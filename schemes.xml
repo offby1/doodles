@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>
+      These are some free scheme implementations.
+    </title>
+  </head>
+  <body>
+    <h1>These are some free scheme implementations.</h1>
+    <table width="1" border="true">
+      <thead>
+        <tr> <th>Implementation</th> <th>GUI-friendly?</th> <th>threads?</th> <th>Windows?</th> <th>Unicode?</th> <th>Why does it suck?</th> </tr>
+      </thead>
+      <tbody>
+        <tr> <td> mzscheme 202 </td> <td> MrEd -- slick </td> <td> yes </td> <td> yes </td> <td> </td> <td> help system flaky </td> </tr>
+        <tr> <td> MIT 7.7.0 </td> <td> looks primitive </td> <td> no! </td> <td> yes </td> </tr>
+        <tr> <td> bigloo 2.5c </td> <td></td> <td> coop </td> <td> yes </td> <td> yes </td> <td> no bignums </td> </tr>
+        <tr> <td> chicken 0.1072-2 </td> </tr>
+        <tr> <td> gauche 0.6.5-1 </td> </tr>
+        <tr> <td> guile 1.6 </td> <td> has some GTK </td> <td> yes </td> <td> no </td> <td></td> <td> it doesn't! </td> </tr>
+        <tr> <td> scheme48 0.57 </td> <td> apparantly not </td> <td> nah </td> <td>scsh 0.6.4 (which include scheme48) seems fine with <a href="http://www.cygwin.com/">Cygwin</a></td> </tr>
+        <tr> <td> scm 5d6 </td> <td> probably not </td> <td> </td> <td> moribund (1996) port </td> </tr>
+        <tr> <td> stklos 0.53 </td> <td> yes -- gtk </td> <td> apparantly not </td> <td> no </td> </tr>
+        <tr> <th> moribund: </th> </tr>
+        <tr> <td> oaklisp </td> <td> dunno </td> <td> dunno </td> <td> doubt it </td> <td> doubt it </td> <td> moribund: Jan 2000 </td> </tr>
+        <tr> <td> petit chez </td> <td> yes </td> <td> </td> <td> </td> <td> </td> <td> moribund: October 1998 </td> </tr>
+        <tr> <td> gambit </td> <td> </td> <td> </td> <td> </td> <td> </td> <td> moribund: August 1999 </td> </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
