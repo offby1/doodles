@@ -7,7 +7,10 @@
                                #+sbcl ".fasl"
                                #+clisp ".fas"
                                )))
-        `("anagrams" "bag" "dict"))
+        `("anagrams"
+          ;"bag"
+          "numeric-bag"
+          "dict"))
 
 #+cmu (progn 
         (profile:profile anagrams-internal)
@@ -17,7 +20,6 @@
         (profile:profile bag-emptyp)
         (profile:profile word-acceptablep)
         (profile:profile maybe-add-word)
-        (profile:profile alist->array)
         (profile:profile make-dictionary-from-file)
         (profile:profile make-dictionaries-from-list)
         (profile:profile init))
@@ -31,13 +33,10 @@
          (sb-profile:profile bag-emptyp)
          (sb-profile:profile word-acceptablep)
          (sb-profile:profile maybe-add-word)
-         (sb-profile:profile alist->array)
          (sb-profile:profile make-dictionary-from-file)
          (sb-profile:profile make-dictionaries-from-list)
          (sb-profile:profile init))
 
-
-(init)
 (let ((*print-level* nil)
       (*print-length* nil))
   #-clisp            (format t "Done!~%~A~&" (anagrams  "hemingway"))
@@ -45,4 +44,4 @@
   )
 #+sbcl (sb-profile:report)
 #+cmu  (profile:report-time)
-;(quit)
+(quit)

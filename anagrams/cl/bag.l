@@ -1,3 +1,12 @@
+(defun char_to_index (c)
+  (declare (type character c))
+  (- (char-code c)
+     (char-code #\a)))
+
+(defun index_to_char (i)
+  (declare (type fixnum i))
+  (code-char (+ i (char-code #\a))))
+
 (defun bag (s)
   (declare (type simple-string s))
   (let ((return-value (make-array '(26) :element-type 'unsigned-byte :initial-element 0))
@@ -11,8 +20,7 @@
                (<= (char-code this-char)
                    (char-code #\z)))
           (incf letters)
-          (incf (aref return-value (- (char-code this-char)
-                                   (char-code #\a)))))))
+          (incf (aref return-value (char_to_index this-char))))))
     (values return-value letters)))
 
 (defun subtract-bags (minuend subtrahend)
@@ -32,3 +40,13 @@
   (dotimes (slots-examined (length b) t)
     (when (plusp (aref b slots-examined))
       (return-from bag-emptyp nil))))
+
+;; debugging only
+(defun bag_to_string (b)
+  (let ((rv "")) 
+    (dotimes (slots-examined (length b) rv)
+      (setf rv (concatenate 'string
+                            rv
+                            (make-string (aref b slots-examined)
+                                         :initial-element
+                                         (index_to_char slots-examined) ))))))

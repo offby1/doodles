@@ -6,15 +6,7 @@ set -e
 
 # Some observations about the relative merits of the different Lisps:
 
-# sbcl takes *six times longer* to read the dictionary than cmu, and
-# clisp is even faster.  I assume this has something to do with the
-# implementation of hash tables.
-
-# clisp's profiling output looks to be the least useful; cmu's and
-# sbcl's are pretty much the same.  And yet `slime' somehow manages to
-# extract useful info from clisp (by using a file called
-# metering.lisp).  I must figure out how to use that file outside of
-# slime.
+# clisp seems to be the fastest by far.
 
 # sbcl's and cmu's compiler outputs are very informative; I bet if I
 # fixed everything they were whining about, the program would run
