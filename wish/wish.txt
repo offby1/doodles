@@ -1,0 +1,80 @@
+-*-outline-*-
+I wish I had a "scheme machine" like this:
+
+* It has no operating system.
+
+When you turn on the power, instead of running Windows or Unix or
+whatever, the computer just gives you a REPL prompt.
+
+You could get then type some command, or press a special key to see a
+windowing system.  Perhaps that key would toggle between the windowing
+system and the REPL.  The REPL would have complete control over the
+computer, and would thus be dangerous, so you wouldn't use it unless
+you had to.
+
+* It doesn't forget when you turn off the power.
+
+So if you type `(define x 3)', and then turn the power off and then on
+again, and type `x', it'll type back `3'.
+
+I imagine it'd have RAM and a hard disk like a regular PC, but there
+would be no file system on the hard disk; instead it'd all be a paging
+file.  And somehow the machine would ensure that everything in memory
+got saved when you turned off the power.
+
+* It has no file system.
+
+To store data on the machine, just assign it to a Scheme variable and
+it'll hang around forever, or until you reassign the variable.
+
+Because R5RS mandates ports, there'd have to be some sort of "file
+system" to keep call-with-output-port et al happy, but it'd be as
+simple as possible: it would in effect be a list of pairs of strings,
+the first in each pair would be the file's "name" and the second would
+be its contents.  I wouldn't expect to use this feature much.
+
+There might be a problem with this idea: you might store a value in a
+variable, and then forget which variable you stored it in.  So it
+might make sense to store values not in lots of different variables,
+but in just one compound variable, and then be able to search through
+that.
+
+* It would have a function `eval-async'.
+
+It'd be like `eval' except it returns immediately (even if the
+expression to be evaluated would loop forever).  The returned value is
+of a new type that I suppose I'll call "thread".  It has no external
+representation.  Here's what you can do with a thread:
+
+** (thread? T)
+
+returns #t if and only if T is a thread; it returns #f otherwise.
+Duh.
+
+** (is-finished? T)
+
+returns #t or #f.  If it returns #t, then it will never again return
+#f for that particular thread.  A return of #t means that `(value T)'
+will return more or less immediately; a return of #f means that
+`(value T)' will return only after the thread finishes.
+
+** (value T)
+
+Returns the result of evaluating the expression that was passed to
+`eval-async'.
+
+See `thread.scm' for a stub implementation that is synchronous (and
+ignores the `environment' parameter to `eval-async')
+
+I think you could have a multi-user system with this -- to start a
+"logon session" for someone, write a REPL whose ports are bound to the
+person's terminal, then call `eval-async' with that REPL and a fresh
+scheme-report-environment.
+
+There'd be no distinction between "processes" and "threads"; instead
+there'd be just threads.  Two threads would be cooperative if, when
+the second was created, the call to `eval-async' was passed a "pointer
+to" the first's environment.  So the threads could then communicate by
+modifying the environment.
+
+I suppose some sort of mutex would be useful too.
