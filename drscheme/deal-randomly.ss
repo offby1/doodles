@@ -5,7 +5,7 @@
   (require (lib "mred.ss" "mred"))
   (require (lib "list.ss"))
   (require "fys.ss")
-  (define *d* (let ((d (make-deck)))
+  (define *d* (let ((d (shuffle-list (make-deck) 1)))
                 (for-each (lambda (c)
                            (send c face-up))
                          d)
@@ -29,7 +29,10 @@
           (o-s-c receiver event)))
       (super-instantiate ())))
 
-  (define *t* (make-object my-table% "snowball" 13 5))
+  (define *t* (make-object my-table% "snowball" 10 10))
+  (send *t* set-button-action 'left   'drag-raise/one)
+  (send *t* set-button-action 'middle 'drag-raise/one)
+  (send *t* set-button-action 'right  'drag-raise/one)
 
   (define (card->value c)
     (+ (* 13
@@ -37,31 +40,68 @@
        (* 1
           (sub1 (send c get-value)))))
 
-  (define *initial-region* (make-region
-                            0
-                            ;; a mystery: (send *t* table-height)
-                            ;; returns a different value than (send *t* get-height)
-                            (- (send *t* table-height)
-                               (send (car *d*) card-height))
-                            (send *t* table-width)
-                            (send (car *d*) card-height)
-                            "unshuffled deck goes here" #f))
+  (define *region-length* (- (send *t* table-width) (* 2 *ch*)))
+  (define *player-regions*
+    (map
+     (lambda (direction coords)
+       (apply make-region (append coords (list (symbol->string direction)
+                                               #f))))
+     `(south west north east)
+     `( 
+       ;;left x                           top y                           width                   height
+
+;;; south
+       (,*ch*                             ,(+ *ch* *region-length*)       ,*region-length*        ,*ch*           ) 
+
+;;; west
+       (0                                 ,*ch*                           ,*ch*                   ,*region-length*) 
+
+;;; north
+       (,*ch*                             0                               ,*region-length*        ,*ch*           )
+
+;;; east
+       (,(+ *ch* *region-length*)         ,*ch*                           ,*ch*                   ,*region-length*)
+       )))
+
+  (for-each
+   (lambda (r)
+     (send *t* add-region r))
+   *player-regions*)
+
   (define (card->initial-position c)
     (list
-     (+
-      (region-x *initial-region*)
-      (* (- (region-w
-             *initial-region*)
-            (/ *cw* 2)) 
-         (/
-          (card->value c) 52)))
-     (region-y *initial-region*)))
-  (send *t* add-region *initial-region*)
-  ;; put each card on the table in its initial position.
-  (send *t* add-cards *d* 0 0 (lambda (index) (apply values (card->initial-position (list-ref *d* index)))))
+     (* (- *region-length*
+           (/ *cw* 2)) 
+        (/
+         (card->value c) 52))
+     (- (send *t* table-height)
+        *ch*)))
 
-  ;;(send *t* add-cards-to-region *d* *initial-region*)
+  (let loop ((hands-dealt 0)
+             (d *d*))
+    (define (first-n l n)
+      (let* ((copy (apply list l))
+             (tail (list-tail copy n)))
+        (when (not (null? tail))
+          (set-cdr! tail '()))
+        copy))
 
+    (when (not (null? d))
+      
+      (let ((destination (list-ref *player-regions* hands-dealt))
+            (hand (first-n d 13)))
+
+        (for-each
+         (lambda (c) (send c home-region destination))
+         hand)
+
+        (send *t* add-cards-to-region 
+              hand
+              destination))
+                                                                  
+      (loop (add1 hands-dealt)
+            (list-tail d 13))))
+  
   ;; for debugging
   (send *t* set-single-click-action
         (lambda (c)
@@ -91,70 +131,8 @@
     (define main-menu  (instantiate menu% () 
                                     (label "&Stuff" )
                                     (parent menu-bar)))
-
-    (define quick-menu-item (instantiate checkable-menu-item% ()
-                                         (label "&Quick")
-                                         (parent main-menu)
-                                         (callback (lambda (it ev) (void)))))
-    
-    
-    (define-syntax quickly
-      (syntax-rules ()
-        ((_ body ...)
-         (dynamic-wind
-             (lambda () (if (send quick-menu-item is-checked?) (send *t* begin-card-sequence)))
-             (lambda () body ... )
-             (lambda () (if (send quick-menu-item is-checked?) (send *t* end-card-sequence)))))))
-
-    (define-syntax with-busy-cursor
-      (syntax-rules ()
-        ((_ body ...)
-         (dynamic-wind
-             (lambda () (begin-busy-cursor))
-             (lambda () body ...)
-             (lambda () (end-busy-cursor))))))
     
     (send menu-bar enable #t)
-    (instantiate menu-item% ()
-                 (label "&Deal Randomly")
-                 (parent main-menu)
-                 (callback (lambda (item event) 
-                             (set! *d* (vector->list (fys! (apply vector *d*))))
-                             (with-busy-cursor
-                              (quickly
-                               (let loop ((cards-moved 0)
-                                          (d *d*))
-                                 (when (not (or *quit-flag*
-                                                (null? d)))
-                                   (let ((x (* *cw* (remainder cards-moved 13)))
-                                         (y (* *ch* (quotient  cards-moved 13))))
-                                     (send *t* move-card (car d)
-                                           x
-                                           y))
-                                   (when (send (car d) face-down?)
-                                     (send *t* card-face-up (car d) ))
-                                   (loop (+ 1 cards-moved)
-                                         (cdr d)))
-                                 (set! *quit-flag* #f)))))))
-    (instantiate menu-item% ()
-                 (label "Send 'em Back &Home")
-                 (parent main-menu)
-                 (callback (lambda (item event)
-                             (quickly
-                              (with-busy-cursor
-                               (let/ec k
-                                 (for-each (lambda (c)
-                                             (when *quit-flag* 
-                                               (set! *quit-flag* #f)
-                                               (k (void)))
-                                             (send/apply *t* move-card c (card->initial-position c))
-                                             (send *t* card-to-front c)
-                                             (when (send c face-down?)
-                                               (send *t* card-face-up c)))
-                                           (mergesort *d* (lambda (c1 c2)
-                                                            (< (card->value c1)
-                                                               (card->value c2))))))))
-                             )))
 
     (instantiate menu-item% ()
                  (label "&Exit")
