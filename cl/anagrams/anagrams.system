@@ -1,7 +1,5 @@
 ;;; -*- Mode: lisp -*-
 
-#+cmu (make:operate-on-system 'memoization 'load)
-
 (make:defsystem anagrams
     :source-extension "l"
     :components ((:file "bag")

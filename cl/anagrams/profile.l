@@ -1,6 +1,7 @@
 ;; Note that unless we use a stripped-down dictionary, CMU Common Lisp
 ;; release x86-linux 3.1.2 18d+ 24 September 2002 build 4293 dies with
 ;; what appears to be an assertion failure in the garbage collector.
+;; However, CMU Common Lisp 18e works fine.
 
 ;; sbcl SBCL 0.7.2 does too!
 
