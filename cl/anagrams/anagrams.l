@@ -1,15 +1,14 @@
-(if nil
-    (progn
-      (setq *dict*
-	    (with-open-file
-	     (dict "/usr/share/dict/words")
-	     (let ((d '()))
-	       (loop
-		(let ((datum (read-line dict nil nil)))
-		  (if (null datum)
-		      (return d))
-		  (setq d (cons datum d)))))))
-      (values)))
+(defvar *dict*
+  (with-open-file
+   (dict "/usr/share/dict/words")
+   (let ((d '()))
+     (loop
+      (let ((datum (read-line dict nil nil)))
+        (if (null datum)
+            (return d))
+        (setq d (cons datum d)))))))
+
+#+cmu (setq *gc-verbose* nil)
 
 (defconstant *characters*
   (+ 1 (- (char-code #\z) (char-code #\a)))
@@ -38,13 +37,7 @@ or lower-case version of that character in STRING."
        (decf chars-to-examine)))
     result))
 
-(defun surveyp (thing)
-  (and (vectorp thing)
-       (= *characters* (length thing))))
-
 (defun survey-subtract (big small)
-  (assert (surveyp big))
-  (assert (surveyp small))
   (let ((result (survey ""))
 	(slots-examined 0))
     (loop
@@ -81,8 +74,6 @@ or lower-case version of that character in STRING."
 
   (defun anagram-helper (bag dictionary)
 
-    (assert (surveyp bag))
-    
     (if (bag-emptyp bag)
 	(return-from anagram-helper nil))
 
