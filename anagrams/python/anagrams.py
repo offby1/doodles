@@ -63,7 +63,7 @@ def anagrams (bag, dict):
     assert (is_list_of_anagrams (rv))
     return rv
 
-parser = OptionParser()
+parser = OptionParser(usage="usage: %prog [options] string")
 parser.add_option("-d",
                   "--dictionary",
                   action="store",
@@ -74,6 +74,10 @@ parser.add_option("-d",
                   help="location of word list")
 
 (options, args) = parser.parse_args()
+
+if (0 == len(args)):
+    parser.print_help ()
+    sys.exit (0)
 
 dict_hash_table = snarf_dictionary (options.dict_fn)
 

@@ -1,3 +1,6 @@
+#!/usr/bin/guile \
+--debug -ds
+!#
 (define-module (anagrams))
 (use-modules (ice-9 debug)
              (ice-9 pretty-print)
@@ -12,12 +15,13 @@
 ;; write to a file whose name is a simplified version of the input
 ;; string.
 (define-public (all-anagrams string)
-  (let ((in-bag         (bag string))
-        (start-time     (get-internal-real-time)))
+  (let ((in-bag   (bag string))
+        (start-time  (get-internal-real-time)))
     
     (init in-bag)
-    (let* ((result    (all-anagrams-internal in-bag *dictionary* 0))
-           (stop-time (get-internal-real-time)))
+    (let* ((result (all-anagrams-internal in-bag *dictionary* 0))
+           (stop-time (get-internal-real-time))
+           )
       (pretty-print result)
       (format (current-error-port)
               ";; ~a anagrams of ~s: ~a seconds~%"
@@ -31,7 +35,7 @@
 
 (define-macro (maybe-dump ans)
   `(if (zero? depth)
-       (for-each (lambda (a) (format (current-error-port) "~a~%" a))
+       (for-each (lambda (a) (format #t "~a~%" a))
                  ,ans)))
 
 (define-macro (update! stuff)
@@ -40,24 +44,18 @@
      (set! rv (append! rv ,stuff))))
 
 (define (all-anagrams-internal bag dict depth)
-
-  (set! dict (filter (lambda (entry) (bag-acceptable? (car entry) bag))
-                     dict))
-
   (let ((rv '()))
     (let loop ((dict dict))
       (if (null? dict)
           rv
         (let* ((words (cdar dict))
                (smaller-bag (subtract-bags bag (caar dict))))
-
-          (if (bag-empty? smaller-bag)
-              (update! (map list words))
-
-            (let ((anagrams (all-anagrams-internal smaller-bag dict (+ 1 depth))))
-              (if (not (null? anagrams))
-                  (update! (combine words anagrams)))))
-                                                       
+          (if smaller-bag
+              (if (bag-empty? smaller-bag)
+                  (update! (map list words))
+                (let ((anagrams (all-anagrams-internal smaller-bag dict (+ 1 depth))))
+                  (if (not (null? anagrams))
+                      (update! (combine words anagrams))))))
           (loop (cdr dict)))))))
 
 (define (combine words anagrams)
@@ -68,3 +66,6 @@ list of anagrams, each of which begins with one of the WORDS."
                        (cons word an))
                      anagrams))
               words))
+
+(pretty-print (command-line))
+;;(all-anagrams (cadr (command-line)))

@@ -56,7 +56,7 @@
                  (string=? "a" word)
                  (< 1 l)))))))
 
-(define-public (bag-acceptable? this bag-to-meet)
+(define (bag-acceptable? this bag-to-meet)
   (and (or (bags=? bag-to-meet this)
            (subtract-bags bag-to-meet this))
        this))
@@ -68,7 +68,9 @@
    (lambda (pair)
      (let ((bag (car pair))
            (words (cdr pair)))
-       (hash-set! *big-ol-hash-table* bag words)))
+       (let ((this-bag (bag-acceptable? bag bag-to-meet)))
+         (if this-bag
+             (hash-set! *big-ol-hash-table* bag words)))))
    (with-input-from-file *alist-file-name* read))
   ;; now clobber the alist.
   (set! *dictionary* (hash-fold (lambda (key value prior)
@@ -145,40 +147,14 @@
                                  (cons (cons key value) prior)) 
                                '()
                                (wordlist->hash))))
+
         (with-output-to-file *alist-file-name*
           (lambda ()
-            ;; use `pretty-print' rather than `write' so that it's not
-            ;; all on on big line.
-            (pretty-print result ))))
+            ;; I was tempted to use `pretty-print' rather than `write'
+            ;; so that it's not all on on big line, but that takes for
+            ;; ...  ever.
+            (write result ))))
       
       (format #t "done~%")))
 
 (set! *random-state* (seed->random-state (get-internal-real-time)))
-
-;; calculate letter frequencies.  This could be used to re-order the
-;; prime-number list in bag.scm.
-(if #f
-    (map car
-         (sort
-          (let ((tally '()))
-            (for-each
-             (lambda (str)
-               (let loop ((str str))
-                 (if (not (zero? (string-length str)))
-                     (let* ((this-letter (string-ref str 0))
-                            (probe (assq this-letter tally)))
-                    
-                       (set! tally (assq-set! tally
-                                              this-letter
-                                              (+ 1 (if (not probe)
-                                                       0
-                                                     (cdr probe) ))
-                                              ))
-                       (loop (substring str 1)
-                             )))))
-             (apply append (map cdr *dictionary*)))
-            tally)
-          (lambda (p1 p2)
-            (> (cdr p1)
-               (cdr p2)))))
-  )

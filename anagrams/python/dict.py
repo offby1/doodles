@@ -41,7 +41,6 @@ def snarf_dictionary (fn):
     try:
         fh = open (hash_cache, "rb")
         rv= cPickle.load (fh)
-        fh.close()
         print >> sys.stderr, "Reading cache", hash_cache, "instead of dictionary", fn
     except:
         fh = open (fn, "r")
@@ -49,8 +48,8 @@ def snarf_dictionary (fn):
         fh.close ()
         fh = open (hash_cache, "wb")
         cPickle.dump (rv, fh, 2)
-        fh.close ()
 
+    fh.close ()
     return rv
 
 
