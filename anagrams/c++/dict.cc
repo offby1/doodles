@@ -27,7 +27,7 @@ namespace {
 
   bool
   acceptable (const bag&filter,
-              const bag &candidate)
+              const std::string &candidate)
   {
     bag *difference = filter.subtract_bag (candidate);
     bool rv = ((0 == (regexec (&has_a_vowel       , candidate.c_str (), 0, 0, 0)))
@@ -75,7 +75,7 @@ init (const bag &filter)
 
       bag one_bag (one_string);
       if (acceptable (filter,
-                      one_bag))
+                      one_string))
         {
           hash_t::iterator existing = hash.find(one_bag);
           if (existing == hash.end ())

@@ -114,11 +114,11 @@ namespace {
 std::ostream &
 operator <<(std::ostream &o, const entry &e)
 {
-  o << "[";
-  o << e.first;
-  o << " => ";
-  o << e.second;
-  o << "]";
+  o << "["
+    << e.first
+    << " => "
+    << e.second
+    << "]";
   return o;
 }
 
