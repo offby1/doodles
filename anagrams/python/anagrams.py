@@ -81,8 +81,6 @@ print "Snarfing", dict_fn
 dict_hash_table = snarf_dictionary (dict_fn)
 print "done"
 
-#print combine (["some", "new", "words"], [["annie", "grams"], ["grams", "annie"]])
-
 the_phrase = bag (sys.argv[1])
 print "Pruning dictionary.  Before:", len (dict_hash_table.keys ())
 
@@ -94,7 +92,18 @@ for k in dict_hash_table.keys ():
     if (subtract_bags (the_phrase, k)):
         the_dict_list.append([k, dict_hash_table[k]])
 
-the_dict_list.sort (lambda a, b: cmp (len (b[1][0]), len (a[1][0])))
+# Note that sorting entries "alphabetically" only makes partial sense,
+# since each entry is (at least potentially) more than one word (all
+# the words in an entry are anagrams of each other).
+def biggest_first_then_alphabetically (a, b):
+    a = a[1][0]
+    b = b[1][0]
+    result = cmp (len (b), len (a))
+    if (not result):
+        result = cmp (a, b)
+    return result
+
+the_dict_list.sort (biggest_first_then_alphabetically)
 
 print "Pruned dictionary.  After:", len (the_dict_list)
 result = anagrams (the_phrase, {}, 0)
