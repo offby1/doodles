@@ -75,9 +75,7 @@ parser.add_option("-d",
 
 (options, args) = parser.parse_args()
 
-print >> sys.stderr, "Snarfing", options.dict_fn
 dict_hash_table = snarf_dictionary (options.dict_fn)
-print >> sys.stderr, "done"
 
 the_phrase = bag (args[0])
 print >> sys.stderr, "Pruning dictionary.  Before:", len (dict_hash_table.keys ())

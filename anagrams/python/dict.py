@@ -4,6 +4,9 @@ import StringIO
 import string
 import re
 import sys
+import cPickle
+import os
+from stat import *
 from bag import bag, bag_empty, bags_equal, subtract_bags
 
 has_a_vowel_re = re.compile (r'[aeiou]')
@@ -11,9 +14,9 @@ long_enough_re = re.compile (r'^i$|^a$|^..')
 non_letter_re = re.compile (r'[^a-zA-Z]')
 
 def snarf_dictionary_from_IO (I):
-    all_words = re.findall (r'.+', I.read ())
+    print >> sys.stderr, "Snarfing", I
     hash_table = {}
-    for w in all_words:
+    for w in re.findall (r'.+', I.read ()):
         w = string.lower (w)
         if non_letter_re.search (w):
             continue
@@ -29,15 +32,28 @@ def snarf_dictionary_from_IO (I):
         else:
             hash_table[key] = [w]
 
+    print >> sys.stderr, "done"
     return hash_table
 
+hash_cache = "hash.cache"
+
 def snarf_dictionary (fn):
-    fh = open (fn, "r")
-    rv = snarf_dictionary_from_IO (fh)
-    fh.close ()
+    try:
+        fh = open (hash_cache, "rb")
+        rv= cPickle.load (fh)
+        fh.close()
+        print >> sys.stderr, "Reading cache", hash_cache, "instead of dictionary", fn
+    except:
+        fh = open (fn, "r")
+        rv = snarf_dictionary_from_IO (fh)
+        fh.close ()
+        fh = open (hash_cache, "wb")
+        cPickle.dump (rv, fh, 2)
+        fh.close ()
+
     return rv
 
-
+
 fake_input = "cat\ntac\nfred\n"
 fake_dict = snarf_dictionary_from_IO (StringIO.StringIO (fake_input))
 
