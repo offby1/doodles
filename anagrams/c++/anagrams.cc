@@ -86,17 +86,14 @@ namespace {
     assert (some_anagrams.size ());
 
     std::vector<wordlist> rv;
-    for (std::vector<wordlist>::const_iterator an = some_anagrams.begin ();
-         an != some_anagrams.end ();
-         an++)
+    for (wordlist::const_iterator word = these_words.begin ();
+         word != these_words.end ();
+         word++)
       {
-        assert (an->size ());
-        for (wordlist::const_iterator word = these_words.begin ();
-             word != these_words.end ();
-             word++)
+        for (std::vector<wordlist>::const_iterator an = some_anagrams.begin ();
+             an != some_anagrams.end ();
+             an++)
           {
-            assert (word->size ());
-
             wordlist one_new_anagram;
             one_new_anagram.push_back (*word);
             for (wordlist::const_iterator i = an->begin ();

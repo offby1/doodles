@@ -11,14 +11,14 @@
 
 bool
 entry::operator < (const entry &other) const
- {
-    bool rv = ((this->second.at(0).size () > other.second.at(0).size ())
-               ||
-               (this->second.at(0).size () == other.second.at(0).size ()
-                &&
-                this->second.at(0) < other.second.at(0)));
-    return rv;
-  }
+{
+  bool rv = ((this->second.at(0).size () > other.second.at(0).size ())
+             ||
+             (this->second.at(0).size () == other.second.at(0).size ()
+              &&
+              this->second.at(0) < other.second.at(0)));
+  return rv;
+}
 
 namespace {
   regex_t has_a_vowel;
