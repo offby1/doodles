@@ -2,10 +2,6 @@
   mzscheme
   (require "assert.scm")
   (provide bag subtract-bags bag-empty? bags=?)
-;; todo -- sort these primes in order of decreasing frequency.  That
-;; is, instead of assigning 2 to a, assign it to e since e is the most
-;; common letter.  That way the average bag will be smaller, and
-;; presumably math on it will go faster.
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
 

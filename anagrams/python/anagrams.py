@@ -57,7 +57,7 @@ def anagrams (bag, exclusions, debug_level):
         if (bag_empty (smaller_bag)):
             for w in words:
                 rv.append ([w])
-                if (not debug_level):
+                if (0 and not debug_level):
                     print w
         else:
             from_smaller_bag = anagrams (smaller_bag,
@@ -68,7 +68,7 @@ def anagrams (bag, exclusions, debug_level):
 
             for new in combine (words, from_smaller_bag):
                 rv.append (new)
-                if (not debug_level):
+                if (0 and not debug_level):
                     print new
 
         exclusions[key] = 1
@@ -77,12 +77,12 @@ def anagrams (bag, exclusions, debug_level):
     return rv
 
 dict_fn = "/usr/share/dict/words"
-print "Snarfing", dict_fn
+print >> sys.stderr, "Snarfing", dict_fn
 dict_hash_table = snarf_dictionary (dict_fn)
-print "done"
+print >> sys.stderr, "done"
 
 the_phrase = bag (sys.argv[1])
-print "Pruning dictionary.  Before:", len (dict_hash_table.keys ())
+print >> sys.stderr, "Pruning dictionary.  Before:", len (dict_hash_table.keys ())
 
 # Now convert the hash table to a list, longest entries first.  (This
 # isn't necessary, but it makes the more interesting anagrams appear
@@ -105,9 +105,9 @@ def biggest_first_then_alphabetically (a, b):
 
 the_dict_list.sort (biggest_first_then_alphabetically)
 
-print "Pruned dictionary.  After:", len (the_dict_list)
+print >> sys.stderr, "Pruned dictionary.  After:", len (the_dict_list)
 result = anagrams (the_phrase, {}, 0)
-print len(result), "anagrams of", sys.argv[1], ":"
+print >> sys.stderr, len(result), "anagrams of", sys.argv[1], ":"
 
 for a in result:
     sys.stdout.write ("(")
@@ -117,5 +117,3 @@ for a in result:
         sys.stdout.write  (w)
     sys.stdout.write (")")
     print
-    
-

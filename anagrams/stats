@@ -18,23 +18,23 @@ cpuid level	: 2
 wp		: yes
 flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr xmm
 bogomips	: 550.50
-                                                                              
-                                                                              Permanent            Temporary
-Class                                                                    instances   bytes    instances   bytes
------                                                                    --------- ---------  --------- ---------
-CONS                                                                          3873     30984  2596030399 20768243192
-SIMPLE-STRING                                                                 1218     35348     860879 183065804
-BIGNUM                                                                         479      6532   12981773 162475028
-STRING                                                                           0         0     787999  18911976
-STREAM                                                                           0         0      72370   4631680
-SIMPLE-VECTOR                                                                    0         0         51     64176
-SIMPLE-8BIT-VECTOR                                                               0         0          1      4104
-SYSTEM::CONTROL-STRING-DIRECTIVE                                                 0         0          4       176
-FILE-STREAM                                                                      0         0          1       148
-PATHNAME                                                                         0         0          7       140
-HASH-TABLE                                                                       0         0          1        60
------                                                                    --------- ---------  --------- ---------
-Total                                                                         5570     72864  2610733485 21137396484
+									      
+									      Permanent		   Temporary
+Class									 instances   bytes    instances	  bytes
+-----									 --------- ---------  --------- ---------
+CONS									      3873     30984  2596030399 20768243192
+SIMPLE-STRING								      1218     35348	 860879 183065804
+BIGNUM									       479	6532   12981773 162475028
+STRING										 0	   0	 787999	 18911976
+STREAM										 0	   0	  72370	  4631680
+SIMPLE-VECTOR									 0	   0	     51	    64176
+SIMPLE-8BIT-VECTOR								 0	   0	      1	     4104
+SYSTEM::CONTROL-STRING-DIRECTIVE						 0	   0	      4	      176
+FILE-STREAM									 0	   0	      1	      148
+PATHNAME									 0	   0	      7	      140
+HASH-TABLE									 0	   0	      1	       60
+-----									 --------- ---------  --------- ---------
+Total									      5570     72864  2610733485 21137396484
 
 Real time: 177929.73 sec.
 Run time: 177330.27 sec.
@@ -66,14 +66,25 @@ wp		: yes
 flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe cid
 bogomips	: 4771.02
 
-time ./anagrams hemingway > /dev/null
+time ./anagrams  > /dev/null
 
-c++	: 14 seconds	   bags are bignums     dictionary cached? dunno
-guile	:  7 seconds	   bags are bignums     dictionary cached? dunno
-mzscheme:  4 seconds	   ?                    ?
-perl	: 35 seconds       bags are bignums     dictionary cached? dunno
-python  :  5 seconds       bags are bignums     dictionary not cached
-common lisp                bags are bignums     dictionary cached? dunno
-  cmucl :  2 seconds
-  clisp :  2 seconds
-  sbcl	:  3 seconds
+language	: time "hemingway"	time "st hemingway"	bag implementation	dictionary cached?	exclusions implementation
+-----------------------------------------------------------------------------------------------------------------------------------------
+c++ (-O2)	:  2 seconds		~60 seconds		bignums			no			list
+c++ (-O2)	:  1-2 seconds		~45 seconds		bignums			no			hash table
+guile 1.7 (gmp)	:  7 seconds		~400 seconds		bignums			dunno
+guile 1.6 	:  7 seconds		~300 seconds		bignums			dunno
+mzscheme	:  4 seconds					bignums			no
+perl		: 35 seconds					strings			no	
+perl/numeric	: 77 seconds					bignums			yes
+python		:  5 seconds		75-80 seconds		bignums			no
+common lisp							bignums			no
+  cmucl		:  2 seconds		~110 seconds
+  clisp		:  2 seconds		~110 seconds
+  sbcl		:  3 seconds		~110 seconds				     
+
+---
+
+Note: when gathering data to fill in the above, be sure that none of
+the programs or libraries were compiled for profiling -- because they
+run much slower than normal libraries.

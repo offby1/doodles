@@ -3,6 +3,7 @@
 import StringIO
 import string
 import re
+import sys
 from bag import bag, bag_empty, bags_equal, subtract_bags
 
 has_a_vowel_re = re.compile (r'[aeiou]')
@@ -48,4 +49,4 @@ assert (cat_hits[1] == "tac")
 assert (1 == len (fake_dict[bag ("fred")]))
 assert (fake_dict[bag ("fred")][0] == "fred")
 
-print __name__, "tests passed."
+print >> sys.stderr, __name__, "tests passed."

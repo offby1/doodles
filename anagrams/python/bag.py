@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import string
+import sys
 
 def bag_empty (b):
     return b == 1
@@ -63,4 +64,4 @@ assert (bags_equal (bag ("x"),
 assert (bags_equal (bag ("abc"),
                     bag ("ABC")))
 
-print __name__, "tests passed."
+print >> sys.stderr, __name__, "tests passed."

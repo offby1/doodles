@@ -19,41 +19,15 @@
               (vector-ref primes (char->index c))
             1))))
 
-;; This stuff is a nice idea, but has no noticeable effect.
-
-;; The idea is to sort the primes in order of decreasing frequency.
-;; That is, instead of assigning 2 to a, assign it to e since e is the
-;; most common letter.  That way the average bag will be smaller, and
-;; presumably math on it will go faster.
-
-(if #f
-    (begin
-      ;; derived from some code in dict.scm
-      (define frequency-list '(#\e #\s #\i #\a #\n #\r #\t #\o #\l #\c #\d #\u #\g #\p #\m #\h #\b #\y #\f #\v #\k #\w #\z #\x #\j #\q))
-
-      (let ((new-prime-array (make-vector (vector-length primes))))
-        (let loop ((frequency-list frequency-list)
-                   (letters-processed 0))
-          (if (not (null? frequency-list))
-              (let* ((this-letter (car frequency-list))
-                     (this-prime (vector-ref primes letters-processed)))
-                (format #t "~a: ~a~%" this-letter this-prime)
-                (vector-set! new-prime-array (char->index this-letter) this-prime)
-                (loop (cdr frequency-list)
-                      (+ 1 letters-processed)))))
-        (set! primes new-prime-array)
-        )))
-
 (define-public (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
   (let loop ((chars-to-examine (string-length s))
              (product 1))
     (if (zero? chars-to-examine)
-         product
-      (let ((factor (char->factor (string-ref s (- chars-to-examine 1)))))
-        (loop (- chars-to-examine 1)
-              (* product factor))))))
+        product
+      (loop (- chars-to-examine 1)
+            (* product (char->factor (string-ref s (- chars-to-examine 1))))))))
 
 (define-public (subtract-bags b1 b2)
   (if (bag-empty? b2)

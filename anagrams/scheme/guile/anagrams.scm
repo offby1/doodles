@@ -8,13 +8,6 @@
              (exclusions)
              (assert))
 
-(define-macro (prog1 expr . rest)
-  (let ((e (gensym)))
-    `(let ((,e ,expr))
-       (begin
-         ,@rest)
-       ,e)))
-
 ;; TODO -- perhaps, instead of writing to standard out, we should
 ;; write to a file whose name is a simplified version of the input
 ;; string.
@@ -56,26 +49,25 @@
         (set! max-depth-so-far depth))
     (if (> exclusion-length max-exclusion-length-so-far)
         (set! max-exclusion-length-so-far exclusion-length))
-    (save-exclusions exclusions
-      (dict-for-each
-       (lambda (key words)
-         (if (not (excluded? key exclusions))
-             (let ((smaller-bag (subtract-bags bag key)))
-               (if smaller-bag
-                   (if (bag-empty? smaller-bag)
-                       (begin
-                         (add-exclusion! exclusions key)
-                         (let ((combined (map list words)))
-                           (maybe-dump combined)
-                           (set! rv (append! rv combined))))
-                     (let ((anagrams (all-anagrams-internal smaller-bag exclusions (+ 1 depth))))
-                       (if (not (null? anagrams))
-                           (begin
-                             (add-exclusion! exclusions key)
-                             (let ((combined (combine words anagrams)))
-                               (maybe-dump combined)
-                               (set! rv (append! rv combined))))))))))))
-      rv)))
+    (dict-for-each
+     (lambda (key words)
+       (if (not (excluded? key exclusions))
+           (let ((smaller-bag (subtract-bags bag key)))
+             (if smaller-bag
+                 (if (bag-empty? smaller-bag)
+                     (begin
+                       (add-exclusion! exclusions key)
+                       (let ((combined (map list words)))
+                         (maybe-dump combined)
+                         (set! rv (append! rv combined))))
+                   (let ((anagrams (all-anagrams-internal smaller-bag exclusions (+ 1 depth))))
+                     (if (not (null? anagrams))
+                         (begin
+                           (add-exclusion! exclusions key)
+                           (let ((combined (combine words anagrams)))
+                             (maybe-dump combined)
+                             (set! rv (append! rv combined))))))))))))
+    rv))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
