@@ -143,7 +143,16 @@
                                 (lambda (index)
                                   (let ((r (rotate-region
                                             (make-region
-                                             (+ (region-x north-region) (* (/ (region-w north-region) 14) index))
+                                             (+ (region-x north-region) (* (/ (region-w north-region) 14) 
+
+                                                                           ;; If it's the interactive hand,
+                                                                           ;; put the high cards on the left.
+
+                                                                           (if (= 2 quarter-turns)
+                                                                               (- 12 index)
+                                                                             index)
+
+                                                                           ))
                                              (region-y north-region)
                                              *cw*
                                              *ch*
@@ -263,14 +272,16 @@
                       ((4) 4))))
            (- (ace-high (send c get-value)) 2)))
 
-      (let loop ((cards-to-relocate (mergesort cards (lambda (c1 c2)
+      (let loop ((cards-to-relocate (mergesort cards ;; decreasing left-to-right
+                                                     (lambda (c1 c2)
                                                        (> (card->alternate-colors-value c1)
                                                           (card->alternate-colors-value c2)))))
                  (cards-located 0))
         (when (not (null? cards-to-relocate))
           (let ((c (car cards-to-relocate)))
             (send/apply *t* move-card c
-                        ((player-card-home-location-proc visible-hand) cards-located))
+                        ((player-card-home-location-proc visible-hand)
+                         cards-located ))
             
             (send *t* card-to-front c)
             (loop (cdr cards-to-relocate)
@@ -293,8 +304,8 @@
 
         (define (ordinal hand-pair)
           (- (length *direction/player-alist*)
+             (length (member (car hand-pair) (map car *direction/player-alist*)))))
 
-       (length (member (car hand-pair) (map car *direction/player-alist*)))))
         (define dummy-offset (ordinal *dummy*))
         (let next-player ((the-trick '())
                           (cards-this-trick 0))
@@ -339,7 +350,8 @@
           (send *t* pause .1)
           
           (send *t* remove-cards the-trick)
-          (for-each (lambda (c) (send c face-down)) the-trick)))
+          (for-each (lambda (c) (send c face-down)) the-trick)
+          ))
       (let ((cards (player-cards (cdar *direction/player-alist*))))
         (when (not (null? cards))
           (play-one-trick)
