@@ -1,3 +1,10 @@
+;; http://info.lboro.ac.uk/departments/ma/gallery/selfref/
+;;
+;; Even though that site describes almost exactly this, I wrote this
+;; long before I saw that site.
+
+;; http://home.att.net/~rhhardin/decimalv2.html
+
 ;; This is _way_ faster under sbcl than under clisp.
 
 (defmacro lookup (c survey)
@@ -29,9 +36,9 @@
          (push thing result))
        (setf copy (cdr copy)))))
 
-(defun spell-out-letter (c)
+(defun spell-out-character (c)
   (cond
-    ((alpha-char-p c)
+    ((alphanumericp c)
      (format nil "~:C" (char-upcase c)))
     (t
      (case c
@@ -46,19 +53,29 @@
   (apply #'concatenate 'string
          (mapcar (lambda (thing)
                    (if (consp thing)
-                       (let ((letter (spell-out-letter (cdr thing))))
+                       (let ((letter (spell-out-character (cdr thing))))
                          (format nil (concatenate 'string "~R " letter "~:p") (car thing)))
                        thing)) tmplt)))
 
 (
  #+clisp ext:times
  #-clisp progn
- (let ((tmplt 
+ (let ((tmplt
         (append
          (list
-          "When boiling, baking, or stweing, be sure to include " '(0 . #\,)
+          "When boiling, baking, or stewing, be sure to include " '(0 . #\,)
           ", " '(0 . #\Space)
           ", " '(0 . #\.)
+          ", " '(0 . #\0)
+          ", " '(0 . #\1)
+          ", " '(0 . #\2)
+          ", " '(0 . #\3)
+          ", " '(0 . #\4)
+          ", " '(0 . #\5)
+          ", " '(0 . #\6)
+          ", " '(0 . #\7)
+          ", " '(0 . #\8)
+          ", " '(0 . #\9)
           ", ")
          (let (thing)
            (dotimes (c (- (char-code #\z)
@@ -70,18 +87,15 @@
            (push '(0 . #\z) thing)
            (push "." thing)
            (nreverse thing))))
-               
+
        (duplicate-detector (make-hash-table :test #'equal)))
-   (format t "Here's that template, you drunken sot: ~s~%" tmplt)
    (loop
       (let ((str (template->string tmplt)))
-        (format t "~a: ~s~%" (hash-table-count duplicate-detector) str)
         (when  (gethash str duplicate-detector nil)
-          (format t "Whop!~%")
+          ;(format t "~a: ~s~%" (hash-table-count duplicate-detector) str)
           (setf tmplt (update-template tmplt #'(lambda (char)
                                                  (random (length str)))))
-          (setf str (template->string tmplt))
-          (format t "~s~%" str))
+          (setf str (template->string tmplt)))
         (setf (gethash str duplicate-detector) t)
         (setf tmplt (update-template tmplt #'(lambda (char)
                                                (lookup char (survey-string str)))))
