@@ -1,3 +1,6 @@
+;; TODO in general -- find a better way to chatter than printf.
+;; Perhaps make a scrolling console that captures standard out.
+
 (module bridge mzscheme
   (require (lib "cards.ss" "games" "cards"))
   (require (all-except (lib "classes.ss" "games" "cards") pasteboard%))
@@ -62,11 +65,35 @@
       (set-player-cards! p (remove choice hand))
       choice))
 
+  (define interactively-choose-card
+    (let ((choice #f))
+      (lambda (p)
+        (let ((sem (make-semaphore)))
+      
+          ;; Doesn't this clobber any existing double-click-action?  Isn't
+          ;; that a Bad Thing?
+          (send *t* set-double-click-action 
+                (lambda (card)
+                  (if (member card (player-cards p))
+                      (begin
+                        (set! choice card)
+                        (semaphore-post sem))
+                    (begin
+                      (bell)
+                      (printf "You gotta click your own cards.")))
+                  ))
+          (yield sem)
+          (unless choice
+            (error "Looks like I don't understand semaphores."))
+          choice))))
+
   (define *player-alist*
     (map (lambda (pos coords cards choice-func)
            (cons pos
                  (make-player (apply make-region (append coords (list (symbol->string pos) #f))) 
-                              cards choice-func)))
+                              cards (lambda (p)
+                                      (printf "Waiting for player ~A~%" pos)
+                                      (choice-func p)))))
          `(south west north east)
          `( 
            ;;left x                           top y                           width                   height
@@ -84,7 +111,7 @@
            (,(+ *ch* *region-length*)         ,*ch*                           ,*ch*                   ,*region-length*)
            )
          `(#f #f #f #f)
-         `(,random-choose-card
+         `(,interactively-choose-card
            ,dumbest-choose-card
            ,random-choose-card
            ,dumbest-choose-card)
