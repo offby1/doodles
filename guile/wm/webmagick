@@ -1,0 +1,245 @@
+#!/usr/local/bin/guile -s
+!#
+
+;; replace the above with /usr/bin/guile once that program supports
+;; SRFIs -- which is to say, once Guile 1.6 becomes a Debian package,
+;; which I've installed.
+
+;; given a directory full of bitmaps, create a Web page in that
+;; directory that includes thumbnails which link to the bigger files.
+
+;; So if the directory contained just one image, bob.jpeg, create a
+;; page that contains this line:
+
+;; <a href="bob.jpeg"><img src=".thumbnails/bob.jpeg"></a>
+
+(use-modules (ice-9 slib))
+(use-modules (srfi srfi-1))             ; for find
+(require 'filter)
+(require 'sort)
+(require 'trace)
+
+(define (split fn sep-char first?)
+  (let ((index-of-separator ((if first?
+                                 string-index
+                               string-rindex) 
+                             fn sep-char)))
+    (if index-of-separator
+        (let ((left (make-shared-substring
+                      fn
+                      0
+                      index-of-separator))
+              (right (make-shared-substring
+                     fn
+                     index-of-separator)))
+          (cons left right))
+      (cons fn ""))))
+
+(define (extension     fn) (cdr (split fn #\. #f)))
+(define (sansextension fn) (car (split fn #\. #f)))
+(define (dirname       fn) (car (split fn #\/ #f)))
+(define (basename      fn) 
+  (let* ((pair (split fn #\/ #f))
+         (last-component (cdr pair )))
+    (if (positive? (string-length last-component))
+        (make-shared-substring 
+         last-component
+         1)
+      (car pair))))
+
+(define source-dir-name (list-ref (command-line) 1))
+
+(define index-file-name          (string-append source-dir-name "/index.html"))
+(define thumbnail-directory-name (string-append source-dir-name "/.thumbnails"))
+(define converted-jpeg-directory (string-append source-dir-name "/.jpegs"))
+
+(define thumbnail-name #f)
+(define converted-jpeg-name #f)
+(let ()
+  (define (target-name fn absolute? thumbnail?)
+    (define (identity x) x)
+    (string-append
+     ((if absolute?
+          identity
+        basename)
+      (if thumbnail?
+          thumbnail-directory-name
+        converted-jpeg-directory))
+     "/"
+     (basename (sansextension fn))
+     ".jpeg"))
+
+  (set! thumbnail-name
+        (lambda (fn absolute?)
+          (target-name fn absolute? #t)))
+
+  (set! converted-jpeg-name
+        (lambda (fn absolute?)
+          (target-name fn absolute? #f))))
+
+(define (image-file-names)
+  (define (dir->list)
+    (let ((dir (opendir source-dir-name)))
+      (let ((result
+             (let loop ((result '())
+                        (entry-name (readdir dir)))
+               (if (eof-object? entry-name)
+                   (reverse result)
+                 (loop (cons entry-name result)
+                       (readdir dir))))))
+        (closedir dir)
+        result)))
+  (define (names-image-file? fn)
+    ;; crude hack.  A better way would be to run `file' on the named
+    ;; file, and see if the returned string contains the phrase "image
+    ;; data".  But that would be really slow, and would involve
+    ;; executing a shell pipeline, which is a pain in the ass.
+    (let ((ext (extension fn)))
+      (find (lambda (s) (string-ci=? s ext))
+            (list ".jpeg"
+                  ".jpg" 
+                  ".tiff"
+                  ".tif" 
+                  ".bmp"
+                  ".png"))))
+
+  (filter names-image-file? 
+          (map (lambda (relative-name)
+                 (string-append source-dir-name "/" relative-name))
+               (dir->list))))
+
+;; Like the `system' that comes with Guile, but it takes a list of
+;; command arguments, á la execlp (which in fact we use).  Thus we
+;; avoid all the hairy shell-syntax quoting problems.
+
+;; Don't pass the program name twice like this: (list "ls" "ls" "-l"
+;; "~").
+
+(define (my-system arglist)
+  (let ((child (primitive-fork)))
+    (if (zero? child)
+        (apply execlp (cons (car arglist) arglist))
+      (cdr (waitpid child)))))
+
+;; for each file in the named directory
+(let* ((images (image-file-names)))
+
+  (define (maybe-make-jpeg fn thumbnail?)
+
+    (define target-name
+      ((if thumbnail?
+           thumbnail-name
+         converted-jpeg-name)
+       
+       fn #t))
+
+    (define (out-of-date?)
+      (define (newer? f1 f2)
+        (let ((s1 (stat f1))
+              (s2 (stat f2)))
+          (> (stat:mtime s1)
+             (stat:mtime s2))))
+      (or (not (access? target-name W_OK))
+          (newer? fn target-name)))
+
+    (define (command-to-generate-jpeg fn)
+      (cons 
+       "convert"
+       (cons 
+        "-geometry" 
+        (cons 
+         (if thumbnail? "180x120" "640x480")
+         (list "-quality" "100" fn target-name)))))
+
+    (if (out-of-date?)
+        (begin
+          (write fn)
+          (display " -> ")
+          (write target-name)
+          (force-output)
+          (my-system (command-to-generate-jpeg fn))
+          (display "\n"))
+      (begin
+        (write target-name)
+        (display " is up-to-date")
+        (newline))))
+
+  (define (index-page-for-directory)
+
+    (define (jpeg-file-names)
+      (define (uniqify seq equal?)
+        (cond
+         ((not (pair? seq))
+          seq)
+         ((null? (cdr seq))
+          seq)
+         ((equal? (car seq)
+                  (cadr seq))
+          (uniqify (cdr seq) equal?))
+         (#t
+          (cons (car seq)
+                (uniqify (cdr seq)  equal?)))))
+      (uniqify
+       (sort
+        (map 
+         (lambda (fn)
+           (string-append (sansextension fn) ".jpeg"))
+         (image-file-names))
+        string<?)
+       string=?))
+
+    (define (filename->html-link fn)
+      (let ((bn (basename fn)))
+        (string-append
+         "<a href=\"" (converted-jpeg-name bn #f) "\">"
+         "<img src=\""  (thumbnail-name bn #f) "\">"
+         "\n" bn "\n"
+         "</a>\n")))
+
+    (string-append
+     "<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">\n<html>\n"
+     (apply
+      string-append
+      (map (lambda (link-line)
+             (string-append "<p>" link-line "</p>\n"))
+           
+           (map filename->html-link (jpeg-file-names))))
+     "</body>\n</html>\n"))
+
+  (for-each
+   (lambda (dirname)
+     (if (not (access? dirname
+                       (logior R_OK W_OK X_OK)))
+         (mkdir dirname)))
+   (list thumbnail-directory-name
+         converted-jpeg-directory))
+  
+  (for-each
+   (lambda (image)
+     (maybe-make-jpeg image #t)
+     (maybe-make-jpeg image #f))
+   images)
+
+  ;; back up any old index page
+  (if (access? index-file-name W_OK)
+      (begin
+        (let ((status (my-system
+                       (list 
+                        "cp"
+                        "--force"
+                        "--backup=numbered"
+                        index-file-name
+                        index-file-name))))
+          (if (not (zero? status))
+              (error "Couldn't back up " index-file-name)))
+        (display "backed up ") (display index-file-name)
+        (newline)))
+  
+  ;; generate the index page
+  (with-output-to-file 
+      index-file-name
+    (lambda () (display (index-page-for-directory)))))
+
+;; Local Variables:
+;; mode: scheme
+;; End:

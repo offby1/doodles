@@ -1,0 +1,20 @@
+;; from mcmanus@IDT.NET, August 1998.  Posted to the Guile mailing list.
+
+(defmacro fluid-let (binding-ls . body)
+  (let* ((expanded-binding-ls (map (lambda (binding) 
+                                     (append binding (list (gensym)))) 
+                                   binding-ls))
+         (tmp-var (gensym))
+         (environment-ls (map (lambda (binding) 
+                                `(,(caddr binding) ,(cadr binding))) 
+                              expanded-binding-ls))
+         (swap-form `(lambda ()
+                       ,@(map (lambda (binding) 
+                                `(let ((,tmp-var ,(car binding)))
+                                   (set! ,(car binding) ,(caddr binding))
+                                   (set! ,(caddr binding) ,tmp-var)))
+                              expanded-binding-ls)))
+         (swap (gensym)))
+    `(let ,environment-ls
+       (let ((,swap ,swap-form))
+         (dynamic-wind ,swap (lambda () ,@body) ,swap)))))
