@@ -1,5 +1,5 @@
 all:
 
 check:
-	ruby anagrams.rb "Cats"
+	ruby anagrams.rb "Ernest"
 .PHONY: all check

@@ -8,31 +8,41 @@ class Dict
   # that subsequent calls will read that cache, presumably faster than
   # reading the original dictionary.
 
-  File.open("/usr/share/dict/words", "r") do |aFile|
-    @Anagrams_by_number = {}
-    printf "Snarfing dictionary ..."
-    has_a_vowel_re = /[aeiou]/
-    long_enough_re = /^(..|i|a)/
-    has_a_non_letter_re = /[^a-z]/
-    aFile.each_line do |aLine|
-      aLine.chomp!()
-      aLine.downcase!()
-      next if has_a_non_letter_re.match(aLine)
-      next if !has_a_vowel_re.match(aLine)
-      next if !long_enough_re.match(aLine)
-      b = Bag.new(aLine)
-      if (@Anagrams_by_number.has_key?(b))
-        @Anagrams_by_number[b] = @Anagrams_by_number[b] | [aLine]     # avoid duplicates
-      else
-        @Anagrams_by_number[b] = [aLine]
-      end
-
+  begin
+    File.open("hash.cache", "r") do |aCache|
+      @Anagrams_by_number = Marshal.load(aCache)
+      puts "Loaded dictionary from hash.cache"
     end
-    puts " (#{@Anagrams_by_number.length} slots) done"
-  end
 
-  def Dict.Lookup(string)
-    @Anagrams_by_number[Bag.new(string)]
+  rescue Errno::ENOENT
+    puts "Didn't find cache, so we're reading the dictionary line by line"
+    File.open("/usr/share/dict/words", "r") do |aFile|
+      @Anagrams_by_number = {}
+      printf "Snarfing dictionary ..."
+      has_a_vowel_re = /[aeiou]/
+      long_enough_re = /^(..|i|a)/
+      has_a_non_letter_re = /[^a-z]/
+      aFile.each_line do |aLine|
+        aLine.chomp!()
+        aLine.downcase!()
+        next if has_a_non_letter_re.match(aLine)
+        next if !has_a_vowel_re.match(aLine)
+        next if !long_enough_re.match(aLine)
+
+        b = Bag.new(aLine)
+        if (@Anagrams_by_number.has_key?(b))
+          @Anagrams_by_number[b] = @Anagrams_by_number[b] | [aLine]     # avoid duplicates
+        else
+          @Anagrams_by_number[b] = [aLine]
+        end
+
+      end
+      puts " (#{@Anagrams_by_number.length} slots) done"
+    end
+    File.open("hash.cache", "w") do |aCache|
+      Marshal.dump(@Anagrams_by_number, aCache)
+      puts "Wrote hash.cache"
+    end
   end
 
   def Dict.Prune(max)
