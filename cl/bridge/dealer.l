@@ -1,4 +1,4 @@
-(defpackage :bridge.dealer
+() (defpackage :bridge.dealer
   (:use :common-lisp)
   (:import-from  :bridge.card
                  :card :card-suit :card-rank)
@@ -54,10 +54,15 @@ first."
             (sort-cards (subseq cards 39 52)))))
 
 (if t
-    (with-open-file (x "/tmp/x" :direction :output)
-                    (time (dotimes (i 10000)
-                            (let ((d (random-deal)))
-                              (format x "~&~A => ~A~&" d (make-opening-call d)))))))
+    (let ((deals 10000)
+          (outfile-name "/tmp/x"))
+      (format t "Generating ~A random deals in ~A..." deals outfile-name)
+      (finish-output)
+      (with-open-file (x outfile-name :direction :output)
+                      (time (dotimes (i deals)
+                              (let ((d (random-deal)))
+                                (format x "~&~A => ~A~&" d (make-opening-call d))))))
+      (format t "done.~%")))
 
 (defun example-hand (criterion)
   "Returns a hand that satisfies the CRITERION, which is an expression
@@ -141,12 +146,17 @@ to examine in order to find the hand we returned."
          (incf matching-hands-found))
        (decf candidates-to-examine)))))
 
-(let ((*runs* 10000)
-      (notrump-criteria #'(lambda (h) (and (< (doubletons h) 2)
-                                           (zerop (voids h))
-                                           (zerop (singletons h))
-                                           (<= 16 (hand-value h :notrump) 18)))))
+(let*  ((*runs* 100)
+        (range `(16 . 18))
+        (notrump-criteria #'(lambda (h) (and (< (doubletons h) 2)
+                                             (zerop (voids h))
+                                             (zerop (singletons h))
+                                             (<= (car range) 
+                                                 (hand-value h :notrump) 
+                                                 (cdr range))))))
     
-  (format t "Here's an example notrump hand: ~A ... " (example-hand notrump-criteria))
+  (format t "Here's an example ~A-~A notrump hand: ~A ... " (car range)
+          (cdr range)
+                                                            (example-hand notrump-criteria))
   (force-output)
   (format t "they come up about ~A%~&" (* 100.0 (how-frequent notrump-criteria))))
