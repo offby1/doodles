@@ -10,7 +10,7 @@ AC_CONFIG_HEADER([config.h])
 AC_ARG_ENABLE(profiling,
               [--enable-profiling    Turn on profiling],
               [case "${enableval}" in
-                yes) profiling=true ; CFLAGS=-O0; CXXFLAGS=$CFLAGS ;;
+                yes) profiling=true ;
                  no) profiling=false ;;
                   *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
               esac],
@@ -19,9 +19,20 @@ AM_CONDITIONAL(PROFILE, test x$profiling = xtrue)
 
 # Checks for programs.
 
+# AC_PROG_CXX for some reason forces CXXFLAGS to `-O2 -g' if it isn't
+# already set.  I don't like that, so if it's not already set, I
+# clobber it.
+user_set_cflags=$CXXFLAGS
 AC_PROG_CXX
+if test -z "$user_set_cflags" ; then unset CXXFLAGS; fi
+
+# Likewise for CC.
+user_set_cflags=$CFLAGS
 AC_PROG_CC
+if test -z "$user_set_cflags" ; then unset CFLAGS; fi
+
 AC_PROG_CPP
+
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET

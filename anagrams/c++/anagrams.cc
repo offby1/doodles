@@ -134,14 +134,10 @@ anagrams_internal (const bag &b, excls exclusions, unsigned int level)
       const bag &key_bag (i->first);
       const wordlist &these_words (i->second);
 
-      if (excluded (key_bag, exclusions))
-        {
-          continue;
-        }
+      if (excluded (key_bag, exclusions)) continue;
 
       smaller_bag = (b.subtract_bag (key_bag));
-      if (!smaller_bag)
-        continue;
+      if (!smaller_bag) continue;
 
       if (smaller_bag->is_empty ())
         {
@@ -153,24 +149,21 @@ anagrams_internal (const bag &b, excls exclusions, unsigned int level)
             {
               wordlist result;
               result.push_back (*wd);
-              if (!level)
-                std::cerr << result << std::endl;
+              if (!level) std::cerr << result << std::endl;
               rv.push_back (result);
             }
         }
       else
         {
           std::vector<wordlist> from_smaller_bag (anagrams_internal (*smaller_bag, exclusions, level + 1));
-          if (!from_smaller_bag.size ())
-            continue;
+          if (!from_smaller_bag.size ()) continue;
           exclusions.push_back (key_bag);
           std::vector<wordlist> more (prepend_words_to_anagrams (these_words, from_smaller_bag));
           for (std::vector<wordlist>::const_iterator i = more.begin ();
                i != more.end ();
                i++)
             {
-              if (!level)
-                std::cerr << *i << std::endl;
+              if (!level) std::cerr << *i << std::endl;
               rv.push_back (*i);
             }
         }
