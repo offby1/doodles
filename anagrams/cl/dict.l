@@ -13,15 +13,15 @@
                             (or (not (alpha-char-p ch))
                                 (not (standard-char-p ch)))) word))
 
-          (or t
-              ;; it's gotta have a vowel.
-              (find-if #'(lambda (ch)
-                           (find ch "aeiou")) word)
+          
+          ;; it's gotta have a vowel.
+          (find-if #'(lambda (ch)
+                       (find ch "aeiou")) word)
 
-              ;; it's gotta be two letters long, unless it's `i' or `a'.
-              (or (equalp "i" word)
-                  (equalp "a" word)
-                  (< 1 (length word))))
+          ;; it's gotta be two letters long, unless it's `i' or `a'.
+          (or (equalp "i" word)
+              (equalp "a" word)
+              (< 1 (length word)))
           b))))
 
 (defun maybe-add-word (word bag)
@@ -38,7 +38,7 @@
       (let ((word (read-line dict nil nil)))
         (if (null word)
             (return)
-          (maybe-add-word word bag))
+          (maybe-add-word (nstring-downcase word) bag))
         (incf lines-read))))))
 
 ;; for testing

@@ -49,4 +49,28 @@
                             rv
                             (make-string (aref b slots-examined)
                                          :initial-element
-                                         (index_to_char slots-examined) ))))))
+                                         (index_to_char
+                                          slots-examined) ))))))
+
+(assert (bag-emptyp (bag "")))
+(assert (not (bag-emptyp (bag "a"))))
+(defun bags-equalp (a b)
+  (bag-emptyp (subtract-bags a b)))
+(assert (bags-equalp (bag "abc")
+                     (bag "cba")))
+(assert (not (bags-equalp (bag "abc")
+                          (bag "bc"))))
+(assert (bags-equalp (bag "a")
+                     (subtract-bags (bag "ab")
+                                    (bag "b"))))
+(assert (not (subtract-bags (bag "a")
+                            (bag "b"))))
+(assert (not (subtract-bags (bag "a")
+                            (bag "aa"))))
+
+(let* ((silly-long-string "When first I was a wee, wee lad Eating on my horse I had to take a farting duck Much to my remorse. Oh Sally can't you hear my plea When Roe V Wade is nigh And candles slide the misty morn With dimples on your tie. ")
+       (ever-so-slightly-longer-string (concatenate 'string silly-long-string "x")))
+  (assert (bags-equalp (bag "x")
+                       (subtract-bags (bag ever-so-slightly-longer-string)
+                                      (bag silly-long-string)))))
+(format t "We cool!~%")
