@@ -1,5 +1,3 @@
-#!/usr/bin/ruby -s
-
 require 'test/unit'
 
 class Bag
@@ -9,18 +7,29 @@ class Bag
     @product = 1
     str.downcase().each_byte {
       |b|
-      if(b >= ?a and b <= ?z)
+      if (b >= ?a and b <= ?z)
         index = b - ?a
         @product *= Primes[index]
       end
     }
   end
+
+  def hash
+    @product.hash
+  end
+  
   def empty
     1 == @product
   end
+
   def ==(other)
     @product == other.product
   end
+
+  def eql?(other)
+    @product == other.product
+  end
+
   def -(other)
     if(@product % other.product != 0)
       nil
@@ -30,10 +39,13 @@ class Bag
       p
     end
   end
-  protected
+
   def product
     @product
   end
+
+  protected
+
   def product=(x)
     @product = x
   end

@@ -1,5 +1,5 @@
 all:
 
 check:
-	ruby bag.rb
+	ruby dict.rb
 .PHONY: all check
