@@ -1,0 +1,32 @@
+;; -*-lisp-*-
+
+(mk:defsystem bridge
+              :source-extension "l"
+              :binary-pathname nil
+              :binary-extension nil
+              :components ((:file "card"
+                                  :depends-on ("test-stuff"))
+                           (:file "hand"
+                                  :depends-on ("test-stuff" "card"))
+                           (:file "bidding-opening-call"
+                                  :depends-on ("test-stuff" "card" "hand" "bidding-misc"))
+                           (:file "dealer"
+                                  :depends-on ("card" "hand"))
+                           (:file "1-suit-responses"
+                                  :depends-on ("test-stuff" "bidding-misc" "hand" "card"))
+                           (:file "bidding-1nt-response"
+                                  :depends-on ("test-stuff" "bidding-misc" "hand" "card"))
+                           (:file "bidding-misc"
+                                  :depends-on ("test-stuff" "hand" "card"))
+                           (:file "test-stuff"))
+              :depends-on nil)
+
+(setq *print-case* :downcase)
+
+;This causes stuff to break.  I'd wanted to get printed output to be
+;complete, by which I mean not using ellipses in place of data.  I
+;don't know any other way to do it.
+;(setq *print-readably* t)
+
+#+cmulisp
+(setf ext:*gc-verbose* nil)

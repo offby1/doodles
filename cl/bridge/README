@@ -1,0 +1,8 @@
+Might be some interesting ideas at
+http://www.xoxchange.com/FORUM.asp?FORUM_ID=42&CAT_ID=3&Forum_Title=Bridge+Bidding+Script+Language+Forum
+::
+
+I sometimes put comments for a given function not in the function
+itself, but rather in the tests for that function.  So if you're
+wondering how function `foo' works, be sure to read the comments in
+the function `foo-tests', if such a function exists.

@@ -1,0 +1,11 @@
+;; -*- mode:lisp -*-
+
+;; Maybe a new macro that's like defun, but allows you to define unit
+;; tests for the defined function.  You'd call it like this:
+
+(defunt func (args)
+  "The first thing is a doc string, as usual."
+  (test
+   (expect (eql 3 (func 9)))
+   (expect (eql 4 (func 16))))
+  (sqrt args))
