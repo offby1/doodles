@@ -1,7 +1,7 @@
 (defgeneric make-dictionary (fn))
 
 (defmethod make-dictionary ((fn string))
-  (with-open-file 
+  (with-open-file
    (dict fn)
    ;; while we read the file, we save what we find in a hash table.
    ;; Once we're done reading, we flatten the hash into a list.  This

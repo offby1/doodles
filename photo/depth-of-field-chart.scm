@@ -1,33 +1,32 @@
-(require 'round)
-(require 'filter)
-(require 'html)
-(require 'multiply)
-(require 'interval)
-(require 'dynamic-wind)
-(require 'pretty-print)
+(use-modules (ice-9 format))
+(use-modules (ice-9 pretty-print))
+(load "../multiply.scm")
+(load "../round.scm")
+(load "../html.scm")
 
+(display
 (let ()
 
   (define make-html-file 
     ;; if true, we create our depth-of-field table in a file, in HTML
     ;; format.  If false, we simply return the data in a list.
-    #f)
+    #t)
 
   (define (verbose-call-with-output-file fn thunk)
     (define (display-many . args)
       (for-each display args))
     (dynamic-wind
-     (lambda () (display-many "Writing to file `" fn "'..."))
-     (lambda () (call-with-output-file fn thunk))
-     (lambda () (display-many "done" #\newline))))
-     
+        (lambda () (display-many "Writing to file `" fn "'..."))
+        (lambda () (call-with-output-file fn thunk))
+        (lambda () (display-many "done" #\newline))))
+  
   ((if make-html-file
        verbose-call-with-output-file
      (lambda (filename thunk) (thunk (current-output-port))))
    "depth-of-field.html"
    (lambda (html-output)
 
-     (define (format n)
+     (define (two-sig-figs n)
        (define nuke-trailing-period
          (lambda (str)
            (substring str 0
@@ -50,7 +49,7 @@
        (let* ((infinity most-positive-fixnum)
               (circle-of-confusion-in-mm 
                ;;3/100                    ;appropriate for 35mm photos
-               3/400                    ; perhaps appropriate for 4x5" photos
+               3/400            ; perhaps appropriate for 4x5" photos
                ;;(/ focal-length-in-mm 1000)
                )
               (hyperfocal-distance-in-mm
@@ -86,7 +85,7 @@
               (display "<html>\n" html-output)
               (display (html-table thing) html-output)
               (display "</html>\n" html-output))
-          (pretty-print thing)))
+          (format #f "~A" thing)))
       (append
        '(("f number"
           "focal length in mm"
@@ -104,10 +103,10 @@
            (number->string (list-ref numbers 0))
            (number->string (list-ref numbers 1))
            (number->string (list-ref numbers 2))
-           (format (list-ref numbers 3))
-           (format (list-ref numbers 4))
-           (format (list-ref numbers 5))
-           (format (list-ref numbers 6))))
+           (two-sig-figs (list-ref numbers 3))
+           (two-sig-figs (list-ref numbers 4))
+           (two-sig-figs (list-ref numbers 5))
+           (two-sig-figs (list-ref numbers 6))))
         (map
          (lambda (args-with-distances-in-feet)
            (append args-with-distances-in-feet
@@ -124,7 +123,7 @@
 
           (multiply
 
-           (list 20 50)               ; focal lengths in mm
-           (list 2.8)                 ; f-numbers
-           (list 3)                     ; subject distance in feet
-           )))))))))
+           (list 20 50)                ; focal lengths in mm
+           (list 2.8 22)                ; f-numbers
+           (list 2 3 10 100)            ; subject distance in feet
+           ))))))))))

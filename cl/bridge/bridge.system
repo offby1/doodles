@@ -30,3 +30,6 @@
 
 #+cmulisp
 (setf ext:*gc-verbose* nil)
+
+;; To compile the whole shebang, load this file, then evaluate
+;; (mk:operate-on-system :bridge :compile)

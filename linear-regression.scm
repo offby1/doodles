@@ -12,21 +12,21 @@
          (mean-of-ys (/ sum-of-ys n))
 
          (slope (/ (- (* n 
-                      ;; sum (x_i * y_i)
-                      (apply + (map (lambda (point)
-                                      (* (car point)
-                                         (cdr point)))
-                                    points))
-                      )
-                   (* sum-of-xs sum-of-ys))
-                (- (* n (apply + (map square xs)))
-                   (square sum-of-xs))))
+                         ;; sum (x_i * y_i)
+                         (apply + (map (lambda (point)
+                                         (* (car point)
+                                            (cdr point)))
+                                       points))
+                         )
+                      (* sum-of-xs sum-of-ys))
+                   (- (* n (apply + (map square xs)))
+                      (square sum-of-xs))))
 
          (y-intercept (- mean-of-ys (* slope mean-of-xs)))
 
          (correlation-coefficient
           (/
-            
+           
            (apply + (map
                      (lambda (point) (* (- (car point) mean-of-xs) (- (cdr point) mean-of-ys)))
                      points))

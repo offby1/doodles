@@ -11,14 +11,14 @@
                        "traverse")))
   
   (labels ((transform (base ext)
-                      (concatenate 'string "/huge/doodles/wc/right/" base ext)))
+                      (concatenate 'string "doodles/wc/right/" base ext)))
     (mapc #'(lambda (base)
               (load (compile-file (transform  base ".l")
                                   
                                   ;; In theory, this file helps me
                                   ;; optimize.  In practice, I don't
                                   ;; know what it's trying to tell me.
-                                  :trace-file (transform base ".trace")
+                                  ;;:trace-file (transform base ".trace")
                                   
                                   )))
           

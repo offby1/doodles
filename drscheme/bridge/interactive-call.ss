@@ -1,7 +1,8 @@
 (module interactive-call mzscheme
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
-  (require (lib "1.ss" "srfi"))
+  (require (all-except (lib "1.ss" "srfi") reverse! member map
+                       for-each assoc append!))
   (require "call.ss")
   (require "misc.ss")
   (require "auction.ss")

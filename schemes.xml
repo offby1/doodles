@@ -175,6 +175,9 @@
           <td>
             <ul>
               <li>
+                No bignums!
+              </li>
+              <li>
                 easy to use
               </li>
               <li>
@@ -254,12 +257,17 @@
             Yes
           </td>
           <td>
+            Exception support seems crude; documentation is hidden in
+            source files.
+            <br/>
             <a href="http://www.paulgraham.com/">
               Paul Graham
             </a>
             likes
             it, so it must be good!
-            <br></br>
+            <br/>
+            Alas, "bignums are slow", says the manual.
+            <br/>
             I can never remember where the paper on Pre-Scheme is, so:
             <a
               href="http://mumble.net/~kelsey/papers/prescheme.ps.gz">http://mumble.net/~kelsey/papers/prescheme.ps.gz

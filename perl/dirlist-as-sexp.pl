@@ -5,9 +5,9 @@ use strict;
 
 =head1 dirlist_as_sexp
 
-Somehow takes the output of the shells "dirs" command, and formats the
-list of directories that it returns in a way that's easy for Emacs to
-parse. 
+Takes the output of the shell's "dirs" command, and formats the list
+of directories that it returns in a way that's easy for Emacs to
+parse.
 
 Expects its input to consist of one directory name per line.  This
 means that directory names may not contain newlines, but they rarely

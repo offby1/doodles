@@ -1,5 +1,6 @@
 (module auction mzscheme
-  (require (lib "1.ss" "srfi"))
+  (require (all-except (lib "1.ss" "srfi") reverse! member map
+                       for-each assoc append!))
   (require "call.ss")
   (require "misc.ss")
 

@@ -1,5 +1,6 @@
 ;; a hash table whose keys are strings.  Comparison of keys is
-;; case-insensitve.
+;; case-insensitve.  Now that I think about it, this seems stupid; I
+;; should probably be using properties on symbols.
 
 (defun make-ci-hash-table (&key (size 3000)
                                 (rehash-size 100)
