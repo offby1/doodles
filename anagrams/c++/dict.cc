@@ -1,7 +1,10 @@
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <regexx.hh>
 #include <map>
+#include <cstring>
 
 #include "dict.h"
 
@@ -52,7 +55,17 @@ init (const bag &filter)
 
   hash_t  hash;
   
-  std::ifstream words ("/usr/share/dict/words");
+  const std::string dict_file_name ("/usr/share/dict/words");
+  std::ifstream words (dict_file_name.c_str ());
+  if (!words)
+    {
+      std::ostringstream whine;
+      whine << "Can't open dictionary `";
+      whine << dict_file_name;
+      whine << "' because ";
+      whine << strerror (errno);
+      throw std::runtime_error (whine.str ());
+    }
   while (words)
     {
       std::string one_string;

@@ -180,21 +180,26 @@ all_anagrams (const bag &b)
 int
 main (int argc, char *argv[])
 {
-  if (argc > 1)
+  try {
+    if (argc > 1)
+      {
+        argc--;
+        argv++;
+
+        const std::string input = argv[0];
+        const bag b (input);
+
+        std::vector<wordlist> ans (all_anagrams (b));
+        for (std::vector<wordlist>::const_iterator i = ans.begin ();
+             i != ans.end ();
+             i++)
+          {
+            std::cout << *i << std::endl;
+          }
+      }
+  } catch (std::exception &e)
     {
-      argc--;
-      argv++;
-
-      const std::string input = argv[0];
-      const bag b (input);
-
-      std::vector<wordlist> ans (all_anagrams (b));
-      for (std::vector<wordlist>::const_iterator i = ans.begin ();
-           i != ans.end ();
-           i++)
-        {
-          std::cout << *i << std::endl;
-        }
+      std::cerr << e.what () << std::endl;
     }
 }
 #endif

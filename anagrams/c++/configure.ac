@@ -26,5 +26,7 @@ AC_C_CONST
 AC_C_INLINE
 
 # Checks for library functions.
+AC_CHECK_FUNCS([strerror])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
