@@ -398,24 +398,27 @@
        (deal)
        (send deal-menu-item enable #t)
        (send sort-menu-item enable #t)
+       (reset-buttons-for-new-auction)
        (send auction-menu-item enable #t))))
   
   (define auction-menu-item
-    (make-menu-item
-     "&Auction"
-     (lambda (item event)
-       (make-bbox-window *t*)
-       (let ((the-auction (make-auction (caar *player-alist*))))
-         (let loop ()
-           (let ((c (interactively-get-call (last-bid the-auction)
-                               (format "~A" (whose-turn the-auction)))))
-             (note-call the-auction c)
+    (begin
+      (make-bbox-window *t*)
+      (make-menu-item
+       "&Auction"
+       (lambda (item event)
+       
+         (let ((the-auction (make-auction (caar *player-alist*))))
+           (let loop ()
+             (let ((c (interactively-get-call (last-bid the-auction)
+                                              (format "~A" (whose-turn the-auction)))))
+               (note-call the-auction c)
 
-             (if (contract-settled? the-auction)
-                 (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
-               (loop)))))
-       (send auction-menu-item enable #f)
-       (send play-menu-item enable #t))))
+               (if (contract-settled? the-auction)
+                   (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
+                 (loop)))))
+         (send auction-menu-item enable #f)
+         (send play-menu-item enable #t)))))
 
   (send deal-menu-item enable #t)
 

@@ -5,6 +5,7 @@
   (require "call.ss")
   (require "misc.ss")
   (provide make-bbox-window
+           reset-buttons-for-new-auction
            interactively-get-call)
   
   (define *choice* #f)
@@ -16,6 +17,8 @@
   (define *level/pane-alist* #f)
 
   (define (make-bbox-window parent)
+    (when *bidding-box-window*
+      (error "I expected *bidding-box-window* to be #f"))
     (set! *bidding-box-window* 
           (instantiate frame% ()
             (parent parent)
@@ -52,13 +55,22 @@
 
     (unless (= 38 (length *call/button-alist*))
       (error "I was expecting exactly 38 buttons in *call/button-alist*, but instead it's "
-             *call/button-alist*))
+             (length *call/button-alist*)))
     )
 
   ;; all 38 buttons (38 = 7 levels * 5 denominations plus 3 {pass,
   ;; double, redouble})
   (define *call/button-alist* '())
 
+  (define (reset-buttons-for-new-auction)
+    (for-each (lambda (call/button-pair)
+                (send (cdr call/button-pair)
+                      enable #t))
+              *call/button-alist*)
+    (send (cdr (assq 'double   *call/button-alist*)) enable #f)
+    (send (cdr (assq 'redouble *call/button-alist*)) enable #f)
+    )
+  
   (define interactively-get-call #f)
 
   (define (make-choice-button label parent value enabled?)
