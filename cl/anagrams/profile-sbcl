@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sbcl --noinform --noprint --disable-debugger -eval <<EOF
+(progn
+ (load "anagrams.system")
+ (mk:operate-on-system 'anagrams 'compile)
+ (quit))
+EOF

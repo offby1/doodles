@@ -1,0 +1,3 @@
+#!/bin/sh
+
+lisp -load anagrams.system -eval "(mk:operate-on-system 'anagrams 'compile)" -eval "(quit)"
