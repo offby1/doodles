@@ -149,12 +149,12 @@
                             (region-callback r))))
            
            (cons compass-direction
-                 (let ((r (rotate-region
-                           (make-region 0 0
-                                        *region-length*
-                                        *ch*
-                                        (symbol->string
-                                         compass-direction) #f))))
+                 (let* ((north-region (make-region *ch* 0
+                                                   *region-length*
+                                                   *ch*
+                                                   (symbol->string
+                                                    compass-direction) #f))
+                        (r (rotate-region north-region)))
                    (make-player r
                                 #f      ; cards -- this gets filled
                                         ; in when we deal
@@ -162,9 +162,8 @@
                                 (lambda (index)
                                   (let ((r (rotate-region
                                             (make-region
-                                             (+ (region-x r) (* (/
-                                                                 *region-length* 14) index))
-                                             (region-y r)
+                                             (+ (region-x north-region) (* (/ (region-w north-region) 14) index))
+                                             (region-y north-region)
                                              *cw*
                                              *ch*
                                              #f
