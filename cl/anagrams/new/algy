@@ -11,6 +11,9 @@ to find all the anagrams given a bag of letters and a dictionary:
           "distribute" this word across those anagrams; add them to the return value
   return the return value
 
+(this seems to return more than one permutation of the anagrams ...
+that's bad ...)
+
 to distribute a word across a list of anagrams:
   map (lambda (a) (make-new-anagram word a)) anagrams
 

@@ -13,3 +13,8 @@
     (dolist (word l)
       (setf (gethash word d) t))
     d))
+
+(defun map-dict (func dict)
+  (maphash #'(lambda (word ignored)
+               (funcall func word)) dict))
+

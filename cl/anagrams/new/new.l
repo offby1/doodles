@@ -1,18 +1,32 @@
 (defun anagrams (bag)
   (let ((rv '()))
-    (maphash
-     #'(lambda (word ignored)
+    (map-dict
+     #'(lambda (word)
+         
          (let ((smaller-bag (bag-reduce bag word)))
+           
            (when smaller-bag
+             
              (if (bag-emptyp smaller-bag)
-               (setq rv (nconc rv (list word)))
+                 (setq rv (nconc rv (list (list word))))
                (let ((more-anagrams (anagrams smaller-bag)))
-                 (when more-anagrams
-                   (setq rv (mapcar #'(lambda (l)
-                                        (cons word l)) more-anagrams)))
-                 ))))
-         )
+                 
+                 (if more-anagrams
+                     (setq rv (nconc rv (mapcar #'(lambda (l)
+                                                    (cons word l)) more-anagrams)))))))))
      *dict*)
     rv))
 
-(trace anagrams)
+(load "bag")
+(load "dict")
+
+(defparameter *dict* (make-dictionary (list "hey" "you")))
+(anagrams (bag "heyyou"))
+(let ((*dict* (make-dictionary (list))))
+  (assert (null (anagrams (bag "I don't expect any!")))))
+
+(let ((*dict* (make-dictionary (list "hey" "you"))))
+  (assert (null (anagrams (bag "")))))
+
+(let ((*dict* (make-dictionary (list "ho" "uy" "ye" "he" "hey" "you"))))
+  (anagrams (bag "you hey")))
