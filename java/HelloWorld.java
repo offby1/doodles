@@ -9,7 +9,7 @@ class HelloWorld {
         HelloWorld hw = new HelloWorld();
 
         CBTester cbt = new CBTester ();
-        hw.doSomethingMoreInteresting (cbt, "Testing some more.");
+        hw.doSomethingMoreInteresting (cbt, "Testing some more");
         System.out.print ("This had better be two: ");
         System.out.println (cbt.get_calls ());
         System.exit (2 == cbt.get_calls () ? 0 : 1);
