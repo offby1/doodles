@@ -1,0 +1,34 @@
+to find all the anagrams given a bag of letters and a dictionary:
+  return value <- empty list
+  for each word in the dictionary
+    if this word can be made from the bag
+      remove those letters from the bag
+      if the bag is now empty
+        make an anagram list that contains just this word; add that result to the return value
+      else
+        find all anagrams given the reduced bag and the dictionary
+        if there are some
+          "distribute" this word across those anagrams; add them to the return value
+  return the return value
+
+to distribute a word across a list of anagrams:
+  map (lambda (a) (make-new-anagram word a)) anagrams
+
+bag:
+make a bag from a string.
+make a smaller bag from a bag and a string, or NIL if it can't be done.
+
+dictionary:
+make a dictionary from a file.
+make a dictionary from a list of strings (for testing).
+map a function over each word.
+
+anagram list:
+make an empty one.
+make one that contains just one string.
+distribute a word across one, yielding another one.
+combine two anagram lists, yielding one that contains all the anagrams in each.
+
+anagram:
+make one from a string.
+make a new one by adding a string to an existing one.
