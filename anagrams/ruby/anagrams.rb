@@ -1,7 +1,7 @@
 require 'dict'
 require 'bag'
 
-The_Bag = Bag.new("Ernest")
+The_Bag = Bag.new(ARGV[0])
 The_Dict = Dict.Prune(The_Bag)
 puts The_Dict.inspect
 
