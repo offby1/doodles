@@ -379,11 +379,6 @@
     (menite
      "&Sort hand"
      (sort-hand (cdr *interactive-hand*))))
-
-  (define play-menu-item
-    (menite
-     "&Play"
-     (pretend-to-play)))
   
   (define deal-menu-item
     (menite
@@ -402,15 +397,23 @@
      (let ((the-auction (make-auction (caar *direction/player-alist*))))
        (reset-buttons-for-new-auction)
        (let loop ()
-         (let ((c (interactively-get-call (last-bid the-auction)
-                                          (format "~A" (whose-turn the-auction)))))
-           (note-call the-auction c)
+         (let* ((p (whose-turn the-auction))
+                (player-is-interactive? (eq? p
+                                             (car
+                                              *interactive-hand*))))
+           (define (dumbly-get-call auction)
+             (printf "~A dumbly passes.~%" p)
+             'pass)
+           (let ((c (if player-is-interactive?
+                        (interactively-get-call the-auction (format "~A" p))
+                      (dumbly-get-call the-auction))))
+             (note-call the-auction c))
 
            (if (contract-settled? the-auction)
                (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
              (loop)))))
      (send auction-menu-item enable #f)
-     (send play-menu-item enable #t)))
+     (pretend-to-play)))
 
   (send deal-menu-item enable #t)
 

@@ -4,6 +4,7 @@
   (require (lib "1.ss" "srfi"))
   (require "call.ss")
   (require "misc.ss")
+  (require "auction.ss")
   (provide make-bbox-window
            reset-buttons-for-new-auction
            interactively-get-call)
@@ -23,7 +24,7 @@
           (instantiate frame% ()
             (parent parent)
             (enabled #t)
-            (label "I need to figure out what label to put here")))
+            (label "If you can see this, something is wrong.")))
     (set! *column* (instantiate vertical-pane% ()
                      (parent *bidding-box-window*)))
 
@@ -95,19 +96,21 @@
        #t)))
 
   (set! interactively-get-call
-        (lambda (highest-illegal-bid frame-title)
-          ;; disable some more buttons.
-          ;; BUGBUG: do the double and redouble too
-          (when highest-illegal-bid
-            (for-each (lambda (call/button-pair)
-                        (when (and (bid? (car call/button-pair))
-                                   (not (bid> (car call/button-pair) highest-illegal-bid)))
-                          (send (cdr call/button-pair)
-                                enable #f)))
-                      *call/button-alist*))
-          (send *bidding-box-window* show #t)
-          (yield *sem*)
-          *choice*))
+        (lambda (the-auction frame-title)
+          (let ((highest-illegal-bid (last-bid the-auction)))
+            ;; disable some more buttons.
+            ;; BUGBUG: do the double and redouble too
+            (when highest-illegal-bid
+              (for-each (lambda (call/button-pair)
+                          (when (and (bid? (car call/button-pair))
+                                     (not (bid> (car call/button-pair) highest-illegal-bid)))
+                            (send (cdr call/button-pair)
+                                  enable #f)))
+                        *call/button-alist*))
+            (send *bidding-box-window* set-label frame-title)
+            (send *bidding-box-window* show #t)
+            (yield *sem*)
+            *choice*)))
   
   (when #f
     ;; a very short auction :-\
