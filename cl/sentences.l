@@ -86,7 +86,8 @@ in all the conses by calling FUNC on the character in the cons."
                        thing))
                  tmplt)))
 
-(defun yow ()
+(defun yow (tries)
+  (declare (type fixnum tries))
   (let ((tmplt
          (append 
           (cons "This sentence contains exactly "
@@ -105,32 +106,34 @@ in all the conses by calling FUNC on the character in the cons."
            ".")))
 
         (duplicate-detector (make-hash-table :test #'eql)))
-    (let ((tries 0))
-      (loop
-         (let ((str (template->string tmplt)))
-           (when (zerop (mod tries 1000))
-             (format t "~a: ~s~%" tries str))
+    (loop
+       (let ((str (template->string tmplt)))
+         (when (zerop (mod tries 1000))
+           (format t "~a: ~s~%" tries str))
 
-           ;; If we find ourselves examining a sentence that we've
-           ;; already seen, start over with random values.
+         ;; If we find ourselves examining a sentence that we've
+         ;; already seen, start over with random values.
            
-           ;; this doesn't work reliably in clisp -- sxhash returns
-           ;; the same value on very different strings.  This isn't a
-           ;; bug; it's just unfortunate.
-           (when  (gethash (sxhash str) duplicate-detector nil)
-             (setf tmplt (update-template tmplt #'(lambda (char)
-                                                    (declare (ignore char))
-                                                    (random (length str)))))
-             (setf str (template->string tmplt)))
-                                                 
-           (setf (gethash (sxhash str) duplicate-detector) t)
+         ;; this doesn't work reliably in clisp -- sxhash returns
+         ;; the same value on very different strings.  This isn't a
+         ;; bug; it's just unfortunate.
+         (when  (gethash (sxhash str) duplicate-detector nil)
            (setf tmplt (update-template tmplt #'(lambda (char)
-                                                  (lookup char (survey-string str)))))
+                                                  (declare (ignore char))
+                                                  (random (length str)))))
+           (setf str (template->string tmplt)))
+                                                 
+         (setf (gethash (sxhash str) duplicate-detector) t)
+         (setf tmplt (update-template tmplt #'(lambda (char)
+                                                (lookup char (survey-string str)))))
 
-           (when (not tmplt)
-             (format t "(~a): We've got a winner: ``~a''~%"
-                     tries
-                     str)
-             (return)))
+         (when (not tmplt)
+           (format t "(~a): We've got a winner: ``~a''~%"
+                   tries
+                   str)
+           (return)))
+
+       (when (zerop tries)
+         (return))
        
-         (incf tries)))))
+       (decf tries))))
