@@ -2,5 +2,6 @@
 
 Program ('anagrams', 
          ['numeric-bag.cc', 'dict.cc', 'anagrams.cc'], 
+         CXXFLAGS='-O2',
          CPPPATH = '.', 
          LIBS = 'gmp')
