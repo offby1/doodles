@@ -1,0 +1,6 @@
+#-*-python-*-
+
+Program ('anagrams', 
+         ['numeric-bag.cc', 'dict.cc', 'anagrams.cc'], 
+         CPPPATH = '.', 
+         LIBS = 'gmp')
