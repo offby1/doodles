@@ -8,10 +8,14 @@
                            (send c face-up))
                          d)
                 d))
+
+  (define *cw* (send (car *d*) card-width))
+  (define *ch* (send (car *d*) card-height))
+
   (define (1- x)
     (- x 1))
 
-  (define *t* (make-table "snowball" 13 4))
+  (define *t* (make-table "snowball" 13 5))
   
   (define (card->value c)
     (+ (* 13
@@ -20,12 +24,10 @@
           (1- (send c get-value)))))
 
   (define card->initpos
-    (let ((cw (send (car *d*) card-width))
-          (ch (send (car *d*) card-height)))
-      (lambda (c)
-        (values
-         (* cw (1- (send c get-value  )))
-         (* ch (1- (send c get-suit-id)))))))
+    (lambda (c)
+      (values
+       (* *cw* (1- (send c get-value  )))
+       (* *ch* (1- (send c get-suit-id))))))
   
   (define (card->initpos* c)
     (call-with-values
@@ -38,11 +40,15 @@
   
   
   ;; the hell with that -- let's let Mr. Ed fan them out.
-  (send *t* add-cards-to-region *d* (make-region
-                                     0 0
-                                     (send *t* table-width)
-                                     (send *t* table-height)
-                                     "cards go here" #f))
+  (define initial-region (make-region
+                          0
+                          (- (send *t* table-height)
+                             (send (car *d*) card-height))
+                          (send *t* table-width)
+                          (send (car *d*) card-height)
+                          "unshuffled deck goes here" #f))
+  (send *t* add-region initial-region)
+  (send *t* add-cards-to-region *d* initial-region)
   ;; for debugging
   (send *t* set-single-click-action
         (lambda (c)
@@ -109,7 +115,15 @@
                  (label "&Shuffle")
                  (parent main-menu)
                  (callback (lambda (item event) 
-                             (set! *d* (vector->list (fys! (apply vector *d*) swap-cards)))
+                             (set! *d* (vector->list (fys! (apply vector *d*))))
+                             (let loop ((cards-moved 0)
+                                        (d *d*))
+                               (when (not (null? d))
+                                 (send *t* move-card (car d)
+                                       (* *cw* (remainder cards-moved 13))
+                                       (* *ch* (quotient  cards-moved 13)))
+                                 (loop (+ 1 cards-moved)
+                                       (cdr d))))
                              (printf "Done.\n"))))
     (instantiate menu-item% ()
                  (label "&Exit")
