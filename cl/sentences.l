@@ -1,5 +1,5 @@
 (defmacro lookup (c survey)
-  `(aref ,survey (char-code (char-downcase ,c))))
+  `(svref ,survey (char-code (char-downcase ,c))))
 
 (defun survey-string (s)
   (let ((survey (make-array 128 :initial-element 0)))
@@ -9,32 +9,36 @@
          s)
     survey))
 
-(defun fill-template (input survey)
-  (let* ((format-string-components (mapcar
-                         (lambda (thing)
-                           (cond
-                             ((characterp thing)
-                               "~R"
-                              )
-                             ((stringp thing)
-                              thing)
-                             (t (error "wha? ~s" thing))
-                             ))
-                         input
-                         ))
-         (fs (apply #'concatenate 'string format-string-components))
-         (just-the-chars (remove-if-not #'characterp input)))
-  
-    (let ((counts (mapcar (lambda (c)
-                            (aref survey (char-code (char-downcase c)))) just-the-chars)))
-      
-      (apply #'format nil fs counts))))
+(defun survey->alist (s)
+  (mapcar (lambda ())))
 
-(let ((s (list "This sentence has " #\e " and " #\a)))
-  (format t "~s => " s)
-  (setf s (fill-template
-           s
-           (survey-string
-            (apply #'concatenate 'string
-                   (remove-if-not #'stringp s)))))
-  (format t "~s~%" s))
+(defun update-template (input survey)
+  (let (result)
+    (loop
+       (when (null input)
+         (return (nreverse result)))
+       (let ((thing (car input)))
+         (when (consp thing)
+           (setf (car thing)
+                 (lookup (cdr thing) survey)))
+         (push thing result))
+       (setf input (cdr input)))))
+
+(defun template->string (tmplt)
+  (apply #'concatenate 'string
+         (mapcar (lambda (thing)
+                   (if (consp thing)
+                       (format nil "~R ~:C'~:p" (car thing) (cdr thing))
+                       thing)) tmplt)))
+
+(let ((tmplt (list "This sentence has "
+                   '(0 . #\e)
+                   ", "
+                   '(0 . #\a)
+                   ", and "
+                   '(0 . #\t)
+                   ".")))
+  (dotimes (x 10)
+           (format t "~s => ~s~%" tmplt (template->string tmplt))
+           (update-template tmplt (survey-string (template->string tmplt)))))
+
