@@ -19,6 +19,13 @@
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require (lib "list.ss"))
+  (require "rotate.ss")
+
+  ;; this rename looks dumb -- hell, it *is* dumb -- but it's the only
+  ;; way I can think of to avoid a name collision -- apparently 1.ss
+  ;; and list.ss both define some of the same names (such as "second",
+  ;; "third", etc.)
+  (require (rename (lib "1.ss" "srfi") iota iota))
 
   (define *d* (make-deck))
 
@@ -70,7 +77,7 @@
 
   (define *region-length* (- (send *t* table-width) (* 2 *ch*)))
 
-  (define-struct player (region cards choose-card!))
+  (define-struct player (region cards choose-card! card-home-location-proc))
 
   (define (make-card-removing-proc choice-proc)
     (lambda (p)
@@ -106,37 +113,81 @@
           choice))))
 
   (define *player-alist*
-    (map (lambda (pos coords cards choice-func)
-           (cons pos
-                 (make-player (apply make-region (append coords (list (symbol->string pos) #f))) 
-                              cards (lambda (p)
-                                      ;;(printf "Waiting for player ~A~%" pos)
-                                      (choice-func p)))))
-         `(south west north east)
-         `( 
-           ;;left x                           top y                           width                   height
-
-;;; south
-           (,*ch*                             ,(+ *ch* *region-length*)       ,*region-length*        ,*ch*           ) 
-
-;;; west
-           (0                                 ,*ch*                           ,*ch*                   ,*region-length*) 
-
-;;; north
-           (,*ch*                             0                               ,*region-length*        ,*ch*           )
-
-;;; east
-           (,(+ *ch* *region-length*)         ,*ch*                           ,*ch*                   ,*region-length*)
+    (map (lambda (compass-direction quarter-turns choice-func)
+           
+           (define (rotate-region r)
+             (define (get-ul points)
+               (make-point (apply min (map point-x points))
+                           (apply min (map point-y points))))
+             (define (get-wh points)
+               (- (make-point (apply max (map point-x points))
+                              (apply max (map point-y points)))
+                  (get-ul points)))
+             (define (translate p dx dy)
+               (make-point (+ dx (point-x p))
+                           (+ dy (point-y p))))
+             (define r-points 
+               (let* ((ul (make-point (region-x r)
+                                      (region-y r)))
+                      (ur (translate ul (region-w r) 0))
+                      (lr (translate ur 0 (region-h r)))
+                      (ll (translate ul 0 (region-h r))))
+                 (list ul ur lr ll)))
+             
+             (let* ((table-middle (make-point  (/ (send *t* table-width) 2)
+                                               (/ (send *t* table-width) 2)))
+                    (rotated (map (lambda (p)
+                                    (rotate-about p table-middle
+                                                  quarter-turns))
+                                  r-points))
+                    (rotated-ul (get-ul rotated))
+                    (rotated-wh (get-wh rotated)))
+               
+               (make-region (point-x rotated-ul) (point-y rotated-ul)
+                            (point-x rotated-wh) (point-y rotated-wh)
+                            (region-label r)
+                            (region-callback r))))
+           
+           (cons compass-direction
+                 (let ((r (rotate-region
+                           (make-region 0 0
+                                        *region-length*
+                                        *ch*
+                                        (symbol->string
+                                         compass-direction) #f))))
+                   (make-player r
+                                #f      ; cards -- this gets filled
+                                        ; in when we deal
+                                choice-func
+                                (lambda (index)
+                                  (let ((r (rotate-region
+                                            (make-region
+                                             (+ (region-x r) (* (/
+                                                                 *region-length* 14) index))
+                                             (region-y r)
+                                             *cw*
+                                             *ch*
+                                             #f
+                                             #f
+                                             ))))
+                                    (list (region-x r)
+                                          (region-y r)))
+                                
+                                  ))))
            )
-         `(#f #f #f #f)
+         `(north west south east)
+         (iota 4)
          (map make-card-removing-proc
               (list  
-               interactively-choose-card
+               random-choose-card
                dumbest-choose-card
                random-choose-card
                dumbest-choose-card))
          
          ))
+
+  (define *declarer* (assq 'east *player-alist*))
+  (set-player-choose-card!! (cdr *declarer*) (make-card-removing-proc interactively-choose-card))
   
   (for-each 
    (lambda (p)
@@ -144,7 +195,7 @@
    (map cdr *player-alist*))
 
   (define middle-region
-    (let ((cx (/ (send *t* table-width ) 2)) ;; center of table
+    (let ((cx (/ (send *t* table-width) 2)) ;; center of table
           (cy (/ (send *t* table-width) 2)))
       (make-region (- cx (/ *cw* 2))
                    (- cy (/ *ch* 2))
@@ -159,9 +210,24 @@
     (case v
       ((1) 14)
       (else v)))
+
   (define (card->value c)
     (+ (* 13
           (sub1 (send c get-suit-id)))
+       (- (ace-high (send c get-value)) 2)))
+
+  ;; useful only for displaying a hand in this suit order: spades,
+  ;; hearts, clubs, diamonds.  This order keeps the hearts and
+  ;; diamonds separate, since if they're adjacent there's a risk that
+  ;; those with poor vision will think the hearts are diamonds, or
+  ;; vice versa, becuase they're both red.
+  (define (card->alternate-colors-value c)
+    (+ (* 13
+          (sub1 (case (send c get-suit-id)
+                  ((1) 2)
+                  ((2) 1)
+                  ((3) 3)
+                  ((4) 4))))
        (- (ace-high (send c get-value)) 2)))
 
   (send *t* set-single-click-action
@@ -233,7 +299,7 @@
                         hand
                         (player-region p))
 
-                  (when (eq? 'south (caar players))
+                  (when (eq? (car *declarer*) (caar players))
                     (send *t* cards-face-up hand))
                   
                   (for-each
@@ -249,23 +315,24 @@
 
           )))
 
-    (define (sort)
+    (define (sort-declarers-hand)
       ;; sort the cards in the visible hand.
-      (let ((south (cdr (assq 'south *player-alist*))))
+      (let* ((declarer (cdr *declarer*))
+             (cards (player-cards declarer))
+             (region (player-region declarer)))
             
-        (let loop ((hand (mergesort (player-cards south) (lambda (c1 c2)
-                                                           (> (card->value c1)
-                                                              (card->value c2)))))
-                   (x (region-x (player-region south))))
-          (when (not (null? hand))
-            (let ((c (car hand)))
-              (send *t* move-card c
-                    x
-                    (region-y (player-region south)))
+        (let loop ((cards-to-relocate (mergesort cards (lambda (c1 c2)
+                                                         (> (card->alternate-colors-value c1)
+                                                            (card->alternate-colors-value c2)))))
+                   (cards-located 0))
+          (when (not (null? cards-to-relocate))
+            (let ((c (car cards-to-relocate)))
+              (send/apply *t* move-card c
+                          ((player-card-home-location-proc declarer) cards-located))
               
               (send *t* card-to-front c)
-              (loop (cdr hand)
-                    (+ x (/ *region-length* 13))))))))
+              (loop (cdr cards-to-relocate)
+                    (add1 cards-located)))))))
 
     (define (pretend-to-play)
       ;; TODO: I have this nagging feeling that I shouldn't be using a
@@ -330,10 +397,10 @@
       (parent main-menu)
       (callback (let ((sort-menu-item
                        (instantiate menu-item% ()
-                         (label "&Sort my hand")
+                         (label "&Sort declarer's hand")
                          (parent main-menu)
                          (callback (lambda (item event)
-                                     (sort))))))
+                                     (sort-declarers-hand))))))
                   (send sort-menu-item enable #f)
                   (lambda (item event)
                     (deal)
