@@ -3,7 +3,7 @@
 #define DICT_H
 
 #include <vector>
-#include <bag.h>
+#include <numeric-bag.h>
 
 typedef std::vector<std::string> wordlist;
 //typedef std::pair<bag, wordlist > entry;

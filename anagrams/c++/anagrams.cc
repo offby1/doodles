@@ -2,7 +2,7 @@
 #include <sstream>
 #include <cassert>
 
-#include "bag.h"
+#include "numeric-bag.h"
 #include "dict.h"
 
 std::vector<entry > the_dictionary;
