@@ -40,6 +40,8 @@
 
   (define *initial-region* (make-region
                             0
+                            ;; a mystery: (send *t* table-height)
+                            ;; returns a different value than (send *t* get-height)
                             (- (send *t* table-height)
                                (send (car *d*) card-height))
                             (send *t* table-width)
