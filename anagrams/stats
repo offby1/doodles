@@ -43,3 +43,37 @@ GC: 9749, GC time: 977.57 sec.
 176988.93user 343.87system 49:25:32elapsed 3%CPU (0avgtext+0avgdata 0maxresident)k
 0inputs+0outputs (467major+5204810minor)pagefaults 0swaps
 23:55:39 [erich@dark cl]$
+
+That's about 50 hours, but it seemed longer -- I'd have guessed three or even four days.  Wish I'd thought to save the output :(
+
+at home:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 15
+model		: 2
+model name	: Intel(R) Pentium(R) 4 CPU 2.40GHz
+stepping	: 7
+cpu MHz		: 2391.191
+cache size	: 512 KB
+fdiv_bug	: no
+hlt_bug		: no
+f00f_bug	: no
+coma_bug	: no
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 2
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe cid
+bogomips	: 4771.02
+
+time ./anagrams hemingway > /dev/null
+
+c++	: 14 seconds	   bags are bignums     dictionary cached? dunno
+guile	:  7 seconds	   bags are bignums     dictionary cached? dunno
+mzscheme:  4 seconds	   ?                    ?
+perl	: 35 seconds       bags are bignums     dictionary cached? dunno
+python  :  5 seconds       bags are bignums     dictionary not cached
+common lisp                bags are bignums     dictionary cached? dunno
+  cmucl :  2 seconds
+  clisp :  2 seconds
+  sbcl	:  3 seconds
