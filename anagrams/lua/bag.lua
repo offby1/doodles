@@ -68,3 +68,30 @@ assert (not (sub (d3, d1)))
 diff = sub (d1, a1)
 assert (diff.b == 2) 
 assert (not (diff[a]))
+
+function is_lc_char (c)
+   return ((string.byte (c) <= string.byte ("z"))
+          and
+          (string.byte (c) >= string.byte ("a"))
+          )
+end
+
+function from_string (s)
+   local bag = {}
+   local s = string.lower (s)
+   while (string.len (s) > 0) do
+     local c = string.sub (s, 0, 1)
+     local orig = bag [c] 
+     if (not (orig)) then orig = 0 end
+     if (is_lc_char (c)) then bag [c] = orig + 1 end
+     s = string.sub (s, 2)  
+   end 
+   return bag
+end
+
+b = from_string ("Hey you!")
+assert (not (b.H))
+assert (1 == b.h)
+assert (2 == b.y)
+assert (not( b[" "]))
+assert (not( b["!"]))
