@@ -4,15 +4,14 @@
 ;; console that captures standard out.  (How nerdly.)
 
 ;; figure out how to draw cards oriented horizontally.  I posted to
-;; plt-scheme@list.cs.brown.edu on May 10 asking this.
+;; plt-scheme@list.cs.brown.edu on May 10 asking this.  The answer:
+;; hack the source to the card library.
 
 ;; figure out how to deliver a stand-alone executable (see the dox for
 ;; `write-image-to-file' in the mzscheme manual).  The executable
 ;; created by `mzc --gui-exe bridge bridge.ss' is *almost* standalone,
 ;; but it loads something (probably bitmaps) from games/cards at
-;; startup.  I thought I read somewhere that one could save a snapshot
-;; of a running DrScheme image, which sounds promising; alas, I can't
-;; find the reference.
+;; startup.
 
 (module bridge mzscheme
   (require (lib "cards.ss" "games" "cards"))
@@ -33,13 +32,10 @@
   (require (rename (lib "1.ss" "srfi") iota iota))
   
   (define *d* (make-deck))
-  
+  (for-each (lambda (c) (send c user-can-flip #f)) *d*)
   (define *cw* (send (car *d*) card-width))
   (define *ch* (send (car *d*) card-height))
-  
-  ;; TODO: think of a more elegant way to do this
-  (define *quit-flag* #f)
-  
+
   (define-syntax quickly
     (syntax-rules ()
       ((_ body ...)
@@ -50,16 +46,9 @@
   
   (define my-table%
     (class table% 
-      (rename (o-s-c on-subwindow-char))
-      (override on-subwindow-char)
+      
       (inherit move-card)
       (public move-card-center)
-      (define on-subwindow-char 
-        (lambda (receiver event) 
-          (when (eq? 'escape (send event get-key-code))
-            (set! *quit-flag* #t))
-          
-          (o-s-c receiver event)))
       
       (define move-card-center
         (lambda (card x y)
@@ -82,13 +71,7 @@
   (define *region-length* (- (send *t* table-width) (* 2 *ch*)))
   
   (define-struct player (region cards choose-card! card-home-location-proc))
-  
-  (define (make-card-removing-proc choice-proc)
-    (lambda (p)
-      (let ((choice (choice-proc (player-cards p))))
-        (set-player-cards! p (remove choice (player-cards p)))
-        choice)))
-  
+
   (define dumbest-choose-card car)
   
   (define (random-choose-card hand)
@@ -98,7 +81,7 @@
     (let ((choice #f))
       (lambda (hand)
         (let ((sem (make-semaphore)))
-          
+
           ;; Doesn't this clobber any existing double-click-action?  Isn't
           ;; that a Bad Thing?
           (send *t* set-double-click-action 
@@ -107,21 +90,35 @@
                       (begin
                         (set! choice card)
                         (semaphore-post sem))
-                      (begin
-                        (bell)
-                        
-                        (printf 
-                         (if (send card face-down?)
-                             "You gotta click your own cards.~%"
-                           "It's not that player's turn.~%")
-                         )))
+                    (begin
+                      (bell)
+                      
+                      (printf 
+                       (if 
+                           ;; this isn't quite the right test -- I
+                           ;; really want to say something like "if
+                           ;; this card doesn't belong to the human".
+                           ;; The human's cards include their own
+                           ;; hand, of course, but also, if they're
+                           ;; the declarer, the dummy.
+
+                           (send card face-down?)
+                           "You gotta click your own cards.~%"
+                         "It's not that player's turn.~%")
+                       )))
                   ))
           (yield sem)
           (unless choice
             (error "Looks like I don't understand semaphores."))
           choice))))
   
-  (define *player-alist*
+  (define (make-card-removing-proc choice-proc)
+    (lambda (p)
+      (let ((choice (choice-proc (player-cards p))))
+        (set-player-cards! p (remove choice (player-cards p)))
+        choice)))
+
+  (define *direction/player-alist*
     (map (lambda (compass-direction quarter-turns choice-func)
            
            (cons compass-direction
@@ -140,6 +137,9 @@
                                 #f      ; cards -- this gets filled
                                 ; in when we deal
                                 choice-func
+                                
+                                ;; TODO -- always sort horizontal
+                                ;; hands from left to right
                                 (lambda (index)
                                   (let ((r (rotate-region
                                             (make-region
@@ -166,18 +166,15 @@
          
          ))
 
-  (define *interactive-hand* (assq 'east *player-alist*))
+  (define *interactive-hand* (assq 'south *direction/player-alist*))
   (set-player-choose-card!! (cdr *interactive-hand*) (make-card-removing-proc interactively-choose-card))
 
-  (define *dummy* (assq 'west *player-alist*))
-  (define (ordinal hand-pair)
-    (- (length *player-alist*)
-       (length (member (car hand-pair) (map car *player-alist*)))))
+  (define *dummy* (assq 'west *direction/player-alist*))
 
   (for-each 
    (lambda (p)
      (send *t* add-region (player-region p)))
-   (map cdr *player-alist*))
+   (map cdr *direction/player-alist*))
   
   (define middle-region
     (let ((cx (/ (send *t* table-width) 2)) ;; center of table
@@ -189,34 +186,11 @@
                    #f #f)))
   
   (send *t* add-region middle-region)
-  
-  ;; for debugging
-  (define (ace-high v)
-    (case v
-      ((1) 14)
-      (else v)))
-  
-  (define (card->value c)
-    (+ (* 13
-          (sub1 (send c get-suit-id)))
-       (- (ace-high (send c get-value)) 2)))
-  
-  ;; useful only for displaying a hand in this suit order: spades,
-  ;; hearts, clubs, diamonds.  This order keeps the hearts and
-  ;; diamonds separate, since if they're adjacent there's a risk that
-  ;; those with poor vision will think the hearts are diamonds, or
-  ;; vice versa, becuase they're both red.
-  (define (card->alternate-colors-value c)
-    (+ (* 13
-          (sub1 (case (send c get-suit-id)
-                  ((1) 2)
-                  ((2) 1)
-                  ((3) 3)
-                  ((4) 4))))
-       (- (ace-high (send c get-value)) 2)))
 
   (random-seed 0)
 
+  ;; TODO -- see if perhaps we could use a toolbar instead of a menu
+  ;; bar.
   (define menu-bar (instantiate menu-bar% () (parent *t*)))
   
   (define main-menu  (instantiate menu% () 
@@ -235,22 +209,16 @@
         ;; deal the cards.
         (set! *d* (shuffle-list *d* 1))
         (set! shuffles (add1 shuffles))
-        (let loop ((players *player-alist*)
+        (let loop ((players *direction/player-alist*)
                    (cards-to-deal *d*))
-          
-          (define (first-n l n)
-            (let loop ([l l][n n])
-              (if (or (null? l)
-                      (zero? n))
-                  null
-                (cons (car l) (loop (cdr l) (sub1 n))))))
           
           (when (not (null? cards-to-deal))
             
             (let* ((p (cdar players))
                    (destination (player-region p)))
               
-              (set-player-cards! p (first-n cards-to-deal 13))
+              (set-player-cards! p (first-n cards-to-deal (/ (length *d*)
+                                                             (length *direction/player-alist*))))
               
               (let ((hand (player-cards p)))
                 (send *t* add-cards-to-region 
@@ -262,21 +230,39 @@
                 
                 (for-each
                  (lambda (c)
-                   (send c home-region destination)
-                   (send c user-can-flip #f))
+                   (send c home-region destination))
+                 
                  hand))
               
               (loop (cdr players)
-                    (list-tail cards-to-deal 13)))))
+                    (list-tail cards-to-deal (length (player-cards p)))))))
         
         (send shuffle-message set-label (format "~A shuffle(s)" shuffles))
         
         )))
-  
+
   (define (sort-hand visible-hand)
     (let* ((cards (player-cards visible-hand))
            (region (player-region visible-hand)))
       
+      ;; useful only for displaying a hand in this suit order: spades,
+      ;; hearts, clubs, diamonds.  This order keeps the hearts and
+      ;; diamonds separate, since if they're adjacent there's a risk that
+      ;; those with poor vision will think the hearts are diamonds, or
+      ;; vice versa, becuase they're both red.
+      (define (card->alternate-colors-value c)
+        (define (ace-high v)
+          (case v
+            ((1) 14)
+            (else v)))
+        (+ (* 13
+              (sub1 (case (send c get-suit-id)
+                      ((1) 2)
+                      ((2) 1)
+                      ((3) 3)
+                      ((4) 4))))
+           (- (ace-high (send c get-value)) 2)))
+
       (let loop ((cards-to-relocate (mergesort cards (lambda (c1 c2)
                                                        (> (card->alternate-colors-value c1)
                                                           (card->alternate-colors-value c2)))))
@@ -304,6 +290,11 @@
     ;; debugging).
     (let next-trick ((tricks-played 0))
       (define (play-one-trick)
+
+        (define (ordinal hand-pair)
+          (- (length *direction/player-alist*)
+
+       (length (member (car hand-pair) (map car *direction/player-alist*)))))
         (define dummy-offset (ordinal *dummy*))
         (let next-player ((the-trick '())
                           (cards-this-trick 0))
@@ -320,15 +311,18 @@
               (set-player-choose-card!! (cdr *dummy*) (player-choose-card! (cdr *interactive-hand*)))))
 
           (when (< cards-this-trick 4)
-            (let* ((p (cdr (list-ref *player-alist* (modulo 
+            (let* ((p (cdr (list-ref *direction/player-alist* (modulo 
                                                      (+ cards-this-trick (- dummy-offset 1))
                                                      4))))
                    (c ((player-choose-card! p) p)))
               (send *t* card-face-up c)
-              (send *t* card-to-front c) ;TODO -- use `stack-cards' instead
+              (send *t* card-to-front c) ;; maybe use `stack-cards' instead
               (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
                     (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
                 (let ()
+                  ;; move the card almost, but not quite, to the
+                  ;; center of the table.  That way none of the cards
+                  ;; of the trick are entirely obscured by the others.
                   (send *t* move-card-center c 
                         (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
                         (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
@@ -346,7 +340,7 @@
           
           (send *t* remove-cards the-trick)
           (for-each (lambda (c) (send c face-down)) the-trick)))
-      (let ((cards (player-cards (cdar *player-alist*))))
+      (let ((cards (player-cards (cdar *direction/player-alist*))))
         (when (not (null? cards))
           (play-one-trick)
           (next-trick (add1 tricks-played))
@@ -356,69 +350,67 @@
   
   (send menu-bar enable #t)
   
-  (define make-menu-item #f)
-  (define disable-all-menu-items #f)
+  ;; TODO -- figure out how to make this not be global.  This may be
+  ;; one of those cases where syntax-rules' lack of variable capture
+  ;; is a Bad Thing, in which case I should simply re-write it with
+  ;; defmacro. 
+  (define *menu-items* '())
+  (define-syntax menite
+    (syntax-rules ()
+      ((_ lbl callback-body ...)
+       (let ((mi (instantiate menu-item% ()
+                   (label lbl)
+                   (parent main-menu)
+                   (callback (lambda (item event)
+                               callback-body ...)))))
+         (send mi enable #f)
+         (set! *menu-items* (cons mi *menu-items*))
+         mi))))
 
-  (let ((items '()))
-    (set! make-menu-item
-          (lambda (label callback)
-            (let ((mi  (instantiate menu-item% ()
-                         (label label)
-                         (parent main-menu)
-                         (callback callback))))
-              (send mi enable #f)
-              (set! items (cons mi items))
-              mi)))
-    (set! disable-all-menu-items
-          (lambda ()
-            (for-each (lambda (mi)
-                        (send mi enable #f))
-                      items))))
+  (define disable-all-menu-items 
+    (lambda ()
+      (for-each (lambda (mi)
+                  (send mi enable #f))
+                *menu-items*)))
 
-  (make-menu-item "&Exit" (lambda (item event)
-                            (exit)))
+  (menite "&Exit" (exit))
 
   (define sort-menu-item
-    (make-menu-item
+    (menite
      "&Sort hand"
-     (lambda (item event)
-       (sort-hand (cdr *interactive-hand*)))))
+     (sort-hand (cdr *interactive-hand*))))
 
   (define play-menu-item
-    (make-menu-item
+    (menite
      "&Play"
-     (lambda (item event)
-       (pretend-to-play))))
+     (pretend-to-play)))
   
   (define deal-menu-item
-    (make-menu-item
+    (menite
      "&Deal"
-     (lambda (item event)
-       (disable-all-menu-items)
-       (deal)
-       (send deal-menu-item enable #t)
-       (send sort-menu-item enable #t)
-       (reset-buttons-for-new-auction)
-       (send auction-menu-item enable #t))))
+     (disable-all-menu-items)
+     (deal)
+     (send deal-menu-item enable #t)
+     (send sort-menu-item enable #t)
+     (send auction-menu-item enable #t)))
   
+  (make-bbox-window *t*)
   (define auction-menu-item
-    (begin
-      (make-bbox-window *t*)
-      (make-menu-item
-       "&Auction"
-       (lambda (item event)
-       
-         (let ((the-auction (make-auction (caar *player-alist*))))
-           (let loop ()
-             (let ((c (interactively-get-call (last-bid the-auction)
-                                              (format "~A" (whose-turn the-auction)))))
-               (note-call the-auction c)
+    (menite
+     "&Auction"
+     
+     (let ((the-auction (make-auction (caar *direction/player-alist*))))
+       (reset-buttons-for-new-auction)
+       (let loop ()
+         (let ((c (interactively-get-call (last-bid the-auction)
+                                          (format "~A" (whose-turn the-auction)))))
+           (note-call the-auction c)
 
-               (if (contract-settled? the-auction)
-                   (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
-                 (loop)))))
-         (send auction-menu-item enable #f)
-         (send play-menu-item enable #t)))))
+           (if (contract-settled? the-auction)
+               (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
+             (loop)))))
+     (send auction-menu-item enable #f)
+     (send play-menu-item enable #t)))
 
   (send deal-menu-item enable #t)
 
