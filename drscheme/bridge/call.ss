@@ -1,50 +1,47 @@
 (module call mzscheme
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
-
-  (provide make-call)
-
-  (define (multiply seq1 seq2)
-    (define (distribute atom lst)
-      (if (null? lst)
-          lst
-        (map (lambda (thing) (cons atom thing))
-             
-             lst)))
-    (if (null? seq1)
-        seq2
-      (apply append (map (lambda (atom) (distribute atom seq2))
-                         seq1))))
+  (require (lib "1.ss" "srfi"))
+  (provide frobotzle)
   
-  (define my-get-choices
-    (lambda (options)
-      (let ((dialog (instantiate dialog% () (label "Make a call.")))
-            (choice #f))
-        (define make-button
-          (lambda (label)
+  (define frobotzle
+    (lambda ()
+      (let* ((dialog (instantiate dialog% () (label "Make a call.")))
+             (column (instantiate vertical-pane% ()
+                       (parent dialog)))
+
+             ;; alist, each elt looks like (3 . <horizontal-pane%>)
+             (bids (map (lambda (level)
+                          (cons level (instantiate horizontal-pane% ()
+                                        (parent column))))
+                        (iota 7 1)))
+             (doubles-and-pass (instantiate horizontal-pane% ()
+                                 (parent column)))
+             (choice #f))
+        (define make-bid-button
+          (lambda (label parent)
             (instantiate button% () (label label)
-                         (parent dialog)
+                         (parent parent)
                          (callback (lambda (button control-event-object)
                                      (set! choice label)
-                                     (send (send button get-parent) show #f))))))
-        (for-each (lambda (l)
-                    (make-button l))
-                  options)
+                                     (send dialog show #f))))))
+        (define dummy-callback (lambda (button control-event-object)
+                                 (void)))
+        
+        (for-each (lambda (label)
+                    (instantiate button% ()
+                      (label label)
+                      (parent doubles-and-pass)
+                      (callback dummy-callback)))
+                  `("Double" "Redouble" "Pass" "Oh Piss Off"))
+
+        (for-each (lambda (level/pane-pair)
+                    (for-each (lambda (denom)
+                                (make-bid-button (format "~A ~A" denom (car level/pane-pair)) 
+                                                 (cdr level/pane-pair)))
+                              `(clubs diamonds hearts spades notrump)))
+                  bids)
         (send dialog show #t)
         choice)))
-  
-  (define (make-call player auction)
-    
-    (let* ((levels `(1 2 3 4 5 6 7))
-           (denominations `(clubs diamonds hearts spades notrump))
-           (bids (cons "redouble"
-                       (cons "double"
-                             (cons "pass"
-                                   (map (lambda (p)
-                                          (format "~A ~A" (car p)
-                                                  (cdr p)))
-                      
-                                        (multiply levels denominations)))))))
-      (my-get-choices bids)))
-  
-  (printf "~A~%"  (make-call 'foo 'bar)))
+
+  (printf "~A~%" (frobotzle)))
