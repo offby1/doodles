@@ -1,8 +1,9 @@
 (define-module (dict))
 
-(use-modules (ice-9 rdelim))
-(use-modules (bag))
-(use-modules (srfi srfi-1))
+(use-modules (ice-9 rdelim)
+             (ice-9 pretty-print)
+             (srfi srfi-1)
+             (bag))
 
 (define-public *dict* #f)
 
@@ -52,7 +53,9 @@
 (if (not (access? *wordhash-name* R_OK))
     (call-with-output-file *wordhash-name* 
       (lambda (port)
-        (write (hash-map->list cons (wordlist->hash)) port))))
+        ;; use `pretty-print' rather than `write' so that it's not all
+        ;; on on big line.
+        (pretty-print (hash-map->list cons (wordlist->hash)) port))))
 
 (define (bag-acceptable? this bag-to-meet)
   (and (or (bags=? bag-to-meet this)
@@ -71,3 +74,13 @@
              (hash-set! *dict* bag words)))))
    (with-input-from-file *wordhash-name* read))
   (format #t "done~%"))
+
+(define-public (test-init)
+  (set! *dict* (make-hash-table 26))
+  (for-each (lambda (word)
+              (hash-set!
+               *dict*
+               (bag word)
+               (list word)))
+            (map (lambda (i)
+               (string (integer->char (+ i (char->integer #\a))))) (iota 26))))

@@ -1,21 +1,44 @@
 (define-module (anagrams))
-(use-modules (ice-9 receive))
-(use-modules (bag))
-(use-modules (dict))
-(use-modules (srfi srfi-1))
-(use-modules (wrappers))
+(use-modules (ice-9 receive)
+             (ice-9 debug)
+             (srfi srfi-1))
 
-(define (all-anagrams bag exclusions)
-  (append (easy-anagrams   bag exclusions)
-          (harder-anagrams bag exclusions)))
+(use-modules (bag)
+             (dict)
+             (exclusions)
+             )
 
-(define (easy-anagrams bag exclusions)
-  (let ((found (hash-ref *dict* bag)))
-    (if found
-        (begin
-          (hash-set! exclusions found #t)
-          (map list found))
-      '())))
+(define-public (all-anagrams string)
+  (let ((in-bag   (bag string)))
+    (init in-bag)
+    (all-anagrams-internal in-bag  (empty-exclusions))))
+
+(define (all-anagrams-internal bag exclusions)
+  (save-exclusions exclusions
+    (append
+     (let ((easy-anagrams (and
+                           (not (excluded? bag exclusions))
+                           (hash-ref *dict* bag))))
+       (if easy-anagrams
+           (begin
+             (add-exclusion! exclusions bag)
+             (map list easy-anagrams))
+         '()))
+     (let ((harder-anagrams '()))
+       (hash-for-each
+        (lambda (key words)
+          (if (not (excluded? key exclusions))
+              (let ((smaller-bag (subtract-bags bag key)))
+                (if smaller-bag
+                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions)))
+                      (if anagrams
+                          (begin
+                            (add-exclusion! exclusions key)
+                            (set! harder-anagrams (append! harder-anagrams (combine words anagrams)))
+                            )))))))
+        *dict*)
+       harder-anagrams)
+     )))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
@@ -25,44 +48,3 @@ list of anagrams, each of which begins with one of the WORDS."
                        (cons word an))
                      anagrams))
               words))
-
-(define (harder-anagrams bag exclusions)
-  (let ((rv '()))
-    (hash-for-each
-     (lambda (key words)
-       (if (not (hash-ref exclusions key))
-             (let ((smaller-bag (subtract-bags bag key)))
-               (if smaller-bag
-                   (let ((anagrams (all-anagrams smaller-bag exclusions)))
-                     (if (null? anagrams)
-                         (begin (display ".") (force-output)))
-                     (if anagrams
-                         (begin
-                           (hash-set! exclusions key #t)
-                           (set! rv (append! rv (combine words anagrams)))
-                           )))))))
-     *dict*)
-    rv))
-
-(let ((input (bag "Ernest Hemingway")))
-  (init input)
-  (let ((output (with-profiling 
-                 (
-                  all-anagrams
-                  append
-                  bag
-                  easy-anagrams
-                  harder-anagrams
-                  hash-ref
-                  hash-set!
-                  not
-                  subtract-bags
-                  )
-   
-                 (all-anagrams input (make-hash-table)))))
-    (format #t
-            "~a => ~a anagrams: ~a~%"
-            input
-            (length output)
-            output)))
-

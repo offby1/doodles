@@ -4,7 +4,7 @@
 ;; environment.
 
 (define-module (primes))
-(use-modules (ice-9 slib))
+(use-modules ((ice-9 slib) :select (require)))
 
 (require 'factor)
 
