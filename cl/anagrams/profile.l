@@ -4,7 +4,7 @@
 ;; Because it's so damned slow, throw out most of the dictionary ...
 ;; so it will run faster.  Otherwise it's too slow to even profile.
 
-(when nil
+(when t
 
   (setq *dict* (let ((words-to-examine (length *dict*))
                      (reduced-dictionary '()))
@@ -35,7 +35,22 @@
         ;;(trace anagrams-internal)
         (format t "~&~A~%" (anagrams (bag "ernest hemingway")))
         (profile:report-time)
+
         )
+#+sbcl (progn 
+         ;; grr ... sb-profile:profile is a macro, so I can't use mapcar
+         (SB-PROFILE:PROFILE anagrams)
+         (sb-profile:profile anagrams-internal)
+         (sb-profile:profile bag)
+         (sb-profile:profile bag-add)
+         (sb-profile:profile bag-emptyp)
+         (sb-profile:profile bag-reduce)
+         (sb-profile:profile bag-to-string)
+         (sb-profile:profile hash-copy)
+         (sb-profile:profile map-dict)
+         ;;(trace anagrams-internal)
+         (format t "~&~A~%" (anagrams (bag "ernest hemingway")))
+         (SB-PROFILE:REPORT))
 
 #+clisp (let ((result))
           (ext:space (setq result (anagrams (bag "ernest hemingway"))))

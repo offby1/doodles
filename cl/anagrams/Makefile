@@ -16,6 +16,6 @@ anagrams.x86f: bag.x86f dict.x86f
 	@clisp -c $<
 
 clean:
-	-rm -f *.fas *.lib *.x86f
+	-rm -f *.fas{,l} *.lib *.x86f
 
 .PHONY: clean all cmucl clisp

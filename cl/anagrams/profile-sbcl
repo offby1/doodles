@@ -1,0 +1,3 @@
+#!/bin/sh
+
+sbcl --noinform --noprint --disable-debugger -load anagrams.system -eval "(mk:operate-on-system 'anagrams 'compile)" -load profile.fasl -eval "(quit)"
