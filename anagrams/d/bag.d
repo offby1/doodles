@@ -10,6 +10,19 @@ class bag
 
   bool opEquals (int i) { return (this.product == i ? true : false);}
 
+  int opCmp(Object p)
+  {
+    bag rhs = cast(bag)p;
+    mpz diff = product - rhs.product;
+    return (diff > 0 ? 1 : (diff < 0 ? -1 : 0));
+  }
+  uint toHash()
+  {
+    uint rv = product % 0x7fffffff;
+    printf ("Some hash is %u\n", rv);
+    return rv;
+  }
+
   bool is_empty ()
   {
     return (1 == product ? true : false);
@@ -31,7 +44,10 @@ class bag
       }
   }
 
-  char []toString () { return this.product.toString (); }
+  char []toString ()
+  {
+    return this.product.toString ();
+  }
   
   void subtract (in bag other, out bag difference, out bool ok)
   {

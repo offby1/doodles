@@ -3,13 +3,7 @@ import bag;
 
 class dictionary
 {
-  // this sucks.  I originally defined the map to have _bags_ as keys,
-  // not strings.  But when I did that, the `in' expression always
-  // yielded false.  Apparently associative arrays don't work as
-  // expected with my bag class ... but since strings work, I store
-  // them instead.
-  char [][] [char[]] string_map;
-  char [][][bag] bag_map;
+  int [char []][bag] hoo_map;
 
   this (Stream s)
   {
@@ -17,38 +11,24 @@ class dictionary
       {
         char []this_line = s.readLine ();
         bag b = new bag (this_line);
-        char[] bag_string = b.toString ();
-
-        if (b in bag_map)
-          {
-            bag_map[b] ~= this_line;
-          }
-        else
-          {
-            char [][] new_wordlist;
-            new_wordlist ~= this_line;
-            bag_map[b] = new_wordlist;
-          }
-        
-        if (bag_string in string_map)
-          {
-            string_map[bag_string] ~= this_line;
-          }
-        else
-          {
-            char [][] new_wordlist;
-            new_wordlist ~= this_line;
-            string_map[bag_string] = new_wordlist;
-          }
+        hoo_map[b][this_line]++;
       }
   }
 
   int size ()
   {
-    //return bag_map.length;
-    return string_map.length;
+    return hoo_map.length;
   }
   
+  char[][] lookup (bag b)
+  {
+    return hoo_map[b].keys;
+  }
+  bag[] keys ()
+  {
+    return hoo_map.keys;
+  }
+
   unittest
   {
     printf ("Snarfing a test dictionary; patience! ... \n");
@@ -68,11 +48,29 @@ class dictionary
     dictionary words = new dictionary (s);
     printf ("done\n");
     assert (5 == words.size ());
-
-    foreach (char [] key; words.string_map.keys)
+    {
+      char[][] say_what = words.lookup (new bag ("what"));
+      char [] rendered;
+      foreach (int i, char [] s; say_what)
+        {
+          if (i > 0)
+            rendered ~= ";";
+          rendered ~= s;
+        }
+      printf ("Word `what' hath %d anagrams: %.*s\n", say_what.length, rendered);
+      foreach (int i, bag b; words.hoo_map.keys)
+        {
+          foreach (char []s; words.hoo_map[b].keys)
+            {
+              printf ("%.*s\n", s);
+            }
+        }
+      assert (1 == say_what.length);
+    }
+    foreach (bag key; words.keys ())
       {
-        printf ("Key `%.*s' => ", key );
-        char [][] words = words.string_map[key];
+        printf ("Key `%.*s' => ", key.toString ());
+        char [][] words = words.lookup(key);
         foreach (int i, char [] word; words)
           {
             if (i > 0)
