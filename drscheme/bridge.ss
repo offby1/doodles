@@ -51,15 +51,22 @@
 
   (define-struct player (region cards choose-card!))
 
+  (define (dumbest-choose-card p)
+    (let ((choice (car (player-cards p))))
+      (set-player-cards! p (cdr (player-cards p)))
+      choice))
+
+  (define (random-choose-card p)
+    (let* ((hand (player-cards p))
+           (choice (list-ref hand (random (length hand)))))
+      (set-player-cards! p (remove choice hand))
+      choice))
+
   (define *player-alist*
-    (map (lambda (pos coords cards)
+    (map (lambda (pos coords cards choice-func)
            (cons pos
                  (make-player (apply make-region (append coords (list (symbol->string pos) #f))) 
-                              cards
-                              (lambda (p) 
-                                (let ((choice (car (player-cards p))))
-                                  (set-player-cards! p (cdr (player-cards p)))
-                                  choice)))))
+                              cards choice-func)))
          `(south west north east)
          `( 
            ;;left x                           top y                           width                   height
@@ -77,6 +84,10 @@
            (,(+ *ch* *region-length*)         ,*ch*                           ,*ch*                   ,*region-length*)
            )
          `(#f #f #f #f)
+         `(,random-choose-card
+           ,dumbest-choose-card
+           ,random-choose-card
+           ,dumbest-choose-card)
          ))
   
   (for-each 
@@ -165,7 +176,7 @@
                 (set-player-cards! p (first-n d 13))
 
                 (let ((hand (player-cards p)))
-                  (send *t* move-cards-to-region 
+                  (send *t* add-cards-to-region 
                         hand
                         (player-region p))
 
@@ -257,7 +268,6 @@
     (let ()
       (define one-hand
         (lambda ()
-          (send *t* add-cards-to-region *d* middle-region)
           (deal)
           (sort)
           (pretend-to-play)
