@@ -16,6 +16,8 @@
   (define (1- x)
     (- x 1))
 
+  (define *escape* #f)
+  
   (define my-table%
     (class table% 
       (rename (o-s-c on-subwindow-char))
@@ -24,8 +26,12 @@
         (lambda (receiver event) 
           (when (eq? 'escape (send event get-key-code))
             
-            ;; TODO -- figure out how to exit our loops.
-            (printf "~S sez \"Escape!\"~%" receiver))
+            ;; TODO -- figure out how to exit our loops; this doesn't
+            ;; work.
+            (printf "~S escaping to ~S~%" receiver *escape*)
+            (when *escape* (let ((e *escape*))
+                             (set! *escape* #f)
+                             (e))))
           
           (o-s-c receiver event)))
       (super-instantiate ())))
@@ -107,36 +113,49 @@
              (lambda () body ... )
              (lambda () (if (send quick-menu-item is-checked?) (send *t* end-card-sequence)))))))
 
+    (define-syntax with-busy-cursor
+      (syntax-rules ()
+        ((_ body ...)
+         (dynamic-wind
+             (lambda () (begin-busy-cursor))
+             (lambda () body ...)
+             (lambda () (end-busy-cursor))))))
+    
     (send menu-bar enable #t)
     (instantiate menu-item% ()
                  (label "&Deal Randomly")
                  (parent main-menu)
                  (callback (lambda (item event) 
                              (set! *d* (vector->list (fys! (apply vector *d*))))
-                             (quickly
-                              (let loop ((cards-moved 0)
-                                         (d *d*))
-                                (when (not (null? d))
-                                  (let ((x (* *cw* (remainder cards-moved 13)))
-                                        (y (* *ch* (quotient  cards-moved 13))))
-                                    (send *t* move-card (car d)
-                                          x
-                                          y))
-                                  (when (send (car d) face-down?)
-                                    (send *t* card-face-up (car d) ))
-                                  (loop (+ 1 cards-moved)
-                                        (cdr d)))))
-                             (printf "Done.\n"))))
+                             (with-busy-cursor
+                              (let/ec k
+                                (set! *escape* k)
+                                (quickly
+                                 (let loop ((cards-moved 0)
+                                            (d *d*))
+                                   (when (not (null? d))
+                                     (let ((x (* *cw* (remainder cards-moved 13)))
+                                           (y (* *ch* (quotient  cards-moved 13))))
+                                       (send *t* move-card (car d)
+                                             x
+                                             y))
+                                     (when (send (car d) face-down?)
+                                       (send *t* card-face-up (car d) ))
+                                     (loop (+ 1 cards-moved)
+                                           (cdr d))))))))))
     (instantiate menu-item% ()
                  (label "Send 'em Back &Home")
                  (parent main-menu)
                  (callback (lambda (item event)
                              (quickly
-                              (for-each (lambda (c)
-                                          (send/apply *t* move-card c 
-                                                      (card->initial-position c)
-                                                      ))
-                                        (reverse *d*)))
+                              (with-busy-cursor
+                               (let/ec k
+                                 (set! *escape* k)
+                                 (for-each (lambda (c)
+                                             (send/apply *t* move-card c 
+                                                         (card->initial-position c)
+                                                         ))
+                                           (reverse *d*)))))
                              )))
 
     (instantiate menu-item% ()
