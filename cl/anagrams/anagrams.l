@@ -1,6 +1,6 @@
 (if nil
     (progn
-      (setq dict
+      (setq *dict*
 	    (with-open-file
 	     (dict "/usr/share/dict/words")
 	     (let ((d '()))
@@ -11,7 +11,7 @@
 		  (setq d (cons datum d)))))))
       (values)))
 
-(defconstant characters
+(defconstant *characters*
   (+ 1 (- (char-code #\z) (char-code #\a)))
   "number of characters that we distinguish.")
 
@@ -19,26 +19,28 @@
   "returns a vector.  Each slot represents a lower-case character; the
 value in the slot is the number of occurences of *either* the upper-
 or lower-case version of that character in STRING."
+  #+cmu (declare (type (simple-array base-char *) string))
+  #+cmu (declare (optimize (speed 3)))
+  ;;(assert (stringp string))
 
-  (assert (stringp string))
-
-  (let ((result (make-array characters :element-type 'fixnum :initial-element 0)))
-    (let ((chars-examined 0))
+  (let ((result (make-array *characters* :element-type 'fixnum :initial-element 0)))
+    (let ((chars-to-examine (length string)))
+      #+cmu (declare (type fixnum chars-to-examine))
       (loop
-       (if (= chars-examined (length string))
+       (if (zerop chars-to-examine)
 	   (return result)
-	 (let ((ch (aref string chars-examined)))
+	 (let ((ch (aref string (1- chars-to-examine))))
 	   (if (alpha-char-p ch)
 	       (incf (aref result
-			   (- (char-code (char-downcase ch))
-			      (char-code #\a))
-			   )))))
-       (incf chars-examined)))
+                           (- (char-code (char-downcase ch))
+                              (char-code #\a))
+                           )))))
+       (decf chars-to-examine)))
     result))
 
 (defun surveyp (thing)
   (and (vectorp thing)
-       (= characters (length thing))))
+       (= *characters* (length thing))))
 
 (defun survey-subtract (big small)
   (assert (surveyp big))
@@ -46,7 +48,7 @@ or lower-case version of that character in STRING."
   (let ((result (survey ""))
 	(slots-examined 0))
     (loop
-     (if (= slots-examined characters)
+     (if (= slots-examined *characters*)
 	 (return result))
      (let ((diff (- (aref big slots-examined)
 		    (aref small slots-examined))))
@@ -74,13 +76,6 @@ or lower-case version of that character in STRING."
   (map 'list #'(lambda (wordlist)
 		 (cons word wordlist))
        lol))
-
-(defun cdr-until (list predicate)
-  (loop
-   (and list
-	(if (funcall 'predicate (car list))
-	    (return list))
-	(setq list (cdr list)))))
 
 (defun anagrams (string dictionary)
 
