@@ -62,7 +62,7 @@
   (assert (not (excluded? 'sam e)))
   (assert (excluded? 'bob e))
 
-  (printf (format "exclusions tests passed.~%" )))
+  (fprintf (current-error-port) (format "exclusions tests passed.~%" )))
 
 ;; Local Variables:
 ;; eval: (put 'save-exclusions 'scheme-indent-function 1)

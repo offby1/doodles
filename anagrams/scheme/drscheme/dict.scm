@@ -1,29 +1,33 @@
 (module dict
-  mzscheme
+    mzscheme
   (require "bag.scm"
            (prefix list- (lib "list.ss"))
            (lib "pretty.ss")
            (lib "process.ss")
+           (lib "mred.ss" "mred")
            (prefix srfi-1- (lib "1.ss" "srfi"))
            (prefix srfi-13- (lib "13.ss" "srfi")))
   (provide dict-for-each init)
   
   (define *big-ol-hash-table* #f)
 
-  (define (wordlist->hash)
-    (with-input-from-file
-        "c:/cygwin/usr/share/dict/words"
+  (define (wordlist->hash fn)
+    (with-input-from-file fn
       (lambda ()
         (let ((dict (make-hash-table 'equal)))
-          (printf (format "Reading dictionary ... ")) (flush-output)
-          (let loop ((word  (read-line)))
+          (fprintf (current-error-port) (format "Reading dictionary ... "))
+          (let loop ((word  (read-line))
+                     (words-read 0))
             (if (eof-object? word)
-                (printf (format "done: ~a~%" dict))
-                (begin
-                  (if (word-acceptable? word)
-                      (adjoin-word dict (srfi-13-string-downcase word)))
-                  (loop (read-line )))
-                ))
+                (fprintf (current-error-port) (format "Reading dictionary ... done."))
+              (begin
+                (if (word-acceptable? word)
+                    (adjoin-word dict (srfi-13-string-downcase word)))
+                (if (zero? (remainder words-read 1000))
+                    (fprintf (current-error-port)  (format "Reading dictionary ... ~a words ..." words-read)))
+                (loop (read-line)
+                      (+ 1 words-read)))
+              ))
           dict)
         )))
   
@@ -42,11 +46,11 @@ dictionary."
     (let* ((this-bag (bag word))
            (probe (hash-table-get dict this-bag (lambda () #f))))
       (cond
-        ((not probe)
-         (hash-table-put! dict this-bag (list word)))
-        ((not (member word probe))
-         (hash-table-put! dict this-bag (cons word probe)))
-        )))
+       ((not probe)
+        (hash-table-put! dict this-bag (list word)))
+       ((not (member word probe))
+        (hash-table-put! dict this-bag (cons word probe)))
+       )))
   
   (define word-acceptable?
     (let ((has-vowel-regexp (regexp "[aeiouAEIOU]"))
@@ -72,16 +76,23 @@ dictionary."
              (subtract-bags bag-to-meet this))
          this))
   
-  (define (init bag-to-meet)
+  (define (init bag-to-meet dict-file-name)
     (if (not *big-ol-hash-table*)
-        (set! *big-ol-hash-table* (wordlist->hash)))
+        (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
     
-    (printf (format "Pruning dictionary ... ")) (flush-output)
+    (fprintf (current-error-port) "Pruning dictionary ... ") (flush-output)
 
-    (set! *alist* (srfi-1-filter (lambda (entry)
-                                   (bag-acceptable? (car entry) bag-to-meet))
-                          (hash-table-map *big-ol-hash-table* cons)))
-    (printf (format "done~%"))
+    (set! *alist* 
+          (let ((entries-examined 0))
+            (let ((result (srfi-1-filter (lambda (entry)
+                                           (if (zero? (remainder entries-examined 1000))
+                                               (fprintf (current-error-port)
+                                                         (format "Pruning dictionary ... ~a words ..." entries-examined)))
+                                           (set! entries-examined (+ 1 entries-examined))
+                                           (bag-acceptable? (car entry) bag-to-meet))
+                                         (hash-table-map *big-ol-hash-table* cons))))
+              result)))
+    (fprintf (current-error-port) "Pruning dictionary ... done.")
     
     (let ()
       (define (biggest-first e1 e2) 
@@ -103,14 +114,11 @@ dictionary."
                                                                              (car b)))))
           (map cdr with-random-numbers)))
       
-      (printf (format "Sorting or shuffling the dictionary (~a elements), for the hell of it ... "
-                      (length *alist*)))
       (set! *alist* 
             (if #t
                 (list-quicksort *alist* biggest-first)
-                (shuffled *alist*))
-            )
-      (printf (format "done.~%")))
-    )
+              (shuffled *alist*))
+            )))
+
   
-)
+  )

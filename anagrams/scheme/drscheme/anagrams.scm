@@ -25,14 +25,11 @@
     (let ((result (time
                    (let ((in-bag   (bag string)))
        
-                     (init in-bag)
+                     (init in-bag "/usr/share/dict/words")
                      (all-anagrams-internal
                       in-bag
-                      (empty-exclusions) #t
-                      (lambda (thing)
-                        (printf (format "One anagram: ~s~%" thing))))))))
+                      (empty-exclusions) #t)))))
       
-    
       (pretty-print result)
       (printf (format
                ";; ~a anagrams of ~s~%"
@@ -43,24 +40,39 @@
 
   ;; todo -- combine this with the above, passing the callback as a
   ;; parameter with a default value.
-  (define (all-anagrams-mit-callback string callback)
+  (define (all-anagrams-mit-callback string dict-file-name)
     (let ((in-bag   (bag string)))
-      (init in-bag)
+      (init in-bag dict-file-name)
+      (fprintf (current-error-port) "") ;clears the status window
       (all-anagrams-internal
        in-bag
        (empty-exclusions)
-       #t
-       callback)))
+       #t)))
+
+  (define (string-append-with-spaces words)
+    (let loop ((result "")
+               (words words))
+      (cond
+       ((null? words)
+        result)
+       (#t
+        (loop (string-append
+               result
+               (if (zero? (string-length result))
+                   ""
+                 " ")
+               (car words))
+              (cdr words))))))
 
   (define-macro (maybe-dump ans)
-    `(begin
-       (if top-level?
-           (for-each (lambda (a)
-                       (output-func a))
-                     ,ans))
-       ,ans))
+    `(if top-level?
+         (for-each
+          (lambda (words)
+            (printf "~a~%" (string-append-with-spaces words)))
+          ,ans)
+         ))
 
-  (define (all-anagrams-internal bag exclusions top-level? output-func)
+  (define (all-anagrams-internal bag exclusions top-level?)
     (define rv '())
     (save-exclusions exclusions
                      (dict-for-each
@@ -75,7 +87,7 @@
                                         (let ((combined (map list words)))
                                           (maybe-dump combined)
                                           (set! rv (append! rv combined))))
-                                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f output-func)))
+                                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f)))
                                       (if (not (null? anagrams))
                                           (begin
                                             (add-exclusion! exclusions key)

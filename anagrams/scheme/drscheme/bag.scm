@@ -73,5 +73,5 @@ regard to order."
   (assert (bag-empty? empty-bag))
   (assert empty-bag))
 
-(printf (format "bag tests passed.~%"))
+(fprintf (current-error-port) (format "bag tests passed.~%"))
 )

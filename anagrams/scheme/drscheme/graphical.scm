@@ -3,8 +3,7 @@
 ;;; * pause, cancel, continue buttons.
 ;;; * keep track of the number of anagrams generated so far, and display it somewhere.
 ;;; * likewise for the elapsed time.
-;;; * more feedback when reading the dictionary.
-;;; * bind current-output-port to something that puts the characters somewhere in the window.1
+;;; * Perhaps use a progress meter for feedback when reading the dictionary.
 
 (module graphical
     mzscheme
@@ -12,7 +11,15 @@
   (require (lib "class.ss"))
   (require "anagrams.scm")
 
+  (define dictionary-file-name #f)
+  
   (define f (instantiate frame% ("Anagrams Redux")))
+  (define status (instantiate text-field% ()
+                              (parent f)
+                              (label "status")
+                              (style '(single))
+                              (enabled #f)
+                              (callback (lambda args #f))))
   (define input
     (instantiate 
      text-field% ()
@@ -35,7 +42,7 @@
                                         ; selecting, scrolling,
                                         ; etc.
                                       (callback (lambda args #f))))
-                     
+                 
                  (editor (send output get-editor)))
                 
             
@@ -51,27 +58,23 @@
                   (yield)
                   (- end start))
                 void
-                void)))
+                void))
+              (current-error-port (make-custom-output-port #f (lambda (s start end buffer-ok?) (send status set-value (substring s start end)) (yield) (- end start)) void void))
+              )
              
+             (fprintf (current-error-port) "Testing!")
              (all-anagrams-mit-callback 
               input-string 
-              (lambda (an)
-
-                (define (string-append-with-spaces words)
-                  (let loop ((result "")
-                             (words words))
-                    (cond
-                     ((null? words)
-                      result)
-                     (#t
-                      (loop (string-append
-                             result
-                             (if (zero? (string-length result))
-                                 ""
-                               " ")
-                             (car words))
-                            (cdr words))))))
-               
-                (printf (format "~a~%" (string-append-with-spaces an)))))))
+              (or dictionary-file-name
+                  (begin
+                    (set! dictionary-file-name
+                          (get-file "Where's the dictionary on this box?"
+                                    f
+                                    "/usr/share/dict"
+                                    "words"
+                                    #f
+                                    '()
+                                    '()))
+                    dictionary-file-name)))))
           (send object enable #t))))))
   (send f show #t))
