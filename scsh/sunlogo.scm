@@ -4,7 +4,7 @@
 
 ;; written in `functional postscript' -- ftp://ftp-swiss.ai.mit.edu/pub/su/scsh/contrib/fps/fps-1.0.tar.gz
 (begin
-  (define thickness .1)
+  (define thickness 1)
   
   (define arc-center (pt (/ (- thickness 1) 2) 0))
   
