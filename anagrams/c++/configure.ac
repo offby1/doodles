@@ -19,6 +19,9 @@ AC_PROG_RANLIB
 
 # Checks for libraries.
 AC_CHECK_LIB([regexx], [pcre_exec])
+if test "x$ac_cv_lib_regexx_pcre_exec" != xyes ; then
+   AC_MSG_ERROR([You need the Regexx library -- the Debian package name is libregexx-dev; http://sourceforge.net/projects/regexx/])
+fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
