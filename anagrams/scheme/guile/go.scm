@@ -1,5 +1,5 @@
 #!/bin/sh
-exec guile --debug -s $0 ${1+"$@"}
+exec guile -L . --debug -s $0 ${1+"$@"}
 !#
 
 (use-modules (anagrams))
