@@ -2,4 +2,8 @@
 
 set -e
 
-sbcl --eval '(progn (load (compile-file "sentences.l"))(yow 10000) (quit))'
+# Compiling explicityly seems to have no effect -- presumably SBCL
+# always compiles, whether you ask it to or not.
+#time sbcl --eval '(progn (load (compile-file "sentences.l"))(yow 10000) (quit))'
+
+nice time sbcl --eval '(progn (load "sentences.l"               )(yow 1000000) (quit))'
