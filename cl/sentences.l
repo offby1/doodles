@@ -10,7 +10,8 @@
     survey))
 
 ;; returns nil when INPUT is a "true" template.
-(defun update-template (input survey)
+
+(defun update-template (input func)
   (setf copy  (copy-tree input))
   (let (result)
     (loop
@@ -22,7 +23,7 @@
        (let ((thing (car copy)))
          (when (consp thing)
            (setf (car thing)
-                 (lookup (cdr thing) survey)))
+                 (funcall func (cdr thing))))
          (push thing result))
        (setf copy (cdr copy)))))
 
@@ -47,12 +48,16 @@
       (duplicate-detector (make-hash-table :test #'equal)))
   (loop
      (let ((str (template->string tmplt)))
-       (format t "~s~%" str)
+       (format t "~a: ~s~%" (hash-table-count duplicate-detector) str)
        (when  (gethash str duplicate-detector nil)
-         (format t "Looped, durn it~%")
-         (return))
+         (format t "Whop!~%")
+         (setf tmplt (update-template tmplt #'(lambda (char)
+                                                (random (length str)))))
+         (setf str (template->string tmplt))
+         (format t "~s~%" str))
        (setf (gethash str duplicate-detector) t)
-       (setf tmplt (update-template tmplt (survey-string str)))
+       (setf tmplt (update-template tmplt #'(lambda (char)
+                                              (lookup char (survey-string str)))))
        (when (not tmplt)
          (format t "We've got a winner: ``~a''~%" str)
          (return)))))
