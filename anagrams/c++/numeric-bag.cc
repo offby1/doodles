@@ -30,10 +30,10 @@ bag::bag (const std::string &input)
   std::string s (input);
   while (s.size ())
     {
-      char c = s.at (0);
+      char c = s[0];
       if (isalpha (c))
         {
-          _product *= primes.at(tolower (c) - 'a');
+          _product *= primes[tolower (c) - 'a'];
         }
       s.erase (0, 1);
     }
