@@ -8,7 +8,7 @@
              (exclusions)
              (assert))
 
-(define-macro (begin0 expr . rest)
+(define-macro (prog1 expr . rest)
   (let ((e (gensym)))
     `(let ((,e ,expr))
        (begin
@@ -19,7 +19,7 @@
   (let ((in-bag   (bag string))
         (start-time  (get-internal-real-time)))
     (init in-bag)
-    (begin0
+    (prog1
       (pretty-print
        (all-anagrams-internal in-bag  (empty-exclusions) #t))
       (format #t
@@ -39,47 +39,27 @@
                    ,ans))
      ,ans))
 
-(define (format-bag b)
-  (format #f "[~s => ~s]" b (hash-ref *dict* b)))
-
 (define (all-anagrams-internal bag exclusions top-level?)
+  (define rv '())
   (save-exclusions exclusions
-    (append
-     (let ((easy-anagrams (and
-                           (not (excluded? bag exclusions))
-                           (hash-ref *dict* bag))))
-       (if easy-anagrams
-           (begin
-             (add-exclusion! exclusions bag)
-             (maybe-dump (map list easy-anagrams)))
-         '()
-         ))
-     (let ((harder-anagrams '()))
-       (hash-fold
-        (lambda (key words prior)
-          (assert (not (null? words)))
-          (if (not (excluded? key exclusions))
-              (let ((smaller-bag (subtract-bags bag key)))
-                (if smaller-bag
-                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f)))
-                      (assert anagrams)
-                      (if #f
-                          (format #t "~a - ~a excluding ~a yields ~s ... ~%"
-                                  (format-bag bag)
-                                  (format-bag key)
-                                  (map format-bag exclusions)
-                                  anagrams))
-                      (if (not (null? anagrams))
-                          (begin
-                            (add-exclusion! exclusions key)
-                            (let ((combined (combine words anagrams)))
-                              (maybe-dump combined)
-                              (set! harder-anagrams (append! harder-anagrams combined)))
-                            )))))))
-        #f                              ;ignored
-        *dict*)
-       harder-anagrams)
-     )))
+    (dict-for-each
+     (lambda (key words)
+       (if (not (excluded? key exclusions))
+           (let ((smaller-bag (subtract-bags bag key)))
+             (if smaller-bag
+                 (if (bag-empty? smaller-bag)
+                     (begin
+                       (add-exclusion! exclusions key)
+                       (maybe-dump (list words))
+                       (set! rv (append! rv (list words))))
+                   (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f)))
+                     (if (not (null? anagrams))
+                         (begin
+                           (add-exclusion! exclusions key)
+                           (let ((combined (combine words anagrams)))
+                             (maybe-dump combined)
+                             (set! rv (append! rv combined))))))))))))
+    rv))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
