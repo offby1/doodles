@@ -12,7 +12,7 @@
 (defun empty-exclusions nil)
 
 ;; unit tests
-(defvar e (empty-exclusions))
+(defparameter e (empty-exclusions))
 (assert (not (excluded? 'bob e)))
 (add-exclusion! e 'bob)
 (assert (excluded? 'bob e))

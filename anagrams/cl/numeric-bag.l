@@ -1,5 +1,3 @@
-(defun bag-number (b) b)
-
 ;; I tried arranging these in order of frequency, so that the most
 ;; frequent letters (i.e., `e') have the smallest primes (like Morse
 ;; code).  Turned out it didn't make the program any faster.
@@ -40,8 +38,7 @@
   (when *verbose* (format t "Subtracting ~a from ~a~%" subtrahend minuend))
 
   (multiple-value-bind (q r)
-      (floor (bag-number minuend)
-             (bag-number subtrahend))
+      (floor  minuend subtrahend)
     (when (not (zerop r))
       (when *verbose* (format t "remainder when dividing: returning nil.~%"))
       (return-from subtract-bags nil))
@@ -56,7 +53,7 @@
 
 ;; debugging only
 (defun bag_to_string (b)
-  (format nil "~a" (bag-number b)))
+  (format nil "~a"  b))
 
 ;; unit tests
 (assert (bag-emptyp (bag "")))
