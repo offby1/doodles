@@ -50,8 +50,8 @@
                  (if (bag-empty? smaller-bag)
                      (begin
                        (add-exclusion! exclusions key)
-                       (maybe-dump (list words))
-                       (set! rv (append! rv (list words))))
+                       (maybe-dump words)
+                       (set! rv (append! rv (map list words))))
                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f)))
                      (if (not (null? anagrams))
                          (begin
