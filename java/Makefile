@@ -1,8 +1,11 @@
+JAVAC := javac
+JAVAH := javah
+
 %.class: %.java
-	javac $<
+	$(JAVAC) $<
 
 %.h: %.class
-	javah $(basename $< .class)
+	$(JAVAH) $(basename $< .class)
 
 lib%.so: %.o
 	$(CC) $(LDFLAGS) $^ -shared -o $@
