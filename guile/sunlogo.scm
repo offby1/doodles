@@ -1,3 +1,7 @@
+#!/usr/bin/scsh \
+-lm /usr/local/src/fps-1.0-orig/fps-package.scm -o fps -s
+!#
+
 ;; written in `functional postscript' -- ftp://ftp-swiss.ai.mit.edu/pub/su/scsh/contrib/fps/fps-1.0.tar.gz
 (begin
   (define thickness .1)
