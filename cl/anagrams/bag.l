@@ -5,21 +5,41 @@
 
 
 
-(defclass bag () ((stuff :initform nil )))
+(defclass bag () ((stuff :initform (make-hash-table) )))
 (defmethod print-object ((x bag)
                          stream)
   (format stream "~A" (slot-value x 'stuff)))
 
+(defmethod as-alist ((x bag))
+  (let ((result '()))
+    (maphash #'(lambda (k v)
+                 (setq result (cons (cons k v) result)))
+             (slot-value x 'stuff))
+    result))
+
 (defmethod contents ((x bag))
-  (slot-value x 'stuff))
+  (apply 'append
+         (mapcar #'(lambda (alist)
+                     (make-list (cdr alist)
+                                :initial-element (car alist)))
+                 (as-alist x))))
 
 (defmethod add ((x bag) datum)
-  (setf (slot-value x 'stuff)
-        (cons datum (slot-value x 'stuff))))
+  (incf (gethash datum (slot-value x 'stuff) 0)))
 
 (defmethod subtract ((a bag)
                      (b bag))
-  (make-instance 'bag))
+  (defmethod keys ((x bag))
+    (mapcar #'car (as-alist x)))
+  (let ((result (make-instance 'bag))
+        (all-keys (union (keys a)
+                         (keys b))))
+    (mapc #'(lambda (key)
+              (incf (gethash key (slot-value result 'stuff) 0)
+               (- (gethash key (slot-value a 'stuff) 0)
+                  (gethash key (slot-value b 'stuff) 0)))) all-keys )
+    result
+    ))
 
 
 
@@ -29,33 +49,33 @@
 
 
 (defmethod initially-empty ((test bag-fixture))
-  (let ((result (contents (make-instance 'bag))))
-    (unless (null result)
+  (let ((actual (contents (make-instance 'bag))))
+    (unless (null actual)
       (failure "Bag ~A was not empty: ~A"
 	       (the-bag test)
-               result))))
+               actual))))
 
 (defmethod what-goes-in-comes-back-out ((test bag-fixture))
   (let ((the-bag (make-instance 'bag)))
     (add the-bag 'a)
     (add the-bag 'b)
     (add the-bag 'a)
-    (let ((result (contents the-bag))
+    (let ((actual   (contents the-bag))
           (expected (list 'a 'a 'b)))
-      (unless (equal (sort result 'string<)
-                     expected)
+      (unless (equal (sort (copy-seq actual  ) 'string<)
+                     (sort (copy-seq expected) 'string<))
         (failure "Expected ~A; got ~A"
-                 expected result)))))
+                 expected actual)))))
 
 (defmethod subtraction ((test bag-fixture))
   (let ((a (make-instance 'bag))
         (b (make-instance 'bag)))
     (defun check-for (expected)
-      (let ((result (contents (subtract a b))))
-        (unless (equal (sort (copy-seq result)   'string<)
+      (let ((actual (contents (subtract a b))))
+        (unless (equal (sort (copy-seq actual)   'string<)
                        (sort (copy-seq expected) 'string<))
           (failure "Expected ~A; got ~A"
-                   expected result))))
+                   expected actual))))
     (mapc #'(lambda (datum)
               (add a datum))
           (list 'a 'a 'b 'c))
