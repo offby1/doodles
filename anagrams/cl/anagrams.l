@@ -24,27 +24,29 @@
   (let ((rv ()))
     (save-exclusions exclusions
      ;; Now find anagrams containing smaller words.
-     (maphash
-      #'(lambda (this-bag these-words)
-          (unless (excluded? this-bag exclusions)
-            (let ((smaller-bag (subtract-bags bag this-bag)))
-              (when smaller-bag
-                (if (bag-emptyp smaller-bag)
-                    (progn
-                      (add-exclusion! exclusions this-bag)
-                      (let ((combined (mapcar #'list these-words)))
-                        (maybe-dump combined)
-                        (setf rv (append rv combined))))
-                  (let ((more-anagrams (anagrams-internal smaller-bag exclusions (+ 1 depth))))
-                    (check-type more-anagrams (satisfies anagram-type))
-                    (when more-anagrams
-                                        ;(format t "Prepending ~a to ~a~%" these-words more-anagrams)
-                      (let ((combined (combine these-words more-anagrams)))
-                        (maybe-dump combined)
-                        (setf rv (append rv combined))
-                        ;;(check-type rv (satisfies anagram-type))
+     (mapc
+      #'(lambda (entry)
+          (let ((this-bag (car entry))
+                (these-words (cdr entry)))
+            (unless (excluded? this-bag exclusions)
+              (let ((smaller-bag (subtract-bags bag this-bag)))
+                (when smaller-bag
+                  (if (bag-emptyp smaller-bag)
+                      (progn
                         (add-exclusion! exclusions this-bag)
-                        ))))))))
+                        (let ((combined (mapcar #'list these-words)))
+                          (maybe-dump combined)
+                          (setf rv (append rv combined))))
+                    (let ((more-anagrams (anagrams-internal smaller-bag exclusions (+ 1 depth))))
+                      (check-type more-anagrams (satisfies anagram-type))
+                      (when more-anagrams
+                                        ;(format t "Prepending ~a to ~a~%" these-words more-anagrams)
+                        (let ((combined (combine these-words more-anagrams)))
+                          (maybe-dump combined)
+                          (setf rv (append rv combined))
+                          ;;(check-type rv (satisfies anagram-type))
+                          (add-exclusion! exclusions this-bag)
+                          )))))))))
       *dict*))
 
     ;;(check-type rv (satisfies anagram-type))

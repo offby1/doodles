@@ -24,34 +24,37 @@
               (< 1 (length word)))
           b))))
 
-(defun maybe-add-word (word bag)
-  (let ((b (word-acceptablep word bag)))
-    (when b
-      (setf (gethash b *dict* '())
-            (adjoin word (gethash b *dict* '())  :test #'equalp)))))
-
-(defun make-dictionary-from-file (fn bag)
-  (with-open-file
-   (dict fn #+clisp :external-format #+clisp 'charset:ISO-8859-1)
-   (let ((lines-read 0))
+(defun make-hash-from-file (fn bag)
+  (let ((thang (make-hash-table :test #'equalp)))
+    (with-open-file
+     (dict fn #+clisp :external-format #+clisp 'charset:ISO-8859-1)
      (loop
       (let ((word (read-line dict nil nil)))
-        (if (null word)
-            (return)
-          (maybe-add-word (nstring-downcase word) bag))
-        (incf lines-read))))))
-
-;; for testing
-(defun make-dictionaries-from-list (l)
-  (dolist (word l)
-      (let ((b (bag word)))
-        (setf (gethash b *dict*)
-              (adjoin word (gethash b *dict* )  :test #'equalp)))))
-
+        (when (not word)
+          (return thang))
+        (let ((b (word-acceptablep (nstring-downcase word) bag)))
+          (when b
+            (setf (gethash b thang '())
+                  (adjoin word (gethash b thang '())  :test #'equalp)))))))
+    thang))
 
 (defun init (bag)
   (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
-  (setf *dict* (make-hash-table :test #'equalp))
-  (make-dictionary-from-file "/usr/share/dict/words" bag)
-  (format t "done.  Dictionary hath ~a elements.~%" (hash-table-size *dict*)) (finish-output))
+  (setf *dict* nil)
+  (maphash
+   #'(lambda (bag words)
+       (push (cons bag (sort words #'string<)) *dict*))
+   (make-hash-from-file "/usr/share/dict/words" bag))
+  (format t "(~a elements); sorting ..." (length *dict*))
+  (setf *dict* (sort *dict* 
+                     #'(lambda (e1 e2)
+                         ;; longer entries first; then alphabetically.
+                         (let ((w1 (cadr e1))
+                               (w2 (cadr e2)))
+                           (or (> (length w1)
+                                  (length w2))
+                               (and (= (length w1)
+                                       (length w2))
+                                    (string< w1 w2))))
+                         ))))
 

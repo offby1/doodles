@@ -4,7 +4,7 @@
            "exclusions.scm"
            "dict.scm"
            "bag.scm"
-           (lib "errortrace.ss" "errortrace")
+           ;(lib "errortrace.ss" "errortrace")
            (lib "defmacro.ss")
            (lib "pretty.ss")
            (prefix srfi-1- (lib "1.ss" "srfi")))
@@ -33,7 +33,8 @@
                ";; ~a anagrams of ~s~%"
                (length result)
                string))
-      (output-profile-results #t #t)))
+      ;(output-profile-results #t #t)
+      ))
 
   (define-macro (maybe-dump ans)
     `(begin
