@@ -1,10 +1,11 @@
+(defmacro lookup (c survey)
+  `(aref ,survey (char-code (char-downcase ,c))))
+
 (defun survey-string (s)
   (let ((survey (make-array 128 :initial-element 0)))
     (map nil
          (lambda (c)
-           (let ((index (char-code (char-downcase c))))
-             (incf (aref survey index)))
-           )
+           (incf (lookup c survey)))
          s)
     survey))
 
