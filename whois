@@ -1,0 +1,48 @@
+#!/usr/bin/guile -s
+!#
+
+;;; An accurate re-write of whois.c, from 4.4 BSD.
+
+(define args (cdr (command-line)))
+
+(if (null? args)
+    (begin
+      (display "Usage: whois [-h hostname] name ...\n")
+      (exit 1)))
+
+(define host
+  (if (string-ci=? (car args)
+                   "-h")
+      (let ((result (list-ref args 1)))
+        (set! args (cddr args))
+        result)
+    "whois.internic.net"))
+
+(define the-socket (socket AF_INET SOCK_STREAM 0))
+
+(connect the-socket
+         AF_INET
+         (car (hostent:addr-list (gethostbyname host)))
+         (servent:port (getservbyname "whois" "tcp")))
+
+(let loop ((args args))
+  (if (not (null? args))
+      (begin
+        (display (car args) the-socket)
+        (if (not (null? (cdr args)))
+            (display " " the-socket))
+        (loop (cdr args)))))
+
+(display "\r\n" the-socket)
+
+(display
+ (let loop ((ch (read-char the-socket))
+            (so-far ""))
+   (if (eof-object? ch)
+       so-far
+     (loop (read-char the-socket)
+           (string-append so-far (string ch))))))
+
+;; Local Variables:
+;; mode:scheme
+;; End:
