@@ -49,12 +49,17 @@
 
   (define *region-length* (- (send *t* table-width) (* 2 *ch*)))
 
-  (define-struct player (region cards))
+  (define-struct player (region cards choose-card!))
 
   (define *player-alist*
     (map (lambda (pos coords cards)
            (cons pos
-                 (make-player (apply make-region (append coords (list (symbol->string pos) #f))) cards)))
+                 (make-player (apply make-region (append coords (list (symbol->string pos) #f))) 
+                              cards
+                              (lambda (p) 
+                                (let ((choice (car (player-cards p))))
+                                  (set-player-cards! p (cdr (player-cards p)))
+                                  choice)))))
          `(south west north east)
          `( 
            ;;left x                           top y                           width                   height
@@ -201,34 +206,36 @@
                       (+ x (/ *region-length* 13)))))))))
 
     (define (pretend-to-play)
-      (let next-trick ((tricks-played 0))
-        (when (not (null? (player-cards (cdar *player-alist*))))
+      (let next-trick ()
+        (define (play-one-trick)
           (let next-player ((the-trick '())
                             (cards-this-trick 0))
             (when (< cards-this-trick 4)
               (let* ((p (cdr (list-ref *player-alist* cards-this-trick)))
-                     (hand (player-cards p)))
+                     (c ((player-choose-card! p) p)))
                 ;; play the first card in the hand, because we're dumb.
-                (send *t* card-face-up (car hand))
-                (send *t* card-to-front (car hand)) ;TODO -- use `stack-cards' instead
+                (send *t* card-face-up c)
+                (send *t* card-to-front c) ;TODO -- use `stack-cards' instead
                 (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
                       (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
                   (quickly
-                   (send *t* move-card-center (car hand) 
+                   (send *t* move-card-center c 
                          (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
                          (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
-                (set-player-cards! p (cdr hand))
-                (next-player (cons (car hand) the-trick)
+                (next-player (cons c the-trick)
                              (add1 cards-this-trick))))
 
+            ;; TODO: find out why the program pauses for a long time
+            ;; *after* the trick vanishes from the table.
+            (sleep/yield .1)
+
             (send *t* remove-cards the-trick)
-            (for-each
-             (lambda (c)
-               (send c face-down))
-             the-trick))
+            (for-each (lambda (c) (send c face-down)) the-trick)))
+        (when (not (null? (player-cards (cdar *player-alist*))))
+          (play-one-trick)
+          (next-trick)
+          )))
           
-          (next-trick (add1 tricks-played)))))
-    
     (send menu-bar enable #t)
 
     (instantiate menu-item% ()
@@ -241,8 +248,11 @@
       (parent main-menu)
       (callback (lambda (item event)
                   (deal))))
-    (send *t* move (send *t* get-x)
-          0)
+
+    ;; Move the table so that it's all visible, and not blocking the
+    ;; DrScheme window.
+    (send *t* move 400 0)
+            
     (send *t* show #t)
     (let ()
       (define one-hand
@@ -253,8 +263,7 @@
           (pretend-to-play)
           )
         )
-      (let loop ()
-        (one-hand)
-        (loop))
-      ;;(instantiate timer% () (notify-callback the-loop) (interval 500))
+      ;;(let loop () (one-hand) (loop))
+      (instantiate timer% () (notify-callback one-hand) (interval 1000))
       )))
+
