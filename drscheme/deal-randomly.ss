@@ -1,5 +1,6 @@
 (module deal-randomly mzscheme
   (require (lib "cards.ss" "games" "cards"))
+  (require (all-except (lib "classes.ss" "games" "cards") pasteboard%))
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require "fys.ss")
@@ -15,8 +16,22 @@
   (define (1- x)
     (- x 1))
 
-  (define *t* (make-table "snowball" 13 5))
-  
+  (define my-table%
+    (class table% 
+      (rename (o-s-c on-subwindow-char))
+      (override on-subwindow-char)
+      (define on-subwindow-char 
+        (lambda (receiver event) 
+          (when (eq? 'escape (send event get-key-code))
+            
+            ;; TODO -- figure out how to exit our loops.
+            (printf "~S sez \"Escape!\"~%" receiver))
+          
+          (o-s-c receiver event)))
+      (super-instantiate ())))
+
+  (define *t* (make-object my-table% "snowball" 13 5))
+
   (define (card->value c)
     (+ (* 13
           (1- (send c get-suit-id)))
@@ -71,35 +86,57 @@
 
   (let ()
     (define menu-bar (instantiate menu-bar% () (parent *t*)))
+
     (define main-menu  (instantiate menu% () 
                                     (label "&Stuff" )
                                     (parent menu-bar)))
+
+    (define quick-menu-item (instantiate checkable-menu-item% ()
+                                         (label "&Quick")
+                                         (parent main-menu)
+                                         (callback (lambda (it ev) (void)))))
+    
+    
+    (define-syntax quickly
+      (syntax-rules ()
+        ((_ body ...)
+         (dynamic-wind
+             (lambda () (if (send quick-menu-item is-checked?) (send *t* begin-card-sequence)))
+             (lambda () body ... )
+             (lambda () (if (send quick-menu-item is-checked?) (send *t* end-card-sequence)))))))
+
     (send menu-bar enable #t)
     (instantiate menu-item% ()
                  (label "&Deal Randomly")
                  (parent main-menu)
                  (callback (lambda (item event) 
                              (set! *d* (vector->list (fys! (apply vector *d*))))
-                             (let loop ((cards-moved 0)
-                                        (d *d*))
-                               (when (not (null? d))
-                                 (send *t* move-card (car d)
-                                       (* *cw* (remainder cards-moved 13))
-                                       (* *ch* (quotient  cards-moved 13)))
-                                 (when (send (car d) face-down?)
-                                       (send *t* card-face-up (car d) ))
-                                 (loop (+ 1 cards-moved)
-                                       (cdr d))))
+                             (quickly
+                              (let loop ((cards-moved 0)
+                                         (d *d*))
+                                (when (not (null? d))
+                                  (let ((x (* *cw* (remainder cards-moved 13)))
+                                        (y (* *ch* (quotient  cards-moved 13))))
+                                    (send *t* move-card (car d)
+                                          x
+                                          y))
+                                  (when (send (car d) face-down?)
+                                    (send *t* card-face-up (car d) ))
+                                  (loop (+ 1 cards-moved)
+                                        (cdr d)))))
                              (printf "Done.\n"))))
     (instantiate menu-item% ()
                  (label "Send 'em Back &Home")
                  (parent main-menu)
                  (callback (lambda (item event)
-                             (for-each (lambda (c)
-                                         (send/apply *t* move-card c 
-                                               (card->initial-position c)
-                                               ))
-                                       (reverse *d*)))))
+                             (quickly
+                              (for-each (lambda (c)
+                                          (send/apply *t* move-card c 
+                                                      (card->initial-position c)
+                                                      ))
+                                        (reverse *d*)))
+                             )))
+
     (instantiate menu-item% ()
                  (label "&Exit")
                  (parent main-menu)
