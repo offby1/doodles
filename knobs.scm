@@ -1,10 +1,10 @@
-;; (volume: (silent quiet loud))
-
-;; mzscheme
+#! /bin/sh
+#|
+exec mzscheme -qr "$0" ${1+"$@"}
+|#
 
 (require (lib "1.ss" "srfi"))
-
-;; (volume: (quiet moderate noisy))
+(require (lib "pretty.ss"))
 
 (define (name k)
   (car k))
@@ -15,13 +15,6 @@
 (define (lowest-val k)
   (car (values k)))
 
-;; interesting settings of some knobs:
-;;   one knob: all its values
-;;   two knobs: interesting settings of (other knobs, plus us held at
-;;              lowest)
-;;              adjoined with
-;;              interesting settings of (us, plus other knobs, each held at lowest)
-
 (define (at-lowest k)
   (list (name k)
         (car (values k))))
@@ -29,8 +22,6 @@
 (define (exclude-lowest k)
   (list (name k)
         (cdr (values k))))
-
-;; the above works, but is mighty ugly.
 
 (define (interesting-settings knobs)
   
@@ -65,3 +56,8 @@
    
     (filter (lambda (k) (not (null? (values k))))
             (map exclude-lowest knobs)))))
+
+(pretty-print (interesting-settings '((trustees  (1 2 5 6))
+                                      (voters    (1 2 10 11 30 31 100 101))
+                                      (questions (1 2 10 11 30 31))
+                                      (answers   (1 2 10 11 30 31)))))
