@@ -7,18 +7,18 @@
 lib%.so: %.o
 	$(CC) $(LDFLAGS) $^ -shared -o $@
 
-CLASS	:= HelloWorld
+CLASSES	:= HelloWorld CallBack
 LIB	:= Hello
 
 CPPFLAGS:= -I/usr/local/include -I/usr/local/include/linux
 LDFLAGS	:= -shared
 
-all: $(CLASS).class lib$(LIB).so
+all: $(patsubst %,%.class,$(CLASSES)) lib$(LIB).so
 
-$(LIB).o : $(LIB).c $(CLASS).h
+$(LIB).o : $(LIB).c $(patsubst %,%.h,$(CLASSES))
 
 check: all
-	test "`LD_LIBRARY_PATH=. java $(CLASS)`" = "Hello world!"
+	LD_LIBRARY_PATH=. java HelloWorld | egrep -q "Hello world!"
 	@echo All tests passed.
 
 clean:
