@@ -19,9 +19,8 @@
       (let ((this-char (char-downcase (aref s chars-processed))))
         (when (and
                (alpha-char-p this-char)
-               (>= (char-code this-char)
-                   (char-code #\a))
-               (<= (char-code this-char)
+               (<= (char-code #\a)
+                   (char-code this-char)
                    (char-code #\z)))
           (setf return-value 
                 (* (the integer return-value)
@@ -30,23 +29,18 @@
     
     return-value))
 
-
-(defvar *verbose* nil)
 (defun subtract-bags (minuend subtrahend)
   (declare (type integer minuend))
   (declare (type integer subtrahend))
-  (when *verbose* (format t "Subtracting ~a from ~a~%" subtrahend minuend))
-
+  
   (multiple-value-bind (q r)
       (floor  minuend subtrahend)
     (when (not (zerop r))
-      (when *verbose* (format t "remainder when dividing: returning nil.~%"))
       (return-from subtract-bags nil))
     q))
 
 (defun bag-emptyp (b)
   (declare (type integer b))
-  (when *verbose* (format t "bag-emptyp: ~s~%" b))
   (= 1 b))
 
 (defun bags-equalp (b1 b2) (= b1 b2))

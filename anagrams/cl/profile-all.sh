@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -e
-
 # This worked on a Debian `testing' system as of 19 May 2004.
 
 # Some observations about the relative merits of the different Lisps:
