@@ -1,21 +1,9 @@
-(require 'sort)
-(require 'filter)
-(require 'format)
+(use-modules ((srfi srfi-1)))
 
 (display
  (let ()
-   ;; Like the common-lisp function `union', but uses `member' instead
-   ;; of `memq'.
-   (define (union seq1 seq2)
-     (let loop ((seq1 seq1)
-                (result seq2))
-       (if (null? seq1)
-           result
-         (loop (cdr seq1)
-               (if (not (member (car seq1) result))
-                   (cons (car seq1) result)
-                 result)))))
-
+   (define (union s1 s2)
+     (lset-union eq? s1 s2))
    (define (uniquify seq)
      (cond
       ((null? seq)
@@ -38,7 +26,7 @@
       "Dennis Farina"
       "Albert Brooks"
       "Steve Zahn"
-      "Luis Guzmán"
+      "Luis Guzmán"
       "Catherine Keener"
       "Isaiah Washington"
       "Keith Loneker"
@@ -76,7 +64,7 @@
       "Chris Tucker (I)"
       "Ellis E. Williams"
       "Tangie Ambrose"
-      "T'Keyah 'Crystal' Keymáh"
+      "T'Keyah 'Crystal' Keymáh"
       "Venessia Valentino"
       "Diana Uribe"
       "Renee Kelly (II)"
@@ -219,9 +207,9 @@
 
 
      (define everyone (union (union (union (uniquify (sort-strings Out-of-Sight))
-                                           (uniquify (sort-strings Get-Shorty)))
-                                    (uniquify (sort-strings Pulp-Fiction)))
-                             (uniquify (sort-strings Jackie-Brown))))
+                                                          (uniquify (sort-strings Get-Shorty)))
+                                              (uniquify (sort-strings Pulp-Fiction)))
+                                  (uniquify (sort-strings Jackie-Brown))))
 
      (define (bool->integer b) (if b 1 0))
 
