@@ -11,6 +11,14 @@
     (+ (* (sub1 (bid-level b)) (length *denominations*))
        (index (bid-denomination b) *denominations*)))
   
+  (define (bid->string b)
+    (format "~A ~A" (bid-level b)
+            (bid-denomination b)))
+  (define (call->string c)
+    (if (bid? c)
+        (bid->string c)
+      (format "~A" c)))
+  
   (define make-call
     (lambda (lowest-legal-bid)
       (let* ((dialog (instantiate dialog% () (label "Make a call.")))
@@ -34,16 +42,16 @@
                                    (set! choice value)
                                    (send dialog show #f)))))
         (define make-bid-button
-          (lambda (label level denom enabled?)
+          (lambda (b enabled?)
             (make-choice-button
-             label
-             (cdr (assq level bids))
-             (cons level denom)
+             (bid->string b)
+             (cdr (assq (bid-level b) bids))
+             b
              enabled?)))
         
         (for-each (lambda (sym enabled?)
                     (make-choice-button
-                     (format "~A" sym)
+                     (call->string sym)
                      doubles-and-pass
                      sym
                      enabled?))
@@ -54,12 +62,10 @@
 
         (for-each (lambda (level/pane-pair)
                     (for-each (lambda (denom)
-                                (let ((level (car level/pane-pair)))
-                                  (make-bid-button (format "~A ~A" level denom) 
-                                                   level
-                                                   denom
+                                (let ((b (make-bid (car level/pane-pair) denom)))
+                                  (make-bid-button b
                                                    (or (not lowest-legal-bid)
-                                                       (>= (bid-value (make-bid level denom))
+                                                       (>= (bid-value b)
                                                            (bid-value lowest-legal-bid)))
                                                    )))
                               *denominations*))
@@ -67,7 +73,5 @@
         (send dialog show #t)
         choice)))
 
-  (printf "~A~%" (make-call 
-                  
-                  (make-bid 3 'notrump)
-                  )))
+  (printf "~A~%" (call->string
+                  (make-call (make-bid 3 'notrump)))))
