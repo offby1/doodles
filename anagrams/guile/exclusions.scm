@@ -3,7 +3,7 @@
 
 (if #t
     (begin
-      ;; The simple-and-possibly-slow way
+      ;; The simple-and-youd-think-itd-be-slow-but-its-really-fast way
       (define-public (empty-exclusions) '())
       (define-public excluded? member)
 
