@@ -2,20 +2,23 @@ import mpz;
 import std.string;
 import std.ctype;
 
-int primes[26] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
+int primes[] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101];
 
 class bag
 {
   mpz product;
-  int opEquals (int i)
+
+  bool opEquals (int i) { return (this.product == i ? true : false);}
+
+  bool is_empty ()
   {
-    return this.product == i;
+    return (1 == product ? true : false);
   }
+
+  this (mpz i) { this.product = i; }
   this (char[] s)
   {
     product = new mpz (1);
-
-    printf ("New bag: input was `%.*s'; ", s);
 
     while (s.length)
       {
@@ -26,35 +29,37 @@ class bag
           }
         s = s[1 .. s.length];
       }
+  }
 
-    printf ("product is %.*s\n", product.toString ());
-  }
-  bool is_empty ()
+  char []toString () { return this.product.toString (); }
+  
+  void subtract (in bag other, out bag difference, out bool ok)
   {
-    return (1 == product ? true : false);
+    mpz remainder = this.product % other.product;
+    ok = (0 == remainder ? true : false);
+    if (ok)
+      {
+        difference = new bag (this.product / other.product);
+      }
   }
+
   unittest
   {
     assert (2 == new bag ("a"));
     assert (6 == new bag ("ab"));
     assert (6 == new bag ("ba"));
+    assert ((new bag ("")).is_empty ());
+
+    bag aa = new bag ("aa");
+    bag a  = new bag ("a");
+
+    bag New_Diff;
+    bool ok;
+    aa.subtract (a, New_Diff, ok);
+    assert (ok && (2 == New_Diff));
+    a.subtract (aa, New_Diff, ok);
+    assert (!ok);
+
+    printf ("Bag unit tests passed.\n");
   }
-}
-
-int main()
-{
-  int i = 0;
-  mpz sam = new mpz (2);
-
-  for (i = 0;
-       i < 7;
-       i++)
-    {
-      printf ("%.*s\n", sam.toString ());
-      sam *= sam;
-    }
-
-  bag ted = new bag ("Ernest Hemingway");
-  
-  return 0;
 }

@@ -1,3 +1,9 @@
 # -*-python-*-
-env = Environment(DFLAGS = '-unittest')
-env.Program ('bag', ['bag.d', 'mpz.d', 'gmppool.d'], LIBS = ['gmp'])
+env = Environment(DFLAGS = ['-unittest', '-g'])
+env.Program ('anagrams',
+             ['anagrams.d',
+              'bag.d',
+              'dictionary.d',
+              'mpz.d',
+              'gmppool.d'],
+             LIBS = ['gmp'])
