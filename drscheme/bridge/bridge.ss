@@ -22,6 +22,7 @@
   (require (lib "list.ss"))
   (require "rotate.ss")
   (require "call.ss")
+  (require "interactive-call.ss")
   (require "auction.ss")
   (require "misc.ss")
 
@@ -74,7 +75,6 @@
     (set! *t* (make-object my-table% "The Snowball Bridge Club" 
                 (/ width-in-pixels *cw*)
                 (/ width-in-pixels *ch*))))
-  
   (send *t* set-button-action 'left   'drag-raise/one)
   (send *t* set-button-action 'middle 'drag-raise/one)
   (send *t* set-button-action 'right  'drag-raise/one)
@@ -404,9 +404,10 @@
     (make-menu-item
      "&Auction"
      (lambda (item event)
+       (make-bbox-window *t*)
        (let ((the-auction (make-auction (caar *player-alist*))))
          (let loop ()
-           (let ((c (make-call (last-bid the-auction )
+           (let ((c (interactively-get-call (last-bid the-auction)
                                (format "~A" (whose-turn the-auction)))))
              (note-call the-auction c)
 

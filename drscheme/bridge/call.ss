@@ -1,13 +1,17 @@
 (module call mzscheme
-  (require (lib "class.ss"))
-  (require (lib "mred.ss" "mred"))
-  (require (lib "1.ss" "srfi"))
+  (require (lib "test.ss"    "schemeunit"))
+  (require (lib "text-ui.ss" "schemeunit"))
   (require "misc.ss")
-  (provide make-call
-           call->string
+
+  (provide call->string
            bid?
-           make-bid)
-  
+           bid-level
+           bid-denomination
+           make-bid
+           calls-equal?
+           bid>
+           *denominations*)
+
   (define *denominations* `(clubs diamonds hearts spades notrump))
   (define-struct bid (level denomination))
   (define (bid->int b)
@@ -20,68 +24,52 @@
     (if (bid? c)
         (bid->string c)
       (format "~A" c)))
+    
+  (define (calls-equal? c1 c2)
+    (if (bid? c1)
+        (and (bid? c2)
+             (= (bid-level c1)
+                (bid-level c2))
+             (eq? (bid-denomination c1)
+                  (bid-denomination c2)))
+      (and (not (bid? c2))
+           (eq? c1 c2))))
+
+  (define (bid< b1 b2)
+    (< (bid->int b1)
+       (bid->int b2)))
+
+  (define (bid> b1 b2)
+    (and (not (calls-equal? b1 b2))
+         (not (bid< b1 b2))))
   
-  (define make-call
-    (lambda (highest-illegal-bid frame-title)
-      (let* ((dialog (instantiate dialog% ()
-                       (label frame-title)
-                       (x 200)
-                       (y 200)))
-             (column (instantiate vertical-pane% ()
-                       (parent dialog)))
-
-             ;; alist, each elt looks like (3 . <horizontal-pane%>)
-             (bids (map (lambda (level)
-                          (cons level (instantiate horizontal-pane% ()
-                                        (parent column))))
-                        (reverse (iota 7 1))))
-             (doubles-and-pass (instantiate horizontal-pane% ()
-                                 (parent column)))
-             (choice #f))
-
-        (define (make-choice-button label parent value enabled?)
-          (instantiate button% () (label label)
-                       (parent parent)
-                       (enabled enabled?)
-                       (callback (lambda (button control-event-object)
-                                   (set! choice value)
-                                   (send dialog show #f)))))
-        (define make-bid-button
-          (lambda (b enabled?)
-            (make-choice-button
-             (bid->string b)
-             (cdr (assq (bid-level b) bids))
-             b
-             enabled?)))
-        
-        (for-each (lambda (sym enabled?)
-                    (make-choice-button
-                     (call->string sym)
-                     doubles-and-pass
-                     sym
-                     enabled?))
-                  `(Double Redouble Pass)
-                  `(#f #f #t)           ; BUGBUG -- get double and
-                                        ; redouble right
-                  )
-
-        (for-each (lambda (level/pane-pair)
-                    (for-each (lambda (denom)
-                                (let ((b (make-bid (car level/pane-pair) denom)))
-                                  (make-bid-button b
-                                                   (or (not highest-illegal-bid)
-                                                       (> (bid->int b)
-                                                          (bid->int highest-illegal-bid)))
-                                                   )))
-                              *denominations*))
-                  bids)
-        (send dialog show #t)
-        choice)))
-
-  (when #f
-    ;; a very short auction :-\
-    (let ((c1 (make-call #f)))
-      (let ((c2 (make-call (and (bid? c1) c1))))
-        (printf "~A~%" (call->string
-                        c2)))
-      )))
+  (test/text-ui
+   (make-test-suite
+    "Evahthang"
+    (make-test-case
+     "uh ..."
+     (let ((b1 (make-bid 1 'notrump))
+           (b2 (make-bid 1 'notrump))
+           (b3 (make-bid 2 'notrump))
+           (p1 'pass)
+           (p2 'pass)
+           (d  'double))
+       (assert-true (calls-equal? b1 b2))
+       (assert-false (calls-equal? b2 b3))
+       (assert-false (calls-equal? b1 b3))
+       (assert-false (calls-equal? b1 p1))
+       (assert-true  (calls-equal? p1 p2)))
+     )
+    (make-test-case
+     ">"
+     (begin
+       (assert-true (bid< (make-bid 1 'spades)
+                          (make-bid 1 'notrump)))
+       (assert-false (bid< (make-bid 1 'notrump)
+                           (make-bid 1 'notrump)))
+       (assert-true (bid> (make-bid 1 'notrump)
+                          (make-bid 1 'spades)))
+       (assert-false (bid> (make-bid 4 'diamonds)
+                           (make-bid 4 'diamonds)))))
+    ))
+  )
