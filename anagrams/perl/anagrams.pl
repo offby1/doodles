@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 use Data::Dumper;
-use Carp;
+use Carp qw(confess);
 
 use dict;
 use bag;
@@ -25,82 +25,112 @@ sub type_check {
   }
 }
 
-sub anagrams {
+sub excluded {
   my $bag = shift;
-  my $excluded_bags = shift;
-  #warn "entering. bag $bag; exclusions " . Data::Dumper->Dump ([$excluded_bags], [qw(excluded_bags)]);
+  confess "got a ref" if (ref ($bag));
+  my @exclusions = @_;
 
-  my $easy_anagrams = $dict->{$bag};
-  if ($easy_anagrams) {
-    $easy_anagrams = [map {[$_]} @$easy_anagrams];
-    $excluded_bags->{$bag}++;
-    #warn "Easy anagrams of $bag: " . Dumper ($easy_anagrams) ;
-    #warn Data::Dumper->Dump ([$excluded_bags], [qw(excluded_bags)]);
-  } else {
-    $easy_anagrams = [];
+  #print STDERR "Looking for $bag in [" , join (' ', @exclusions) , "] ... ";
+  foreach (@exclusions) {
+    if (bags_equal ($_, $bag)) {
+      #warn "Found it; moving to next dictionary entry";
+      return 1;
+    }
   }
 
-  #type_check ($easy_anagrams);
+  #warn "it wasn't there.";
+  return 0;
+}
 
-  my $harder_anagrams = [];
+sub combine {
+  my $words = shift;
+  my $anagrams = shift;
+  my $rv = [];
 
-  foreach my $pickled_dict_bag (keys %$dict) {
-    #print STDERR "Looking for $pickled_dict_bag in exclusions ... ";
-    if (exists $excluded_bags->{$pickled_dict_bag}) {
-      #warn "Found it; moving to next dictionary entry";
-      next ;
+  foreach my $w (@$words) {
+    push @$rv, (map {[($w, @$_)]} @$anagrams);
+  }
+
+  @$rv;
+}
+
+sub anagrams {
+  my $bag = shift;
+  my $l = shift;
+  my @excluded_bags = @_;
+  my $rv = [];
+
+  if (excluded ($bag, @excluded_bags)) {
+    #warn " " x $l ."$bag is excluded; returning empty list";
+    return $rv;
+  }
+
+  foreach my $entry (@dict) {
+    my $key   = $entry->[0];
+    my $words = $entry->[1];
+    next if (excluded ($key, @excluded_bags));
+    #warn " " x $l ."$key => [" . join (', ', @$words) . "]";
+
+    my $smaller_bag = subtract_bags ($bag, $key);
+    next unless (defined ($smaller_bag));
+    #warn " " x $l ."$bag - $key = $smaller_bag";
+
+    if (bag_empty ($smaller_bag)) {
+      #warn " " x $l ."$smaller_bag is empty";
+      push @excluded_bags, $key;
+      my @combined = map { [$_]  } @$words;
+      print join (' ', map { "(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
+      push @$rv, @combined;
+    } else {
+      #warn " " x $l ."$smaller_bag is not empty";
+      my $from_smaller_bag = anagrams ($smaller_bag,
+                                       $l + 1,
+                                       @excluded_bags);
+      next unless (@$from_smaller_bag);
+      push @excluded_bags, $key;
+
+      my @combined = combine ($words, $from_smaller_bag);
+      push @$rv, @combined;
+      print join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
     }
-    #warn "it wasn't there.";
-    my $bag_from_dictionary = bag ($pickled_dict_bag);
-    my $smaller_bag = subtract_bags ($bag, $bag_from_dictionary);
-    next unless $smaller_bag;
-    my $from_smaller_bag = anagrams ($smaller_bag, $excluded_bags);
-    next unless @$from_smaller_bag;
-    #die $smaller_bag .  Data::Dumper->Dump ([$from_smaller_bag], [qw(from_smaller_bag)]);
-    {
-      my $more;
-      foreach my $short_an (@$from_smaller_bag) {
-        #warn Data::Dumper->Dump ([$short_an, $pickled_dict_bag], [qw(short_an pickled_dict_bag)]);
-        my @these_words = @{$dict->{$pickled_dict_bag}};
-        #warn Data::Dumper->Dump ([\@these_words], [qw(these_words)]);
-        my @what_is_it = map { [($_, @$short_an)]  } @these_words;
-        #type_check (\@what_is_it);
-        push @$more, @what_is_it;
-        #warn Data::Dumper->Dump ([$more], [qw(more)]);
-      }
-      push @$harder_anagrams,  @$more;
-    }
-    #warn "Excluding $pickled_dict_bag";
-    $excluded_bags->{$pickled_dict_bag}++;
+    #warn "Excluding $key";
+    #warn Data::Dumper->Dump ([\@excluded_bags], [qw(excluded_bags_before)]);
+    #warn Data::Dumper->Dump ([\@excluded_bags], [qw(excluded_bags_after)]);
   }
 
   #type_check ($harder_anagrams);
-  my $rv = [@$easy_anagrams, @$harder_anagrams];
   #type_check ($rv);
-  if (0) {
-    foreach my $one_anagram (@$rv) {
-      my $as_string = join ('', @$one_anagram);
-      die "input size " . size ($bag) . " exceeds length of `$as_string'"
-        unless (size ($bag) <= length ($as_string));
-    }
 
-    if (scalar (@$rv)) {
-      #warn "Found some anagrams; here are the exclusions: " . Data::Dumper->Dump ([$excluded_bags], [qw(exclusions)]);
-    }
-  }
-  if (0) {
-    warn Data::Dumper->Dump ([$rv], [qw(so_far)])
-      if (scalar (@$rv));
-  }
-  #warn "Returning " . join (', ', @$rv);
+  #warn " " x $l ."Returning " . Data::Dumper->Dump ([$rv], [qw(rv)]);
+  #die " " x $l ."Outta here" if (2 == $l);
   return $rv;
 }
 
 {
-  my $input = "Hemingway";
+  my $input = shift;
+  die "Say something!" unless defined ($input);
   my $input_as_bag = bag ($input);
-  init ($input_as_bag);
-  my $result = anagrams ($input_as_bag);
+  if (1) {
+    init ($input_as_bag);
+  } else {
+    @dict = (
+             ['bbboy' => [
+                          'bobby',
+                          'bobby'
+                         ]],
+             ['bo' => [
+                       'ob'
+                      ]],
+             ['bbo' => [
+                        'bob',
+                        'bob'
+                       ]],
+             ['boy' => [
+                        'boy'
+                       ]]
+            );
+  }
+  my $result = anagrams ($input_as_bag, 0);
   print scalar (@$result),
     " anagrams of $input: ",
       join (' ', map { "(" . join (' ', @$_) . ")" } @$result),

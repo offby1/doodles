@@ -4,21 +4,21 @@ use warnings;
 use strict;
 
 package dict;
-use Carp qw(cluck);
+use Carp qw(cluck carp);
 use Data::Dumper;
 use bag;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw($dict init);
+our @EXPORT = qw(@dict init);
 
-our $dict;
-
+our @dict;
+our $dict_hash;
 my $dict_file_name = "/usr/share/dict/words";
 
 sub init {
   my $bag = shift;
-
+  carp "bag is `$bag'";
   if (!-r "dict.pl") {
     # Open this first, so that if it fails we won't have wasted time
     # reading a dictionary that we cannot cache.
@@ -34,58 +34,61 @@ sub init {
       chomp;
       next unless $_;
 
+      $_ = lc ($_);
       my $b = bag ($_);
-      if (0) {
 
-        if (0) {
-          next if (m([^[:alpha:]]));
-          next if (m([[:upper:]]));
-          next unless ((m(^i$)i)
-                       ||
-                       (m(^a$)i)
-                       ||
-                       (m(^..)));
-          next unless (m([aeiou]));
-        } else {
-          next unless (subtract_bags ($bag, $b));
-        }
-      }
+      next if (m([^[:alpha:]]));
+      next unless ((m(^i$))
+                   ||
+                   (m(^a$))
+                   ||
+                   (m(^..)));
+      next unless (m([aeiou]));
 
-      {
-        my $entry = $dict->{$b};
-        if (defined ($entry)) {
-          my %existing_entries = map { ($_, 1)} @{$entry};
-          #die "$_: " . Data::Dumper->Dump ([$dict], [qw(dict)]);
-          if (exists $existing_entries{$_}) {
-            #warn "skipping duplicate entry $_: $existing_entries{$_}";
-            next;
+      my $entry = $dict_hash->{$b};
+
+      if (defined ($entry)) {
+        my $duplicate;
+        foreach my $existing_entry (@$entry) {
+          if ($_ eq $existing_entry) {
+            $duplicate = 1;
+            last;
           }
         }
+
+        next if ($duplicate);
       }
+
       #die "entering $_; dict is now " . Data::Dumper->Dump ([$dict], [qw(dict)]) if ($. > 10);
-      push @{$dict->{$b}}, lc ($_);
+      push @{$dict_hash->{$b}}, $_;
     }
     close (DICT)
       or die "Can't close filehandle: $!; stopped";
-    warn " done.  Dictionary hath " . scalar (keys %$dict) . " elements";
+    warn " done.  Dictionary hath " . scalar (keys %$dict_hash) . " elements";
 
-    print PICKLE Data::Dumper->Dump ([$dict], [qw(dict)]);
+    print PICKLE Data::Dumper->Dump ([$dict_hash], [qw(dict_hash)]);
     close (PICKLE)
       or warn "Can't close filehandle: $!";
   }
 
   do "dict.pl";
-  warn "Before pruning: " . %$dict;
-  while ((my $k, my $v) = (each %$dict)) {
-    my $makeable = subtract_bags ($bag, $k);
-    #cluck "$bag minus $k is $makeable";
-    if ($makeable) {
-      #warn "Keeping key `$k', value `@$v'";
-    } else {
-      delete $dict->{$k};
+  if (1) {
+    warn "Before pruning: " . scalar (keys %$dict_hash);
+    while ((my $k, my $v) = (each %$dict_hash)) {
+      my $makeable = subtract_bags ($bag, $k);
+      #cluck "$bag minus $k is $makeable";
+      if (defined ($makeable)) {
+        push @dict, [($k, [sort (@$v)])];
+      }
     }
+
+    # just for fun, let's sort the dictionary.  Biggest words first.
+    @dict = (sort {length ($b->[0])
+                     <=>
+                       length ($a->[0])} @dict);
+
+    warn "After pruning and sorting: " . scalar (@dict);
   }
-  warn "After pruning: " . %$dict;
 
 }
 1;

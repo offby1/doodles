@@ -1,6 +1,5 @@
 (use-modules (ice-9 pretty-print)
-             (anagrams)
-             (wrappers))
+             (anagrams))
 
 ;; Do a bunch of anagrams, with different sized inputs; measure the
 ;; time they take, and also the number of returned anagrams.  Then
@@ -8,7 +7,7 @@
 
 ;; Our first run will take the first character of this string; the
 ;; second will take the first two characters, and so on.
-(define *ultimate-string* "ErnestHemingway")
+(define *ultimate-string* "ErnestHeming")
 
 (define (sym->filename s)
   (string-append

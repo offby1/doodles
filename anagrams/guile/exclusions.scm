@@ -21,7 +21,7 @@
              )))
       (export save-exclusions))
   (begin
-    ;; The hopefully-faster way
+    ;; The I'd-have-thought-itd-be-faster way
     (define-public (empty-exclusions) (list (make-hash-table)))
     (define-public (excluded? datum list)
       (let loop ((list list))

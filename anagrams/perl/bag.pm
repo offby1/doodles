@@ -7,105 +7,149 @@ package bag;
 
 use Carp qw(cluck confess);
 use Data::Dumper;
-use Math::BigInt lib => 'GMP';
-warn "using " . Math::BigInt->config()->{lib};
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(bag bag_empty bags_equal subtract_bags  size);
-
-my @primes = map { Math::BigInt->new ($_)} qw(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101);
-
-{
-  my $a_code = ord ("a");
-  sub char_to_factor {
-    my $char = lc (shift);
-
-    if ($char !~ m([[:alpha:]])) {
-      return 1;
-    }
-
-    $primes [ord ($char) - $a_code];
-  }
-}
+our @EXPORT = qw(bag bag_empty bags_equal subtract_bags);
 
 sub bag {
-  my $thing = shift;
-  my $rv = $thing;
-
-  unless ($thing =~ m(^(\d+), (\d+)$)) {
-
-    my $product = 1;
-    my $size = 0;
-
-    foreach (split (qr(), $thing)) {
-      my $factor = char_to_factor ($_);
-      $product *=  $factor;
-      $size ++ if ($factor > 1);
-    }
-    $rv = "$product, $size";
-  }
-  confess "Empty bag!" unless ($rv =~ m(, [1-9]));
-  return $rv;
-}
-
-sub product {
-  my $b = shift;
-  my $rv = "1";
-  if (defined ($b)) {
-    $rv = Math::BigInt->new ((split (m(,), $b))[0]);
-  }
-
-  $rv;
-}
-
-sub size {
-  my $b = shift;
-  my $rv = "0";
-  if (defined ($b)) {
-    $rv = (split (m(, +), $b))[1];
-  }
-
-  $rv;
+  my $input = lc (shift);
+  my $output = join ('', sort (split (m(), $input)));
+  $output;
 }
 
 sub bag_empty {
-  my $b = shift;
-  my $rv = "1";
-
-  if (defined ($b)) {
-    $rv = ((0 == size ($b)) ? "1" : "0");
-  }
-
-  return $rv;
+  "" eq shift;
 }
 
 sub bags_equal {
-  my $b1 = shift;
-  my $b2 = shift;
-  my $diff = subtract_bags ($b1, $b2);
-
-  bag_empty ($diff);
+  shift eq shift;
 }
+
+# Looking just at the first characters:
+
+# b1 is "smaller" than b2: consume from b1 until it's no smaller; resume main loop
+# exactly equal: keep going
+# b1 is empty but b2 isn't: undef
+# b2 is empty but b1 isn't: difference-so-far plus b1 starting from this letter
 
 sub subtract_bags {
   my $b1 = shift;
   my $b2 = shift;
-  my $rv = undef;
+  my $letters_examined = 0;
+  my $difference = "";
+  while (1) {
+    my $c1 = substr ($b1, 0, 1);
+    my $c2 = substr ($b2, 0, 1);
 
-  #confess "Why you be subtracting nothing?" unless (size ($b2));
+    if ($c2 eq "") {
+      my $rv = $difference . substr ($b1, $letters_examined);
+      return $rv;
+    }
 
-  my $size = size ($b1) - size ($b2);
+    if ($c1 eq "") {
+      return undef;
+    }
 
-  if (($size > 0)
-      &&
-      (0 == (product ($b1) % product ($b2)))) {
+    if ($c1 eq $c2) {
+      next;
+    }
 
-    my $quotient = product ($b1) / product ($b2);
-    $rv = "$quotient, $size";
+    {
+      my $comparison = ($c1 cmp $c2);
+      while ($comparison < 0) {
+
+        if ($c1 eq "") {
+          return undef ;
+        }
+
+        $difference .= $c1;
+
+        $b1 = substr ($b1, 1);
+        $c1 = substr ($b1, 0, 1);
+        $comparison = ($c1 cmp $c2);
+      }
+
+      if ($comparison > 0) {
+        return undef;
+      }
+    }
+
+  } continue {
+    $b1 = substr ($b1, 1);
+    $b2 = substr ($b2, 1);
   }
 
-  $rv;
+  return $difference;
 }
+
+
+die "Case sensitive"
+  unless (bags_equal (bag ("HEY"),
+                     bag ("hey")));
+
+die "bag_empty"
+  unless (bag_empty (bag ("")));
+
+die "bag_empty"
+  if (bag_empty (bag ("a")));
+
+die "bags_equal"
+  unless (bags_equal (bag ("abc"),
+                      bag ("cba"))) ;
+
+die "bags_equal"
+  if (bags_equal (bag ("abc"),
+                  bag ("bc")));
+
+{
+  my $oughta_be_empty = subtract_bags (bag ("a"),
+                                       bag ("a"));
+  die "subtract_bags"
+    unless defined ($oughta_be_empty);
+  die "subtract_bags"
+    unless (bag_empty ($oughta_be_empty));
+}
+
+die "subtract_bags"
+  unless (bags_equal (bag ("a"),
+                      subtract_bags (bag("ab"),
+                                     bag ("b")))) ;
+
+die "subtract_bags"
+  if (subtract_bags (bag ("a"),
+                     bag ("b")));
+
+die "subtract_bags"
+  if (subtract_bags (bag ("a"),
+                     bag ("aa")));
+
+die "subtract_bags"
+  if (subtract_bags (141, 123093));
+
+die "subtract_bags"
+  unless (bags_equal (bag ("x"),
+                      subtract_bags (bag ("foox"),
+                                     bag ("foo"))));
+{
+  my $silly_long_string = <<EOF;
+When first I was a wee, wee lad
+Eating on my horse
+I had to take a farting duck
+Much to my remorse.
+Oh Sally can't you hear my plea
+When Roe V Wade is nigh
+And candles slide the misty morn
+With dimples on your tie.
+EOF
+
+  my $ever_so_slightly_longer_string = $silly_long_string . "x";
+  die "subtract_bags"
+    unless (bags_equal (bag ("x"),
+                        subtract_bags (bag ($ever_so_slightly_longer_string),
+                                       bag ($silly_long_string))));
+}
+
+print "We cool!\n";
 
 1;

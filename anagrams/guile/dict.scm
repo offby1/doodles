@@ -83,7 +83,7 @@ dictionary."
        (let ((this-bag (bag-acceptable? bag bag-to-meet)))
          (if this-bag
              (hash-set! *big-ol-hash-table* bag words)))))
-   *alist*)
+   (with-input-from-file *alist-file-name* read))
   ;; now clobber the alist.
   (set! *alist* (hash-fold (lambda (key value prior)
                              (cons (cons key value) prior)) 
@@ -167,7 +167,7 @@ dictionary."
       
       (format #t "done~%")))
 
-(define *alist* (with-input-from-file *alist-file-name* read))
+(define *alist* #f)
 (set! *random-state* (seed->random-state (get-internal-real-time)))
 
 ;; calculate letter frequencies.  This could be used to re-order the

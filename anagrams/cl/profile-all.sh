@@ -6,14 +6,14 @@ set -e
 
 # Some observations about the relative merits of the different Lisps:
 
-# clisp seems to be the fastest by far.
+# they're roughly the same speed, with cmucl a bit faster.
 
 # sbcl's and cmu's compiler outputs are very informative; I bet if I
 # fixed everything they were whining about, the program would run
 # faster.  clisp's output is quite terse; I wonder if I can give some
 # switch to make it whine louder.
 
-for cmd in "clisp -q -i" "lisp -load" "sbcl --load"
+for cmd in "lisp -load" "clisp -q -i" "sbcl --load"
   do 
   time $cmd profile.l
   echo 
