@@ -1,9 +1,21 @@
 require 'dict'
 require 'bag'
+require 'getoptlong'
+
+Dict_filename = "/usr/share/dict/words"
+
+opts = GetoptLong.new(
+                        [ "--dictionary-fn",    "-d",            GetoptLong::OPTIONAL_ARGUMENT ]
+                      )
+
+opts.each do |opt, arg|
+  Dict_filename = arg
+  puts "Will read dictionary `#{Dict_filename}' if necessary"
+end
 
 The_Bag = Bag.new(ARGV[0])
-The_Dict = Dict.Prune(The_Bag)
-#puts The_Dict.inspect
+Read(Dict_filename)
+The_Dict = Prune(The_Bag)
 
 def combine(words, anagrams)
   rv = []

@@ -2,12 +2,7 @@ require 'bag'
 
 # First snarf the dictionary and do as much pre-processing as we can
 
-class Dict
-
-  # TODO -- see if we can cache the dictionary once we've read it, so
-  # that subsequent calls will read that cache, presumably faster than
-  # reading the original dictionary.
-
+def Read(fn)
   begin
     File.open("hash.cache", "r") do |aCache|
       @Anagrams_by_number = Marshal.load(aCache)
@@ -15,10 +10,10 @@ class Dict
     end
 
   rescue Errno::ENOENT
-    puts "Didn't find cache, so we're reading the dictionary line by line"
-    File.open("/usr/share/dict/words", "r") do |aFile|
+    File.open(fn, "r") do |aFile|
       @Anagrams_by_number = {}
-      printf "Snarfing dictionary ..."
+      printf "Snarfing #{fn} ..."
+      $stdout.flush
       has_a_vowel_re = /[aeiou]/
       long_enough_re = /^(..|i|a)/
       has_a_non_letter_re = /[^a-z]/
@@ -44,17 +39,17 @@ class Dict
       puts "Wrote hash.cache"
     end
   end
-
-  def Dict.Prune(max)
-    result = []
-    @Anagrams_by_number.each {
-      | bag, words |
-      if (max - bag)
-        result.push([bag, words])
-      end
-    }
-
-    #puts "After pruning to `#{max}', (#{result.length} slots: "
-    result
-  end
 end
+
+def Prune(max)
+  result = []
+  @Anagrams_by_number.each {
+    | bag, words |
+    if (max - bag)
+      result.push([bag, words])
+    end
+  }
+
+  result
+end
+
