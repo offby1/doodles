@@ -167,26 +167,29 @@
   (send *t* set-single-click-action
         (lambda (c)
           (printf "~A~%" 
-                  (format "The ~A of ~A, face ~A"
-                          (let ((v (ace-high (send c get-value))))
-                            (case v
-                              ;; it's a shame that MzScheme's `format' doesn't
-                              ;; support the ~R control.
-                              ((2) 'two)
-                              ((3) 'three)
-                              ((4) 'four)
-                              ((5) 'five)
-                              ((6) 'six)
-                              ((7) 'seven)
-                              ((8) 'eight)
-                              ((9) 'nine)
-                              ((10) 'ten)
-                              ((11) 'jack)
-                              ((12) 'queen)
-                              ((13) 'king)
-                              ((14) 'ace)))
-                          (send c get-suit )
-                          (if (send c face-down?) "down" "up")))))
+                  (if (send c face-down?)
+                      "Like I'm really gonna show you that card."
+                    (format "The ~A of ~A"
+                            (let ((v (ace-high (send c get-value))))
+                              (case v
+                                ;; it's a shame that MzScheme's `format' doesn't
+                                ;; support the ~R control.
+                                ((2) 'two)
+                                ((3) 'three)
+                                ((4) 'four)
+                                ((5) 'five)
+                                ((6) 'six)
+                                ((7) 'seven)
+                                ((8) 'eight)
+                                ((9) 'nine)
+                                ((10) 'ten)
+                                ((11) 'jack)
+                                ((12) 'queen)
+                                ((13) 'king)
+                                ((14) 'ace)))
+                            (send c get-suit )
+                            ))
+                  )))
 
   (random-seed 0)
   (let ()
@@ -247,30 +250,35 @@
           )))
 
     (define (sort)
-      (if #t
-          (printf "Not sorting hand 'cuz that's slow.~%")
-        ;; sort the cards in the visible hand.
-        (let ((south (cdr (assq 'south *player-alist*))))
+      ;; sort the cards in the visible hand.
+      (let ((south (cdr (assq 'south *player-alist*))))
             
-          (let loop ((hand (mergesort (player-cards south) (lambda (c1 c2)
-                                                             (> (card->value c1)
-                                                                (card->value c2)))))
-                     (x (region-x (player-region south))))
-            (when (not (null? hand))
-              (let ((c (car hand)))
-                (send *t* move-card c
-                      x
-                      (region-y (player-region south)))
+        (let loop ((hand (mergesort (player-cards south) (lambda (c1 c2)
+                                                           (> (card->value c1)
+                                                              (card->value c2)))))
+                   (x (region-x (player-region south))))
+          (when (not (null? hand))
+            (let ((c (car hand)))
+              (send *t* move-card c
+                    x
+                    (region-y (player-region south)))
               
-                (send *t* card-to-front c)
-                (loop (cdr hand)
-                      (+ x (/ *region-length* 13)))))))))
+              (send *t* card-to-front c)
+              (loop (cdr hand)
+                    (+ x (/ *region-length* 13))))))))
 
     (define (pretend-to-play)
       ;; TODO: I have this nagging feeling that I shouldn't be using a
       ;; loop here, and instead should use some contraption involving
       ;; callbacks which call themselves.  But that sounds ugly.  Wish
       ;; I knew more about GUI programming in general.
+      
+      ;; One possible advantage of not using loops: if all my code is
+      ;; callbacks, and they all complete reasonably quickly (as
+      ;; opposed to looping), then the DrScheme window will not say
+      ;; "running" for very long, and thus I can futz in the REPL
+      ;; pretty much whenever I want (which is, at least, handy for
+      ;; debugging).
       (let next-trick ()
         (define (play-one-trick)
           (let next-player ((the-trick '())
@@ -316,13 +324,22 @@
       (parent main-menu)
       (callback (lambda (item event)
                   (exit))))
+
     (instantiate menu-item% ()
       (label "&Deal")
       (parent main-menu)
-      (callback (lambda (item event)
-                  (deal)
-                  (sort)
-                  (pretend-to-play))))
+      (callback (let ((sort-menu-item
+                       (instantiate menu-item% ()
+                         (label "&Sort my hand")
+                         (parent main-menu)
+                         (callback (lambda (item event)
+                                     (sort))))))
+                  (send sort-menu-item enable #f)
+                  (lambda (item event)
+                    (deal)
+                    (send sort-menu-item enable #t)
+                    (pretend-to-play)
+                    (send sort-menu-item enable #f)))))
 
     ;; Move the table so that it's all visible, and not blocking the
     ;; DrScheme window.
