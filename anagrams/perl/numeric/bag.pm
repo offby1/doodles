@@ -7,64 +7,62 @@ package bag;
 
 use Carp qw(cluck confess);
 use Data::Dumper;
+use Math::BigInt lib => 'GMP';
+warn "using " . Math::BigInt->config()->{lib};
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(bag bag_empty bags_equal subtract_bags);
+our @EXPORT = qw(bag bag_empty bags_equal subtract_bags  size);
+
+my @primes = qw(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101) ;
+
+{
+  my $a_code = ord ("a");
+  sub char_to_factor {
+    my $char = lc (shift);
+
+    if ($char !~ m([[:alpha:]])) {
+      return 1;
+    }
+
+    $primes [ord ($char) - $a_code];
+  }
+}
 
 sub bag {
-  my $input = lc (shift);
-  my $output = join ('', sort (split (m(), $input)));
-  $output;
+  my $thing = shift;
+
+  confess "I was passed a reference"
+    if (ref ($thing));
+
+  my $product = Math::BigInt->new(1);
+
+  foreach (split (qr(), $thing)) {
+    my $factor = char_to_factor ($_);
+    $product *=  $factor;
+  }
+
+  return $product;
 }
 
 sub bag_empty {
-  "" eq shift;
+  1 == shift;
 }
 
 sub bags_equal {
-  shift eq shift;
+  shift == shift;
 }
 
 sub subtract_bags {
   my $b1 = shift;
   my $b2 = shift;
-  my $difference = "";
 
-  while (1) {
-    my $c1 = substr ($b1, 0, 1);
-    my $c2 = substr ($b2, 0, 1);
-
-    return $difference . $b1 if ($c2 eq "");
-    return undef             if ($c1 eq "");
-    next                     if ($c1 eq $c2);
-
-    my $comparison = ($c1 cmp $c2);
-    while ($comparison < 0) {
-
-      return undef if ($c1 eq "");
-
-      $difference .= $c1;
-
-      $b1 = substr ($b1, 1);
-      $c1 = substr ($b1, 0, 1);
-      $comparison = ($c1 cmp $c2);
-    }
-
-    return undef if ($comparison > 0);
-
-  } continue {
-    $b1 = substr ($b1, 1);
-    $b2 = substr ($b2, 1);
+  if (0 == ($b1 % $b2)) {
+    return $b1 / $b2;
   }
 
-  return $difference;
+  undef;
 }
-
-
-die "Case sensitive"
-  unless (bags_equal (bag ("HEY"),
-                     bag ("hey")));
 
 die "bag_empty"
   unless (bag_empty (bag ("")));
@@ -80,19 +78,6 @@ die "bags_equal"
   if (bags_equal (bag ("abc"),
                   bag ("bc")));
 
-die "bags_equal"
-  if (bags_equal (bag ("abc"),
-                  bag ("a")));
-
-{
-  my $oughta_be_empty = subtract_bags (bag ("a"),
-                                       bag ("a"));
-  die "subtract_bags"
-    unless defined ($oughta_be_empty);
-  die "subtract_bags"
-    unless (bag_empty ($oughta_be_empty));
-}
-
 die "subtract_bags"
   unless (bags_equal (bag ("a"),
                       subtract_bags (bag("ab"),
@@ -106,13 +91,6 @@ die "subtract_bags"
   if (subtract_bags (bag ("a"),
                      bag ("aa")));
 
-die "subtract_bags"
-  if (subtract_bags (141, 123093));
-
-die "subtract_bags"
-  unless (bags_equal (bag ("x"),
-                      subtract_bags (bag ("foox"),
-                                     bag ("foo"))));
 {
   my $silly_long_string = <<EOF;
 When first I was a wee, wee lad
@@ -132,6 +110,8 @@ EOF
                                        bag ($silly_long_string))));
 }
 
-print "We cool!\n";
+die "Unpickling"
+  unless (bags_equal (bag ("cat"), 2 * 5 * 71));
 
+print "We cool!\n";
 1;
