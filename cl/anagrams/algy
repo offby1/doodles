@@ -1,18 +1,16 @@
 to find all the anagrams given a bag of letters and a dictionary:
   return value <- empty list
+  dictionary <- only those words that can be created with this bag
   for each word in the dictionary
     if this word can be made from the bag
       remove those letters from the bag
       if the bag is now empty
         make an anagram list that contains just this word; add that result to the return value
       else
-        find all anagrams given the reduced bag and the dictionary
+        find all anagrams given the reduced bag and the subdictionary starting with this word
         if there are some
           "distribute" this word across those anagrams; add them to the return value
   return the return value
-
-(this seems to return more than one permutation of the anagrams ...
-that's bad ...)
 
 to distribute a word across a list of anagrams:
   map (lambda (a) (make-new-anagram word a)) anagrams

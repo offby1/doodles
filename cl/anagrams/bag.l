@@ -1,4 +1,5 @@
 (defun bag (string)
+  (declare (simple-string string))      ;doesn't hurt; doesn't help
   (let ((result (make-hash-table :test 'equalp)))
     (let ((chars-to-examine (length string)))
       (loop
@@ -51,6 +52,7 @@
                                                 (make-string v :initial-element k)))) bag)
     r))
 
+;; Doesn't modify its argument.
 (defun bag-reduce (minuend str)
   (let ((result (hash-copy minuend))
         (subtrahend (bag str))   ; this might benefit from memoization
