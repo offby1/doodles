@@ -33,7 +33,7 @@
                  (output (instantiate text-field% ()
                                       (parent f)
                                       (label (format "anagrams of ~s" input-string))
-                                      (style '(multiple ))
+                                      (style '(multiple vertical-label))
                                       (enabled #t) ; #f is overkill.  I merely
                                         ; want to prevent the user
                                         ; from changing the
@@ -61,8 +61,7 @@
                 void))
               (current-error-port (make-custom-output-port #f (lambda (s start end buffer-ok?) (send status set-value (substring s start end)) (yield) (- end start)) void void))
               )
-             
-             (fprintf (current-error-port) "Testing!")
+
              (all-anagrams-mit-callback 
               input-string 
               (or dictionary-file-name

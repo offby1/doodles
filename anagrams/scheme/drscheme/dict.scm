@@ -47,7 +47,7 @@ dictionary."
            (probe (hash-table-get dict this-bag (lambda () #f))))
       (cond
        ((not probe)
-        (hash-table-put! dict this-bag (list word)))
+        (hash-table-put! dict this-bag (list-quicksort (list word) string<?)))
        ((not (member word probe))
         (hash-table-put! dict this-bag (cons word probe)))
        )))
