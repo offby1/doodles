@@ -10,6 +10,8 @@
        (decf chars-to-examine)))
     result))
 
+#+cmu (memoization:memoize 'bag)
+
 (defun bag-emptyp (b)
   (zerop (hash-table-count b)))
 
@@ -40,6 +42,15 @@
                  (setf (gethash key result) val)) h)
     result))
 
+;; for debugging
+(defun bag-to-string (bag)
+  (let ((r ""))
+    (maphash #'(lambda (k v) (setf r
+                                   (concatenate 'string
+                                                r
+                                                (make-string v :initial-element k)))) bag)
+    r))
+
 (defun bag-reduce (minuend str)
   (let ((result (hash-copy minuend))
         (subtrahend (bag str))   ; this might benefit from memoization
@@ -52,9 +63,18 @@
                     ((zerop diff)
                      (remhash key result))
                     (t
-                     (decf (gethash key result))))))
+                     (decf (gethash key result) val)))))
              subtrahend)
     result))
+
+(let ((initial (bag "yay you")))
+  (let ((smaller (bag-reduce initial "yy")))
+    (assert (= 4 (hash-table-count smaller)))
+    (assert (= 1 (gethash #\a smaller)))
+    (assert (= 1 (gethash #\y smaller)))
+    (assert (= 1 (gethash #\o smaller)))
+    (assert (= 1 (gethash #\u smaller)))
+    (bag-to-string smaller)))
 
 (let ((initial (bag "hey you")))
   (assert (= 5 (hash-table-count initial)))
@@ -65,7 +85,7 @@
     (assert (= 1 (gethash #\y smaller)))
     (let ((too-small (bag-reduce initial "barf")))
       (assert (null too-small))))
-  
+
   (assert (= 5 (hash-table-count initial)))
   (let ((empty (bag-reduce initial "hey you")))
     (assert (not (null empty)))

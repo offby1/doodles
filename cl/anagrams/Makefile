@@ -1,13 +1,21 @@
-all: $(patsubst %.l,%.fas,$(wildcard *.l))
+all: cmucl clisp
 
-dict.fas: bag.fas
-anagrams.fas: bag.fas dict.fas
+cmucl: $(patsubst %.l,%.x86f,$(wildcard *.l))
+clisp: $(patsubst %.l,%.fas,$(wildcard *.l))
+
+dict.fas : bag.fas
+dict.x86f: bag.x86f
+
+anagrams.fas : bag.fas dict.fas
+anagrams.x86f: bag.x86f dict.x86f
+
+%.x86f: %.l
+	@lisp -eval "(progn (compile-file \"$<\") (quit))"
 
 %.fas %.lib: %.l
-	@(clisp --quiet -c $< && clisp --quiet $@) > /dev/null
-	@echo $< tests passed.
+	@clisp -c $<
 
 clean:
-	-rm -f *.fas *.lib
+	-rm -f *.fas *.lib *.x86f
 
-.PHONY: clean
+.PHONY: clean all cmucl clisp

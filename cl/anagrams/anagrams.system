@@ -1,0 +1,13 @@
+;;; -*- Mode: lisp -*-
+
+#+cmu (make:operate-on-system 'memoization 'load)
+
+(make:defsystem anagrams
+    :source-extension "l"
+    :components ((:file "bag")
+                 (:file "dict")
+                 (:file "anagrams"
+                        :depends-on ("bag"))
+                 (:file "profile"
+                        :depends-on ("bag" "dict" "anagrams"))
+                 ))

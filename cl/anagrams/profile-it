@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -e
-
-clisp profile.l

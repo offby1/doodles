@@ -1,20 +1,19 @@
 (defmethod make-dictionary ((fn string))
   (with-open-file 
    (dict fn)
-   (let ((d (make-hash-table :test 'equalp)))
+   (let ((d (list)))
      (loop
       (let ((datum (read-line dict nil nil)))
         (if (null datum)
             (return d))
-        (setf (gethash datum d) t))))))
+        (setf d (cons (string-downcase datum) d)))))))
 
 (defmethod make-dictionary ((l list))
-  (let ((d (make-hash-table :test 'equalp)))
+  (let ((d (list)))
     (dolist (word l)
-      (setf (gethash word d) t))
+      (setf d (cons (string-downcase word) d)))
     d))
 
 (defun map-dict (func dict)
-  (maphash #'(lambda (word ignored)
-               (funcall func word)) dict))
+  (mapcar func dict))
 

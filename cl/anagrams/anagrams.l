@@ -1,32 +1,35 @@
-(defun anagrams (bag)
+(defun anagrams-internal (bag dict)
+  ;;(format t "~A~&" (bag-to-string bag))
   (let ((rv '()))
-    (map-dict
-     #'(lambda (word)
+    (maplist
+     #'(lambda (subdict)
          
-         (let ((smaller-bag (bag-reduce bag word)))
+         (let* ((word (car subdict))
+                (smaller-bag (bag-reduce bag word)))
            
            (when smaller-bag
              
              (if (bag-emptyp smaller-bag)
                  (setq rv (nconc rv (list (list word))))
-               (let ((more-anagrams (anagrams smaller-bag)))
+               (let ((more-anagrams (anagrams-internal smaller-bag subdict)))
                  
                  (if more-anagrams
                      (setq rv (nconc rv (mapcar #'(lambda (l)
                                                     (cons word l)) more-anagrams)))))))))
-     *dict*)
+     dict)
     rv))
 
-(load "bag")
-(load "dict")
+(defun anagrams (bag)
+  (anagrams-internal bag *dict*))
 
-(defparameter *dict* (make-dictionary (list "hey" "you")))
-(assert (= 1 (length (anagrams (bag "heyyou")))))
-(let ((*dict* (make-dictionary (list))))
-  (assert (null (anagrams (bag "I don't expect any!")))))
+(let ((dict (make-dictionary (list "hey" "you"))))
+  (assert (= 1 (length (anagrams-internal (bag "heyyou") dict)))))
 
-(let ((*dict* (make-dictionary (list "hey" "you"))))
-  (assert (null (anagrams (bag "")))))
+(let ((dict (make-dictionary (list))))
+    (assert (null (anagrams-internal (bag "I don't expect any!") dict))))
 
-(let ((*dict* (make-dictionary (list "ho" "uy" "ye" "he" "hey" "you"))))
-  (anagrams (bag "you hey")))
+(let ((dict (make-dictionary (list "hey" "you"))))
+  (assert (null (anagrams-internal (bag "") dict))))
+
+(let ((dict (make-dictionary (list "ho" "uy" "ye" "he" "hey" "you"))))
+  (anagrams-internal (bag "you hey") dict))
