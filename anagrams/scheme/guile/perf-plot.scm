@@ -7,7 +7,7 @@
 
 ;; Our first run will take the first character of this string; the
 ;; second will take the first two characters, and so on.
-(define *ultimate-string* "ErnestHeming")
+(define *ultimate-string* "ErnestHemingway")
 
 (define (sym->filename s)
   (string-append

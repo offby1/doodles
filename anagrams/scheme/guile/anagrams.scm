@@ -32,35 +32,27 @@
 
 (define-macro (maybe-dump ans)
   `(if (zero? depth)
-       (for-each (lambda (a)
-                   (format #t
-                           "max depth ~a: ~a~%"
-                           max-depth-so-far
-                           a))
+       (for-each (lambda (a) (format #t "~a~%" a))
                  ,ans)))
 
-(define max-depth-so-far 0)
+(define-macro (update! stuff)
+  `(begin
+     (maybe-dump ,stuff)
+     (set! rv (append! rv ,stuff))))
 
 (define (all-anagrams-internal bag dict depth)
   (let ((rv '()))
-    (if (> depth max-depth-so-far)
-        (set! max-depth-so-far depth))
     (let loop ((dict dict))
       (if (null? dict)
           rv
-        (let* ((key (caar dict))
-               (words (cdar dict))
-               (smaller-bag (subtract-bags bag key)))
+        (let* ((words (cdar dict))
+               (smaller-bag (subtract-bags bag (caar dict))))
           (if smaller-bag
               (if (bag-empty? smaller-bag)
-                  (let ((combined (map list words)))
-                    (maybe-dump combined)
-                    (set! rv (append! rv combined)))
+                  (update! (map list words))
                 (let ((anagrams (all-anagrams-internal smaller-bag dict (+ 1 depth))))
                   (if (not (null? anagrams))
-                      (let ((combined (combine words anagrams)))
-                        (maybe-dump combined)
-                        (set! rv (append! rv combined)))))))
+                      (update! (combine words anagrams))))))
           (loop (cdr dict)))))))
 
 (define (combine words anagrams)
