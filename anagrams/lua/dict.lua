@@ -1,8 +1,11 @@
 d1 = { a=1, b=2 }
 d2 = { a=2, b=1 }
+a1 = { a=1 }
 d3 = { }
 
 function dump (t)
+   if (not (t)) then return "nil" end
+
    res = "{ "
    table.foreach (t,
                   function (i, v)
@@ -12,7 +15,8 @@ function dump (t)
                      res = res .. "; "
                   end
                )
-   res = res .. "}\n"
+   res = res .. "}"
+
    return res
 end
 
@@ -31,29 +35,28 @@ end
 function sub (top, bottom)
    print ("top", dump (top))
    print ("bottom", dump (bottom))
-   diff = clone (top)
-   table.foreach (bottom, 
-                  function (i, v)
-                     print ("i: ", i, 
-                            "top[i]: ", top[i],
-                            "bottom[i]: ", v,
-                            "Diff[i]: ", diff[i])
-                     if (not (top[i])) then
-                        table.setn (diff, 0)
-                        return 0
-                     end
-                     diff[i] = top[i] - v;
-                     if (diff[i] <= 0) then
-                        table.setn (diff, 0)
-                        return 0
-                     end
-                     table.setn(diff, table.getn(diff) + 1)
-                  end
-               )
-   print ("Diff", dump (diff), "n is ", table.getn (diff))
-   if (0 == table.getn (diff)) then
-      return Nil
+
+   local diff = clone (top)
+
+   function update_diff (index, top_value)
+      print ("Update_diff: index is", index, "; top_value is", top_value)
+      function one_diff (top, bottom)
+         if (not (top)) then return Nil end
+         if (not (bottom)) then return top end
+         if (top < bottom) then return Nil end
+         return top - bottom
+      end
+
+      local this_diff = one_diff (top_value, bottom[index])
+      if (not (this_diff)) then return 0 end
+      diff[index] = this_diff
    end
+
+   if (table.foreach (top, update_diff)) then diff = Nil end
+
+   if (diff and (0 == (table.getn (diff)))) then diff = Nil end
+
+   print ("diff", dump (diff), "\n")
    return diff
 end
 
@@ -62,3 +65,6 @@ assert (not (sub (d1, d2)))
 assert (not (sub (d2, d1)))
 assert (not (sub (d3, d2)))
 assert (not (sub (d3, d1)))
+diff = sub (d1, a1)
+assert (diff.b == 2) 
+assert (not (diff[a]))
