@@ -10,25 +10,26 @@
   (require (lib "list.ss"))
 
   (provide make-point
-           point-x
-           point-y
            rotate-region)
+
+  ;; I could have defined a structure named point, but this way I get
+  ;; addition and subtraction for free.
   (define make-point make-rectangular)
   (define point-x real-part)
   (define point-y imag-part)
 
   ;; subtlety: since we're dealing with computer graphics, the origin
   ;; is in the upper left (not the lower left), and y values increase
-  ;; downwards, not upwards.  Thus point x, y goes to y, -x.  (If the
-  ;; origin were the lower left, and y increased upwards, x, y would
-  ;; go to -y, x.)
+  ;; downwards, not upwards.  Thus point [x, y] goes to [y, -x], not
+  ;; [-y, x] as it would if the origin were the lower left, and y
+  ;; increased upwards.
   (define (rotate-quarter-turn-ccw p)
     (make-point (point-y p)
                 (- (point-x p))))
 
   (define (rotate-some p quarter-turns)
     (set! quarter-turns (modulo quarter-turns 4))
-    (if  (zero? quarter-turns)
+    (if (zero? quarter-turns)
         p
       (rotate-some (rotate-quarter-turn-ccw p)
                    (sub1 quarter-turns))))
@@ -40,13 +41,7 @@
   (define (translate p dx dy)
     (make-point (+ dx (point-x p))
                 (+ dy (point-y p))))
-
-  (define (region->string r)
-    (format "ul: ~A, ~A; w: ~A; h: ~A"
-            (region-x r)
-            (region-y r)
-            (region-w r)
-            (region-h r)))
+  
   (define (region->points r)
     (let* ((ul (make-point (region-x r) (region-y r)))
            (lr (translate ul (region-w r) (region-h r))))
@@ -55,14 +50,11 @@
   (define (points->region points label callback)
     (define p1 (first points))
     (define p2 (second points))
-    (define ul
-      (make-point (min (point-x p1)
-                       (point-x p2))
-                  (min (point-y p1)
-                       (point-y p2))))
     
-    (make-region (point-x ul)
-                 (point-y ul)
+    (make-region (min (point-x p1)
+                      (point-x p2))
+                 (min (point-y p1)
+                      (point-y p2))
                  (abs (- (point-x p1)
                          (point-x p2)))
                  (abs (- (point-y p1)
@@ -83,6 +75,9 @@
   (define-assertion (assert-member obj seq)
     (member obj seq))
 
+  ;; this elaborate test suite seems like overkill, but it helped me
+  ;; find the bug wherein I failed to understand the subtlety referred
+  ;; to in the comment by rotate-quarter-turn-ccw, above
   (test/text-ui
    (let ((origin (make-point 0 0))
          (victim (make-point 1 1)))
