@@ -31,14 +31,13 @@ namespace {
               const std::string &candidate)
   {
     bag *difference = filter.subtract_bag (candidate);
-    bool rv = ((0 == (regexec (&has_a_vowel       , candidate.c_str (), 0, 0, 0)))
+    bool rv = (difference
+               &&
+               (0 == (regexec (&has_a_vowel       , candidate.c_str (), 0, 0, 0)))
                &&
                (0 == (regexec (&is_long_enough    , candidate.c_str (), 0, 0, 0)))
                &&
-               (0 != (regexec (&contains_non_ascii, candidate.c_str (), 0, 0, 0)))
-               &&
-               difference
-               );
+               (0 != (regexec (&contains_non_ascii, candidate.c_str (), 0, 0, 0))));
     delete difference;
     return rv;
   }
@@ -118,8 +117,8 @@ init (const bag &filter)
   sort (the_dictionary.begin (),
         the_dictionary.end ());
   
-  std::cout << "hash           hath " << hash          .size () << " elements" << std::endl;
-  std::cout << "the_dictionary hath " << the_dictionary.size () << " elements" << std::endl;
+  std::cerr << "hash           hath " << hash          .size () << " elements" << std::endl;
+  std::cerr << "the_dictionary hath " << the_dictionary.size () << " elements" << std::endl;
 }
 
 #if 0

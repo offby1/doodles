@@ -1,13 +1,15 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
-
+#include <map>
 #include "numeric-bag.h"
 #include "dict.h"
 
 std::vector<entry > the_dictionary;
 
-typedef std::vector<bag>  excls;
+// TODO -- figure out what to use other than a map -- perhaps there's
+// a set.
+typedef std::map<bag, bool>  excls;
 
 namespace {
   std::ostream &
@@ -19,20 +21,6 @@ namespace {
       {
         o << *i;
         if (i + 1 != w.end ())
-          o << " ";
-      }
-    return o;
-  }
-
-  std::ostream &
-  operator <<(std::ostream &o, const excls &e)
-  {
-    for (excls::const_iterator i = e.begin ();
-         i != e.end ();
-         i++)
-      {
-        o << *i;
-        if (i + 1 != e.end ())
           o << " ";
       }
     return o;
@@ -55,21 +43,26 @@ namespace {
   }
 
 
-  bool
+  inline bool
   excluded (const bag &b, const excls &e)
   {
-    assert (!b.is_empty ());
+    return  (e.find(b) != e.end ());
+  }
+
+  excls
+  copy_exclusions (const excls e)
+  {
+    excls rv;
     for (excls::const_iterator i = e.begin ();
          i != e.end ();
          i++)
       {
-        if (b == *i)
-          return true;
+        rv.insert (std::pair<bag, bool>(i->first, i->second));
       }
 
-    return false;
+    return rv;
   }
-  
+
   std::string
   wordlist_to_string (const wordlist &wl)
   {
@@ -121,9 +114,12 @@ operator <<(std::ostream &o, const entry &e)
 
 
 std::vector<wordlist>
-anagrams_internal (const bag &b, excls exclusions, unsigned int level)
+anagrams_internal (const bag &b,
+                   const excls &given_exclusions,
+                   unsigned int level)
 {
   std::vector<wordlist> rv;
+  excls exclusions (copy_exclusions (given_exclusions));
   bag *smaller_bag = 0;
   for (std::vector<entry>::const_iterator i = the_dictionary.begin ();
        i != the_dictionary.end ();
@@ -145,15 +141,13 @@ anagrams_internal (const bag &b, excls exclusions, unsigned int level)
 
       if (smaller_bag->is_empty ())
         {
-          exclusions.push_back (key_bag);
-
           for (wordlist::const_iterator wd = these_words.begin ();
                wd != these_words.end ();
                wd++)
             {
               wordlist result;
               result.push_back (*wd);
-              if (!level)
+              if (false && !level)
                 std::cerr << result << std::endl;
               rv.push_back (result);
             }
@@ -163,17 +157,18 @@ anagrams_internal (const bag &b, excls exclusions, unsigned int level)
           std::vector<wordlist> from_smaller_bag (anagrams_internal (*smaller_bag, exclusions, level + 1));
           if (!from_smaller_bag.size ())
             continue;
-          exclusions.push_back (key_bag);
+
           std::vector<wordlist> more (prepend_words_to_anagrams (these_words, from_smaller_bag));
           for (std::vector<wordlist>::const_iterator i = more.begin ();
                i != more.end ();
                i++)
             {
-              if (!level)
+              if (false && !level)
                 std::cerr << *i << std::endl;
               rv.push_back (*i);
             }
         }
+      exclusions.insert (std::pair<bag, bool>(*smaller_bag, true));
     }
 
   return rv;
@@ -184,33 +179,40 @@ all_anagrams (const bag &b)
 {
   std::cerr << "Snarfing the dictionary and whatnot ... ";
   init (b);
-  std::cerr << " done" << std::endl;
-  std::vector<bag> exclusions;
-  return anagrams_internal (b, exclusions, 0);
+  std::cerr << the_dictionary.size ()
+            << " items left in dictionary"
+            << std::endl;
+  return anagrams_internal (b, excls (), 0);
 }
 
 #if 1
 int
 main (int argc, char *argv[])
 {
-  try {
-    if (argc > 1)
-      {
-        argc--;
-        argv++;
+  try
+    {
+      if (argc > 1)
+        {
+          argc--;
+          argv++;
 
-        const std::string input = argv[0];
-        const bag b (input);
+          const std::string input = argv[0];
+          const bag b (input);
 
-        std::vector<wordlist> ans (all_anagrams (b));
-        for (std::vector<wordlist>::const_iterator i = ans.begin ();
-             i != ans.end ();
-             i++)
-          {
-            std::cout << *i << std::endl;
-          }
-      }
-  } catch (std::exception &e)
+          std::vector<wordlist> ans (all_anagrams (b));
+          std::cerr << ans.size ()
+                    << " anagrams of "
+                    << input
+                    << std::endl;
+          for (std::vector<wordlist>::const_iterator i = ans.begin ();
+               i != ans.end ();
+               i++)
+            {
+              std::cout << *i << std::endl;
+            }
+        }
+    }
+  catch (std::exception &e)
     {
       std::cerr << e.what () << std::endl;
     }

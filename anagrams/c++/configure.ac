@@ -16,6 +16,7 @@ AC_ARG_ENABLE(profiling,
               esac],
               [profiling=false])
 AM_CONDITIONAL(PROFILE, test x$profiling = xtrue)
+
 # Checks for programs.
 
 AC_PROG_CXX

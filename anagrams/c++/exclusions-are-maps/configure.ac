@@ -7,6 +7,16 @@ AM_INIT_AUTOMAKE()
 AC_CONFIG_SRCDIR([anagrams.cc])
 AC_CONFIG_HEADER([config.h])
 
+AC_ARG_ENABLE(profiling,
+              [--enable-profiling    Turn on profiling],
+              [case "${enableval}" in
+                yes) profiling=true ; CFLAGS=-O0; CXXFLAGS=$CFLAGS ;;
+                 no) profiling=false ;;
+                  *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
+              esac],
+              [profiling=false])
+AM_CONDITIONAL(PROFILE, test x$profiling = xtrue)
+
 # Checks for programs.
 
 AC_PROG_CXX
