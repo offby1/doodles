@@ -18,6 +18,10 @@ as a hash key (convenient when reading the dictionary).  And anyway,
 subtracting two such things ought to be fast, assuming that substr is
 fast.
 
+And yet I tried this first when writing the C++ version.  It worked
+OK, but I then tried using bignums ... and they were twice as fast.
+Hmm.
+
 * Use a simple list of bags as the exclusions.
 
 For all I know, I'm already doing this in all implementations.

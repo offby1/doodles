@@ -1,6 +1,4 @@
-#!/bin/sh
-
-exec perl -w $0 ${1+"$@"}
+#!/usr/bin/perl
 
 use strict;
 use Data::Dumper;
