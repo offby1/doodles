@@ -3,6 +3,9 @@ d2 = { a=2, b=1 }
 a1 = { a=1 }
 d3 = { }
 
+letters = {}
+for c =string.byte ("a"), string.byte ("z") do letters[string.char (c)] = "!" end
+
 function dump (t)
    if (not (t)) then return "nil" end
 
@@ -17,6 +20,8 @@ function dump (t)
                )
    res = res .. "}"
 
+   res = res .. " size: " .. table.getn (t)
+   
    return res
 end
 
@@ -36,28 +41,50 @@ function sub (top, bottom)
    print ("top", dump (top))
    print ("bottom", dump (bottom))
 
-   local diff = clone (top)
+   local diff = {}
 
-   function update_diff (index, top_value)
-      print ("Update_diff: index is", index, "; top_value is", top_value)
-      function one_diff (top, bottom)
-         if (not (top)) then return Nil end
-         if (not (bottom)) then return top end
-         if (top < bottom) then return Nil end
-         return top - bottom
+   -- counter-intuitively, a return code of Nil means success; anything else means failure.
+   function update_diff (index, ignore)
+      local t = top[index]
+      local b = bottom[index]
+      -- print ("Update_diff: index is", index, "; t is", t, ";b is", b)
+
+      --  top       bottom          result
+      --  --------------------------------
+      --  nil       nil             continue
+      --  nil       n               fail
+      --  n         nil             n
+      --  n         m>n             fail
+      --  n         m<=n            n - m               
+
+      if (not (t)) then
+         if (b) then return 0 end
+      else
+         if (not (b)) then 
+            diff[index] = t
+         else 
+            if (b > t) then return 0 end
+            diff[index] = t - b
+         end
       end
-
-      local this_diff = one_diff (top_value, bottom[index])
-      if (not (this_diff)) then return 0 end
-      diff[index] = this_diff
+      table.setn (diff, 0)
+      table.foreach (diff,
+                    function (index, value) 
+                    table.setn (diff, table.getn (diff) + value)
+                    end)
    end
 
-   if (table.foreach (top, update_diff)) then diff = Nil end
-
-   if (diff and (0 == (table.getn (diff)))) then diff = Nil end
+   -- TODO -- it might make more sense to examine just the union of the letters
+   -- that appear as keys in both tables, rather than examining all 26 letters
+   -- all the time.
+   if (table.foreach (letters, update_diff)) then diff = Nil end
 
    print ("diff", dump (diff), "\n")
    return diff
+end
+
+function bag_empty (b)
+   return (0 == table.getn (b))
 end
 
 assert (sub (d1, d3))
@@ -68,6 +95,9 @@ assert (not (sub (d3, d1)))
 diff = sub (d1, a1)
 assert (diff.b == 2) 
 assert (not (diff[a]))
+should_be_empty = (sub (d1, d1))
+assert (should_be_empty)
+assert (bag_empty (should_be_empty))
 
 function is_lc_char (c)
    return ((string.byte (c) <= string.byte ("z"))
