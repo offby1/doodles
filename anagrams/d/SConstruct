@@ -1,0 +1,2 @@
+# -*-python-*-
+Program ('bag', ['bag.d', 'mpz.d', 'gmppool.d'], LIBS = ['gmp'])
