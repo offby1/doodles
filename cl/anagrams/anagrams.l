@@ -1,12 +1,4 @@
-(defvar *dict*
-  (with-open-file
-   (dict "/usr/share/dict/words")
-   (let ((d '()))
-     (loop
-      (let ((datum (read-line dict nil nil)))
-        (if (null datum)
-            (return d))
-        (setq d (cons datum d)))))))
+
 
 #+cmu (setq *gc-verbose* nil)
 
@@ -15,45 +7,18 @@
   "number of characters that we distinguish.")
 
 (defun survey (string)
-  "returns a vector.  Each slot represents a lower-case character; the
-value in the slot is the number of occurences of *either* the upper-
-or lower-case version of that character in STRING."
-  #+cmu (declare (type (simple-array base-char *) string))
-  #+cmu (declare (optimize (speed 3)))
-  ;;(assert (stringp string))
-
-  (let ((result (make-array *characters* :element-type 'fixnum :initial-element 0)))
-    (let ((chars-to-examine (length string)))
-      #+cmu (declare (type fixnum chars-to-examine))
-      (loop
-       (if (zerop chars-to-examine)
-	   (return result)
-	 (let ((ch (aref string (1- chars-to-examine))))
-	   (if (alpha-char-p ch)
-	       (incf (aref result
-                           (- (char-code (char-downcase ch))
-                              (char-code #\a))
-                           )))))
-       (decf chars-to-examine)))
-    result))
+  (bag:string->bag string))
 
 (defun survey-subtract (big small)
-  (let ((result (survey ""))
-	(slots-examined 0))
-    (loop
-     (if (= slots-examined *characters*)
-	 (return result))
-     (let ((diff (- (aref big slots-examined)
-		    (aref small slots-examined))))
-       (if (minusp diff)
-	   (return nil))
-       (setf (aref result slots-examined)
-	     diff))
-     (incf slots-examined))))
+  (let ((result (bag:subtract big small)))
+    (if (not (bag:empty result))
+        result
+      nil)))
+
+;;(trace survey-subtract)
 
 (defun bag-emptyp (bag)
-  (and (not (null bag))
-       (zerop (apply #'+ (map 'list #'identity bag)))))
+  (bag:empty bag))
 
 (defun find-words (bag dictionary)
   (mapcan #'(lambda (one-word)
