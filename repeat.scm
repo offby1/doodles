@@ -1,0 +1,12 @@
+(define (repeat n thing)
+  (if (not (and (exact? n)
+                (integer? n)
+                (not (negative? n))))
+      (error "N must be an exact non-negative integer, but is" n))
+
+  (let loop ((n n)
+             (result '()))
+    (if (zero? n)
+        (reverse result)
+      (loop (- n 1)
+            (cons (thing n) result)))))
