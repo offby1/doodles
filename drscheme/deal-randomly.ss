@@ -23,32 +23,29 @@
        (* 1
           (1- (send c get-value)))))
 
-  (define card->initpos
-    (lambda (c)
-      (values
-       (* *cw* (1- (send c get-value  )))
-       (* *ch* (1- (send c get-suit-id))))))
-  
-  (define (card->initpos* c)
-    (call-with-values
-        (lambda ()
-          (card->initpos c))
-      cons))
-
+  (define *initial-region* (make-region
+                            0
+                            (- (send *t* table-height)
+                               (send (car *d*) card-height))
+                            (send *t* table-width)
+                            (send (car *d*) card-height)
+                            "unshuffled deck goes here" #f))
+  (define (card->initial-position c)
+    (list
+     (+
+      (region-x *initial-region*)
+      (* (- (region-w
+             *initial-region*)
+            (/ *cw* 2)) 
+         (/
+          (card->value c) 52)))
+     (region-y *initial-region*)))
+  (send *t* add-region *initial-region*)
   ;; put each card on the table in its initial position.
-  ;;(send *t* add-cards *d* 0 0 (lambda (index) (card->initpos (list-ref *d* index))))
-  
-  
-  ;; the hell with that -- let's let Mr. Ed fan them out.
-  (define initial-region (make-region
-                          0
-                          (- (send *t* table-height)
-                             (send (car *d*) card-height))
-                          (send *t* table-width)
-                          (send (car *d*) card-height)
-                          "unshuffled deck goes here" #f))
-  (send *t* add-region initial-region)
-  (send *t* add-cards-to-region *d* initial-region)
+  (send *t* add-cards *d* 0 0 (lambda (index) (apply values (card->initial-position (list-ref *d* index)))))
+
+  ;;(send *t* add-cards-to-region *d* *initial-region*)
+
   ;; for debugging
   (send *t* set-single-click-action
         (lambda (c)
@@ -73,46 +70,13 @@
                   (send c get-suit ))))
 
   (let ()
-    (define swap-cards
-      (let ((location-alist (map (lambda (c) (cons c (card->initpos* c)))
-                                 *d*)))
-        (lambda (c1 c2)
-
-          ;; there's something fishy here.  I shouldn't have to maintain
-          ;; the locations of the cards myself, and yet I cannot figure
-          ;; out how to get the table to tell me where they are.
-
-          ;; On second thought, though, it seems that what I'm
-          ;; maintaining isn't "where the card is", but rather "where
-          ;; I'd like the card to be".  It's certainly reasonable for
-          ;; me to maintain *that* -- there's no way the system could
-          ;; know where I want it to be.  In fact, I don't think
-          ;; there's ever a case where I need to know a card's
-          ;; location in pixels -- at most, I'd want to know what
-          ;; region it's in, and I can presumably control that by
-          ;; simply putting the card in some region or other.
-          
-          (letrec-values (((card->location move-and-update)
-                           (values
-                            (lambda (c)
-                              (cdr (assq c location-alist)))
-                            (lambda (c loc-pair)
-                              (let ((newx (car loc-pair))
-                                    (newy (cdr loc-pair)))
-                                (send *t* move-card c newx newy)
-                                (let ((old  (assq c location-alist)))
-                                  (set-cdr! old (cons newx newy))))))))
-                         (let ((loc-pair-1 (card->location c1)))
-                           (move-and-update c1 (card->location c2))
-                           (move-and-update c2 loc-pair-1))))))
-
     (define menu-bar (instantiate menu-bar% () (parent *t*)))
     (define main-menu  (instantiate menu% () 
-                                    (label "Stuff" )
+                                    (label "&Stuff" )
                                     (parent menu-bar)))
     (send menu-bar enable #t)
     (instantiate menu-item% ()
-                 (label "&Shuffle")
+                 (label "&Deal Randomly")
                  (parent main-menu)
                  (callback (lambda (item event) 
                              (set! *d* (vector->list (fys! (apply vector *d*))))
@@ -122,13 +86,23 @@
                                  (send *t* move-card (car d)
                                        (* *cw* (remainder cards-moved 13))
                                        (* *ch* (quotient  cards-moved 13)))
+                                 (when (send (car d) face-down?)
+                                       (send *t* card-face-up (car d) ))
                                  (loop (+ 1 cards-moved)
                                        (cdr d))))
                              (printf "Done.\n"))))
+    (instantiate menu-item% ()
+                 (label "Send 'em Back &Home")
+                 (parent main-menu)
+                 (callback (lambda (item event)
+                             (for-each (lambda (c)
+                                         (send/apply *t* move-card c 
+                                               (card->initial-position c)
+                                               ))
+                                       (reverse *d*)))))
     (instantiate menu-item% ()
                  (label "&Exit")
                  (parent main-menu)
                  (callback (lambda (item event)
                              (exit))))
     (send *t* show #t)))
-
