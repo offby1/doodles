@@ -1,5 +1,11 @@
 ;;; -*- Mode: lisp -*-
 
+;; to use this: first load
+;; "/usr/share/common-lisp/source/defsystem/defsystem.lisp" or the
+;; equivalent .  Then load this file.  Then compile everything by
+;; doing (make:operate-on-system :anagrams :compile).  That will also
+;; run any unit tests.
+
 (make:defsystem anagrams
     :source-extension "l"
     :components ((:file "bag")
