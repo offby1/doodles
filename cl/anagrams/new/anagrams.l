@@ -21,7 +21,7 @@
 (load "dict")
 
 (defparameter *dict* (make-dictionary (list "hey" "you")))
-(anagrams (bag "heyyou"))
+(assert (= 1 (length (anagrams (bag "heyyou")))))
 (let ((*dict* (make-dictionary (list))))
   (assert (null (anagrams (bag "I don't expect any!")))))
 
