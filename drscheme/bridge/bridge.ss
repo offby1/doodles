@@ -21,7 +21,8 @@
   (require (lib "mred.ss" "mred"))
   (require (lib "list.ss"))
   (require "rotate.ss")
-  
+  (require "call.ss")
+
   ;; this rename looks dumb -- hell, it *is* dumb -- but it's the only
   ;; way I can think of to avoid a name collision -- apparently 1.ss
   ;; and list.ss both define some of the same names (such as "second",
@@ -213,170 +214,206 @@
        (- (ace-high (send c get-value)) 2)))
 
   (random-seed 0)
-  (let ()
-    (define menu-bar (instantiate menu-bar% () (parent *t*)))
-    
-    (define main-menu  (instantiate menu% () 
-                         (label "&Stuff" )
-                         (parent menu-bar)))
-    
-    (define deal
-      (let ((shuffles 0)
-            (shuffle-message (instantiate message% ()
-                               (label "Not shuffled")
-                               (parent *t*))))
-        (lambda ()
-          (send *t* remove-cards *d*)
-          (for-each (lambda (c) (send c face-down)) *d*)
-          
-          ;; deal the cards.
-          (set! *d* (shuffle-list *d* 1))
-          (set! shuffles (add1 shuffles))
-          (let loop ((players *player-alist*)
-                     (cards-to-deal *d*))
-            
-            (define (first-n l n)
-              (let loop ([l l][n n])
-                (if (or (null? l)
-                        (zero? n))
-                    null
-                    (cons (car l) (loop (cdr l) (sub1 n))))))
-            
-            (when (not (null? cards-to-deal))
-              
-              (let* ((p (cdar players))
-                     (destination (player-region p)))
-                
-                (set-player-cards! p (first-n cards-to-deal 13))
-                
-                (let ((hand (player-cards p)))
-                  (send *t* add-cards-to-region 
-                        hand
-                        (player-region p))
-                  
-                  (when (eq? (car *interactive-hand*) (caar players))
-                    (send *t* cards-face-up hand))
-                  
-                  (for-each
-                   (lambda (c)
-                     (send c home-region destination)
-                     (send c user-can-flip #f))
-                   hand))
-                
-                (loop (cdr players)
-                      (list-tail cards-to-deal 13)))))
-          
-          (send shuffle-message set-label (format "~A shuffle(s)" shuffles))
-          
-          )))
-    
-    (define (sort-hand visible-hand)
-      (let* ((cards (player-cards visible-hand))
-             (region (player-region visible-hand)))
+
+  (define menu-bar (instantiate menu-bar% () (parent *t*)))
+  
+  (define main-menu  (instantiate menu% () 
+                       (label "&Stuff" )
+                       (parent menu-bar)))
+  
+  (define deal
+    (let ((shuffles 0)
+          (shuffle-message (instantiate message% ()
+                             (label "Not shuffled")
+                             (parent *t*))))
+      (lambda ()
+        (send *t* remove-cards *d*)
+        (for-each (lambda (c) (send c face-down)) *d*)
         
-        (let loop ((cards-to-relocate (mergesort cards (lambda (c1 c2)
-                                                         (> (card->alternate-colors-value c1)
-                                                            (card->alternate-colors-value c2)))))
-                   (cards-located 0))
-          (when (not (null? cards-to-relocate))
-            (let ((c (car cards-to-relocate)))
-              (send/apply *t* move-card c
-                          ((player-card-home-location-proc visible-hand) cards-located))
+        ;; deal the cards.
+        (set! *d* (shuffle-list *d* 1))
+        (set! shuffles (add1 shuffles))
+        (let loop ((players *player-alist*)
+                   (cards-to-deal *d*))
+          
+          (define (first-n l n)
+            (let loop ([l l][n n])
+              (if (or (null? l)
+                      (zero? n))
+                  null
+                (cons (car l) (loop (cdr l) (sub1 n))))))
+          
+          (when (not (null? cards-to-deal))
+            
+            (let* ((p (cdar players))
+                   (destination (player-region p)))
               
-              (send *t* card-to-front c)
-              (loop (cdr cards-to-relocate)
-                    (add1 cards-located)))))))
-    
-    (define (pretend-to-play)
-      ;; TODO: I have this nagging feeling that I shouldn't be using a
-      ;; loop here, and instead should use some contraption involving
-      ;; callbacks which call themselves.  But that sounds ugly.  Wish
-      ;; I knew more about GUI programming in general.
+              (set-player-cards! p (first-n cards-to-deal 13))
+              
+              (let ((hand (player-cards p)))
+                (send *t* add-cards-to-region 
+                      hand
+                      (player-region p))
+                
+                (when (eq? (car *interactive-hand*) (caar players))
+                  (send *t* cards-face-up hand))
+                
+                (for-each
+                 (lambda (c)
+                   (send c home-region destination)
+                   (send c user-can-flip #f))
+                 hand))
+              
+              (loop (cdr players)
+                    (list-tail cards-to-deal 13)))))
+        
+        (send shuffle-message set-label (format "~A shuffle(s)" shuffles))
+        
+        )))
+  
+  (define (sort-hand visible-hand)
+    (let* ((cards (player-cards visible-hand))
+           (region (player-region visible-hand)))
       
-      ;; One possible advantage of not using loops: if all my code is
-      ;; callbacks, and they all complete reasonably quickly (as
-      ;; opposed to looping), then the DrScheme window will not say
-      ;; "running" for very long, and thus I can futz in the REPL
-      ;; pretty much whenever I want (which is, at least, handy for
-      ;; debugging).
-      (let next-trick ((tricks-played 0))
-        (define (play-one-trick)
-          (define dummy-offset (ordinal *dummy*))
-          (let next-player ((the-trick '())
-                            (cards-this-trick 0))
-            (when (and (zero? tricks-played)
-                       (= 1 cards-this-trick))
-              (quickly
-               (send *t* cards-face-up (player-cards (cdr *dummy*)))
-               (sort-hand (cdr *dummy*)))
-
-              (when (= 2 (modulo (- (ordinal *interactive-hand*)
-                                    (ordinal *dummy*))
-                                 4))
-                (printf "Looks like we're the declarer, so we get to play both hands.~%")
-                (set-player-choose-card!! (cdr *dummy*) (player-choose-card! (cdr *interactive-hand*)))))
-
-            (when (< cards-this-trick 4)
-              (let* ((p (cdr (list-ref *player-alist* (modulo 
-                                                       (+ cards-this-trick (- dummy-offset 1))
-                                                       4))))
-                     (c ((player-choose-card! p) p)))
-                (send *t* card-face-up c)
-                (send *t* card-to-front c) ;TODO -- use `stack-cards' instead
-                (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
-                      (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
-                  (let ()
-                    (send *t* move-card-center c 
-                          (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
-                          (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
-                (next-player (cons c the-trick)
-                             (add1 cards-this-trick))))
+      (let loop ((cards-to-relocate (mergesort cards (lambda (c1 c2)
+                                                       (> (card->alternate-colors-value c1)
+                                                          (card->alternate-colors-value c2)))))
+                 (cards-located 0))
+        (when (not (null? cards-to-relocate))
+          (let ((c (car cards-to-relocate)))
+            (send/apply *t* move-card c
+                        ((player-card-home-location-proc visible-hand) cards-located))
             
-            ;; TODO: find out why the program pauses for a long time
-            ;; *after* the trick vanishes from the table.  Both
-            ;; (sleep) and (send *t* pause) seem to suffer from this.
-            ;; For what it's worth, the `pause' method differs from
-            ;; sleep in that it does its sleeping in a separate thread
-            ;; (and uses `yield' to wait for that sleep to finish) ,
-            ;; and hence presumably doesn't block *this* thread.
-            (send *t* pause .1)
-            
-            (send *t* remove-cards the-trick)
-            (for-each (lambda (c) (send c face-down)) the-trick)))
-        (let ((cards (player-cards (cdar *player-alist*))))
-          (when (not (null? cards))
-            (play-one-trick)
-            (next-trick (add1 tricks-played))
-            ))
-        )
-      (printf "OK, we're done with that hand.~%"))
+            (send *t* card-to-front c)
+            (loop (cdr cards-to-relocate)
+                  (add1 cards-located)))))))
+  
+  (define (pretend-to-play)
+    ;; TODO: I have this nagging feeling that I shouldn't be using a
+    ;; loop here, and instead should use some contraption involving
+    ;; callbacks which call themselves.  But that sounds ugly.  Wish
+    ;; I knew more about GUI programming in general.
     
-    (send menu-bar enable #t)
-    
-    (instantiate menu-item% ()
-      (label "&Exit")
-      (parent main-menu)
-      (callback (lambda (item event)
-                  (exit))))
-    
-    (instantiate menu-item% ()
-      (label "&Deal")
-      (parent main-menu)
-      (callback (let ((sort-menu-item
-                       (instantiate menu-item% ()
-                         (label "&Sort hand")
+    ;; One possible advantage of not using loops: if all my code is
+    ;; callbacks, and they all complete reasonably quickly (as
+    ;; opposed to looping), then the DrScheme window will not say
+    ;; "running" for very long, and thus I can futz in the REPL
+    ;; pretty much whenever I want (which is, at least, handy for
+    ;; debugging).
+    (let next-trick ((tricks-played 0))
+      (define (play-one-trick)
+        (define dummy-offset (ordinal *dummy*))
+        (let next-player ((the-trick '())
+                          (cards-this-trick 0))
+          (when (and (zero? tricks-played)
+                     (= 1 cards-this-trick))
+            (quickly
+             (send *t* cards-face-up (player-cards (cdr *dummy*)))
+             (sort-hand (cdr *dummy*)))
+
+            (when (= 2 (modulo (- (ordinal *interactive-hand*)
+                                  (ordinal *dummy*))
+                               4))
+              (printf "Looks like we're the declarer, so we get to play both hands.~%")
+              (set-player-choose-card!! (cdr *dummy*) (player-choose-card! (cdr *interactive-hand*)))))
+
+          (when (< cards-this-trick 4)
+            (let* ((p (cdr (list-ref *player-alist* (modulo 
+                                                     (+ cards-this-trick (- dummy-offset 1))
+                                                     4))))
+                   (c ((player-choose-card! p) p)))
+              (send *t* card-face-up c)
+              (send *t* card-to-front c) ;TODO -- use `stack-cards' instead
+              (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
+                    (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
+                (let ()
+                  (send *t* move-card-center c 
+                        (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
+                        (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
+              (next-player (cons c the-trick)
+                           (add1 cards-this-trick))))
+          
+          ;; TODO: find out why the program pauses for a long time
+          ;; *after* the trick vanishes from the table.  Both
+          ;; (sleep) and (send *t* pause) seem to suffer from this.
+          ;; For what it's worth, the `pause' method differs from
+          ;; sleep in that it does its sleeping in a separate thread
+          ;; (and uses `yield' to wait for that sleep to finish) ,
+          ;; and hence presumably doesn't block *this* thread.
+          (send *t* pause .1)
+          
+          (send *t* remove-cards the-trick)
+          (for-each (lambda (c) (send c face-down)) the-trick)))
+      (let ((cards (player-cards (cdar *player-alist*))))
+        (when (not (null? cards))
+          (play-one-trick)
+          (next-trick (add1 tricks-played))
+          ))
+      )
+    (printf "OK, we're done with that hand.~%"))
+  
+  (send menu-bar enable #t)
+  
+  (define make-menu-item #f)
+  (define disable-all-menu-items #f)
+
+  (let ((items '()))
+    (set! make-menu-item
+          (lambda (label callback)
+            (let ((mi  (instantiate menu-item% ()
+                         (label label)
                          (parent main-menu)
-                         (callback (lambda (item event)
-                                     (sort-hand (cdr *interactive-hand*)))))))
-                  (send sort-menu-item enable #f)
-                  (lambda (item event)
-                    (deal)
-                    (send sort-menu-item enable #t)
-                    (pretend-to-play)
-                    (send sort-menu-item enable #f)))))
-    
-    ;; Move the table so that it's all visible, and not blocking the
-    ;; DrScheme window.
-    (send *t* move 400 0)
-    
-    (send *t* show #t)))
+                         (callback callback))))
+              (send mi enable #f)
+              (set! items (cons mi items))
+              mi)))
+    (set! disable-all-menu-items
+          (lambda ()
+            (for-each (lambda (mi)
+                        (send mi enable #f))
+                      items))))
+
+  (make-menu-item "&Exit" (lambda (item event)
+                            (exit)))
+
+  (define sort-menu-item
+    (make-menu-item
+     "&Sort hand"
+     (lambda (item event)
+       (sort-hand (cdr *interactive-hand*)))))
+
+  (define play-menu-item
+    (make-menu-item
+     "&Play"
+     (lambda (item event)
+       (pretend-to-play)
+       (disable-all-menu-items))))
+  
+  (define deal-menu-item
+    (make-menu-item
+     "&Deal"
+     (lambda (item event)
+       (deal)
+       (send sort-menu-item enable #t)
+       (send auction-menu-item enable #t))))
+  
+  (define auction-menu-item
+    (make-menu-item
+     "&Auction"
+     (lambda (item event)
+       (let loop ((c (make-call #f))
+                  (calls-made 1))
+         (printf "Somebody bid ~A~%" (call->string c))
+         (if (< calls-made 4)
+             (loop (make-call c)
+                   (add1 calls-made))
+           (printf "Final bid was ~A~%" (call->string c))))
+       (send play-menu-item enable #t))))
+
+  (send deal-menu-item enable #t)
+
+  ;; Move the table so that it's all visible, and not blocking the
+  ;; DrScheme window.
+  (send *t* move 400 0)
+  
+  (send *t* show #t))

@@ -2,7 +2,7 @@
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require (lib "1.ss" "srfi"))
-  (provide make-call)
+  (provide make-call call->string)
   
   (define *denominations* `(clubs diamonds hearts spades notrump))
   (define-struct bid (level denomination))
@@ -72,9 +72,10 @@
         (send dialog show #t)
         choice)))
 
-  ;; a very short auction :-\
-  (let ((c1 (make-call #f)))
-    (let ((c2 (make-call (and (bid? c1) c1))))
-      (printf "~A~%" (call->string
-                      c2)))
-  ))
+  (when #f
+    ;; a very short auction :-\
+    (let ((c1 (make-call #f)))
+      (let ((c2 (make-call (and (bid? c1) c1))))
+        (printf "~A~%" (call->string
+                        c2)))
+      )))
