@@ -1,0 +1,15 @@
+(require 'sort)
+(require 'multiply)
+
+(let ()
+  (define rear-gears (list 24 27 30 32 35 39 42))
+  (define front-gears (list 35 42 48))
+
+  (pretty-print (sort (map (lambda (args) 
+                             (apply (lambda (front back) 
+                                      (list 'front front 'back back 'ratio (/ front back))) 
+                                    args)) 
+                           (multiply front-gears rear-gears))
+		      (lambda (l1 l2)
+			(< (car (last-pair l1))
+			   (car (last-pair l2)))))))
