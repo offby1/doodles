@@ -3,6 +3,7 @@
   (require "bag.scm"
            (prefix list- (lib "list.ss"))
            (lib "pretty.ss")
+           (lib "process.ss")
            (prefix srfi-1- (lib "1.ss" "srfi"))
            (prefix srfi-13- (lib "13.ss" "srfi")))
   (provide dict-for-each init test-init)
@@ -11,26 +12,9 @@
 
   (define *alist-file-name* "big-dict-alist.scm")
 
-  (if (not (file-exists? *alist-file-name*))
-      (begin
-        (printf (format "Caching dictionary ... "))
-        ;; don't use `call-with-input-file',since pretty-print doesn't
-        ;; take a port argument in guile 1.6.4
-        (with-output-to-file *alist-file-name*
-          (lambda ()
-            ;; use `pretty-print' rather than `write' so that it's not all
-            ;; on on big line.
-            (pretty-print (hash-table-map (wordlist->hash) 
-                                          (lambda (key value)
-                                             (cons key value))) )))
-        
-        (printf (format "done~%"))))
-
-  (define *alist* #f)
-
   (define (wordlist->hash)
     (with-input-from-file
-        "d:/cygwin/usr/share/dict/words"
+        "c:/cygwin/usr/share/dict/words"
       (lambda ()
         (let ((dict (make-hash-table 'equal)))
           (printf (format "Reading dictionary ... ")) (flush-output)
@@ -44,6 +28,8 @@
               ))
           dict)
         )))
+  
+  (define *alist* #f)
 
   (define (dict-for-each proc)
     "An iterator over dictionary elements.  Applies PROC
@@ -58,7 +44,7 @@ dictionary."
 
   (define (adjoin-word dict word)
     (let* ((this-bag (bag word))
-           (probe (hash-table-get dict this-bag)))
+           (probe (hash-table-get dict this-bag (lambda () #f))))
       (cond
        ((not probe)
         (hash-table-put! dict this-bag (list word)))
@@ -92,6 +78,23 @@ dictionary."
 
   (define (init bag-to-meet)
     (set! *big-ol-hash-table* (make-hash-table 'equal))
+
+    (if (not (file-exists? *alist-file-name*))
+        (begin
+          (printf (format "Caching dictionary ... "))
+          ;; don't use `call-with-input-file',since pretty-print doesn't
+          ;; take a port argument in guile 1.6.4
+          (call-with-output-file *alist-file-name*
+            (lambda (op)
+              ;; use `pretty-print' rather than `write' so that it's not all
+              ;; on on big line.
+              (pretty-print (hash-table-map (wordlist->hash) 
+                                            (lambda (key value)
+                                              (cons key value)))
+                            op)))
+          
+          (printf (format "done~%"))))
+
     (printf (format "Pruning dictionary ... ")) (flush-output)
     (for-each
      (lambda (pair)

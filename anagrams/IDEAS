@@ -1,0 +1,31 @@
+-*- outline -*-
+
+A grab bag of ideas that are applicable to all the implementations,
+but probably appear only in some.
+
+* Store the dictionary as a list, not a hash.
+
+There's no need for it to be a hash, since the anagram algorithm
+doesn't need to do any lookups; it merely needs to traverse.  Using a
+list lets us sort the entries in interesting ways (such as: biggest
+words first).
+
+* Use a simple string of sorted letters as the bag.
+
+This isn't necessarily better than any other method for all
+implementations, but it seems the best for Perl, since it can be used
+as a hash key (convenient when reading the dictionary).  And anyway,
+subtracting two such things ought to be fast, assuming that substr is
+fast.
+
+* Use a simple list of bags as the exclusions.
+
+For all I know, I'm already doing this in all implementations.
+Anyway, I've never seen any speed improvement with a more complex idea
+(such as a list of hash tables).
+
+* Emit top-level anagrams as they're found.
+
+To alleviate boredom.  This requires sorting the dictionary by biggest
+words first, as described above.  Well, OK, it doesn't _require_ it, but
+it's much nicer that way.
