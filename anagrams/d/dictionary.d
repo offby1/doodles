@@ -3,7 +3,7 @@ import bag;
 
 class dictionary
 {
-  int [char []][bag] hoo_map;
+  int [char []][bag] map;
 
   this (Stream s, char [] filter)
   {
@@ -16,22 +16,22 @@ class dictionary
         bool ok;
         f.subtract (t, diff, ok);
         if (ok)
-          hoo_map[t][this_line]++;
+          map[t][this_line]++;
       }
   }
 
   int size ()
   {
-    return hoo_map.length;
+    return map.length;
   }
   
   char[][] lookup (bag b)
   {
-    return hoo_map[b].keys;
+    return map[b].keys;
   }
   bag[] keys ()
   {
-    return hoo_map.keys;
+    return map.keys;
   }
 
   unittest
@@ -49,8 +49,8 @@ class dictionary
     test_lines ~= "cuz\n";
     test_lines ~= "what\n";
 
-    TArrayStream! (char[]) s = new TArrayStream! (char[]) (test_lines);
-    dictionary words = new dictionary (s, "heyyoucuzwhatup");
+    dictionary words = new dictionary (new TArrayStream! (char[]) (test_lines),
+                                       "heyyoucuzwhatup");
     printf ("done\n");
     assert (5 == words.size ());
 

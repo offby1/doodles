@@ -56,7 +56,7 @@
                  (string=? "a" word)
                  (< 1 l)))))))
 
-(define (bag-acceptable? this bag-to-meet)
+(define-public (bag-acceptable? this bag-to-meet)
   (and (or (bags=? bag-to-meet this)
            (subtract-bags bag-to-meet this))
        this))
@@ -68,9 +68,7 @@
    (lambda (pair)
      (let ((bag (car pair))
            (words (cdr pair)))
-       (let ((this-bag (bag-acceptable? bag bag-to-meet)))
-         (if this-bag
-             (hash-set! *big-ol-hash-table* bag words)))))
+       (hash-set! *big-ol-hash-table* bag words)))
    (with-input-from-file *alist-file-name* read))
   ;; now clobber the alist.
   (set! *dictionary* (hash-fold (lambda (key value prior)

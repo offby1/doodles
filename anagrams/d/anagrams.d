@@ -6,7 +6,10 @@ dictionary the_dictionary;
 
 int main()
 {
-  BufferedFile s = new BufferedFile ("one_percent_dict");
+  BufferedFile s = new BufferedFile (
+                                     "/usr/share/dict/words"
+                                     //"one_percent_dict"
+                                     );
   printf ("Snarfing big dictionary ...\n");
   the_dictionary = new dictionary (s, "Ernest");
   printf ("done\n");

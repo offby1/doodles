@@ -21,3 +21,5 @@ I've only tried the programs on a few computers, and yet each has the
 dictionary in a different place.  Windows is of course particularly
 bad.  If using `configure' is too complicated, perhaps just an
 environment variable.
+
+* Allow a command-line option to specify the location of the dictionary

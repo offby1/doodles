@@ -6,6 +6,13 @@ Program ('anagrams',
           'dictionary.d',
           'mpz.d',
           'gmppool.d'],
-         DFLAGS = ['-unittest', '-g', '-pg'],
+         DFLAGS = ['-unittest', '-g', '-pg', 
+                   '-release'
+                   #'-fno-bounds-check'
+                   ],
          LIBS = ['gmp'],
          LINKFLAGS = ['-pg'])
+
+Program ('hmph',
+         ['hmph.d'],
+         )
