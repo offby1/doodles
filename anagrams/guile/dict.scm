@@ -18,7 +18,8 @@
      )))
 
 (define word-acceptable?
-  (let ((has-vowel-regexp  (make-regexp "[aeiou]" regexp/icase)))
+  (let ((has-vowel-regexp     (make-regexp "[aeiou]" regexp/icase))
+        (has-non-ASCII-regexp (make-regexp "[^a-z]"  regexp/icase )))
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
@@ -26,6 +27,9 @@
              ;; it's gotta have a vowel.
              (regexp-exec has-vowel-regexp word)
 
+             ;; it's gotta be all ASCII, all the time.
+             (not (regexp-exec has-non-ASCII-regexp word))
+             
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
