@@ -34,21 +34,14 @@ def combine (words, anagrams):
     return rv
 
 
-def anagrams (bag, exclusions, debug_level):
-
-    # We'll add stuff to exclusions as we go through our loop, but we
-    # don't want those changes to affect our caller.  So we deep-copy
-    # exclusions, and modify the copy.
-    exclusions = exclusions.copy ()
+def anagrams (bag, dict):
 
     rv = []
 
-    for entry in the_dict_list:
+    for words_processed in range (0, len (dict)):
+        entry = dict[words_processed]
         key   = entry[0]
         words = entry[1]
-
-        if (exclusions.has_key (key)):
-            continue
 
         smaller_bag = subtract_bags (bag, key)
         if (not smaller_bag):
@@ -57,21 +50,14 @@ def anagrams (bag, exclusions, debug_level):
         if (bag_empty (smaller_bag)):
             for w in words:
                 rv.append ([w])
-                if (0 and not debug_level):
-                    print w
         else:
             from_smaller_bag = anagrams (smaller_bag,
-                                         exclusions,
-                                         debug_level + 1)
+                                         dict[words_processed + 1:])
             if (not len (from_smaller_bag)):
                 continue
 
             for new in combine (words, from_smaller_bag):
                 rv.append (new)
-                if (0 and not debug_level):
-                    print new
-
-        exclusions[key] = 1
 
     assert (is_list_of_anagrams (rv))
     return rv
@@ -106,7 +92,7 @@ def biggest_first_then_alphabetically (a, b):
 the_dict_list.sort (biggest_first_then_alphabetically)
 
 print >> sys.stderr, "Pruned dictionary.  After:", len (the_dict_list)
-result = anagrams (the_phrase, {}, 0)
+result = anagrams (the_phrase, the_dict_list)
 print >> sys.stderr, len(result), "anagrams of", sys.argv[1], ":"
 
 for a in result:
