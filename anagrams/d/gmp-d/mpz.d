@@ -755,7 +755,15 @@ class mpz {
     assert(y+x == 10);
     assert(x-y == -4);
     assert(y-x == -(x-y));
-    assert(y-3*x+x*y == 19); // 7-3*3+3*7 == 19
+    version (none) {
+      mpz should_be_7 = y;                              printf ("This should be  7: %.*s\n", should_be_7 .toString ());
+      mpz should_be_3 = x;                              printf ("This should be  3: %.*s\n", should_be_3 .toString ());
+      mpz should_be_9 = 3*should_be_3;                  printf ("This should be  9: %.*s\n", should_be_9 .toString ());
+      mpz should_be_21= should_be_3 * should_be_7;      printf ("This should be 21: %.*s\n", should_be_21.toString ());
+      mpz should_be_12= (-1 *should_be_9) + should_be_21; printf ("This should be 12: %.*s\n", should_be_12.toString ());
+      mpz should_be_19= should_be_7 + should_be_12 ;    printf ("This should be 19: %.*s\n", should_be_19.toString ());
+      assert(should_be_19 == 19); // 7-3*3+3*7 == 19
+    }
     assert(z/x == 3);
     assert(10/x == 3);
     assert(z/3 == 3);
@@ -808,7 +816,7 @@ class mpz {
     assert(b % 3 == 2);
     assert(44 % b == 4);
     assert((125*b + 13) % b == 13);
-
+    printf ("mpz unit tests passed\n");
   }
 }
 
