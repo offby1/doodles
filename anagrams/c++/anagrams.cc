@@ -185,7 +185,9 @@ anagrams_internal (const bag &b, excls exclusions, unsigned int level)
 std::vector<wordlist>
 all_anagrams (const bag &b)
 {
+  std::cerr << "Snarfing the dictionary and whatnot ... ";
   init (b);
+  std::cerr << " done" << std::endl;
   std::vector<bag> exclusions;
   return anagrams_internal (b, exclusions, 0);
 }
