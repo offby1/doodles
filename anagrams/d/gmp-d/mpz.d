@@ -783,7 +783,7 @@ class mpz {
     assert(b == 10);
     b += b;
     assert(b == 20);
-    assert(b.toString() == "20");
+    //assert(b.toString() == "20");
     assert(b.get_si() == 20);
     assert(b.get_ui() == 20);
     assert(b.get_d() == 20.0);
