@@ -1,0 +1,26 @@
+
+anagrams.scm,0
+
+assert.scm,0
+
+bag.scm,303
+(define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))primes10,352
+(define char->factorchar->factor12,449
+(define (bag s)bag21,714
+(define (subtract-bags b1 b2)subtract-bags32,1101
+(define (bag-empty? b)bag-empty?39,1295
+(define bags=? =)bags=?42,1334
+
+big-dict-alist.scm,0
+
+dict.scm,0
+
+exclusions.scm,0
+
+go.scm,0
+
+perf-plot.scm,204
+(define *ultimate-string* "ErnestHemingway")*ultimate-string*11,386
+(define (sym->filename s)sym->filename13,432
+(define stats-alistsstats-alists19,587
+(define stats-as-listsstats-as-lists41,1574
