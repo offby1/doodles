@@ -1,3 +1,6 @@
+;; TODO: figure out how to prevent this module from loading if any of
+;; its self-tests fail.
+
 (module rotate mzscheme
   (require (lib "cards.ss" "games" "cards")) ; for region et al.
   (require (lib "class.ss"))
@@ -67,27 +70,15 @@
                  label callback))        
                           
   (define rotate-region
-    (let ((guts (lambda (r origin quarter-turns)
-                  (points->region (map
-                                   (lambda (p)
-                                     (rotate-about p origin quarter-turns))
-                                   (region->points r))
+    (lambda (r origin quarter-turns)
+      (points->region (map
+                       (lambda (p)
+                         (rotate-about p origin quarter-turns))
+                       (region->points r))
                                                  
-                                  (region-label r)
-                                  (region-callback r))
-                  )))
-      (case-lambda
-        [(r origin quarter-turns)
-         (guts r origin quarter-turns)]
-        [(r origin quarter-turns verbose?)
-         (begin
-           (if verbose? (printf "rotate-region: r: ~A origin ~A quarter-turns ~A~%"
-                                (region->string r) origin quarter-turns))
-           (let ((result (guts r origin quarter-turns))) 
-             (if verbose? (printf "rotate-region: returning ~A~%"
-                                  (region->string result)))
-             result))
-         ])))
+                      (region-label r)
+                      (region-callback r))
+      ))
 
   (define-assertion (assert-member obj seq)
     (member obj seq))
@@ -192,7 +183,7 @@
 
       (make-test-case
        "Region 2"
-       (let ((actual (rotate-region (make-region 10 10 10 0 #f #f) origin 1 #t)))
+       (let ((actual (rotate-region (make-region 10 10 10 0 #f #f) origin 1)))
          (assert-equal? (region-x actual)  10)
          (assert-equal? (region-y actual) -20)
          (assert-equal? (region-w actual)   0)
