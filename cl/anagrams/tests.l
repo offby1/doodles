@@ -1,4 +1,4 @@
-(si::use-fast-links nil)
+#+gcl (si::use-fast-links nil)
 (defun unit ()
   (let ((attempted 0)
 	(passed 0)
