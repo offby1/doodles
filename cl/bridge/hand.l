@@ -3,6 +3,7 @@
   (:import-from  :bridge.card
                  :card :card-suit :card-rank :card-goren-hcp)
   (:export :make-hand :hand-value :hand-suit :suit-lengths :by-suits
+           :voids :singletons :doubletons
            :nclubs :ndiamonds :nhearts :nspades))
 
 (in-package :bridge.hand)
@@ -75,6 +76,28 @@ diamonds, hearts, then spades."
 some suit.  Useful for judging the 'balancedness' of a hand."
   (mapcar #'length
           (by-suits h)))
+
+(defun voids (h) (count-if #'zerop (suit-lengths h)))
+(defun singletons (h)
+  (count-if #'(lambda (x) (= x 1)) (suit-lengths h)))
+(defun doubletons (h)
+  (count-if #'(lambda (x) (= x 2)) (suit-lengths h)))
+
+(defun voids-tests ()
+  (let ((h1 (make-hand '(s5 s6 s7 s8 s9 st sj sk sq sa
+                            h4 h5
+                            d2)))
+        (h2 (make-hand '(s5 s6 s7 s8 s9 st sj sk
+                            h4 h5
+                            d2 d3
+                            c3))))
+    (expect-equal 1 (voids      h1))
+    (expect-equal 1 (singletons h1))
+    (expect-equal 1 (doubletons h1))
+
+    (expect-equal 0 (voids      h2))
+    (expect-equal 1 (singletons h2))
+    (expect-equal 2 (doubletons h2))))
 
 (defun long-suit-points (h)
   (apply #'+ (mapcar
@@ -199,4 +222,5 @@ dummy points (i.e., each short suit gets extra points).)"
 
 (run-tests "hand"
   by-suits-tests
-  hand-value-tests)
+  hand-value-tests
+  voids-tests)

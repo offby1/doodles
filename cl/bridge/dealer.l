@@ -127,3 +127,26 @@ to examine in order to find the hand we returned."
                    (list t "~A: ~A (~A tries) ~&"
                          (car p))
                    (multiple-value-list (example-hand (nth 1 p))))))
+
+(defparameter *runs* 10000)
+
+(defun how-frequent (criterion)
+  (let ((candidates-to-examine *runs*)
+        (matching-hands-found 0))
+    (loop
+     (let ((candidate (random-deal)))
+       (when (zerop candidates-to-examine)
+         (return (/ matching-hands-found *runs*)))
+       (when (funcall criterion candidate)
+         (incf matching-hands-found))
+       (decf candidates-to-examine)))))
+
+(let ((*runs* 10000)
+      (notrump-criteria #'(lambda (h) (and (< (doubletons h) 2)
+                                           (zerop (voids h))
+                                           (zerop (singletons h))
+                                           (<= 16 (hand-value h :notrump) 18)))))
+    
+  (format t "Here's an example notrump hand: ~A ... " (example-hand notrump-criteria))
+  (force-output)
+  (format t "they come up about ~A%~&" (* 100.0 (how-frequent notrump-criteria))))
