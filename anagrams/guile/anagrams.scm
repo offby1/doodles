@@ -15,18 +15,24 @@
          ,@rest)
        ,e)))
 
+;; TODO -- perhaps, instead of writing to standard out, we should
+;; write to a file whose name is a simplified version of the input
+;; string.
 (define-public (all-anagrams string)
   (let ((in-bag   (bag string))
         (start-time  (get-internal-real-time)))
+    
     (init in-bag)
-    (prog1
-      (pretty-print
-       (all-anagrams-internal in-bag  (empty-exclusions) #t))
+    (let* ((result (all-anagrams-internal in-bag  (empty-exclusions) #t))
+           (stop-time (get-internal-real-time))
+           )
+      (pretty-print result)
       (format #t
-              ";; ~s: ~a seconds~%"
+              ";; ~a anagrams of ~s: ~a seconds~%"
+              (length result)
               string
               (exact->inexact (/
-                               (- (get-internal-real-time)
+                               (- stop-time
                                   start-time)
                                internal-time-units-per-second))))))
 
@@ -50,8 +56,9 @@
                  (if (bag-empty? smaller-bag)
                      (begin
                        (add-exclusion! exclusions key)
-                       (maybe-dump words)
-                       (set! rv (append! rv (map list words))))
+                       (let ((combined (map list words)))
+                         (maybe-dump combined)
+                         (set! rv (append! rv combined))))
                    (let ((anagrams (all-anagrams-internal smaller-bag exclusions #f)))
                      (if (not (null? anagrams))
                          (begin

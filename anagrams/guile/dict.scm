@@ -148,16 +148,20 @@ dictionary."
 
 
 (if (not (access? *alist-file-name* R_OK))
-    (call-with-output-file *alist-file-name* 
-      (lambda (port)
-        (format #t "Caching dictionary ... ")
-        ;; use `pretty-print' rather than `write' so that it's not all
-        ;; on on big line.
-        (pretty-print (hash-fold (lambda (key value prior)
-                                   (cons (cons key value) prior)) 
-                                 '()
-                                 (wordlist->hash)) port)
-        (format #t "done~%"))))
+    (begin
+      (format #t "Caching dictionary ... ")
+      ;; don't use `call-with-input-file',since pretty-print doesn't
+      ;; take a port argument in guile 1.6.4
+      (with-output-to-file *alist-file-name*
+        (lambda ()
+          ;; use `pretty-print' rather than `write' so that it's not all
+          ;; on on big line.
+          (pretty-print (hash-fold (lambda (key value prior)
+                                     (cons (cons key value) prior)) 
+                                   '()
+                                   (wordlist->hash)) )))
+      
+      (format #t "done~%")))
 
 (define *alist* (with-input-from-file *alist-file-name* read))
 (set! *random-state* (seed->random-state (get-internal-real-time)))
