@@ -1,4 +1,0 @@
-* Find a string and a dictionary that are the right size: the
-  algorithm will find all the anagrams fast enough that I won't get
-  bored, but slowly enough so that the profile statistics are
-  meaningful.

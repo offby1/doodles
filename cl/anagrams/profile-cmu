@@ -1,4 +1,0 @@
-#!/bin/sh
-
-/usr/local/bin/lisp -load /usr/share/common-lisp/source/defsystem/defsystem.lisp -eval "(progn (mk:operate-on-system 'anagrams 'compile) (quit))"
-#/usr/bin/lisp -load anagrams.system -eval "(mk:operate-on-system 'anagrams 'compile)" -eval "(quit)"

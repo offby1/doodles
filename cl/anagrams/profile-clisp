@@ -1,3 +1,0 @@
-#!/bin/sh
-
-clisp --quiet -i ~/.clisprc.lisp -i anagrams.system -x "(progn (mk:operate-on-system 'anagrams 'compile)(quit))"

@@ -1,49 +1,87 @@
-(defgeneric make-dictionary (fn))
-
-(defmethod make-dictionary ((fn string))
+(defun make-dictionary-from-file (fn)
   (with-open-file
-   (dict fn)
-   ;; while we read the file, we save what we find in a hash table.
-   ;; Once we're done reading, we flatten the hash into a list.  This
-   ;; is *much* faster than simply building up the list one word at a
-   ;; time, since then we'd need to traverse much of the list every
-   ;; time we read a word, yielding O(n^2) performance.
-   (let ((d (list)))
-     (let ((hash (make-hash-table :test #'equalp))
-           (lines-read 0))
-       (loop
-        (let ((datum (read-line dict nil nil)))
-          (if (null datum)
-              (return)
-            (when (zerop (rem lines-read 1))
-              (let ((word (string-downcase datum)))
-                (push word (gethash (bag word) hash))
-                )))
-          (incf lines-read)
-          ))
-       (push "sting"    (gethash (bag "sting"   ) hash))
-       (push "me"       (gethash (bag "me"      ) hash))
-       (push "anywhere" (gethash (bag "anywhere") hash))
-       (maphash #'(lambda (k v)
-                    (push (cons k v) d))
-                hash))
-     (format t "Dictionary hath ~A words~%" (length d))
-     d)))
+   (dict fn #+clisp :external-format #+clisp 'charset:ISO-8859-1)
+   (let ((hash-tables-alist '())
+         (lines-read 0))
+     (loop
+      (let ((word (read-line dict nil nil)))
+        (if (null word)
+            (return)
+          (setf hash-tables-alist (add-word word hash-tables-alist)))
+        (incf lines-read)))
+     (alist->array hash-tables-alist))))
 
-(defmethod make-dictionary ((l list))
-  (let ((d (list)))
+(defun add-word (word hash-tables-alist)
+  (multiple-value-bind (b length)
+      (bag word)
+    (let ((pair (assoc length hash-tables-alist))
+          (the-hash-table nil))
+      (if (null pair)
+          (progn
+            (setf the-hash-table (make-hash-table :test 'equalp))
+            (setf hash-tables-alist (cons (cons length the-hash-table)
+                                          hash-tables-alist)))
+        (setf the-hash-table (cdr pair)))
+      (setf (gethash b the-hash-table '())
+            (cons word (gethash b the-hash-table '())))
+      hash-tables-alist)))
+
+(defun alist->array (hash-tables-alist)
+  ;; instead of sorting, it would suffice to merely find the maximum
+  ;; of the CARs.  But sorting is an easy way to do just that, and
+  ;; the alist will never be greater than, I dunno, 20 entries (the
+  ;; length of the longest word in the dictionary).
+  (setf hash-tables-alist (sort hash-tables-alist
+                                #'(lambda (this that)
+                                    (> (car this)
+                                       (car that)))))
+
+  (let ((as-array  (make-array (list  (+ 1 (caar hash-tables-alist))))))
+    (dolist (pair hash-tables-alist)
+      (setf (aref as-array (car pair))
+            (cdr pair)))
+    ;; a cleanup pass -- ensure that each slot in the array is indeed
+    ;; a hash table.
+    (dotimes (slots-examined (length as-array))
+      (when  (null  (aref as-array slots-examined))
+        (setf   (aref as-array slots-examined) (make-hash-table :test 'equalp))))
+    as-array))
+
+(defun make-dictionaries-from-list (l)
+  (let ((hash-tables-alist '()))
     (dolist (word l)
-      (let* ((key (bag word))
-             (pair (assoc key d :test #'string=))
-             (value (string-downcase word)))
-        (if pair
-            (nconc pair (list value))
-          (setf d (nconc d (list (cons key (list value))))))))
-    d))
+      (setf hash-tables-alist (add-word word hash-tables-alist)))
+    (alist->array hash-tables-alist)))
 
-(assert (null (make-dictionary (list))))
+(defun bag (s)
+  (let ((return-value (make-array '(26) :element-type 'unsigned-byte :initial-element 0))
+        (letters 0))
+    (dotimes (chars-processed (length s) return-value)
+      (let ((this-char (char-downcase (aref s chars-processed))))
+        (when (and
+               (alpha-char-p this-char)
+               (>= (char-code this-char)
+                   (char-code #\a))
+               (<= (char-code this-char)
+                   (char-code #\z)))
+          (incf letters)
+          (incf (aref return-value (- (char-code this-char)
+                                   (char-code #\a)))))))
+    (values return-value letters)))
 
-(let ((d (make-dictionary (list "act" "cat" "dog"))))
-  (assert (= 2 (length d)))
-  (assert (equalp (list "act" "cat") (cdr (assoc (bag "tac") d :test #'string=))))
-  (assert (equalp (list "dog"      ) (cdr (assoc (bag "god") d :test #'string=)))))
+(defun subtract-bags (minuend subtrahend)
+  (let ((return-value (copy-seq minuend))
+        (letters 0))
+    (dotimes (slots-subtracted (length return-value) return-value)
+      (decf (aref return-value slots-subtracted) (aref subtrahend slots-subtracted))
+      (when (minusp (aref return-value slots-subtracted))
+        (return-from subtract-bags nil))
+      (incf letters (aref return-value slots-subtracted)))
+    (values return-value letters)))
+
+(defun bag-emptyp (b)
+  (dotimes (slots-examined (length b) t)
+    (when (plusp (aref b slots-examined))
+      (return-from bag-emptyp nil))))
+
+(defvar *dicts* (make-dictionary-from-file "/usr/share/dict/words"))
