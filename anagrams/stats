@@ -19,6 +19,8 @@ bogomips	: 4771.02
 
 time ./anagrams  > /dev/null
 
+Waah: I can't remember if these times are 'real' or 'user'.
+
 language	: time "hemingway"	time "st hemingway"	bag implementation	dictionary cached?
 ----------------------------------------------------------------------------------------------------------
 c++ (-O2)	:  2 seconds    	  2 seconds!    	bignums			no                      note(1)
@@ -28,6 +30,7 @@ mzscheme	:  7 seconds        	 30 seconds		bignums			no
 perl		:  4 seconds        	 10 seconds		strings			no
 perl/numeric	: 21 seconds    	170 seconds		bignums			yes
 python		:  4 seconds         	  6 seconds    		bignums			no
+ruby            :  8 seconds             40 seconds             bignums                 no
 common lisp	        					bignums			no
   cmucl		:  1 seconds              2 seconds
   clisp		:  3 seconds              3 seconds
