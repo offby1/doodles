@@ -1,0 +1,87 @@
+;;	name		 frequency	 latitude	 longitiude      elevation
+;;                                       degrees minutes
+(define vors
+  (map
+   (lambda (vor)
+     (map
+      (lambda (x)
+        (if (list? x)
+            (apply (lambda (degrees minutes)
+                     (+  degrees (/  minutes 60)))
+                   x)
+          x))
+      vor))
+   '(
+     (astoria         114.00          (46             #e9.70 )	 (123             #e52.80)	   +10)
+     (baker-city      115.30          (44             #e50.40)	 (117             #e48.50)	   +3360)
+     (battleground    116.60          (45             #e44.90)	 (122             #e35.50)	   +250)
+     (bellingham      113.00          (48             #e56.70)	 (122             #e34.80)	   +80)
+     (corvallis       115.40          (44             #e29.90)	 (123             #e17.60)	   +250)
+     (deschutes       117.60          (44             #e15.20)	 (121             #e18.20)	   +4100)
+     (ellensburg      117.90          (47             #e1.50 )	 (120             #e27.50)	   +1766)
+     (ephrata         112.60          (47             #e22.70)	 (119             #e25.40)	   +1250)
+     (eugene          112.90          (44             #e7.30 )	 (123             #e13.40)	   +360)
+     (hoquiam         117.70          (46             #e56.80)	 (124             #e8.90 )	   +10)
+     (kimberly        115.60          (44             #e38.90)	 (119             #e42.70)	   +5220)
+     (klamath-falls   115.90          (42             #e9.20 )	 (121             #e43.70)	   +4087)
+     (klickitat       112.30          (45             #e42.80)	 (121             #e6.10 )	   +3220)
+     (lakeview        112.00          (42             #e29.60)	 (120             #e30.40)	   +7460)
+     (mcchord         109.60          (47             #e8.90 )	 (122             #e28.50)	   +280)
+     (moses-lake      115.00          (47             #e12.70)	 (119             #e19.00)	   +1177)
+     (newberg         117.40          (45             #e21.20)	 (122             #e58.70)	   +1440)
+     (newport         117.10          (44             #e34.50)	 (124             #e3.60 )	   +150)
+     (north-bend      112.10          (43             #e24.90)	 (124             #e10.10)	   +680)
+     (olympia         113.40          (46             #e58.30)	 (122             #e54.10)	   +200)
+     (paine           110.60          (47             #e55.20)	 (122             #e16.70)	   +670)
+     (pasco           108.40          (46             #e15.80)	 (119             #e6.90 )	   +400)
+     (pendleton       114.70          (45             #e41.90)	 (118             #e56.30)	   +1556)
+     (portland        111.80          (45             #e35.60)	 (122             #e36.40)	   +20)
+     (pullman         109.00          (46             #e40.50)	 (117             #e13.40)	   +2720)
+     (rogue-valley    113.60          (42             #e28.80)	 (122             #e54.80)	   +2080)
+     (rome            112.50          (42             #e35.40)	 (117             #e52.10)	   +4050)
+     (roseburg        108.20          (43             #e10.90)	 (123             #e21.10)	   +1320)
+     (seattle         116.80          (47             #e26.10)	 (122             #e18.60)	   +340)
+     (spokane         115.50          (47             #e33.90)	 (117             #e37.60)	   +2760)
+     (tatoosh         112.20          (48             #e17.90)	 (124             #e37.60)	   +1650)
+     (walla-walla     116.40          (46             #e5.20 )	 (118             #e17.60)	   +1150)
+     (wenatchee       111.00          (47             #e23.90)	 (120             #e12.60)	   +1220)
+     (wildhorse       113.80          (43             #e35.60)	 (118             #e57.30)	   +4140)
+     (yakima          116.00          (46             #e34.20)	 (120             #e26.70)	   +980)
+     ))
+  )
+
+(define (vector-to-target target-name v)
+  (define target-vor (assq target-name vors))
+  (define (lat v)
+    (list-ref v 2))
+  (define (long v)
+    (list-ref v 3))
+  (make-rectangular (- (lat v)
+                       (lat target-vor))
+                    (- (long v)
+                       (long target-vor))))
+
+((lambda (target)
+  (pp
+   (map
+    (let ((pi (* 2 (acos 0))))
+      (lambda (pair)
+
+        (list (car pair)
+              (magnitude (cdr pair))
+              (inexact->exact (remainder (+ 360 (round (/ (* 180 (angle
+                                                                  (cdr
+                                                                   pair))) pi)))
+                                         360)))))
+    (sort
+     (map
+      (lambda (vor)
+        (cons (car vor)
+              (vector-to-target target vor)
+              ))
+      vors)
+     (lambda (p1 p2)
+       (< (magnitude (cdr p1))
+          (magnitude (cdr p2))))))))
+ 'olympia)
+
