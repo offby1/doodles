@@ -19,7 +19,6 @@ class bag
   uint toHash()
   {
     uint rv = product % 0x7fffffff;
-    printf ("Some hash is %u\n", rv);
     return rv;
   }
 

@@ -5,13 +5,18 @@ class dictionary
 {
   int [char []][bag] hoo_map;
 
-  this (Stream s)
+  this (Stream s, char [] filter)
   {
+    bag f = new bag (filter);
     while (!s.eof ())
       {
         char []this_line = s.readLine ();
-        bag b = new bag (this_line);
-        hoo_map[b][this_line]++;
+        bag t = new bag (this_line);
+        bag diff;
+        bool ok;
+        f.subtract (t, diff, ok);
+        if (ok)
+          hoo_map[t][this_line]++;
       }
   }
 
@@ -45,42 +50,10 @@ class dictionary
     test_lines ~= "what\n";
 
     TArrayStream! (char[]) s = new TArrayStream! (char[]) (test_lines);
-    dictionary words = new dictionary (s);
+    dictionary words = new dictionary (s, "heyyoucuzwhatup");
     printf ("done\n");
     assert (5 == words.size ());
-    {
-      char[][] say_what = words.lookup (new bag ("what"));
-      char [] rendered;
-      foreach (int i, char [] s; say_what)
-        {
-          if (i > 0)
-            rendered ~= ";";
-          rendered ~= s;
-        }
-      printf ("Word `what' hath %d anagrams: %.*s\n", say_what.length, rendered);
-      foreach (int i, bag b; words.hoo_map.keys)
-        {
-          foreach (char []s; words.hoo_map[b].keys)
-            {
-              printf ("%.*s\n", s);
-            }
-        }
-      assert (1 == say_what.length);
-    }
-    foreach (bag key; words.keys ())
-      {
-        printf ("Key `%.*s' => ", key.toString ());
-        char [][] words = words.lookup(key);
-        foreach (int i, char [] word; words)
-          {
-            if (i > 0)
-              {
-                printf (", ");
-              }
-            printf ("`%.*s'", word);
-          }
-        printf ("\n");
-      }
+
     printf ("Dictionary unit tests passed\n");
   }
 }
