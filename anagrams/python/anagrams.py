@@ -4,6 +4,7 @@ from bag import bag, bag_empty, bags_equal, subtract_bags
 from dict import snarf_dictionary
 from types import *
 import sys
+from optparse import OptionParser
 
 ## These are just for internal sanity checking.
 def is_anagram (thing):
@@ -61,13 +62,24 @@ def anagrams (bag, dict):
 
     assert (is_list_of_anagrams (rv))
     return rv
+
+parser = OptionParser()
+parser.add_option("-d",
+                  "--dictionary",
+                  action="store",
+                  type="string",
+                  dest="dict_fn",
+                  default="/usr/share/dict/words",
+                  metavar="FILE",
+                  help="location of word list")
 
-dict_fn = "/usr/share/dict/words"
-print >> sys.stderr, "Snarfing", dict_fn
-dict_hash_table = snarf_dictionary (dict_fn)
+(options, args) = parser.parse_args()
+
+print >> sys.stderr, "Snarfing", options.dict_fn
+dict_hash_table = snarf_dictionary (options.dict_fn)
 print >> sys.stderr, "done"
 
-the_phrase = bag (sys.argv[1])
+the_phrase = bag (args[0])
 print >> sys.stderr, "Pruning dictionary.  Before:", len (dict_hash_table.keys ())
 
 # Now convert the hash table to a list, longest entries first.  (This

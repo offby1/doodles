@@ -27,7 +27,7 @@ def subtract_bags (b1, b2):
         return quotient
     else:
         return 0
-
+
 assert (bag_empty (bag ("")))
 
 assert (not (bag_empty (bag ("a"))))
