@@ -16,7 +16,7 @@
 (proclaim `(optimize (speed 3)))
 
 (defmacro lookup (c survey)
-  `(the fixnum (aref ,survey (char-code (char-downcase ,c)))))
+  `(the fixnum (aref ,survey (char-code ,c))))
 
 ;; presumably, creating our array just once (at load time) is faster
 ;; than creating a new one every time this function is called.
@@ -55,7 +55,7 @@
   example, #\\c => \"C\"; #\\, => \"comma\"."
   (cond
     ((alphanumericp c)
-     (format nil "~:C" (char-upcase c)))
+     (format nil "~:C" c))
     (t
      (case c
        ((#\') "apostrophe")
@@ -101,17 +101,25 @@
          (append 
           (cons 
            ;;"Please help yourself to "
-           "It seems that, the longer a sentence like this one is, the harder it becomes for it to truthfully claim (as this one does) that it contains exactly "
-           (loop for (item rest) on
-                (loop for n
-                   from (char-code #\a)
-                   to   (char-code #\z)
-                   collect (cons 0 (code-char n)))
-                collect item when rest collect ", "))
+           "It's about time that Eric Hanchrow encoded his name into one of these sentences that contains exactly "
+           (append
+            (loop for (item rest) on
+                 (loop for n
+                    from (char-code #\a)
+                    to   (char-code #\z)
+                    collect (cons 0 (code-char n)))
+                 collect item when rest collect ", ")
+            (list ", ")
+            (loop for (item rest) on
+                 (loop for n
+                    from (char-code #\A)
+                    to   (char-code #\Z)
+                    collect (cons 0 (code-char n)))
+                 collect item when rest collect ", ")))
           (list 
            ", "     `(0 . #\Space)
-           ", "     `(0 . #\()
-           ", "     `(0 . #\))
+           ;; ", "     `(0 . #\()
+           ;; ", "     `(0 . #\))
            ", "     `(0 . #\.)
            ", "     `(0 . #\,)
            ", "     `(0 . #\-)
