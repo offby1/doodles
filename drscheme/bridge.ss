@@ -45,7 +45,13 @@
 
       (super-instantiate ())))
 
-  (define *t* (make-object my-table% "snowball" 10 10))
+  (define *t* #f)
+  (let ((width-in-pixels (+ (* 2 *ch*)
+                            (* 13/2 *cw*))))
+    (set! *t* (make-object my-table% "snowball" 
+                           (/ width-in-pixels *cw*)
+                           (/ width-in-pixels *ch*))))
+  
   (send *t* set-button-action 'left   'drag-raise/one)
   (send *t* set-button-action 'middle 'drag-raise/one)
   (send *t* set-button-action 'right  'drag-raise/one)
@@ -54,27 +60,27 @@
 
   (define-struct player (region cards choose-card!))
 
-  (define (dumbest-choose-card p)
-    (let ((choice (car (player-cards p))))
-      (set-player-cards! p (cdr (player-cards p)))
-      choice))
+  (define (make-card-removing-proc choice-proc)
+    (lambda (p)
+      (let ((choice (choice-proc (player-cards p))))
+        (set-player-cards! p (remove choice (player-cards p)))
+        choice)))
+  
+  (define dumbest-choose-card car)
 
-  (define (random-choose-card p)
-    (let* ((hand (player-cards p))
-           (choice (list-ref hand (random (length hand)))))
-      (set-player-cards! p (remove choice hand))
-      choice))
+  (define (random-choose-card hand)
+    (list-ref hand (random (length hand))))
 
   (define interactively-choose-card
     (let ((choice #f))
-      (lambda (p)
+      (lambda (hand)
         (let ((sem (make-semaphore)))
       
           ;; Doesn't this clobber any existing double-click-action?  Isn't
           ;; that a Bad Thing?
           (send *t* set-double-click-action 
                 (lambda (card)
-                  (if (member card (player-cards p))
+                  (if (member card hand)
                       (begin
                         (set! choice card)
                         (semaphore-post sem))
@@ -92,7 +98,7 @@
            (cons pos
                  (make-player (apply make-region (append coords (list (symbol->string pos) #f))) 
                               cards (lambda (p)
-                                      (printf "Waiting for player ~A~%" pos)
+                                      ;;(printf "Waiting for player ~A~%" pos)
                                       (choice-func p)))))
          `(south west north east)
          `( 
@@ -111,10 +117,13 @@
            (,(+ *ch* *region-length*)         ,*ch*                           ,*ch*                   ,*region-length*)
            )
          `(#f #f #f #f)
-         `(,interactively-choose-card
-           ,dumbest-choose-card
-           ,random-choose-card
-           ,dumbest-choose-card)
+         (map make-card-removing-proc
+              (list  
+               interactively-choose-card
+               dumbest-choose-card
+               random-choose-card
+               dumbest-choose-card))
+         
          ))
   
   (for-each 
@@ -256,7 +265,7 @@
                 (send *t* card-to-front c) ;TODO -- use `stack-cards' instead
                 (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
                       (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
-                  (quickly
+                  (let ()
                    (send *t* move-card-center c 
                          (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
                          (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
@@ -269,10 +278,13 @@
 
             (send *t* remove-cards the-trick)
             (for-each (lambda (c) (send c face-down)) the-trick)))
-        (when (not (null? (player-cards (cdar *player-alist*))))
-          (play-one-trick)
-          (next-trick)
-          )))
+        (let ((cards (player-cards (cdar *player-alist*))))
+          (when (not (null? cards))
+            (play-one-trick)
+            (next-trick)
+            ))
+        )
+      (printf "OK, we're done with that hand.~%"))
           
     (send menu-bar enable #t)
 
@@ -285,22 +297,14 @@
       (label "&Deal")
       (parent main-menu)
       (callback (lambda (item event)
-                  (deal))))
+                  (deal)
+                  (sort)
+                  (pretend-to-play))))
 
     ;; Move the table so that it's all visible, and not blocking the
     ;; DrScheme window.
     (send *t* move 400 0)
             
-    (send *t* show #t)
-    (let ()
-      (define one-hand
-        (lambda ()
-          (deal)
-          (sort)
-          (pretend-to-play)
-          )
-        )
-      ;;(let loop () (one-hand) (loop))
-      (instantiate timer% () (notify-callback one-hand) (interval 1000))
-      )))
+    (send *t* show #t)))
+
 
