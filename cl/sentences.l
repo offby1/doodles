@@ -30,18 +30,20 @@
   (apply #'concatenate 'string
          (mapcar (lambda (thing)
                    (if (consp thing)
-                       (let ((letter (format nil "~:C" (cdr thing))))
+                       (let ((letter (format nil "~:C" (char-upcase (cdr thing)))))
                          (format nil (concatenate 'string "~R " letter "~:p") (car thing)))
                        thing)) tmplt)))
 
-(let ((tmplt (list  "This sentence contains exactly "
-                   '(0 . #\z) ", "
-                   '(0 . #\q) ", "
-                   '(0 . #\r) ", "
-                   '(-99 . #\Space)
-                   ", and "
-                   '(0 . #\e)
-                   ))
+(let ((tmplt (let (thing)
+               (dotimes (c (- (char-code #\z)
+                              (char-code #\a))
+                         thing)
+                 (push (cons 0 (code-char (+ (char-code #\a) c))) thing)
+                 (push ", " thing))
+               (push "and " thing)
+               (push '(0 . #\z) thing)
+               (push "." thing)
+               (nreverse thing)))
       (duplicate-detector (make-hash-table :test #'equal)))
   (loop
      (let ((str (template->string tmplt)))
