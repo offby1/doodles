@@ -9,20 +9,22 @@
          s)
     survey))
 
-(defun survey->alist (s)
-  (mapcar (lambda ())))
-
+;; returns nil when INPUT is a "true" template.
 (defun update-template (input survey)
+  (setf copy  (copy-tree input))
   (let (result)
     (loop
-       (when (null input)
-         (return (nreverse result)))
-       (let ((thing (car input)))
+       (when (null copy)
+         (setf result (nreverse result))
+         (if (equal input result)
+             (return nil))
+         (return result))
+       (let ((thing (car copy)))
          (when (consp thing)
            (setf (car thing)
                  (lookup (cdr thing) survey)))
          (push thing result))
-       (setf input (cdr input)))))
+       (setf copy (cdr copy)))))
 
 (defun template->string (tmplt)
   (apply #'concatenate 'string
@@ -35,10 +37,35 @@
                    '(0 . #\e)
                    ", "
                    '(0 . #\a)
+                   ", "
+                   '(0 . #\i)
+                   ", "
+                   '(0 . #\o)
+                   ", "
+                   '(0 . #\n)
+                   ", "
+                   '(0 . #\s)
+                   ", "
+                   '(0 . #\r)
+                   ", "
+                   '(0 . #\Space)
+                   ", "
+                   '(0 . #\')
+                   ", "
+                   '(0 . #\,)
                    ", and "
                    '(0 . #\t)
-                   ".")))
-  (dotimes (x 10)
-           (format t "~s => ~s~%" tmplt (template->string tmplt))
-           (update-template tmplt (survey-string (template->string tmplt)))))
+                   "."))
+      (duplicate-detector (make-hash-table :test #'equal)))
+  (loop
+     (let ((str (template->string tmplt)))
+       (format t "~s~%" str)
+       (when  (gethash str duplicate-detector nil)
+         (format t "Looped, durn it~%")
+         (return))
+       (setf (gethash str duplicate-detector) t)
+       (setf tmplt (update-template tmplt (survey-string str)))
+       (when (not tmplt)
+         (format t "We've got a winner: ``~a''~%" str)
+         (return)))))
 
