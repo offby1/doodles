@@ -16,7 +16,7 @@
                    (let ((more-anagrams (anagrams-internal smaller-bag smaller-length)))
                      (when more-anagrams
                        (format t "Prepending ~a to ~a~%"
-                               rv these-words more-anagrams)
+                               these-words more-anagrams)
                        (let ((with-new-word 
                               (mapcan #'(lambda (word-to-prepend)
                                           (mapcar #'(lambda (phrase) 
@@ -26,3 +26,7 @@
                          (setq rv (nconc rv with-new-word)))))))))
          (aref *dicts* this-length))))
     rv))
+
+(defun anagrams (string)
+  (declare (type simple-base-string string))
+  (multiple-value-call #'anagrams-internal (bag string)))
