@@ -3,6 +3,7 @@
   (require (all-except (lib "classes.ss" "games" "cards") pasteboard%))
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
+  (require (lib "list.ss"))
   (require "fys.ss")
   (define *d* (let ((d (make-deck)))
                 (for-each (lambda (c)
@@ -13,10 +14,8 @@
   (define *cw* (send (car *d*) card-width))
   (define *ch* (send (car *d*) card-height))
 
-  (define (1- x)
-    (- x 1))
-
-  (define *escape* #f)
+  ;; TODO: think of a more elegant way to do this
+  (define *quit-flag* #f)
   
   (define my-table%
     (class table% 
@@ -25,13 +24,7 @@
       (define on-subwindow-char 
         (lambda (receiver event) 
           (when (eq? 'escape (send event get-key-code))
-            
-            ;; TODO -- figure out how to exit our loops; this doesn't
-            ;; work.
-            (printf "~S escaping to ~S~%" receiver *escape*)
-            (when *escape* (let ((e *escape*))
-                             (set! *escape* #f)
-                             (e))))
+            (set! *quit-flag* #t))
           
           (o-s-c receiver event)))
       (super-instantiate ())))
@@ -40,9 +33,9 @@
 
   (define (card->value c)
     (+ (* 13
-          (1- (send c get-suit-id)))
+          (sub1 (send c get-suit-id)))
        (* 1
-          (1- (send c get-value)))))
+          (sub1 (send c get-value)))))
 
   (define *initial-region* (make-region
                             0
@@ -128,21 +121,21 @@
                  (callback (lambda (item event) 
                              (set! *d* (vector->list (fys! (apply vector *d*))))
                              (with-busy-cursor
-                              (let/ec k
-                                (set! *escape* k)
-                                (quickly
-                                 (let loop ((cards-moved 0)
-                                            (d *d*))
-                                   (when (not (null? d))
-                                     (let ((x (* *cw* (remainder cards-moved 13)))
-                                           (y (* *ch* (quotient  cards-moved 13))))
-                                       (send *t* move-card (car d)
-                                             x
-                                             y))
-                                     (when (send (car d) face-down?)
-                                       (send *t* card-face-up (car d) ))
-                                     (loop (+ 1 cards-moved)
-                                           (cdr d))))))))))
+                              (quickly
+                               (let loop ((cards-moved 0)
+                                          (d *d*))
+                                 (when (not (or *quit-flag*
+                                                (null? d)))
+                                   (let ((x (* *cw* (remainder cards-moved 13)))
+                                         (y (* *ch* (quotient  cards-moved 13))))
+                                     (send *t* move-card (car d)
+                                           x
+                                           y))
+                                   (when (send (car d) face-down?)
+                                     (send *t* card-face-up (car d) ))
+                                   (loop (+ 1 cards-moved)
+                                         (cdr d)))
+                                 (set! *quit-flag* #f)))))))
     (instantiate menu-item% ()
                  (label "Send 'em Back &Home")
                  (parent main-menu)
@@ -150,12 +143,17 @@
                              (quickly
                               (with-busy-cursor
                                (let/ec k
-                                 (set! *escape* k)
                                  (for-each (lambda (c)
-                                             (send/apply *t* move-card c 
-                                                         (card->initial-position c)
-                                                         ))
-                                           (reverse *d*)))))
+                                             (when *quit-flag* 
+                                               (set! *quit-flag* #f)
+                                               (k (void)))
+                                             (send/apply *t* move-card c (card->initial-position c))
+                                             (send *t* card-to-front c)
+                                             (when (send c face-down?)
+                                               (send *t* card-face-up c)))
+                                           (mergesort *d* (lambda (c1 c2)
+                                                            (< (card->value c1)
+                                                               (card->value c2))))))))
                              )))
 
     (instantiate menu-item% ()
