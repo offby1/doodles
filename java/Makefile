@@ -20,6 +20,15 @@ CPPFLAGS := -I$(J2)/include -I$(J2)/include/win32 -I$(MSVC)/include
 %$(SO): %$(O)
 	LIB=$(MSVC)/lib cl -LD $< -Fe$*$(SO)
 
+else
+CPPFLAGS := -I/usr/local/j2sdk1.4.2_05/include -I/usr/local/j2sdk1.4.2_05/include/linux
+CC	:= gcc34
+LDFLAGS	:= -shared
+SO	:= .so
+O	:= .o
+
+%$(SO): %$(O)
+	$(CC) $(LDFLAGS) $^ -shared -o lib$@
 endif
 
 all: $(C).class $(DLL)$(SO)
