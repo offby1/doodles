@@ -28,6 +28,9 @@ For all I know, I'm already doing this in all implementations.
 Anyway, I've never seen any speed improvement with a more complex idea
 (such as a list of hash tables).
 
+Although a simple hash table, which we deep-copy upon entry to the
+function, probably would work too.
+
 * Emit top-level anagrams as they're found.
 
 To alleviate boredom.  This requires sorting the dictionary by biggest
