@@ -18,7 +18,7 @@ cpuid level	: 2
 wp		: yes
 flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr xmm
 bogomips	: 550.50
-									      
+
 									      Permanent		   Temporary
 Class									 instances   bytes    instances	  bytes
 -----									 --------- ---------  --------- ---------
@@ -68,22 +68,23 @@ bogomips	: 4771.02
 
 time ./anagrams  > /dev/null
 
-language	: time "hemingway"	time "st hemingway"	bag implementation	dictionary cached?	exclusions implementation
------------------------------------------------------------------------------------------------------------------------------------------
-c++ (-O2)	:  2 seconds		~60 seconds		bignums			no			list
-c++ (-O2)	:  1-2 seconds		~45 seconds		bignums			no			hash table
-guile 1.7 (gmp)	:  7 seconds		~400 seconds		bignums			dunno
-guile 1.6 	:  7 seconds		~300 seconds		bignums			dunno
-mzscheme	:  4 seconds					bignums			no
-perl		: 35 seconds					strings			no	
-perl/numeric	: 77 seconds					bignums			yes
-python		:  5 seconds		75-80 seconds		bignums			no
-common lisp							bignums			no
-  cmucl		:  2 seconds		~110 seconds
-  clisp		:  2 seconds		~110 seconds
-  sbcl		:  3 seconds		~110 seconds				     
+language	: time "hemingway"	time "st hemingway"	bag implementation	dictionary cached?
+----------------------------------------------------------------------------------------------------------
+c++ (-O2)	:  2 seconds    	  2 seconds!    	bignums			no                      note(1)
+guile 1.7 (gmp)	:  1 seconds         	  4 seconds    		bignums			yes
+guile 1.6 	:  2 seconds        	  4 seconds    		bignums			yes
+mzscheme	:  7 seconds        	 30 seconds		bignums			no
+perl		:  4 seconds        	 10 seconds		strings			no
+perl/numeric	: 21 seconds    	170 seconds		bignums			yes
+python		:  4 seconds         	  6 seconds    		bignums			no
+common lisp	        					bignums			no
+  cmucl		:  1 seconds              2 seconds
+  clisp		:  3 seconds              3 seconds
+  sbcl		:  2 seconds              3 seconds
 
 ---
+
+Note(1): C++ does "ernest hemingway" -- 408198 anagrams -- in about 35 seconds
 
 Note: when gathering data to fill in the above, be sure that none of
 the programs or libraries were compiled for profiling -- because they

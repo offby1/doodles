@@ -69,4 +69,4 @@
                                          (length w2))
                                       (string< w1 w2))))
                            )))
-    (format t "done -- down to ~a elements: ~s.~%" (length *dict*) *dict*)))
+    (format t "done -- down to ~a elements.~%" (length *dict*) )))

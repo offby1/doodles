@@ -70,6 +70,10 @@ die "bag_empty"
 die "bag_empty"
   if (bag_empty (bag ("a")));
 
+die "didn't ignore a space"
+  unless (bags_equal (bag ("a "),
+                     (bag ("a"))));
+
 die "bags_equal"
   unless (bags_equal (bag ("abc"),
                       bag ("cba"))) ;

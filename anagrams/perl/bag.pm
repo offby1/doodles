@@ -14,7 +14,9 @@ our @EXPORT = qw(bag bag_empty bags_equal subtract_bags);
 
 sub bag {
   my $input = lc (shift);
-  my $output = join ('', sort (split (m(), $input)));
+  my $output = join ('', sort (grep { ord($_) <= ord ('z')
+                                        && ord($_) >= ord('a')}
+                               (split (m(), $input))));
   $output;
 }
 
@@ -32,6 +34,8 @@ sub subtract_bags {
   my $difference = "";
 
   while (1) {
+    confess "Undefined arg to subtract_bags" unless defined ($b2);
+
     my $c1 = substr ($b1, 0, 1);
     my $c2 = substr ($b2, 0, 1);
 
@@ -84,6 +88,9 @@ die "bags_equal"
   if (bags_equal (bag ("abc"),
                   bag ("a")));
 
+die "didn't ignore a space"
+  unless (bags_equal (bag ("a "),
+                     (bag ("a"))));
 {
   my $oughta_be_empty = subtract_bags (bag ("a"),
                                        bag ("a"));

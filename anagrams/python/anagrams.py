@@ -52,7 +52,7 @@ def anagrams (bag, dict):
                 rv.append ([w])
         else:
             from_smaller_bag = anagrams (smaller_bag,
-                                         dict[words_processed + 1:])
+                                         dict[words_processed:])
             if (not len (from_smaller_bag)):
                 continue
 

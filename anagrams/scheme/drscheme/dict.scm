@@ -8,7 +8,7 @@
            (lib "mred.ss" "mred")
            (prefix srfi-1- (lib "1.ss" "srfi"))
            (prefix srfi-13- (lib "13.ss" "srfi")))
-  (provide dict-for-each init)
+  (provide init *dictionary*)
   
   (define *big-ol-hash-table* #f)
 
@@ -32,17 +32,8 @@
           dict)
         )))
   
-  (define *alist* #f)
-  
-  (define (dict-for-each proc)
-    "An iterator over dictionary elements.  Applies PROC
-successively on all dictionary items.  The arguments to PROC are
-\"(key value)\" where key and value are successive pairs from the
-dictionary."
-    (for-each (lambda (p)
-                (proc (car p)
-                      (cdr p))) *alist*))
-  
+  (define *dictionary* #f)
+
   (define (adjoin-word dict word)
     (let* ((this-bag (bag word))
            (probe (hash-table-get dict this-bag (lambda () #f))))
@@ -83,7 +74,7 @@ dictionary."
     
     (fprintf status-port "Pruning dictionary ... ") (flush-output)
 
-    (set! *alist* 
+    (set! *dictionary* 
           (let ((entries-examined 0))
             (let ((result (srfi-1-filter (lambda (entry)
                                            (if (zero? (remainder entries-examined 1000))
@@ -115,10 +106,10 @@ dictionary."
                                                                              (car b)))))
           (map cdr with-random-numbers)))
       
-      (set! *alist* 
+      (set! *dictionary* 
             (if #t
-                (list-quicksort *alist* biggest-first)
-              (shuffled *alist*))
+                (list-quicksort *dictionary* biggest-first)
+              (shuffled *dictionary*))
             )))
 
   

@@ -5,6 +5,8 @@
              (srfi srfi-1)
              (bag))
 
+(define-public *dictionary* #f)
+
 (define *big-ol-hash-table* #f)
 
 (define *alist-file-name* "big-dict-alist.scm")
@@ -25,20 +27,6 @@
             ))
         dict)
       )))
-
-(define-public (dict-for-each proc)
-  "An iterator over dictionary elements.  Applies PROC
-successively on all dictionary items.  The arguments to PROC are
-\"(key value)\" where key and value are successive pairs from the
-dictionary."
-  (if #f
-      (hash-fold (lambda (key words prior)
-                   (proc key words))
-                 #f
-                 *big-ol-hash-table*)
-    (for-each (lambda (p)
-                (proc (car p)
-                      (cdr p))) *alist*)))
 
 (define (adjoin-word dict word)
   (let* ((this-bag (bag word))
@@ -85,14 +73,14 @@ dictionary."
              (hash-set! *big-ol-hash-table* bag words)))))
    (with-input-from-file *alist-file-name* read))
   ;; now clobber the alist.
-  (set! *alist* (hash-fold (lambda (key value prior)
+  (set! *dictionary* (hash-fold (lambda (key value prior)
                              (cons (cons key value) prior)) 
                            '()
                            *big-ol-hash-table*))
   (format #t "done~%")
 
   
-  ;; TODO -- consider sorting *alist*.  There are two ways you might
+  ;; TODO -- consider sorting *dictionary*.  There are two ways you might
   ;; want to sort it:
 
   ;; 1) put the  big words first, so that  the most interesting anagrams
@@ -127,11 +115,11 @@ dictionary."
         (map cdr with-random-numbers)))
 
     (format #t "Sorting or shuffling the dictionary (~a elements), for the hell of it ... "
-            (length *alist*))
-    (set! *alist* 
+            (length *dictionary*))
+    (set! *dictionary* 
           (if #t
-              (sort! *alist* biggest-first)
-            (shuffled *alist*))
+              (sort! *dictionary* biggest-first)
+            (shuffled *dictionary*))
           )
     (format #t "done.~%"))
   )
@@ -167,7 +155,6 @@ dictionary."
       
       (format #t "done~%")))
 
-(define *alist* #f)
 (set! *random-state* (seed->random-state (get-internal-real-time)))
 
 ;; calculate letter frequencies.  This could be used to re-order the
@@ -191,7 +178,7 @@ dictionary."
                                               ))
                        (loop (substring str 1)
                              )))))
-             (apply append (map cdr *alist*)))
+             (apply append (map cdr *dictionary*)))
             tally)
           (lambda (p1 p2)
             (> (cdr p1)

@@ -7,8 +7,6 @@
 
 std::vector<entry > the_dictionary;
 
-typedef std::vector<bag>  excls;
-
 namespace {
   std::ostream &
   operator <<(std::ostream &o, const wordlist &w)
@@ -19,20 +17,6 @@ namespace {
       {
         o << *i;
         if (i + 1 != w.end ())
-          o << " ";
-      }
-    return o;
-  }
-
-  std::ostream &
-  operator <<(std::ostream &o, const excls &e)
-  {
-    for (excls::const_iterator i = e.begin ();
-         i != e.end ();
-         i++)
-      {
-        o << *i;
-        if (i + 1 != e.end ())
           o << " ";
       }
     return o;
@@ -54,22 +38,6 @@ namespace {
     return o;
   }
 
-
-  bool
-  excluded (const bag &b, const excls &e)
-  {
-    assert (!b.is_empty ());
-    for (excls::const_iterator i = e.begin ();
-         i != e.end ();
-         i++)
-      {
-        if (b == *i)
-          return true;
-      }
-
-    return false;
-  }
-  
   std::string
   wordlist_to_string (const wordlist &wl)
   {
@@ -121,49 +89,48 @@ operator <<(std::ostream &o, const entry &e)
 
 
 std::vector<wordlist>
-anagrams_internal (const bag &b, excls exclusions, unsigned int level)
+anagrams_internal (const bag &b,
+                   std::vector<entry>::const_iterator dict,
+                   std::vector<entry>::const_iterator dict_end,
+                   unsigned int level)
 {
   std::vector<wordlist> rv;
   bag *smaller_bag = 0;
-  for (std::vector<entry>::const_iterator i = the_dictionary.begin ();
-       i != the_dictionary.end ();
-       i++)
+  for (;
+       dict != dict_end;
+       dict++)
     {
       delete smaller_bag; smaller_bag = 0;
 
-      const bag &key_bag (i->first);
-      const wordlist &these_words (i->second);
-
-      if (excluded (key_bag, exclusions)) continue;
+      const bag &key_bag (dict->first);
+      const wordlist &these_words (dict->second);
 
       smaller_bag = (b.subtract_bag (key_bag));
       if (!smaller_bag) continue;
 
       if (smaller_bag->is_empty ())
         {
-          exclusions.push_back (key_bag);
-
           for (wordlist::const_iterator wd = these_words.begin ();
                wd != these_words.end ();
                wd++)
             {
               wordlist result;
               result.push_back (*wd);
-              if (!level) std::cerr << result << std::endl;
               rv.push_back (result);
             }
         }
       else
         {
-          std::vector<wordlist> from_smaller_bag (anagrams_internal (*smaller_bag, exclusions, level + 1));
+          std::vector<wordlist> from_smaller_bag (anagrams_internal (*smaller_bag,
+                                                                     dict,
+                                                                     dict_end,
+                                                                     level + 1));
           if (!from_smaller_bag.size ()) continue;
-          exclusions.push_back (key_bag);
           std::vector<wordlist> more (prepend_words_to_anagrams (these_words, from_smaller_bag));
           for (std::vector<wordlist>::const_iterator i = more.begin ();
                i != more.end ();
                i++)
             {
-              if (!level) std::cerr << *i << std::endl;
               rv.push_back (*i);
             }
         }
@@ -178,8 +145,10 @@ all_anagrams (const bag &b)
   std::cerr << "Snarfing the dictionary and whatnot ... ";
   init (b);
   std::cerr << " done" << std::endl;
-  std::vector<bag> exclusions;
-  return anagrams_internal (b, exclusions, 0);
+  return anagrams_internal (b,
+                            the_dictionary.begin (),
+                            the_dictionary.end (),
+                            0);
 }
 
 #if 1
@@ -196,11 +165,15 @@ main (int argc, char *argv[])
         const bag b (input);
 
         std::vector<wordlist> ans (all_anagrams (b));
+        std::cerr << ans.size () << " anagrams of " << input << std::endl;
         for (std::vector<wordlist>::const_iterator i = ans.begin ();
              i != ans.end ();
              i++)
           {
-            std::cout << *i << std::endl;
+            std::cout << "("
+                      << *i
+                      << ")"
+                      << std::endl;
           }
       }
   } catch (std::exception &e)

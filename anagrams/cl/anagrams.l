@@ -17,37 +17,38 @@
 
 (defmacro maybe-dump (ans)
   `(if (zerop depth)
-       (dolist (a ,ans) (format t "~a~%" a))))
+       (dolist (a ,ans) (format *error-output* "~a~%" a))))
 
-(defun anagrams-internal (bag exclusions depth)
+(defmacro while (test &rest body)
+  `(do ()
+       ((not ,test))
+     ,@body))
+
+(defun anagrams-internal (bag dict depth)
   
   (let ((rv ()))
-    (save-exclusions exclusions
-     ;; Now find anagrams containing smaller words.
-     (mapc
-      #'(lambda (entry)
-          (let ((this-bag (car entry))
-                (these-words (cdr entry)))
-            (unless (excluded? this-bag exclusions)
-              (let ((smaller-bag (subtract-bags bag this-bag)))
-                (when smaller-bag
-                  (if (bag-emptyp smaller-bag)
-                      (progn
-                        (add-exclusion! exclusions this-bag)
-                        (let ((combined (mapcar #'list these-words)))
-                          (maybe-dump combined)
-                          (setf rv (append rv combined))))
-                    (let ((more-anagrams (anagrams-internal smaller-bag exclusions (+ 1 depth))))
-                      (check-type more-anagrams (satisfies anagram-type))
-                      (when more-anagrams
-                                        ;(format t "Prepending ~a to ~a~%" these-words more-anagrams)
-                        (let ((combined (combine these-words more-anagrams)))
-                          (maybe-dump combined)
-                          (setf rv (append rv combined))
-                          ;;(check-type rv (satisfies anagram-type))
-                          (add-exclusion! exclusions this-bag)
-                          )))))))))
-      *dict*))
+    ;; Now find anagrams containing smaller words.
+    (while (not (null dict))
+      (let* ((entry (car dict))
+             (this-bag (car entry))
+             (these-words (cdr entry)))
+        (let ((smaller-bag (subtract-bags bag this-bag)))
+          (when smaller-bag
+            (if (bag-emptyp smaller-bag)
+                (let ((combined (mapcar #'list these-words)))
+                  ;(maybe-dump combined)
+                  (setf rv (append rv combined)))
+              (let ((more-anagrams (anagrams-internal smaller-bag dict (+ 1 depth))))
+                (check-type more-anagrams (satisfies anagram-type))
+                (when more-anagrams
+                                        ;(format *error-output* "Prepending ~a to ~a~%" these-words more-anagrams)
+                  (let ((combined (combine these-words more-anagrams)))
+                    ;(maybe-dump combined)
+                    (setf rv (append rv combined))
+                    ;;(check-type rv (satisfies anagram-type))
+                     
+                    )))))))
+      (setf dict (cdr dict)))
 
     ;;(check-type rv (satisfies anagram-type))
 
@@ -57,7 +58,7 @@
   (declare (type simple-base-string string))
   (let ((b  (bag string)))
     (init b)
-    (let ((result (anagrams-internal b nil 0)))
+    (let ((result (anagrams-internal b *dict* 0)))
       (prog1 result
-            (format t ";; ~a anagrams of ~a~%" (length result)
+            (format *error-output* ";; ~a anagrams of ~a~%" (length result)
               string)))))

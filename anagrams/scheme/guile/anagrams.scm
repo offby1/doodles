@@ -16,11 +16,11 @@
         (start-time  (get-internal-real-time)))
     
     (init in-bag)
-    (let* ((result (all-anagrams-internal in-bag  (empty-exclusions) 0))
+    (let* ((result (all-anagrams-internal in-bag *dictionary* 0))
            (stop-time (get-internal-real-time))
            )
       (pretty-print result)
-      (format #t
+      (format (current-error-port)
               ";; ~a anagrams of ~s: ~a seconds~%"
               (length result)
               string
@@ -34,40 +34,34 @@
   `(if (zero? depth)
        (for-each (lambda (a)
                    (format #t
-                           "max depth ~a; ~a exclusions: ~a~%"
+                           "max depth ~a: ~a~%"
                            max-depth-so-far
-                           max-exclusion-length-so-far
                            a))
                  ,ans)))
 
 (define max-depth-so-far 0)
-(define max-exclusion-length-so-far 0)
-(define (all-anagrams-internal bag exclusions depth)
-  (let ((rv '())
-        (exclusion-length (length exclusions)))
+
+(define (all-anagrams-internal bag dict depth)
+  (let ((rv '()))
     (if (> depth max-depth-so-far)
         (set! max-depth-so-far depth))
-    (if (> exclusion-length max-exclusion-length-so-far)
-        (set! max-exclusion-length-so-far exclusion-length))
-    (dict-for-each
-     (lambda (key words)
-       (if (not (excluded? key exclusions))
-           (let ((smaller-bag (subtract-bags bag key)))
-             (if smaller-bag
-                 (if (bag-empty? smaller-bag)
-                     (begin
-                       (add-exclusion! exclusions key)
-                       (let ((combined (map list words)))
-                         (maybe-dump combined)
-                         (set! rv (append! rv combined))))
-                   (let ((anagrams (all-anagrams-internal smaller-bag exclusions (+ 1 depth))))
-                     (if (not (null? anagrams))
-                         (begin
-                           (add-exclusion! exclusions key)
-                           (let ((combined (combine words anagrams)))
-                             (maybe-dump combined)
-                             (set! rv (append! rv combined))))))))))))
-    rv))
+    (let loop ((dict dict))
+      (if (null? dict)
+          rv
+        (let* ((key (caar dict))
+               (words (cdar dict))
+               (smaller-bag (subtract-bags bag key)))
+          (if smaller-bag
+              (if (bag-empty? smaller-bag)
+                  (let ((combined (map list words)))
+                    (maybe-dump combined)
+                    (set! rv (append! rv combined)))
+                (let ((anagrams (all-anagrams-internal smaller-bag dict (+ 1 depth))))
+                  (if (not (null? anagrams))
+                      (let ((combined (combine words anagrams)))
+                        (maybe-dump combined)
+                        (set! rv (append! rv combined)))))))
+          (loop (cdr dict)))))))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
