@@ -6,13 +6,13 @@
 #include "bag.h"
 
 bag::bag (const std::string &s)
-  : _letters (s)
 {
   for (int i = 0;
-       i < _letters.size ();
+       i < s.size ();
        i++)
     {
-      _letters.at(i) = tolower (_letters.at(i));
+      if (isalpha (s.at (i)))
+        _letters += (tolower (s.at(i)));
     }
   sort (_letters.begin (), _letters.end ());
 }

@@ -2,9 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <regexx.hh>
 #include <map>
 #include <cstring>
+#include <cassert>
+#include <regex.h>
 
 #include "dict.h"
 
@@ -20,22 +21,20 @@ entry::operator < (const entry &other) const
   }
 
 namespace {
-  regexx::Regexx has_a_vowel;
-  regexx::Regexx is_long_enough;
-  regexx::Regexx contains_non_ascii;
+  regex_t has_a_vowel;
+  regex_t is_long_enough;
+  regex_t contains_non_ascii;
 
   bool
   acceptable (const bag&filter,
               const bag &candidate)
   {
-    has_a_vowel.str (candidate);
-    is_long_enough.str (candidate);
     bag *difference = filter.subtract_bag (candidate);
-    bool rv = (has_a_vowel.exec ()
+    bool rv = ((0 == (regexec (&has_a_vowel       , candidate.c_str (), 0, 0, 0)))
                &&
-               is_long_enough.exec ()
+               (0 == (regexec (&is_long_enough    , candidate.c_str (), 0, 0, 0)))
                &&
-               !contains_non_ascii.exec ()
+               (0 != (regexec (&contains_non_ascii, candidate.c_str (), 0, 0, 0)))
                &&
                difference
                );
@@ -49,9 +48,9 @@ typedef std::map<bag, wordlist> hash_t;
 void
 init (const bag &filter)
 {
-  has_a_vowel.expr        ("[aeiou]");
-  is_long_enough.expr     ("^(i|a)$|^..");
-  contains_non_ascii.expr ("[^[:alpha:]]");
+  assert (!regcomp (&has_a_vowel       , "[aeiou]"     , REG_EXTENDED | REG_NOSUB));
+  assert (!regcomp (&is_long_enough    , "^(i|a)$|^.." , REG_EXTENDED | REG_NOSUB));
+  assert (!regcomp (&contains_non_ascii, "[^[:alpha:]]", REG_EXTENDED | REG_NOSUB));
 
   hash_t  hash;
   

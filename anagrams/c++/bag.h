@@ -25,7 +25,8 @@ public:
   // returns 0 if b2 cannot be subtracted from b1
   bag*  subtract_bag (const bag &b2) const;
 
-  operator const std::string &() const { return _letters; }
+  operator const std::string () const { return "Bag `" + _letters + "'"; }
+  const char * c_str () const { return _letters.c_str (); }
 
   inline friend std::ostream &
   operator <<(std::ostream &o, const bag &b)

@@ -25,6 +25,20 @@ namespace {
   }
 
   std::ostream &
+  operator <<(std::ostream &o, const excls &e)
+  {
+    for (excls::const_iterator i = e.begin ();
+         i != e.end ();
+         i++)
+      {
+        o << *i;
+        if (i + 1 != e.end ())
+          o << " ";
+      }
+    return o;
+  }
+
+  std::ostream &
   operator <<(std::ostream &o, const std::vector<wordlist> &anagrams)
   {
     o << "(";
