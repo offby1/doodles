@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+nice time clisp -q -C -x '(progn (load "sentences.l" )(yow 1000000) (quit))'
