@@ -11,7 +11,7 @@ non_letter_re = re.compile (r'[^a-zA-Z]')
 
 def snarf_dictionary_from_IO (I):
     all_words = re.findall (r'.+', I.read ())
-    rv = {}
+    hash_table = {}
     for w in all_words:
         w = string.lower (w)
         if non_letter_re.search (w):
@@ -22,19 +22,20 @@ def snarf_dictionary_from_IO (I):
             continue
 
         key = bag(w)
-        if rv.has_key (key):
-            if (0 == rv[key].count (w)): # avoid duplicates
-                rv[key].append (w)
+        if hash_table.has_key (key):
+            if (0 == hash_table[key].count (w)): # avoid duplicates
+                hash_table[key].append (w)
         else:
-            rv[key] = [w]
+            hash_table[key] = [w]
 
-    return rv
+    return hash_table
 
 def snarf_dictionary (fn):
     fh = open (fn, "r")
     rv = snarf_dictionary_from_IO (fh)
     fh.close ()
     return rv
+
 
 fake_input = "cat\ntac\nfred\n"
 fake_dict = snarf_dictionary_from_IO (StringIO.StringIO (fake_input))

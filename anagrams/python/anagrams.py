@@ -7,7 +7,7 @@ import sys
 
 dict_fn = "/usr/share/dict/words"
 print "Snarfing", dict_fn
-the_dict = snarf_dictionary (dict_fn)
+dict_hash_table = snarf_dictionary (dict_fn)
 print "done"
 
 def is_anagram (thing):
@@ -44,8 +44,9 @@ def anagrams (bag, exclusions, debug_level):
     exclusions = exclusions.copy ()
     rv = []
 
-    for key in the_dict.keys ():
-        words = the_dict[key]
+    for entry in the_dict_list:
+        key = entry[0]
+        words = entry[1]
 
         if (excluded (key, exclusions)):
             continue
@@ -77,15 +78,21 @@ def anagrams (bag, exclusions, debug_level):
 #print combine (["some", "new", "words"], [["annie", "grams"], ["grams", "annie"]])
 
 the_phrase = bag (sys.argv[1])
-print "Pruning dictionary.  Before:", len (the_dict.keys ())
+print "Pruning dictionary.  Before:", len (dict_hash_table.keys ())
 
-for k in the_dict.keys ():
-    if (0 == subtract_bags (the_phrase, k)):
-        del the_dict[k]
+# Now convert the hash table to a list, longest entries first.  (This
+# isn't necessary, but it makes the more interesting anagrams appear
+# first.)  While we're at it, prune the list, too.
+the_dict_list = []
+for k in dict_hash_table.keys ():
+    if (subtract_bags (the_phrase, k)):
+        the_dict_list.append([k, dict_hash_table[k]])
 
-print "Pruned dictionary.  After:", len (the_dict.keys ())
+the_dict_list.sort (lambda a, b: cmp (len (b[1][0]), len (a[1][0])))
+
+print "Pruned dictionary.  After:", len (dict_hash_table.keys ())
 result = anagrams (the_phrase, {}, 0)
-print len(result), "anagrams of", sys.argv[1], result, ":",
+print len(result), "anagrams of", sys.argv[1], ":"
 
 for a in result:
     sys.stdout.write ("(")
