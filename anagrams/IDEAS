@@ -39,3 +39,10 @@ it's much nicer that way.
 The dictionary maps each "bag" to a list of words that can be made
 from that bag.  Make sure that list is in alphabetical order, so that
 the returned list of anagrams is sorted too.
+
+* Use `configure' to figure out where the dictionary lives.
+
+I've only tried the programs on a few computers, and yet each has the
+dictionary in a different place.  Windows is of course particularly
+bad.  If using `configure' is too complicated, perhaps just an
+environment variable.

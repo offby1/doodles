@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cassert>
 #include <regex.h>
+#include <cerrno>
 
 #include "dict.h"
 
