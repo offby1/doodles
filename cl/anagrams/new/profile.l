@@ -1,6 +1,6 @@
 (load "bag.l")
 (load "dict.l")
-(load "new.l")
+(load "anagrams.l")
 
 (setq *dict* (make-dictionary 
                 (list "sting" "me" "anywhere" )
