@@ -1,0 +1,62 @@
+;; -*-scheme-*-
+;; Intended to be evaluated by my evaluator
+
+;;; (define length
+;;;   (lambda (seq)
+;;;     (if (null? seq)
+;;;         0
+;;;       (+ 1 (length (cdr seq))))))
+;;; 
+;;; (define x '())
+;;; 
+;;; (begin 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   (set! x (cons (length x) x)) 
+;;;   x)
+
+;;; (define golly (let ((x 0))
+;;;                 (lambda ()
+;;;                   (set! x (+ 1 x))
+;;;                   (- x 1))))
+;;; (display (golly))
+;;; (newline)
+;;; 
+;;; (display (golly))
+;;; (newline)
+;;; 
+;;; (display (golly))
+;;; (newline)
+
+;; This should print out 
+;; 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
+;;; (define fact
+;;;      (lambda (n)
+;;;        (if (and (integer? n)
+;;;                 (> n 1))
+;;;            (* n (fact (- n 1)))
+;;;          1)))
+;;;                     
+;;; (fact 100)
+
+;;; (define golly (let ((x 0)
+;;;                     (some-pairs (cons 5 (cons 4 (cons 3 (cons 2 (cons 1 '())))))))
+;;;                 (lambda ()
+;;;                   (set! x (+ 1 x))
+;;;                   (- x 1))))
+;;; (define gee (let ((more-pairs (cons 10 (cons 9 (cons 8 (cons 7 (cons 6 '())))))))
+;;;               (lambda ()
+;;;                 'zz-top)))
+;;; (set! golly 0)
+;;; (set! gee 0)
+;;; (define reused (cons 'z (cons 'y (cons 'x (cons 'w '())))))
+;;; (set! reused 0)
+
+(define golly (let ((x (cons 'a 'b)))
+                (lambda () 0)))
+(set! golly 0)
