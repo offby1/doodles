@@ -14,6 +14,7 @@
 (defun add-word (word hash-tables-alist)
   (multiple-value-bind (b length)
       (bag word)
+    (setf word (nstring-downcase word))
     (let ((pair (assoc length hash-tables-alist))
           (the-hash-table nil))
       (if (null pair)
@@ -22,8 +23,9 @@
             (setf hash-tables-alist (cons (cons length the-hash-table)
                                           hash-tables-alist)))
         (setf the-hash-table (cdr pair)))
-      (setf (gethash b the-hash-table '())
-            (cons word (gethash b the-hash-table '())))
+      (unless (member word (gethash b the-hash-table '()) :test #'equalp)
+        (setf (gethash b the-hash-table '())
+              (cons word (gethash b the-hash-table '()))))
       hash-tables-alist)))
 
 (defun alist->array (hash-tables-alist)
@@ -47,6 +49,7 @@
         (setf   (aref as-array slots-examined) (make-hash-table :test 'equalp))))
     as-array))
 
+;; for testing
 (defun make-dictionaries-from-list (l)
   (let ((hash-tables-alist '()))
     (dolist (word l)
@@ -84,4 +87,11 @@
     (when (plusp (aref b slots-examined))
       (return-from bag-emptyp nil))))
 
-(defvar *dicts* (make-dictionary-from-file "/usr/share/dict/words"))
+(defparameter *dicts* (progn
+                        (format t "Reading dictionary ... ") (finish-output)
+                        (prog1 
+                            (make-dictionary-from-file "/usr/share/dict/words")
+                          (format t "done~%") (finish-output))))
+
+;; remove all the one-letter words
+(setf (aref *dicts* 1) (make-hash-table :test 'equalp))
