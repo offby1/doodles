@@ -37,6 +37,5 @@
          (format t "~%~A~&" (anagrams (bag "ernesthemingway")))
          (SB-PROFILE:REPORT))
 
-#+clisp (let ((result))
-          (ext:space  (anagrams (bag "ernesthemingway"))))
+#+clisp (ext:space (format t "~A~%" (anagrams (bag "ernesthemingway"))))
 
