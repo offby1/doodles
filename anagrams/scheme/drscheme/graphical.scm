@@ -7,9 +7,11 @@
 
 (module graphical
     mzscheme
-  (require (lib "mred.ss" "mred"))
-  (require (lib "class.ss"))
-  (require "anagrams.scm")
+
+  (require "anagrams.scm"
+           "ports.scm"
+           (lib "mred.ss" "mred")
+           (lib "class.ss"))
 
   (define dictionary-file-name #f)
   
@@ -30,9 +32,17 @@
         (when (eq? 'text-field-enter (send event get-event-type ))
           (send object enable #f)
           (let* ((input-string  (send input get-value))
-                 (output (instantiate text-field% ()
+                 (output-field (instantiate text-field% ()
                                       (parent f)
-                                      (label (format "anagrams of ~s" input-string))
+                                      (label (format "~aanagrams of ~s" 
+                                        ; hack-o-rama: it seems that
+                                        ; once I create this label, I
+                                        ; cannot make it any bigger
+                                        ; later.  So I need to reserve
+                                        ; some space ...
+                                                     (make-string 10 #\space)
+                                                     input-string
+                                                     ))
                                       (style '(multiple vertical-label))
                                       (enabled #t) ; #f is overkill.  I merely
                                         ; want to prevent the user
@@ -43,37 +53,62 @@
                                         ; etc.
                                       (callback (lambda args #f))))
                  
-                 (editor (send output get-editor)))
+                 (editor (send output-field get-editor)))
                 
             
-            (parameterize
-             ((current-output-port
-               (make-custom-output-port
-                #f
-                (lambda (s start end buffer-ok?)
-                  (send output enable #f)
-                  ;; todo -- move point to end before inserting
-                  (send editor insert (substring s start end))
-                  (send output enable #t)
-                  (yield)
-                  (- end start))
-                void
-                void))
-              (current-error-port (make-custom-output-port #f (lambda (s start end buffer-ok?) (send status set-value (substring s start end)) (yield) (- end start)) void void))
-              )
+            (set-output-port!
+             (make-custom-output-port
+              #f
+              (lambda (s start end buffer-ok?)
+                (send output-field enable #f)
+                ;; move point to end before inserting
+                (send editor insert (substring s start end) (send editor get-end-position))
+                (send output-field enable #t)
+                ;(sleep/yield 1)
+                (- end start))
+              void
+              void))
+            (set-status-port!
+             (make-custom-output-port
+              #f
+              (lambda (s start end buffer-ok?)
+                (send status set-value (substring s start end)) (yield) (- end start)) void void))
 
-             (all-anagrams-mit-callback 
-              input-string 
-              (or dictionary-file-name
-                  (begin
-                    (set! dictionary-file-name
-                          (get-file "Where's the dictionary on this box?"
-                                    f
-                                    "/usr/share/dict"
-                                    "words"
-                                    #f
-                                    '()
-                                    '()))
-                    dictionary-file-name)))))
+            (let ((total 0))
+              (all-anagrams 
+               input-string 
+               (or dictionary-file-name
+                   (begin
+                     (set! dictionary-file-name
+                           (get-file "Where's the dictionary on this box?"
+                                     f
+                                     "/usr/share/dict"
+                                     "words"
+                                     #f
+                                     '()
+                                     '()))
+                     dictionary-file-name))
+               (lambda (ans)
+                 (for-each
+                  (lambda (words)
+                    (define (string-append-with-spaces words)
+                      (let loop ((result "")
+                                 (words words))
+                        (cond
+                         ((null? words)
+                          result)
+                         (#t
+                          (loop (string-append
+                                 result
+                                 (if (zero? (string-length result))
+                                     ""
+                                   " ")
+                                 (car words))
+                                (cdr words))))))
+                    (fprintf output-port "~a~%" (string-append-with-spaces words)))
+                  ans)
+                 (set! total (+ (length ans) total))
+                 (send output-field set-label (format "~a anagrams of ~s" total
+                                                      input-string))))))
           (send object enable #t))))))
   (send f show #t))

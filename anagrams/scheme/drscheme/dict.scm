@@ -1,6 +1,7 @@
 (module dict
     mzscheme
   (require "bag.scm"
+           "ports.scm"
            (prefix list- (lib "list.ss"))
            (lib "pretty.ss")
            (lib "process.ss")
@@ -15,16 +16,16 @@
     (with-input-from-file fn
       (lambda ()
         (let ((dict (make-hash-table 'equal)))
-          (fprintf (current-error-port) (format "Reading dictionary ... "))
+          (fprintf status-port  "Reading dictionary ... ")
           (let loop ((word  (read-line))
                      (words-read 0))
             (if (eof-object? word)
-                (fprintf (current-error-port) (format "Reading dictionary ... done."))
+                (fprintf status-port  "Reading dictionary ... done.")
               (begin
                 (if (word-acceptable? word)
                     (adjoin-word dict (srfi-13-string-downcase word)))
                 (if (zero? (remainder words-read 1000))
-                    (fprintf (current-error-port)  (format "Reading dictionary ... ~a words ..." words-read)))
+                    (fprintf status-port  (format "Reading dictionary ... ~a words ..." words-read)))
                 (loop (read-line)
                       (+ 1 words-read)))
               ))
@@ -80,19 +81,19 @@ dictionary."
     (if (not *big-ol-hash-table*)
         (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
     
-    (fprintf (current-error-port) "Pruning dictionary ... ") (flush-output)
+    (fprintf status-port "Pruning dictionary ... ") (flush-output)
 
     (set! *alist* 
           (let ((entries-examined 0))
             (let ((result (srfi-1-filter (lambda (entry)
                                            (if (zero? (remainder entries-examined 1000))
-                                               (fprintf (current-error-port)
+                                               (fprintf status-port
                                                          (format "Pruning dictionary ... ~a words ..." entries-examined)))
                                            (set! entries-examined (+ 1 entries-examined))
                                            (bag-acceptable? (car entry) bag-to-meet))
                                          (hash-table-map *big-ol-hash-table* cons))))
               result)))
-    (fprintf (current-error-port) "Pruning dictionary ... done.")
+    (fprintf status-port "Pruning dictionary ... done.")
     
     (let ()
       (define (biggest-first e1 e2) 
