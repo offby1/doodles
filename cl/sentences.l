@@ -7,6 +7,8 @@
 
 ;; This is _way_ faster under sbcl than under clisp.
 
+(proclaim `(optimize (speed 3)))
+
 (defmacro lookup (c survey)
   `(svref ,survey (char-code (char-downcase ,c))))
 
@@ -46,6 +48,7 @@
        ((#\') "apostrophe")
        ((#\,) "comma")
        ((#\.) "full stop")
+       ((#\-) "hyphen")
        ((#\Space) "space")
        (t "")))))
 
@@ -68,41 +71,43 @@
                  tmplt)))
 
 
-(let ((tmplt
-       (append 
-        (cons "This sentence contains exactly "
-              (loop for (item rest) on
-                    (loop for n
-                          from (char-code #\a)
-                          to   (char-code #\z)
-                          collect (cons 0 (code-char n)))
-                    collect item when rest collect ", "))
-        (list 
-         ",  " '(0 . #\Space)
-         ",  " '(0 . #\.)
-         ",  " '(0 . #\,)
-         ", and " '(0 . #\')
-         ".")))
+(defun yow ()
+  (let ((tmplt
+         (append 
+          (cons "This sentence contains exactly "
+                (loop for (item rest) on
+                     (loop for n
+                        from (char-code #\a)
+                        to   (char-code #\z)
+                        collect (cons 0 (code-char n)))
+                     collect item when rest collect ", "))
+          (list 
+           ", " '(0 . #\Space)
+           ", " '(0 . #\.)
+           ", " '(0 . #\,)
+           ", " '(0 . #\-)
+           ", and " '(0 . #\')
+           ".")))
 
-      (duplicate-detector (make-hash-table :test #'equal)))
-  (let ((tries 0))
-    (loop
-       (let ((str (template->string tmplt)))
-         (when (zerop (mod tries 1000))
-           (format t "~a: ~s~%" tries str))
-         (when  (gethash (sxhash str) duplicate-detector nil)
+        (duplicate-detector (make-hash-table :test #'equal)))
+    (let ((tries 0))
+      (loop
+         (let ((str (template->string tmplt)))
+           (when (zerop (mod tries 1000))
+             (format t "~a: ~s~%" tries str))
+           (when  (gethash (sxhash str) duplicate-detector nil)
+             (setf tmplt (update-template tmplt #'(lambda (char)
+                                                    (declare (ignore char))
+                                                    (random (length str)))))
+             (setf str (template->string tmplt)))
+           (setf (gethash (sxhash str) duplicate-detector) t)
            (setf tmplt (update-template tmplt #'(lambda (char)
-                                                  (declare (ignore char))
-                                                  (random (length str)))))
-           (setf str (template->string tmplt)))
-         (setf (gethash (sxhash str) duplicate-detector) t)
-         (setf tmplt (update-template tmplt #'(lambda (char)
-                                                (lookup char (survey-string str)))))
-        
-         (when (not tmplt)
-           (format t "(~a): We've got a winner: ``~a''~%"
-                   tries
-                   str)
-           (return)))
-       (incf tries))
-    ))
+                                                  (lookup char (survey-string str)))))
+
+           (when (not tmplt)
+             (format t "(~a): We've got a winner: ``~a''~%"
+                     tries
+                     str)
+             (return)))
+       
+         (incf tries)))))
