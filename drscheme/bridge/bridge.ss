@@ -22,6 +22,8 @@
   (require (lib "list.ss"))
   (require "rotate.ss")
   (require "call.ss")
+  (require "auction.ss")
+  (require "misc.ss")
 
   ;; this rename looks dumb -- hell, it *is* dumb -- but it's the only
   ;; way I can think of to avoid a name collision -- apparently 1.ss
@@ -153,7 +155,7 @@
                                   
                                   ))))
            )
-         `(north east south west)
+         *compass-directions*
          `(0 3 2 1)
          (map make-card-removing-proc
               (list  
@@ -386,14 +388,15 @@
     (make-menu-item
      "&Play"
      (lambda (item event)
-       (pretend-to-play)
-       (disable-all-menu-items))))
+       (pretend-to-play))))
   
   (define deal-menu-item
     (make-menu-item
      "&Deal"
      (lambda (item event)
+       (disable-all-menu-items)
        (deal)
+       (send deal-menu-item enable #t)
        (send sort-menu-item enable #t)
        (send auction-menu-item enable #t))))
   
@@ -401,13 +404,16 @@
     (make-menu-item
      "&Auction"
      (lambda (item event)
-       (let loop ((c (make-call #f))
-                  (calls-made 1))
-         (printf "Somebody bid ~A~%" (call->string c))
-         (if (< calls-made 4)
-             (loop (make-call c)
-                   (add1 calls-made))
-           (printf "Final bid was ~A~%" (call->string c))))
+       (let ((the-auction (make-auction (caar *player-alist*))))
+         (let loop ()
+           (let ((c (make-call (last-bid the-auction )
+                               (format "~A" (whose-turn the-auction)))))
+             (note-call the-auction c)
+
+             (if (contract-settled? the-auction)
+                 (printf "Final bid was ~A~%" (call->string (last-bid the-auction)))
+               (loop)))))
+       (send auction-menu-item enable #f)
        (send play-menu-item enable #t))))
 
   (send deal-menu-item enable #t)

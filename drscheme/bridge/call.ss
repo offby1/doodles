@@ -2,12 +2,15 @@
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require (lib "1.ss" "srfi"))
-  (provide make-call call->string)
+  (require "misc.ss")
+  (provide make-call
+           call->string
+           bid?
+           make-bid)
   
   (define *denominations* `(clubs diamonds hearts spades notrump))
   (define-struct bid (level denomination))
   (define (bid->int b)
-    (define (index item seq ) (- (length seq) (length (member item seq))))
     (+ (* (sub1 (bid-level b)) (length *denominations*))
        (index (bid-denomination b) *denominations*)))
   (define (bid->string b)
@@ -19,8 +22,11 @@
       (format "~A" c)))
   
   (define make-call
-    (lambda (highest-illegal-bid)
-      (let* ((dialog (instantiate dialog% () (label "Make a call.")))
+    (lambda (highest-illegal-bid frame-title)
+      (let* ((dialog (instantiate dialog% ()
+                       (label frame-title)
+                       (x 200)
+                       (y 200)))
              (column (instantiate vertical-pane% ()
                        (parent dialog)))
 
