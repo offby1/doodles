@@ -75,7 +75,7 @@
 
 (defun init ()
   (setf *dicts* (progn
-                  (format t "Reading dictionary ... ") (finish-output)
+                  (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
                   (prog1 
                       (make-dictionary-from-file "/usr/share/dict/words")
                     (format t "done~%") (finish-output))))
