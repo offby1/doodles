@@ -53,46 +53,56 @@
   (apply #'concatenate 'string
          (mapcar (lambda (thing)
                    (if (consp thing)
-                       (let ((letter (spell-out-character (cdr thing))))
-                         (format nil (concatenate 'string "~R " letter "~:p") (car thing)))
+                       (let ((letter (spell-out-character (cdr thing)))
+                             (maybe-apostrophe 
+                              (if (and
+                                   (not (= 1 (car thing)))
+                                   (alpha-char-p (cdr thing)))
+                                  "'"
+                                  "")))
+                         (format 
+                          nil 
+                          (concatenate 'string "~R " letter
+                                       maybe-apostrophe "~:p") (car thing)))
                        thing))
                  tmplt)))
 
-(
- #+clisp ext:times
- #-clisp progn
- #+sbcl (sb-profile:profile template->string spell-out-character update-template survey-string)
- #+sbcl (sb-profile:reset)
- (let ((tmplt
-        (append 
-         (cons "This rather nifty sentence contains "
-               (loop for (item rest) on
+
+(let ((tmplt
+       (append 
+        (cons "This sentence contains exactly "
+              (loop for (item rest) on
                     (loop for n
-                       from (char-code #\a)
-                       to   (char-code #\y)
-                       collect (cons 0 (code-char n)))
+                          from (char-code #\a)
+                          to   (char-code #\z)
+                          collect (cons 0 (code-char n)))
                     collect item when rest collect ", "))
-         (list " and " '(0 . #\z) ".")))
+        (list 
+         ",  " '(0 . #\Space)
+         ",  " '(0 . #\.)
+         ",  " '(0 . #\,)
+         ", and " '(0 . #\')
+         ".")))
 
-       (duplicate-detector (make-hash-table :test #'equal)))
-   (loop
-      (let ((str (template->string tmplt)))
-        (when  (gethash (sxhash str) duplicate-detector nil)
-          ;(format t "~a: ~s~%" (hash-table-count duplicate-detector) str)
-          (setf tmplt (update-template tmplt #'(lambda (char)
-                                                 (declare (ignore char))
-                                                 (random (length str)))))
-          (setf str (template->string tmplt)))
-        (setf (gethash (sxhash str) duplicate-detector) t)
-        (setf tmplt (update-template tmplt #'(lambda (char)
-                                               (lookup char (survey-string str)))))
-        (when (= 100 (hash-table-count duplicate-detector))
-          (format t "Oh hell, I give up.~%")
-          (return))
-      
-        (when (not tmplt)
-          (format t "We've got a winner: ``~a''~%" str)
-          (return)))))
- #+sbcl(sb-profile:report)
-
- )
+      (duplicate-detector (make-hash-table :test #'equal)))
+  (let ((tries 0))
+    (loop
+       (let ((str (template->string tmplt)))
+         (when (zerop (mod tries 1000))
+           (format t "~a: ~s~%" tries str))
+         (when  (gethash (sxhash str) duplicate-detector nil)
+           (setf tmplt (update-template tmplt #'(lambda (char)
+                                                  (declare (ignore char))
+                                                  (random (length str)))))
+           (setf str (template->string tmplt)))
+         (setf (gethash (sxhash str) duplicate-detector) t)
+         (setf tmplt (update-template tmplt #'(lambda (char)
+                                                (lookup char (survey-string str)))))
+        
+         (when (not tmplt)
+           (format t "(~a): We've got a winner: ``~a''~%"
+                   tries
+                   str)
+           (return)))
+       (incf tries))
+    ))
