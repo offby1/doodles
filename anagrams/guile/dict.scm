@@ -17,7 +17,7 @@
         (format #t "Reading dictionary ... ") (force-output)
         (let loop ((word  (read-delimited "\n")))
           (if (eof-object? word)
-              (format #t "done: ~a~%" dict)
+              (format #t "done~%")
             (begin
               (if (word-acceptable? word)
                   (adjoin-word dict (string-downcase word)))
@@ -146,22 +146,54 @@ dictionary."
             (map (lambda (i)
                (string (integer->char (+ i (char->integer #\a))))) (iota 26))))
 
-
 (if (not (access? *alist-file-name* R_OK))
     (begin
       (format #t "Caching dictionary ... ")
-      ;; don't use `call-with-input-file',since pretty-print doesn't
-      ;; take a port argument in guile 1.6.4
-      (with-output-to-file *alist-file-name*
-        (lambda ()
-          ;; use `pretty-print' rather than `write' so that it's not all
-          ;; on on big line.
-          (pretty-print (hash-fold (lambda (key value prior)
-                                     (cons (cons key value) prior)) 
-                                   '()
-                                   (wordlist->hash)) )))
+      ;; keep the computation of `result' out of the call to
+      ;; `with-output-to-file', since that computation might spew
+      ;; stuff to the current output port.
+
+      ;; don't use `call-with-output-file' since older versions of
+      ;; pretty-print don't accept a port parameter.
+      (let ((result (hash-fold (lambda (key value prior)
+                                 (cons (cons key value) prior)) 
+                               '()
+                               (wordlist->hash))))
+        (with-output-to-file *alist-file-name*
+          (lambda ()
+            ;; use `pretty-print' rather than `write' so that it's not
+            ;; all on on big line.
+            (pretty-print result ))))
       
       (format #t "done~%")))
 
 (define *alist* (with-input-from-file *alist-file-name* read))
 (set! *random-state* (seed->random-state (get-internal-real-time)))
+
+;; calculate letter frequencies.  This could be used to re-order the
+;; prime-number list in bag.scm.
+(if #f
+    (map car
+         (sort
+          (let ((tally '()))
+            (for-each
+             (lambda (str)
+               (let loop ((str str))
+                 (if (not (zero? (string-length str)))
+                     (let* ((this-letter (string-ref str 0))
+                            (probe (assq this-letter tally)))
+                    
+                       (set! tally (assq-set! tally
+                                              this-letter
+                                              (+ 1 (if (not probe)
+                                                       0
+                                                     (cdr probe) ))
+                                              ))
+                       (loop (substring str 1)
+                             )))))
+             (apply append (map cdr *alist*)))
+            tally)
+          (lambda (p1 p2)
+            (> (cdr p1)
+               (cdr p2)))))
+  )

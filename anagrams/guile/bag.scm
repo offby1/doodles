@@ -1,20 +1,48 @@
 (define-module (bag))
 
-;; todo -- sort these primes in order of decreasing frequency.  That
-;; is, instead of assigning 2 to a, assign it to e since e is the most
-;; common letter.  That way the average bag will be smaller, and
-;; presumably math on it will go faster.
-
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
 
-(define char->factor
-  (let ((a-code (char->integer #\a)))
-    (lambda (c)
-      (if (char-alphabetic? c)
-          (let ((index (- (char->integer (char-downcase c))
-                          a-code)))
-            (vector-ref primes index))
-        1))))
+
+(define char->index #f)
+(define char->factor #f)
+
+(let ((a-code (char->integer #\a)))
+   
+  (set! char->index
+        (lambda ( c)
+          (- (char->integer (char-downcase c))
+             a-code)))
+
+  (set! char->factor
+        (lambda (c)
+          (if (char-alphabetic? c)
+              (vector-ref primes (char->index c))
+            1))))
+
+;; This stuff is a nice idea, but has no noticeable effect.
+
+;; The idea is to sort the primes in order of decreasing frequency.
+;; That is, instead of assigning 2 to a, assign it to e since e is the
+;; most common letter.  That way the average bag will be smaller, and
+;; presumably math on it will go faster.
+
+(if #f
+    (begin
+      ;; derived from some code in dict.scm
+      (define frequency-list '(#\e #\s #\i #\a #\n #\r #\t #\o #\l #\c #\d #\u #\g #\p #\m #\h #\b #\y #\f #\v #\k #\w #\z #\x #\j #\q))
+
+      (let ((new-prime-array (make-vector (vector-length primes))))
+        (let loop ((frequency-list frequency-list)
+                   (letters-processed 0))
+          (if (not (null? frequency-list))
+              (let* ((this-letter (car frequency-list))
+                     (this-prime (vector-ref primes letters-processed)))
+                (format #t "~a: ~a~%" this-letter this-prime)
+                (vector-set! new-prime-array (char->index this-letter) this-prime)
+                (loop (cdr frequency-list)
+                      (+ 1 letters-processed)))))
+        (set! primes new-prime-array)
+        )))
 
 (define-public (bag s)
   "Return an object that describes all the letters in S, without
