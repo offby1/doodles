@@ -6,3 +6,11 @@ I sometimes put comments for a given function not in the function
 itself, but rather in the tests for that function.  So if you're
 wondering how function `foo' works, be sure to read the comments in
 the function `foo-tests', if such a function exists.
+::
+
+To try it out:
+
+* clisp
+
+start clisp, and at the prompt type `(load "bridge.system")', then `(mk:operate-on-system :bridge :compile)'.
+

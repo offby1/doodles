@@ -22,6 +22,11 @@
             (loop (* mantissa 10)
                   (- exponent 1)))))))
 
+  (define (eggzackly x)
+    (if (exact? x)
+        x
+      (inexact->exact x)))
+  
   (if (not (and
             (integer? digits)
             (positive? digits)))
@@ -32,8 +37,8 @@
          (exponent (cdr s))
          (scale-factor (expt 10 (- digits 1))))
 
-    (* (inexact->exact (round
-                        (* mantissa scale-factor)))
+    (* (eggzackly (round
+                   (* mantissa scale-factor)))
 
        ;; You might be tempted to call `inexact->exact' on the return
        ;; from `expt' here, but that would be a mistake, because some

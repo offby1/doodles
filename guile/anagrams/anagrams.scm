@@ -78,4 +78,4 @@ list of anagrams, each of which begins with one of the WORDS."
   not
   lset-adjoin
   append)
- (begin (display (all-anagrams (bag "hemingsy"))) (newline)))
+ (begin (display (all-anagrams (bag "hemingway"))) (newline)))
