@@ -26,54 +26,32 @@ sub bags_equal {
   shift eq shift;
 }
 
-# Looking just at the first characters:
-
-# b1 is "smaller" than b2: consume from b1 until it's no smaller; resume main loop
-# exactly equal: keep going
-# b1 is empty but b2 isn't: undef
-# b2 is empty but b1 isn't: difference-so-far plus b1 starting from this letter
-
 sub subtract_bags {
   my $b1 = shift;
   my $b2 = shift;
-  my $letters_examined = 0;
   my $difference = "";
+
   while (1) {
     my $c1 = substr ($b1, 0, 1);
     my $c2 = substr ($b2, 0, 1);
 
-    if ($c2 eq "") {
-      my $rv = $difference . substr ($b1, $letters_examined);
-      return $rv;
+    return $difference . $b1 if ($c2 eq "");
+    return undef             if ($c1 eq "");
+    next                     if ($c1 eq $c2);
+
+    my $comparison = ($c1 cmp $c2);
+    while ($comparison < 0) {
+
+      return undef if ($c1 eq "");
+
+      $difference .= $c1;
+
+      $b1 = substr ($b1, 1);
+      $c1 = substr ($b1, 0, 1);
+      $comparison = ($c1 cmp $c2);
     }
 
-    if ($c1 eq "") {
-      return undef;
-    }
-
-    if ($c1 eq $c2) {
-      next;
-    }
-
-    {
-      my $comparison = ($c1 cmp $c2);
-      while ($comparison < 0) {
-
-        if ($c1 eq "") {
-          return undef ;
-        }
-
-        $difference .= $c1;
-
-        $b1 = substr ($b1, 1);
-        $c1 = substr ($b1, 0, 1);
-        $comparison = ($c1 cmp $c2);
-      }
-
-      if ($comparison > 0) {
-        return undef;
-      }
-    }
+    return undef if ($comparison > 0);
 
   } continue {
     $b1 = substr ($b1, 1);
@@ -101,6 +79,10 @@ die "bags_equal"
 die "bags_equal"
   if (bags_equal (bag ("abc"),
                   bag ("bc")));
+
+die "bags_equal"
+  if (bags_equal (bag ("abc"),
+                  bag ("a")));
 
 {
   my $oughta_be_empty = subtract_bags (bag ("a"),
