@@ -25,8 +25,8 @@
              (map list easy-anagrams))
          '()))
      (let ((harder-anagrams '()))
-       (hash-for-each
-        (lambda (key words)
+       (hash-fold
+        (lambda (key words prior)
           (if (not (excluded? key exclusions))
               (let ((smaller-bag (subtract-bags bag key)))
                 (if smaller-bag
@@ -36,6 +36,7 @@
                             (add-exclusion! exclusions key)
                             (set! harder-anagrams (append! harder-anagrams (combine words anagrams)))
                             )))))))
+        #f
         *dict*)
        harder-anagrams)
      )))

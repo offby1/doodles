@@ -55,7 +55,10 @@
       (lambda (port)
         ;; use `pretty-print' rather than `write' so that it's not all
         ;; on on big line.
-        (pretty-print (hash-map->list cons (wordlist->hash)) port))))
+        (pretty-print (hash-fold (lambda (key value prior)
+                                   (cons (cons key value) prior)) 
+                                 '()
+                                 (wordlist->hash)) port))))
 
 (define (bag-acceptable? this bag-to-meet)
   (and (or (bags=? bag-to-meet this)
