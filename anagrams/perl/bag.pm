@@ -5,14 +5,14 @@ use strict;
 
 package bag;
 
-use Carp qw(cluck);
+use Carp qw(cluck confess);
 use Data::Dumper;
 use Math::BigInt lib => 'GMP';
 warn "using " . Math::BigInt->config()->{lib};
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT = qw(bag bag_empty bags_equal subtract_bags bag_to_string size);
+our @EXPORT = qw(bag bag_empty bags_equal subtract_bags  size);
 
 my @primes = map { Math::BigInt->new ($_)} qw(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101);
 
@@ -28,45 +28,56 @@ my @primes = map { Math::BigInt->new ($_)} qw(2 3 5 7 11 13 17 19 23 29 31 37 41
     $primes [ord ($char) - $a_code];
   }
 }
+
 sub bag {
   my $thing = shift;
+  my $rv = $thing;
 
-  my $product = 1;
-  my $size = 0;
+  unless ($thing =~ m(^(\d+), (\d+)$)) {
 
-  return $thing if ('ARRAY' eq ref ($thing));
+    my $product = 1;
+    my $size = 0;
 
-  if ($thing =~ m((\d+), (\d+))) {
-    $product = $1;
-    $size = $2;
-  } else {
-
-    my @chars = split (qr(), $thing);
-
-    foreach (@chars) {
+    foreach (split (qr(), $thing)) {
       my $factor = char_to_factor ($_);
       $product *=  $factor;
       $size ++ if ($factor > 1);
     }
+    $rv = "$product, $size";
   }
-  return [$product, $size];
+  confess "Empty bag!" unless ($rv =~ m(, [1-9]));
+  return $rv;
 }
 
 sub product {
-  $_[0]->[0];
+  my $b = shift;
+  my $rv = "1";
+  if (defined ($b)) {
+    $rv = Math::BigInt->new ((split (m(,), $b))[0]);
+  }
+
+  $rv;
 }
 
 sub size {
-  $_[0]->[1];
+  my $b = shift;
+  my $rv = "0";
+  if (defined ($b)) {
+    $rv = (split (m(, +), $b))[1];
+  }
+
+  $rv;
 }
 
 sub bag_empty {
-  my $bag = shift;
+  my $b = shift;
+  my $rv = "1";
 
-  return 1
-    if !defined ($bag);
+  if (defined ($b)) {
+    $rv = ((0 == size ($b)) ? "1" : "0");
+  }
 
-   0 == size ($bag);
+  return $rv;
 }
 
 sub bags_equal {
@@ -80,22 +91,21 @@ sub bags_equal {
 sub subtract_bags {
   my $b1 = shift;
   my $b2 = shift;
+  my $rv = undef;
 
-  return undef
-    if (
-        (size ($b2) > size ($b1))
-        ||
-        (product ($b1) % product ($b2)));
+  #confess "Why you be subtracting nothing?" unless (size ($b2));
 
-  my $quotient = product ($b1) / product ($b2);
   my $size = size ($b1) - size ($b2);
 
-  return [$quotient, $size];
-}
+  if (($size > 0)
+      &&
+      (0 == (product ($b1) % product ($b2)))) {
 
-sub bag_to_string {
-  my $bag = shift;
-  product ($bag) . ", " . size ($bag);
+    my $quotient = product ($b1) / product ($b2);
+    $rv = "$quotient, $size";
+  }
+
+  $rv;
 }
 
 1;
