@@ -59,7 +59,8 @@
           </td>
           <td>
             yes,
-            natively; mzscheme also runs on Cygwin 
+            natively; mzscheme also runs on Cygwin; I wouldn't be that
+            surprised if the whole shebang could be ported to Cygwin
           </td>
           <td>
             Alas, no.  Its lone shortcoming.  Does support Latin-1,
@@ -224,19 +225,17 @@
           <td>
           </td>
           <td>
-            <p>
-              <a href="http://www.paulgraham.com/">
-                Paul Graham
-              </a>
-              likes
-              it, so it must be good!
-            </p>
-            <p>
-              I can never remember where the paper on Pre-Scheme is, so:
-              <a
-                href="http://mumble.net/~kelsey/papers/prescheme.ps.gz">http://mumble.net/~kelsey/papers/prescheme.ps.gz
-              </a>
-            </p>
+            <a href="http://www.paulgraham.com/">
+              Paul Graham
+            </a>
+            likes
+            it, so it must be good!
+            <br></br>
+            I can never remember where the paper on Pre-Scheme is, so:
+            <a
+              href="http://mumble.net/~kelsey/papers/prescheme.ps.gz">http://mumble.net/~kelsey/papers/prescheme.ps.gz
+            </a>
+
           </td>
         </tr>
         <tr>
