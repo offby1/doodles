@@ -11,16 +11,17 @@
     <h1>These are some free scheme implementations.</h1>
     <table frame="box" rules="all">
       <thead>
-        <tr> <th>Implementation</th> <th>GUI-friendly?</th> <th>threads?</th> <th>Windows?</th> <th>Unicode?</th> <th>Why does it suck?</th> </tr>
+        <tr> <th>Implementation</th> <th>GUI-friendly?</th> <th>threads?</th> <th>Runs on MS Windows?</th> <th>Unicode?</th> <th>Why does it suck?</th> </tr>
       </thead>
       <tbody>
         <tr> <td> mzscheme 202 </td> <td> MrEd -- slick </td> <td> yes </td> <td> yes </td> <td> </td> <td> help system flaky </td> </tr>
         <tr> <td> MIT 7.7.0 </td> <td> looks primitive </td> <td> no! </td> <td> yes </td> </tr>
-        <tr> <td> bigloo 2.5c </td> <td></td> <td> coop </td> <td> yes </td> <td> yes </td> <td> no bignums </td> </tr>
+        <tr> <td><a href="http://kaolin.unice.fr/~serrano/bigloo/bigloo.html">bigloo 2.5c</a></td> <td><a href="http://kaolin.unice.fr/Biglook">biglook</a></td> <td> coop </td> <td> yes </td> <td> yes </td> <td> no bignums </td> </tr>
         <tr> <td> chicken 0.1072-2 </td> </tr>
         <tr> <td> gauche 0.6.5-1 </td> </tr>
-        <tr> <td> guile 1.6 </td> <td> has some GTK </td> <td> yes </td> <td> no </td> <td></td> <td> it doesn't! </td> </tr>
-        <tr> <td> scheme48 0.57 </td> <td> apparantly not </td> <td> nah </td> <td>scsh 0.6.4 (which includes scheme48) seems fine with <a href="http://www.cygwin.com/">Cygwin</a></td> </tr>
+        <tr> <td> <a href="http://www.gnu.org/software/guile/guile.html">guile 1.6</a></td> <td> has some GTK </td> <td> yes </td> <td> no </td> <td></td> <td> it doesn't! </td> </tr>
+        <tr> <td> scheme48 0.57 </td> <td> apparantly not </td> <td> nah </td> <td></td> </tr>
+        <tr> <td> <a href="http://www.scsh.net/">scsh 0.6.4 </a></td> <td> apparantly not </td> <td> yes </td> <td>fine with <a href="http://www.cygwin.com/">Cygwin</a></td> </tr>
         <tr> <td> scm 5d6 </td> <td> probably not </td> <td> </td> <td> moribund (1996) port </td> </tr>
         <tr> <td> stklos 0.53 </td> <td> yes -- gtk </td> <td> apparantly not </td> <td> no </td> </tr>
         <tr> <th> moribund: </th> </tr>
