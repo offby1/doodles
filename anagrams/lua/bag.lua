@@ -1,10 +1,55 @@
-d1 = { a=1, b=2 }
-d2 = { a=2, b=1 }
-a1 = { a=1 }
-d3 = { }
+function my_setn (t)
+  table.setn (t, 0)
+  table.foreach (t,
+                function (i, v)
+                table.setn (t, v + table.getn (t))
+                end
+                )  
+end
+
+function from_string (s)
+    function is_uc_char (c)
+       return ((string.byte (c) <= string.byte ("Z"))
+              and
+              (string.byte (c) >= string.byte ("A"))
+              )
+    end
+
+   local bag = {}
+   local s = string.upper (s)
+   while (string.len (s) > 0) do
+     local c = string.sub (s, 0, 1)
+     local orig = bag [c] 
+     if (not (orig)) then orig = 0 end
+     if (is_uc_char (c)) then bag [c] = orig + 1 end
+     s = string.sub (s, 2)  
+   end 
+   my_setn (bag)
+   return bag
+end
+
+b = from_string ("Hey you!")
+
+-- all letters are folded to upper case
+assert (not (b.h))
+assert (1 == b.H)
+assert (2 == b.Y)
+
+-- non-letters should be ignored
+assert (not( b[" "]))
+assert (not( b["!"]))
+
+d1 = from_string ("abb")
+d2 = from_string ("aab")
+a1 = from_string ("a")
+d3 = from_string ("")
 
 letters = {}
-for c =string.byte ("a"), string.byte ("z") do letters[string.char (c)] = "!" end
+-- use upper-case to avoid collision with the magic field "n"
+for c =string.byte ("A"), string.byte ("Z") do letters[string.char (c)] = 1 end
+
+my_setn (letters)
+assert (26 == table.getn(letters))
 
 function dump (t)
    if (not (t)) then return "nil" end
@@ -67,17 +112,16 @@ function sub (top, bottom)
             diff[index] = t - b
          end
       end
-      table.setn (diff, 0)
-      table.foreach (diff,
-                    function (index, value) 
-                    table.setn (diff, table.getn (diff) + value)
-                    end)
    end
 
    -- TODO -- it might make more sense to examine just the union of the letters
    -- that appear as keys in both tables, rather than examining all 26 letters
    -- all the time.
-   if (table.foreach (letters, update_diff)) then diff = Nil end
+   if (table.foreach (letters, update_diff)) then 
+     diff = Nil 
+   else
+     my_setn (diff)
+   end
 
    print ("diff", dump (diff), "\n")
    return diff
@@ -93,35 +137,8 @@ assert (not (sub (d2, d1)))
 assert (not (sub (d3, d2)))
 assert (not (sub (d3, d1)))
 diff = sub (d1, a1)
-assert (diff.b == 2) 
-assert (not (diff[a]))
+assert (diff.B == 2) 
+assert (not (diff[A]))
 should_be_empty = (sub (d1, d1))
 assert (should_be_empty)
 assert (bag_empty (should_be_empty))
-
-function is_lc_char (c)
-   return ((string.byte (c) <= string.byte ("z"))
-          and
-          (string.byte (c) >= string.byte ("a"))
-          )
-end
-
-function from_string (s)
-   local bag = {}
-   local s = string.lower (s)
-   while (string.len (s) > 0) do
-     local c = string.sub (s, 0, 1)
-     local orig = bag [c] 
-     if (not (orig)) then orig = 0 end
-     if (is_lc_char (c)) then bag [c] = orig + 1 end
-     s = string.sub (s, 2)  
-   end 
-   return bag
-end
-
-b = from_string ("Hey you!")
-assert (not (b.H))
-assert (1 == b.h)
-assert (2 == b.y)
-assert (not( b[" "]))
-assert (not( b["!"]))
