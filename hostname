@@ -1,0 +1,23 @@
+#!/usr/bin/guile -s
+!#
+
+(let ()
+  (define (our-ip-address)
+    
+    ;; Lord, this is ugly.
+    
+    (define temp-file-name (tmpnam))
+    (dynamic-wind
+     (lambda () (system (string-append
+                         "/sbin/ifconfig | egrep 'inet addr:' | egrep -v 127.0.0.1 | awk 'BEGIN { FS = \":\" } ; { print $2}' | awk '{print $1}' > "
+                         temp-file-name)))
+   
+     (lambda () (with-input-from-file temp-file-name read-line))
+     (lambda () (delete-file temp-file-name))))
+
+  (let ((ip-string (our-ip-address)))
+    (if (not (eof-object? ip-string))
+        (begin
+          (display (hostent:name (gethostbyaddr (inet-aton ip-string))))
+          (newline)))))
+
