@@ -35,8 +35,7 @@ class Dict
     @Anagrams_by_number[Bag.new(string)]
   end
 
-  def Dict.Prune(string)
-    max = Bag.new(string)
+  def Dict.Prune(max)
     result = []
     @Anagrams_by_number.each {
       | bag, words |
@@ -45,7 +44,7 @@ class Dict
       end
     }
 
-    puts "After pruning to `#{string}', (#{result.length} slots: "
+    puts "After pruning to `#{max}', (#{result.length} slots: "
     result
   end
 end
