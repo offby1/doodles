@@ -10,13 +10,11 @@
           lst
         (map (lambda (thing) (cons atom thing))
              
-             lst)
-        ))
+             lst)))
     (if (null? seq1)
         seq2
       (apply append (map (lambda (atom) (distribute atom seq2))
-                         seq1))
-      ))
+                         seq1))))
   
   (define my-get-choices
     (lambda (options)
@@ -49,5 +47,4 @@
                                         (multiply levels denominations)))))))
       (my-get-choices bids)))
   
-  (printf "~A~%"  (make-call 'foo 'bar))
-  (printf "~A~%" (my-get-choices (list "one" "two" "three"))))
+  (printf "~A~%"  (make-call 'foo 'bar)))
