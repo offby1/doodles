@@ -1,23 +1,28 @@
 (defvar *dict*)
 (defun word-acceptablep (word bag)
   (declare (type simple-string word))
-  (let ((b (bag word)))
-    (and 
-     ;; it must be "makeable" from the bag
-     (subtract-bags bag b)
+  (and (not (zerop (length word)))
+       (let ((b (bag word)))
+         (and 
+          ;; it must be "makeable" from the bag
+          (subtract-bags bag b)
    
-     ;; it's gotta have a vowel.
-     (find-if #'(lambda (ch)
-                  (find ch "aeiou")) word)
-     ;; it can't have weird non-ascii-letter characters.
-     (not (find-if #'(lambda (ch)
-                       (or (not (alpha-char-p ch))
-                           (not (standard-char-p ch)))) word))
-     ;; it's gotta be two letters long, unless it's `i' or `a'.
-     (or (equalp "i" word)
-         (equalp "a" word)
-         (< 1 (length word)))
-     b)))
+          ;; it can't have weird non-ascii-letter characters -- they
+          ;; cause Clisp to puke sometimes.
+          (not (find-if #'(lambda (ch)
+                            (or (not (alpha-char-p ch))
+                                (not (standard-char-p ch)))) word))
+
+          (or t
+              ;; it's gotta have a vowel.
+              (find-if #'(lambda (ch)
+                           (find ch "aeiou")) word)
+
+              ;; it's gotta be two letters long, unless it's `i' or `a'.
+              (or (equalp "i" word)
+                  (equalp "a" word)
+                  (< 1 (length word))))
+          b))))
 
 (defun maybe-add-word (word bag)
   (let ((b (word-acceptablep word bag)))
@@ -37,9 +42,12 @@
         (incf lines-read))))))
 
 ;; for testing
-(defun make-dictionaries-from-list (l bag)
+(defun make-dictionaries-from-list (l)
   (dolist (word l)
-      (maybe-add-word word bag)))
+      (let ((b (bag word)))
+        (setf (gethash b *dict*)
+              (adjoin word (gethash b *dict* )  :test #'equalp)))))
+
 
 (defun init (bag)
   (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)

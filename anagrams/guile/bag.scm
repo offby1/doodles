@@ -3,16 +3,10 @@
              (srfi srfi-13)
              (primes))
 
-(define bag-type (make-record-type "bag" '(number num-factors)))
-(define make-bag-from-numbers (record-constructor bag-type))
+(define make-bag-from-numbers cons)
 
-(define-public bag-number (record-accessor bag-type 'number))
-(define-public bag-size   (record-accessor bag-type 'num-factors))
-
-(define-public (hash-bag b size) (remainder (bag-number b) size))
-(define-public (assoc-bag b alist)
-  (find (lambda (pair) (= (bag-number b) (bag-number (car pair)))) alist))
-
+(define-public bag-number car)
+(define-public bag-size   cdr)
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
 (define prime-list (vector->list primes))

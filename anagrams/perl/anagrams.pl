@@ -101,7 +101,8 @@ sub anagrams {
   my $input_as_bag = bag ($input);
   init ($input_as_bag);
   my $result = anagrams ($input_as_bag);
-  print "Anagrams of $input: ",
-    join (' ', map { "(" . join (' ', @$_) . ")" } @$result),
-      "\n";
+  print scalar (@$result),
+    " anagrams of $input: ",
+      join (' ', map { "(" . join (' ', @$_) . ")" } @$result),
+        "\n";
 }

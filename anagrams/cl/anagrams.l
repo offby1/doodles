@@ -6,6 +6,7 @@
                        (every #'stringp elt)))
               thing)))
 
+(defvar *verbose* nil)
 (defun anagrams-internal (bag exclusions)
   
   (let ((rv ;; first simply look up all the words that are this size.
@@ -14,7 +15,7 @@
     ;;(check-type rv (satisfies anagram-type))
 
     (when (not (null rv))
-      (format t "Found some easy ones: ~a~%" rv)
+      ;(format t "Found some easy ones: ~a~%" rv)
       (setf (gethash bag exclusions) t))
     ;; Now find anagrams containing smaller words.
     (maphash
@@ -25,8 +26,7 @@
                (let ((more-anagrams (anagrams-internal smaller-bag exclusions)))
                  (check-type more-anagrams (satisfies anagram-type))
                  (when more-anagrams
-                   (format t "Prepending ~a to ~a~%"
-                           these-words more-anagrams)
+                   ;(format t "Prepending ~a to ~a~%" these-words more-anagrams)
                    (let ((with-new-word 
                           (mapcan #'(lambda (word-to-prepend)
                                       (mapcar #'(lambda (phrase) 
@@ -35,7 +35,16 @@
                                   these-words)))
                      (setf rv (nconc rv with-new-word))
                      ;;(check-type rv (satisfies anagram-type))
-                     (setf (gethash this-bag exclusions) t))))))))
+                     (setf (gethash this-bag exclusions) t)
+                     
+                     (let ((*verbose* t)
+                           (anywhere (bag "anywhere")))
+                       
+                       (when (bags-equalp  this-bag anywhere)
+                         (format t "all anagrams with `anywhere' (~a): ~a~%" anywhere more-anagrams)
+                         ))
+                     
+                     )))))))
      *dict*)
 
     ;;(check-type rv (satisfies anagram-type))

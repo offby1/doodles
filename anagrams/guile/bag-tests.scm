@@ -11,11 +11,19 @@
 ;; the length of the string being anagrammed.
 
 (assert (bag-empty? (bag "")))
+(assert (not (bag-empty? (bag "a"))))
 (assert (bags=? (bag "abc")
                 (bag "cba")))
+
+(assert (not (bags=? (bag "abc")
+                     (bag "bc"))))
 
 (assert (bags=? (bag "a")
                 (subtract-bags (bag "ab")
                                (bag "b"))))
 
+(assert (not (subtract-bags (bag "a")
+                            (bag "b"))))
+(assert (not (subtract-bags (bag "a")
+                            (bag "aa"))))
 (format #t "~a tests passed.~%" (module-name (current-module)))

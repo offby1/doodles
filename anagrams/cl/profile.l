@@ -7,10 +7,10 @@
                                #+sbcl ".fasl"
                                #+clisp ".fas"
                                )))
-        `("anagrams"
+        `("numeric-bag"
           ;"bag"
-          "numeric-bag"
-          "dict"))
+          "dict"
+          "anagrams"))
 
 #+cmu (progn 
         (profile:profile anagrams-internal)
@@ -39,8 +39,8 @@
 
 (let ((*print-level* nil)
       (*print-length* nil))
-  #-clisp            (format t "Done!~%~A~&" (anagrams  "hemingway"))
-  #+clisp (ext:times (format t "Done!~%~A~&" (anagrams  "hemingway")))
+  #-clisp            (format t "Done!~%~A~&" (anagrams  "Ernest Hemingway"))
+  #+clisp (ext:times (format t "Done!~%~A~&" (anagrams  "Ernest Hemingway")))
   )
 #+sbcl (sb-profile:report)
 #+cmu  (profile:report-time)
