@@ -3,13 +3,23 @@ require 'bag'
 # First snarf the dictionary and do as much pre-processing as we can
 
 class Dict
+
+  # TODO -- see if we can cache the dictionary once we've read it, so
+  # that subsequent calls will read that cache, presumably faster than
+  # reading the original dictionary.
+
   File.open("/usr/share/dict/words", "r") do |aFile|
     @Anagrams_by_number = {}
     printf "Snarfing dictionary ..."
+    has_a_vowel_re = /[aeiou]/
+    long_enough_re = /^(..|i|a)/
+    has_a_non_letter_re = /[^a-z]/
     aFile.each_line do |aLine|
       aLine.chomp!()
       aLine.downcase!()
-
+      next if has_a_non_letter_re.match(aLine)
+      next if !has_a_vowel_re.match(aLine)
+      next if !long_enough_re.match(aLine)
       b = Bag.new(aLine)
       hit = @Anagrams_by_number[b]
       if (hit)
