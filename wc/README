@@ -1,0 +1,36 @@
+given two words of the same length, such as "giant" and "raven",
+see how few "steps" it takes to transform one into the other.  A
+"step" consists of modifying one letter, such that the result is a
+real word.  e.g.,
+
+(giant grant grand grind grins grits writs waits wants wanes waves raves raven)
+
+inspired by the puzzle on NPR's "Weekend Edition", 27 January 2001
+
+http://search1.npr.org/opt/collections/torched/wesu/data_wesu/seg_117717.htm
+
+I think NPR's solution was 
+
+    giant grant grand grind grins gains pains pails palls pales paves raves raven
+
+For over a year, I naively tried to solve this by enumerating all
+possible paths and choosing the shortest (those attempts are in the
+"wrong" subdirectory).  That was foolish, since the network that I was
+searching (all five-letter words in /usr/share/dict/words) had a few
+thousand entries, and the number of possible paths is probably on the
+order of N * N!; the program could run overnight and not appear to
+make any progress.
+
+I wasted a lot of time trying to make the code go faster without first
+profiling.  Then I wasted a lot of time trying to profile.
+
+Finally I realized that I needed to use a *breadth-first* search.
+Doing that takes a second or two.  That code is in the "right"
+subdirectory.
+
+There's a lesson in there somewhere about the importance of algorithm
+choice ...
+
+The second big insight (which I got from reading something) was that
+finding the shortest path from A to B wasn't particularly easier than
+finding the shortest paths from A to *every other node*.
