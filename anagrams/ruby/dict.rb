@@ -44,7 +44,7 @@ class Dict
       end
     }
 
-    puts "After pruning to `#{max}', (#{result.length} slots: "
+    #puts "After pruning to `#{max}', (#{result.length} slots: "
     result
   end
 end

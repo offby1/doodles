@@ -3,7 +3,7 @@ require 'bag'
 
 The_Bag = Bag.new(ARGV[0])
 The_Dict = Dict.Prune(The_Bag)
-puts The_Dict.inspect
+#puts The_Dict.inspect
 
 def combine(words, anagrams)
   rv = []
@@ -44,9 +44,13 @@ def anagrams(bag, dict)
   rv
 end
 
+result = anagrams(The_Bag, The_Dict)
+
+puts "#{result.size} anagrams of #{ARGV[0]}"
+
 printf "("
 
-anagrams(The_Bag, The_Dict).each {
+result.each {
   |a|
 
   a.each {
@@ -58,4 +62,3 @@ anagrams(The_Bag, The_Dict).each {
   puts ""
 }
 puts ")"
-
