@@ -1,6 +1,6 @@
 (module fys mzscheme
   (provide fys!)
-  (define (fys! vec . swap-thunk)
+  (define (fys! vec . swap-proc)
     ;;for each elt
     (let loop ((to-process (vector-length vec)))
       (if (zero? to-process)
@@ -12,6 +12,6 @@
                (p-val (vector-ref vec partner-index)))
           (vector-set! vec partner-index me-val     )
           (vector-set! vec me-index      p-val )
-          (if (not (null? swap-thunk))
-              ((car swap-thunk) me-val p-val))
+          (if (not (null? swap-proc))
+              ((car swap-proc) me-val p-val))
           (loop (- to-process 1)))))))
