@@ -11,16 +11,7 @@
   (define (1- x)
     (- x 1))
 
-  (define *t* #f)
-  (define *r* #f)
-  (let ()
-    (define tw 13)
-    (define th 4)
-    (set! *t* (make-table "snowball" tw th))
-    (set! *r* (make-region 0 0
-                           (- tw 1)
-                           (- th 1)
-                           "cards go here" #f)))
+  (define *t* (make-table "snowball" 13 4))
   
   (define (card->value c)
     (+ (* 13
@@ -43,10 +34,15 @@
       cons))
 
   ;; put each card on the table in its initial position.
-  (send *t* add-cards *d* 0 0 (lambda (index)
-                                (card->initpos (list-ref *d* index))
-                                ))
-
+  ;;(send *t* add-cards *d* 0 0 (lambda (index) (card->initpos (list-ref *d* index))))
+  
+  
+  ;; the hell with that -- let's let Mr. Ed fan them out.
+  (send *t* add-cards-to-region *d* (make-region
+                                     0 0
+                                     (send *t* table-width)
+                                     (send *t* table-height)
+                                     "cards go here" #f))
   ;; for debugging
   (send *t* set-single-click-action
         (lambda (c)

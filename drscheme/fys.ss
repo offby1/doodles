@@ -1,3 +1,4 @@
+;; Fisher-Yates shuffle.  Inspired by "Programming Perl".
 (module fys mzscheme
   (provide fys!)
   (define (fys! vec . swap-proc)
