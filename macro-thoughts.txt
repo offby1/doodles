@@ -1,0 +1,99 @@
+(time something) =>  (let ()
+
+                       (define (now)
+                         (let ((time-pair (gettimeofday)))
+                           (+ (car time-pair) (/ (cdr time-pair) 1000000))))
+ 
+                       (let ((start (now)))
+                         (let ((return something))
+                           (let ((stop (now)))
+                             (for-each display (list "Total time: " (- stop start) "seconds" \#newline))
+                             return))))
+
+(let ()
+
+  (define time
+    (procedure->macro
+     (lambda (text env)
+       (let ((expr (list-ref text 1)))
+         `(let ()
+            (define (now)
+              (let ((time-pair (gettimeofday)))
+                (+ (car time-pair) (/ (cdr time-pair) 1000000))))
+            (let ((start (now)))
+              (let ((return ,expr))
+                (let ((stop (now)))
+                  (for-each display (list "Total time: " (- stop start) " seconds" #\newline))
+                  return))))))))
+
+  (time (begin
+          (display "Ya\n")
+          (sleep 2)
+          (+ 3 2))))
+
+;; Here it is again, using `defmacro' instead of `procedure->macro'.
+(let ()
+
+  (define (now)
+    (let ((time-pair (gettimeofday)))
+      (+ (car time-pair) (/ (cdr time-pair) 1000000))))
+  
+  (defmacro time body
+    `(let ((start (now)))
+       (dynamic-wind
+        (lambda () #f)
+        (lambda () ,@body)
+        (lambda ()
+          (for-each display (list "Total time: " (- (now) start) " seconds" #\newline))))))
+  
+  (time
+   (begin
+     (display "Ya\n")
+     (sleep 2)
+     (+ 3 2))))
+
+
+procedure->memoizing-macro: used in defmacro:transformer
+defmacro:transformer: used in defmacro, define-macro
+defmacro: used in while, with-fluids, define-macro, define-syntax-macro, define-module, use-modules, use-syntax, define-public, defmacro-public, export, false-if-exception
+
+procedure->macro: used in no other macros
+
+define-macro: used in no other macros
+
+procedure->syntax: used in defmacro:syntax-transformer
+defmacro:syntax-transformer: used in define-syntax-macro
+define-syntax-macro: used in no other macros
+
+Clearly, defmacro is the preferred way to write macros.
+
+I wonder what `define-macro' is for?
+
+;; Here's a stack implemented with macros --
+
+(define (new-stack) '())
+
+(define stack-empty? null?)
+
+(defmacro stack-push! (stack datum)
+  `(let ((tmp (list ,datum)))
+     (set-cdr! tmp ,stack)
+     (set! ,stack tmp)))
+
+(defmacro stack-pop! (stack)
+  `(if (stack-empty? ,stack)
+       (error "Cannot pop empty stack")
+     (let ((return (car ,stack)))
+       (set! ,stack (cdr ,stack))
+       return)))
+
+;; How to use it:
+
+;; (define s (new-stack))    => undefined
+;; (stack-push! s 0)         => undefined
+;; (stack-push! s 1)         => undefined
+;; (stack-push! s 2)         => undefined
+;; (stack-pop! s)            => 2
+;; (stack-pop! s)            => 1
+;; (stack-pop! s)            => 0
+;; (stack-pop! s)            => *error*
