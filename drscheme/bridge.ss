@@ -114,42 +114,14 @@
 
   (define *player-alist*
     (map (lambda (compass-direction quarter-turns choice-func)
-           
-           (define (rotate-region r)
-             (define (get-ul points)
-               (make-point (apply min (map point-x points))
-                           (apply min (map point-y points))))
-             (define (get-wh points)
-               (- (make-point (apply max (map point-x points))
-                              (apply max (map point-y points)))
-                  (get-ul points)))
-             (define (translate p dx dy)
-               (make-point (+ dx (point-x p))
-                           (+ dy (point-y p))))
-             (define r-points 
-               (let* ((ul (make-point (region-x r)
-                                      (region-y r)))
-                      (ur (translate ul (region-w r) 0))
-                      (lr (translate ur 0 (region-h r)))
-                      (ll (translate ul 0 (region-h r))))
-                 (list ul ur lr ll)))
-             
-             (let* ((table-middle (make-point  (/ (send *t* table-width) 2)
-                                               (/ (send *t* table-width) 2)))
-                    (rotated (map (lambda (p)
-                                    (rotate-about p table-middle
-                                                  quarter-turns))
-                                  r-points))
-                    (rotated-ul (get-ul rotated))
-                    (rotated-wh (get-wh rotated)))
-               
-               (make-region (point-x rotated-ul) (point-y rotated-ul)
-                            (point-x rotated-wh) (point-y rotated-wh)
-                            (region-label r)
-                            (region-callback r))))
-           
+
            (cons compass-direction
-                 (let* ((north-region (make-region *ch* 0
+                 (let* ((rotate-region (let ((table-middle (make-point (/ (send *t* table-width) 2)
+                                                                       (/ (send *t* table-width) 2))))
+                                         (lambda (r)
+                                           (rotate-region r  table-middle
+                                                          quarter-turns))))
+                        (north-region (make-region *ch* 0
                                                    *region-length*
                                                    *ch*
                                                    (symbol->string
