@@ -9,6 +9,9 @@
   (require (lib "list.ss"))
   (require (lib "pretty.ss"))
 
+  ;; This `amb' stuff was stolen from somewhere, but I forget where.
+  ;; Perhaps Paul Graham's "On Lisp" or "ANSI Common Lisp".
+  
   (define amb-fail '*) 
   
   (define initialize-amb-fail 
@@ -78,16 +81,22 @@
   (define (all-distinct? l)
     (not (adjacent-duplicates (quicksort l <))))
 
-  (let ((tries 0))
+  (let ((tries 2))
     (printf "After ~A tries: these don't attack each other: ~A~%"
             tries
+
             ;; wrap this `let' in a `bag-of' to retrieve all the
             ;; solutions instead of just the first.
+
             (let ((q1 (cons 1 (amb 1 2 3 4 5 6 7 8)))
                   (q2 (cons 2 (amb 1 2 3 4 5 6 7 8)))
                   (q3 (cons 3 (amb 1 2 3 4 5 6 7 8)))
                   (q4 (cons 4 (amb 1 2 3 4 5 6 7 8)))
                   (q5 (cons 5 (amb 1 2 3 4 5 6 7 8)))
+                  
+                  ;; Uncommenting the below gives you more interesting
+                  ;; solutions, but of course it takes longer.
+                  
                   ;;(q6 (cons 6 (amb 1 2 3 4 5 6 7 8)))
                   ;;(q7 (cons 7 (amb 1 2 3 4 5 6 7 8)))
                   ;;(q8 (cons 8 (amb 1 2 3 4 5 6 7 8)))

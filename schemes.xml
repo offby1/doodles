@@ -18,7 +18,10 @@
     <p>
       See <a
       href="http://directory.google.com/Top/Computers/Programming/Languages/Lisp/Scheme/Implementations/">Google's
-      directory</a> for a (presumably) more-authoritative list.
+        directory</a> for a (presumably) more-authoritative list, and
+      <a
+      href="http://www-pu.informatik.uni-tuebingen.de/scheme-underground/implementations.html">Mike
+      Sperber's Scheme Underground page</a> for a similar list.
     </p>
     <table frame="box" rules="all">
       <thead>
@@ -37,6 +40,9 @@
           </th>
           <th>
             Unicode?
+          </th>
+          <th>
+            Foreign Function Interface?
           </th>
           <th>
             Notes
@@ -65,6 +71,11 @@
           <td>
             Alas, no.  Its lone shortcoming.  Does support Latin-1,
             though, for what that's worth.
+          </td>
+          <td>
+            <a
+            href="http://download.plt-scheme.org/doc/204/html/mzc/mzc-Z-H-2.html#node_chap_2">Yes</a>
+            -- apparently only works from compiled Scheme code
           </td>
           <td>
             the more I use it, the more impressed I am
@@ -108,10 +119,13 @@
           </td>
           <td>
           </td>
+          <td>
+            Apparently not
+          </td>
         </tr>
         <tr>
           <td>
-            <a href="http://kaolin.unice.fr/~serrano/bigloo/bigloo.html">
+            <a href="http://www-sop.inria.fr/mimosa/fp/Bigloo/">
               bigloo 2.5c
             </a>
           </td>
@@ -130,13 +144,16 @@
             yes 
           </td>
           <td>
+            Yes
+          </td>
+          <td>
             no bignums 
           </td>
         </tr>
         <tr>
           <td>
             <a
-              href="http://www.call-with-current-continuation.org/">chicken
+              href="http://www.call-with-current-continuation.org/chicken.html">chicken
             </a>
             0.1072-2 
           </td>
@@ -151,6 +168,9 @@
           </td>
           <td>
             dunno
+          </td>
+          <td>
+            Yes: "straightforward" and "easy", according to the home page
           </td>
           <td>
             <ul>
@@ -185,6 +205,9 @@
             yes
           </td>
           <td>
+            Apparently not
+          </td>
+          <td>
             Supports lots o' SRFIs.
           </td>
         </tr>
@@ -206,6 +229,9 @@
           <td>
           </td>
           <td>
+            Yes; that's the whole point
+          </td>
+          <td>
           </td>
         </tr>
         <tr>
@@ -223,6 +249,9 @@
           <td>
           </td>
           <td>
+          </td>
+          <td>
+            Yes
           </td>
           <td>
             <a href="http://www.paulgraham.com/">
@@ -258,6 +287,11 @@
           </td>
           <td>
           </td>
+          <td>
+            Yes, because Scheme48 supports it
+          </td>
+          <td>
+          </td>
         </tr>
         <tr>
           <td>
@@ -275,6 +309,9 @@
           </td>
           <td>
           </td>
+          <td>
+            Apparantly not
+          </td>
         </tr>
         <tr>
           <td>
@@ -288,6 +325,8 @@
           </td>
           <td>
             no 
+          </td>
+          <td>
           </td>
           <td>
           </td>
@@ -306,6 +345,9 @@
           </td>
           <td>
             ? 
+          </td>
+          <td>
+            ?
           </td>
           <td>
             ?
@@ -334,6 +376,9 @@
             ?
           </td>
           <td>
+            Apparently not
+          </td>
+          <td>
             Not really scheme, but rather a new language inspired by
             scheme.  Unlike Arc, goo <em>is</em> "particularly
             object-oriented".
@@ -344,6 +389,7 @@
             moribund: 
           </th>
           <th></th><th></th><th></th><th></th>
+          <th></th>
         </tr>
         <tr>
           <td>
@@ -362,6 +408,8 @@
             doubt it 
           </td>
           <td>
+          </td>
+          <td>
             moribund: Jan 2000 
           </td>
         </tr>
@@ -371,6 +419,8 @@
           </td>
           <td>
             yes 
+          </td>
+          <td>
           </td>
           <td>
           </td>
@@ -397,6 +447,9 @@
           </td>
           <td>
             yes!
+          </td>
+          <td>
+            Yes
           </td>
           <td>
             moribund: May 1998 (but highly praised on some newsgroup) 

@@ -330,13 +330,12 @@
               (send *t* card-to-front c) ;; maybe use `stack-cards' instead
               (let ((region-center-x (+ (region-x (player-region p)) (/ (region-w (player-region p)) 2)))
                     (region-center-y (+ (region-y (player-region p)) (/ (region-h (player-region p)) 2))))
-                (let ()
-                  ;; move the card almost, but not quite, to the
-                  ;; center of the table.  That way none of the cards
-                  ;; of the trick are entirely obscured by the others.
-                  (send *t* move-card-center c 
-                        (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
-                        (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8)))))
+                ;; move the card almost, but not quite, to the
+                ;; center of the table.  That way none of the cards
+                ;; of the trick are entirely obscured by the others.
+                (send *t* move-card-center c 
+                      (+ (/ *ch* 2) (region-x middle-region) (* (- region-center-x (region-x middle-region)) 1/8))
+                      (+ (/ *ch* 2) (region-y middle-region) (* (- region-center-y (region-y middle-region)) 1/8))))
               (next-player (cons c the-trick)
                            (add1 cards-this-trick))))
           
@@ -352,11 +351,10 @@
           (send *t* remove-cards the-trick)
           (for-each (lambda (c) (send c face-down)) the-trick)
           ))
-      (let ((cards (player-cards (cdar *direction/player-alist*))))
-        (when (not (null? cards))
-          (play-one-trick)
-          (next-trick (add1 tricks-played))
-          ))
+      (when (not (null? (player-cards (cdar *direction/player-alist*))))
+        (play-one-trick)
+        (next-trick (add1 tricks-played))
+        )
       )
     (printf "OK, we're done with that hand.~%"))
   
