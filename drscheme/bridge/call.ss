@@ -19,31 +19,41 @@
                                  (parent column)))
              (choice #f))
 
-        (define (make-choice-button label parent value)
+        (define (make-choice-button label parent value enabled?)
           (instantiate button% () (label label)
                        (parent parent)
+                       (enabled enabled?)
                        (callback (lambda (button control-event-object)
                                    (set! choice value)
                                    (send dialog show #f)))))
         (define make-bid-button
-          (lambda (label level denom)
+          (lambda (label level denom enabled?)
             (make-choice-button
              label
              (cdr (assq level bids))
-             (cons level denom))))
+             (cons level denom)
+             enabled?)))
         
-        (for-each (lambda (sym)
+        (for-each (lambda (sym enabled?)
                     (make-choice-button
                      (format "~A" sym)
                      doubles-and-pass
-                     sym))
-                  `(Double Redouble Pass))
+                     sym
+                     enabled?))
+                  `(Double Redouble Pass)
+                  `(#f #f #t)           ; BUGBUG -- get double and
+                                        ; redouble right
+                  )
 
         (for-each (lambda (level/pane-pair)
                     (for-each (lambda (denom)
                                 (make-bid-button (format "~A ~A" (car level/pane-pair) denom) 
                                                  (car level/pane-pair)
-                                                 denom))
+                                                 denom
+                                                 #t ; BUGBUG --
+                                                   ; disable buttons
+                                                   ; for illegal bids 
+                                                   ))
                               `(clubs diamonds hearts spades notrump)))
                   bids)
         (send dialog show #t)
