@@ -15,15 +15,18 @@
 ;; file from being compiled (clisp complains that there is no package
 ;; named MD5).
 
+#+clisp (error "I don't work under clisp 2.33.2")
+
 (proclaim `(optimize (speed 3)))
 
 (defmacro lookup (c survey)
-  `(svref ,survey (char-code (char-downcase ,c))))
+  `(the fixnum (svref ,survey (char-code (char-downcase ,c)))))
 
 ;; presumably, keeping our array in a global is faster than
 ;; SURVEY-STRING creating a new one every time it's called.
 (defparameter *survey* (make-array 128 :initial-element 0))
 (defun survey-string (s)
+  (declare (type simple-string s))
   "Given string S, return an array that describes the number of each character."
   (fill *survey* 0)
   (map nil
@@ -34,6 +37,7 @@
 
 ;; returns nil when INPUT is a "true" template.
 (defun update-template (input func)
+  (declare (type function func))
   "Given a \"template\" INPUT, and a function FUNC, update the counts
 in all the conses by calling FUNC on the character in the cons."
   (let ((copy  (copy-tree input))
@@ -72,10 +76,10 @@ in all the conses by calling FUNC on the character in the cons."
   (apply #'concatenate 'string
          (mapcar (lambda (thing)
                    (if (consp thing)
-                       (let ((letter (spell-out-character (cdr thing)))
+                       (let ((letter (the simple-string (spell-out-character (cdr thing))))
                              (maybe-apostrophe 
                               (if (and
-                                   (not (= 1 (car thing)))
+                                   (not (= 1 (the fixnum (car thing))))
                                    (alpha-char-p (cdr thing)))
                                   "'"
                                   "")))
@@ -90,13 +94,15 @@ in all the conses by calling FUNC on the character in the cons."
   (declare (type fixnum tries))
   (let ((tmplt
          (append 
-          (cons "This sentence contains exactly "
-                (loop for (item rest) on
-                     (loop for n
-                        from (char-code #\a)
-                        to   (char-code #\z)
-                        collect (cons 0 (code-char n)))
-                     collect item when rest collect ", "))
+          (cons 
+           ;;"Please help yourself to "
+           "The sentence contains exactly "
+           (loop for (item rest) on
+                (loop for n
+                   from (char-code #\a)
+                   to   (char-code #\z)
+                   collect (cons 0 (code-char n)))
+                collect item when rest collect ", "))
           (list 
            ", " '(0 . #\Space)
            ", " '(0 . #\.)
@@ -117,13 +123,14 @@ in all the conses by calling FUNC on the character in the cons."
          ;; this doesn't work reliably in clisp -- sxhash returns
          ;; the same value on very different strings.  This isn't a
          ;; bug; it's just unfortunate.
-         (when  (gethash (sxhash str) duplicate-detector nil)
+         (when  (gethash (sxhash (the simple-string str)) duplicate-detector nil)
+           ;;(warn "~s is a duplicate; starting over with random values" str)
            (setf tmplt (update-template tmplt #'(lambda (char)
                                                   (declare (ignore char))
                                                   (random (length str)))))
            (setf str (template->string tmplt)))
                                                  
-         (setf (gethash (sxhash str) duplicate-detector) t)
+         (setf (gethash (sxhash (the simple-string str)) duplicate-detector) t)
          (setf tmplt (update-template tmplt #'(lambda (char)
                                                 (lookup char (survey-string str)))))
 
@@ -132,8 +139,8 @@ in all the conses by calling FUNC on the character in the cons."
                    tries
                    str)
            (return)))
-
+       
        (when (zerop tries)
          (return))
-       
+
        (decf tries))))
