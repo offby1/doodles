@@ -1,0 +1,15 @@
+;;; -*- Mode: lisp -*-
+
+;; to use this: first load
+;; "/usr/share/common-lisp/source/defsystem/defsystem.lisp" or the
+;; equivalent .  Then load this file.  Then compile everything by
+;; doing (make:operate-on-system :wc :compile).  That will also
+;; run any unit tests.
+
+(make:defsystem wc
+    :source-extension "l"
+    :components ((:file "ci-hash")
+                 (:file "queue")
+                 (:file "bfs")
+		 (:file "traverse")))
+
