@@ -6,4 +6,5 @@ set -e
 # always compiles, whether you ask it to or not.
 #time sbcl --eval '(progn (load (compile-file "sentences.l"))(yow 10000) (quit))'
 
-nice time sbcl --eval '(progn (load "sentences.l"               )(yow 1000000) (quit))'
+nice time sbcl --eval '(load "sb-profile.l")'
+
