@@ -1,7 +1,6 @@
 (define-module (bag))
 (use-modules (srfi srfi-1)
-             (srfi srfi-13)
-             (primes))
+             (srfi srfi-13))
 
 (define make-bag-from-numbers cons)
 
@@ -48,17 +47,6 @@ regard to order."
 
 (define-public (bag-empty? b)
   (zero? (bag-size b)))
-
-(define-public (bag->string b)
-  "Returns a string of all the characters in bag B, in some arbitrary order.
-This is intended only for debugging, because it's mighty slow."
-  (apply string
-         (map (lambda (p)
-                (integer->char
-                 (+ (char->integer #\a)
-                    (- (vector-length primes)
-                       (length (member p prime-list)))))) 
-              (sort (factors (number b)) <))))
 
 (define-public (bags=? b1 b2)
   (= (bag-number b1)
