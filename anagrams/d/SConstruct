@@ -1,2 +1,3 @@
 # -*-python-*-
-Program ('bag', ['bag.d', 'mpz.d', 'gmppool.d'], LIBS = ['gmp'])
+env = Environment(DFLAGS = '-unittest')
+env.Program ('bag', ['bag.d', 'mpz.d', 'gmppool.d'], LIBS = ['gmp'])
