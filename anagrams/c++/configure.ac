@@ -10,7 +10,7 @@ AC_CONFIG_HEADER([config.h])
 AC_ARG_ENABLE(profiling,
               [--enable-profiling    Turn on profiling],
               [case "${enableval}" in
-                yes) profiling=true ;
+                yes) profiling=true ;;
                  no) profiling=false ;;
                   *) AC_MSG_ERROR(bad value ${enableval} for --enable-profiling) ;;
               esac],
