@@ -2,16 +2,16 @@
 
 require 'test/unit'
 
-$primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
-
 class Bag
+  Primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
+
   def initialize (str)
     @product = 1
     str.downcase().each_byte {
       |b|
       if(b >= ?a and b <= ?z)
         index = b - ?a
-        @product *= $primes[index]
+        @product *= Primes[index]
       end
     }
   end
