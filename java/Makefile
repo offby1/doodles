@@ -21,8 +21,8 @@ CPPFLAGS := -I$(J2)/include -I$(J2)/include/win32 -I$(MSVC)/include
 	LIB=$(MSVC)/lib cl -LD $< -Fe$*$(SO)
 
 else
-CPPFLAGS := -I/usr/local/j2sdk1.4.2_05/include -I/usr/local/j2sdk1.4.2_05/include/linux
-CC	:= gcc34
+CPPFLAGS := -I/usr/local/include -I/usr/local/include/linux
+CC	:= gcc
 LDFLAGS	:= -shared
 SO	:= .so
 O	:= .o
@@ -36,7 +36,7 @@ all: $(C).class $(DLL)$(SO)
 $(DLL)$(O) : $(DLL).c $(C).h
 
 check: all
-	test "`java $(C)`" = "Hello world!"
+	test "`LD_LIBRARY_PATH=. java $(C)`" = "Hello world!"
 	@echo All tests passed.
 
 clean:
