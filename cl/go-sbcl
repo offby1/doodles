@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+sbcl --eval '(progn (compile-file "sentences.l")(load "sentences.fasl")(yow))'
