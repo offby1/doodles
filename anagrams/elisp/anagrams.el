@@ -141,6 +141,11 @@
 (defvar anagrams-dictionary-file-name "/usr/share/dict/words"
   "The name of the file that contains lots of words.")
 
+(defun anagrams-select-dictionary (name)
+  "Tell Emacs where the dictionary is, in case its original guess is wrong."
+  (interactive "fEnter the dictionary's name: ")
+  (setq anagrams-dictionary-file-name name))
+
 (defvar anagrams-internal-dict-hash nil
   "A hash table that holds the dictionary from
   `anagrams-dictionary-file-name'.  Initialized (very slowly) upon
@@ -148,9 +153,13 @@
 
 (defun anagrams-maybe-init-hash ()
   (when (not anagrams-internal-dict-hash)
-    (setq anagrams-internal-dict-hash  (make-hash-table :test 'equal :size 65000))
     (with-temp-buffer
       (insert-file-contents anagrams-dictionary-file-name) 
+
+      ;; do this _after_ insert-file-contents, since that function
+      ;; might signal an error.
+      (setq anagrams-internal-dict-hash  (make-hash-table :test 'equal :size 65000))
+
       (while (not (eobp))
         (let ((w (downcase (buffer-substring (line-beginning-position)
                                              (line-end-position)))))
@@ -161,10 +170,11 @@
                     (puthash b (cons w existing) anagrams-internal-dict-hash)))))
         (forward-line 1)
         (message  "Reading %s ... %3.3f %%" anagrams-dictionary-file-name  
-                 (* 100
-                    (/ (float (point))
-                       (point-max))))))
-    (message "Done")))
+                  (* 100
+                     (/ (float (point))
+                        (point-max)))))
+      (message "Done"))
+    ))
 
 
 ;; making anagrams
@@ -202,28 +212,34 @@
 (defun anagrams (s)
   "Print all the anagrams of string S."
   (interactive "sType a (short!) string: ")
-  (anagrams-maybe-init-hash)
-
-  ;; now turn the hash into a list.
-  (let ((pruned-dictionary)
-        (b (anagrams-bag s)))
-    (message "Pruning the dictionary ... ")
-    (let ((entries-examined 0))
-      (maphash (lambda (victim-bag words)
-                 (when (anagrams-subtract-bags b victim-bag)
-                   (setq pruned-dictionary
-                         (cons (cons victim-bag 
-                                     ;; alphabetize the words in
-                                     ;; this entry, just so we get
-                                     ;; a sense of progress as we
-                                     ;; watch the anagrams being
-                                     ;; generated.
-                                     (sort words 'string<)
-                                     )
-                               pruned-dictionary)))
-                 (setq entries-examined (1+ entries-examined))
-                 (message "Pruning the dictionary ... %d entries examined" entries-examined))
-               anagrams-internal-dict-hash))
+  (condition-case file-error
+      (progn
+        (anagrams-maybe-init-hash)
+      
+        ;; now turn the hash into a list.
+        (let ((pruned-dictionary)
+              (b (anagrams-bag s)))
+          (message "Pruning the dictionary ... ")
+          (let ((entries-examined 0))
+            (maphash (lambda (victim-bag words)
+                       (when (anagrams-subtract-bags b victim-bag)
+                         (setq pruned-dictionary
+                               (cons (cons victim-bag 
+                                           ;; alphabetize the words in
+                                           ;; this entry, just so we
+                                           ;; get a sense of progress
+                                           ;; as we watch the anagrams
+                                           ;; being generated.
+                                           (sort words 'string<)
+                                           )
+                                     pruned-dictionary)))
+                       (setq entries-examined (1+ entries-examined))
+                       (message "Pruning the dictionary ... %d entries examined" entries-examined))
+                     anagrams-internal-dict-hash))
   
-    (message "Pruning the dictionary ... done")
-    (princ (anagrams-internal b pruned-dictionary nil 0))))
+          (message "Pruning the dictionary ... done")
+          (princ (anagrams-internal b pruned-dictionary nil 0))))
+    (error (message (format "%s.  %s." 
+                            (error-message-string file-error)
+                            (substitute-command-keys "Try \\[anagrams-select-dictionary].")))))
+  )
