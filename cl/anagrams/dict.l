@@ -15,7 +15,7 @@
         (let ((datum (read-line dict nil nil)))
           (if (null datum)
               (return)
-            (when (zerop (rem lines-read 10))
+            (when (zerop (rem lines-read 1))
               (let ((word (string-downcase datum)))
                 (push word (gethash (bag word) hash))
                 )))

@@ -1,3 +1,14 @@
+;; Note that unless we use a stripped-down dictionary, CMU Common Lisp
+;; release x86-linux 3.1.2 18d+ 24 September 2002 build 4293 dies with
+;; what appears to be an assertion failure in the garbage collector.
+
+;; sbcl SBCL 0.7.2 does too!
+
+;; clisp 2.27, however, completes with no trouble.  Pity it's slower
+;; than the others ...
+
+(declaim (optimize speed))
+                          
 (let ((*error-output*  *standard-output*))
   (defvar *dict* (make-dictionary "/usr/share/dict/words"))
   (format t "dictionary contains ~A words ...~%" (length *dict*))

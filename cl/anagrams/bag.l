@@ -30,14 +30,15 @@
 
 ;; This conses!  That surprises me ...
 (defun string-cdr (s)
+  (declare (type (vector standard-char) s))
   (make-array (- (length s) 1) :element-type 'standard-char
               :displaced-to s
               :displaced-index-offset 1))
 (declaim (inline string-cdr))
 
 (defun br3 (minuend subtrahend accum)
-  (check-type minuend    (vector standard-char))
-  (check-type subtrahend (vector standard-char))
+  (declare (type (vector standard-char) minuend subtrahend accum))
+
   (cond
    ;; I'm assuming that finding the length of a string takes constant
    ;; time.
@@ -62,8 +63,8 @@
                     accum))))))))
 
 (defun bag-reduce  (minuend subtrahend)
-  (check-type minuend    (simple-array standard-char))
-  (check-type subtrahend (simple-array standard-char))
+  (declare (type (simple-array standard-char)    minuend))
+  (declare (type (simple-array standard-char) subtrahend))
   (br3 minuend subtrahend (make-array (length minuend)
                                       :fill-pointer 0
                                       :element-type 'standard-char)))
