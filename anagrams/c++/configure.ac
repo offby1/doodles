@@ -19,6 +19,7 @@ AC_PROG_RANLIB
 
 # Checks for libraries.
 AC_CHECK_LIB([gmp], [__gmpz_init], [], [AC_MSG_ERROR([You're missing the nifty gmp library.])])
+AC_CHECK_HEADER([gmpxx.h], [], [AC_MSG_ERROR([You're missing the nifty C++ bindings to the gmp library.])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
