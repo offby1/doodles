@@ -2,13 +2,6 @@
 #include "HelloWorld.h"
 #include <stdio.h>
 
-JNIEXPORT void JNICALL 
-Java_HelloWorld_displayHelloWorld(JNIEnv *env, jobject obj) 
-{
-    printf("Hello world!\n");
-    return;
-}
-
 JNIEXPORT void JNICALL
 Java_HelloWorld_doSomethingMoreInteresting (JNIEnv *env,
                                             jobject this,
