@@ -6,31 +6,12 @@ from types import *
 import sys
 from optparse import OptionParser
 
-## These are just for internal sanity checking.
-def is_anagram (thing):
-    assert type(thing) is ListType
-    for w in thing:
-        assert type(w) is StringType
-    return 1
-    
-def is_list_of_anagrams (thing):
-    assert type(thing) is ListType
-    for a in thing:
-        assert is_anagram(a)
-    return 1
-## End of sanity checking stuff.
-
 def combine (words, anagrams):
-    assert (is_anagram (words))
-    assert (is_list_of_anagrams (anagrams))
 
     rv = []
     for w in words:
         for a in anagrams:
             rv.append ([w] + a)
-
-    assert (is_list_of_anagrams (rv))
-    assert (len (rv) == len (anagrams) * len (words))
 
     return rv
 
@@ -60,7 +41,6 @@ def anagrams (bag, dict):
             for new in combine (words, from_smaller_bag):
                 rv.append (new)
 
-    assert (is_list_of_anagrams (rv))
     return rv
 
 parser = OptionParser(usage="usage: %prog [options] string")

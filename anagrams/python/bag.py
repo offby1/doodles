@@ -12,7 +12,7 @@ def bag (str):
     rv = 1
 
     for c in str:
-        if (c <= 'z') and (c >= 'a'):
+        if (c >= 'a') and (c <= 'z'):
             rv *= primes [ord (c) - ord ('a')]
 
     return rv
