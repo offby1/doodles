@@ -13,53 +13,42 @@
 
 ;; This is _way_ faster under sbcl than under clisp.
 
-;; sxhash under clisp appears to examine only the first few (31?)
-;; characters of strings, and hence cannot be used (lest we get far
-;; too many collisions).  Unfortunatley the only alternative I know of
-;; is the debian package `cl-md5', which is very slow, and whose
-;; presence (in the form of ``(clc:clc-require :md5)'') prevents this
-;; file from being compiled (clisp complains that there is no package
-;; named MD5).
-
-#+clisp (error "I don't work under clisp 2.33.2")
-
-(proclaim `(optimize (speed 3) (safety 0)))
+(proclaim `(optimize (speed 3)))
 
 (defmacro lookup (c survey)
-  `(the fixnum (svref ,survey (char-code (char-downcase ,c)))))
+  `(the fixnum (aref ,survey (char-code (char-downcase ,c)))))
 
-;; presumably, keeping our array in a global is faster than
-;; SURVEY-STRING creating a new one every time it's called.
-(defparameter *survey* (make-array 128 :initial-element 0))
-(defun survey-string (s)
-  (declare (type simple-string s))
-  "Given string S, return an array that describes the number of each character."
-  (fill *survey* 0)
-  (map nil
-       (lambda (c)
-         (incf (lookup c *survey*)))
-       s)
-  *survey*)
+;; presumably, creating our array just once (at load time) is faster
+;; than creating a new one every time this function is called.
+(setf (fdefinition 'survey-string) 
+      (let ((survey (make-array 128
+                                :initial-element 0
+                                :element-type '(unsigned-byte 8)))) 
+        (lambda (s)
+          (declare (type simple-string s))
+          "Given string S, return an array that describes the number of each character."
+          (fill survey 0)
+          (map nil
+               (lambda (c)
+                 (incf (lookup c survey)))
+               s)
+          survey)))
 
-;; returns nil when INPUT is a "true" template.
-(defun update-template (input func)
-  (declare (type function func))
-  "Given a \"template\" INPUT, and a function FUNC, update the counts
-in all the conses by calling FUNC on the character in the cons."
-  (let ((copy  (copy-tree input))
-        (result))
-    (loop
-     (when (null copy)
-       (setf result (nreverse result))
-       (if (equal input result)
-           (return nil))
-       (return result))
-     (let ((thing (car copy)))
-       (when (consp thing)
-         (setf (car thing)
-               (funcall func (cdr thing))))
-       (push thing result))
-     (setf copy (cdr copy)))))
+(defun random-inclusively-between (a b)
+  (let ((min (min a b)))
+    (+ min (random (- (max a b) min -1)))))
+
+(defun update-template (input survey)
+  (let (result
+        (true t))
+    (dolist (thing (copy-tree input) (if true nil (nreverse result)))
+      (when (consp thing)
+        (let ((claimed (car thing))
+              (actual (lookup (cdr thing) survey)))
+          (when (not (= claimed actual))
+            (setf true nil))
+          (setf (car thing) (random-inclusively-between claimed actual))))
+      (push thing result))))
 
 (defun spell-out-character (c)
   "Given a character C, return a string that names the character.  For
@@ -74,6 +63,8 @@ in all the conses by calling FUNC on the character in the cons."
        ((#\.) "full stop")
        ((#\-) "hyphen")
        ((#\Space) "space")
+       ((#\() "left parenthesis")
+       ((#\)) "right parenthesis")
        (t "")))))
 
 (defun template->string (tmplt)
@@ -82,19 +73,27 @@ in all the conses by calling FUNC on the character in the cons."
   (apply #'concatenate 'string
          (mapcar (lambda (thing)
                    (if (consp thing)
-                       (let ((letter (the simple-string (spell-out-character (cdr thing))))
-                             (maybe-apostrophe 
-                              (if (and
-                                   (not (= 1 (the fixnum (car thing))))
-                                   (alpha-char-p (cdr thing)))
-                                  "'"
-                                  "")))
+                       (let* ((letter (the simple-string (spell-out-character (cdr thing))))
+                              (pv (car thing))
+                              (maybe-apostrophe 
+                               (if (and
+                                    (numberp pv)
+                                    (not (= 1 (the fixnum pv)))
+                                    (alpha-char-p (cdr thing)))
+                                   "'"
+                                   "")))
                          (format 
                           nil 
                           (concatenate 'string "~R " letter
-                                       maybe-apostrophe "~:p") (car thing)))
+                                       maybe-apostrophe "~:p") 
+                          (or pv 0)))
                        thing))
                  tmplt)))
+
+(defmacro while (test &rest body)
+  `(do ()
+       ((not ,test))
+     ,@body))
 
 (defun yow (max-tries)
   (declare (type fixnum max-tries))
@@ -102,7 +101,7 @@ in all the conses by calling FUNC on the character in the cons."
          (append 
           (cons 
            ;;"Please help yourself to "
-           "Snowball, Rusty, and Buster would like to offer you "
+           "It seems that, the longer a sentence like this one is, the harder it becomes for it to truthfully claim (as this one does) that it contains exactly "
            (loop for (item rest) on
                 (loop for n
                    from (char-code #\a)
@@ -110,43 +109,29 @@ in all the conses by calling FUNC on the character in the cons."
                    collect (cons 0 (code-char n)))
                 collect item when rest collect ", "))
           (list 
-           ", " '(0 . #\Space)
-           ", " '(0 . #\.)
-           ", " '(0 . #\,)
-           ", " '(0 . #\-)
-           ", and " '(0 . #\')
+           ", "     `(0 . #\Space)
+           ", "     `(0 . #\()
+           ", "     `(0 . #\))
+           ", "     `(0 . #\.)
+           ", "     `(0 . #\,)
+           ", "     `(0 . #\-)
+           ", and " `(0 . #\')
            ".")))
-        (tries 0)
-        (duplicate-detector (make-hash-table :test #'eql)))
-    (loop
-       (let ((str (the simple-string (template->string tmplt))))
-         (when (zerop (mod tries 1000))
-           (format t "~a: ~s~%" tries str))
+        (tries 0))
 
-         ;; If we find ourselves examining a sentence that we've
-         ;; already seen, start over with random values.
+    (while t ;;(< tries max-tries)
+                              
+      (let*  ((str   (template->string tmplt))
+              (new-tmplt (update-template tmplt (survey-string str))))
+         
+        (when (not new-tmplt)
+          (format t "~a: We've got a winner!: ~s~%" tries str)
+          (return))
+
+        (when (zerop (mod tries 1000))
+          (format t "~&~a: ~a~%" tries str))
+        
+        (setf tmplt new-tmplt)
            
-         ;; this doesn't work reliably in clisp -- sxhash returns
-         ;; the same value on very different strings.  This isn't a
-         ;; bug; it's just unfortunate.
-         (when  (gethash (sxhash str) duplicate-detector nil)
-           ;;(warn "~s is a duplicate; starting over with random values" str)
-           (setf tmplt (update-template tmplt #'(lambda (char)
-                                                  (declare (ignore char))
-                                                  (random (the fixnum (length (the simple-string str)))))))
-           (setf str (template->string tmplt)))
-                                                 
-         (setf (gethash (sxhash str) duplicate-detector) t)
-         (setf tmplt (update-template tmplt #'(lambda (char)
-                                                (lookup char (survey-string str)))))
-
-         (when (not tmplt)
-           (format t "(~a): We've got a winner: ``~a''~%"
-                   tries
-                   str)
-           (return)))
-       
-       (when (= tries max-tries)
-         (return))
-
-       (incf tries))))
+        )
+      (incf tries))))
