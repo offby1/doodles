@@ -1,4 +1,4 @@
-(module visible-shuffle mzscheme
+(module deal-randomly mzscheme
   (require (lib "cards.ss" "games" "cards"))
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
