@@ -21,9 +21,8 @@ class Dict
       next if !has_a_vowel_re.match(aLine)
       next if !long_enough_re.match(aLine)
       b = Bag.new(aLine)
-      hit = @Anagrams_by_number[b]
-      if (hit)
-        hit = hit | [aLine]     # avoid duplicates
+      if (@Anagrams_by_number.has_key?(b))
+        @Anagrams_by_number[b] = @Anagrams_by_number[b] | [aLine]     # avoid duplicates
       else
         @Anagrams_by_number[b] = [aLine]
       end
@@ -38,19 +37,15 @@ class Dict
 
   def Dict.Prune(string)
     max = Bag.new(string)
-    @Anagrams_by_number.delete_if {
-      | bag, ignored |
-      not (max - bag)
-    }
-    puts "After pruning to `#{string}', (#{@Anagrams_by_number.length} slots: "
+    result = []
     @Anagrams_by_number.each {
-      |key, value|
-      printf "Key: #{key}";
-      value.each {
-        |v|
-        printf " #{v}"
-      }
-      puts ""
+      | bag, words |
+      if (max - bag)
+        result.push([bag, words])
+      end
     }
+
+    puts "After pruning to `#{string}', (#{result.length} slots: "
+    result
   end
 end
