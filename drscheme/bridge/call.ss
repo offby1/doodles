@@ -2,10 +2,17 @@
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require (lib "1.ss" "srfi"))
-  (provide frobotzle)
+  (provide make-call)
   
-  (define frobotzle
-    (lambda ()
+  (define *denominations* `(clubs diamonds hearts spades notrump))
+  (define-struct bid (level denomination))
+  (define (bid-value b)
+    (define (index item seq ) (- (length seq) (length (member item seq))))
+    (+ (* (sub1 (bid-level b)) (length *denominations*))
+       (index (bid-denomination b) *denominations*)))
+  
+  (define make-call
+    (lambda (lowest-legal-bid)
       (let* ((dialog (instantiate dialog% () (label "Make a call.")))
              (column (instantiate vertical-pane% ()
                        (parent dialog)))
@@ -47,16 +54,20 @@
 
         (for-each (lambda (level/pane-pair)
                     (for-each (lambda (denom)
-                                (make-bid-button (format "~A ~A" (car level/pane-pair) denom) 
-                                                 (car level/pane-pair)
-                                                 denom
-                                                 #t ; BUGBUG --
-                                                   ; disable buttons
-                                                   ; for illegal bids 
-                                                   ))
-                              `(clubs diamonds hearts spades notrump)))
+                                (let ((level (car level/pane-pair)))
+                                  (make-bid-button (format "~A ~A" level denom) 
+                                                   level
+                                                   denom
+                                                   (or (not lowest-legal-bid)
+                                                       (>= (bid-value (make-bid level denom))
+                                                           (bid-value lowest-legal-bid)))
+                                                   )))
+                              *denominations*))
                   bids)
         (send dialog show #t)
         choice)))
 
-  (printf "~A~%" (frobotzle)))
+  (printf "~A~%" (make-call 
+                  
+                  (make-bid 3 'notrump)
+                  )))
