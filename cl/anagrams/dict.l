@@ -1,3 +1,5 @@
+(defgeneric make-dictionary (fn))
+
 (defmethod make-dictionary ((fn string))
   (with-open-file 
    (dict fn)
@@ -13,7 +15,3 @@
     (dolist (word l)
       (setf d (cons (string-downcase word) d)))
     d))
-
-(defun map-dict (func dict)
-  (mapcar func dict))
-
