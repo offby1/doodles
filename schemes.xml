@@ -15,6 +15,11 @@
       I haven't included implementations written in Java because I've
       never found a decent free Java.
     </p>
+    <p>
+      See <a
+      href="http://directory.google.com/Top/Computers/Programming/Languages/Lisp/Scheme/Implementations/">Google's
+      directory</a> for a (presumably) more-authoritative list.
+    </p>
     <table frame="box" rules="all">
       <thead>
         <tr>
@@ -44,10 +49,10 @@
             <a href="http://www.drscheme.org/">
               mzscheme
             </a>
-            203-6 
+            204-cvs28apr2003
           </td>
           <td>
-            MrEd -- slick 
+            MrEd -- somewhere between slick and awesome
           </td>
           <td>
             yes 
@@ -61,20 +66,39 @@
           </td>
           <td>
             the more I use it, the more impressed I am
+            <ul>
+              <li>
+                Built-in GUI tester
+              </li>
+              <li>
+                Supposedly mzscheme can be made into an operating
+                system kernel.  I swear I'm not making this up.
+              </li>
+            </ul>
           </td>
         </tr>
         <tr>
           <td>
-            <a href="http://www.swiss.ai.mit.edu/projects/scheme/mit/">MIT 7.7.1</a>
+            <a href="http://www.swiss.ai.mit.edu/projects/scheme/mit/">
+              MIT 7.7.1
+            </a>
           </td>
           <td>
             "a simple two-dimensional line-graphics interface" ... and
-            yet Edwin is <em>much</em> more Emacs-like than I
+            yet Edwin is 
+            <em>
+              much
+            </em>
+            more Emacs-like than I
             remembered.  It seems comfortable, modulo a few surprising
             keybindings.
           </td>
           <td>
-            nothing in the docs, but <tt>(apropos 'thread)</tt> yields
+            nothing in the docs, but 
+            <tt>
+              (apropos 'thread)
+            </tt>
+            yields
             a lot of interesting-looking hits
           </td>
           <td>
@@ -142,7 +166,9 @@
         </tr>
         <tr>
           <td>
-            <a href="http://www.shiro.dreamhost.com/scheme/gauche/">gauche 0.6.8</a>
+            <a href="http://www.shiro.dreamhost.com/scheme/gauche/">
+              gauche 0.6.8
+            </a>
           </td>
           <td>
             Has GTK and OpenGL bindings, for what that's worth
@@ -182,7 +208,9 @@
         </tr>
         <tr>
           <td>
-            <a href="http://s48.org/">scheme48 0.57</a>
+            <a href="http://s48.org/">
+              scheme48 0.57
+            </a>
           </td>
           <td>
             apparantly not 
@@ -196,13 +224,17 @@
           </td>
           <td>
             <p>
-              <a href="http://www.paulgraham.com/">Paul Graham</a> likes
+              <a href="http://www.paulgraham.com/">
+                Paul Graham
+              </a>
+              likes
               it, so it must be good!
             </p>
             <p>
               I can never remember where the paper on Pre-Scheme is, so:
               <a
-              href="http://mumble.net/~kelsey/papers/prescheme.ps.gz">http://mumble.net/~kelsey/papers/prescheme.ps.gz</a>
+                href="http://mumble.net/~kelsey/papers/prescheme.ps.gz">http://mumble.net/~kelsey/papers/prescheme.ps.gz
+              </a>
             </p>
           </td>
         </tr>
@@ -229,7 +261,9 @@
         </tr>
         <tr>
           <td>
-            <a href="http://www.swiss.ai.mit.edu/~jaffer/SCM.html">scm 5d6</a>
+            <a href="http://www.swiss.ai.mit.edu/~jaffer/SCM.html">
+              scm 5d6
+            </a>
           </td>
           <td>
             probably not 
@@ -281,9 +315,35 @@
           </td>
         </tr>
         <tr>
+          <td>
+            <a href="http://www.ai.mit.edu/~jrb/goo/">
+              Goo 0.153
+            </a>
+          </td>
+          <td>
+            Apparently
+          </td>
+          <td>
+            "experimental" 
+          </td>
+          <td>
+            Apparently; a kludge to get it to talk to GTK is <a
+            href="http://radio.weblogs.com/0102385/2003/02/06.html#a266">here</a>
+          </td>
+          <td>
+            ?
+          </td>
+          <td>
+            Not really scheme, but rather a new language inspired by
+            scheme.  Unlike Arc, goo <em>is</em> "particularly
+            object-oriented".
+          </td>
+        </tr>
+        <tr>
           <th>
             moribund: 
           </th>
+          <th></th><th></th><th></th><th></th>
         </tr>
         <tr>
           <td>
@@ -345,7 +405,7 @@
       </tbody>
     </table>
     <p>
-      Last changed Time-stamp: "2003-05-02 00:38:12 PDT erich"
+      Last changed Time-stamp: "2003-05-04 11:12:11 PDT erich"
     </p>
   </body>
 </html>
