@@ -33,3 +33,5 @@ combine two anagram lists, yielding one that contains all the anagrams in each.
 anagram:
 make one from a string.
 make a new one by adding a string to an existing one.
+
+Lots of ideas at  http://www.gtoal.com/wordgames/anagrams.html

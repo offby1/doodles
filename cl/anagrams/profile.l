@@ -1,10 +1,11 @@
 (defvar *dict* (make-dictionary "/usr/share/dict/words"))
 (format t "dictionary contains ~A words ...~%" (length *dict*))
 
-;; Because it's so damned slow, throw out 98% of the dictionary ...
+;; Because it's so damned slow, throw out most of the dictionary ...
 ;; so it will run faster.  Otherwise it's too slow to even profile.
 
-(when t
+(when nil
+
   (setq *dict* (let ((words-to-examine (length *dict*))
                      (reduced-dictionary '()))
                  (loop
@@ -19,6 +20,10 @@
   (setq *dict* (sort (nconc 
                       *dict* 
                       (list "anywhere" "me" "sting" )) #'string-lessp)))
+
+;; If we don't throw out most of the dictionary, as above,
+;; CMU Common Lisp release x86-linux 3.1.2 18d+ 24 September 2002 build 4293
+;; dies with what appears to be an assertion failure in the garbage collector.
 
 (format t "dictionary (~A -> ~A) contains ~A words ...~%" 
         (first *dict*)

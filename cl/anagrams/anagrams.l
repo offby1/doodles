@@ -10,10 +10,16 @@
 
 
   (when (zerop level) (format t "reduced to ~A words.~%" (length dict)))
+  
+  ;; It also might be fun to sort the dictionary by word size
+  ;; (obviously we'd only need to do this once).  This would ensure
+  ;; that the first anagrams we see have big words in them, and are
+  ;; thus more interesting.
+  
   (let ((rv '()))
     (maplist
      #'(lambda (subdict)
-         (when (zerop level) (format t ".")(finish-output))
+         (when (< level 1) (format t ".")(finish-output))
          (let* ((word (car subdict))
                 (smaller-bag (bag-reduce bag word)))
            
