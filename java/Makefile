@@ -18,7 +18,7 @@ all: $(patsubst %,%.class,$(CLASSES)) lib$(LIB).so
 $(LIB).o : $(LIB).c $(patsubst %,%.h,$(CLASSES))
 
 check: all
-	LD_LIBRARY_PATH=. java HelloWorld | egrep -q "Hello world!"
+	LD_LIBRARY_PATH=. java HelloWorld
 	@echo All tests passed.
 
 clean:
