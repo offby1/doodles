@@ -1,3 +1,9 @@
+;; http://rec-puzzles.org/sol.pl/language/english/self.ref/self.ref.letters
+;; describes the inspiration
+
+;; http://www.cs.indiana.edu/~tanaka/GEB/pangram.txt has some example
+;; programs in Perl and C
+
 ;; http://info.lboro.ac.uk/departments/ma/gallery/selfref/
 ;;
 ;; Even though that site describes almost exactly this, I wrote this
@@ -17,7 +23,7 @@
 
 #+clisp (error "I don't work under clisp 2.33.2")
 
-(proclaim `(optimize (speed 3)))
+(proclaim `(optimize (speed 3) (safety 0)))
 
 (defmacro lookup (c survey)
   `(the fixnum (svref ,survey (char-code (char-downcase ,c)))))
@@ -90,13 +96,13 @@ in all the conses by calling FUNC on the character in the cons."
                        thing))
                  tmplt)))
 
-(defun yow (tries)
-  (declare (type fixnum tries))
+(defun yow (max-tries)
+  (declare (type fixnum max-tries))
   (let ((tmplt
          (append 
           (cons 
            ;;"Please help yourself to "
-           "The sentence contains exactly "
+           "Snowball, Rusty, and Buster would like to offer you "
            (loop for (item rest) on
                 (loop for n
                    from (char-code #\a)
@@ -110,10 +116,10 @@ in all the conses by calling FUNC on the character in the cons."
            ", " '(0 . #\-)
            ", and " '(0 . #\')
            ".")))
-
+        (tries 0)
         (duplicate-detector (make-hash-table :test #'eql)))
     (loop
-       (let ((str (template->string tmplt)))
+       (let ((str (the simple-string (template->string tmplt))))
          (when (zerop (mod tries 1000))
            (format t "~a: ~s~%" tries str))
 
@@ -123,14 +129,14 @@ in all the conses by calling FUNC on the character in the cons."
          ;; this doesn't work reliably in clisp -- sxhash returns
          ;; the same value on very different strings.  This isn't a
          ;; bug; it's just unfortunate.
-         (when  (gethash (sxhash (the simple-string str)) duplicate-detector nil)
+         (when  (gethash (sxhash str) duplicate-detector nil)
            ;;(warn "~s is a duplicate; starting over with random values" str)
            (setf tmplt (update-template tmplt #'(lambda (char)
                                                   (declare (ignore char))
-                                                  (random (length str)))))
+                                                  (random (the fixnum (length (the simple-string str)))))))
            (setf str (template->string tmplt)))
                                                  
-         (setf (gethash (sxhash (the simple-string str)) duplicate-detector) t)
+         (setf (gethash (sxhash str) duplicate-detector) t)
          (setf tmplt (update-template tmplt #'(lambda (char)
                                                 (lookup char (survey-string str)))))
 
@@ -140,7 +146,7 @@ in all the conses by calling FUNC on the character in the cons."
                    str)
            (return)))
        
-       (when (zerop tries)
+       (when (= tries max-tries)
          (return))
 
-       (decf tries))))
+       (incf tries))))
