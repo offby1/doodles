@@ -27,6 +27,7 @@ class bag
     return (1 == product ? true : false);
   }
 
+  this () { this.product = new mpz (1); }
   this (mpz i) { this.product = i; }
   this (char[] s)
   {

@@ -1,7 +1,8 @@
 (require (lib "unitsig.ss")
          (lib "servlet-sig.ss" "web-server")
          (lib "servlet-helpers.ss" "web-server")
-         (lib "url.ss" "net"))
+         (lib "url.ss" "net")
+         (list "list.ss"))
 
 (unit/sig () (import servlet^)
   (report-errors-to-browser (lambda (response)
@@ -51,11 +52,17 @@
           (cdr tmp)
         'you-bozo-you-didnt-pick-anything)))
 
-  (let ((choices '(dog cat ferret skunk)))
-    (send/finish
-     `(html
-       (head "Here's what you picked")
-       (body (p
-              ,(format "~s" (radio-pick-one "Pick the cutest small furry mammal" `(dog cat ferret skunk bunny)))
-              "\n"
-              ,(format "~s" (links-pick-one "Pick the cutest person" `(katie eric brad debbie laura)))))))))
+  (let loop ((choices '(dog cat ferret skunk)))
+    (if (null? choices)
+        (send/finish
+         `(html
+           (head "All done!")
+           (body (p "You've picked everything."))))    
+      
+      (let ((c (links-pick-one "Pick the cutest small furry mammal" choices)))
+        (send/back
+         `(html
+           (head "Here's what you picked")
+           (body (p
+                  ,(format "~s" c)))))
+        (loop (remove c choices)))))

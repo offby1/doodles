@@ -43,3 +43,7 @@ Note(1): C++ does "ernest hemingway" -- 408198 anagrams -- in about 35 seconds
 Note: when gathering data to fill in the above, be sure that none of
 the programs or libraries were compiled for profiling -- because they
 run much slower than normal libraries.
+
+The really interesting question isn't so much "how fast is this
+language", but rather "does this language have an easy-to-use
+profiler".

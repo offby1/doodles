@@ -9,6 +9,16 @@
     ((13) :king)
     ((14) :ace)))
 
+(defun rank->number (c)
+  (let ((s (cadr c)))
+  (ecase s 
+    ((2 3 4 5 6 7 8 9 10)
+     s)
+    ((:jack) 11)
+    ((:queen) 12)
+    ((:king) 13)
+    ((:ace) 14))))
+
 (defun number->suit (n)
   (ecase n 
     ((0) :club) 
@@ -38,28 +48,21 @@
                       (< (car a)
                          (car b))))))
 
-(defun rank->number (c)
-  (let ((s (cadr c)))
-  (ecase s 
-    ((2 3 4 5 6 7 8 9 10)
-     s)
-    ((:jack) 11)
-    ((:queen) 12)
-    ((:king) 13)
-    ((:ace) 14))))
-
 (defun arrange-hand (cards)
   (sort cards
         (lambda (c1 c2)
           (let ((s1 (symbol-name (car c1)))
                 (s2 (symbol-name (car c2))))
             (cond
-              ((string-lessp  s1 s2)
-               t)
+              ;; first order by suits.
+              ((string-greaterp  s1 s2) t)
+
+              ;; within a suit, order by rank.
               ((string-equal  s1 s2)
-               (funcall #'<
+               (funcall #'>
                       (rank->number  c1)
                       (rank->number  c2)))
+
               (t nil)
               )))))
 

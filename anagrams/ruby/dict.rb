@@ -5,6 +5,8 @@ require 'bag'
 def Read(fn)
   begin
     File.open("hash.cache", "r") do |aCache|
+      printf "Snarfing hash.cache ..."
+      $stdout.flush
       @Anagrams_by_number = Marshal.load(aCache)
       puts "Loaded dictionary from hash.cache"
     end
