@@ -14,7 +14,7 @@
         <tr> <th>Implementation</th> <th>GUI-friendly?</th> <th>threads?</th> <th>Runs on MS Windows?</th> <th>Unicode?</th> <th>Why does it suck?</th> </tr>
       </thead>
       <tbody>
-        <tr> <td> mzscheme 202 </td> <td> MrEd -- slick </td> <td> yes </td> <td> yes </td> <td> </td> <td> help system flaky </td> </tr>
+        <tr> <td> <a href="http://www.plt-scheme.org/">mzscheme</a> 203-6 </td> <td> MrEd -- slick </td> <td> yes </td> <td> yes </td> <td> </td> <td> help system was flaky in version 202; seems OK now</td> </tr>
         <tr> <td> MIT 7.7.0 </td> <td> looks primitive </td> <td> no! </td> <td> yes </td> </tr>
         <tr> <td><a href="http://kaolin.unice.fr/~serrano/bigloo/bigloo.html">bigloo 2.5c</a></td> <td><a href="http://kaolin.unice.fr/Biglook">biglook</a></td> <td> coop </td> <td> yes </td> <td> yes </td> <td> no bignums </td> </tr>
         <tr> <td> chicken 0.1072-2 </td> </tr>
