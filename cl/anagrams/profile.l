@@ -1,5 +1,14 @@
 (declaim (optimize speed))
 
+(mapcar #'(lambda (basename)
+            (compile-file (concatenate 'string basename ".l"))
+            (load (concatenate 'string basename
+                               #+cmu  ".x86f"
+                               #+sbcl ".fasl"
+                               #+clisp ".fas"
+                               )))
+        `("anagrams" "bag" "dict"))
+
 #+cmu (progn 
         (profile:profile anagrams-internal)
         (profile:profile anagrams)
@@ -11,7 +20,7 @@
         (profile:profile alist->array)
         (profile:profile make-dictionary-from-file)
         (profile:profile make-dictionaries-from-list)
-        (profile:profile init)))
+        (profile:profile init))
 
 #+sbcl (progn 
          ;; grr ... sb-profile:profile is a macro, so I can't use mapcar
@@ -27,18 +36,13 @@
          (sb-profile:profile make-dictionaries-from-list)
          (sb-profile:profile init))
 
-(mapcar #'(lambda (basename)
-            (compile-file (concatenate 'string basename ".l"))
-            (load (concatenate 'string basename
-                               #+cmu  ".x86f"
-                               #+sbcl ".fasl"
-                               #+clisp ".fas"
-                               )))
-        `("anagrams" "bag" "dict"))
-(init)
-#-clisp            (format t "~%~A~&" (anagrams  "bobhemingway"))
-#+clisp (ext:times (format t "~%~A~&" (anagrams  "bobhemingway")))
 
+(init)
+(let ((*print-level* nil)
+      (*print-length* nil))
+  #-clisp            (format t "Done!~%~A~&" (anagrams  "hemingway"))
+  #+clisp (ext:times (format t "Done!~%~A~&" (anagrams  "hemingway")))
+  )
 #+sbcl (sb-profile:report)
 #+cmu  (profile:report-time)
-(quit)
+;(quit)

@@ -78,4 +78,7 @@
                   (format t "Reading dictionary ... ") (finish-output)
                   (prog1 
                       (make-dictionary-from-file "/usr/share/dict/words")
-                    (format t "done~%") (finish-output)))))
+                    (format t "done~%") (finish-output))))
+  ;; ensure that the REPL doesn't display a huge array of hash tables.
+  nil
+  )
