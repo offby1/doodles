@@ -15,22 +15,13 @@
 ;; write to a file whose name is a simplified version of the input
 ;; string.
 (define-public (all-anagrams string)
-  (let ((in-bag   (bag string))
-        (start-time  (get-internal-real-time)))
+  (let ((in-bag         (bag string)))
     
     (init in-bag)
-    (let* ((result (all-anagrams-internal in-bag *dictionary* 0))
-           (stop-time (get-internal-real-time))
-           )
+    (let* ((result    (all-anagrams-internal in-bag *dictionary* 0)))
+      
       (pretty-print result)
-      (format (current-error-port)
-              ";; ~a anagrams of ~s: ~a seconds~%"
-              (length result)
-              string
-              (exact->inexact (/
-                               (- stop-time
-                                  start-time)
-                               internal-time-units-per-second)))
+      
       result)))
 
 (define-macro (maybe-dump ans)
