@@ -3,7 +3,7 @@
 (display
  (let ()
    (define (union s1 s2)
-     (lset-union eq? s1 s2))
+     (lset-union equal? s1 s2))
    (define (uniquify seq)
      (cond
       ((null? seq)
