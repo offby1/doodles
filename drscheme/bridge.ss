@@ -1,5 +1,17 @@
-;; TODO in general -- find a better way to chatter than printf.
-;; Perhaps make a scrolling console that captures standard out.
+;; TODO:
+
+;; find a better way to chatter than printf.  Perhaps make a scrolling
+;; console that captures standard out.  (How nerdly.)
+
+;; figure out how to draw cards oriented horizontally.  I posted to
+;; plt-scheme@list.cs.brown.edu on May 10 asking this.
+
+;; figure out how to deliver a stand-alone executable.  The executable
+;; created by `mzc --gui-exe bridge bridge.ss' is *almost* standalone,
+;; but it loads something (probably bitmaps) from games/cards at
+;; startup.  I thought I read somewhere that one could save a snapshot
+;; of a running DrScheme image, which sounds promising; alas, I can't
+;; find the reference.
 
 (module bridge mzscheme
   (require (lib "cards.ss" "games" "cards"))
@@ -7,7 +19,7 @@
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
   (require (lib "list.ss"))
-  (require "fys.ss")
+
   (define *d* (make-deck))
 
   (define *cw* (send (car *d*) card-width))
@@ -48,7 +60,7 @@
   (define *t* #f)
   (let ((width-in-pixels (+ (* 2 *ch*)
                             (* 13/2 *cw*))))
-    (set! *t* (make-object my-table% "snowball" 
+    (set! *t* (make-object my-table% "The Snowball Bridge Club" 
                            (/ width-in-pixels *cw*)
                            (/ width-in-pixels *ch*))))
   
@@ -86,7 +98,7 @@
                         (semaphore-post sem))
                     (begin
                       (bell)
-                      (printf "You gotta click your own cards.")))
+                      (printf "You gotta click your own cards.~%")))
                   ))
           (yield sem)
           (unless choice
@@ -155,7 +167,7 @@
   (send *t* set-single-click-action
         (lambda (c)
           (printf "~A~%" 
-                  (format "The ~A of ~A"
+                  (format "The ~A of ~A, face ~A"
                           (let ((v (ace-high (send c get-value))))
                             (case v
                               ;; it's a shame that MzScheme's `format' doesn't
@@ -173,7 +185,8 @@
                               ((12) 'queen)
                               ((13) 'king)
                               ((14) 'ace)))
-                          (send c get-suit )))))
+                          (send c get-suit )
+                          (if (send c face-down?) "down" "up")))))
 
   (random-seed 0)
   (let ()
@@ -189,13 +202,14 @@
                                (label "Not shuffled")
                                (parent *t*))))
         (lambda ()
-          (send *t* cards-face-down *d*)
+          (send *t* remove-cards *d*)
+          (for-each (lambda (c) (send c face-down)) *d*)
 
           ;; deal the cards.
           (set! *d* (shuffle-list *d* 1))
           (set! shuffles (add1 shuffles))
           (let loop ((players *player-alist*)
-                     (d *d*))
+                     (cards-to-deal *d*))
 
             (define (first-n l n)
               (let loop ([l l][n n])
@@ -204,12 +218,12 @@
                     null
                   (cons (car l) (loop (cdr l) (sub1 n))))))
 
-            (when (not (null? d))
+            (when (not (null? cards-to-deal))
           
               (let* ((p (cdar players))
                      (destination (player-region p)))
             
-                (set-player-cards! p (first-n d 13))
+                (set-player-cards! p (first-n cards-to-deal 13))
 
                 (let ((hand (player-cards p)))
                   (send *t* add-cards-to-region 
@@ -226,7 +240,7 @@
                    hand))
                 
                 (loop (cdr players)
-                      (list-tail d 13)))))
+                      (list-tail cards-to-deal 13)))))
 
           (send shuffle-message set-label (format "~A shuffle(s)" shuffles))
 
@@ -253,6 +267,10 @@
                       (+ x (/ *region-length* 13)))))))))
 
     (define (pretend-to-play)
+      ;; TODO: I have this nagging feeling that I shouldn't be using a
+      ;; loop here, and instead should use some contraption involving
+      ;; callbacks which call themselves.  But that sounds ugly.  Wish
+      ;; I knew more about GUI programming in general.
       (let next-trick ()
         (define (play-one-trick)
           (let next-player ((the-trick '())
@@ -273,8 +291,13 @@
                              (add1 cards-this-trick))))
 
             ;; TODO: find out why the program pauses for a long time
-            ;; *after* the trick vanishes from the table.
-            (sleep/yield .1)
+            ;; *after* the trick vanishes from the table.  Both
+            ;; (sleep) and (send *t* pause) seem to suffer from this.
+            ;; For what it's worth, the `pause' method differs from
+            ;; sleep in that it does its sleeping in a separate thread
+            ;; (and uses `yield' to wait for that sleep to finish) ,
+            ;; and hence presumably doesn't block *this* thread.
+            (send *t* pause .1)
 
             (send *t* remove-cards the-trick)
             (for-each (lambda (c) (send c face-down)) the-trick)))
@@ -306,5 +329,3 @@
     (send *t* move 400 0)
             
     (send *t* show #t)))
-
-
