@@ -6,7 +6,8 @@
 ;; figure out how to draw cards oriented horizontally.  I posted to
 ;; plt-scheme@list.cs.brown.edu on May 10 asking this.
 
-;; figure out how to deliver a stand-alone executable.  The executable
+;; figure out how to deliver a stand-alone executable (see the dox for
+;; `write-image-to-file' in the mzscheme manual).  The executable
 ;; created by `mzc --gui-exe bridge bridge.ss' is *almost* standalone,
 ;; but it loads something (probably bitmaps) from games/cards at
 ;; startup.  I thought I read somewhere that one could save a snapshot
