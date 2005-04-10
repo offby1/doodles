@@ -1,0 +1,93 @@
+-*-outline-*-
+Thoughts about a bridge program based on a "double-dummy solver".
+
+Inspired by http://www.gibware.com/reviews/bw.html, or something like
+it.
+
+* What is it?
+
+A double-dummy solver is a function that, given
+
+- north's holding
+- east's holding
+- south's holding
+- west's holding
+- which of the four hands makes the opening lead
+- the trump suit
+
+figures out the number of tricks that the declarer will take.  It
+assumes that all four players play as well as possible.  I'm not
+entirely sure what that means, but each player can see each other's
+cards (that's why it's called "double-dummy"), so there shouldn't be
+too much ambiguity.
+
+** open questions
+
+However, here are some things that are nevertheless uncertain:
+
+When faced with a choice of two cards to play, both of which will
+clearly win, which should it choose?  (Perhaps it should, say, always
+play the higher, on the assumption that that will communicate
+something useful to partner.)
+
+Similarly, when faced with a choice of two cards to play, both of
+which will clearly _lose_, which should it choose?
+
+Related to the first question: when the two cards will both clearly
+win, but one of them will cause the trick to be won by me, and the
+other by my partner, which should it choose?
+
+Is there ever a case when it should play a losing card, despite
+holding a winning card?  (I suspect the answer is "yes": that's why
+defenders "hold up" at notrump.)  Obviously, losing that trick now
+only makes sense if the tactic gains me _two_ or more otherwise
+unavailable tricks.
+
+I also wonder if the idea of unblocking a suit (i.e., playing the high
+card from the short suit first, as they taught us in beginner class)
+will lead to answers of some or all of those above questions.
+
+* How would you use it?
+
+Here's how one might base a complete game around this solver:
+
+Bidding: every time I hear another player make a call, I figure out
+what that call "means" (e.g., in Standard American, opening one spade
+"means" the opener has at least 12 high card points, at least five
+spades, more spades than hearts), create a little function that
+returns true for all such hands and false for all others, and add that
+function to a list of such functions for that hand.  The list is
+essentially my understanding of the hand.  Presumably as the auction
+continues, I'll add more and more descriptive functions to the list.
+
+Now when it's my turn to make a call (and this probably applies to
+playing a card, too), I enumerate all the legal possibilities.  (If
+the auction has just started, for example, there are seven levels
+times five denominations = 35 bids, plus "pass", available to me; if
+an opponent has made the last bid, then "double" might be available,
+etc).  Each possibility determines a trump suit, and we'll assume I'll
+be the declarer; that determines who'd make the opening lead (namely
+my left-hand opponent).  Now I deal out a bunch of random hands that
+conform to what I know -- that is, each hand passes all the predicates
+that I've saved up in my list.  So now I've got, let's say, 100 deals,
+each of which is plausible given what I know of the auction (and
+perhaps the play).
+
+For each such deal, I now have the four holdings, the opening leader,
+and the trump suit; I now run the double-dummy solver to see how many
+tricks I'd take.  I figure out the resulting score, based on the
+contract (I'm not sure how I figure the precise contract -- should I
+assume the opponents double, or not? {Since each player always makes
+the best possible call, I should probably assume that it will be
+doubled if and only if it's a sacrifice bid -- i.e., one which I don't
+expect to make.})
+
+So now I have a bunch of possible contracts, and a score for each.  I
+pick the one whose score is best for me _and_ for which I'm the
+declarer.  That's my bid.
+
+(I assume that regardless of holding, the best contract for me is
+always going to be the opponents playing seven notrump redoubled, but
+I cannot force them to get to that contract; I can only control the
+calls that _I_ make.  {In Version 2, I'll be able to 'control' the
+calls that my _partner_ makes by using a bidding system :-})
