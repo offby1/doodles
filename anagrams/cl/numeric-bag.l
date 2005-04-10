@@ -52,28 +52,28 @@
 ;; unit tests
 (assert (bag-emptyp (bag "")))
 (assert (bags-equalp (bag "HEY")
-                (bag "hey")))
+                     (bag "hey")))
 (assert (bags-equalp (bag "  hey   you   ")
-                (bag "heyyou")))
+                     (bag "heyyou")))
 (assert (bags-equalp (bag "Fred's")
-                (bag "freds")))
+                     (bag "freds")))
 (assert (not (bag-emptyp (bag "a"))))
 (assert (bags-equalp (bag "abc")
-                (bag "cba")))
+                     (bag "cba")))
 
 (let ((cant-be-done (subtract-bags (bag "a")
                                    (bag "b"))))
   (assert (not cant-be-done)))
 
 (assert (not (subtract-bags  (bag "een")
-                                      (bag "eg"))))
+                             (bag "eg"))))
 
 (assert (not (bags-equalp (bag "abc")
-                              (bag "bc"))))
+                          (bag "bc"))))
 
 (assert (bags-equalp (bag "a")
-                (subtract-bags (bag "ab")
-                               (bag "b"))))
+                     (subtract-bags (bag "ab")
+                                    (bag "b"))))
 
 
 (assert (not (subtract-bags (bag "a")

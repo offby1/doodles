@@ -20,7 +20,7 @@
   `(the fixnum (aref ,survey (char-code ,c))))
 
 (defparameter  alphabet
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz().,0123456789-'"
+  "abcdefghijklmnopqrstuvwxyz().,0123456789-'"
   "The characters that will get spelled out")
 
 ;; presumably, creating our array just once (at load time) is faster
@@ -40,21 +40,24 @@
           survey)))
 
 (defun random-inclusively-between (a b)
+  (declare (type fixnum a))
+  (declare (type fixnum b))
   (let ((min (min a b)))
-    (+ min (random (- (max a b) min -1)))))
+    (+ min (random (the fixnum (- (max a b) min -1))))))
 
 (defvar *the-template* nil)
 
 ;; this holds the same conses as *the-template*.  It's easier to mess
 ;; with them if there aren't any strings mixed in.
-(defvar *alist-to-fiddle* nil)
+(defvar *just-the-conses* nil)
 
 (setf (fdefinition 'update-template)
       (let ((current-character-index 0))
         (lambda (survey)
+          (declare (type simple-array))
           (let ((true t)
                 (the-character (aref alphabet current-character-index)))
-            (dolist (the-cons *alist-to-fiddle*)
+            (dolist (the-cons *just-the-conses*)
               (let* ((claimed (cdr the-cons))
                      (actual (lookup (car the-cons) survey)))
                 (when (not (= claimed actual))
@@ -116,7 +119,7 @@
   (declare (type fixnum max-tries))
   (setf *the-template* 
         (cons 
-         "This sentence, which is Copyright (c) 2005 Eric Hanchrow, has got just about "
+         ""
           
          (append
           (loop for (item penultimate last)
@@ -127,7 +130,7 @@
                  
          (list ".")))
         )
-  (setf *alist-to-fiddle*  (remove-if-not 'consp *the-template*))
+  (setf *just-the-conses*  (remove-if-not 'consp *the-template*))
   (let ((tries 0))
 
     (format 

@@ -4,7 +4,7 @@ set -e
 
 # Compiling explicityly seems to have no effect -- presumably SBCL
 # always compiles, whether you ask it to or not.
-#time sbcl --eval '(progn (load (compile-file "sentences.l"))(yow 10000) (quit))'
+nice time sbcl --eval '(progn (load (compile-file "sentences.l"))(yow 10000000) (quit))'
 
-nice time sbcl --eval '(load "sb-profile.l")'
+#nice time sbcl --eval '(load "sb-profile.l")'
 

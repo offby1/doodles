@@ -23,3 +23,9 @@ bad.  If using `configure' is too complicated, perhaps just an
 environment variable.
 
 * Allow a command-line option to specify the location of the dictionary
+
+* Languages to do
+
+** perl6
+
+** Haskell

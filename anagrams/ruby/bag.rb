@@ -8,8 +8,7 @@ class Bag
     str.downcase().each_byte {
       |b|
       if (b >= ?a and b <= ?z)
-        index = b - ?a
-        @product *= Primes[index]
+        @product *= Primes[b - ?a]
       end
     }
   end
