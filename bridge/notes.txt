@@ -26,9 +26,12 @@ too much ambiguity.
 However, here are some things that are nevertheless uncertain:
 
 When faced with a choice of two cards to play, both of which will
-clearly win, which should it choose?  (Perhaps it should, say, always
-play the higher, on the assumption that that will communicate
-something useful to partner.)
+clearly win, which should it choose?  
+
+    Perhaps it should, say, always play the higher, on the assumption
+    that that will communicate something useful to partner.  On second
+    thought, though, that's silly; there's nothing to communicate,
+    since each player can see everything.
 
 Similarly, when faced with a choice of two cards to play, both of
 which will clearly _lose_, which should it choose?
@@ -37,15 +40,18 @@ Related to the first question: when the two cards will both clearly
 win, but one of them will cause the trick to be won by me, and the
 other by my partner, which should it choose?
 
-Is there ever a case when it should play a losing card, despite
-holding a winning card?  (I suspect the answer is "yes": that's why
-defenders "hold up" at notrump.)  Obviously, losing that trick now
-only makes sense if the tactic gains me _two_ or more otherwise
-unavailable tricks.
+    I suspect that the idea of unblocking a suit (i.e., playing the
+    high card from the short suit first, as they taught us in beginner
+    class) is relevant here.
 
-I also wonder if the idea of unblocking a suit (i.e., playing the high
-card from the short suit first, as they taught us in beginner class)
-will lead to answers of some or all of those above questions.
+Is there ever a case when it should play a losing card, despite
+holding a winning card?  (This is called "ducking":
+http://en.wikipedia.org/wiki/Duck_%28bridge%29)
+
+    Yes: that's why defenders "hold up" at notrump.
+    http://en.wikipedia.org/wiki/Holdup_%28bridge%29 Obviously, losing
+    that trick now only makes sense if the tactic gains me _two_ or
+    more otherwise unavailable tricks.
 
 * How would you use it?
 
@@ -56,9 +62,13 @@ what that call "means" (e.g., in Standard American, opening one spade
 "means" the opener has at least 12 high card points, at least five
 spades, more spades than hearts), create a little function that
 returns true for all such hands and false for all others, and add that
-function to a list of such functions for that hand.  The list is
-essentially my understanding of the hand.  Presumably as the auction
-continues, I'll add more and more descriptive functions to the list.
+function to a list of such functions for that hand.  That list of
+functions represents my (incomplete) picture of the hand.  Presumably
+as the auction continues, I'll add more and more descriptive functions
+to the list.
+
+[This sounds very tedious; I'd have to have a big database showing
+what each call means in certain contexts]
 
 Now when it's my turn to make a call (and this probably applies to
 playing a card, too), I enumerate all the legal possibilities.  (If
@@ -90,4 +100,5 @@ declarer.  That's my bid.
 always going to be the opponents playing seven notrump redoubled, but
 I cannot force them to get to that contract; I can only control the
 calls that _I_ make.  {In Version 2, I'll be able to 'control' the
-calls that my _partner_ makes by using a bidding system :-})
+calls that my _partner_ makes by using a bidding system :-}.  That's
+why I choose the highest-scoring contract for which I'm the declarer.)
