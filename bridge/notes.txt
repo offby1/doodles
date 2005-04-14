@@ -25,6 +25,8 @@ too much ambiguity.
 
 However, here are some things that are nevertheless uncertain:
 
+*** Which card to play
+
 When faced with a choice of two cards to play, both of which will
 clearly win, which should it choose?  
 
@@ -54,6 +56,8 @@ http://en.wikipedia.org/wiki/Duck_%28bridge%29)
     more otherwise unavailable tricks.
 
 * How would you use it?
+
+** First idea
 
 Here's how one might base a complete game around this solver:
 
@@ -96,9 +100,104 @@ So now I have a bunch of possible contracts, and a score for each.  I
 pick the one whose score is best for me _and_ for which I'm the
 declarer.  That's my bid.
 
+    This strategy means that every bid I make is natural.  This is
+    probably silly, but hey, it's all preliminary.
+
 (I assume that regardless of holding, the best contract for me is
 always going to be the opponents playing seven notrump redoubled, but
 I cannot force them to get to that contract; I can only control the
 calls that _I_ make.  {In Version 2, I'll be able to 'control' the
 calls that my _partner_ makes by using a bidding system :-}.  That's
 why I choose the highest-scoring contract for which I'm the declarer.)
+
+** Second idea
+
+For each possible bid that is legal for me, predict the score that
+will result if I make it, and then pick the biggest one.
+
+Now, how does one predict the score of a bid?  Well, there's one case
+that's really easy: when it's the third pass, and we thus are certain
+who the declarer will be, and what the contract will be.  In that
+case, we simply run our double-dummy solver a bunch of times, and pick
+the most likely result, and score that.
+
+In the other cases, we'd call ourselves recursively.  See the
+pseudo-code.
+
+
+
+(define (make-call auction-so-far)
+  (let ((best-hypothetical-auction (car (sort (predict-scores auction-so-far)
+                                 (lambda (s1 s2)
+                                   (< (car s1)
+                                      (car s2)))))))
+
+    ;; This simply counts the number of calls in auction-so-far, and
+    ;; then skips that many in best-hypothetical-auction.
+    (my-next-call best-hypothetical-auction)))
+
+
+;; Given a possibly-incomplete auction, figure out every possible
+;; auction that could follow from it, and the score each would yield.
+;; Boy, I bet there are a lot of them :-(
+
+;; the recursive calls are guaranteed to terminate eventually, because
+;; extending an auction brings it "closer" to completion.
+
+;; an obvious postcondition: auction-so-far must be a prefix of each
+;; returned auction.
+(define (predict-scores auction-so-far)
+  (if (auction-is-completed)
+      (cons
+       (most-likely-score (extract-incomplete-knowledge auction-so-far)
+                          auction-so-far)
+       auction-so-far)
+
+    (map (lambda (one-possible-call)
+           (let ((extended (extend-auction auction-so-far one-possible-call)))
+             (cons (predict-scores extended) extended)))
+
+         ;; possible optimization: rather than considering _every_
+         ;; legal call I could make, considery only the "first" few,
+         ;; where "first" means "lowest level".
+
+         (all-legal-calls-I-could-make-now auction-so-far)
+         )))
+
+
+;; (most-frequently-occurring (list 1 2 3 3 4 5 6 2 2 2)) => 2
+
+(define (most-likely-score incomplete-hand-knowledge auction)
+  (score-from-result
+   (reduce
+    most-frequently-occurring
+    (map (lambda (one-possible-hand))
+         (dds:number-of-declarer-tricks one-possible-hand))
+    (generate-lotsa-plausible-hands incomplete-hand-knowledge ))
+   auction)
+  )
+
+;; (score-from-result 3 '(two notrump east not-doubled vulnerable)) => 150
+
+
+
+** How do I represent incomplete knowledge of a hand?
+
+The only thing I've thought of so far is a list of predicates: for
+example, if all I know is that the hand has either five or six spades,
+I'd construct a function like
+
+    (lambda (hand) (< 4 (count-spades hand) 7))
+
+and add it to a list of such functions.  That list would constitute my
+knowledge of the hand.
+
+Such a list might work, but seems crude.  For example, if a list had
+the above entry, along with the similar entry
+
+    (lambda (hand) (< 4 (count-spades hand) 8))
+
+it'd sure be nice to be able to recognize that the first is redundant,
+but given that the only thing one can do with a function is call it,
+this seems difficult.
+
