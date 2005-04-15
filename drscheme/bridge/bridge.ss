@@ -4,7 +4,7 @@
 ;; console that captures standard out.  (How nerdly.)
 
 ;; figure out how to draw cards oriented horizontally.  I posted to
-;; plt-scheme@list.cs.brown.edu on May 10 asking this.  The answer:
+;; plt-scheme@list.cs.brown.edu on May 10, 2003 asking this.  The answer:
 ;; hack the source to the card library.
 
 ;; figure out how to deliver a stand-alone executable (see the dox for
