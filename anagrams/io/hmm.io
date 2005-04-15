@@ -1,4 +1,4 @@
-String asList := method (result := list clone; self foreach (i, c, result add (c asCharacter)); result)
+String asList := method (result := list; self foreach (i, c, result add (c asCharacter)); result)
 String sortChars := method ("" join (self asList sort))
 "testing:"           print; "\n" print
 "testing:" sortChars print; "\n" print
