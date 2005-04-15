@@ -5,7 +5,16 @@ String sortChars := method ("" join (self asList sort))
 
 f := File setPath ("/usr/share/dict/words") openForReading
 
+# work around a bug
+evil_words_to_skip := list ("activate", "clone", "debug", "delegate", "forward", "parent", "return", "self", "sender", "target")
+
 while(line := f readLine,
-  line asString sortChars print
-  "\n" print
+
+  if (evil_words_to_skip contains (line), 
+    Nil,
+    line print
+    ": " print
+    line asString sortChars print
+    "\n" print
+  )
 )
