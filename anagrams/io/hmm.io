@@ -1,7 +1,18 @@
-String asList := method (result := list; self foreach (i, c, result add (c asCharacter)); result)
-String sortChars := method ("" join (self asList sort))
-"testing:"           print; "\n" print
-"testing:" sortChars print; "\n" print
+String asMap  := method (
+  result := Map clone
+  self foreach(i, c, 
+    ch := c asCharacter
+    if (result hasKey (ch),
+      result atPut (ch, 1 + result at (ch)),
+      result atPut (ch, 1)) 
+    result))
+
+Map asString := method (
+  result := String clone
+  self foreach (char, count, for (n, 0, count -1, result := result append (char)))
+  result)
+
+Nil asString := method ("Nil!")
 
 f := File setPath ("/usr/share/dict/words") openForReading
 
@@ -14,7 +25,7 @@ while(line := f readLine,
     Nil,
     line print
     ": " print
-    line asString sortChars print
-    "\n" print
+    line asString asMap asString linePrint
   )
+
 )
