@@ -55,65 +55,14 @@ http://en.wikipedia.org/wiki/Duck_%28bridge%29)
     that trick now only makes sense if the tactic gains me _two_ or
     more otherwise unavailable tricks.
 
+Is there ever a case where it's not clear whether a particular card
+would win?
+
+      Presumably, yes: when the opponents might duck.
+
 * How would you use it?
 
-** First idea
-
-Here's how one might base a complete game around this solver:
-
-Bidding: every time I hear another player make a call, I figure out
-what that call "means" (e.g., in Standard American, opening one spade
-"means" the opener has at least 12 high card points, at least five
-spades, more spades than hearts), create a little function that
-returns true for all such hands and false for all others, and add that
-function to a list of such functions for that hand.  That list of
-functions represents my (incomplete) picture of the hand.  Presumably
-as the auction continues, I'll add more and more descriptive functions
-to the list.
-
-[This sounds very tedious; I'd have to have a big database showing
-what each call means in certain contexts]
-
-Now when it's my turn to make a call (and this probably applies to
-playing a card, too), I enumerate all the legal possibilities.  (If
-the auction has just started, for example, there are seven levels
-times five denominations = 35 bids, plus "pass", available to me; if
-an opponent has made the last bid, then "double" might be available,
-etc).  Each possibility determines a trump suit, and we'll assume I'll
-be the declarer; that determines who'd make the opening lead (namely
-my left-hand opponent).  Now I deal out a bunch of random hands that
-conform to what I know -- that is, each hand passes all the predicates
-that I've saved up in my list.  So now I've got, let's say, 100 deals,
-each of which is plausible given what I know of the auction (and
-perhaps the play).
-
-For each such deal, I now have the four holdings, the opening leader,
-and the trump suit; I now run the double-dummy solver to see how many
-tricks I'd take.  I figure out the resulting score, based on the
-contract (I'm not sure how I figure the precise contract -- should I
-assume the opponents double, or not? {Since each player always makes
-the best possible call, I should probably assume that it will be
-doubled if and only if it's a sacrifice bid -- i.e., one which I don't
-expect to make.})
-
-So now I have a bunch of possible contracts, and a score for each.  I
-pick the one whose score is best for me _and_ for which I'm the
-declarer.  That's my bid.
-
-    This strategy means that every bid I make is natural.  This is
-    probably silly, but hey, it's all preliminary.
-
-(I assume that regardless of holding, the best contract for me is
-always going to be the opponents playing seven notrump redoubled, but
-I cannot force them to get to that contract; I can only control the
-calls that _I_ make.  {In Version 2, I'll be able to 'control' the
-calls that my _partner_ makes by using a bidding system :-}.  That's
-why I choose the highest-scoring contract for which I'm the declarer.)
-
-** Second idea
-
-(Actually, this is the same as the first idea above, just {perhaps}
-better explained.)
+** Bidding
 
 For each possible call that is legal for me, predict the score that
 will result if I make it, and then pick the call that yields the
@@ -191,6 +140,63 @@ some call.  See the pseudo-code.
 
 
 
+** Playing
+
+Probably similar to bidding: for each card that it's legal for me to
+play, see what the score would be if I _did_ play it, and choose the
+card with the highest score.
+
+How does one predict the score, given a card and a game-so-far?
+
+The easy case: this is the last card of the hand.  In that case, we
+know the actual number of tricks taken by the declarer, so we can just
+figure out the score.
+
+The recursive case: "posit" this card, and call ourselves recursively.
+
+;; Note the similarity between this and the auction stuff above.
+;; Refactoring clearly needed.
+
+(define (choose-card completed-auction play-so-far)
+  (let ((best-hypothetical-course-of-play 
+         (car (sort (predict-scores completed-auction play-so-far)
+                    (lambda (s1 s2)
+                      (< (car s1)
+                         (car s2)))))))
+
+    ;; This simply counts the number of tricks in play-so-far, and
+    ;; then skips that many in best-hypothetical-course-of-play.
+    (my-next-play best-hypothetical-course-of-play)))
+
+
+;; given a completed auction, and zero or more records of who played
+;; which card, predict all the possible future games, and their
+;; scores, and return them all.
+(define (predict-scores completed-auction play-so-far)
+  (if (this-is-the-fifty-second-card)
+      (cons
+
+       (most-likely-score (extract-incomplete-knowledge completed-auction play-so-far)
+                          completed-auction play-so-far)
+       play-so-far)
+
+    (map (lambda (one-possible-card)
+           (let ((extended (extend-play-history completed-auction play-so-far one-possible-card)))
+             (cons (predict-scores completed-auction extended) extended)))
+
+         (all-legal-cards-I-could-now-play completed-auction play-so-far)
+         )))
+
+(define (most-likely-score incomplete-hand-knowledge auction play-so-far)
+  (score-from-result
+   (reduce
+    most-frequently-occurring
+    (map (lambda (one-possible-hand))
+         (dds:number-of-declarer-tricks one-possible-hand))
+    (generate-lotsa-plausible-hands incomplete-hand-knowledge ))
+   auction)
+  )
+ 
 ** How do I represent incomplete knowledge of a hand?
 
 The only thing I've thought of so far is a list of predicates: for
@@ -211,6 +217,8 @@ it'd sure be nice to be able to recognize that the first is redundant,
 but given that the only thing one can do with a function is call it,
 this seems difficult.
 
+The right solution is probably a language to describe partial
+knowledge of bridge hands ... but that sounds mighty daunting.
 
 * Implementation thoughts
 
