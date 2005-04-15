@@ -112,8 +112,14 @@ why I choose the highest-scoring contract for which I'm the declarer.)
 
 ** Second idea
 
-For each possible bid that is legal for me, predict the score that
-will result if I make it, and then pick the biggest one.
+(Actually, this is the same as the first idea above, just {perhaps}
+better explained.)
+
+For each possible call that is legal for me, predict the score that
+will result if I make it, and then pick the call that yields the
+biggest score.
+
+Brute force indeed!
 
 Now, how does one predict the score of a bid?  Well, there's one case
 that's really easy: when it's the third pass, and we thus are certain
@@ -121,8 +127,8 @@ who the declarer will be, and what the contract will be.  In that
 case, we simply run our double-dummy solver a bunch of times, and pick
 the most likely result, and score that.
 
-In the other cases, we'd call ourselves recursively.  See the
-pseudo-code.
+In the other cases, we'd call ourselves recursively, after positing
+some call.  See the pseudo-code.
 
 
 
@@ -149,6 +155,10 @@ pseudo-code.
 (define (predict-scores auction-so-far)
   (if (auction-is-completed)
       (cons
+
+       ;; perhaps, rather than finding the most likely score, I should
+       ;; find the _average_ score.
+
        (most-likely-score (extract-incomplete-knowledge auction-so-far)
                           auction-so-far)
        auction-so-far)
@@ -158,7 +168,7 @@ pseudo-code.
              (cons (predict-scores extended) extended)))
 
          ;; possible optimization: rather than considering _every_
-         ;; legal call I could make, considery only the "first" few,
+         ;; legal call I could make, consider only the "first" few,
          ;; where "first" means "lowest level".
 
          (all-legal-calls-I-could-make-now auction-so-far)
@@ -201,3 +211,18 @@ it'd sure be nice to be able to recognize that the first is redundant,
 but given that the only thing one can do with a function is call it,
 this seems difficult.
 
+
+* Implementation thoughts
+
+If I really do the brute-force approach outlined above, then it'll be
+crucial that I be able to profile the code, since it's likely to do
+_lots_ of computation.  Unfortunately Guile as of version 1.7.2 (which
+is a prerelease) doesn't seem to have any profiling support whatever.
+mzscheme does, and Common Lisp does.  I tend towards Scheme since I
+spend less time looking stuff up in the reference.
+
+* Testing
+
+Lots of records of real hands are at
+http://www.sarantakos.com/bridge/vugraph.html; if I ever write
+something that claims to work, I could compare its results to those.
