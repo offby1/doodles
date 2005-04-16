@@ -1,13 +1,6 @@
-#! /bin/sh
-#|
-exec mzscheme -qu "$0" ${1+"$@"}
-|#
-
 (module calls mzscheme
   (require (lib "compat.ss")            ;for "sort", at least
-           (rename (lib "1.ss" "srfi") iota iota)
-           (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+           (rename (lib "1.ss" "srfi") iota iota))
   
   (provide all-legal-calls-I-could-make-now)
   
@@ -53,12 +46,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (bid> . bids)
     (apply > (map bid->number bids)))
   
-  (define file-tests
-    (make-test-suite
-     "Tests for calls.ss"
-     (make-test-case
-      "35 bids"
-      (assert = 35 (length *all-bids*)))))
-
-  (test/text-ui file-tests)
   )
+
+;; Local Variables:
+;; mode: scheme
+;; End:
