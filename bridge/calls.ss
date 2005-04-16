@@ -92,7 +92,7 @@
               (all-legal-calls-I-could-make-now auction-so-far)
               ))))
 
-  ;;(trace predict-scores)
+  (trace predict-scores)
 
   )
 
