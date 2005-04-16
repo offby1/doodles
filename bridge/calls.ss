@@ -1,17 +1,24 @@
 (module calls mzscheme
-  (require (lib "list.ss" "srfi" "1"))
 
-  (require (lib "compat.ss")            ;for "sort", at least
+  ;; it'd be clearer to simply require  (lib "1.ss" "srfi"), but ... that causes this error:
+;;; module: identifier already imported (from a different source) at: reverse! in: (require (lib "1.ss" "srfi"))
+  
+  (require (lib "trace.ss")
+           (lib "list.ss" "srfi" "1")
+           (lib "compat.ss")            ;for "sort", at least
            )
 
   (provide all-legal-calls-I-could-make-now
-           auction-is-completed)
+           auction-is-completed
+           predict-scores)
  
+  (define bid? pair?)
+  
   (define (all-legal-calls-I-could-make-now auction-so-far)
     ;; BUGBUG -- doesn't deal with doubles.
-    (let* ((last-call   (last auction-so-far))
+    (let* ((last-call (last (filter bid? auction-so-far)))
            )
-      (list-tail *all-bids* (+ 1 (bid->number last-call)))))
+      (cons 'pass (list-tail *all-bids* (+ 1 (bid->number last-call))))))
   
   
   (define level car)
@@ -22,7 +29,8 @@
                                                 (diamonds . 1)
                                                 (hearts   . 2)
                                                 (spades   . 3)
-                                                (notrump  . 4))))
+                                                (notrump  . 4)
+                                                )))
   
   (define *levels*  (map (lambda (x) (+ 1 x)) (iota 7)))
   
@@ -52,6 +60,40 @@
            (and (every (lambda (c)
                          (eq? c 'pass)) last-three-calls)))))
   
+  (define (extend-auction a c)
+    (append a (list c)))
+  
+  (define (extract-incomplete-knowledge . args)
+    "duh?")
+  
+  ;; this of course is a stub.
+  (define (most-likely-score . args)
+    (* 50 (- 10 (remainder (eq-hash-code args) 20))))
+  
+  (define (predict-scores auction-so-far)
+    (if (auction-is-completed auction-so-far)
+        (list
+         (cons
+
+          (most-likely-score (extract-incomplete-knowledge auction-so-far)
+                             auction-so-far)
+          auction-so-far))
+
+      (apply append
+             (map 
+              (lambda (one-possible-call)
+                (let ((extended (extend-auction auction-so-far one-possible-call)))
+                  (predict-scores extended)))
+
+              ;; possible optimization: rather than considering _every_
+              ;; legal call I could make, consider only the "first" few,
+              ;; where "first" means "lowest level".
+
+              (all-legal-calls-I-could-make-now auction-so-far)
+              ))))
+
+  ;;(trace predict-scores)
+
   )
 
 ;; Local Variables:
