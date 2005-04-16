@@ -1,18 +1,18 @@
 (module calls mzscheme
   (require (lib "compat.ss")            ;for "sort", at least
            (rename (lib "1.ss" "srfi") iota iota)
-           (planet "test.ss" ("schematics" "schemeunit.plt" 1))))
+           (planet "test.ss" ("schematics" "schemeunit.plt" 1)))
   
   (provide all-legal-calls-I-could-make-now)
 
   (define (last l)
-    (list-tail l (- (length l) 1)))
+    (car (list-tail l (- (length l) 1))))
 
   (define (all-legal-calls-I-could-make-now auction-so-far)
     ;; BUGBUG -- doesn't deal with doubles.
-    (let ((level (level auction-so-far))
-          (denomination (denomination auction-so-far)))
-      (last auction-so-far)))
+    (let* ((last-call   (last auction-so-far))
+           )
+     (list-tail *all-bids* (+ 1 (bid->number last-call)))))
   
 
   (define level car)
