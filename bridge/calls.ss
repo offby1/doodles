@@ -1,12 +1,12 @@
 (module calls mzscheme
+  (require (lib "list.ss" "srfi" "1"))
+
   (require (lib "compat.ss")            ;for "sort", at least
-           (rename (lib "1.ss" "srfi") iota iota))
-  
-  (provide all-legal-calls-I-could-make-now)
-  
-  (define (last l)
-    (car (list-tail l (- (length l) 1))))
-  
+           )
+
+  (provide all-legal-calls-I-could-make-now
+           auction-is-completed)
+ 
   (define (all-legal-calls-I-could-make-now auction-so-far)
     ;; BUGBUG -- doesn't deal with doubles.
     (let* ((last-call   (last auction-so-far))
@@ -45,6 +45,12 @@
   
   (define (bid> . bids)
     (apply > (map bid->number bids)))
+
+  (define (auction-is-completed a)
+    (and (< 3 (length a))
+         (let ((last-three-calls (take-right a 3)))
+           (and (every (lambda (c)
+                         (eq? c 'pass)) last-three-calls)))))
   
   )
 
