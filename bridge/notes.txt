@@ -234,3 +234,9 @@ spend less time looking stuff up in the reference.
 Lots of records of real hands are at
 http://www.sarantakos.com/bridge/vugraph.html; if I ever write
 something that claims to work, I could compare its results to those.
+
+* Ideas
+
+** search strategies
+
+http://www.aaai.org/AITopics/html/seachreason.html
