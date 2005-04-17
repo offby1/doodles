@@ -24,8 +24,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
    (make-test-case
     "sam"
-    (assert = 0 (length (all-legal-calls-I-could-make-now '(pass pass (1 diamond) you uggly (7 notrump)))))
-    (assert = 5 (length (all-legal-calls-I-could-make-now '(pass pass (1 diamond) you uggly (6 notrump))))))
+    (assert-equal? '(pass) (all-legal-calls-I-could-make-now '(pass pass (1 diamond) you uggly (7 notrump))))
+    (assert-equal? '(pass (7 clubs) (7 diamonds) (7 hearts) (7 spades) (7 notrump))
+                   (all-legal-calls-I-could-make-now '(pass pass (1 diamond) you uggly (6 notrump)))))
 
    (make-test-case
     "completion"
