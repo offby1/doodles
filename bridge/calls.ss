@@ -70,27 +70,42 @@
   (define (most-likely-score . args)
     (* 50 (- 10 (remainder (eq-hash-code args) 20))))
   
-  (define (predict-scores auction-so-far)
-    (if (auction-is-completed auction-so-far)
-        (list
-         (cons
+  (define (take-at-most seq n)
+    (let loop ((seq seq)
+               (n n)
+               (result '()))
+      (if (or (zero? n)
+              (null? seq))
+          (reverse result)
+        (loop (cdr seq)
+              (- n 1)
+              (cons (car seq) result)))))
 
-          (most-likely-score (extract-incomplete-knowledge auction-so-far)
-                             auction-so-far)
-          auction-so-far))
+  (define (predict-scores auction-so-far max-depth)
+    (cond
+     ((or (zero? max-depth) (auction-is-completed auction-so-far))
+      (list
+       (cons
 
+        (most-likely-score (extract-incomplete-knowledge auction-so-far)
+                           auction-so-far)
+        auction-so-far)))
+     
+     (#t
       (apply append
              (map 
               (lambda (one-possible-call)
                 (let ((extended (extend-auction auction-so-far one-possible-call)))
-                  (predict-scores extended)))
+                  (predict-scores extended (- max-depth 1))))
 
               ;; possible optimization: rather than considering _every_
               ;; legal call I could make, consider only the "first" few,
               ;; where "first" means "lowest level".
 
-              (all-legal-calls-I-could-make-now auction-so-far)
-              ))))
+              (take-at-most (all-legal-calls-I-could-make-now auction-so-far) 2)
+              )))
+     )
+    )
 
   (trace predict-scores)
 

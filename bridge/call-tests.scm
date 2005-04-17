@@ -7,7 +7,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
  (planet "test.ss" ("schematics" "schemeunit.plt" 1))
  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
  ;(planet "graphical-ui.ss" ("schematics" "schemeunit.plt" 1))
- (planet "util.ss" ("schematics" "schemeunit.plt" 1)))
+ (planet "util.ss" ("schematics" "schemeunit.plt" 1))
+ (lib "pretty.ss"))
 
 (require/expose  "calls.ss" (*all-bids* bid->number))
 
@@ -36,4 +37,6 @@ exec mzscheme -qr "$0" ${1+"$@"}
    ))
 
 (test/text-ui file-tests)
+(pretty-display (predict-scores '((1 clubs)) 4))
+
 ;(test/graphical-ui file-tests)
