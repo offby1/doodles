@@ -31,3 +31,26 @@
     (append-map (lambda (seq)
                   (distribute (car l) seq))
                 (permute (cdr l))))))
+
+;; don't believe it's slow?  Try (length (permute (iota 10)))
+
+;; like `map', but might stop before hitting the end of LIST, and
+;; hence return only partial results.
+(define (partial-map seconds-to-wait func list)
+  (define quit? #f)
+  (define rv #f)
+  (define (my-map func list)
+    (let loop ((l list)
+               (result '()))
+      (if (or quit?
+              (null? l))
+          (set! rv (reverse result))
+        (loop (cdr l)
+              (cons (func (car l))
+                    result)))))
+  (let  ((finished (sync/timeout seconds-to-wait (thread (lambda () (my-map func list))))))
+      (if finished
+          rv
+        '()))
+  )
+
