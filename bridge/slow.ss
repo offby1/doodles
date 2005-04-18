@@ -37,13 +37,11 @@
 ;; like `map', but might stop before hitting the end of LIST, and
 ;; hence return only partial results.
 (define (partial-map seconds-to-wait func list)
-  (define quit? #f)
   (define rv #f)
   (define (my-map func list)
     (let loop ((l list)
                (result '()))
-      (if (or quit?
-              (null? l))
+      (if (null? l)
           (set! rv (reverse result))
         (loop (cdr l)
               (cons (func (car l))
