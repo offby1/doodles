@@ -28,7 +28,6 @@
    ((null? (cdr l))
     (list l))
    (#t
-    (apply append
-           (map (lambda (seq)
+    (append-map (lambda (seq)
                   (distribute (car l) seq))
-                (permute (cdr l)))))))
+                (permute (cdr l))))))
