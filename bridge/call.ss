@@ -12,7 +12,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
    make-bid
    level
    denomination
-   make-call
+
+   ;; mzscheme 299.102 (x86 linux) segfaults when the structure has
+   ;; only one field.  (Reported to the mailing list 19 April 2005,
+   ;; twice).  So we give the "call" structure a dummy field, and hide
+   ;; it like this.
+   (rename make-call-workaround make-call)
+
    pass? double?)
 
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
@@ -48,22 +54,25 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (make-struct-type
      'call                              ;name-symbol
      #f                                 ;super-struct-type
-     1                                  ;init-field-k
+     2                                  ;init-field-k
      0                                  ;auto-field-k
      #f                                 ;auto-v
      null                               ;prop-value-list
      #f                                 ;inspector-or-false
      #f                                 ;proc-spec
-     '(0)                               ;immutable-k-list
-     (lambda (thing name)               ;guard-proc           
+     '(0 1)                             ;immutable-k-list
+     (lambda (thing dummy name)         ;guard-proc           
        (if (bid? thing)
-           thing
+           (values thing #f)
          (case thing
            ((pass double redouble)
-            thing)
+            (values thing #f))
            (else
             (raise-type-error name "bid, pass, double, or redouble" thing)))))))
 
+  (define (make-call-workaround thing)
+    (make-call thing 0))
+  
   (define get-call
     (make-struct-field-accessor call-ref 0))
   
