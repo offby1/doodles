@@ -62,23 +62,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
      #f                                 ;inspector-or-false
      #f                                 ;proc-spec
      '(0 1)                             ;immutable-k-list
-     (case-lambda                       ;guard-proc           
-       [(thing dummy name)              
-        (case thing
-            ((pass double redouble)
-             (values thing #f))
-            (else
-             (raise-type-error name "bid, pass, double, or redouble" thing)))]
-       [(level denom dummy name)
-        (values (make-bid level denom) #f)]
-       )))
+     (lambda (first second name)        ;guard-proc           
+       (case first
+         ((pass double redouble)
+          (values first #f))
+         (else
+          (values (make-bid first second) #f))))))
 
   (define make-call-workaround
     (case-lambda
       [(thing)
        (make-call thing 0)]
       [(level denom)
-       (make-call level denom 0)]))
+       (make-call level denom)]))
   
   (define get-call
     (make-struct-field-accessor call-ref 0))
