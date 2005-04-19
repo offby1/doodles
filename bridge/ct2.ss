@@ -37,12 +37,18 @@ exec mzscheme -qr "$0" ${1+"$@"}
    (assert-exn exn:fail:contract? (lambda () (denomination (make-call 'pass)))))
 
   (make-test-case
-   "passes are passes"
-   (assert-true (pass? (make-call 'pass))))
+   "passes are passes, etc."
+   (assert-true (pass?     (make-call 'pass)))
+   (assert-true (double?   (make-call 'double)))
+   (assert-true (redouble? (make-call 'redouble)))
+   )
   
   (make-test-case
-   "passes are not doubles"
-   (assert-false (double? (make-call 'pass))))
+   "passes are not doubles, etc"
+   (assert-false (double? (make-call 'pass)))
+   (assert-false (pass? (make-call 'redouble)))
+   (assert-false (redouble? (make-call 'double)))
+   )
   
   (make-test-case
    "Random shit aren't passes"
@@ -57,6 +63,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
      (make-test-case
       "right denomination"
-      (assert eq? 'clubs (denomination b)))))
+      (assert eq? 'clubs (denomination b)))
+
+     (make-test-case
+      "Bids are calls"
+      (assert-true (call? b) "If you want to send a message, call Western Union."))))
 
   ))

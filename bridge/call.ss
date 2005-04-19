@@ -12,6 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    make-bid
    level
    denomination
+   (rename my-call? call?)
 
    ;; mzscheme 299.102 (x86 linux) segfaults when the structure has
    ;; only one field.  (Reported to the mailing list 19 April 2005,
@@ -19,7 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    ;; it like this.
    (rename make-call-workaround make-call)
 
-   pass? double?)
+   pass? double? redouble?)
 
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
     (make-struct-type
@@ -61,17 +62,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
      #f                                 ;inspector-or-false
      #f                                 ;proc-spec
      '(0 1)                             ;immutable-k-list
-     (lambda (thing dummy name)         ;guard-proc           
-       (if (bid? thing)
-           (values thing #f)
-         (case thing
-           ((pass double redouble)
-            (values thing #f))
-           (else
-            (raise-type-error name "bid, pass, double, or redouble" thing)))))))
+     (case-lambda                       ;guard-proc           
+       [(thing dummy name)              
+        (case thing
+            ((pass double redouble)
+             (values thing #f))
+            (else
+             (raise-type-error name "bid, pass, double, or redouble" thing)))]
+       [(level denom dummy name)
+        (values (make-bid level denom) #f)]
+       )))
 
-  (define (make-call-workaround thing)
-    (make-call thing 0))
+  (define make-call-workaround
+    (case-lambda
+      [(thing)
+       (make-call thing 0)]
+      [(level denom)
+       (make-call level denom 0)]))
   
   (define get-call
     (make-struct-field-accessor call-ref 0))
@@ -83,5 +90,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (double? thing)
     (and (call? thing)
          (eq? 'double (get-call thing))))
+
+  (define (redouble? thing)
+    (and (call? thing)
+         (eq? 'redouble (get-call thing))))
+
+  (define (my-call? thing)
+    (or (call? thing)
+        (bid? thing)))
   )
 
