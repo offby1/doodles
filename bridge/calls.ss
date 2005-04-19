@@ -6,6 +6,7 @@
   (require (lib "trace.ss")
            (lib "list.ss" "srfi" "1")
            (lib "compat.ss")            ;for "sort", at least
+           "slow.ss"
            )
 
   (provide all-legal-calls-I-could-make-now
@@ -69,21 +70,10 @@
   ;; this of course is a stub.
   (define (most-likely-score . args)
     (* 50 (- 10 (remainder (eq-hash-code args) 20))))
-  
-  (define (take-at-most seq n)
-    (let loop ((seq seq)
-               (n n)
-               (result '()))
-      (if (or (zero? n)
-              (null? seq))
-          (reverse result)
-        (loop (cdr seq)
-              (- n 1)
-              (cons (car seq) result)))))
 
-  (define (predict-scores auction-so-far max-depth)
+  (define (predict-scores auction-so-far)
     (cond
-     ((or (zero? max-depth) (auction-is-completed auction-so-far))
+     ((auction-is-completed auction-so-far)
       (list
        (cons
 
@@ -91,26 +81,24 @@
                            auction-so-far)
         auction-so-far)))
      
-     (#t
-      (apply append
-             (map 
-              (lambda (one-possible-call)
-                (let ((extended (extend-auction auction-so-far one-possible-call)))
-                  (predict-scores extended (- max-depth 1))))
+     (else
+      (apply
+       append
+       (partial-map
+        1
+        (lambda (one-possible-call)
+          (let ((extended (extend-auction auction-so-far one-possible-call)))
+            (predict-scores extended)))
 
-              ;; possible optimization: rather than considering _every_
-              ;; legal call I could make, consider only the "first" few,
-              ;; where "first" means "lowest level".
+        ;; possible optimization: rather than considering _every_
+        ;; legal call I could make, consider only the "first" few,
+        ;; where "first" means "lowest level".
 
-              (take-at-most (all-legal-calls-I-could-make-now auction-so-far) 2)
-              )))
+        (all-legal-calls-I-could-make-now auction-so-far)
+        )))
      )
     )
 
   (trace predict-scores)
 
   )
-
-;; Local Variables:
-;; mode: scheme
-;; End:

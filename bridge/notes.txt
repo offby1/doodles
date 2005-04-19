@@ -28,12 +28,13 @@ However, here are some things that are nevertheless uncertain:
 *** Which card to play
 
 When faced with a choice of two cards to play, both of which will
-clearly win, which should it choose?  
+clearly win, which should it choose?  Perhaps it should, say, always
+play the higher, on the assumption that that will communicate
+something useful to partner.
 
-    Perhaps it should, say, always play the higher, on the assumption
-    that that will communicate something useful to partner.  On second
-    thought, though, that's silly; there's nothing to communicate,
-    since each player can see everything.
+    On second thought, though, that's silly; there's nothing to
+    communicate, since each player can see everything.  Therefore I
+    now proclaim: it doesn't matter.
 
 Similarly, when faced with a choice of two cards to play, both of
 which will clearly _lose_, which should it choose?
@@ -60,6 +61,10 @@ would win?
 
       Presumably, yes: when the opponents might duck.
 
+So it's clear that writing such a function wouldn't be trivial,
+although it might not be terribly hard.  I'm also hoping it would run
+quickly.
+
 * How would you use it?
 
 ** Bidding
@@ -70,75 +75,36 @@ biggest score.
 
 Brute force indeed!
 
-Now, how does one predict the score of a bid?  Well, there's one case
-that's really easy: when it's the third pass, and we thus are certain
-who the declarer will be, and what the contract will be.  In that
-case, we simply run our double-dummy solver a bunch of times, and pick
-the most likely result, and score that.
+Now imagine a function that takes a possibly-incomplete auction, and
+returns a score.  Now, how does one write this function?  Well,
+there's one case that's really easy: when the auction is complete, and
+we thus are certain who the declarer will be (or, perhaps, that the
+hand was passed out), and what the contract will be.  In that case, we
+simply call the function that maps _completed_ auctions to scores,
+passing our incomplete auction with our "pass" appended.
 
-In the other cases, we'd call ourselves recursively, after positing
-some call.  See the pseudo-code.
+    How to run predict the score from a completed auction:
 
-
+    Run our double-dummy solver a bunch of times, and pick the most
+    likely result, and score that.
 
-(define (make-call auction-so-far)
-  (let ((best-hypothetical-auction (car (sort (predict-scores auction-so-far)
-                                 (lambda (s1 s2)
-                                   (< (car s1)
-                                      (car s2)))))))
+    But -- how do we run the double-dummy solver, when we don't know
+    the contents of the other three hands?  Answer: we _guess_.  We
+    accumulate partial knowledge of those hands, from the auction; and
+    then we deal a random hand that doesn't contradict that partial
+    knowledge.
+ 
+In the (more common) case of an _incomplete_ auction, we'd
 
-    ;; This simply counts the number of calls in auction-so-far, and
-    ;; then skips that many in best-hypothetical-auction.
-    (my-next-call best-hypothetical-auction)))
+-posit some call.  That is, we simply pick one legal call.
 
+-call ourselves recursively, with the "extended auction" -- just the
+ auction we were passed, with the posited call tacked onto the end
 
-;; Given a possibly-incomplete auction, figure out every possible
-;; auction that could follow from it, and the score each would yield.
-;; Boy, I bet there are a lot of them :-(
-
-;; the recursive calls are guaranteed to terminate eventually, because
-;; extending an auction brings it "closer" to completion.
-
-;; an obvious postcondition: auction-so-far must be a prefix of each
-;; returned auction.
-(define (predict-scores auction-so-far)
-  (if (auction-is-completed)
-      (cons
-
-       ;; perhaps, rather than finding the most likely score, I should
-       ;; find the _average_ score.
-
-       (most-likely-score (extract-incomplete-knowledge auction-so-far)
-                          auction-so-far)
-       auction-so-far)
-
-    (map (lambda (one-possible-call)
-           (let ((extended (extend-auction auction-so-far one-possible-call)))
-             (cons (predict-scores extended) extended)))
-
-         ;; possible optimization: rather than considering _every_
-         ;; legal call I could make, consider only the "first" few,
-         ;; where "first" means "lowest level".
-
-         (all-legal-calls-I-could-make-now auction-so-far)
-         )))
-
-
-;; (most-frequently-occurring (list 1 2 3 3 4 5 6 2 2 2)) => 2
-
-(define (most-likely-score incomplete-hand-knowledge auction)
-  (score-from-result
-   (reduce
-    most-frequently-occurring
-    (map (lambda (one-possible-hand))
-         (dds:number-of-declarer-tricks one-possible-hand))
-    (generate-lotsa-plausible-hands incomplete-hand-knowledge ))
-   auction)
-  )
-
-;; (score-from-result 3 '(two notrump east not-doubled vulnerable)) => 150
-
-
+Naturally we'd do this for _every_ legal call, or at least, some of
+them (doing them all would almost certainly take too long, alas), and
+return the score that comes up the most, or the average score, or
+something.
 
 ** Playing
 
@@ -152,51 +118,8 @@ The easy case: this is the last card of the hand.  In that case, we
 know the actual number of tricks taken by the declarer, so we can just
 figure out the score.
 
-The recursive case: "posit" this card, and call ourselves recursively.
-
-;; Note the similarity between this and the auction stuff above.
-;; Refactoring clearly needed.
-
-(define (choose-card completed-auction play-so-far)
-  (let ((best-hypothetical-course-of-play 
-         (car (sort (predict-scores completed-auction play-so-far)
-                    (lambda (s1 s2)
-                      (< (car s1)
-                         (car s2)))))))
-
-    ;; This simply counts the number of tricks in play-so-far, and
-    ;; then skips that many in best-hypothetical-course-of-play.
-    (my-next-play best-hypothetical-course-of-play)))
-
-
-;; given a completed auction, and zero or more records of who played
-;; which card, predict all the possible future games, and their
-;; scores, and return them all.
-(define (predict-scores completed-auction play-so-far)
-  (if (this-is-the-fifty-second-card)
-      (cons
-
-       (most-likely-score (extract-incomplete-knowledge completed-auction play-so-far)
-                          completed-auction play-so-far)
-       play-so-far)
-
-    (map (lambda (one-possible-card)
-           (let ((extended (extend-play-history completed-auction play-so-far one-possible-card)))
-             (cons (predict-scores completed-auction extended) extended)))
-
-         (all-legal-cards-I-could-now-play completed-auction play-so-far)
-         )))
-
-(define (most-likely-score incomplete-hand-knowledge auction play-so-far)
-  (score-from-result
-   (reduce
-    most-frequently-occurring
-    (map (lambda (one-possible-hand))
-         (dds:number-of-declarer-tricks one-possible-hand))
-    (generate-lotsa-plausible-hands incomplete-hand-knowledge ))
-   auction)
-  )
- 
+The recursive case: "posit" a legal card, and call ourselves recursively.
+ 
 ** How do I represent incomplete knowledge of a hand?
 
 The only thing I've thought of so far is a list of predicates: for

@@ -37,6 +37,6 @@ exec mzscheme -qr "$0" ${1+"$@"}
    ))
 
 (test/text-ui file-tests)
-(pretty-display (predict-scores '((1 clubs)) 4))
+(pretty-display (predict-scores '((1 clubs))))
 
 ;(test/graphical-ui file-tests)
