@@ -5,12 +5,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module auction mzscheme
   
-  (require "call.ss")
+  (require "call.ss"
+           (lib "list.ss" "srfi" "1"))
   (provide
    (rename my-make-auction make-auction)
    auction-add!
    auction-length
-   auction-contract)
+   auction-contract
+   auction-complete?)
 
   (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
     (make-struct-type
@@ -44,6 +46,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define (auction-contract a)
     #f)
+
+  (define (auction-complete? a)
+    (and (< 3 (auction-length a))
+         (every pass? (take-right (get-guts a) 4)))
+    )
   
   )
 

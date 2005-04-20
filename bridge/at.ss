@@ -29,6 +29,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
           (let ((a (make-auction)))
             (auction-add! a one-club)
             (assert = 1 (auction-length a))
+            (auction-add! a pass)
+            (assert = 2 (auction-length a))
             (assert-false (auction-contract a))))
 
          (make-test-case
@@ -36,7 +38,18 @@ exec mzscheme -qr "$0" ${1+"$@"}
           (let ((a (make-auction)))
             (assert-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
             (assert-exn exn:fail:contract? (lambda () (auction-add! a "you _really_ ugly")))
-            ))))
+            ))
+
+         (make-test-case
+          "Knows the contract"
+          (let ((a (make-auction)))
+            (auction-add! a pass)
+            (auction-add! a pass)
+            (auction-add! a pass)
+            (assert-false (auction-complete? a))
+            (auction-add! a pass)
+            (assert-true (auction-complete? a))
+            (assert-false (auction-contract a))))))
   
       ))
   (exit 0))
