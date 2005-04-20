@@ -16,21 +16,21 @@
      #f                                 ;inspector-or-false
      #f                                 ;proc-spec
      '()                                ;immutable-k-list
-     (lambda (level denomination seat risk name) ;guard-proc
+     (lambda (level denomination declarer risk name) ;guard-proc
 
        ;; try to make a bid from the level and the denomination -- if
        ;; they're bogus, make-bid will throw an exception.
        (let ((test-bid (make-bid level denomination)))
          'ok)
        
-       (case seat
+       (case declarer
          ((north south east west) 'ok)
-         (else (raise-type-error name "seat" seat)))
+         (else (raise-type-error name "declarer" declarer)))
        (case risk
          ((1 2 4) 'ok)
          (else (raise-type-error name "risk" risk)))
 
-       (values level denomination seat risk))
+       (values level denomination declarer risk))
      
      )
     )

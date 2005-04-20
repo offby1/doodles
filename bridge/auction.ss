@@ -23,7 +23,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      'auction                           ;name-symbol
      #f                                 ;super-struct-type
      2                                  ;init-field-k
-     1                                  ;auto-field-k
+     0                                  ;auto-field-k
      #f                                 ;auto-v
      null                               ;prop-value-list
      #f                                 ;inspector-or-false
@@ -32,9 +32,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
      #f                                 ;guard-proc
      ))
 
+  (define *seats* '(north east south west))
+
+  ;; this probably should only be called by functions which we export
+  ;; via provide -- internal functions can be assumed to not be bogus.
+  (define (check-seat s)
+    (unless (memq s *seats*)
+      (raise-type-error 'check-seat "north|south|east|west" s)))
+                                                   
+  (define (seat->number s)
+    (check-seat s)
+    (list-index (lambda (x)
+                  (eq? x s))
+                *seats*))
+
+  ;; (nth-successor 'north 0) => 'north
+  ;; (nth-successor 'north 1) => 'east
+  ;; (nth-successor 'north 102) => 'south
+  ;; (nth-successor 'north 203) => 'west
+  (define (nth-successor seat n)
+    (check-seat seat)
+    (list-ref *seats* (modulo (+ (seat->number seat) n) (length *seats*))))
+
   (define (my-make-auction dealer)
-    (when (not (memq dealer '(north south east west)))
-      (raise-type-error "nort|south|east|west" dealer))
+    (check-seat dealer)
     ;; calls are in reverse order: most recent first.  That's simply
     ;; because it's a tad easier to cons new calls onto the front than
     ;; to append them to the end.
@@ -86,18 +107,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (every pass? (take (get-guts a) 3))))
   
   (define (auction-contract a)
-    
     (and (auction-complete? a)
-         (let ((last-bid (find bid? (get-guts a))))
-           (if (not last-bid)
+         (let ((down-from-last-bid  (find-tail bid? (get-guts a))))
+           (if (not down-from-last-bid)
                'passed-out
-             (make-contract
-              (level last-bid)
-              (denomination last-bid)
-              ;; BUGBUG -- do something reasonable here
-              'north
-
-              (a-risk a))))))
+             (let* ((last-bid (car down-from-last-bid))
+                    (last-bidders-seat (nth-successor
+                                        (get-dealer a)
+                                        (- (length down-from-last-bid) 1))
+                                       ))
+               (make-contract
+                (level last-bid)
+                (denomination last-bid)
+                (let loop ((calls-to-examine (reverse down-from-last-bid))
+                           (seat (get-dealer a)))
+                  (if (and (bid? (car calls-to-examine))
+                           (or (eq? seat last-bidders-seat)
+                               (eq? seat (nth-successor last-bidders-seat 2)))
+                           (eq? (denomination (car calls-to-examine))
+                                (denomination last-bid)))
+                      seat
+                    (loop (cdr calls-to-examine)
+                          (nth-successor seat 1))))
+                
+                (a-risk a)))))))
 
   (define (a-risk a)
     (let ((last-non-pass (find (lambda (c)
@@ -110,6 +143,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
        ((redouble? last-non-pass) 4)
        (else
         (error "internal error -- expected double or redouble; got" last-non-pass)))))
-  
-  )
 
+  ;(trace auction-contract nth-successor)
+  )
