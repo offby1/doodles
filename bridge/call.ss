@@ -6,20 +6,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module call mzscheme
   (require
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
-   (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+   (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
+   (lib "list.ss" "srfi" "1"))
 
   (provide
    make-bid
    level
    denomination
    (rename my-call? call?)
-
-   ;; mzscheme 299.102 (x86 linux) segfaults when the structure has
-   ;; only one field.  (Reported to the mailing list 19 April 2005,
-   ;; twice).  So we give the "call" structure a dummy field, and hide
-   ;; it like this.
-   (rename make-call-workaround make-call)
-
+   (rename flexible-make-call make-call)
    pass? double? redouble?)
 
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
@@ -55,27 +50,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (make-struct-type
      'call                              ;name-symbol
      #f                                 ;super-struct-type
-     2                                  ;init-field-k
+     1                                  ;init-field-k
      0                                  ;auto-field-k
      #f                                 ;auto-v
      null                               ;prop-value-list
      #f                                 ;inspector-or-false
      #f                                 ;proc-spec
-     '(0 1)                             ;immutable-k-list
-     (lambda (first second name)        ;guard-proc           
-       (case first
+     '(0)                               ;immutable-k-list
+     (lambda (thing name)               ;guard-proc           
+       (case thing
          ((pass double redouble)
-          (values first #f))
+          (values thing))
          (else
-          (values (make-bid first second) #f))))))
+          (make-bid (first thing)
+                    (last thing)))))))
 
-  (define make-call-workaround
+  ;; can be called _either_ with a list like (make-call '(1 clubs))
+  ;; _or_ with two separate arguments like (make-call 1 'clubs)
+  (define flexible-make-call
     (case-lambda
       [(thing)
-       (make-call thing 0)]
+       (make-call thing)]
       [(level denom)
-       (make-call level denom)]))
-  
+       (make-call (list level denom))]))
+
   (define get-call
     (make-struct-field-accessor call-ref 0))
   
