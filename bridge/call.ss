@@ -108,11 +108,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
           5)
        (denom->integer (denomination b))))
   
+  (define-syntax call->bid!
+    (syntax-rules ()
+      ((_ thing)
+       (when (call? thing)
+         (set! thing (get-call thing))))))
+  
   (define (bid>? b1 b2)
-    (when (call? b1)
-      (set! b1 (get-call b1)))
-    (when (call? b2)
-      (set! b2 (get-call b2)))
+    (call->bid! b1)
+    (call->bid! b2)
     (> (bid-to-number b1)
        (bid-to-number b2)))
   (define (my-bid? thing)
