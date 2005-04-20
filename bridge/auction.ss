@@ -72,23 +72,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
                            (double? thing))
                       (and (= 2 r)
                            (redouble? thing)))
-            (raise-type-error "appropriate double or redouble" thing))))
-       )
+            (raise-type-error "appropriate double or redouble" thing)))))
       
       (set-guts! a (cons thing guts))))
 
   (define (auction-complete? a)
     (and (< 3 (auction-length a))
-         (every pass? (take (get-guts a) 3)))
-    )
-
+         (every pass? (take (get-guts a) 3))))
+  
   (define (auction-contract a)
     
     (and (auction-complete? a)
          (let ((last-bid (find bid? (get-guts a))))
            (if (not last-bid)
                'passed-out
-             (make-contract last-bid 'made-up-seat (a-risk a))))))
+             (make-contract
+              (level last-bid)
+              (denomination last-bid)
+              ;; BUGBUG -- do something reasonable here
+              'north
+
+              (a-risk a))))))
 
   (define (a-risk a)
     (let ((last-non-pass (find (lambda (c)

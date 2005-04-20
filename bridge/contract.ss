@@ -1,9 +1,42 @@
 (module contract mzscheme
 
-  (require (lib "trace.ss"))
+  (require "call.ss"
+           (lib "trace.ss"))
   (provide
-   make-contract contract-bid contract-risk)
+   make-contract contract-level contract-denomination contract-seat contract-risk)
+  
+  (define-values (struct:contract make-contract contract? contract-ref contract-set!) 
+    (make-struct-type
+     'contract                          ;name-symbol
+     #f                                 ;super-struct-type
+     4                                  ;init-field-k
+     0                                  ;auto-field-k
+     #f                                 ;auto-v
+     null                               ;prop-value-list
+     #f                                 ;inspector-or-false
+     #f                                 ;proc-spec
+     '()                                ;immutable-k-list
+     (lambda (level denomination seat risk name) ;guard-proc
 
-  (print-struct #t)
+       ;; try to make a bid from the level and the denomination -- if
+       ;; they're bogus, make-bid will throw an exception.
+       (let ((test-bid (make-bid level denomination)))
+         'ok)
+       
+       (case seat
+         ((north south east west) 'ok)
+         (else (raise-type-error name "seat" seat)))
+       (case risk
+         ((1 2 4) 'ok)
+         (else (raise-type-error name "risk" risk)))
 
-  (define-struct contract (bid seat risk) #f))
+       (values level denomination seat risk))
+     
+     )
+    )
+
+  (define contract-level        (make-struct-field-accessor contract-ref 0 'bid))
+  (define contract-denomination (make-struct-field-accessor contract-ref 1 'bid))
+  (define contract-seat         (make-struct-field-accessor contract-ref 2 'seat))
+  (define contract-risk         (make-struct-field-accessor contract-ref 3 'risk))
+  )

@@ -103,8 +103,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (auction-add! a pass)
             (assert-true (auction-complete? a))
             (let ((c  (auction-contract a)))
-              (assert =   1      (level        (contract-bid c)))
-              (assert eq? 'clubs (denomination (contract-bid c)))
+              (assert =   1      (contract-level c))
+              (assert eq? 'clubs (contract-denomination c))
               (assert =   1      (contract-risk c)))))
 
          (make-test-case
