@@ -34,6 +34,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (<= 1 level 7))
          (raise-type-error name "integer in [1,7]" level))
        (case denom
+         ((club diamond heart spade)
+          (set! denom (string->symbol (string-append (symbol->string denom)
+                                                     "s"))))
          ((clubs diamonds hearts spades notrump)
           'ok)
          (else
@@ -41,12 +44,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (values level denom)
        ))) 
  
-  (define level
+  (define bid-level
     (make-struct-field-accessor bid-ref 0))
 
-  (define denomination
+  (define bid-denomination
     (make-struct-field-accessor bid-ref 1))
 
+  (define (level thing)
+    (call->bid! thing)
+    (bid-level thing))
+
+  (define (denomination thing)
+    (call->bid! thing)
+    (bid-denomination thing))
+  
   (define-values (struct:call make-call call? call-ref call-set!) 
     (make-struct-type
      'call                              ;name-symbol
@@ -122,6 +133,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (my-bid? thing)
     (or (bid? thing)
         (bid? (get-call thing))))
-  ;(trace bid>? bid-to-number denom->integer)
+  ;(trace level denomination)
   )
 

@@ -1,4 +1,4 @@
-TESTS := at.ss ct2.ss
+TESTS := at-private.ss at.ss ct2.ss
 
 check: $(TESTS)
 	@failed_tests=;									\

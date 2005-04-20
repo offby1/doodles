@@ -51,6 +51,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
          )
   
         (make-test-case
+         "allows singular form"
+         (assert eq? 'clubs    (denomination (make-bid 3 'club)))
+         (assert eq? 'diamonds (denomination (make-bid 3 'diamond)))
+         (assert eq? 'hearts   (denomination (make-bid 3 'heart)))
+         (assert eq? 'spades   (denomination (make-bid 3 'spade)))
+         )
+        
+        (make-test-case
          "Random shit aren't passes"
          (assert-false (pass? 1776)))
   
