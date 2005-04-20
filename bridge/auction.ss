@@ -58,7 +58,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
         ;; find the most recent bid, if there is one
         (let ((last-bid (find bid? guts)))
           (when (and last-bid
-                     (bid>? last-bid thing))
+                     (not (bid>? thing last-bid)))
             ;; TODO -- raise-type-error throws exn:fail:contract,
             ;; which (despite the presence of the word "contract" :-)
             ;; seems like the wrong exception.  Perhaps I need a new

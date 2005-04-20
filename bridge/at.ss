@@ -111,7 +111,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
           "Gacks if we try to add an insufficient bid"
           (let ((a (make-auction)))
             (auction-add! a '(2 notrump))
-            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))))))
+            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))) "strictly less")
+            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
          ))
 
       ))
