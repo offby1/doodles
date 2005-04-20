@@ -6,7 +6,6 @@
   (require (lib "trace.ss")
            (lib "list.ss" "srfi" "1")
            (lib "compat.ss")            ;for "sort", at least
-           "slow.ss"
            )
 
   (provide all-legal-calls-I-could-make-now
@@ -82,20 +81,26 @@
         auction-so-far)))
      
      (else
-      (apply
-       append
-       (partial-map
-        1
-        (lambda (one-possible-call)
-          (let ((extended (extend-auction auction-so-far one-possible-call)))
-            (predict-scores extended)))
+      (let ((alc (all-legal-calls-I-could-make-now auction-so-far)))
+        (define (most-frequently-ocurring-score score-auction-lists)
+          ;; bugbug! just a stub
+          (caar score-auction-lists)
+          )
+        (fold (lambda (call1 call2)
+                (let ((e1 (extend-auction auction-so-far call1))
+                      (e2 (extend-auction auction-so-far call2)))
+                  (if (> (most-frequently-ocurring-score (predict-scores e1))
+                         (most-frequently-ocurring-score (predict-scores e2)))
+                      call1
+                    call2)))
+              (car alc)
+            
+              ;; possible optimization: rather than considering _every_
+              ;; legal call I could make, consider only the "first" few,
+              ;; where "first" means "lowest level".
 
-        ;; possible optimization: rather than considering _every_
-        ;; legal call I could make, consider only the "first" few,
-        ;; where "first" means "lowest level".
-
-        (all-legal-calls-I-could-make-now auction-so-far)
-        )))
+              alc))
+      )
      )
     )
 
