@@ -27,7 +27,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
          (make-test-case
           "Trivial auction"
-          (let ((a (make-auction)))
+          (let ((a (make-auction 'north)))
             (auction-add! a one-club)
             (assert = 1 (auction-length a))
             (auction-add! a pass)
@@ -36,7 +36,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
          (make-test-case
           "Can only add calls to an auction"
-          (let ((a (make-auction)))
+          (let ((a (make-auction 'north)))
             (assert-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
             (assert-not-exn (lambda () (auction-add! a '(4 notrump))) "Converts data to calls if necessary")
             (assert-exn exn:fail:contract? (lambda () (auction-add! a "you _really_ ugly")))
@@ -50,10 +50,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
           ;;;      2                     reject                   accept
           ;;;      4                     reject                   reject
 
-          (let ((undef (make-auction))
-                (one   (make-auction))
-                (two   (make-auction))
-                (four  (make-auction)))
+          (let ((undef (make-auction 'north))
+                (one   (make-auction 'north))
+                (two   (make-auction 'north))
+                (four  (make-auction 'north)))
 
             (for-each (lambda (a)
                         (auction-add! a '(2 diamonds)))
@@ -82,7 +82,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
             ) )
          (make-test-case
           "Recognizes a passed-out auction"
-          (let ((a (make-auction)))
+          (let ((a (make-auction 'north)))
             (auction-add! a pass)
             (auction-add! a pass)
             (auction-add! a pass)
@@ -93,7 +93,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
          (make-test-case
           "Knows the contract"
-          (let ((a (make-auction)))
+          (let ((a (make-auction 'north)))
             (auction-add! a pass)
             (auction-add! a pass)
             (auction-add! a '(1 club))
@@ -105,11 +105,12 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (let ((c  (auction-contract a)))
               (assert =   1      (contract-level c))
               (assert eq? 'clubs (contract-denomination c))
+              (assert eq? 'south (contract-declarer c))
               (assert =   1      (contract-risk c)))))
 
          (make-test-case
           "Gacks if we try to add an insufficient bid"
-          (let ((a (make-auction)))
+          (let ((a (make-auction 'north)))
             (auction-add! a '(2 notrump))
             (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))) "strictly less")
             (assert-exn exn:fail:contract? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))

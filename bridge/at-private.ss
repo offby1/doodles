@@ -11,7 +11,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (require/expose "auction.ss" (a-risk))
 
 (exit (if (test/text-ui
-           (let ((a (make-auction)))
+           (let ((a (make-auction 'north)))
              (make-test-suite
               "Tests for private auction stuff."
               (make-test-case

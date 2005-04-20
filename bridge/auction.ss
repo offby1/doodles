@@ -22,7 +22,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (make-struct-type
      'auction                           ;name-symbol
      #f                                 ;super-struct-type
-     1                                  ;init-field-k
+     2                                  ;init-field-k
      1                                  ;auto-field-k
      #f                                 ;auto-v
      null                               ;prop-value-list
@@ -32,17 +32,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
      #f                                 ;guard-proc
      ))
 
-  (define (my-make-auction)
+  (define (my-make-auction dealer)
+    (when (not (memq dealer '(north south east west)))
+      (raise-type-error "nort|south|east|west" dealer))
     ;; calls are in reverse order: most recent first.  That's simply
     ;; because it's a tad easier to cons new calls onto the front than
     ;; to append them to the end.
-    (make-auction '()))
+    (make-auction '() dealer))
   
   (define get-guts
     (make-struct-field-accessor auction-ref 0 'guts))
   
   (define set-guts!
     (make-struct-field-mutator  auction-set! 0 'guts))
+  
+  (define get-dealer
+    (make-struct-field-accessor auction-ref 1 'dealer))
   
   (define (auction-length a)
     (length (get-guts a)))

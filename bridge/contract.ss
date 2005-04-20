@@ -3,7 +3,7 @@
   (require "call.ss"
            (lib "trace.ss"))
   (provide
-   make-contract contract-level contract-denomination contract-seat contract-risk)
+   make-contract contract-level contract-denomination contract-declarer contract-risk)
   
   (define-values (struct:contract make-contract contract? contract-ref contract-set!) 
     (make-struct-type
@@ -35,8 +35,8 @@
      )
     )
 
-  (define contract-level        (make-struct-field-accessor contract-ref 0 'bid))
-  (define contract-denomination (make-struct-field-accessor contract-ref 1 'bid))
-  (define contract-seat         (make-struct-field-accessor contract-ref 2 'seat))
+  (define contract-level        (make-struct-field-accessor contract-ref 0 'level))
+  (define contract-denomination (make-struct-field-accessor contract-ref 1 'denomination))
+  (define contract-declarer     (make-struct-field-accessor contract-ref 2 'declarer))
   (define contract-risk         (make-struct-field-accessor contract-ref 3 'risk))
   )
