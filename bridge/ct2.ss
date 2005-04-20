@@ -67,7 +67,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
            (make-test-case
             "Bids are calls"
-            (assert-true (call? b) "If you want to send a message, call Western Union."))))
+            (assert-true (call? b) "If you want to send a message, call Western Union."))
+
+           (make-test-case
+            "ordering"
+            (assert-true (bid>? b (make-bid 2 'clubs)))
+            (assert-false (bid>? (make-bid 2 'clubs) b))
+            (assert-true (bid>? (make-bid 3 'diamonds) b))
+            (assert-true (bid>? (make-bid 3 'notrump) b))
+            )))
 
         ))
   (exit 0))

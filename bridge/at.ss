@@ -37,9 +37,11 @@ exec mzscheme -qr "$0" ${1+"$@"}
           "Can only add calls to an auction"
           (let ((a (make-auction)))
             (assert-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
+            (assert-not-exn (lambda () (auction-add! a '(4 notrump))) "Converts data to calls if necessary")
             (assert-exn exn:fail:contract? (lambda () (auction-add! a "you _really_ ugly")))
+            (assert-exn exn:fail:contract? (lambda () (auction-add! a 'piss)) "Isn't fooled by non-calls")
             ))
-
+         
          (make-test-case
           "Knows the contract"
           (let ((a (make-auction)))
@@ -49,7 +51,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (assert-false (auction-complete? a))
             (auction-add! a pass)
             (assert-true (auction-complete? a))
-            (assert-false (auction-contract a))))))
+            (assert-false (auction-contract a))))
+
+         (make-test-case
+          "Gacks if we try to add an insufficient bid"
+          (let ((a (make-auction)))
+            (auction-add! a '(2 notrump))
+            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))))))
+         ))
   
       ))
   (exit 0))

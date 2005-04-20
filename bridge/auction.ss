@@ -6,13 +6,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module auction mzscheme
   
   (require "call.ss"
-           (lib "list.ss" "srfi" "1"))
+           (lib "list.ss" "srfi" "1")
+           (lib "trace.ss"))
   (provide
    (rename my-make-auction make-auction)
    auction-add!
    auction-length
    auction-contract
    auction-complete?)
+
+  (print-struct #t)
 
   (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
     (make-struct-type
@@ -41,8 +44,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (define (auction-add! a thing)
     (unless (call? thing)
-      (raise-type-error 'auction "call" thing))
-    (set-guts! a (cons thing (get-guts a))))
+      (set! thing (make-call thing)))
+    
+    (let ((guts (get-guts a)))
+      (when (bid? thing)
+        ;; find the most recent bid, if there is one
+        (let ((last-bid (find bid? (reverse guts))))
+          (when (and last-bid
+                     (bid>? last-bid thing))
+            ;; TODO -- raise-type-error throws exn:fail:contract,
+            ;; which (despite the presence of the word "contract" :-)
+            ;; seems like the wrong exception.  Perhaps I need a new
+            ;; exn:fail:insufficient-bid exception or something.
+            (raise-type-error "sufficient bid" thing))))
+      (set-guts! a (cons thing guts))))
 
   (define (auction-contract a)
     #f)
@@ -51,6 +66,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (and (< 3 (auction-length a))
          (every pass? (take-right (get-guts a) 4)))
     )
-  
+  ;(trace auction-add!)
   )
 

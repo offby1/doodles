@@ -7,14 +7,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (require
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
-   (lib "list.ss" "srfi" "1"))
+   (lib "list.ss" "srfi" "1")
+   (lib "trace.ss"))
 
   (provide
-   make-bid
-   level
-   denomination
+   make-bid level denomination
    (rename my-call? call?)
    (rename flexible-make-call make-call)
+   (rename my-bid? bid?)
+   bid>?
    pass? double? redouble?)
 
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
@@ -92,5 +93,31 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (my-call? thing)
     (or (call? thing)
         (bid? thing)))
+
+  (define (denom->integer d)
+    (case d
+      ((clubs) 0)
+      ((diamonds) 1)
+      ((hearts) 2)
+      ((spades) 3)
+      ((notrump) 4)
+      (else (raise-type-error "denomination" d))))
+  
+  (define (bid-to-number b)
+    (+ (* (- (level b) 1)
+          5)
+       (denom->integer (denomination b))))
+  
+  (define (bid>? b1 b2)
+    (when (call? b1)
+      (set! b1 (get-call b1)))
+    (when (call? b2)
+      (set! b2 (get-call b2)))
+    (> (bid-to-number b1)
+       (bid-to-number b2)))
+  (define (my-bid? thing)
+    (or (bid? thing)
+        (bid? (get-call thing))))
+  ;(trace bid>? bid-to-number denom->integer)
   )
 
