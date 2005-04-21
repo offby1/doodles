@@ -17,7 +17,40 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
       (make-test-case
        "error when given garbage"
-       (assert-exn exn:fail:contract? (lambda () (make-auction "you ugly"))))
+       (assert-exn exn:fail:contract? (lambda () (make-auction "you ugly")))
+       (assert-not-exn                (lambda () (make-auction 'east)))
+
+       ;; Didn't you know the reader is case-sensitive?
+       (assert-exn exn:fail:contract? (lambda () (make-auction 'EAST)))
+       )
+
+      (make-test-case
+       "Copying"
+       
+       (let ((incomplete (make-auction 'south))
+             (complete (make-auction 'east)))
+         (auction-add! incomplete '(1 club))
+         (auction-add! incomplete 'pass)
+         (for-each (lambda (c)
+                     (auction-add! complete c))
+                   '(pass (2 diamonds) pass pass pass))
+         
+         (let ((i2 (copy-auction incomplete))
+               (c2 (copy-auction complete)))
+           (assert = (auction-length incomplete) (auction-length i2))
+           (assert = (auction-length   complete) (auction-length c2))
+           (assert eq? (auction-complete? incomplete) (auction-complete? i2))
+           (assert eq? (auction-complete?   complete) (auction-complete? c2))
+
+           (let ((ct1 (auction-contract complete))
+                 (ct2 (auction-contract c2)))
+             (assert eq? (contract-denomination ct1) (contract-denomination ct2))
+             (assert eq? (contract-declarer ct1)     (contract-declarer ct2))
+             (assert =   (contract-level ct1)        (contract-level ct2))
+             (assert =   (contract-risk ct1)         (contract-risk ct2))
+             )
+           )))
+
 
       (let ((one-club      (make-call 1 'clubs))
             (pass          (make-call 'pass))

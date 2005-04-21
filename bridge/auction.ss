@@ -14,9 +14,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-add!
    auction-length
    auction-contract
-   auction-complete?)
-
-  (print-struct #t)
+   auction-complete?
+   copy-auction)
 
   (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
     (make-struct-type
@@ -31,17 +30,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
      '()                                ;immutable-k-list
      #f                                 ;guard-proc
      ))
-
+  (define (copy-auction a)
+    (make-auction (get-guts a)
+                  (get-dealer a)))
   (define *seats* '(north east south west))
 
-  ;; this probably should only be called by functions which we export
-  ;; via provide -- internal functions can be assumed to not be bogus.
-  (define (check-seat s)
-    (unless (memq s *seats*)
-      (raise-type-error 'check-seat "north|south|east|west" s)))
-                                                   
   (define (seat->number s)
-    (check-seat s)
     (list-index (lambda (x)
                   (eq? x s))
                 *seats*))
@@ -51,11 +45,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; (nth-successor 'north 102) => 'south
   ;; (nth-successor 'north 203) => 'west
   (define (nth-successor seat n)
-    (check-seat seat)
     (list-ref *seats* (modulo (+ (seat->number seat) n) (length *seats*))))
 
   (define (my-make-auction dealer)
-    (check-seat dealer)
+    (unless (memq dealer *seats*)
+      (raise-type-error 'check-seat "north|south|east|west" dealer))
+
     ;; calls are in reverse order: most recent first.  That's simply
     ;; because it's a tad easier to cons new calls onto the front than
     ;; to append them to the end.
