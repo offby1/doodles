@@ -9,7 +9,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (require "contract.ss"
            "call.ss"
-           "swap.ss"
+           "misc.ss"
            (lib "list.ss" "srfi" "1")
            (lib "trace.ss"))
   (provide
@@ -176,10 +176,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (loop (cddr l)
               (cons (car l) evens)
               (cons (cadr l) odds))))))
-  
-  (define (level-or-zero thing)
-    (if thing (level thing)
-      0))
   
   (define (auction-max-levels a)
 

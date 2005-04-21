@@ -9,10 +9,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (require "auction.ss"
          "multiply.ss"
          "call.ss"
-         "map.ss"
-         "swap.ss"
+         "misc.ss"
          (lib "trace.ss")
          (lib "pretty.ss")
+         (prefix list- (lib "list.ss"))
          (lib "list.ss" "srfi" "1"))
 
 (define-syntax false-if-exception
@@ -29,8 +29,20 @@ exec mzscheme -qr "$0" ${1+"$@"}
     (false-if-exception
      (auction-add! c call))))
 
+(define (call>? c1 c2)
+  (define (call->int c)
+    (if (bid? c)
+        (bid-to-number c)
+      0))
+  (> (call->int c1)
+     (call->int c2)))
+
 (define all-legal-calls
-  (let ((all-calls-period (map make-call (append (multiply (iota 7 1) '(clubs diamonds hearts spades notrump)) '(pass double redouble)))))
+  (let ((all-calls-period
+         (reverse
+          (list-quicksort
+           (map make-call (append '(pass double redouble) (multiply (iota 7 1) '(clubs diamonds hearts spades notrump))))
+           call>?))))
     (lambda (i)
       (filter (lambda (c)
                 (would-be-legal? c i))
@@ -39,6 +51,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;(trace all-legal-calls)
 (define (some-auctions-with-given-prefix i)
   (define alc (all-legal-calls i))
+
+  ;; this depeonds upon all-legal-calls being sorted in increasing order.
+  (define minimum-bid (find bid? alc))
 
   ;; a heuristic: don't consider auctions which have two doubles,
   ;; since they're kind of rare.
@@ -50,23 +65,22 @@ exec mzscheme -qr "$0" ${1+"$@"}
     (let* ((maxes (auction-max-levels a))
            (my-side (car maxes))
            (opponents (cdr maxes)))
-      (unless (even? (auction-length i))
+      (when (odd? (auction-length i))
         (swap! my-side opponents))
       
       (lambda (c)
-        ;; opponent making actual bid, where other guys have bid to the
-        ;; four level
+        ;; actual bid, where opponents have bid to the four level
         (and (bid? c)
-             (< 3 (level (car alc)))))))
+             (< 3 opponents)))))
   (define crazy-jump?
     (lambda (c)
       ;; a bid whose level is more than two more than the minimum
       ;; possible
       (and (bid? c)
-           (< 2 (- (level c)
-                   (level (car alc)))))
+           (< 2 (- (level-or-zero c)
+                   (level-or-zero minimum-bid))))
       ))
-  ;(trace crazy-jump?)
+  ;(trace silly-double? silly-competition? crazy-jump?)
   (unless (and (auction? i)
                (not (auction-complete? i)))
     (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
@@ -78,14 +92,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
        (if (auction-complete? extended )
            (list extended)
          (some-auctions-with-given-prefix extended))))
-   4
-   (take-at-most 
+   3
+   (take-at-most
     (remove silly-competition? (remove crazy-jump? (remove silly-double? alc)))
     2))
   )
+;(trace some-auctions-with-given-prefix)
 
 (define a (make-auction 'east))
-(auction-add! a '(1 spades))
+(auction-add! a '(5 spades))
 (auction-add! a 'double)
 (auction-add! a 'redouble)
 (pretty-display (some-auctions-with-given-prefix a))

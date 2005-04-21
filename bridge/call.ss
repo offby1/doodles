@@ -11,7 +11,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (lib "trace.ss"))
 
   (provide
-   make-bid level denomination
+   make-bid level denomination bid-to-number
    (rename my-call? call?)
    (rename flexible-make-call make-call)
    (rename my-bid? bid?)
