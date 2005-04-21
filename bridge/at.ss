@@ -152,6 +152,19 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (auction-add! a '(2 notrump))
             (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))) "strictly less")
             (assert-exn exn:fail:contract? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
+
+         (make-test-case
+          "Gacks if we add to a completed auction"
+          (let ((completed (make-auction 'west)))
+            (auction-add! completed '(1 notrump))
+            (for-each (lambda (c)
+                        (auction-add! completed c)) '(pass pass pass))
+            (assert-true (auction-complete? completed))
+            (assert-exn exn:fail? (lambda () (auction-add! completed '(2 diamonds))))
+            (assert-exn exn:fail? (lambda () (auction-add! completed 'pass)))
+            (assert-exn exn:fail? (lambda () (auction-add! completed 'double)))
+            (assert-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
+            ))
          ))
 
       ))

@@ -77,6 +77,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (length (get-guts a)))
   
   (define (auction-add! a thing)
+    (when (auction-complete? a)
+      (error 'auction-complete))
+    
     (unless (call? thing)
       (set! thing (make-call thing)))
     
