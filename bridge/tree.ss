@@ -9,6 +9,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (require "auction.ss"
          "multiply.ss"
          "call.ss"
+         "map.ss"
          (lib "pretty.ss")
          (lib "list.ss" "srfi" "1"))
 
@@ -39,14 +40,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
                (not (auction-complete? i)))
     (raise-type-error 'all-auctions-with-given-prefix "incomplete auction" i))
 
-  (append-map
+  (append-map-at-most
    (lambda (c)
      (let ((extended (copy-auction i)))
        (auction-add! extended c)
        (if (auction-complete? extended )
            (list extended)
          (all-auctions-with-given-prefix extended))))
-   (all-legal-calls i))
+   2
+   (take-at-most (all-legal-calls i) 2))
   )
 
 (define a (make-auction 'east))
