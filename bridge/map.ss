@@ -1,4 +1,5 @@
 (module map mzscheme
+  (require (lib "trace.ss"))
   (provide
    append-map-at-most take-at-most)
 
@@ -27,4 +28,5 @@
 
 (define (append-map-at-most proc n seq)
   (apply append (map-at-most proc n seq)))
+;(trace take-at-most)
 )

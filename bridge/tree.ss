@@ -10,6 +10,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
          "multiply.ss"
          "call.ss"
          "map.ss"
+         (lib "trace.ss")
          (lib "pretty.ss")
          (lib "list.ss" "srfi" "1"))
 
@@ -34,11 +35,11 @@ exec mzscheme -qr "$0" ${1+"$@"}
                 (would-be-legal? c i))
               all-calls-period)
       )))
-
-(define (all-auctions-with-given-prefix i)
+;(trace all-legal-calls)
+(define (some-auctions-with-given-prefix i)
   (unless (and (auction? i)
                (not (auction-complete? i)))
-    (raise-type-error 'all-auctions-with-given-prefix "incomplete auction" i))
+    (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
 
   (append-map-at-most
    (lambda (c)
@@ -46,13 +47,20 @@ exec mzscheme -qr "$0" ${1+"$@"}
        (auction-add! extended c)
        (if (auction-complete? extended )
            (list extended)
-         (all-auctions-with-given-prefix extended))))
-   2
-   (take-at-most (all-legal-calls i) 2))
+         (some-auctions-with-given-prefix extended))))
+   3
+   (take-at-most 
+    ;; a heuristic: don't consider auctions which have two doubles,
+    ;; since they're kind of rare.
+    (remove (lambda (c)
+              (and (auction-has-a-double? i)
+                   (double? c)))
+            (all-legal-calls i))
+    3))
   )
 
 (define a (make-auction 'east))
-(auction-add! a '(7 spades))
+(auction-add! a '(6 spades))
 (auction-add! a 'double)
 (auction-add! a 'redouble)
-(pretty-display (all-auctions-with-given-prefix a))
+(pretty-display (some-auctions-with-given-prefix a))

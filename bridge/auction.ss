@@ -16,6 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-length
    auction-contract
    auction-complete?
+   auction-has-a-double?
    copy-auction)
 
   (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
@@ -152,5 +153,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (else
         (error "internal error -- expected double or redouble; got" last-non-pass)))))
 
+  (define (auction-has-a-double? a)
+    (any double? (get-guts a)))
   ;(trace auction-contract nth-successor)
   )
