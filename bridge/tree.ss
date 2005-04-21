@@ -10,6 +10,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
          "multiply.ss"
          "call.ss"
          "map.ss"
+         "swap.ss"
          (lib "trace.ss")
          (lib "pretty.ss")
          (lib "list.ss" "srfi" "1"))
@@ -37,6 +38,35 @@ exec mzscheme -qr "$0" ${1+"$@"}
       )))
 ;(trace all-legal-calls)
 (define (some-auctions-with-given-prefix i)
+  (define alc (all-legal-calls i))
+
+  ;; a heuristic: don't consider auctions which have two doubles,
+  ;; since they're kind of rare.
+  (define silly-double?
+    (lambda (c)
+      (and (auction-has-a-double? i)
+           (double? c))))
+  (define silly-competition?
+    (let* ((maxes (auction-max-levels a))
+           (my-side (car maxes))
+           (opponents (cdr maxes)))
+      (unless (even? (auction-length i))
+        (swap! my-side opponents))
+      
+      (lambda (c)
+        ;; opponent making actual bid, where other guys have bid to the
+        ;; four level
+        (and (bid? c)
+             (< 3 (level (car alc)))))))
+  (define crazy-jump?
+    (lambda (c)
+      ;; a bid whose level is more than two more than the minimum
+      ;; possible
+      (and (bid? c)
+           (< 2 (- (level c)
+                   (level (car alc)))))
+      ))
+  ;(trace crazy-jump?)
   (unless (and (auction? i)
                (not (auction-complete? i)))
     (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
@@ -48,19 +78,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
        (if (auction-complete? extended )
            (list extended)
          (some-auctions-with-given-prefix extended))))
-   3
+   4
    (take-at-most 
-    ;; a heuristic: don't consider auctions which have two doubles,
-    ;; since they're kind of rare.
-    (remove (lambda (c)
-              (and (auction-has-a-double? i)
-                   (double? c)))
-            (all-legal-calls i))
-    3))
+    (remove silly-competition? (remove crazy-jump? (remove silly-double? alc)))
+    2))
   )
 
 (define a (make-auction 'east))
-(auction-add! a '(6 spades))
+(auction-add! a '(1 spades))
 (auction-add! a 'double)
 (auction-add! a 'redouble)
 (pretty-display (some-auctions-with-given-prefix a))

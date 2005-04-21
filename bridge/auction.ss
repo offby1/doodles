@@ -5,8 +5,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module auction mzscheme
   
+  (print-struct #t)
+  
   (require "contract.ss"
            "call.ss"
+           "swap.ss"
            (lib "list.ss" "srfi" "1")
            (lib "trace.ss"))
   (provide
@@ -17,7 +20,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-contract
    auction-complete?
    auction-has-a-double?
-   copy-auction)
+   auction-max-levels
+   copy-auction
+   get-dealer)
 
   (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
     (make-struct-type
@@ -155,5 +160,42 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define (auction-has-a-double? a)
     (any double? (get-guts a)))
-  ;(trace auction-contract nth-successor)
+
+  (define (every-other seq)
+    (let loop ((l seq)
+               (evens '())
+               (odds '()))
+      (cond 
+       ((null? l)
+        (values (reverse evens)
+                (reverse odds)))
+       ((null? (cdr l))
+        (values (reverse (cons (car l) evens))
+                (reverse odds)))
+       (else
+        (loop (cddr l)
+              (cons (car l) evens)
+              (cons (cadr l) odds))))))
+  
+  (define (level-or-zero thing)
+    (if thing (level thing)
+      0))
+  
+  (define (auction-max-levels a)
+
+    ;; the first call always belongs to the dealer, so if the calls
+    ;; weren't stored in reverse chronological order, we could simply
+    ;; say that the dealer's side is the evens, and the dealer's
+    ;; opponents are the odds.  But since the calls are in reverse
+    ;; order, that's wrong when there's an even number of them.
+    (let-values (((one-side other-side) (every-other (get-guts a))))
+      (let ((dealers-side one-side)
+            (dealers-opps other-side))
+        (when (even? (auction-length a))
+          (swap! dealers-side dealers-opps))
+        (cons
+         (level-or-zero (find bid? dealers-side))
+         (level-or-zero (find bid? dealers-opps))))))
+  
+  ;(trace auction-max-levels)
   )
