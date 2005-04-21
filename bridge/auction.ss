@@ -11,6 +11,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (lib "trace.ss"))
   (provide
    (rename my-make-auction make-auction)
+   auction?
    auction-add!
    auction-length
    auction-contract
