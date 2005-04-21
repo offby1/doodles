@@ -35,19 +35,24 @@ exec mzscheme -qr "$0" ${1+"$@"}
                      (auction-add! complete c))
                    '(pass (2 diamonds) pass pass pass))
          
-         (let ((i2 (copy-auction incomplete))
-               (c2 (copy-auction complete)))
-           (assert = (auction-length incomplete) (auction-length i2))
-           (assert = (auction-length   complete) (auction-length c2))
-           (assert eq? (auction-complete? incomplete) (auction-complete? i2))
-           (assert eq? (auction-complete?   complete) (auction-complete? c2))
+         (let ((c-of-i (copy-auction incomplete))
+               (c-of-c (copy-auction complete)))
+           (assert = (auction-length incomplete) (auction-length c-of-i))
+           (assert = (auction-length   complete) (auction-length c-of-c))
+           (assert eq? (auction-complete? incomplete) (auction-complete? c-of-i))
+           (assert eq? (auction-complete?   complete) (auction-complete? c-of-c))
 
            (let ((ct1 (auction-contract complete))
-                 (ct2 (auction-contract c2)))
+                 (ct2 (auction-contract c-of-c)))
              (assert eq? (contract-denomination ct1) (contract-denomination ct2))
              (assert eq? (contract-declarer ct1)     (contract-declarer ct2))
              (assert =   (contract-level ct1)        (contract-level ct2))
              (assert =   (contract-risk ct1)         (contract-risk ct2))
+
+             (auction-add! incomplete 'pass)
+             (assert-false (= (auction-length incomplete) (auction-length c-of-i))
+                           "Aagh!  Modifying one auction caused its copy to change!")
+             
              )
            )))
 

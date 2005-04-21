@@ -30,21 +30,29 @@ exec mzscheme -qu "$0" ${1+"$@"}
      '()                                ;immutable-k-list
      #f                                 ;guard-proc
      ))
+
+  ;; this _could_ be dangerous: if we ever expose a function that
+  ;; modifies the list structure of the guts, then we'd need to change
+  ;; this function to do a deep copy.  As it stands now, though,
+  ;; that's not necessary, since no function yet modifies list
+  ;; structure.  Good thing I wrote a unit test to check for that.
   (define (copy-auction a)
     (make-auction (get-guts a)
                   (get-dealer a)))
+                                  
   (define *seats* '(north east south west))
-
-  (define (seat->number s)
-    (list-index (lambda (x)
-                  (eq? x s))
-                *seats*))
 
   ;; (nth-successor 'north 0) => 'north
   ;; (nth-successor 'north 1) => 'east
   ;; (nth-successor 'north 102) => 'south
   ;; (nth-successor 'north 203) => 'west
   (define (nth-successor seat n)
+
+    (define (seat->number s)
+      (list-index (lambda (x)
+                    (eq? x s))
+                  *seats*))
+
     (list-ref *seats* (modulo (+ (seat->number seat) n) (length *seats*))))
 
   (define (my-make-auction dealer)
@@ -114,16 +122,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
                (make-contract
                 (level last-bid)
                 (denomination last-bid)
-                (let loop ((calls-to-examine (reverse down-from-last-bid))
+                (let loop ((up-to-last-bid (reverse down-from-last-bid))
                            (seat (get-dealer a)))
-                  (if (and (bid? (car calls-to-examine))
-                           (or (eq? seat last-bidders-seat)
-                               (eq? seat (nth-successor last-bidders-seat 2)))
-                           (eq? (denomination (car calls-to-examine))
-                                (denomination last-bid)))
-                      seat
-                    (loop (cdr calls-to-examine)
-                          (nth-successor seat 1))))
+                  (let ((b (car up-to-last-bid)))
+                    (if (and (bid? b)
+                             (or (eq? seat last-bidders-seat)
+                                 (eq? seat (nth-successor last-bidders-seat 2)))
+                             (eq? (denomination b)
+                                  (denomination last-bid)))
+                        seat
+                      (loop (cdr up-to-last-bid)
+                            (nth-successor seat 1)))))
                 
                 (a-risk a)))))))
 
