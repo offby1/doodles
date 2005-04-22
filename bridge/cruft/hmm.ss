@@ -29,21 +29,21 @@ exec mzscheme -qr "$0" ${1+"$@"}
         t1)
     t2))
 
+(define *consumers-favorite* #f)
+
 (define consumer
   (lambda ()
     (let loop ((ca (channel-get *the-channel*))
-               (passes 20)
-               (best #f))
+               (passes 10000))
       (if (zero? passes)
           (begin
-            (printf "Consumer used up its passes, so that means it's time to quit.~n")
-            (printf "Best thing we saw was ~s~n" best)
+            (printf "Consumer: used up its passes, so that means it's time to quit.~n")
             (set! *producer-keep-going* #f))
         (begin
-          (printf "Consumer got a completed auction: ~s~n" ca)
+          (printf "Consumer: got a completed auction: ~s~n" ca)
+          (set! *consumers-favorite* (thing-max ca *consumers-favorite*))
           (loop (channel-get *the-channel*)
-                (- passes 1)
-                (thing-max best ca))))
+                (- passes 1))))
       
       )))
 
@@ -67,4 +67,5 @@ exec mzscheme -qr "$0" ${1+"$@"}
   )
 ;(trace makes-big-lists)
 (define consumer-thread-id (thread consumer))
-(makes-big-lists '(0) 10)
+(makes-big-lists '(0) 20)
+(printf "Best thing the consumer saw so far: ~s~n" *consumers-favorite*)
