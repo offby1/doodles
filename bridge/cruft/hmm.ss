@@ -9,18 +9,41 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (define *the-channel* (make-channel))
 (define *producer-keep-going* #t)
 
+;; a stub.
+(define (thing-max t1 t2)
+
+  (define (thing-score thing)
+    (if thing
+        (equal-hash-code thing)
+      0))
+  
+  (define (thing>? t1 t2)
+    (> (thing-score t1)
+       (thing-score t2)))
+
+  (if (thing>? t1 t2)
+      (begin
+        (printf "Ooh -- ~s (score ~a) > ~s (score ~a)~n"
+                t1 (thing-score t1)
+                t2 (thing-score t2))
+        t1)
+    t2))
+
 (define consumer
   (lambda ()
     (let loop ((ca (channel-get *the-channel*))
-               (passes 10))
+               (passes 20)
+               (best #f))
       (if (zero? passes)
           (begin
             (printf "Consumer used up its passes, so that means it's time to quit.~n")
+            (printf "Best thing we saw was ~s~n" best)
             (set! *producer-keep-going* #f))
         (begin
           (printf "Consumer got a completed auction: ~s~n" ca)
           (loop (channel-get *the-channel*)
-                (- passes 1))))
+                (- passes 1)
+                (thing-max best ca))))
       
       )))
 
