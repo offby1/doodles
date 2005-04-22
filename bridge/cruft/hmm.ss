@@ -7,42 +7,41 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (require (lib "trace.ss"))
 
 (define *the-channel* (make-channel))
+(define *producer-keep-going* #t)
 
 (define consumer
   (lambda ()
-    (let loop ((ca (channel-get *the-channel*)))
-      (if ca
+    (let loop ((ca (channel-get *the-channel*))
+               (passes 10))
+      (if (zero? passes)
           (begin
-            (printf "Consumer got a completed auction: ~s~n" ca)
-            (loop (channel-get *the-channel*)))
-        (printf "Consumer got #f, so that means it's time to quit.~n"))
+            (printf "Consumer used up its passes, so that means it's time to quit.~n")
+            (set! *producer-keep-going* #f))
+        (begin
+          (printf "Consumer got a completed auction: ~s~n" ca)
+          (loop (channel-get *the-channel*)
+                (- passes 1))))
+      
       )))
 
 ;; simple function that acts vaguely like
 ;; "some-auctions-with-given-prefix"
 (define makes-big-lists
-  (let ((passes 10))
-    (lambda (seq max exit)
-      (define (allowable-successors seq max)
-        (let ((l (last seq)))
-          (iota (- max l) (+ 1 l))))
-      (for-each (lambda (n)
+  (lambda (seq max)
+    (define (allowable-successors seq max)
+      (let ((l (last seq)))
+        (iota (- max l) (+ 1 l))))
+    (for-each (lambda (n)
+                (when  *producer-keep-going*
                   (let ((extended (append seq (list n))))
                     (if (= n max)
                         (begin
-                          (printf "Producer: passes is ~a; sending ... " passes)
-                          (channel-put *the-channel* extended)
-                          (set! passes (- passes 1))
-                          (printf "passes is now ~a~n" passes)
-                          (when (zero? passes)
-                            (channel-put *the-channel* #f)
-                            (printf "Producer exiting~n")
-                            (exit)))
-                      (makes-big-lists extended max exit))))
-                (allowable-successors seq max))))
+                          (printf "Producer: sending ~s~n" extended)
+                          (channel-put *the-channel* extended))
+                      (makes-big-lists extended max)))))
+              (allowable-successors seq max))
+    )
   )
 ;(trace makes-big-lists)
 (define consumer-thread-id (thread consumer))
-(call/cc
- (lambda (exit)
-   (makes-big-lists '(0) 10 exit)))
+(makes-big-lists '(0) 10)
