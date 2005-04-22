@@ -24,3 +24,5 @@ Unfortunately I haven't figued out how to get a decent stack trace:
 
 And I cannot get the problem to happen when I start mzscheme under the
 debugger.
+
+Submitted to the mailing list Fri Apr 22 21:27:10 UTC 2005
