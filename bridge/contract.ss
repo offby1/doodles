@@ -1,6 +1,7 @@
 (module contract mzscheme
 
   (require "call.ss"
+           "exceptions.ss"
            (lib "trace.ss"))
   (provide
    make-contract contract-level contract-denomination contract-declarer contract-risk)
@@ -25,10 +26,10 @@
        
        (case declarer
          ((north south east west) 'ok)
-         (else (raise-type-error name "declarer" declarer)))
+         (else (raise-bridge-error name "declarer" declarer)))
        (case risk
          ((1 2 4) 'ok)
-         (else (raise-type-error name "risk" risk)))
+         (else (raise-bridge-error name "risk" risk)))
 
        (values level denomination declarer risk))
      

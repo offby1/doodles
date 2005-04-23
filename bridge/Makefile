@@ -9,6 +9,5 @@ check: $(TESTS)
         done;										\
         test -z "$$failed_tests" || { echo Failed tests: $$failed_tests; false ; }
 	./tree.ss
-	./cruft/hmm.ss
 
 .PHONY: check

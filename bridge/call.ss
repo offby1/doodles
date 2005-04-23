@@ -8,7 +8,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (lib "list.ss" "srfi" "1")
-   (lib "trace.ss"))
+   (lib "trace.ss")
+   "exceptions.ss")
 
   (provide
    make-bid level denomination bid-to-number
@@ -32,7 +33,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (lambda (level denom name)         ;guard-proc           
        (unless (and (integer? level)
                     (<= 1 level 7))
-         (raise-type-error name "integer in [1,7]" level))
+         (raise-bridge-error name "integer in [1,7]" level))
        (case denom
          ((club diamond heart spade)
           (set! denom (string->symbol (string-append (symbol->string denom)
@@ -40,7 +41,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          ((clubs diamonds hearts spades notrump)
           'ok)
          (else
-          (raise-type-error name "clubs|diamonds|hearts|spades|notrump" denom)))
+          (raise-bridge-error name "clubs|diamonds|hearts|spades|notrump" denom)))
        (values level denom)
        ))) 
  
@@ -74,8 +75,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
          ((pass double redouble)
           (values thing))
          (else
-          (make-bid (first thing)
-                    (last thing)))))))
+          (cond
+           ((pair? thing)
+            (make-bid (first thing)
+                      (last thing)))
+           (else (raise-bridge-error 'make-call "legal call" thing))))))))
 
   ;; can be called _either_ with a list like (make-call '(1 clubs))
   ;; _or_ with two separate arguments like (make-call 1 'clubs)
@@ -112,7 +116,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       ((hearts) 2)
       ((spades) 3)
       ((notrump) 4)
-      (else (raise-type-error "denomination" d))))
+      (else (raise-bridge-error "denomination" d))))
   
   (define (bid-to-number b)
     (+ (* (- (level b) 1)

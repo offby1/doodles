@@ -9,7 +9,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
  ;(planet "graphical-ui.ss" ("schematics" "schemeunit.plt" 1))
  (planet "util.ss" ("schematics" "schemeunit.plt" 1))
  (lib "pretty.ss")
- "call.ss")
+ "call.ss"
+ "exceptions.ss")
 
 (when (test/text-ui
        (make-test-suite
@@ -17,16 +18,16 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
         (make-test-case
          "error when given garbage"
-         (assert-exn exn:fail:contract? (lambda () (make-call "you ugly"))))
+         (assert-exn exn:fail:bridge? (lambda () (make-call "you ugly"))))
   
         (make-test-case
          "error when given too-large number"
-         (assert-exn exn:fail:contract? (lambda () (make-call (make-bid 9 'clubs)))))
+         (assert-exn exn:fail:bridge? (lambda () (make-call (make-bid 9 'clubs)))))
 
 
         (make-test-case
          "error when given something what ain't a real suit"
-         (assert-exn exn:fail:contract? (lambda () (make-call (make-bid 3 'pitchforks)))))
+         (assert-exn exn:fail:bridge? (lambda () (make-call (make-bid 3 'pitchforks)))))
 
         (make-test-case
          "error when asked for level of something that's not a bid"

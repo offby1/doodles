@@ -16,9 +16,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
               "Tests for private auction stuff."
               (make-test-case
                "right risk"
-               (assert eq? 'undefined (a-risk a))
+               (assert = 0 (a-risk a))
                (auction-add! a 'pass)
-               (assert eq? 'undefined (a-risk a))
+               (assert eq? 0 (a-risk a))
                (auction-add! a '(1 heart))
                (assert = 1 (a-risk a))
                (auction-add! a 'double)

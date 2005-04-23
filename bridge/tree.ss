@@ -10,6 +10,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
          "multiply.ss"
          "call.ss"
          "misc.ss"
+         "exceptions.ss"
          (lib "trace.ss")
          (lib "pretty.ss")
          (prefix list- (lib "list.ss"))
@@ -19,7 +20,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
   (syntax-rules ()
     ((_ body-forms ...)
      (with-handlers
-         ((exn:fail?
+         ((exn:fail:bridge?
            (lambda (exn) #f)))
        body-forms ...
        #t))))
@@ -80,14 +81,23 @@ exec mzscheme -qr "$0" ${1+"$@"}
       (if (zero? passes)
           (begin
             (printf "Consumer: used up its passes, so that means it's time to quit.~n")
-            (set! *producer-keep-going* #f))
+            (set! *producer-keep-going* #f)
+
+            ;; drain the channel, in case the producer bugaceously
+            ;; tried to send -- otherwise, it will be blocked forever.
+            (let loop ((x (channel-try-get *the-channel*))
+                       (bogus-messages 0))
+              (if x
+                  (loop (channel-try-get *the-channel*)
+                        (add1 bogus-messages))
+                (if (positive? bogus-messages)
+                    (printf "Warning: consumer drained ~a bogus messages from channel~n" bogus-messages)))))
+        
         (begin
           (printf "Consumer: got a completed auction: ~s~n" ca)
           (set! *consumers-favorite* (thing-max ca *consumers-favorite*))
           (loop (channel-get *the-channel*)
-                (- passes 1))))
-      
-      )))
+                (- passes 1)))))))
 
 (define (some-auctions-with-given-prefix i)
   (define alc (all-legal-calls i))
@@ -138,9 +148,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;(trace some-auctions-with-given-prefix)
 
 (define a (make-auction 'east))
-(auction-add! a '(4 spades))
-(auction-add! a 'double)
-(auction-add! a 'redouble)
+(auction-add! a 'pass)
+;(auction-add! a 'double)
+;(auction-add! a 'redouble)
 (define consumer-thread-id (thread consumer))
 (some-auctions-with-given-prefix a)
 (printf "Best thing the consumer saw so far: ~s~n" (cons (thing-score *consumers-favorite*)

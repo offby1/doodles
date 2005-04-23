@@ -8,7 +8,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
  "contract.ss"
  "call.ss"
- "auction.ss")
+ "auction.ss"
+ "exceptions.ss")
 
 (when
     (test/text-ui
@@ -17,11 +18,11 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
       (make-test-case
        "error when given garbage"
-       (assert-exn exn:fail:contract? (lambda () (make-auction "you ugly")))
+       (assert-exn exn:fail:bridge? (lambda () (make-auction "you ugly")))
        (assert-not-exn                (lambda () (make-auction 'east)))
 
        ;; Didn't you know the reader is case-sensitive?
-       (assert-exn exn:fail:contract? (lambda () (make-auction 'EAST)))
+       (assert-exn exn:fail:bridge? (lambda () (make-auction 'EAST)))
        )
 
       (make-test-case
@@ -77,8 +78,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
           (let ((a (make-auction 'north)))
             (assert-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
             (assert-not-exn (lambda () (auction-add! a '(4 notrump))) "Converts data to calls if necessary")
-            (assert-exn exn:fail:contract? (lambda () (auction-add! a "you _really_ ugly")))
-            (assert-exn exn:fail:contract? (lambda () (auction-add! a 'piss)) "Isn't fooled by non-calls")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! a "you _really_ ugly")))
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! a 'piss)) "Isn't fooled by non-calls")
             ))
          (make-test-case
           "accepts valid, and rejects invalid, doubles & redoubles"
@@ -103,20 +104,20 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
             (auction-add! four 'redouble)
 
-            (assert-exn exn:fail:contract? (lambda () (auction-add! undef   'double)) "rejects double   when risk undefined")
-            (assert-exn exn:fail:contract? (lambda () (auction-add! undef 'redouble)) "rejects redouble when risk undefined")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! undef   'double)) "rejects double   when risk undefined")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! undef 'redouble)) "rejects redouble when risk undefined")
 
             ;; check for failures before successes, so that the side
             ;; effect from the success doesn't interfere with the
             ;; failure check.
-            (assert-exn exn:fail:contract? (lambda () (auction-add! one   'redouble)) "rejects redouble when risk is one")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! one   'redouble)) "rejects redouble when risk is one")
             (assert-not-exn                (lambda () (auction-add! one     'double)) "accepts double   when risk is one")
 
-            (assert-exn exn:fail:contract? (lambda () (auction-add! two     'double)) "rejects double   when risk is two")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! two     'double)) "rejects double   when risk is two")
             (assert-not-exn                (lambda () (auction-add! two   'redouble)) "accepts redouble when risk is two")
 
-            (assert-exn exn:fail:contract? (lambda () (auction-add! four    'double)) "rejects double   when risk is four")
-            (assert-exn exn:fail:contract? (lambda () (auction-add! four  'redouble)) "rejects redouble when risk is four")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! four    'double)) "rejects double   when risk is four")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! four  'redouble)) "rejects redouble when risk is four")
             ) )
          (make-test-case
           "Recognizes a passed-out auction"
@@ -162,8 +163,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
           "Gacks if we try to add an insufficient bid"
           (let ((a (make-auction 'north)))
             (auction-add! a '(2 notrump))
-            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(1 clubs))) "strictly less")
-            (assert-exn exn:fail:contract? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(1 clubs))) "strictly less")
+            (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
 
          (make-test-case
           "Gacks if we add to a completed auction"

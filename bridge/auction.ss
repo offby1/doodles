@@ -10,6 +10,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (require "contract.ss"
            "call.ss"
            "misc.ss"
+           "exceptions.ss"
            (lib "list.ss" "srfi" "1")
            (lib "trace.ss"))
   (provide
@@ -64,7 +65,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define (my-make-auction dealer)
     (unless (memq dealer *seats*)
-      (raise-type-error 'check-seat "north|south|east|west" dealer))
+      (raise-bridge-error 'check-seat "north|south|east|west" dealer))
 
     ;; calls are in reverse order: most recent first.  That's simply
     ;; because it's a tad easier to cons new calls onto the front than
@@ -98,11 +99,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (let ((last-bid (find bid? guts)))
           (when (and last-bid
                      (not (bid>? thing last-bid)))
-            ;; TODO -- raise-type-error throws exn:fail:contract,
+            ;; TODO -- raise-bridge-error throws exn:fail:contract,
             ;; which (despite the presence of the word "contract" :-)
             ;; seems like the wrong exception.  Perhaps I need a new
             ;; exn:fail:insufficient-bid exception or something.
-            (raise-type-error "sufficient bid" thing))))
+            (raise-bridge-error 'auction-add! "sufficient bid" thing))))
 
        ((or (double? thing)
             (redouble? thing))
@@ -111,7 +112,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                            (double? thing))
                       (and (= 2 r)
                            (redouble? thing)))
-            (raise-type-error "appropriate double or redouble" thing)))))
+            (raise-bridge-error auction-add! "appropriate double or redouble" thing)))))
       
       (set-guts! a (cons thing guts))))
 
@@ -151,7 +152,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                  (not (pass? c)))
                                (get-guts a))))
       (cond
-       ((not       last-non-pass) 'undefined)
+       ((not       last-non-pass) 0)
        ((bid?      last-non-pass) 1)
        ((double?   last-non-pass) 2)
        ((redouble? last-non-pass) 4)
