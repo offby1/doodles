@@ -49,6 +49,46 @@ exec mzscheme -qr "$0" ${1+"$@"}
               all-calls-period)
       )))
 ;(trace all-legal-calls)
+
+(define *the-channel* (make-channel))
+(define *consumers-favorite* #f)
+(define *producer-keep-going* #t)
+
+(define (thing-score thing)
+  (if thing
+      (* 360 (- (modulo (equal-hash-code thing) 20) 10))
+    0))
+
+(define (thing-max t1 t2)
+  
+  (define (thing>? t1 t2)
+    (> (thing-score t1)
+       (thing-score t2)))
+
+  (if (thing>? t1 t2)
+      (begin
+        (printf "Ooh -- ~s (score ~a) > ~s (score ~a)~n"
+                t1 (thing-score t1)
+                t2 (thing-score t2))
+        t1)
+    t2))
+
+(define consumer
+  (lambda ()
+    (let loop ((ca (channel-get *the-channel*))
+               (passes 10))
+      (if (zero? passes)
+          (begin
+            (printf "Consumer: used up its passes, so that means it's time to quit.~n")
+            (set! *producer-keep-going* #f))
+        (begin
+          (printf "Consumer: got a completed auction: ~s~n" ca)
+          (set! *consumers-favorite* (thing-max ca *consumers-favorite*))
+          (loop (channel-get *the-channel*)
+                (- passes 1))))
+      
+      )))
+
 (define (some-auctions-with-given-prefix i)
   (define alc (all-legal-calls i))
 
@@ -85,22 +125,23 @@ exec mzscheme -qr "$0" ${1+"$@"}
                (not (auction-complete? i)))
     (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
 
-  (append-map-at-most
+  (for-each
    (lambda (c)
-     (let ((extended (copy-auction i)))
-       (auction-add! extended c)
-       (if (auction-complete? extended )
-           (list extended)
-         (some-auctions-with-given-prefix extended))))
-   3
-   (take-at-most
-    (remove silly-competition? (remove crazy-jump? (remove silly-double? alc)))
-    2))
+     (when *producer-keep-going*
+       (let ((extended (copy-auction i)))
+         (auction-add! extended c)
+         (if (auction-complete? extended )
+             (channel-put *the-channel* extended)
+           (some-auctions-with-given-prefix extended)))))
+   alc)
   )
 ;(trace some-auctions-with-given-prefix)
 
 (define a (make-auction 'east))
-(auction-add! a '(5 spades))
+(auction-add! a '(4 spades))
 (auction-add! a 'double)
 (auction-add! a 'redouble)
-(pretty-display (some-auctions-with-given-prefix a))
+(define consumer-thread-id (thread consumer))
+(some-auctions-with-given-prefix a)
+(printf "Best thing the consumer saw so far: ~s~n" (cons (thing-score *consumers-favorite*)
+                                                         *consumers-favorite*))
