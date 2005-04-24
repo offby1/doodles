@@ -52,6 +52,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;(trace all-legal-calls)
 
 (define *best-scoring-auction-so-far* #f)
+(define *the-semaphore* (make-semaphore 1))
 
 (define (auction-score thing)
   (if thing
@@ -69,7 +70,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
     t2))
 
 (define (consider-one-auction ca)
-  (set! *best-scoring-auction-so-far* (higher-scoring-auction ca *best-scoring-auction-so-far*)))
+  (call-with-semaphore
+   *the-semaphore*
+   (lambda ()
+     (set! *best-scoring-auction-so-far* (higher-scoring-auction ca *best-scoring-auction-so-far*)))))
 
 (define (some-auctions-with-given-prefix i)
   (define alc (all-legal-calls i))
@@ -126,7 +130,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
                             (some-auctions-with-given-prefix a))))
 (let ((seconds-to-wait 5))
   (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
-  (sync/timeout seconds-to-wait thread-id))
- 
+  (sleep seconds-to-wait)
+  (call-with-semaphore
+   *the-semaphore*
+   (lambda () (kill-thread thread-id))))
+
 (printf "Best auction so far: ~s~n" (cons (auction-score *best-scoring-auction-so-far*)
-                                          *best-scoring-auction-so-far*))
+                                             *best-scoring-auction-so-far*))

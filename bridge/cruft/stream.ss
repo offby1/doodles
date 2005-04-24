@@ -32,13 +32,13 @@ add1                                 ;g
   (if (stream-null? stream)
       stream
     (cons (stream-car stream)
-          (stream->list (stream-cdr stream)))))
+          (stream->list (stream-cdr stream))))) ;ok -- this whole function's point is to force promises
 
 (define (stream-map proc seq)
   (if (stream-null? seq)
       the-null-stream
     (cons-stream (proc (car seq))
-                 (stream-map proc (stream-cdr seq)))))
+                 (stream-map proc (stream-cdr seq))))) ;ok -- 2nd arg to cons-stream, hence delayed
 
 (define (slit . data)
   (let loop ((data (reverse data))
@@ -124,31 +124,26 @@ add1                                 ;g
     (cond
      ((and (stream-null? s1)
            (stream-null? s2))
-      (stream-reverse result))
+      (stream-reverse result))          ;BAD!!!
      ((stream-null? s1)
-      (loop (stream-cdr s2)
+      (loop (stream-cdr s2)             ;BAD!!!
             '()
             (cons-stream (stream-car s2) result)))
      (else
-      (loop (stream-cdr s1)
+      (loop (stream-cdr s1)             ;BAD!!!
             s2
             (cons-stream (stream-car s1) result)))
      )))
 
-(define (stream-append . streams)
-
-  (let loop ((streams streams)
-             (result '()))
-    (cond
-     ((null? streams)
-      result)
-     ((null? (cdr streams))
-      (append2 result
-               (car streams)))
-     (else
-      (loop (cdr streams)
-            (append2 result
-                     (car streams)))))))
+(define (append3 s1 s2)
+  (cond
+   ((stream-null? s1)
+    s2)
+   ((stream-null? s2)
+    s1)
+   (else
+    (cons-stream (stream-car s1)
+                 (append3 (stream-cdr s1) s2))))) ;OK -- 2nd arg to stream-cons
 
 (define (stream-apply-append stream-of-streams)
   
@@ -157,20 +152,23 @@ add1                                 ;g
     (cond
      ((stream-null? streams)
       result)
-     ((stream-null? (stream-cdr streams))
-      (append2 result
+     ((stream-null? (stream-cdr streams)) ;BAD!!!
+      (append3 result
                (stream-car streams)))
      (else
-      (loop (stream-cdr streams)
-            (append2 result
+      (loop (stream-cdr streams)        ;BAD!!!
+            (append3 result
                      (stream-car streams)))))))
 
+;; it occurs to me that this is a spectacularly stupid idea.  By
+;; definition (I think), reversing a stream forces every single
+;; promise.
 (define (stream-reverse l)
   (let loop ((l l)
              (result '()))
     (if (stream-null? l)
         result
-      (loop (stream-cdr l)
+      (loop (stream-cdr l)              ;BAD!!!
             (cons-stream (stream-car l) result)))))
 
 
@@ -187,22 +185,7 @@ add1                                 ;g
        (assert-equal? (stream->list (append2 (slit 'a)       (slit 'b)))    '(a b))
        (assert-equal? (stream->list (append2 (slit 'a 'b 'c) (slit 1 2 3))) '(a b c 1 2 3))
        )
-
-      (make-test-case
-       "append"
-       (assert-equal? (stream->list (stream-append (slit )         (slit )))      '())
-       (assert-equal? (stream->list (stream-append (slit )         (slit 'a)))    '(a))
-       (assert-equal? (stream->list (stream-append (slit 'a)       (slit )))      '(a))
-       (assert-equal? (stream->list (stream-append (slit 'a)       (slit 'b)))    '(a b))
-       (assert-equal? (stream->list (stream-append (slit 'a 'b 'c) (slit 1 2 3))) '(a b c 1 2 3))
-       (assert-equal? (stream->list (stream-append (slit 'a)
-                                                   (slit 'b)
-                                                   (slit 'c)
-                                                   (slit 1)
-                                                   (slit 2)
-                                                   (slit 3))) '(a b c 1 2 3))
-       )
-
+      
       (make-test-case
        "apply-append"
        (assert-equal? (stream->list (stream-apply-append (slit (slit )         (slit ))))      '())
