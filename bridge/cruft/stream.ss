@@ -59,7 +59,6 @@ add1                                 ;g
        (something p f g seed (lambda (x) the-null-stream))]
       [(p f g seed tail-gen)
        (something p f g seed tail-gen)])))
-(trace stream-unfold)
 
 #|
 (define l (stream-unfold 
@@ -114,42 +113,45 @@ add1                                 ;g
    ((stream-null? (cdr l))
     (slit l))
    (else
+    ;; BUGBUG --gotta "apply append", or something like it
     (stream-map (lambda (seq)
                   (distribute (car l) seq))
                 (stream-permute (cdr l))))))
 
+;; used only by stream-append, but defined at the top level for ease
+;; of testing.
 (define (append2 s1 s2)
   (let loop ((s1 s1)
              (s2 s2)
              (result '()))
     (cond
-     ((and (null? s1)
-           (null? s2))
-      (reverse result))
-     ((null? s1)
-      (loop (cdr s2)
+     ((and (stream-null? s1)
+           (stream-null? s2))
+      (stream-reverse result))
+     ((stream-null? s1)
+      (loop (stream-cdr s2)
             '()
-            (cons (car s2) result)))
+            (cons-stream (stream-car s2) result)))
      (else
-      (loop (cdr s1)
+      (loop (stream-cdr s1)
             s2
-            (cons (car s1) result)))
+            (cons-stream (stream-car s1) result)))
      )))
 
-(define (my-append . seqs)
+(define (stream-append . streams)
 
-  (let loop ((seqs (reverse seqs))
+  (let loop ((streams streams)
              (result '()))
     (cond
-     ((null? seqs)
+     ((null? streams)
       result)
-     ((null? (cdr seqs))
-      (append2 (car seqs)
-               result))
+     ((null? (cdr streams))
+      (append2 result
+               (car streams)))
      (else
-      (loop (cdr seqs)
-            (append2 (car seqs)
-                     result))))))
+      (loop (cdr streams)
+            (append2 result
+                     (car streams)))))))
 
 (define (stream-reverse l)
   (let loop ((l l)
@@ -159,6 +161,7 @@ add1                                 ;g
       (loop (stream-cdr l)
             (cons-stream (stream-car l) result)))))
 
+
 (when
     (test/text-ui
      (make-test-suite
@@ -166,11 +169,26 @@ add1                                 ;g
 
       (make-test-case
        "append2"
-       (assert-equal? (append2 '() '())  '())
-       (assert-equal? (append2 '() '(a)) '(a))
-       (assert-equal? (append2 '(a) '()) '(a))
-       (assert-equal? (append2 '(a) '(b)) '(a b))
-       (assert-equal? (append2 '(a b c) '(1 2 3)) '(a b c 1 2 3))
+       (assert-equal? (stream->list (append2 (slit )         (slit )))      '())
+       (assert-equal? (stream->list (append2 (slit )         (slit 'a)))    '(a))
+       (assert-equal? (stream->list (append2 (slit 'a)       (slit )))      '(a))
+       (assert-equal? (stream->list (append2 (slit 'a)       (slit 'b)))    '(a b))
+       (assert-equal? (stream->list (append2 (slit 'a 'b 'c) (slit 1 2 3))) '(a b c 1 2 3))
+       )
+
+      (make-test-case
+       "append"
+       (assert-equal? (stream->list (stream-append (slit )         (slit )))      '())
+       (assert-equal? (stream->list (stream-append (slit )         (slit 'a)))    '(a))
+       (assert-equal? (stream->list (stream-append (slit 'a)       (slit )))      '(a))
+       (assert-equal? (stream->list (stream-append (slit 'a)       (slit 'b)))    '(a b))
+       (assert-equal? (stream->list (stream-append (slit 'a 'b 'c) (slit 1 2 3))) '(a b c 1 2 3))
+       (assert-equal? (stream->list (stream-append (slit 'a)
+                                                   (slit 'b)
+                                                   (slit 'c)
+                                                   (slit 1)
+                                                   (slit 2)
+                                                   (slit 3))) '(a b c 1 2 3))
        )
 
       (make-test-case
