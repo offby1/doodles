@@ -3,6 +3,7 @@
 exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
+;; $Id$
 #|
 > (unfold 
 (lambda (i) (< 10 i))                ;p
@@ -104,16 +105,16 @@ add1                                 ;g
 ;; (fred sam) => ((fred sam) . #<promise -> ((sam fred) . #<promise -> ()>)>)
 (define (stream-permute l)
   (cond
-   ((stream-null? l)
+   ((null? l)
     the-null-stream)
-   ((stream-null? (cdr l))
+   ((null? (cdr l))
     (slit l))
    (else
     (stream-apply-append
      (stream-map (lambda (seq)
                    (distribute (car l) seq))
                  (stream-permute (cdr l)))))))
-
+(trace stream-permute)
 ;; used only by stream-append, but defined at the top level for ease
 ;; of testing.
 (define (append2 s1 s2)
