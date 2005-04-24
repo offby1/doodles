@@ -86,21 +86,17 @@ add1                                 ;g
       (loop (force (cdr seq))
             (combiner-proc (car seq) result)))))
 
-;; (distribute 3 (list         )) => '()
-;; (distribute 3 (list 'a      )) => ((3 a    ) (a 3    )                    )
-;; (distribute 3 (list 'a 'b   )) => ((3 a b  ) (a 3 b  ) (a b 3  )          )
-;; (distribute 3 (list 'a 'b 'c)) => ((3 a b c) (a 3 b c) (a b 3 c) (a b c 3))
 (define (distribute item l)
   (cond
    ((null? l)
     '())
    ((null? (cdr l))
-    (list (list item (car l))
+    (slit (list item (car l))
           (list (car l) item)))
    (else
-    (cons (cons item l)
-          (map (lambda (seq)
-                 (cons (car l) seq)) (distribute item (cdr l)))))
+    (cons-stream (cons item l)
+                 (stream-map (lambda (seq) (cons (car l) seq))
+                             (distribute item (cdr l)))))
    ))
 
 ;; ()         => ()
@@ -113,10 +109,10 @@ add1                                 ;g
    ((stream-null? (cdr l))
     (slit l))
    (else
-    ;; BUGBUG --gotta "apply append", or something like it
-    (stream-map (lambda (seq)
-                  (distribute (car l) seq))
-                (stream-permute (cdr l))))))
+    (stream-apply-append
+     (stream-map (lambda (seq)
+                   (distribute (car l) seq))
+                 (stream-permute (cdr l)))))))
 
 ;; used only by stream-append, but defined at the top level for ease
 ;; of testing.
@@ -152,6 +148,21 @@ add1                                 ;g
       (loop (cdr streams)
             (append2 result
                      (car streams)))))))
+
+(define (stream-apply-append stream-of-streams)
+  
+  (let loop ((streams stream-of-streams)
+             (result the-null-stream))
+    (cond
+     ((stream-null? streams)
+      result)
+     ((stream-null? (stream-cdr streams))
+      (append2 result
+               (stream-car streams)))
+     (else
+      (loop (stream-cdr streams)
+            (append2 result
+                     (stream-car streams)))))))
 
 (define (stream-reverse l)
   (let loop ((l l)
@@ -192,6 +203,21 @@ add1                                 ;g
        )
 
       (make-test-case
+       "apply-append"
+       (assert-equal? (stream->list (stream-apply-append (slit (slit )         (slit ))))      '())
+       (assert-equal? (stream->list (stream-apply-append (slit (slit )         (slit 'a))))    '(a))
+       (assert-equal? (stream->list (stream-apply-append (slit (slit 'a)       (slit ))))      '(a))
+       (assert-equal? (stream->list (stream-apply-append (slit (slit 'a)       (slit 'b))))    '(a b))
+       (assert-equal? (stream->list (stream-apply-append (slit (slit 'a 'b 'c) (slit 1 2 3)))) '(a b c 1 2 3))
+       (assert-equal? (stream->list (stream-apply-append (slit (slit 'a)
+                                                               (slit 'b)
+                                                               (slit 'c)
+                                                               (slit 1)
+                                                               (slit 2)
+                                                               (slit 3)))) '(a b c 1 2 3))
+       )
+
+      (make-test-case
        "reverse"
        (assert-equal? (stream->list (stream-reverse (slit ))) '())
        (assert-equal? (stream->list (stream-reverse (slit 1))) '(1))
@@ -204,6 +230,23 @@ add1                                 ;g
        (assert-equal? (stream->list (stream-map add1 (slit 9))) '(10))
        (assert-equal? (stream->list (stream-map add1 (slit 9 10))) '(10 11))
        )
+
+      (make-test-case
+       "distribute"
+       (assert-equal? (stream->list (distribute 3 (list         ))) '())
+       (assert-equal? (stream->list (distribute 3 (list 'a      ))) '((3 a    ) (a 3    )                    ))
+       (assert-equal? (stream->list (distribute 3 (list 'a 'b   ))) '((3 a b  ) (a 3 b  ) (a b 3  )          ))
+       (assert-equal? (stream->list (distribute 3 (list 'a 'b 'c))) '((3 a b c) (a 3 b c) (a b 3 c) (a b c 3)))
+       )
+
+      (make-test-case
+       "permute"
+       (assert-equal? (stream->list (stream-permute (list))) '())
+       (assert-equal? (stream->list (stream-permute (list 1))) '((1)))
+       
+       (assert-true
+        (or (equal? (stream->list (stream-permute (list 1 2)))  '((1 2) (2 1)))
+            (equal? (stream->list (stream-permute (list 1 2)))  '((2 1) (1 2))))))
       ))
   
   (exit 0))
