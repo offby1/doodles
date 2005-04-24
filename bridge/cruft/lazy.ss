@@ -5,11 +5,11 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 #|
 > (unfold 
-   (lambda (i) (< 10 i))                ;p
-   (lambda (x) x)                       ;f
-   add1                                 ;g
-   0                                    ;seed
-   )
+(lambda (i) (< 10 i))                ;p
+(lambda (x) x)                       ;f
+add1                                 ;g
+0                                    ;seed
+)
 (0 1 2 3 4 5 6 7 8 9 10)
 > |#
 (require (lib "trace.ss")
@@ -28,17 +28,16 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (define stream-null? null?)
 
 (define (stream->list stream)
-  (if (or (stream-null? stream)
-          (stream-null? (cdr stream)))
+  (if (stream-null? stream)
       stream
     (cons (stream-car stream)
           (stream->list (stream-cdr stream)))))
 
-(define (lazy-map proc seq)
-    (if (stream-null? seq)
-        the-null-stream
-      (cons-stream (proc (car seq))
-                   (lazy-map proc (stream-cdr seq)))))
+(define (stream-map proc seq)
+  (if (stream-null? seq)
+      the-null-stream
+    (cons-stream (proc (car seq))
+                 (stream-map proc (stream-cdr seq)))))
 
 (define (slit . data)
   (let loop ((data (reverse data))
@@ -48,27 +47,27 @@ exec mzscheme -qr "$0" ${1+"$@"}
       (loop (cdr data)
             (cons-stream (car data) result)))))
 
-(define lazy-unfold
+(define stream-unfold
   (let ()
     (define (something p f g seed tail-gen)
       (if (p seed)
           (tail-gen seed)
         (cons-stream (f seed)
-                   (lazy-unfold p f g (g seed)))))
+                     (stream-unfold p f g (g seed)))))
     (case-lambda
       [(p f g seed)
        (something p f g seed (lambda (x) the-null-stream))]
       [(p f g seed tail-gen)
        (something p f g seed tail-gen)])))
-(trace lazy-unfold)
+(trace stream-unfold)
 
 #|
-(define l (lazy-unfold 
-     (lambda (i) (< 10 i))              ;p
-     (lambda (x) x)                     ;f
-     add1                               ;g
-     0                                  ;seed
-     ))
+(define l (stream-unfold 
+           (lambda (i) (< 10 i))              ;p
+           (lambda (x) x)                     ;f
+           add1                               ;g
+           0                                  ;seed
+           ))
 > l
 (0 . #<struct:promise>)
 > (stream-cdr l)
@@ -80,7 +79,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 ;; I _think_ this is the lazy equivalent of "reduce", but I'm not
 ;; certain.
-(define (lazy-reduce combiner-proc init seq)
+(define (stream-reduce combiner-proc init seq)
   (let loop ((seq seq)
              (result init))
     (if (stream-null? seq)
@@ -108,16 +107,16 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;; ()         => ()
 ;; (fred)     => ((fred)     . #<promise -> ()>)
 ;; (fred sam) => ((fred sam) . #<promise -> ((sam fred) . #<promise -> ()>)>)
-(define (lazy-permute l)
+(define (stream-permute l)
   (cond
    ((stream-null? l)
     the-null-stream)
    ((stream-null? (cdr l))
     (slit l))
    (else
-    (lazy-map (lambda (seq)
-                (distribute (car l) seq))
-              (lazy-permute (cdr l))))))
+    (stream-map (lambda (seq)
+                  (distribute (car l) seq))
+                (stream-permute (cdr l))))))
 
 (define (append2 s1 s2)
   (let loop ((s1 s1)
@@ -151,6 +150,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
       (loop (cdr seqs)
             (append2 (car seqs)
                      result))))))
+
+(define (stream-reverse l)
+  (let loop ((l l)
+             (result '()))
+    (if (stream-null? l)
+        result
+      (loop (stream-cdr l)
+            (cons-stream (stream-car l) result)))))
 
 (when
     (test/text-ui
@@ -158,12 +165,27 @@ exec mzscheme -qr "$0" ${1+"$@"}
       "Tests for the stream stuff."
 
       (make-test-case
-       "Tim"
+       "append2"
        (assert-equal? (append2 '() '())  '())
        (assert-equal? (append2 '() '(a)) '(a))
        (assert-equal? (append2 '(a) '()) '(a))
        (assert-equal? (append2 '(a) '(b)) '(a b))
        (assert-equal? (append2 '(a b c) '(1 2 3)) '(a b c 1 2 3))
-       )))
+       )
+
+      (make-test-case
+       "reverse"
+       (assert-equal? (stream->list (stream-reverse (slit ))) '())
+       (assert-equal? (stream->list (stream-reverse (slit 1))) '(1))
+       (assert-equal? (stream->list (stream-reverse (slit 1 2 3))) '(3 2 1))
+       )
+
+      (make-test-case
+       "map"
+       (assert-equal? (stream->list (stream-map add1 (slit))) '())
+       (assert-equal? (stream->list (stream-map add1 (slit 9))) '(10))
+       (assert-equal? (stream->list (stream-map add1 (slit 9 10))) '(10 11))
+       )
+      ))
   
   (exit 0))
