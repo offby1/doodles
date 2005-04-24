@@ -1,4 +1,4 @@
-TESTS := at-private.ss at.ss ct2.ss cruft/lazy.ss
+TESTS := at-private.ss at.ss ct2.ss cruft/stream.ss
 
 check: $(TESTS)
 	@failed_tests=;									\
