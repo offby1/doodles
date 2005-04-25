@@ -213,22 +213,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define (string-append-map proc seq)
     (apply string-append (map proc seq)))
-  
-  (define (insert-newlines l)
-    (let loop ((l l)
-               (result-length 0)
-               (result '()))
-      (if (null? l)
-          (reverse result)
-        (let ((new-datum (list (car l))))
-          (when (and (positive? result-length)
-                     (zero? (modulo result-length 4)))
-            (set! new-datum (list (car l) "\n")))
-        
-          (loop (cdr l)
-                (add1 result-length)
-                (append new-datum result))))))
-  
+
   (define (auction->string a)
     (let ((seats (let loop ((seats *seats*))
                    (if (not (eq? (get-dealer a) (car seats)))
@@ -236,9 +221,24 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      seats))))
       (apply string-append
        (string-append-map (lambda (s)
-                            (string-locale-upcase (substring (symbol->string s) 0 1)))
+                            (string-append
+                             (string-locale-upcase (substring (symbol->string s) 0 1))
+                             "   "))
                           seats)
        "\n"
-       "--------\n"
-       (insert-newlines (map call->string (reverse (get-guts a))))))))
-
+       "--------------\n"
+       (let loop ((calls (get-guts a))
+                  (result '())
+                  (ticker 0))
+         (if (null? calls)
+             result
+           (let ((separator "  "))
+             (when (and (zero? (modulo ticker 4))
+                        (positive? ticker))
+               (set! separator "\n"))
+             (loop (cdr calls)
+                   (cons (call->string (car calls))
+                         (cons separator result))
+                   (add1 ticker))))
+         )
+       ))))
