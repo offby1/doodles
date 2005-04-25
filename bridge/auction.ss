@@ -22,6 +22,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-complete?
    auction-has-a-double?
    auction-max-levels
+   auction->string
    copy-auction
    get-dealer)
 
@@ -195,4 +196,44 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (level-or-zero (find bid? dealers-opps))))))
   
   ;(trace auction-max-levels)
-  )
+
+  (define (rotate seq count)
+    (if (or (zero? count)
+            (null? seq)
+            (null? (cdr seq)))
+        seq
+      (rotate (append (cdr seq)
+                      (list (car seq)))
+              (sub1 count))))
+
+  (define (string-append-map proc seq)
+    (apply string-append (map proc seq)))
+  
+  (define (insert-newlines l)
+    (let loop ((l l)
+               (result-length 0)
+               (result '()))
+      (if (null? l)
+          (reverse result)
+        (let ((new-datum (list (car l))))
+          (when (and (positive? result-length)
+                     (zero? (modulo result-length 4)))
+            (set! new-datum (list (car l) "\n")))
+        
+          (loop (cdr l)
+                (add1 result-length)
+                (append new-datum result))))))
+  
+  (define (auction->string a)
+    (let ((seats (let loop ((seats *seats*))
+                   (if (not (eq? (get-dealer a) (car seats)))
+                       (loop (rotate seats 1))
+                     seats))))
+      (apply string-append
+       (string-append-map (lambda (s)
+                            (string-locale-upcase (substring (symbol->string s) 0 1)))
+                          seats)
+       "\n"
+       "--------\n"
+       (insert-newlines (map call->string (reverse (get-guts a))))))))
+

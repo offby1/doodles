@@ -128,12 +128,13 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;(auction-add! a 'redouble)
 (define thread-id (thread (lambda ()
                             (some-auctions-with-given-prefix a))))
-(let ((seconds-to-wait 5))
+(let ((seconds-to-wait 1))
   (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
   (sleep seconds-to-wait)
   (call-with-semaphore
    *the-semaphore*
    (lambda () (kill-thread thread-id))))
 
-(printf "Best auction so far: ~s~n" (cons (auction-score *best-scoring-auction-so-far*)
-                                             *best-scoring-auction-so-far*))
+(printf "Best auction so far: ~n~a~nScore: ~a~n"
+        (auction->string *best-scoring-auction-so-far*) 
+        (auction-score *best-scoring-auction-so-far*))

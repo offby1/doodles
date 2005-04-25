@@ -17,7 +17,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (rename flexible-make-call make-call)
    (rename my-bid? bid?)
    bid>?
-   pass? double? redouble?)
+   pass? double? redouble?
+   call->string)
+
+  (print-struct #t)
 
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
     (make-struct-type
@@ -137,6 +140,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (my-bid? thing)
     (or (bid? thing)
         (bid? (get-call thing))))
+  (define (call->string c)
+    (cond
+     ((pass? c)
+      "--")
+     ((double? c)
+      "X ")
+     ((redouble? c)
+      "XX")
+     ((bid? (get-call c))
+      (call->bid! c)
+      (string-append
+       (number->string (level c))
+       (string-locale-upcase (substring (symbol->string (denomination c))
+                                        0 1))))
+     (else
+      (raise-type-error 'call->string "call" c))))
   ;(trace level denomination)
   )
 
