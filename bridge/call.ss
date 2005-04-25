@@ -143,7 +143,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (call->string c)
     (cond
      ((pass? c)
-      "--")
+      "p-")
      ((double? c)
       "X ")
      ((redouble? c)

@@ -191,9 +191,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (dealers-opps other-side))
         (when (even? (auction-length a))
           (swap! dealers-side dealers-opps))
-        (cons
-         (level-or-zero (find bid? dealers-side))
-         (level-or-zero (find bid? dealers-opps))))))
+        (set! dealers-opps (level-or-zero (find bid? dealers-opps)))
+        (set! dealers-side (level-or-zero (find bid? dealers-side)))
+        (when (< 4 (auction-length a))
+          (unless (or (positive? dealers-opps)
+                      (positive? dealers-side))
+            (error 'auction-max-levels "Neither side seems to have bid, despite a long auction" )))
+        
+        (cons dealers-side dealers-opps))))
   
   ;(trace auction-max-levels)
 

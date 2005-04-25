@@ -89,7 +89,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
         (make-test-case
          "stringification"
          (assert string=? (call->string (make-call 3 'clubs)) "3C")
-         (assert string=? (call->string (make-call 'pass)) "--")
+         (assert string=? (call->string (make-call 'pass)) "p-")
          (assert string=? (call->string (make-call 'double)) "X ")
          (assert string=? (call->string (make-call 'redouble)) "XX")
          )

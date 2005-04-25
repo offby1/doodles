@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
 
 (print-struct #t)
@@ -54,6 +54,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (define *best-scoring-auction-so-far* #f)
 (define *the-semaphore* (make-semaphore 1))
 
+;; this sure is easier than doing it right!
 (define (auction-score thing)
   (if thing
       (* 360 (- (modulo (equal-hash-code thing) 20) 10))
@@ -87,8 +88,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
     (lambda (c)
       (and (auction-has-a-double? i)
            (double? c))))
+
   (define silly-competition?
-    (let* ((maxes (auction-max-levels a))
+    (let* ((maxes (auction-max-levels i))
            (my-side (car maxes))
            (opponents (cdr maxes)))
       (when (odd? (auction-length i))
@@ -98,6 +100,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
         ;; actual bid, where opponents have bid to the four level
         (and (bid? c)
              (< 3 opponents)))))
+
   (define crazy-jump?
     (lambda (c)
       ;; a bid whose level is more than two more than the minimum
@@ -106,7 +109,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
            (< 2 (- (level-or-zero c)
                    (level-or-zero minimum-bid))))
       ))
-  ;(trace silly-double? silly-competition? crazy-jump?)
+
+  ;(trace silly-competition?)
   (unless (and (auction? i)
                (not (auction-complete? i)))
     (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
@@ -117,8 +121,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
        (auction-add! extended c)
        (if (auction-complete? extended )
            (consider-one-auction extended)
-         (some-auctions-with-given-prefix extended))))
-   alc)
+          (some-auctions-with-given-prefix extended))))
+   (remove silly-competition? (remove silly-double? alc)))
   )
 ;(trace some-auctions-with-given-prefix)
 
@@ -128,13 +132,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;(auction-add! a 'redouble)
 (define thread-id (thread (lambda ()
                             (some-auctions-with-given-prefix a))))
-(let ((seconds-to-wait 1))
+(let ((seconds-to-wait 10))
   (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
-  (sleep seconds-to-wait)
+  (sync/timeout seconds-to-wait thread-id)
   (call-with-semaphore
    *the-semaphore*
    (lambda () (kill-thread thread-id))))
 
-(printf "Best auction so far: ~n~a~nScore: ~a~n"
-        (auction->string *best-scoring-auction-so-far*) 
-        (auction-score *best-scoring-auction-so-far*))
+(when *best-scoring-auction-so-far*
+  (printf "Best auction so far: ~n~a~nScore: ~a~n"
+          (auction->string *best-scoring-auction-so-far*) 
+          (auction-score *best-scoring-auction-so-far*)))
