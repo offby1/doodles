@@ -8,6 +8,5 @@ check: $(TESTS)
 		./$$t || failed_tests="$$failed_tests $$t";				\
         done;										\
         test -z "$$failed_tests" || { echo Failed tests: $$failed_tests; false ; }
-	./tree.ss
 
 .PHONY: check

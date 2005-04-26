@@ -9,6 +9,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
  "contract.ss"
  "call.ss"
  "auction.ss"
+ "tree.ss"
  "exceptions.ss")
 
 (when
@@ -178,6 +179,14 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (assert-exn exn:fail? (lambda () (auction-add! completed 'double)))
             (assert-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
             ))
+
+         (make-test-case
+          "Exercise best-auction-from-prefix"
+          (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
+            (when bsa
+              (printf "Best auction so far: ~n~a~nScore: ~a~n"
+                      (auction->string bsa) 
+                      (auction-score bsa)))))
          ))
 
       ))

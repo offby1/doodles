@@ -23,6 +23,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-has-a-double?
    auction-max-levels
    auction->string
+   auction-score
    copy-auction
    get-dealer)
 
@@ -241,4 +242,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (cons separator result))
                    (add1 ticker))))
          )
-       ))))
+       )))
+  ;; this sure is easier than doing it right!
+  (define (auction-score thing)
+    (if thing
+        (* 360 (- (modulo (equal-hash-code thing) 20) 10))
+      0))
+  )
