@@ -4,8 +4,8 @@
   (require "call.ss")
   (require "misc.ss")
 
-  (require (lib "test.ss"    "schemeunit"))
-  (require (lib "text-ui.ss" "schemeunit"))
+  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
+  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
 
   (provide (rename public-make-auction make-auction)
            note-call

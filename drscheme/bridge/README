@@ -2,13 +2,7 @@ This is the beginnings of a GUI program that plays bridge.
 
 How to run it:
 
-* Install drscheme (http://www.drscheme.org).
-
-* install `schemeunit' from
-  http://sourceforge.net/projects/schematics.  You may need to be root
-  to do this, depending on where drscheme is installed.
-
-* similarly install `srfi'.
+* Install version 300 or later of drscheme (http://www.drscheme.org).
 
 * Run `drscheme bridge.ss'.  Click the "Execute" button. You should
   see some messages in the bottom (from tests) reporting successes, 0

@@ -5,8 +5,8 @@
   (require (lib "cards.ss" "games" "cards")) ; for region et al.
   (require (lib "class.ss"))
 
-  (require (lib "test.ss"    "schemeunit"))
-  (require (lib "text-ui.ss" "schemeunit"))
+  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
+  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
   (require (lib "list.ss"))
 
   (provide make-point
@@ -112,11 +112,11 @@
 
       (make-test-case
        "assertion on non-integer rotations"
-       (assert-exn exn:application:type?
+       (assert-exn exn:fail:contract?
                    (lambda ()
                      (rotate-about victim origin 1.333)
                      ))
-       (assert-exn exn:application:type?
+       (assert-exn exn:fail:contract?
                    (lambda ()
                      (rotate-about victim origin 1/8)
                      )))

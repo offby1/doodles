@@ -1,6 +1,6 @@
 (module call mzscheme
-  (require (lib "test.ss"    "schemeunit"))
-  (require (lib "text-ui.ss" "schemeunit"))
+  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
+  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
   (require "misc.ss")
 
   (provide call->string
