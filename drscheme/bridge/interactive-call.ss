@@ -43,7 +43,7 @@
                  doubles-and-pass
                  sym
                  enabled?))
-              `(Double Redouble Pass)
+              `(double redouble pass)
               `(#f #f #t)               ; BUGBUG -- get double and
                                         ; redouble right
               )
