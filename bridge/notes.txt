@@ -65,6 +65,17 @@ So it's clear that writing such a function wouldn't be trivial,
 although it might not be terribly hard.  I'm also hoping it would run
 quickly.
 
+*** Is it clear which is the winning card?
+
+Above I referred to "[cards] which will clearly win".  I am not sure
+that it will be obvious.
+
+    On the other hand, if the player who's leading can see that his
+    card is the highest of the suit, and the opponents hold no trumps,
+    that ain't rocket science.
+
+*** Which card to discard?
+
 * How would you use it?
 
 ** Bidding

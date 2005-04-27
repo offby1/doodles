@@ -9,12 +9,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
   ;; Creates trees of possible auctions.
   (provide best-auction-from-prefix)
   (require "auction.ss"
-           "multiply.ss"
            "call.ss"
            "misc.ss"
            "exceptions.ss"
            (lib "trace.ss")
            (lib "pretty.ss")
+           (rename (lib "misc.ss" "swindle") list-of list-of)
            (prefix list- (lib "list.ss"))
            (lib "list.ss" "srfi" "1"))
 
@@ -44,7 +44,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
     (let ((all-calls-period
            (reverse
             (list-quicksort
-             (map make-call (append '(pass double redouble) (multiply (iota 7 1) '(clubs diamonds hearts spades notrump))))
+             (map make-call (append '(pass double redouble) (list-of (list x y) (x <- (iota 7 1)) (y <- '(clubs diamonds hearts spades notrump)))))
              call>?))))
       (lambda (i)
         (filter (lambda (c)
