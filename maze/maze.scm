@@ -1,9 +1,13 @@
+#!/usr/bin/guile \
+-e main -s
+!#
 ;; Generates a maze, then displays it using Ghostscript.
 ;; Works on GNU Guile 1.3.4, at least.
 
-(require 'filter)
+(use-modules (ice-9 slib)
+             (ice-9 getopt-long)
+             (srfi srfi-1))
 (require 'random)
-(require 'note)
 
 (define debugging-rendering #f)
 
@@ -256,7 +260,6 @@
     (define (grid-render-in-postscript)
       (let ((points-per-cell (/ (* 8 72) grid-width)))
         (define (flatten-strings thing)
-          (note 'flatten-strings "Flattening a string\n")
           (cond
            ((string? thing)
             thing)
@@ -361,7 +364,6 @@
              (if (null? (cdr path))
                  result
                (begin
-                 (note 'path "Rendering path\n")
                  (loop
                   (cdr path)
                   (string-append
@@ -406,7 +408,6 @@
                         (if (= columns-processed grid-width)
                             result
                           (begin
-                            (note 'render "Rendering cell\n")
                             (loop (+ columns-processed 1)
                                   (string-append
                                    result
@@ -490,8 +491,7 @@
                 (reverse so-far)
               (loop prev
                     (cons prev so-far))))))
-    
-      (note 'wander "Wandering\n")
+
       (grid-mark-as-visited! here 'unknown)
 
       ;; Make sure we don't set! the solution more than once.
@@ -510,7 +510,6 @@
 
                   ;; Back up.
                   (begin
-                    (note 'backup "Backing up\n")
                     (wander-from! whence #t))
               
                 ;; We didn't arrive here from anywhere -- we must have
@@ -524,7 +523,6 @@
                                       (random (length places-we-can-go))
                                       )))
             (let ((which-way-to-go  (direction-indicator here next-place)))
-              (note 'new-ground "Heading somewhere new\n")
               (grid-mark-as-visited! here which-way-to-go)
             
               ;; Only knock down east or south walls.  If we're headed
@@ -545,11 +543,30 @@
   
     (grid-render-in-postscript)))
 
-(define (x size)
-  (let ((temp-file-name (string-append
-			 (getenv "HOME")
-			 "/maze")))
-    (note #t)
-    (call-with-output-file temp-file-name (lambda (port) (display (make-maze size) port)))
-    (note #f)
-    (system (string-append "gv " temp-file-name " ; rm " temp-file-name " 2>nul"))))
+(define (display-help)
+  (display (car (command-line)))
+  (display " [options]
+       -s, --size    size of short side of maze, in cells
+       -h, --help       Display this help")
+  (newline))
+(define (main args)
+  (let ((option-spec
+         '((size (single-char #\s) (value #t))
+           (help (single-char #\h) (value #f)))))
+    (catch
+        'misc-error
+      (lambda ()
+        (let* ((options  (getopt-long args option-spec))
+               (help-wanted (option-ref options 'help #f))
+               (size (option-ref options 'size 10)))
+          (if help-wanted
+              (display-help)
+            (let ((temp-file-name (string-append
+                                   (getenv "HOME")
+                                   "/maze")))
+
+              (call-with-output-file temp-file-name (lambda (port) (display (make-maze size) port)))
+
+              (system (string-append "gv " temp-file-name " ; rm " temp-file-name " 2>nul"))))))
+      (lambda (key . args)
+        (display-help)))))
