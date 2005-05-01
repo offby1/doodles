@@ -173,7 +173,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
           (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
             (when bsa
               (let ((s (auction->string bsa)))
-                (assert-regexp-match "^S +W +N +E +\n-+\np- +p- +p- +" s "Auction string don't look right!")
+                (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
+                (printf "An auction:~n~a~n" s)
                 )
               )))
          
