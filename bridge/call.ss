@@ -125,7 +125,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (+ (* (- (level b) 1)
           5)
        (denom->integer (denomination b))))
-  
+
   (define-syntax call->bid!
     (syntax-rules ()
       ((_ thing)

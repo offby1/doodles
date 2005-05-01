@@ -54,23 +54,20 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                                         ;(trace all-legal-calls)
 
   (define *best-scoring-auction-so-far* #f)
+
+  ;; I'm not certain that this semaphore is necessary.
   (define *the-semaphore* (make-semaphore 1))
-
-  (define (higher-scoring-auction t1 t2)
   
-    (define (thing>? t1 t2)
-      (> (auction-score t1)
-         (auction-score t2)))
-
-    (if (thing>? t1 t2)
-        t1
-      t2))
-
   (define (consider-one-auction ca)
     (call-with-semaphore
      *the-semaphore*
      (lambda ()
-       (set! *best-scoring-auction-so-far* (higher-scoring-auction ca *best-scoring-auction-so-far*)))))
+       (when (or (not *best-scoring-auction-so-far*)
+                 (> (auction-score ca)
+                    (auction-score *best-scoring-auction-so-far*)))
+         (set! *best-scoring-auction-so-far*  ca)
+         ;;(printf "Best auction so far: ~a~n" (auction->string *best-scoring-auction-so-far*))
+         ))))
 
   (define (some-auctions-with-given-prefix i)
     (define alc (all-legal-calls i))
@@ -125,13 +122,14 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
   (define (best-auction-from-prefix a)
     (define thread-id (thread (lambda ()
                                 (some-auctions-with-given-prefix a))))
-    (let ((seconds-to-wait 10))
+    (let ((seconds-to-wait 1))
       (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
       (sync/timeout seconds-to-wait thread-id)
       (call-with-semaphore
        *the-semaphore*
-       (lambda () (kill-thread thread-id))))
+       (lambda () (kill-thread thread-id)))
+      (printf "done~n"))
 
     *best-scoring-auction-so-far*)
-
+  ;(trace best-auction-from-prefix)
   )

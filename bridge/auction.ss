@@ -8,9 +8,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (print-struct #t)
   
   (require "contract.ss"
+           "constants.ss"
            "call.ss"
            "misc.ss"
            "exceptions.ss"
+           (lib "13.ss" "srfi")
            (lib "list.ss" "srfi" "1")
            (lib "trace.ss"))
   (provide
@@ -23,6 +25,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    auction-has-a-double?
    auction-max-levels
    auction->string
+   (rename my-auction-ref auction-ref)
    auction-score
    copy-auction
    get-dealer)
@@ -49,8 +52,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (copy-auction a)
     (make-auction (get-guts a)
                   (get-dealer a)))
-                                  
-  (define *seats* '(north east south west))
 
   ;; (nth-successor 'north 0) => 'north
   ;; (nth-successor 'north 1) => 'east
@@ -86,6 +87,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (auction-length a)
     (length (get-guts a)))
   
+  (define (my-auction-ref a K)
+    (list-ref (reverse (get-guts a)) K))
+  
   (define (auction-add! a thing)
     (when (auction-complete? a)
       (error 'auction-complete))
@@ -105,6 +109,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             ;; which (despite the presence of the word "contract" :-)
             ;; seems like the wrong exception.  Perhaps I need a new
             ;; exn:fail:insufficient-bid exception or something.
+            ;;(write a) (newline)
             (raise-bridge-error 'auction-add! "sufficient bid" thing))))
 
        ((or (double? thing)
@@ -220,32 +225,25 @@ exec mzscheme -qu "$0" ${1+"$@"}
                    (if (not (eq? (get-dealer a) (car seats)))
                        (loop (rotate seats 1))
                      seats))))
-      (apply string-append
-       (string-append-map (lambda (s)
-                            (string-append
-                             (string-locale-upcase (substring (symbol->string s) 0 1))
-                             "   "))
-                          seats)
-       "\n"
-       "--------------\n"
-       (let loop ((calls (get-guts a))
-                  (result '())
-                  (ticker 0))
-         (if (null? calls)
-             result
-           (let ((separator "  "))
-             (when (and (zero? (modulo ticker 4))
-                        (positive? ticker))
-               (set! separator "\n"))
-             (loop (cdr calls)
-                   (cons (call->string (car calls))
-                         (cons separator result))
-                   (add1 ticker))))
-         )
-       )))
+      (string-append
+       (string-join
+        (map (lambda (s)
+               (string-append
+                (string-locale-upcase (substring (symbol->string s) 0 1))
+                "   "))
+             seats)
+        "  ")
+       "\n--------------\n"
+       (string-join
+        (map (lambda (chunk)
+               (string-join chunk "   "))
+             (group-by (length *seats*) (map call->string (reverse (get-guts a)))))
+     
+        "\n"))))
+
   ;; this sure is easier than doing it right!
   (define (auction-score thing)
     (if thing
-        (* 360 (- (modulo (equal-hash-code thing) 20) 10))
+        (auction-length thing)
       0))
   )

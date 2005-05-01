@@ -1,7 +1,12 @@
 (module misc mzscheme
-  (provide swap! level-or-zero append-map-at-most take-at-most)
+  (provide
+   swap!
+   level-or-zero
+   append-map-at-most
+   take-at-most
+   group-by)
   (require "call.ss")
-
+  
   (define-syntax swap!
     (syntax-rules ()
       ((_ a b)
@@ -39,4 +44,18 @@
 
   (define (append-map-at-most proc n seq)
     (apply append (map-at-most proc n seq)))
+  (define (group-by N seq)
+    (define (inner seq complete-chunks chunk chunk-length)
+      (if (null? seq)
+          (reverse (cons (reverse chunk) complete-chunks))
+        (let ((complete? (= chunk-length N)))
+          (inner (cdr seq)
+                 (if complete? (cons (reverse chunk) complete-chunks) complete-chunks)
+                 (if complete? (list (car seq))                       (cons (car seq) chunk))
+                 (if complete? 1                                      (add1 chunk-length))
+                 ))))
+    (inner seq '() '() 0)
+    )
+  
+  
   )

@@ -1,11 +1,12 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
 
 (require
  (planet "test.ss" ("schematics" "schemeunit.plt" 1))
  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
+ (planet "util.ss" ("schematics" "schemeunit.plt" 1))
  "contract.ss"
  "call.ss"
  "auction.ss"
@@ -168,6 +169,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
 
          (make-test-case
+          "Exercise best-auction-from-prefix"
+          (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
+            (when bsa
+              (let ((s (auction->string bsa)))
+                (assert-regexp-match "^S +W +N +E +\n-+\np- +p- +p- +" s "Auction string don't look right!")
+                )
+              )))
+         
+         (make-test-case
           "Gacks if we add to a completed auction"
           (let ((completed (make-auction 'west)))
             (auction-add! completed '(1 notrump))
@@ -179,16 +189,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (assert-exn exn:fail? (lambda () (auction-add! completed 'double)))
             (assert-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
             ))
-
-         (make-test-case
-          "Exercise best-auction-from-prefix"
-          (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
-            (when bsa
-              (printf "Best auction so far: ~n~a~nScore: ~a~n"
-                      (auction->string bsa) 
-                      (auction-score bsa)))))
+         
          ))
 
       ))
+    
   (exit 0))
 (exit 1)
