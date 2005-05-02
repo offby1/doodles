@@ -8,7 +8,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (lib "list.ss" "srfi" "1")
+   (lib "13.ss" "srfi")                 ;string-join
+   (lib "31.ss" "srfi")                 ;rec
    (lib "trace.ss")
+   "constants.ss"
    "exceptions.ss")
 
   (provide
@@ -22,6 +25,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (print-struct #t)
 
+  (define (looks-singular? sym)
+    (not (char=? #\s (char-downcase (car (reverse (string->list (symbol->string sym))))))))
+
+  (define (make-plural sym)
+    (string->symbol (string-append (symbol->string sym) "s")))
+  
   (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
     (make-struct-type
      'bid                               ;name-symbol          
@@ -33,20 +42,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
      #f                                 ;inspector-or-false   
      #f                                 ;proc-spec            
      '(0 1)                             ;immutable-k-list     
-     (lambda (level denom name)         ;guard-proc           
-       (unless (and (integer? level)
-                    (<= 1 level 7))
-         (raise-bridge-error name "integer in [1,7]" level))
-       (case denom
-         ((club diamond heart spade)
-          (set! denom (string->symbol (string-append (symbol->string denom)
-                                                     "s"))))
-         ((clubs diamonds hearts spades notrump)
-          'ok)
-         (else
-          (raise-bridge-error name "clubs|diamonds|hearts|spades|notrump" denom)))
-       (values level denom)
-       ))) 
+     (rec (bid-guard level denom name)  ;guard-proc
+          (unless (and (integer? level)
+                       (<= 1 level 7))
+            (raise-bridge-error name "integer in [1,7]" level))
+          (cond
+           ((memq denom *denominations*) (values level denom))
+           ((looks-singular? denom)
+            (bid-guard level (make-plural denom) name))
+           (else
+            (raise-bridge-error
+             name
+             (string-join (map symbol->string *denominations*) "|")
+             denom)))
+          )
+     ))
  
   (define bid-level
     (make-struct-field-accessor bid-ref 0))
@@ -113,14 +123,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (bid? thing)))
 
   (define (denom->integer d)
-    (case d
-      ((clubs) 0)
-      ((diamonds) 1)
-      ((hearts) 2)
-      ((spades) 3)
-      ((notrump) 4)
-      (else (raise-bridge-error "denomination" d))))
-  
+    (let ((l (or (memq d *denominations*)
+                 (memq (make-plural d) *denominations*))))
+      (when (not l)
+        (raise-bridge-error 'denom->integer *denominations*
+                            d))
+      (- (length *denominations*)
+         (length l))))
+
   (define (bid-to-number b)
     (+ (* (- (level b) 1)
           5)

@@ -12,7 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            "call.ss"
            "misc.ss"
            "exceptions.ss"
-           (lib "13.ss" "srfi")
+           (lib "13.ss" "srfi")         ;string-join
            (lib "list.ss" "srfi" "1")
            (lib "trace.ss"))
   (provide

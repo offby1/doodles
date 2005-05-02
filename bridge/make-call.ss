@@ -1,3 +1,6 @@
+;; make-call is a confusing name, since this directory contains a
+;; module named 'call' that defines (but thankfully doesn't provide) a
+;; function by that name.
 (module make-call mzscheme
 ;;;the entry point for bidding
   (require "tree.ss"
