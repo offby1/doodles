@@ -1,5 +1,10 @@
 TESTS := at-private.ss at.ss ct2.ss misc-tests.ss
 
+ETAGS ?= etags
+
+tags: $(wildcard *.ss)
+	$(ETAGS) --regex='/^ *(def\w+\W+.*?\W+/' *.ss
+
 check: $(TESTS)
 	@failed_tests=;						\
         for t in $(TESTS);					\
@@ -9,4 +14,4 @@ check: $(TESTS)
         done; \
         test -z "$$failed_tests" || { echo Failed tests: $$failed_tests; false ; }
 
-.PHONY: check
+.PHONY: check tags
