@@ -58,12 +58,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; (nth-successor 'north 102) => 'south
   ;; (nth-successor 'north 203) => 'west
   (define (nth-successor seat n)
-
-    (define (seat->number s)
-      (list-index (lambda (x)
-                    (eq? x s))
-                  *seats*))
-
+    
     (list-ref *seats* (modulo (+ (seat->number seat) n) (length *seats*))))
 
   (define (my-make-auction dealer)
