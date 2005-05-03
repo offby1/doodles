@@ -17,5 +17,9 @@ check: $(TESTS)
                 ./$$t || failed_tests="$$failed_tests $$t";	\
         done; \
         test -z "$$failed_tests" || { echo Failed tests: $$failed_tests; false ; }
+	./auction.ss
+	./call.ss
+	./tree.ss
+	mzscheme -M errortrace -qu play-card.ss
 
 .PHONY: check tags
