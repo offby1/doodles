@@ -23,3 +23,4 @@ clean:
 	rm -f $(CS) $(LINKFILE) $(prog) hmm
 
 .PHONY: clean check
+.INTERMEDIATE: $(CS) $(LINKFILE)
