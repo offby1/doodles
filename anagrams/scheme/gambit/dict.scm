@@ -22,15 +22,14 @@
         (let loop ((word  (read-line))
                    (words-read 0))
           (if (eof-object? word)
-              (display  "Reading dictionary ... done.")
+              (begin (display  " done.") (newline))
             (begin
               (if (word-acceptable? word)
                   (adjoin-word dict (string-downcase word)))
               (if (zero? (remainder words-read 1000))
                   (begin
-                    (display   "Reading dictionary ... ")
-                    (display  words-read)
-                    (display " words ..."))
+                    (display " ")
+                    (display  words-read))
                 )
               (loop (read-line)
                     (+ 1 words-read)))
@@ -126,6 +125,6 @@
                                   (bag-acceptable? (car entry) bag-to-meet))
                                 (hash-table-map *big-ol-hash-table* cons))))
             result)))
-  (newline)
-  (display "done."))
+  (display " done.")
+  (newline))
 
