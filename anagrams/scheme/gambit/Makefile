@@ -1,19 +1,25 @@
-#  bag-example.scm
-SCMS := bag.scm dict.scm hash-table.scm anagrams.scm 
-CS   := $(SCMS:.scm=.c) $(basename $(word $(words $(SCMS)),$(SCMS)))_.c
+SCMS 	 := bag.scm dict.scm hash-table.scm anagrams.scm 
+CS   	 := $(SCMS:.scm=.c)
+LINKFILE := $(basename $(word $(words $(SCMS)),$(SCMS)))_.c
 
-prog := yow
+prog := anagrams
 
 all: $(prog)
 
 check: $(prog)
 	time ./$(prog) "st hemingway"
 
-$(prog): $(SCMS)
+%.c : %.scm
+	gsc -c $^
+
+$(LINKFILE): $(CS)
 	gsc $^
-	gcc -o $@ $(CS) -lgambc -lm -lutil -ldl 
+
+LDLIBS := -lgambc -lm -lutil -ldl 
+
+$(prog): $(CS) $(LINKFILE)
 
 clean:
-	rm -f *.c $(prog) hmm
+	rm -f $(CS) $(LINKFILE) $(prog) hmm
 
 .PHONY: clean check
