@@ -21,10 +21,12 @@ Nil asString := method ("Nil!")
 
 f := File setPath ("/usr/share/dict/words") openForReading
 
-evil_words_to_skip := list ("activate", "clone", "debug", "delegate", "forward", "parent", "return", "self", "sender", "target")
+evil_words_to_skip := Map clone
+list ("activate", "clone", "debug", "delegate", "forward", "parent", "return", "self", "sender", "target") foreach (i, v, evil_words_to_skip atPut (v, 1))
 
 while(line := f readLine,
-  if (evil_words_to_skip contains (line) == Nil, 
+  line := line asString
+  if (evil_words_to_skip hasKey (line) == Nil, 
     line print
     ": " print
-    line asString asMap asString linePrint))
+    line asMap asString linePrint))

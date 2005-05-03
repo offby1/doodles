@@ -66,7 +66,11 @@ print >> sys.stderr, "Pruning dictionary.  Before:", len (dict_hash_table.keys (
 
 # Now convert the hash table to a list, longest entries first.  (This
 # isn't necessary, but it makes the more interesting anagrams appear
-# first.)  While we're at it, prune the list, too.
+# first.)
+
+# While we're at it, prune the list, too.  That _is_ necessary for the
+# program to finish before you grow old and die.
+
 the_dict_list = []
 for k in dict_hash_table.keys ():
     if (subtract_bags (the_phrase, k)):
