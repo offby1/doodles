@@ -62,8 +62,4 @@
         (* cards-per-hand (seat->number seat))
         (* cards-per-hand (add1 (seat->number seat)))))
       ))
-  
-
-  (define d (shuffled-deck))
-  (printf "Hey look! ~a~n" (deck->string d))
   )

@@ -8,7 +8,7 @@
    hand-ref
    hand-length
    without-card
-   hand-complete?
+   hand->list
    (rename my-make-hand make-hand))
 
   (print-struct #t)
@@ -31,8 +31,9 @@
   (define (without-card c h)
     (make-hand (remove c (hand-cards h))))
   
-  (define (hand-complete? h)
-    (= (hand-length h) *deck-size*))
+  (define (hand->list h)
+    (hand-cards h))
+  
 
   (define h (my-make-hand (vector 0 1 2 3 4 5 6 7 8 9 10 11 12)))
   (printf "Here's a simple hand: ~s~n" h)
