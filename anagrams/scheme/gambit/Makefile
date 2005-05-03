@@ -1,14 +1,19 @@
-dict := /usr/share/dict/words
+#  bag-example.scm
+SCMS := bag.scm dict.scm hash-table.scm anagrams.scm 
+CS   := $(SCMS:.scm=.c) $(basename $(word $(words $(SCMS)),$(SCMS)))_.c
 
-check: bag-example
-	./bag-example |  sed 's/:.*$$//' > hmm
-	diff $(dict) hmm
+prog := yow
 
-bag-example: bag.scm bag-example.scm
+all: $(prog)
+
+check: $(prog)
+	time ./$(prog) "st hemingway"
+
+$(prog): $(SCMS)
 	gsc $^
-	gcc -o $@ bag.c bag-example.c bag-example_.c -lgambc -lm -lutil -ldl 
+	gcc -o $@ $(CS) -lgambc -lm -lutil -ldl 
 
 clean:
-	rm -f *.c bag-example hmm
+	rm -f *.c $(prog) hmm
 
 .PHONY: clean check

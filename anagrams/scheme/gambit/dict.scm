@@ -1,19 +1,37 @@
 (define *big-ol-hash-table* #f)
 
 (define (wordlist->hash fn)
+
+  (define (string-downcase s)
+    (with-output-to-string
+     ""
+     (lambda ()
+       (with-input-from-string
+        s
+        (lambda ()
+          (let loop ((ch (read-char)))
+            (if (not (eof-object? ch))
+                (begin
+                  (display (char-downcase ch))
+                  (loop (read-char))))))))))
+
   (with-input-from-file fn
     (lambda ()
-      (let ((dict (make-hash-table 'equal)))
-        (fprintf status-port  "Reading dictionary ... ")
+      (let ((dict (make-hash-table)))
+        (display  "Reading dictionary ... ")
         (let loop ((word  (read-line))
                    (words-read 0))
           (if (eof-object? word)
-              (fprintf status-port  "Reading dictionary ... done.")
+              (display  "Reading dictionary ... done.")
             (begin
               (if (word-acceptable? word)
-                  (adjoin-word dict (srfi-13-string-downcase word)))
+                  (adjoin-word dict (string-downcase word)))
               (if (zero? (remainder words-read 1000))
-                  (fprintf status-port  (format "Reading dictionary ... ~a words ..." words-read)))
+                  (begin
+                    (display   "Reading dictionary ... ")
+                    (display  words-read)
+                    (display " words ..."))
+                )
               (loop (read-line)
                     (+ 1 words-read)))
             ))
@@ -24,12 +42,12 @@
 
 (define (adjoin-word dict word)
   (let* ((this-bag (bag word))
-         (probe (hash-table-get dict this-bag (lambda () #f))))
+         (probe (hash-get dict this-bag)))
     (cond
      ((not probe)
-      (hash-table-put! dict this-bag (list-quicksort (list word) string<?)))
+      (hash-set! dict this-bag (list word)))
      ((not (member word probe))
-      (hash-table-put! dict this-bag (cons word probe)))
+      (hash-set! dict this-bag (cons word probe)))
      )))
 
 (define (word-acceptable? word)
@@ -80,47 +98,34 @@
        this))
 
 (define (init bag-to-meet dict-file-name)
+  (define (filter proc? seq)
+    (let loop ((seq seq)
+               (result '()))
+      (if (null? seq)
+          (reverse result)
+        (loop (cdr seq)
+              (if (proc? (car seq))
+                  (cons (car seq)
+                        result)
+                result)))))
   (if (not *big-ol-hash-table*)
       (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
   
-  (fprintf status-port "Pruning dictionary ... ") (flush-output)
+  (display "Pruning dictionary ... ") 
 
   (set! *dictionary* 
         (let ((entries-examined 0))
-          (let ((result (srfi-1-filter (lambda (entry)
-                                         (if (zero? (remainder entries-examined 1000))
-                                             (fprintf status-port
-                                                      (format "Pruning dictionary ... ~a words ..." entries-examined)))
-                                         (set! entries-examined (+ 1 entries-examined))
-                                         (bag-acceptable? (car entry) bag-to-meet))
-                                       (hash-table-map *big-ol-hash-table* cons))))
+          (let ((result (filter (lambda (entry)
+                                  (if (zero? (remainder entries-examined 1000))
+                                      (begin
+                                        
+                                        (display " ")
+                                        (display  entries-examined)
+                                        ))
+                                  (set! entries-examined (+ 1 entries-examined))
+                                  (bag-acceptable? (car entry) bag-to-meet))
+                                (hash-table-map *big-ol-hash-table* cons))))
             result)))
-  (fprintf status-port "Pruning dictionary ... done.")
-  
-  (let ()
-    (define (biggest-first e1 e2) 
-      (let* ((s1 (cadr e1))
-             (s2 (cadr e2))
-             (l1 (string-length s1))
-             (l2 (string-length s2)))
-        (or (> l1 l2)
-            (and (= l1 l2)
-                 (string<? s1 s2)))))
-    (define (shuffled seq)
-      (let ((with-random-numbers (map (lambda (item)
-                                        (cons (random 2147483647)
-                                              item))
-                                      seq)
-                                 ))
-        (set! with-random-numbers (list-quicksort with-random-numbers (lambda (a b)
-                                                                        (< (car a)
-                                                                           (car b)))))
-        (map cdr with-random-numbers)))
-    
-    (set! *dictionary* 
-          (if #t
-              (list-quicksort *dictionary* biggest-first)
-            (shuffled *dictionary*))
-          )))
-
+  (newline)
+  (display "done."))
 
