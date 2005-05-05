@@ -10,12 +10,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (lib "list.ss" "srfi" "1")
    (lib "13.ss" "srfi")                 ;string-join
    (lib "31.ss" "srfi")                 ;rec
-   (lib "trace.ss")
+
    "constants.ss"
    "exceptions.ss")
 
   (provide
-   make-bid level denomination bid-to-number
+   (rename my-make-bid make-bid)
+   level denomination bid-to-number
    (rename my-call? call?)
    (rename flexible-make-call make-call)
    (rename my-bid? bid?)
@@ -31,38 +32,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (make-plural sym)
     (string->symbol (string-append (symbol->string sym) "s")))
   
-  (define-values (struct:bid make-bid bid? bid-ref bid-set!) 
-    (make-struct-type
-     'bid                               ;name-symbol          
-     #f                                 ;super-struct-type    
-     2                                  ;init-field-k         
-     0                                  ;auto-field-k         
-     #f                                 ;auto-v               
-     null                               ;prop-value-list      
-     #f                                 ;inspector-or-false   
-     #f                                 ;proc-spec            
-     '(0 1)                             ;immutable-k-list     
-     (rec (bid-guard level denom name)  ;guard-proc
-          (unless (and (integer? level)
-                       (<= 1 level 7))
-            (raise-bridge-error name "integer in [1,7]" level))
-          (cond
-           ((memq denom *denominations*) (values level denom))
-           ((looks-singular? denom)
-            (bid-guard level (make-plural denom) name))
-           (else
-            (raise-bridge-error
-             name
-             (string-join (map symbol->string *denominations*) "|")
-             denom)))
-          )
-     ))
- 
-  (define bid-level
-    (make-struct-field-accessor bid-ref 0))
-
-  (define bid-denomination
-    (make-struct-field-accessor bid-ref 1))
+  (define-struct bid (level denomination) #f)
+  (define (my-make-bid level denom)
+    (unless (and (integer? level)
+                 (<= 1 level 7))
+      (raise-bridge-error 'make-bid "integer in [1,7]" level))
+    (cond
+     ((memq denom *denominations*)
+      (make-bid level denom))
+     ((looks-singular? denom)
+      (my-make-bid level (make-plural denom)))
+     (else
+      (raise-bridge-error
+       'make-bid
+       (string-join (map symbol->string *denominations*) "|")
+       denom))))
 
   (define (level thing)
     (call->bid! thing)
@@ -72,51 +56,41 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (call->bid! thing)
     (bid-denomination thing))
   
-  (define-values (struct:call make-call call? call-ref call-set!) 
-    (make-struct-type
-     'call                              ;name-symbol
-     #f                                 ;super-struct-type
-     1                                  ;init-field-k
-     0                                  ;auto-field-k
-     #f                                 ;auto-v
-     null                               ;prop-value-list
-     #f                                 ;inspector-or-false
-     #f                                 ;proc-spec
-     '(0)                               ;immutable-k-list
-     (lambda (thing name)               ;guard-proc           
-       (case thing
-         ((pass double redouble)
-          (values thing))
-         (else
-          (cond
-           ((pair? thing)
-            (make-bid (first thing)
-                      (last thing)))
-           (else (raise-bridge-error 'make-call "legal call" thing))))))))
+  (define-struct call (thing) #f)
+  (define (my-make-call thing)
+    (case thing
+      ((pass double redouble)
+       (make-call thing))
+      (else
+       (cond
+        ((pair? thing)
+         (make-call
+          (my-make-bid (first thing)
+                                 (last thing))))
+        (else (raise-bridge-error 'make-call "legal call" thing))))))
 
   ;; can be called _either_ with a list like (make-call '(1 clubs))
   ;; _or_ with two separate arguments like (make-call 1 'clubs)
   (define flexible-make-call
     (case-lambda
       [(thing)
-       (make-call thing)]
+       (my-make-call thing)]
       [(level denom)
-       (make-call (list level denom))]))
+       (my-make-call (list level denom))]))
 
-  (define get-call
-    (make-struct-field-accessor call-ref 0))
+  
   
   (define (pass? thing)
     (and (call? thing)
-         (eq? 'pass (get-call thing))))
+         (eq? 'pass (call-thing thing))))
 
   (define (double? thing)
     (and (call? thing)
-         (eq? 'double (get-call thing))))
+         (eq? 'double (call-thing thing))))
 
   (define (redouble? thing)
     (and (call? thing)
-         (eq? 'redouble (get-call thing))))
+         (eq? 'redouble (call-thing thing))))
 
   (define (my-call? thing)
     (or (call? thing)
@@ -140,7 +114,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (syntax-rules ()
       ((_ thing)
        (when (call? thing)
-         (set! thing (get-call thing))))))
+         (set! thing (call-thing thing))))))
   
   (define (bid>? b1 b2)
     (call->bid! b1)
@@ -149,7 +123,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (bid-to-number b2)))
   (define (my-bid? thing)
     (or (bid? thing)
-        (bid? (get-call thing))))
+        (bid? (call-thing thing))))
   (define (call->string c)
     (cond
      ((pass? c)
@@ -158,7 +132,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       "X ")
      ((redouble? c)
       "XX")
-     ((bid? (get-call c))
+     ((bid? (call-thing c))
       (call->bid! c)
       (string-append
        (number->string (level c))
@@ -166,6 +140,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                         0 1))))
      (else
       (raise-type-error 'call->string "call" c))))
-  ;(trace level denomination)
+
+
   )
 
