@@ -28,30 +28,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (rename my-auction-ref auction-ref)
    auction-score
    copy-auction
-   get-dealer)
+   auction-dealer)
 
-  (define-values (struct:auction make-auction auction? auction-ref auction-set!) 
-    (make-struct-type
-     'auction                           ;name-symbol
-     #f                                 ;super-struct-type
-     2                                  ;init-field-k
-     0                                  ;auto-field-k
-     #f                                 ;auto-v
-     null                               ;prop-value-list
-     #f                                 ;inspector-or-false
-     #f                                 ;proc-spec
-     '()                                ;immutable-k-list
-     #f                                 ;guard-proc
-     ))
-
+  (define-struct auction (guts dealer) #f)
+  
   ;; this _could_ be dangerous: if we ever expose a function that
   ;; modifies the list structure of the guts, then we'd need to change
   ;; this function to do a deep copy.  As it stands now, though,
   ;; that's not necessary, since no function yet modifies list
   ;; structure.  Good thing I wrote a unit test to check for that.
   (define (copy-auction a)
-    (make-auction (get-guts a)
-                  (get-dealer a)))
+    (make-auction (auction-guts a)
+                  (auction-dealer a)))
 
   ;; (nth-successor 'north 0) => 'north
   ;; (nth-successor 'north 1) => 'east
@@ -69,21 +57,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ;; because it's a tad easier to cons new calls onto the front than
     ;; to append them to the end.
     (make-auction '() dealer))
-  
-  (define get-guts
-    (make-struct-field-accessor auction-ref 0 'guts))
-  
-  (define set-guts!
-    (make-struct-field-mutator  auction-set! 0 'guts))
-  
-  (define get-dealer
-    (make-struct-field-accessor auction-ref 1 'dealer))
-  
+
   (define (auction-length a)
-    (length (get-guts a)))
+    (length (auction-guts a)))
   
   (define (my-auction-ref a K)
-    (list-ref (reverse (get-guts a)) K))
+    (list-ref (reverse (auction-guts a)) K))
   
   (define (auction-add! a thing)
     (when (auction-complete? a)
@@ -92,7 +71,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (unless (call? thing)
       (set! thing (make-call thing)))
     
-    (let ((guts (get-guts a)))
+    (let ((guts (auction-guts a)))
 
       (cond
        ((bid? thing)
@@ -116,27 +95,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
                            (redouble? thing)))
             (raise-bridge-error auction-add! "appropriate double or redouble" thing)))))
       
-      (set-guts! a (cons thing guts))))
+      (set-auction-guts! a (cons thing guts))))
 
   (define (auction-complete? a)
     (and (< 3 (auction-length a))
-         (every pass? (take (get-guts a) 3))))
+         (every pass? (take (auction-guts a) 3))))
   
   (define (auction-contract a)
     (and (auction-complete? a)
-         (let ((down-from-last-bid  (find-tail bid? (get-guts a))))
+         (let ((down-from-last-bid  (find-tail bid? (auction-guts a))))
            (if (not down-from-last-bid)
                'passed-out
              (let* ((last-bid (car down-from-last-bid))
                     (last-bidders-seat (nth-successor
-                                        (get-dealer a)
+                                        (auction-dealer a)
                                         (- (length down-from-last-bid) 1))
                                        ))
                (make-contract
                 (level last-bid)
                 (denomination last-bid)
                 (let loop ((up-to-last-bid (reverse down-from-last-bid))
-                           (seat (get-dealer a)))
+                           (seat (auction-dealer a)))
                   (let ((b (car up-to-last-bid)))
                     (if (and (bid? b)
                              (or (eq? seat last-bidders-seat)
@@ -152,7 +131,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (a-risk a)
     (let ((last-non-pass (find (lambda (c)
                                  (not (pass? c)))
-                               (get-guts a))))
+                               (auction-guts a))))
       (cond
        ((not       last-non-pass) 0)
        ((bid?      last-non-pass) 1)
@@ -162,7 +141,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (error "internal error -- expected double or redouble; got" last-non-pass)))))
 
   (define (auction-has-a-double? a)
-    (any double? (get-guts a)))
+    (any double? (auction-guts a)))
 
   (define (every-other seq)
     (let loop ((l seq)
@@ -187,7 +166,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ;; say that the dealer's side is the evens, and the dealer's
     ;; opponents are the odds.  But since the calls are in reverse
     ;; order, that's wrong when there's an even number of them.
-    (let-values (((one-side other-side) (every-other (get-guts a))))
+    (let-values (((one-side other-side) (every-other (auction-guts a))))
       (let ((dealers-side one-side)
             (dealers-opps other-side))
         (when (even? (auction-length a))
@@ -217,7 +196,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define (auction->string a)
     (let ((seats (let loop ((seats *seats*))
-                   (if (not (eq? (get-dealer a) (car seats)))
+                   (if (not (eq? (auction-dealer a) (car seats)))
                        (loop (rotate seats 1))
                      seats))))
       (string-append
@@ -230,7 +209,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (string-join
         (map (lambda (chunk)
              (string-join chunk (make-string 4 #\space)))
-             (group-by (length *seats*) (map call->string (reverse (get-guts a)))))
+             (group-by (length *seats*) (map call->string (reverse (auction-guts a)))))
      
         "\n"))))
 
