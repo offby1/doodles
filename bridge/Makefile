@@ -2,12 +2,18 @@ TESTS := at-private.ss at.ss ct2.ss misc-tests.ss
 
 ETAGS ?= etags
 
+# Some comments about the complex regular expression:
+
+#I think it's not necessary for this regular expression to carefully
+#pick out the name of the defined thing, because etags can guess the
+#name.  But it doesn't seem to hurt to have it, and boy did I slave
+#over it ...
+
+#Also, for some reason, tags completion doesn't work with structure
+#names, but works fine with function names.
+
 tags: $(wildcard *.ss)
-	$(ETAGS) --regex='/^ *(def\w+\W+.*?\W+/' *.ss
-# Bill Clementson recommends this:
-# --regex="/[ \t]*(def[a-z\-]+[ \t]+\(.*\)/\1/
-# http://home.comcast.net/~bc19191/2003_11_02_bill-clementson_archive.html
-# Haven't yet tried it
+	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 check: $(TESTS)
 	@failed_tests=;						\
