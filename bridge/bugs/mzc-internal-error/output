@@ -1,0 +1,34 @@
+$ ./repro.sh 
+MzScheme compiler (mzc) version 299.105, Copyright (c) 2005 PLT Scheme, Inc.
+"bug.ss": 
+ Reading...  expanding...
+      [cpu: 150ms, real: 202ms, gc: 60ms]
+ pre-processing and scanning for errors
+      [cpu: 0ms, real: 1ms, gc: 0ms]
+ transforming to a-normal form
+      [cpu: 0ms, real: 0ms, gc: 0ms]
+ determining known bindings
+      [cpu: 0ms, real: 2ms, gc: 0ms]
+ transforming to b-normal form, analyzing, and inlining
+      [cpu: 10ms, real: 33ms, gc: 0ms]
+ finding static procedures
+      [cpu: 10ms, real: 5ms, gc: 0ms]
+ #f [#f,#f]: Warning: found static procedure (per-load)
+ #f [#f,#f]: Warning: found static procedure (per-load)
+ closure conversion and explicit control transformation
+      [cpu: 0ms, real: 1ms, gc: 0ms]
+ closure->vehicle mapping
+      [cpu: 0ms, real: 0ms, gc: 0ms]
+ choosing data representations
+      [cpu: 0ms, real: 1ms, gc: 0ms]
+ transforming to Virtual Machine form
+      [cpu: 10ms, real: 8ms, gc: 0ms]
+ optimizing Virtual Machine code
+      [cpu: 0ms, real: 1ms, gc: 0ms]
+ [emitting ANSI C to "/tmp/mzcTMPbug.c"]
+ #f [#f,#f]: INTERNAL ERROR: vm:build-constant: not supported #<struct:zread>
+ please report the bug using Help Desk
+  or http://bugs.plt-scheme.org/
+  and include a transcript in verbose mode
+Errors encountered.  Compilation aborted.
+$ 
