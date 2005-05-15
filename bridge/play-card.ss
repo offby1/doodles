@@ -2,6 +2,7 @@
   (require (lib "list.ss" "srfi" "1")
            (lib "trace.ss")
            "auction.ss"
+           "card.ss"
            "deck.ss"
            "hand.ss"
            "play-history.ss")

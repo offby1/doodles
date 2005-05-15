@@ -5,30 +5,16 @@
    deck-length
    *deck-size*
    deck-ref
-   card->string)
+   )
   (require (lib "list.ss" "srfi" "1")
            (lib "13.ss" "srfi")
            (rename (lib "43.ss" "srfi") vector-copy vector-copy)
            "constants.ss"
-           "hand.ss")
+           "hand.ss"
+           "card.ss")
 
   (define-struct deck (v))
-  
-  (define (rank-string r)
-    (case r
-      ((11) "jack")
-      ((12) "queen")
-      ((13) "king")
-      ((14) "ace")
-      (else
-       (format "~a" r))))
-  
-  (define (card->string thing)
-    (let* ((rank# (+ (car *ranks*) (modulo   thing (length *ranks*))))
-           (suit# (quotient thing (length *ranks*)))
-           (suit-string (list-ref *suits* suit#)))
-      (format "the ~a of ~a" (rank-string rank#) suit-string)))
-  
+
   (define (shuffled-deck)
     (define (fisher-yates-shuffle v)
       (define (swap! i1 i2)
@@ -40,7 +26,8 @@
             ((zero? top-index) v)
           (let ((bottom-index (random top-index)))
             (swap! bottom-index top-index)))))
-    (make-deck (fisher-yates-shuffle (list->vector (iota *deck-size*)))))
+    (make-deck  (fisher-yates-shuffle (list->vector (map make-card-from-number 
+                                                    (iota *deck-size*))))))
 
   (define (deck->string d)
     (string-join

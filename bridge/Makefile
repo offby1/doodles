@@ -26,6 +26,7 @@ check: $(TESTS)
 	./auction.ss
 	./call.ss
 	./tree.ss
-	mzscheme -M errortrace -qu play-card.ss
+	mzscheme -qu play-card.ss
+	mzscheme -qu deck-fiddling.ss
 
 .PHONY: check tags
