@@ -5,6 +5,7 @@
    card-suit
    card<
    make-card-from-number
+   card-rank
    (rename my-make-card make-card))
   (require "constants.ss"
            "exceptions.ss")
