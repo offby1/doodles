@@ -4,6 +4,7 @@
            "deck.ss"
            "card.ss"
            (lib "list.ss" "srfi" "1")
+           (lib "13.ss" "srfi")
            (rename (lib "compat.ss") sort sort))
   
 
@@ -26,35 +27,49 @@
   (define *shapes* (make-hash-table 'equal))
   (define *coca-cola-hands* 0)
 
-  (define *passes* 10000)
+  (define *deals* 1000)
   
   (define (shape-distribution)
     (hash-table-map *shapes* (lambda (k v) (list v k))))
 
-  (define (note-hand! h)
-    (define (max-rank)
-      (apply max (map card-rank (hand->list h))))
-    (hash-table-increment! *shapes* (sort > (shape h)))
-    (when (<= (max-rank) 10)
-      (set! *coca-cola-hands* (add1 *coca-cola-hands*))))
-
+  (define note-hand!
+    (let ((hands-seen 0))
+      (lambda (h)
+        (define (max-rank)
+          (apply max (map card-rank (hand->list h))))
+        (hash-table-increment! *shapes* (sort > (shape h)))
+        (set! hands-seen (add1 hands-seen))
+        (when (<= (max-rank) 10)
+          (set! *coca-cola-hands* (add1 *coca-cola-hands*))))))
+  
+  
   (let loop ((d (shuffled-deck))
-             (passes 0))
-    (when (< passes *passes*)
+             (deals 0))
+    (when (< deals *deals*)
       (for-each 
        (lambda (s)
          (note-hand! (holding d s)))
        *seats*)  
-      (loop (shuffled-deck) (add1 passes))))
+      (loop (shuffled-deck) (add1 deals))))
 
-  (printf "After ~a passes~n~a: ~a~n" *passes* "Shape" "likelihood")
-  (for-each (lambda (thing)
-              (printf "~a: ~a~n"
-                      (cadr thing)
-                      (exact->inexact (/ (car thing) (* (length *seats*) *passes*)))))
-            (sort (lambda (a b)
-                   (> (car a)
-                      (car b))) (shape-distribution)))
-  (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n" (exact->inexact (/ *coca-cola-hands* *passes*)))
+  (printf "After ~a deals~n~a: ~a~n" *deals* "Shape" "likelihood")
+  (let* ((results (map (lambda (thing)
+                         (list
+                          (second thing)
+                          (first thing)))
+                       (sort (lambda (a b)
+                               (> (car a)
+                                  (car b))) (shape-distribution))))
+         (num-hands (apply + (map second results))))
+    (printf "~a~n"
+            (string-join
+             (map (lambda (p)
+                    (format "~a: ~a"
+                            (first p)
+                            (exact->inexact (/ (second p) num-hands ))))
+                  results)
+             "\n"))
+    (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n" (exact->inexact (/ *coca-cola-hands* num-hands))))
+  
   (newline)
   )
