@@ -8,7 +8,7 @@
    )
   (require (lib "list.ss" "srfi" "1")
            (lib "13.ss" "srfi")
-           (rename (lib "43.ss" "srfi") vector-copy vector-copy)
+           (only (lib "43.ss" "srfi") vector-copy)
            "constants.ss"
            "hand.ss"
            "card.ss")

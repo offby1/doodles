@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
+exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
 (module tree mzscheme
@@ -14,7 +14,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
            "exceptions.ss"
            (lib "trace.ss")
            (lib "pretty.ss")
-           (rename (lib "misc.ss" "swindle") list-of list-of)
+           (only (lib "misc.ss" "swindle") list-of)
            (prefix list- (lib "list.ss"))
            (lib "list.ss" "srfi" "1"))
 

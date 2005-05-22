@@ -1,6 +1,6 @@
 (module hand mzscheme
   (require  (all-except (lib "list.ss" "srfi" "1") remove)
-            (rename (lib "list.ss") remove remove)
+            (only (lib "list.ss") remove)
             "constants.ss"
             "exceptions.ss"
             (lib "trace.ss"))

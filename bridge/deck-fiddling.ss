@@ -5,18 +5,15 @@
            "card.ss"
            (lib "list.ss" "srfi" "1")
            (lib "13.ss" "srfi")
-           (rename (lib "compat.ss") sort sort))
+           (only (lib "compat.ss") sort))
   
-
   ;; hand -> four-element list
   (define (shape h)
-    (set! h (hand->list h))
     (map (lambda (s)
-           (length (filter (lambda (c) (eq? s (card-suit c))) h))
-           )
-         *suits*)
-    )
-    
+           (length (filter (lambda (c) (eq? s (card-suit c)))
+                           (hand->list h))))
+         *suits*))
+  
   (define (hand->string h)
     (map card->short-string (sort card< (hand->list h))))
 
