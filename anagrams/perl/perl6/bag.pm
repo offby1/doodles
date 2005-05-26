@@ -1,47 +1,30 @@
 #!/usr/bin/env perl
 
-use warnings;
-use strict;
+sub char_to_factor (Str $char) {
+  $char = lc ($char);
 
-package bag;
-
-use Carp qw(cluck confess);
-use Data::Dumper;
-use Math::BigInt lib => 'GMP';
-warn "using " . Math::BigInt->config()->{lib};
-
-require Exporter;
-our @ISA = qw(Exporter);
-our @EXPORT = qw(bag bag_empty bags_equal subtract_bags  size);
-
-my @primes = qw(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101) ;
-
-{
-  my $a_code = ord ("a");
-  sub char_to_factor {
-    my $char = lc (shift);
-
-    if ($char !~ m([[:alpha:]])) {
-      return 1;
-    }
-
-    $primes [ord ($char) - $a_code];
+  if ($char !~ m([[:alpha:]])) {
+    return 1;
   }
+
+  $primes [ord ($char) - $a_code];
 }
+
 
 sub bag {
   my $thing = shift;
 
-  confess "I was passed a reference"
+  die "I was passed a reference"
     if (ref ($thing));
 
-  my $product = Math::BigInt->new(1);
+  my $product = 1;
 
   foreach (split (qr(), $thing)) {
     my $factor = char_to_factor ($_);
     $product *=  $factor;
   }
 
+  warn "$thing, $product";
   return $product;
 }
 
