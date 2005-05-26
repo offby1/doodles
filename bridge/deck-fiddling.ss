@@ -17,28 +17,32 @@
   (define (hand->string h)
     (map card->short-string (sort card< (hand->list h))))
 
-  (define (hash-table-increment! h k)
-    (let ((v (hash-table-get h k (lambda () 0))))
-      (hash-table-put! h k (add1 v))))
-
-  (define *shapes* (make-hash-table 'equal))
   (define *coca-cola-hands* 0)
 
   (define *deals* 1000)
   
-  (define (shape-distribution)
-    (hash-table-map *shapes* (lambda (k v) (list v k))))
-
-  (define note-hand!
+  (define shape-distribution #f)
+  (define note-hand! #f)
+
+  (let ()
+    (define *shapes* (make-hash-table 'equal))
+
+    (set! shape-distribution 
+          (lambda ()
+            (hash-table-map *shapes* (lambda (k v) (list v k)))))
+
     (let ((hands-seen 0))
-      (lambda (h)
-        (define (max-rank)
-          (apply max (map card-rank (hand->list h))))
-        (hash-table-increment! *shapes* (sort > (shape h)))
-        (set! hands-seen (add1 hands-seen))
-        (when (<= (max-rank) 10)
-          (set! *coca-cola-hands* (add1 *coca-cola-hands*))))))
-  
+      (set! note-hand!
+            (lambda (h)
+              (define (max-rank)
+                (apply max (map card-rank (hand->list h))))
+              (define (hash-table-increment! h k)
+                (let ((v (hash-table-get h k (lambda () 0))))
+                  (hash-table-put! h k (add1 v))))
+              (hash-table-increment! *shapes* (sort > (shape h)))
+              (set! hands-seen (add1 hands-seen))
+              (when (<= (max-rank) 10)
+                (set! *coca-cola-hands* (add1 *coca-cola-hands*)))))))
   
   (let loop ((d (shuffled-deck))
              (deals 0))
@@ -66,7 +70,8 @@
                             (exact->inexact (/ (second p) num-hands ))))
                   results)
              "\n"))
-    (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n" (exact->inexact (/ *coca-cola-hands* num-hands))))
+    (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n"
+            (exact->inexact (/ *coca-cola-hands* num-hands))))
   
   (newline)
   )

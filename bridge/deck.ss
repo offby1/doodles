@@ -27,7 +27,7 @@
           (let ((bottom-index (random top-index)))
             (swap! bottom-index top-index)))))
     (make-deck  (fisher-yates-shuffle (list->vector (map make-card-from-number 
-                                                    (iota *deck-size*))))))
+                                                         (iota *deck-size*))))))
 
   (define (deck->string d)
     (string-join
