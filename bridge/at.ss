@@ -10,7 +10,6 @@ exec mzscheme -qr "$0" ${1+"$@"}
  "contract.ss"
  "call.ss"
  "auction.ss"
- "tree.ss"
  "exceptions.ss")
 
 (when
@@ -167,16 +166,6 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (auction-add! a '(2 notrump))
             (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(1 clubs))) "strictly less")
             (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
-
-         (make-test-case
-          "Exercise best-auction-from-prefix"
-          (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
-            (when bsa
-              (let ((s (auction->string bsa)))
-                (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
-                (printf "An auction:~n~a~n" s)
-                )
-              )))
          
          (make-test-case
           "Gacks if we add to a completed auction"

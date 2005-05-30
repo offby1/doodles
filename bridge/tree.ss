@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qr "$0" ${1+"$@"}
+exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module tree mzscheme
@@ -16,7 +16,11 @@ exec mzscheme -qr "$0" ${1+"$@"}
            (lib "pretty.ss")
            (only (lib "misc.ss" "swindle") list-of)
            (prefix list- (lib "list.ss"))
-           (lib "list.ss" "srfi" "1"))
+           (lib "list.ss" "srfi" "1")
+
+           (planet "test.ss" ("schematics" "schemeunit.plt" 1))
+           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
+           (planet "util.ss" ("schematics" "schemeunit.plt" 1)))
 
   (define-syntax false-if-exception
     (syntax-rules ()
@@ -51,7 +55,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
                   (would-be-legal? c i))
                 all-calls-period)
         )))
-                                        ;(trace all-legal-calls)
+  ;;(trace all-legal-calls)
 
   (define *best-scoring-auction-so-far* #f)
 
@@ -82,6 +86,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
         (and (auction-has-a-double? i)
              (double? c))))
 
+    ;; Don't consider auctions in which both sides are bidding to the
+    ;; four level.
     (define silly-competition?
       (let* ((maxes (auction-max-levels i))
              (my-side (car maxes))
@@ -94,16 +100,18 @@ exec mzscheme -qr "$0" ${1+"$@"}
           (and (bid? c)
                (< 3 opponents)))))
 
+    ;;(trace silly-competition?)
+
+    ;; Don't consider auctions which contain a bid whose level is more
+    ;; than two more than the minimum possible
     (define crazy-jump?
       (lambda (c)
-        ;; a bid whose level is more than two more than the minimum
-        ;; possible
         (and (bid? c)
              (< 2 (- (level-or-zero c)
                      (level-or-zero minimum-bid))))
         ))
+    ;;(trace crazy-jump?)
 
-                                        ;(trace silly-competition?)
     (unless (and (auction? i)
                  (not (auction-complete? i)))
       (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
@@ -115,9 +123,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
          (if (auction-complete? extended )
              (consider-one-auction extended)
            (some-auctions-with-given-prefix extended))))
-     (remove silly-competition? (remove silly-double? alc)))
+     (remove crazy-jump? (remove silly-competition? (remove silly-double? alc))))
     )
-                                        ;(trace some-auctions-with-given-prefix)
+  ;;(trace some-auctions-with-given-prefix)
   
   (define (best-auction-from-prefix a)
     (define thread-id (thread (lambda ()
@@ -131,5 +139,19 @@ exec mzscheme -qr "$0" ${1+"$@"}
       (printf "done~n"))
 
     *best-scoring-auction-so-far*)
-  ;(trace best-auction-from-prefix)
+  ;;(trace best-auction-from-prefix)
+  (when (not
+         (test/text-ui
+          (make-test-suite
+           "Tree"
+           (make-test-case
+            "Exercise best-auction-from-prefix"
+            (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
+              (when bsa
+                (let ((s (auction->string bsa)))
+                  (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
+                  (printf "An auction:~n~a~n" s)
+                  )
+                ))))))
+    (exit 1))
   )
