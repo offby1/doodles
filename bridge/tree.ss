@@ -59,6 +59,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (define *best-scoring-auction-so-far* #f)
 
+  ;; for debugging only
+  (define *num-auctions-considered* 0)
+  
   ;; I'm not certain that this semaphore is necessary.
   (define *the-semaphore* (make-semaphore 1))
   
@@ -71,7 +74,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (auction-score *best-scoring-auction-so-far*)))
          (set! *best-scoring-auction-so-far*  ca)
          ;;(printf "Best auction so far: ~a~n" (auction->string *best-scoring-auction-so-far*))
-         ))))
+         )
+       (set! *num-auctions-considered* (add1 *num-auctions-considered*))
+       )))
 
   (define (some-auctions-with-given-prefix i)
     (define alc (all-legal-calls i))
@@ -130,7 +135,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (best-auction-from-prefix a)
     (define thread-id (thread (lambda ()
                                 (some-auctions-with-given-prefix a))))
-    (let ((seconds-to-wait 1))
+    (let ((seconds-to-wait 5))
       (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
       (sync/timeout seconds-to-wait thread-id)
       (call-with-semaphore
@@ -150,7 +155,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (when bsa
                 (let ((s (auction->string bsa)))
                   (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
-                  (printf "An auction:~n~a~n" s)
+                  (printf "One auction:~n~a~n(after considering ~a auctions) ~n"
+                          s
+                          *num-auctions-considered*)
                   )
                 ))))))
     (exit 1))
