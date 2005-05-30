@@ -13,7 +13,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            "misc.ss"
            "exceptions.ss"
            (lib "13.ss" "srfi")         ;string-join
-           (lib "list.ss" "srfi" "1")
+           (only (lib "1.ss" "srfi") alist-cons list-copy find find-tail any every take)
            (lib "trace.ss"))
   (provide
    (rename my-make-auction make-auction)
@@ -28,10 +28,43 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (rename my-auction-ref auction-ref)
    auction-score
    copy-auction
-   auction-dealer)
+   auction-dealer
+   auction->alist)
 
   (define-struct auction (guts dealer) #f)
   
+  (define (auction->list a)
+    (list-copy (auction-guts a)))
+  
+  (define-syntax alist-update!
+    (syntax-rules ()
+      ((_ key datum alist)
+       (let ((hit (assq key alist)))
+         
+         (if hit
+             (set-cdr! hit (append (list datum) (cdr hit)))
+           (set! alist (alist-cons key (list datum) alist)))
+         alist))))
+  
+  (define (auction->alist a)
+
+    ;; as usual, we're traversing the calls in reverse order.
+    (let loop ((backwards-calls (auction->list a))
+               (result '())
+               (player (nth-successor
+                        (auction-dealer a)
+                        (- (auction-length a) 1))))
+      (if (null? backwards-calls)
+          result
+        (loop (cdr backwards-calls)
+              (alist-update! player (car backwards-calls) result)
+
+              (nth-successor player -1)
+
+              ))))
+
+  ;(trace auction->alist)
+
   ;; this _could_ be dangerous: if we ever expose a function that
   ;; modifies the list structure of the guts, then we'd need to change
   ;; this function to do a deep copy.  As it stands now, though,
@@ -104,13 +137,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (auction-contract a)
     (and (auction-complete? a)
          (let ((down-from-last-bid  (find-tail bid? (auction-guts a))))
+
+           (define (last-bidders-seat a)
+             (nth-successor
+              (auction-dealer a)
+              (- (length down-from-last-bid) 1)))
+
            (if (not down-from-last-bid)
                'passed-out
              (let* ((last-bid (car down-from-last-bid))
-                    (last-bidders-seat (nth-successor
-                                        (auction-dealer a)
-                                        (- (length down-from-last-bid) 1))
-                                       ))
+                    (lbs (last-bidders-seat a)))
                (make-contract
                 (level last-bid)
                 (denomination last-bid)
@@ -118,8 +154,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                            (seat (auction-dealer a)))
                   (let ((b (car up-to-last-bid)))
                     (if (and (bid? b)
-                             (or (eq? seat last-bidders-seat)
-                                 (eq? seat (nth-successor last-bidders-seat 2)))
+                             (or (eq? seat lbs)
+                                 (eq? seat (nth-successor lbs 2)))
                              (eq? (denomination b)
                                   (denomination last-bid)))
                         seat
@@ -214,8 +250,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
         "\n"))))
 
   ;; this sure is easier than doing it right!
+
+  ;; "Doing it right" would mean generating many deals that "conform"
+  ;; to the auction, then running the double-dummy solver on each, and
+  ;; returning the score that came up most often.
+
+  ;;   (that sounds goofy; surely we'll know the contents of our own
+  ;;   hand?)
+  
+  ;; Perhaps a quick and dirty way to do that would be to simply
+  ;; return the first score to come up three times.
   (define (auction-score thing)
-    (if thing
-        (auction-length thing)
-      0))
+    (equal-hash-code thing))
   )

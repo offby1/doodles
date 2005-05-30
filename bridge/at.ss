@@ -179,6 +179,27 @@ exec mzscheme -qr "$0" ${1+"$@"}
             (assert-exn exn:fail? (lambda () (auction-add! completed 'double)))
             (assert-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
             ))
+
+         (make-test-case
+          "alist"
+          (let ((a (make-auction 'west)))
+            (auction-add! a 'pass)      ;west
+            (auction-add! a '(1 diamond)) ;north
+            (auction-add! a '(1 heart))   ;east
+            (auction-add! a 'pass)        ;south
+            (auction-add! a 'pass)        ;west
+            (auction-add! a 'pass)        ;north
+            (let* ((alist (auction->alist a))
+                   (north (cdr (assq 'north alist)))
+                   (east  (cdr (assq 'east  alist)))
+                   (south (cdr (assq 'south alist)))
+                   (west  (cdr (assq 'west  alist))))
+              (assert-equal? north (map make-call '((1 diamond) pass)))
+              (assert-equal? east  (map make-call '((1 heart)       )))
+              (assert-equal? south (map make-call '(            pass)))
+              (assert-equal? west  (map make-call '(pass          pass)))
+              )
+            ))
          
          ))
 

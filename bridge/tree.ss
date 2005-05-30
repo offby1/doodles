@@ -117,6 +117,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
         ))
     ;;(trace crazy-jump?)
 
+    ;; TODO -- write a filter that excludes auctions in which any side
+    ;; bids the same suit three times (or more) with other suits in
+    ;; between.  For example this is silly
+#|
+1S    p-    p-    1N
+...
+2H    p-    p-    2S
+...
+5S    p-    5N    p-
+7D    p-    7H    p-
+7S    p-    7N    p-
+|#
+
+    ;; because North bid spades, hearts, spades, diamonds, spades.
+
     (unless (and (auction? i)
                  (not (auction-complete? i)))
       (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
