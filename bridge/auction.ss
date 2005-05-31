@@ -35,7 +35,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (define (auction->list a)
     (list-copy (auction-guts a)))
-  
+
   (define-syntax alist-update!
     (syntax-rules ()
       ((_ key datum alist)
@@ -45,7 +45,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (set-cdr! hit (append (list datum) (cdr hit)))
            (set! alist (alist-cons key (list datum) alist)))
          alist))))
-  
+
   (define (auction->alist a)
 
     ;; as usual, we're traversing the calls in reverse order.
