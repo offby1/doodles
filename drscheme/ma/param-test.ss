@@ -15,5 +15,17 @@
           (assert = 10 (+ 8 2))
           (parameterize ((*modulus* 7))
             (assert = 3 (+ 8 2))))
+
+         (make-test-case
+          "/"
+          (assert = 1/4 (/ 4))
+          (parameterize ((*modulus* 5))
+            (assert = 4 (/ 4))
+            (assert = 3 (/ 2))
+            (assert = 2 (/ 3))
+            (assert = 1 (/ 1))
+            )
+          (parameterize ((*modulus* 7))
+            (assert = 6 (/ 2 3 4))))
          )))
     (exit 1)))
