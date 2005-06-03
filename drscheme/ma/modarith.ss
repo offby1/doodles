@@ -1,4 +1,4 @@
-(module param mzscheme
+(module modarith mzscheme
   (require "invert.ss")
   (provide *modulus*
            (rename m+ +)

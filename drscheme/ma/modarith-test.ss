@@ -1,4 +1,4 @@
-(module param-test "param.ss"
+(module modarith-test "modarith.ss"
   (require  (planet "test.ss" ("schematics" "schemeunit.plt" 1))
             (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
             )
