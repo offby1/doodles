@@ -32,6 +32,7 @@
     (lambda args
       (maybe-modulo (apply + args))))
 
+  ;; this could probably be more efficient!
   (define m*
     (lambda args
       (maybe-modulo (apply * args))))
