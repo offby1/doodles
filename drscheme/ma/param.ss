@@ -2,9 +2,10 @@
   (require "invert.ss")
   (provide *modulus*
            (rename m+ +)
+           (rename m- -)
            (rename m* *)
            (rename m/ /)
-           (all-from-except mzscheme + * /))
+           (all-from-except mzscheme + - * /))
   (define *modulus* (make-parameter #f (lambda (value)
                                          (unless (or (and (integer? value)
                                                           (exact? value)
@@ -38,5 +39,10 @@
   (define m/
     (case-lambda
       [(x) (maybe-invert x)]
-      [(a . any) (m* (maybe-invert a) (apply m* any))]))
+      [(a . any) (m* a (maybe-invert (apply m* any)))]))
+
+  (define m-
+    (case-lambda
+      [(x) (maybe modulo (- x))]
+      [(a . any) (m+ a (- (apply m+ any)))]))
   )
