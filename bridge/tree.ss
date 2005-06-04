@@ -59,7 +59,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (would-be-legal? c i))
                 all-calls-period)
         )))
-  ;;(trace all-legal-calls)
 
   (define *best-scoring-auction-so-far* #f)
 
@@ -77,7 +76,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  (> (auction-score ca)
                     (auction-score *best-scoring-auction-so-far*)))
          (set! *best-scoring-auction-so-far*  ca)
-         ;;(printf "Best auction so far: ~a~n" (auction->string *best-scoring-auction-so-far*))
+         ;;(printf "Best auction so far: ~n~a~n" (auction->string *best-scoring-auction-so-far*))
          )
        (set! *num-auctions-considered* (add1 *num-auctions-considered*))
        )))
@@ -109,8 +108,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (and (bid? c)
                (< 3 opponents)))))
 
-    ;;(trace silly-competition?)
-
     ;; Don't consider auctions which contain a bid whose level is more
     ;; than two more than the minimum possible
     (define crazy-jump?
@@ -119,7 +116,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (< 2 (- (level-or-zero c)
                      (level-or-zero minimum-bid))))
         ))
-    ;;(trace crazy-jump?)
 
     (define same-suit-repeatedly?
       (lambda (c)
@@ -140,7 +136,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (some-auctions-with-given-prefix extended))))
      (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
     )
-  ;;(trace some-auctions-with-given-prefix)
 
   (define (best-auction-from-prefix a)
     (define thread-id (thread (lambda ()
@@ -154,7 +149,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (printf "done~n"))
 
     *best-scoring-auction-so-far*)
-  ;;(trace best-auction-from-prefix)
+
   (when (not
          (test/text-ui
           (make-test-suite
