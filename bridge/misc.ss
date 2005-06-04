@@ -1,10 +1,13 @@
 (module misc mzscheme
   (provide
-   swap!
-   level-or-zero
    append-map-at-most
+   group-by
+   hash-table-increment!
+   level-or-zero
+   most-common
+   swap!
    take-at-most
-   group-by)
+   )
   (require "call.ss")
   
   (define-syntax swap!
@@ -57,5 +60,22 @@
     (inner seq '() '() 0)
     )
   
-  
+  (define (hash-table-increment! h k)
+    (let ((v (hash-table-get h k (lambda () 0))))
+      (hash-table-put! h k (add1 v))))
+
+  (define (most-common seq)
+    (define ht (make-hash-table))
+    (define best-pair-so-far '(#f . 0))
+    (when (null? seq)
+      (raise-type-error 'most-common "non-empty sequence" seq))
+    (for-each 
+     (lambda (item) (hash-table-increment! ht item))
+     seq)
+    (hash-table-for-each 
+     ht 
+     (lambda (k v) 
+       (when (> v (cdr best-pair-so-far))
+         (set! best-pair-so-far (cons k v)))))
+    (car best-pair-so-far))
   )

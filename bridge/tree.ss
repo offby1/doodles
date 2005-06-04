@@ -24,6 +24,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
            (planet "util.ss" ("schematics" "schemeunit.plt" 1)))
 
+  (random-seed 0)
+  
   (define identity (lambda (arg) arg))
 
   (define-syntax false-if-exception

@@ -1,12 +1,14 @@
 (module deck-fiddling mzscheme
-  (require "constants.ss"
-           "hand.ss"
-           "deck.ss"
+  (require 
            "card.ss"
+           "constants.ss"
+           "deck.ss"
+           "hand.ss"
+           "misc.ss"
            (lib "list.ss" "srfi" "1")
            (lib "13.ss" "srfi")
            (only (lib "compat.ss") sort))
-  
+
   ;; hand -> four-element list
   (define (shape h)
     (map (lambda (s)
@@ -36,9 +38,6 @@
             (lambda (h)
               (define (max-rank)
                 (apply max (map card-rank (hand->list h))))
-              (define (hash-table-increment! h k)
-                (let ((v (hash-table-get h k (lambda () 0))))
-                  (hash-table-put! h k (add1 v))))
               (hash-table-increment! *shapes* (sort > (shape h)))
               (set! hands-seen (add1 hands-seen))
               (when (<= (max-rank) 10)

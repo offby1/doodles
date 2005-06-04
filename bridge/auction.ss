@@ -7,13 +7,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (print-struct #t)
   
-  (require "contract.ss"
-           "constants.ss"
+  (require 
            "call.ss"
-           "misc.ss"
+           "constants.ss"
+           "contract.ss"
+           "dd.ss"
+           "deck.ss"
            "exceptions.ss"
+           "misc.ss"
+           "score.ss"
            (lib "13.ss" "srfi")         ;string-join
-           (only (lib "1.ss" "srfi") alist-cons list-copy find find-tail any every take)
+           (only (lib "1.ss" "srfi")
+                 alist-cons
+                 any
+                 every
+                 find
+                 find-tail
+                 iota
+                 list-copy
+                 take
+                     )
            (lib "trace.ss"))
   (provide
    (rename my-make-auction make-auction)
@@ -249,17 +262,42 @@ exec mzscheme -qu "$0" ${1+"$@"}
      
         "\n"))))
 
-  ;; this sure is easier than doing it right!
-
-  ;; "Doing it right" would mean generating many deals that "conform"
-  ;; to the auction, then running the double-dummy solver on each, and
-  ;; returning the score that came up most often.
+  ;; Generate many deals that "conform" to the auction, then run the
+  ;; double-dummy solver on each, and return the score that comes up
+  ;; most often.
 
   ;;   (that sounds goofy; surely we'll know the contents of our own
   ;;   hand?)
   
   ;; Perhaps a quick and dirty way to do that would be to simply
   ;; return the first score to come up three times.
-  (define (auction-score thing)
-    (equal-hash-code thing))
+  (define (auction-score a)
+
+    ;; of course this is just a stub.  it totally ignores A, when of
+    ;; course it should only return a deck if that deck is plausible
+    ;; given A.
+    (define (generate-one-likely-deal)
+      (shuffled-deck))
+    
+    (let loop ((typical-deals (map (lambda (ignored) (generate-one-likely-deal))
+                                   (iota 100)))
+               
+               (scores '()))
+      (if (null? typical-deals)
+          (most-common scores)
+        (let ((c (auction-contract a)))
+          (loop (cdr typical-deals)
+                (cons 
+                 (if (eq? 'passed-out c)
+                     0
+                   (score-from-declarer-tricks (likely-declarer-tricks (auction-dealer a)
+                                                                       (contract-denomination c)
+                                                                       (car typical-deals))
+                                               a))
+                 
+                 scores)
+                )))
+      
+      )
+    )
   )
