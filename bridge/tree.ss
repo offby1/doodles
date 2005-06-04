@@ -8,10 +8,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   ;; Creates trees of possible auctions.
   (provide best-auction-from-prefix)
-  (require "auction.ss"
+  (require 
+           "auction.ss"
            "call.ss"
-           "misc.ss"
            "exceptions.ss"
+           "misc.ss"
+           "nad.ss"
            (lib "trace.ss")
            (lib "pretty.ss")
            (only (lib "misc.ss" "swindle") list-of)
@@ -21,6 +23,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (planet "test.ss" ("schematics" "schemeunit.plt" 1))
            (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
            (planet "util.ss" ("schematics" "schemeunit.plt" 1)))
+
+  (define identity (lambda (arg) arg))
 
   (define-syntax false-if-exception
     (syntax-rules ()
@@ -117,6 +121,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
         ))
     ;;(trace crazy-jump?)
 
+    (define same-suit-repeatedly?
+      (lambda (c)
+        (any identity (map (lambda (hand)
+                             (< 1 (length  (non-adjacent-duplicates   (map denomination (filter bid? hand))))))
+                           (map cdr (auction->alist i))))))
+    
     (unless (and (auction? i)
                  (not (auction-complete? i)))
       (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
@@ -128,7 +138,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (if (auction-complete? extended )
              (consider-one-auction extended)
            (some-auctions-with-given-prefix extended))))
-     (remove crazy-jump? (remove silly-competition? (remove silly-double? alc))))
+     (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
     )
   ;;(trace some-auctions-with-given-prefix)
 
