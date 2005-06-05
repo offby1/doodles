@@ -11,7 +11,8 @@
   (require "anagrams.scm"
            "ports.scm"
            (lib "mred.ss" "mred")
-           (lib "class.ss"))
+           (lib "class.ss")
+           (lib "13.ss" "srfi"))
 
   (define dictionary-file-name #f)
   
@@ -93,21 +94,7 @@
                (lambda (ans)
                  (for-each
                   (lambda (words)
-                    (define (string-append-with-spaces words)
-                      (let loop ((result "")
-                                 (words words))
-                        (cond
-                         ((null? words)
-                          result)
-                         (#t
-                          (loop (string-append
-                                 result
-                                 (if (zero? (string-length result))
-                                     ""
-                                   " ")
-                                 (car words))
-                                (cdr words))))))
-                    (fprintf output-port "~a~%" (string-append-with-spaces words)))
+                    (fprintf output-port "~a~%" (string-join words " ")))
                   ans)
                  (set! total (+ (length ans) total))
                  (send output-field set-label (format "~a anagrams of ~s" total
