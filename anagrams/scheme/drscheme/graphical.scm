@@ -57,22 +57,24 @@
                 
             
             (set-output-port!
-             (make-custom-output-port
+             (make-output-port
               #f
-              (lambda (s start end buffer-ok?)
+              always-evt
+              (lambda (s start end buffer-ok? enable-breaks-while-blocking?)
                 (send output-field enable #f)
                 ;; move point to end before inserting
-                (send editor insert (substring s start end) (send editor get-end-position))
+                (send editor insert (substring (bytes->string/utf-8 s) start end) (send editor get-end-position))
                 (send output-field enable #t)
                 ;(sleep/yield 1)
                 (- end start))
               void
               void))
             (set-status-port!
-             (make-custom-output-port
+             (make-output-port
               #f
-              (lambda (s start end buffer-ok?)
-                (send status set-value (substring s start end)) (yield) (- end start)) void void))
+              always-evt
+              (lambda (s start end buffer-ok? enable-breaks-while-blocking?)
+                (send status set-value (substring (bytes->string/utf-8 s) start end)) (yield) (- end start)) void void))
 
             (let ((total 0))
               (all-anagrams 
