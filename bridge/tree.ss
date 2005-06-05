@@ -19,10 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (only (lib "misc.ss" "swindle") list-of)
            (prefix list- (lib "list.ss"))
            (lib "list.ss" "srfi" "1")
-
-           (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "util.ss" ("schematics" "schemeunit.plt" 1)))
+           )
 
   (random-seed 0)
   
@@ -139,33 +136,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
     )
 
-  (define (best-auction-from-prefix a)
+  (define (best-auction-from-prefix a seconds-to-wait)
     (define thread-id (thread (lambda ()
                                 (some-auctions-with-given-prefix a))))
-    (let ((seconds-to-wait 5))
-      (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait) (flush-output)
-      (sync/timeout seconds-to-wait thread-id)
-      (call-with-semaphore
-       *the-semaphore*
-       (lambda () (kill-thread thread-id)))
-      (printf "done~n"))
+    (sync/timeout seconds-to-wait thread-id)
+    (call-with-semaphore
+     *the-semaphore*
+     (lambda () (kill-thread thread-id)))
 
-    *best-scoring-auction-so-far*)
-
-  (when (not
-         (test/text-ui
-          (make-test-suite
-           "Tree"
-           (make-test-case
-            "Exercise best-auction-from-prefix"
-            (let ((bsa (best-auction-from-prefix  (make-auction 'south))))
-              (when bsa
-                (let ((s (auction->string bsa)))
-                  (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
-                  (printf "One auction:~n~a~n(after considering ~a auctions) ~n"
-                          s
-                          *num-auctions-considered*)
-                  )
-                ))))))
-    (exit 1))
-  )
+    *best-scoring-auction-so-far*))

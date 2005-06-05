@@ -87,14 +87,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (make-auction (auction-guts a)
                   (auction-dealer a)))
 
-  ;; (nth-successor 'north 0) => 'north
-  ;; (nth-successor 'north 1) => 'east
-  ;; (nth-successor 'north 102) => 'south
-  ;; (nth-successor 'north 203) => 'west
-  (define (nth-successor seat n)
-    
-    (list-ref *seats* (modulo (+ (seat->number seat) n) (length *seats*))))
-
   (define (my-make-auction dealer)
     (unless (memq dealer *seats*)
       (raise-bridge-error 'check-seat "north|south|east|west" dealer))

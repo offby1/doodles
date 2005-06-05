@@ -1,4 +1,4 @@
-TESTS := at-private.ss at.ss ct2.ss misc-tests.ss
+TESTS := at-private.ss at.ss ct2.ss make-call.ss misc-tests.ss tree-test.ss
 
 ETAGS ?= etags
 
