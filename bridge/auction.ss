@@ -258,12 +258,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; double-dummy solver on each, and return the score that comes up
   ;; most often.
 
-  ;;   (that sounds goofy; surely we'll know the contents of our own
-  ;;   hand?)
-  
   ;; Perhaps a quick and dirty way to do that would be to simply
   ;; return the first score to come up three times.
-  (define (auction-score a)
+  (define (auction-score a my-hand)
 
     ;; of course this is just a stub.  it totally ignores A, when of
     ;; course it should only return a deck if that deck is plausible

@@ -67,20 +67,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; I'm not certain that this semaphore is necessary.
   (define *the-semaphore* (make-semaphore 1))
   
-  (define (consider-one-auction ca)
+  (define (consider-one-auction ca my-hand)
     (call-with-semaphore
      *the-semaphore*
      (lambda ()
        (when (or (not *best-scoring-auction-so-far*)
-                 (> (auction-score ca)
-                    (auction-score *best-scoring-auction-so-far*)))
+                 (> (auction-score ca my-hand)
+                    (auction-score *best-scoring-auction-so-far* my-hand)))
          (set! *best-scoring-auction-so-far*  ca)
          ;;(printf "Best auction so far: ~n~a~n" (auction->string *best-scoring-auction-so-far*))
          )
        (set! *num-auctions-considered* (add1 *num-auctions-considered*))
        )))
 
-  (define (some-auctions-with-given-prefix i)
+  (define (consider-auctions-with-prefix i my-hand)
     (define alc (all-legal-calls i))
 
     ;; this depeonds upon all-legal-calls being sorted in increasing order.
@@ -124,21 +124,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
     
     (unless (and (auction? i)
                  (not (auction-complete? i)))
-      (raise-type-error 'some-auctions-with-given-prefix "incomplete auction" i))
+      (raise-type-error 'consider-auctions-with-prefix "incomplete auction" i))
 
     (for-each
      (lambda (c)
        (let ((extended (copy-auction i)))
          (auction-add! extended c)
          (if (auction-complete? extended )
-             (consider-one-auction extended)
-           (some-auctions-with-given-prefix extended))))
+             (consider-one-auction extended my-hand)
+           (consider-auctions-with-prefix extended my-hand))))
      (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
     )
 
-  (define (best-auction-from-prefix a seconds-to-wait)
+  (define (best-auction-from-prefix a my-hand seconds-to-wait)
     (define thread-id (thread (lambda ()
-                                (some-auctions-with-given-prefix a))))
+                                (consider-auctions-with-prefix a my-hand))))
     (sync/timeout seconds-to-wait thread-id)
     (call-with-semaphore
      *the-semaphore*
