@@ -1,4 +1,4 @@
-() (defpackage :bridge.dealer
+(defpackage :bridge.dealer
   (:use :common-lisp)
   (:import-from  :bridge.card
                  :card :card-suit :card-rank)

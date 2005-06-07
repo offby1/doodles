@@ -1,10 +1,12 @@
 ;;; -*- Mode: lisp -*-
 
-;; to use this: first load
-;; "/usr/share/common-lisp/source/defsystem/defsystem.lisp" or the
-;; equivalent .  Then load this file.  Then compile everything by
-;; doing (make:operate-on-system :wc :compile).  That will also
-;; run any unit tests.
+;; to use this: load this file.  Then compile everything by doing
+;; (make:operate-on-system :wc :compile).  That will also run any unit
+;; tests.
+
+;; unfortunately, this probably only works on Debian Sarge; I don't
+;; know how to make it portable to other systems.
+(load "/usr/share/common-lisp/source/defsystem/defsystem.lisp")
 
 (make:defsystem wc
     :source-extension "l"

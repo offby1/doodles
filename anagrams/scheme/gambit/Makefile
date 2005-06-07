@@ -20,7 +20,7 @@ LDLIBS := -lgambc -lm -lutil -ldl
 $(prog): $(CS) $(LINKFILE)
 
 clean:
-	rm -f $(CS) $(LINKFILE) $(prog) hmm
+	rm -f $(CS) $(LINKFILE) $(prog) hmm *.o
 
 .PHONY: clean check
 .INTERMEDIATE: $(CS) $(LINKFILE)
