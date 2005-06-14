@@ -7,7 +7,8 @@ prog := anagrams
 all: $(prog)
 
 check: $(prog)
-	time ./$(prog) "st hemingway"
+	for i in "hemingway" "st hemingway" "est hemingway"; \
+	do time ./$(prog) $$i; done
 
 %.c : %.scm
 	gsc -c $^
