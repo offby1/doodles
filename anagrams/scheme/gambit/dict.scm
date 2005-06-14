@@ -17,7 +17,9 @@
 
   (with-input-from-file fn
     (lambda ()
-      (let ((dict (make-hash-table)))
+      (let ((dict (make-table init: #f
+                              test: eq? ; using = as the test works, but is agonizingly slow
+                              )))
         (display  "Reading dictionary ... ")
         (let loop ((word  (read-line))
                    (words-read 0))
@@ -41,12 +43,12 @@
 
 (define (adjoin-word dict word)
   (let* ((this-bag (bag word))
-         (probe (hash-get dict this-bag)))
+         (probe (table-ref dict this-bag)))
     (cond
      ((not probe)
-      (hash-set! dict this-bag (list word)))
+      (table-set! dict this-bag (list word)))
      ((not (member word probe))
-      (hash-set! dict this-bag (cons word probe)))
+      (table-set! dict this-bag (cons word probe)))
      )))
 
 (define (word-acceptable? word)
@@ -123,7 +125,7 @@
                                         ))
                                   (set! entries-examined (+ 1 entries-examined))
                                   (bag-acceptable? (car entry) bag-to-meet))
-                                (hash-table-map *big-ol-hash-table* cons))))
+                                (table->list *big-ol-hash-table*))))
             result)))
   (display " done.")
   (newline))

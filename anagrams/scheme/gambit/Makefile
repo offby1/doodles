@@ -1,4 +1,4 @@
-SCMS 	 := bag.scm dict.scm hash-table.scm anagrams.scm 
+SCMS 	 := bag.scm dict.scm anagrams.scm 
 CS   	 := $(SCMS:.scm=.c)
 LINKFILE := $(basename $(word $(words $(SCMS)),$(SCMS)))_.c
 
