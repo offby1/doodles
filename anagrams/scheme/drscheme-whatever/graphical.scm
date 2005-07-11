@@ -15,9 +15,16 @@
            "ports.scm"
            (lib "mred.ss" "mred")
            (lib "class.ss")
-           (lib "13.ss" "srfi"))
+           (lib "13.ss" "srfi")
+           (lib "file.ss")
+           (lib "trace.ss"))
 
-  (define dictionary-file-name #f)
+  (define (dictionary-file-name)
+    (let ((t (get-preference 'anagrams-dictionary-file-name)))
+      (printf "Existing preference: ~s~%" t)
+      (and t (bytes->path t))))
+  
+  (trace dictionary-file-name)
   
   (define f (instantiate frame% ("Anagrams Redux")))
   (define status (instantiate text-field% ()
@@ -81,23 +88,28 @@
                 (send status set-value (substring (bytes->string/utf-8 s) start end)) (yield) (- end start)) void void))
 
             (let ((total 0))
-              (all-anagrams 
-               input-string 
-               (or dictionary-file-name
-                   (begin
-                     (set! dictionary-file-name
+              (when (not (dictionary-file-name))
+                (let ((t (list 
+                          (path->bytes 
                            (get-file "Where's the dictionary on this box?"
                                      f
                                      "/usr/share/dict"
                                      "words"
                                      #f
                                      '()
-                                     '()))
-                     dictionary-file-name))
+                                     '())))))
+                  (printf "Writing preference ~s~%" t)
+                  (put-preferences '(anagrams-dictionary-file-name)
+                                   t)))
+              (when (not (dictionary-file-name))
+                (error "I coulda swore I just saved it."))
+              (all-anagrams 
+               input-string 
+               (dictionary-file-name)
                (lambda (ans)
                  (for-each
                   (lambda (words)
-                    (fprintf output-port "~a~%" (string-join words " ")))
+                    (fprintf *output-port* "~a~%" (string-join words " ")))
                   ans)
                  (set! total (+ (length ans) total))
                  (send output-field set-label (format "~a anagrams of ~s" total

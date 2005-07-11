@@ -1,4 +1,7 @@
-#!/usr/bin/mred -qu
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mred -qu "$0" ${1+"$@"}
+|#
 
 (module go mzscheme
   (require (prefix srfi-19- (lib "19.ss" "srfi"))

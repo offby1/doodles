@@ -22,7 +22,7 @@
   (define (all-anagrams string dict-file-name callback)
     (let ((in-bag   (bag string)))
       (init in-bag dict-file-name)
-      (fprintf status-port "") ;clears the status window
+      (fprintf *status-port* "") ;clears the status window
       (all-anagrams-internal
                  in-bag
                  *dictionary*
