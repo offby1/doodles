@@ -15,9 +15,12 @@
            "ports.scm"
            (lib "mred.ss" "mred")
            (lib "class.ss")
-           (lib "13.ss" "srfi"))
+           (lib "13.ss" "srfi")
+           (lib "file.ss"))
 
-  (define dictionary-file-name #f)
+  (define (dictionary-file-name)
+    (let ((t (get-preference 'anagrams-dictionary-file-name)))
+      (and t (bytes->path t))))
   
   (define f (instantiate frame% ("Anagrams Redux")))
   (define status (instantiate text-field% ()
@@ -81,19 +84,21 @@
                 (send status set-value (substring (bytes->string/utf-8 s) start end)) (yield) (- end start)) void void))
 
             (let ((total 0))
-              (all-anagrams 
-               input-string 
-               (or dictionary-file-name
-                   (begin
-                     (set! dictionary-file-name
+              (when (not (dictionary-file-name))
+                (let ((t (list 
+                          (path->bytes 
                            (get-file "Where's the dictionary on this box?"
                                      f
                                      "/usr/share/dict"
                                      "words"
                                      #f
                                      '()
-                                     '()))
-                     dictionary-file-name))
+                                     '())))))
+                  (put-preferences '(anagrams-dictionary-file-name)
+                                   t)))
+              (all-anagrams 
+               input-string 
+               (dictionary-file-name)
                (lambda (ans)
                  (for-each
                   (lambda (words)
