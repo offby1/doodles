@@ -8,26 +8,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (print-struct #t)
   
   (require 
-           "call.ss"
-           "constants.ss"
-           "contract.ss"
-           "dd.ss"
-           "deck.ss"
-           "exceptions.ss"
-           "misc.ss"
-           "score.ss"
-           (lib "13.ss" "srfi")         ;string-join
-           (only (lib "1.ss" "srfi")
-                 alist-cons
-                 any
-                 every
-                 find
-                 find-tail
-                 iota
-                 list-copy
-                 take
-                     )
-           (lib "trace.ss"))
+   "call.ss"
+   "constants.ss"
+   "contract.ss"
+   "dd.ss"
+   "deck.ss"
+   "exceptions.ss"
+   "misc.ss"
+   "score.ss"
+   (lib "13.ss" "srfi")                 ;string-join
+   (only (lib "1.ss" "srfi")
+         alist-cons
+         any
+         every
+         find
+         find-tail
+         iota
+         list-copy
+         take
+         )
+   (lib "trace.ss"))
   (provide
    (rename my-make-auction make-auction)
    auction?
@@ -76,7 +76,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
               ))))
 
-  ;(trace auction->alist)
+                                        ;(trace auction->alist)
 
   ;; this _could_ be dangerous: if we ever expose a function that
   ;; modifies the list structure of the guts, then we'd need to change
@@ -221,7 +221,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
         
         (cons dealers-side dealers-opps))))
   
-  ;(trace auction-max-levels)
+                                        ;(trace auction-max-levels)
 
   (define (rotate seq count)
     (if (or (zero? count)
@@ -243,13 +243,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (string-append
        (string-join
         (map (lambda (s)
-             (string-locale-upcase (substring (symbol->string s) 0 1)))
+               (string-locale-upcase (substring (symbol->string s) 0 1)))
              seats)
-      (make-string 5 #\space))
-     "\n--------------------\n"
+        (make-string 5 #\space))
+       "\n--------------------\n"
        (string-join
         (map (lambda (chunk)
-             (string-join chunk (make-string 4 #\space)))
+               (string-join chunk (make-string 4 #\space)))
              (group-by (length *seats*) (map call->string (reverse (auction-guts a)))))
      
         "\n"))))

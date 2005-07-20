@@ -174,3 +174,14 @@ something that claims to work, I could compare its results to those.
 ** search strategies
 
 http://www.aaai.org/AITopics/html/seachreason.html
+
+** misc
+
+A simple but reasonable-looking bidding algorithm is clearly displayed at
+
+http://ptaff.ca/bridge/encheres/?lang=en_CA
+
+So if I give up on the brute-force method of using the double-dummy
+solver, and instead revert to the straightforward method of simply
+teaching the program to play like a human, I bet 1) this would be
+fairly easy to encode; 2) it would play reasonably well

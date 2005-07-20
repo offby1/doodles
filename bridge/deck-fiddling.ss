@@ -1,5 +1,5 @@
 (module deck-fiddling mzscheme
-  (require 
+  (require
            "card.ss"
            "constants.ss"
            "deck.ss"
@@ -15,21 +15,27 @@
            (length (filter (lambda (c) (eq? s (card-suit c)))
                            (hand->list h))))
          *suits*))
-  
+
+  (define (high-card-points h)
+    (apply + (map (lambda (c) (max 0 (- (card-rank c) 10)))
+                  (hand->list h))))
+
   (define (hand->string h)
     (map card->short-string (sort card< (hand->list h))))
 
   (define *coca-cola-hands* 0)
 
   (define *deals* 1000)
-  
+
   (define shape-distribution #f)
   (define note-hand! #f)
-
+  
+  (define *points* (make-hash-table))
+  
   (let ()
     (define *shapes* (make-hash-table 'equal))
-
-    (set! shape-distribution 
+    
+    (set! shape-distribution
           (lambda ()
             (hash-table-map *shapes* (lambda (k v) (list v k)))))
 
@@ -39,17 +45,18 @@
               (define (max-rank)
                 (apply max (map card-rank (hand->list h))))
               (hash-table-increment! *shapes* (sort > (shape h)))
+              (hash-table-increment! *points* (high-card-points h))
               (set! hands-seen (add1 hands-seen))
               (when (<= (max-rank) 10)
                 (set! *coca-cola-hands* (add1 *coca-cola-hands*)))))))
-  
+
   (let loop ((d (shuffled-deck))
              (deals 0))
     (when (< deals *deals*)
-      (for-each 
+      (for-each
        (lambda (s)
          (note-hand! (holding d s)))
-       *seats*)  
+       *seats*)
       (loop (shuffled-deck) (add1 deals))))
 
   (printf "After ~a deals~n~a: ~a~n" *deals* "Shape" "likelihood")
@@ -70,7 +77,15 @@
                   results)
              "\n"))
     (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n"
-            (exact->inexact (/ *coca-cola-hands* num-hands))))
-  
+            (exact->inexact (/ *coca-cola-hands* num-hands)))
+
+    (printf "Histogram of high-card points:~%")
+    (for-each
+     (lambda (p) (printf "~a: ~v~%" (first p) (exact->inexact (/ (second p) num-hands))))
+     (sort (lambda (a b)
+             (< (car a)
+                (car b))) (hash-table-map *points* list)))
+    )
+
   (newline)
   )

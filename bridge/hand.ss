@@ -20,6 +20,7 @@
                              (length *seats*))))
       (when (not (= desired-length (vector-length cardv)))
         (raise-bridge-error 'make-hand (format "vector of length ~a" desired-length) cardv)))
+    ;; TODO: check that each element is a card?
     (make-hand (vector->list cardv)))
 
   (define (hand-ref h K)
