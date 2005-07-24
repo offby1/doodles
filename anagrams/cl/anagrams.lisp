@@ -1,3 +1,5 @@
+(in-package :anagrams)
+
 (defvar *dict*)
 (defvar *verbose* nil)
 
@@ -41,7 +43,6 @@
     rv))
 
 (defun anagrams (string)
-  (declare (type simple-base-string string))
   (let ((b  (bag string)))
     (init b)
     (let ((result (anagrams-internal b *dict* 0)))

@@ -1,3 +1,4 @@
+(in-package :anagrams)
 (defmacro save-exclusions (exclusions . body)
   (let ((saved (gensym))
         (rv (gensym)))

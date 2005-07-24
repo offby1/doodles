@@ -1,3 +1,4 @@
+(in-package :anagrams)
 (defvar *dict*)
 (defun word-acceptablep (word)
   (declare (type simple-string word))

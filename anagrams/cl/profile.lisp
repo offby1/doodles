@@ -1,7 +1,10 @@
+(defpackage anagrams
+  (:use :common-lisp))
+(in-package :anagrams)
 (declaim (optimize speed))
 
 (mapcar #'(lambda (basename)
-            (compile-file (concatenate 'string basename ".l"))
+            (compile-file (concatenate 'string basename ".lisp"))
             (load (concatenate 'string basename
                                #+cmu  ".x86f"
                                #+sbcl ".fasl"
@@ -45,4 +48,5 @@
   )
 #+sbcl (sb-profile:report)
 #+cmu  (profile:report-time)
+(in-package :common-lisp-user)
 (quit)
