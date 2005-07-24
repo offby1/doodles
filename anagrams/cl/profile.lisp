@@ -10,8 +10,7 @@
                                #+sbcl ".fasl"
                                #+clisp ".fas"
                                )))
-        `("exclusions"
-          "numeric-bag"
+        `("numeric-bag"
           ;"bag"
           "dict"
           "anagrams"))
