@@ -25,16 +25,18 @@
 (defun make-hash-from-file (fn)
   (let ((thang (make-hash-table :test #'equalp)))
     (with-open-file
-     (dict fn #+clisp :external-format #+clisp 'charset:ISO-8859-1)
-     (loop
-      (let ((word (read-line dict nil nil)))
-        (when (not word)
-          (return thang))
-        (setf word (nstring-downcase word))
-        (when (word-acceptablep word)
-          (let ((b (bag word)))
-            (setf (gethash b thang '())
-                  (adjoin word (gethash b thang '())  :test #'equalp)))))))
+        (dict fn :external-format
+              #+clisp 'charset:ISO-8859-1
+              #+(or cmu sbcl) :ISO-8859-1)
+      (loop
+         (let ((word (read-line dict nil nil)))
+           (when (not word)
+             (return thang))
+           (setf word (nstring-downcase word))
+           (when (word-acceptablep word)
+             (let ((b (bag word)))
+               (setf (gethash b thang '())
+                     (adjoin word (gethash b thang '())  :test #'equalp)))))))
     thang))
 
 (let ((hash-cache nil))
