@@ -7,39 +7,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (require
    (only (lib "1.ss" "srfi") filter)
-   (only (lib "13.ss" "srfi") string-downcase)
+   
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (planet "util.ss"    ("schematics" "schemeunit.plt" 1))
-   (lib "file.ss")
    "network.ss"
-   "olvs.ss")
-  
-  (define *dictionary-file-name*
-    (let ((t (get-preference 'anagrams-dictionary-file-name)))
-      (or (and t (bytes->path t))
-          (bytes->path "/usr/share/dict/words"))))
+   "olvs.ss"
+   "dict.ss"
+   "persist.ss"
+   )
 
-  (define (snarf-dict)
-    (define (word-acceptable? w)
-      (positive? (string-length w)))
-    (with-input-from-file *dictionary-file-name*
-      (lambda ()
-        (let loop ((word  (read-line))
-                   (lines-read 0))
-          (when (not (eof-object? word))
-            (set! word (string-downcase word))
-            (when (word-acceptable? word)
-                 (hash-table-put! *word-list* word #t))
-            (loop (read-line)
-                  (+ 1 lines-read)))))))
-
-  (define *word-list* (make-hash-table 'equal))
-  (snarf-dict)
-
-  (define (build-network)
+  (define-persistent *network* "network.dat"
     (let ((rv (new-network)))
-      (hash-table-for-each *word-list*
+      (hash-table-for-each *word-hash*
                            (lambda (word ignored)
                              (let ((word-node (or (get-node-by-name rv word)
                                                   (new-node word 'dummy-data))))
@@ -52,19 +32,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                     (put-node! rv neighbor-node))
                                   )
                                 (filter (lambda (w)
-                                          (hash-table-get *word-list* w (lambda () #f)))
+                                          (hash-table-get *word-hash* w (lambda () #f)))
                                         (olvs word)))
                                (put-node! rv word-node))))
       rv))
 
   #;(define chain
-    (let ((n (build-network)))
       (lambda (from to)
-        (let ((from-node (get-node n from))
-              (to-node   (get-node n to)))
+        (let ((from-node (get-node *network* from))
+              (to-node   (get-node *network* to)))
           (and (from-node to-node)
-               (bfs n from-node to-node)))
-        )))
+               (bfs *network* from-node to-node)))
+        ))
 
   #;(printf "~a~n" (chain "sheboygan" "Paris"))
   (test/text-ui
@@ -80,7 +59,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 (map (lambda (p)
                        (cons (car p)
                              (get-neighbor-names (cdr p))))
-                     (network->list (build-network)))))
+                     (network->list *network*))))
      (assert = 0 0)
      )
     ))
