@@ -6,6 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;; Thanks to `foof' (aka `ashinn') for guidance and inspiration
 
 (module persist mzscheme
+  (require (lib "serialize.ss"))
   (provide define-persistent)
 
 ;;; (define-persistent x "x.ss" body)
@@ -30,10 +31,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          ;; TODO -- perhaps also parameterize
                          ;; print-unreadble and other things?
                          (parameterize ((print-hash-table #t))
-                           (write res))
+                           (write (serialize res)))
                          ))
                      (fprintf (current-error-port) "Successfully wrote value to ~s~n" file)) ; log if can't save to file
                    res))))
            (begin0
-             (with-input-from-file file read)
+             (with-input-from-file file (lambda () (deserialize (read))))
              (fprintf (current-error-port) "Successfully read value from ~s~n" file))))))))

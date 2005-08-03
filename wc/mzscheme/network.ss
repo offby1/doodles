@@ -6,6 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module network mzscheme
   (print-struct #t)
   (require
+   (lib "serialize.ss")
    (lib "setf.ss" "swindle")
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
@@ -23,7 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    node->string
    )
 
-  (define-struct node (name data neighbors) #f)
+  (define-serializable-struct node (name data neighbors) #f)
   (define (get-neighbor-names n)
     (hash-table-map (node-neighbors n) (lambda (k v) (node-name k))))
   (define (node->string n)
@@ -35,7 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (new-node name data)
     (make-node name data (make-hash-table)))
-  (define-struct network (ht) #f)
+  (define-serializable-struct network (ht) #f)
   
   ;; overwrites any node that might already exist under the given name
   (define (put-node! net node)
