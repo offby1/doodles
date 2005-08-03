@@ -6,8 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module wc mzscheme
   
   (require
-   (only (lib "1.ss" "srfi") filter)
-   
+   (only (lib "1.ss" "srfi") filter every)
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (planet "util.ss"    ("schematics" "schemeunit.plt" 1))
@@ -37,29 +36,33 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                (put-node! rv word-node))))
       rv))
 
-  #;(define chain
-      (lambda (from to)
-        (let ((from-node (get-node *network* from))
-              (to-node   (get-node *network* to)))
-          (and (from-node to-node)
-               (bfs *network* from-node to-node)))
-        ))
+  #;(define chain (lambda (from to) (let ((from-node (get-node *network* from)) (to-node   (get-node *network* to))) (and (from-node to-node) (bfs *network* from-node to-node)))))
 
-  #;(printf "~a~n" (chain "sheboygan" "Paris"))
+  ;(printf "~a~n" (chain "sheboygan" "Paris"))
+
+  (let ((network-as-alist (map (lambda (p)
+                                 (cons (car p)
+                                       (get-neighbor-names (cdr p))))
+                               (network->list *network*))))
+    ;; alas, I've found #f in my data, and don't know where it's coming from.
+    (for-each (lambda (seq)
+                (when (not (every string? seq))
+                  (error "Found non-string in seq" seq)
+                  ))
+              network-as-alist)
+    (for-each (lambda (thing)
+                (printf "~s~n" thing))
+              (filter 
+               (lambda (thing)
+                 (< 1 (length thing)))
+               network-as-alist)))
+
   (test/text-ui
    (make-test-suite
     "I never know what to name these things."
     (make-test-case
      "Duh.  Drooool."
-     (for-each (lambda (thing)
-                 (printf "~s~n" thing))
-               (filter 
-                (lambda (thing)
-                  (< 1 (length thing)))
-                (map (lambda (p)
-                       (cons (car p)
-                             (get-neighbor-names (cdr p))))
-                     (network->list *network*))))
+
      (assert = 0 0)
      )
     ))

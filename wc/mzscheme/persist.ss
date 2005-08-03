@@ -36,5 +36,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (fprintf (current-error-port) "Successfully wrote value to ~s~n" file)) ; log if can't save to file
                    res))))
            (begin0
-             (with-input-from-file file (lambda () (deserialize (read))))
-             (fprintf (current-error-port) "Successfully read value from ~s~n" file))))))))
+             (with-input-from-file file
+               (lambda ()
+                 (fprintf (current-error-port) "Reading from ~s ... " file)
+                 (deserialize (read))))
+             (fprintf (current-error-port) "done~n"))))))))

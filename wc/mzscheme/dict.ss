@@ -25,7 +25,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (let loop ((word  (read-line))
                    (lines-read 0)
                    (result '()))
-          (if (eof-object? word)
+          (if (or (= lines-read 1000)
+                  (eof-object? word))
               result
             (begin
               (set! word (string-downcase word))
