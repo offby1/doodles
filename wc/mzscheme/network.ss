@@ -17,22 +17,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    link-nodes!
    new-network
    new-node
-   (rename node-neighbors get-neighbors)
+   get-neighbor-names
    network->list
    node-name
    node->string
    )
 
   (define-struct node (name data neighbors) #f)
+  (define (get-neighbor-names n)
+    (hash-table-map (node-neighbors n) (lambda (k v) (node-name k))))
   (define (node->string n)
     (let ((v (struct->vector n)))
       (format "Name:~s Data:~s Neighbors:~s"
               (vector-ref v 1)
               (vector-ref v 2)
-              (map node-name (vector-ref v 3)))))
+              (get-neighbor-names n))))
 
   (define (new-node name data)
-    (make-node name data '()))
+    (make-node name data (make-hash-table)))
   (define-struct network (ht) #f)
   
   ;; overwrites any node that might already exist under the given name
@@ -44,8 +46,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (link-nodes! n1 n2)
     
-    (push! n2 (node-neighbors n1))
-    (push! n1 (node-neighbors n2))
+    (hash-table-put! (node-neighbors n1) n2 #t)
+    (hash-table-put! (node-neighbors n2) n1 #t)
     )
 
   (define (new-network) (make-network (make-hash-table 'equal)))
@@ -75,10 +77,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (assert-true (node? nd))
          (assert-true (node? n2))
          (link-nodes! nd n2)
-         (display (node->string n2)) (newline)
-         (assert-not-false (member n2 (node-neighbors nd)))
-         (assert-not-false (member nd (node-neighbors n2)))))
-      )
-      
-     ))
-  )
+         (assert-not-false (hash-table-get (node-neighbors nd) n2 (lambda () #f)))
+         (assert-not-false (hash-table-get (node-neighbors n2) nd (lambda () #f)))))
+
+      (make-test-case
+       "No duplicates"
+       (let ((sam (new-node "sam" 12))
+             (fred (new-node "fred" 77)))
+         (link-nodes! sam fred)
+         (link-nodes! sam fred)
+         (display (node->string sam)) (newline)
+         (assert = 1 (hash-table-count (node-neighbors fred)))
+         (assert = 1 (hash-table-count (node-neighbors sam)))))
+      ))))

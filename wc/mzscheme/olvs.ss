@@ -42,11 +42,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           result
         (loop (sub1 letters-to-examine)
               (append (25-varieties word (sub1 letters-to-examine))
-                      result)))
-      ))
-
-  (printf "Ladies and gentlemen, I give you: the alphabet ~s~n" *the-alphabet*)
-  (printf "~s~n" (25-varieties "dog" 0))
-  (printf "~s~n" (olvs "dog"))
-  (printf "~s~n" (olvs "cat"))
-  )
+                      result))))))

@@ -12,7 +12,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (planet "util.ss"    ("schematics" "schemeunit.plt" 1))
    (lib "file.ss")
-   "network.ss")
+   "network.ss"
+   "olvs.ss")
   
   (define *dictionary-file-name*
     (let ((t (get-preference 'anagrams-dictionary-file-name)))
@@ -36,11 +37,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (+ 1 lines-read)))))))
 
   (define *word-list* (make-hash-table 'equal))
-  (snarf-dict)
-  
-  (define (possible-neighbors word)
-    '("abdul" "aaron"))
-  
+  (if #f (snarf-dict)
+    (begin
+      (hash-table-put! *word-list* "turd" #t)
+      (hash-table-put! *word-list* "third" #t)
+      (hash-table-put! *word-list* "bird" #t)
+      (hash-table-put! *word-list* "tird" #t)
+      ))
+
   (define (build-network)
     (let ((rv (new-network)))
       (hash-table-for-each *word-list*
@@ -57,7 +61,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                   )
                                 (filter (lambda (w)
                                           (hash-table-get *word-list* w (lambda () #f)))
-                                        (possible-neighbors word)))
+                                        (olvs word)))
                                (put-node! rv word-node))))
       rv))
 
@@ -80,7 +84,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  (printf "~s~n" thing))
                (map (lambda (p)
                       (cons (car p)
-                            (map node-name (get-neighbors (cdr p)))))
+                             (get-neighbor-names (cdr p))))
                     (network->list (build-network))))
      (assert = 0 0)
      )
