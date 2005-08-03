@@ -27,9 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (lambda ()
         (let loop ((word  (read-line))
                    (lines-read 0))
-          (when (and
-                 (< lines-read 20)
-                 (not (eof-object? word)))
+          (when (not (eof-object? word))
             (set! word (string-downcase word))
             (when (word-acceptable? word)
                  (hash-table-put! *word-list* word #t))
@@ -37,13 +35,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (+ 1 lines-read)))))))
 
   (define *word-list* (make-hash-table 'equal))
-  (if #f (snarf-dict)
-    (begin
-      (hash-table-put! *word-list* "turd" #t)
-      (hash-table-put! *word-list* "third" #t)
-      (hash-table-put! *word-list* "bird" #t)
-      (hash-table-put! *word-list* "tird" #t)
-      ))
+  (snarf-dict)
 
   (define (build-network)
     (let ((rv (new-network)))
@@ -82,10 +74,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
      "Duh.  Drooool."
      (for-each (lambda (thing)
                  (printf "~s~n" thing))
-               (map (lambda (p)
-                      (cons (car p)
+               (filter 
+                (lambda (thing)
+                  (< 1 (length thing)))
+                (map (lambda (p)
+                       (cons (car p)
                              (get-neighbor-names (cdr p))))
-                    (network->list (build-network))))
+                     (network->list (build-network)))))
      (assert = 0 0)
      )
     ))
