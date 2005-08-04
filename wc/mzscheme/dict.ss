@@ -63,16 +63,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (if (neighbors? w (car dict))
                   (cons (car dict)
                         result)
-                result)))))
-
-  (fprintf (current-error-port)
-           "~a"
-           (map (lambda (word)
-                  (format
-                   "all neighbors of ~s: ~a~n"
-                   word
-                   (all-neighbors word)))
-                (list "giant" "kate" "katie" "buster" "inconceivable")
-                ))
-  
-  )
+                result))))))

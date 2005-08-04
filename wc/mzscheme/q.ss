@@ -7,6 +7,7 @@
    front-queue
    is-on-queue?
    length-queue
+   queue->list
    )
   (require "set.ss")
 
@@ -50,4 +51,5 @@
                 seq)
       rv))
 
+  (define queue->list queue-front-ptr)
   )
