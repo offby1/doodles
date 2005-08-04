@@ -33,7 +33,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (parameterize ((print-hash-table #t))
                            (write (serialize res)))
                          ))
-                     (fprintf (current-error-port) "Successfully wrote value to ~s~n" file)) ; log if can't save to file
+                     (fprintf (current-error-port) "wrote ~s~n" file)) ; log if can't save to file
                    res))))
            (begin0
              (with-input-from-file file
