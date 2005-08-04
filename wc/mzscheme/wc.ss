@@ -18,7 +18,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            args)))
 
     (define (helper agenda done call-stack)
-      ;;(ep "agenda: ~a; done: ~a; call-stack: ~a~n" (length-queue agenda) (count done) (length call-stack))
+      (ep "agenda: ~a; done: ~a; call-stack: ~a~n" (length-queue agenda) (count done) (length call-stack))
       (cond
        ((empty-queue? agenda)
         (ep "agenda is empty~n")
@@ -40,7 +40,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (add! (front-queue agenda) done)
                 (cons (front-queue agenda) call-stack)))))
 
-    (trace helper)
+    ;;(trace helper)
     (helper (make-queue (list start))
             (set)
             (list)))
