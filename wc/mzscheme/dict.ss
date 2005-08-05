@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (lib "file.ss")
    (lib "trace.ss")
    (only (lib "1.ss" "srfi") filter iota)
+   (only (lib "13.ss" "srfi") string-downcase)
    "set.ss"
    "persist.ss")
 
@@ -22,9 +23,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((w-b-l  (make-hash-table)))
       (define (note word)
         (let* ((l (string-length word))
-               (set (hash-table-get w-b-l l (lambda () (set)))))
-          (add! word set)
-          (hash-table-put! w-b-l l set)))
+               (same-length-words (hash-table-get w-b-l l (lambda () (set)))))
+          (add! (string-downcase word)
+                same-length-words)
+          (hash-table-put! w-b-l l same-length-words)))
       (with-input-from-file *dictionary-file-name*
         (lambda ()
           ;; each entry is now a 'set' of words of the same length.

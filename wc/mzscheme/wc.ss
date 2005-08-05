@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qu "$0" ${1+"$@"}
+exec time mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module wc mzscheme
@@ -8,6 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (require
    (lib "trace.ss")
    (only (lib "1.ss" "srfi") any append-map remove)
+   (only (lib "13.ss" "srfi") string-join)
    "set.ss"
    "q.ss"
    "dict.ss")
@@ -60,7 +61,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (let ((args (vector->list (current-command-line-arguments))))
     (when (not (= 2 (length args)))
       (error "give me two words"))
-    (display (apply bfs args)))
+    (display (string-join (apply bfs args) " -> ")))
   (newline)
   
   )
