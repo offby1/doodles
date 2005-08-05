@@ -25,6 +25,10 @@
 
 ;; presumably, creating our array just once (at load time) is faster
 ;; than creating a new one every time this function is called.
+
+;; Idea: instead of using an array, steal an idea from my anagrams
+;; program: assign each letter a distinct small prime, and represent
+;; the survey as the product of all the letters in the string.
 (setf (fdefinition 'survey-string) 
       (let ((survey (make-array 128
                                 :initial-element 0
@@ -119,7 +123,7 @@
   (declare (type fixnum max-tries))
   (setf *the-template* 
         (cons 
-         ""
+         "What the hell is your problem?"
           
          (append
           (loop for (item penultimate last)
