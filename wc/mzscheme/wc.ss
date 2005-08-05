@@ -58,9 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
-  ;;(display (bfs "foo" "bar"))
-  (display (bfs "fuck" "shit"))
-  ;;(display (bfs "giant" "raven"))
+  (display (bfs "giant" "raven"))
   (newline)
   
   )

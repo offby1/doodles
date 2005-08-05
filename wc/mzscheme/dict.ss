@@ -15,7 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((t (get-preference 'anagrams-dictionary-file-name)))
       (or (and t (bytes->path t))
           (bytes->path "/usr/share/dict/words"))))
-  
+
   (define-persistent *words-by-length* "word-list.dat"
     (let ((tmp  (make-hash-table)))
       (define (note word)
