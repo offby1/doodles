@@ -57,7 +57,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
-  (display (bfs "giant" "raven"))
+  (let ((args (vector->list (current-command-line-arguments))))
+    (when (not (= 2 (length args)))
+      (error "give me two words"))
+    (display (apply bfs args)))
   (newline)
   
   )
