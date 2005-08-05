@@ -7,6 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (require
    (lib "file.ss")
    (lib "trace.ss")
+   (only (lib "1.ss" "srfi") filter iota)
+   "set.ss"
    "persist.ss")
 
   (provide all-neighbors)
@@ -17,50 +19,63 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (string->path "/usr/share/dict/words"))))
 
   (define-persistent *words-by-length* "word-list.dat"
-    (let ((tmp  (make-hash-table)))
+    (let ((w-b-l  (make-hash-table)))
       (define (note word)
         (let* ((l (string-length word))
-               (set (hash-table-get tmp l (lambda () (make-hash-table 'equal)))))
-          (hash-table-put! set word #t)
-          (hash-table-put! tmp l set)))
+               (set (hash-table-get w-b-l l (lambda () (set)))))
+          (add! word set)
+          (hash-table-put! w-b-l l set)))
       (with-input-from-file *dictionary-file-name*
         (lambda ()
           ;; each entry is now a 'set' of words of the same length.
           ;; convert the set (really another hash table) to a simple list.
-          (let loop ((word  (read-line)))
+          (let read-word-loop ((word  (read-line)))
             (if (eof-object? word)
-                (begin
-                  (hash-table-for-each
-                   tmp
-                   (lambda (length set)
-                     (let ((words (hash-table-map set (lambda (k v) k))))
-                       (hash-table-put! tmp length words))))
-                  tmp)
+                w-b-l
               (begin
                 (note word)
-                (loop (read-line)))))))))
+                (read-word-loop (read-line)))))))))
 
   (define (words-of-length n)
     (hash-table-get *words-by-length* n))
 
-  (define (neighbors? w1 w2)
-    (let loop ((chars-to-examine (string-length w1))
-               (differences-found 0))
-      (if (or (< 1 differences-found)
-              (zero? chars-to-examine))
-          (= 1 differences-found)
-        (let ((l1 (string-ref w1 (sub1 chars-to-examine)))
-              (l2 (string-ref w2 (sub1 chars-to-examine))))
-          (loop (sub1 chars-to-examine)
-                (+ differences-found (if (char=? l1 l2) 0 1)))))))
+  (define *the-alphabet*
+    (list->vector
+     (map integer->char
+          (iota (- (char->integer #\z)
+                   (char->integer #\a)
+                   -1)
+                (char->integer #\a)
+                ))))
 
-  (define (all-neighbors w)
-    (let loop ((dict (words-of-length (string-length w)))
-               (result '()))
-      (if (null? dict)
+  (define (25-varieties word n)
+    (let 25-varieties-loop ((letters-to-examine (vector-length *the-alphabet*))
+                            (result '()))
+      (if (zero? letters-to-examine  )
           result
-        (loop (cdr dict)
-              (if (neighbors? w (car dict))
-                  (cons (car dict)
-                        result)
-                result))))))
+        (let ((this-letter (vector-ref *the-alphabet* (sub1 letters-to-examine))))
+          (if (char=? this-letter (string-ref word n))
+              (25-varieties-loop (- letters-to-examine 1)
+                                 result)
+            (let ((new (string-copy word)))
+              (string-set! new n this-letter)
+              (25-varieties-loop (- letters-to-examine 1)
+                                 (cons new
+                                       result))))))))
+
+  (define (olvs word)
+    (let olvs-loop ((letters-to-examine (string-length word))
+                    (result '()))
+      (if (zero? letters-to-examine)
+          result
+        (olvs-loop (sub1 letters-to-examine)
+                   (append (25-varieties word (sub1 letters-to-examine))
+                           result)))))
+
+  (define (all-neighbors word)
+    (let ((same-size (hash-table-get *words-by-length* (string-length word))))
+      (filter (lambda (n) (is-present? n same-size)) (olvs word))))
+
+  ;;(trace all-neighbors)
+
+  )

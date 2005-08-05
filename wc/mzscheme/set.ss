@@ -13,7 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    )
 
   (define (set . items)
-    (let ((rv (make-hash-table)))
+    (let ((rv (make-hash-table 'equal)))
       (for-each (lambda (item) (add! item rv))
                 items)
       rv))

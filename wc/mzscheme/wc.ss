@@ -43,7 +43,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             ;; create a new agenda item out of them, and the current agenda.
             (for-each (lambda (n)
                         (when (not (is-present? n seen) )
-                          (ep " ~a" n)
+                          ;;(ep " ~a" n)
                           (add! n seen)
                           (insert-queue! agenda
                                          (make-agenda-item (cons w trail)
@@ -57,7 +57,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
-  (display (bfs "shooter" "crosser"))
+  (display (bfs "giant" "raven"))
   (newline)
   
   )
