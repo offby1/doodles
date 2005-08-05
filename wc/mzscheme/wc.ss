@@ -7,7 +7,6 @@ exec time mzscheme -qu "$0" ${1+"$@"}
 
   (require
    (lib "trace.ss")
-   (only (lib "1.ss" "srfi") any append-map remove)
    (only (lib "13.ss" "srfi") string-join)
    "set.ss"
    "q.ss"
@@ -20,41 +19,33 @@ exec time mzscheme -qu "$0" ${1+"$@"}
 
   (define (bfs start sought)
 
-    (define seen (set))
-    
-    (define (ep . args)
-      (apply fprintf (cons (current-error-port)
-                           args)))
+    ;; words we've already considered.  If we didn't keep track, we'd
+    ;; loop endlessly.
+    (define seen (make-set))
 
     (define (helper agenda)
       (if (empty-queue? agenda)
-          (begin
-            (ep "agenda is empty~n")
-            #f)
+          #f
         (let* ((ai (front-queue agenda))
                (w (agenda-item-word ai))
                (trail (agenda-item-trail ai)))
             
           (cond
-           ((equal? sought (agenda-item-word ai))
-            (ep "Found it~n")
-            (agenda-item-trail ai))
+           ((equal? sought w) trail)
            (else
             ;; find all the neighbors which we haven't already done.
-            ;; create a new agenda item out of them, and the current agenda.
+            ;; create a new agenda item out of them, and the current
+            ;; agenda.
             (for-each (lambda (n)
                         (when (not (is-present? n seen) )
-                          ;;(ep " ~a" n)
                           (add! n seen)
                           (insert-queue! agenda
                                          (make-agenda-item (cons w trail)
                                                            n))))
                       (all-neighbors w))
             (delete-queue! agenda)
-            (helper agenda )))))
-      )
-
-    ;;(trace helper)
+            (helper agenda))))))
+    
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
