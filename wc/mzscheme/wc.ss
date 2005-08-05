@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module wc mzscheme
@@ -26,7 +26,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            args)))
 
     (define (helper agenda)
-      (ep "agenda: ~a~n" (length-queue agenda) )
       (if (empty-queue? agenda)
           (begin
             (ep "agenda is empty~n")
@@ -44,7 +43,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             ;; create a new agenda item out of them, and the current agenda.
             (for-each (lambda (n)
                         (when (not (is-present? n seen) )
-                          (fprintf (current-error-port) "n is ~s~n" n)
+                          (ep " ~a" n)
                           (add! n seen)
                           (insert-queue! agenda
                                          (make-agenda-item (cons w trail)
@@ -58,7 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
-  (display (bfs "giant" "raven"))
+  (display (bfs "shooter" "crosser"))
   (newline)
   
   )

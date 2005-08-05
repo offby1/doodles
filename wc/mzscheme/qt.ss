@@ -12,11 +12,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (insert-queue! q 3)
       (insert-queue! q 9)
       (printf "Q: ~s~n" q)
-      (for-each (lambda (item)
-                  (printf "~s ~a in the queue~n"
-                          item
-                          (if (is-on-queue? item q) "is" "isn't")))
-                (list 1 2 3 4 5 6))
       (printf "head: ~s; rest: ~s~n" (front-queue q) (delete-queue! q))
       (printf "head: ~s; rest: ~s~n" (front-queue q) (delete-queue! q))
       (printf "head: ~s; rest: ~s~n" (front-queue q) (delete-queue! q))
