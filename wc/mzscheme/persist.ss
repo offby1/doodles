@@ -14,6 +14,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;; should either read x.ss and assign the value to x, or else run the
 ;;; body code, save the value into x.ss, and assign it to x.
 
+;;; I suspect there are subtle problems when the value that you save
+;;; contains cycles.
+  
   (define-syntax define-persistent
     (syntax-rules ()
       ((_ var file body ...)
