@@ -8,8 +8,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    set
    is-present?
    add!
-   remove!
-   count
    )
 
   (define (set . items)
@@ -25,12 +23,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (hash-table-put! set item #t)
     set)
 
-  (define (remove! item set)
-    (when (not (is-present? item set))
-      (error 'remove "No item ~s in set" item))
-    (hash-table-remove! set item)
-    set)
-
-  (define count hash-table-count)
 
   )
