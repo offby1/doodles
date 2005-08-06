@@ -6,7 +6,8 @@
    "set.ss"
    "persist.ss")
 
-  (provide all-neighbors)
+  (provide all-neighbors
+           random-word-pair)
 
   (define *dictionary-file-name*
     (let ((t (get-preference 'anagrams-dictionary-file-name)))
@@ -71,4 +72,10 @@
     (let ((same-size (hash-table-get *words-by-length* (string-length word))))
       (filter (lambda (n) (is-present? n same-size)) (olvs word))))
 
+  (define (random-word-pair wlength)
+    (let* ((words (list->vector (hash-table-map (hash-table-get *words-by-length* wlength) (lambda (k v) k))))
+           (length (vector-length words)))
+      (list (vector-ref words (random length))
+            (vector-ref words (random length)))))
+  
   )

@@ -51,8 +51,15 @@ exec time mzscheme -qu "$0" ${1+"$@"}
 
   (let ((args (vector->list (current-command-line-arguments))))
     (when (not (= 2 (length args)))
-      (error "give me two words"))
-    (display (string-join (apply bfs args) " -> ")))
+      (display "OK, I'll use my own words: ")
+      (set! args  (random-word-pair 6))
+      (write args)
+      (newline))
+    (cond
+     ((apply bfs args) => (lambda (result)(display (string-join result " -> "))))
+     (else
+      (display "Bummer.  No chain."))
+    ))
   (newline)
   
   )

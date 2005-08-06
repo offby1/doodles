@@ -17,6 +17,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;; I suspect there are subtle problems when the value that you save
 ;;; contains cycles.
   
+  (define (ep . args)
+    (apply fprintf (cons (current-error-port)
+                         args)))
   (define-syntax define-persistent
     (syntax-rules ()
       ((_ var file body ...)
@@ -24,11 +27,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (with-handlers
              ((exn:fail:filesystem?
                (lambda (exn)
-                 (fprintf (current-error-port) "Cache ~s not found; doing expensive computation ... " file)
+                 (ep "Cache ~s not found; doing expensive computation ... " file)
                  (let ((res body ...))
+                   (ep "done.  Now writing file ~s ... " file)
                    (with-handlers
                        ((exn:fail:filesystem?
-                         (lambda (exn) (fprintf (current-error-port) "Warning: can't write file ~s~n" file))))
+                         (lambda (exn) (ep "Warning: can't write file ~s~n" file))))
                      (with-output-to-file file
                        (lambda ()
                          ;; TODO -- perhaps also parameterize
@@ -36,11 +40,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (parameterize ((print-hash-table #t))
                            (write (serialize res)))
                          ))
-                     (fprintf (current-error-port) "wrote ~s~n" file)) ; log if can't save to file
+                     (ep "done~n")) ; log if can't save to file
                    res))))
            (begin0
              (with-input-from-file file
                (lambda ()
-                 (fprintf (current-error-port) "Reading from ~s ... " file)
+                 (ep "Reading from ~s ... " file)
                  (deserialize (read))))
-             (fprintf (current-error-port) "done~n"))))))))
+             (ep "done~n"))))))))
