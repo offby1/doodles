@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec time mzscheme -qu "$0" ${1+"$@"}
+exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module wc mzscheme
@@ -29,7 +29,7 @@ exec time mzscheme -qu "$0" ${1+"$@"}
         (let* ((ai (front-queue agenda))
                (w (agenda-item-word ai))
                (trail (agenda-item-trail ai)))
-            
+
           (cond
            ((equal? sought w) trail)
            (else
@@ -45,21 +45,25 @@ exec time mzscheme -qu "$0" ${1+"$@"}
                       (all-neighbors w))
             (delete-queue! agenda)
             (helper agenda))))))
-    
+
     (let ((rv (helper (make-queue (list (make-agenda-item '() start))))))
       (and rv (reverse (cons sought rv)))))
 
-  (let ((args (vector->list (current-command-line-arguments))))
-    (when (not (= 2 (length args)))
-      (display "OK, I'll use my own words: ")
-      (set! args  (random-word-pair 6))
-      (write args)
-      (newline))
+  (define (display-result chain say-bummer?)
     (cond
-     ((apply bfs args) => (lambda (result)(display (string-join result " -> "))))
+     (chain => (lambda (result)
+                 (printf "~a: ~a~n"
+                         (length result)
+                         (string-join result " -> "))))
      (else
-      (display "Bummer.  No chain."))
-    ))
-  (newline)
-  
-  )
+      (when say-bummer?
+        (display "Bummer.  No chain.")
+        (newline)))))
+
+  (let ((args (vector->list (current-command-line-arguments))))
+    (if (= 2 (length args))
+        (display-result (apply bfs args) #t)
+      (let loop ()
+        (set! args  (random-word-pair 6))
+        (display-result (apply bfs args) #f)
+        (loop)))))
