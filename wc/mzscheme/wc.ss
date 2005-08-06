@@ -15,6 +15,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; breadth-first search requires an "agenda", which is a queue of
   ;; work to do.  But in case we find a solution, we want to know how
   ;; we got there; the trail holds the "how we got there".
+  
+  ;; I've seen a number of articles about searching that use the term
+  ;; "open list" to refer to what I am calling "agenda".
+  
   (define-struct agenda-item (trail word))
 
   (define (bfs start sought)
@@ -67,3 +71,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (set! args  (random-word-pair 6))
         (display-result (apply bfs args) #f)
         (loop)))))
+
+;;; For further reading:
+
+;; http://www.policyalmanac.org/games/aStarTutorial.htm
