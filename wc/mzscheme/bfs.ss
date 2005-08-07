@@ -16,11 +16,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (apply fprintf (cons (current-error-port)
                          args)))
 
-  (define (pop-queue! q)
-    (begin0
-      (front-queue q)
-      (delete-queue! q)))
-  
   (define-struct agenda-item (trail word))
   
   (define (bfs start-node goal-node nodes-equal? node-neighbors)
@@ -30,53 +25,63 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (define (already-seen? thing)
       (is-present? thing *already-seen*))
   
-    (define (been-there-done-that! thing)
+    (define (note! thing)
       (add! thing *already-seen*))
 
+    (define (enqueue! thing)
+      (insert-queue! *the-queue* thing))
+    
     (define *the-queue* (make-queue (list (make-agenda-item '() start-node))))
 
+    (define (front)
+      (front-queue *the-queue*))
+
+    (define (pop-queue!)
+      (begin0
+        (front)
+        (delete-queue! *the-queue*)))
+    
     (define (loop)
       (if (empty-queue? *the-queue*) #f
-        (let* ((ai (front-queue *the-queue*))
-               (w (agenda-item-word ai))
-               (trail (agenda-item-trail ai)))
+        (let ((w     (agenda-item-word  (front)))
+              (trail (agenda-item-trail (front))))
 
           (cond
            ((nodes-equal? goal-node w) trail)
            (else
             (for-each (lambda (n)
-                        (been-there-done-that! n)
-                        (insert-queue! *the-queue*
-                                       (make-agenda-item (cons w trail) n)))
+                        (note! n)
+                        (enqueue! (make-agenda-item (cons w trail) n)))
                       (remove already-seen? (node-neighbors w)))
-            (delete-queue! *the-queue*)
+            (pop-queue!)
             (loop))))))
 
     (let ((rv (loop)))
-      (and rv (reverse (cons goal-node rv))))
-
-    )
+      (and rv (reverse (cons goal-node rv)))))
 
 ;;; A fake network, for testing.
 
-  (define nodes-equal? string=?)
+  (define nodes-equal? eq?)
   (define (node-neighbors n)
     (cond
-     ((nodes-equal? n "start") (list "a" "b"))
-     ((nodes-equal? n "a") (list "start" "c"))
-     ((nodes-equal? n "b") (list "start" "c" "e"))
-     ((nodes-equal? n "c") (list "a" "b" "e"))
-     ((nodes-equal? n "e") (list "b" "c" "d" "f"))
-     ((nodes-equal? n "d") (list "e"))
-     ((nodes-equal? n "f") (list "e" "goal"))
-     ((nodes-equal? n "goal") (list "f"))
-     ((nodes-equal? n "outlier") (list))
-     ((nodes-equal? n "cycle-a") (list "cycle-b"))
-     ((nodes-equal? n "cycle-b") (list "cycle-a"))
+     ((assoc n '((start   a b)
+                 (a       start c)
+                 (b       start c e)
+                 (c       a b e)
+                 (e       b c d f)
+                 (d       e)
+                 (f       e goal)
+                 (goal    f)
+                 (outlier)
+                 (cycle-a cycle-b)
+                 (cycle-b cycle-a)
+                 ))
+      => cdr)
      (else
       (error 'node-neighbors "Unknown node ~s" n))))
 
-  (printf "This should succeed: ~s~n" (bfs "start" "goal" nodes-equal? node-neighbors))
-  (printf "This should fail: ~s~n"    (bfs "outlier" "goal" nodes-equal? node-neighbors))
-  (printf "This too: ~s~n"            (bfs "cycle-a" "goal" nodes-equal? node-neighbors))
+  (printf "This should succeed: ~s~n" (bfs 'start 'goal nodes-equal? node-neighbors))
+  (printf "This too: ~s~n"            (bfs 'goal 'start nodes-equal? node-neighbors))
+  (printf "This should fail: ~s~n"    (bfs 'outlier 'goal nodes-equal? node-neighbors))
+  (printf "This too: ~s~n"            (bfs 'cycle-a 'goal nodes-equal? node-neighbors))
   )

@@ -15,10 +15,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   
   (define (display-result chain say-bummer?)
     (cond
-     (chain => (lambda (result)
+     (chain => (lambda (chain)
                  (printf "~a: ~a~n"
-                         (length result)
-                         (string-join result " -> "))))
+                         (length chain)
+                         (string-join chain " -> "))))
      (else
       (when say-bummer?
         (display "Bummer.  No chain.")
