@@ -25,7 +25,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (newline)))))
 
   (define (go word-pair)
-    (apply bfs  (append word-pair (list string=?  all-neighbors))))
+    (with-neato-output
+     (lambda ()
+       (apply bfs  (append word-pair (list string=?  all-neighbors))))))
 
   (let ((ccla (vector->list (current-command-line-arguments))))
     (if (= 2 (length ccla))

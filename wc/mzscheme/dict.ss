@@ -7,6 +7,7 @@
    "persist.ss")
 
   (provide all-neighbors
+           with-neato-output
            random-word-pair)
 
   (define *dictionary-file-name*
@@ -68,14 +69,29 @@
                    (append (25-varieties word (sub1 letters-to-examine))
                            result)))))
 
+  (define *graphis-output-port* #f)
+
   (define (all-neighbors word)
-    (let ((same-size (hash-table-get *words-by-length* (string-length word))))
-      (filter (lambda (n) (is-present? n same-size)) (olvs word))))
+    (let ((rv (filter (lambda (n) (is-present? n  (hash-table-get *words-by-length* (string-length word)))) (olvs word))))
+      (when *graphis-output-port*
+        (for-each (lambda (n)
+                    (fprintf *graphis-output-port* "~s -- ~s;~n" word n))
+                  rv))
+      rv))
 
   (define (random-word-pair wlength)
     (let* ((words (list->vector (hash-table-map (hash-table-get *words-by-length* wlength) (lambda (k v) k))))
            (length (vector-length words)))
       (list (vector-ref words (random length))
             (vector-ref words (random length)))))
+
+  (define (with-neato-output thunk)
+    (set! *graphis-output-port*
+          (open-output-file "network.dot" 'truncate/replace))
+    (fprintf *graphis-output-port* "Graph fred{~nsize=\"30,30\"~n")
+    (begin0
+      (thunk)
+      (fprintf *graphis-output-port* "}~n")
+      (close-output-port *graphis-output-port*)))
   
   )
