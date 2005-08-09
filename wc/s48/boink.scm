@@ -1,10 +1,10 @@
 ;;   -*- mode: scheme48; scheme48-package: boink -*-
 (define (boink)
   (display "Boink!!")
-  (table-walk *the-hash-table*
-              (lambda (k v)
+  (table-walk (lambda (k v)
                 (display k)
-                (newline)))
+                (newline))
+              *the-hash-table*)
   (newline))
 
 (define *the-hash-table*
