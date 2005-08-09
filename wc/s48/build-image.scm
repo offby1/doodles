@@ -7,5 +7,6 @@
                 (write x)
                 (newline)
                 (boink)
+                0                       ;exit status
                 )
               "boink.image"))
