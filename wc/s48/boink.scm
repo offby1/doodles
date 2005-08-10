@@ -1,15 +1,13 @@
 ;;   -*- mode: scheme48; scheme48-package: boink -*-
 (define (boink)
-  (display "Boink!!") (newline)
-  (for-each (lambda (p) (table-set! *the-hash-table*
-                                    p
-                                    #t))
-            *the-list*)
   (display "Table has ")
-  (display (length *the-list*))
-  (display " keys")
-  (newline)
-  )
+  (let ((alist '()))
+    (table-walk (lambda (k v)
+                  (set! alist (cons (cons k v) alist)))
+                *the-hash-table*)
+    (display (length alist)))
+  (display " entries")
+  (newline))
 
 (define *the-hash-table*
   (make-string-table))
@@ -24,16 +22,17 @@
         (eof-object)                   ; from the PRIMITIVES structure
       (list->string (reverse chars)))))
 
-(define *the-list*
-  (call-with-input-file
-      "/usr/share/dict/words"
-    (lambda (p)
-      (let loop ((word (read-line p))
-                 (result '()))
-        (if (eof-object? word)
-            result
-          (begin
-            (loop (read-line p)
-                  (cons word result)))
-          )))))
+(call-with-input-file
+    "/usr/share/dict/words"
+
+  (lambda (p)
+    (let loop ((word (read-line p))
+               (result '()))
+      (if (eof-object? word)
+          result
+        (begin
+          (table-set! *the-hash-table* word #t)
+          (loop (read-line p)
+                (cons word result)))
+        ))))
 
