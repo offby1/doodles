@@ -1,11 +1,12 @@
 ;;   -*- mode: scheme48; scheme48-package: boink -*-
 (define (boink)
   (display "Boink!!")
-  (table-walk (lambda (k v)
-                (display k)
-                (newline))
-              *the-hash-table*)
-  (newline))
+  (let ((table '()))
+    (table-walk (lambda (k v)
+                  (set! table (cons (cons k v) table))) *the-hash-table*)
+    (write table)
+    (newline))
+  )
 
 (define *the-hash-table*
   (make-string-table))
@@ -20,16 +21,12 @@
         (eof-object)                   ; from the PRIMITIVES structure
       (list->string (reverse chars)))))
 
-(if #f
-    (call-with-input-file
-        "boink.scm"
-                                        ;"/usr/share/dict/words"
-      (lambda (p)
-        (let loop ((word (read-line p)))
-          (if (not (eof-object? word))
-              (begin
-                (table-set! *the-hash-table* word #t)
-                (loop (read-line p))))))))
-
-(table-set! *the-hash-table* "hey" 'is-for-horses)
-(table-set! *the-hash-table* "you" 'why-because-we-LIKE-you)
+(call-with-input-file
+    "ten-words"
+  (lambda (p)
+    (let loop ((c (read-char p)))
+      (if (not (eof-object? c))
+          (let* ((key (string c))
+                 (probe (table-ref *the-hash-table* key)))
+            (table-set! *the-hash-table* key (if probe (+ 1 probe) 1))
+            (loop (read-char p)))))))
