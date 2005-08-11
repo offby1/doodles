@@ -1,7 +1,7 @@
 ;; This is not exactly Scheme -- it is Scheme48's "exec" language,
 ;; which is a superset of Scheme.
 (config '(load "packages.scm"))
-(user '(open boink))
+(user '(open wc))
 
 ;; todo -- figure out how to tell if this command fails, and if so,
 ;; exit with a non-zero status.
@@ -9,7 +9,7 @@
                 (display "resumer's argument is ")
                 (write x)
                 (newline)
-                (boink)
+                (wc "fred")
                 0                       ;exit status
                 )
               "boink.image"))
