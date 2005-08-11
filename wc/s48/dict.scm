@@ -1,24 +1,12 @@
 ;;   -*- mode: scheme48; scheme48-package: dict -*-
-(define (test)
-  (display "Table has ")
-  (let ((alist '()))
-    (table-walk (lambda (k v)
-                  (set! alist (cons (cons k v) alist)))
-                *the-hash-table*)
-    (display (length alist)))
-  (display " entries")
-  (newline)
 
-  (let ((t22 (table-ref *the-hash-table* 22))
-        (alist '()))
-    (table-walk (lambda (k v)
-                  (set! alist (cons (cons k v)
-                                    alist)))
-                t22)
-    (write alist)
-    (newline))
-  )
+;; each entry is a "sub" hash table mapping words to #t.  (So I'm
+;; actually using it as a set of words.)  In each sub-table, all the
+;; words are the same length, and that length is the key in the main
+;; table for that sub-table.
 
+;; Thus we have about 20-some sets of words: one-letter words,
+;; two-letter words, and so on up to twenty-letter words.
 (define *the-hash-table*
   (make-integer-table))
 

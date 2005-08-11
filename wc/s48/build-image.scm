@@ -6,10 +6,7 @@
 ;; todo -- figure out how to tell if this command fails, and if so,
 ;; exit with a non-zero status.
 (user '(build (lambda (x)
-                (display "resumer's argument is ")
-                (write x)
-                (newline)
-                (wc "fred")
+                (wc x)
                 0                       ;exit status
                 )
               "boink.image"))
