@@ -10,7 +10,7 @@ $(image): build-image.scm $(sources)
 	[ -r $(image) ]		
 
 check: $(image)
-	$(s48) -i $< -a giant raven
+	time $(s48) -i $< -a giant raven
 
 clean:
 	-rm -f $(image)

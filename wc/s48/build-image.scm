@@ -7,6 +7,7 @@
 ;; exit with a non-zero status.
 (user '(build (lambda (x)
                 (write (wc x))
+                (newline)
                 0                       ;exit status
                 )
               "boink.image"))
