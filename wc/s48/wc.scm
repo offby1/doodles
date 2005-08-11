@@ -44,18 +44,6 @@
                  (append (twenty-five-varieties word (- letters-to-examine 1))
                          result)))))
 
-(define (filter proc seq)
-  (let loop ((seq seq)
-             
-             (result '()))
-    (if (null? seq)
-        (reverse result)
-      (loop (cdr seq)
-            (if (proc (car seq))
-                (cons (car seq)
-                      result)
-              result)))))
-
 (define (all-neighbors word)
    (filter (lambda (n)
              (table-ref (table-ref *the-hash-table*
