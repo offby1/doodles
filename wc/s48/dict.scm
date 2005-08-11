@@ -1,5 +1,5 @@
-;;   -*- mode: scheme48; scheme48-package: boink -*-
-(define (boink)
+;;   -*- mode: scheme48; scheme48-package: dict -*-
+(define (test)
   (display "Table has ")
   (let ((alist '()))
     (table-walk (lambda (k v)

@@ -1,5 +1,5 @@
 s48 := scheme48 -h 7000000
-sources := packages.scm boink.scm
+sources := packages.scm dict.scm
 image := boink.image
 
 #unfortunatley scheme48 will not return a failure code if it fails to
