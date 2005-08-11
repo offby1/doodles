@@ -52,10 +52,4 @@
            (olvs word)))
 
 (define (wc words)
-  (for-each (lambda (word)
-              (display "All neighbors of ")
-              (write word)
-              (display ": ")
-              (write (all-neighbors word))
-              (newline))
-            words))
+  (apply bfs  (append words (list string=?  all-neighbors))))

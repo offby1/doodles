@@ -1,5 +1,5 @@
 s48 := scheme48 -h 7000000
-sources := packages.scm dict.scm
+sources := $(wildcard *.scm)
 image := boink.image
 
 #unfortunatley scheme48 will not return a failure code if it fails to
@@ -10,7 +10,7 @@ $(image): build-image.scm $(sources)
 	[ -r $(image) ]		
 
 check: $(image)
-	$(s48) -i $< -a foo bar baz
+	$(s48) -i $< -a giant raven
 
 clean:
 	-rm -f $(image)

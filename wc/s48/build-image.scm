@@ -6,7 +6,7 @@
 ;; todo -- figure out how to tell if this command fails, and if so,
 ;; exit with a non-zero status.
 (user '(build (lambda (x)
-                (wc x)
+                (write (wc x))
                 0                       ;exit status
                 )
               "boink.image"))
