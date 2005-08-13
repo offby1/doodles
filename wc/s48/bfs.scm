@@ -1,10 +1,3 @@
-;; required packages:
-
-;; i/o
-;; srfi-9
-;; set
-;; q
-
 (define (ep . args)
   (apply display args (list (current-error-port))))
 

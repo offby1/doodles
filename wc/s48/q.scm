@@ -1,10 +1,5 @@
 ;;; Stolen from SICP, and scheme48-ified
 
-;; required packages:
-
-;; srfi-9
-;; signals
-
 (define-record-type :queue
   (make-queue-record front-ptr rear-ptr)
   queue?

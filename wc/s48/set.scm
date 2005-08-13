@@ -1,7 +1,3 @@
-;; required packages:
-
-;; tables
-
 (define make-set
   (lambda words
     (let ((rv (make-string-table)))

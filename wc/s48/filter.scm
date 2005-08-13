@@ -1,6 +1,5 @@
 (define (filter proc seq)
   (let loop ((seq seq)
-             
              (result '()))
     (if (null? seq)
         (reverse result)

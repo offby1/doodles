@@ -19,7 +19,7 @@
 
 (define (twenty-five-varieties word index)
   (let twenty-five-varieties-loop ((letters-to-examine (vector-length *the-alphabet*))
-                          (result '()))
+                                   (result '()))
     (if (zero? letters-to-examine  )
         result
       (let ((this-letter (vector-ref *the-alphabet* (- letters-to-examine 1))))
@@ -28,12 +28,12 @@
 
             ;; don't return the string we were passed in.
             (twenty-five-varieties-loop (- letters-to-examine 1)
-                               result)
+                                        result)
 
           (let ((new (string-copy word)))
             (string-set! new index this-letter)
             (twenty-five-varieties-loop (- letters-to-examine 1)
-                               (cons new result))))))))
+                                        (cons new result))))))))
 
 (define (olvs word)
   (let olvs-loop ((letters-to-examine (string-length word))
