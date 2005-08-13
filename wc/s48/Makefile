@@ -4,7 +4,7 @@ image := boink.image
 
 #unfortunately scheme48 will not return a failure code if it fails to
 #build the image, so we need to check by hand.
-$(image): build-image.scm $(sources)
+$(image): build-image.exec $(sources)
 	-rm -f $(image)
 	echo ,exec ,load $< | $(s48) -a batch
 	[ -r $(image) ]		
