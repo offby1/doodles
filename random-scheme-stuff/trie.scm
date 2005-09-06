@@ -17,17 +17,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define (new-trie) (make-trie '()))
 
   (define (trie-lookup t key-string failure-thunk)
+    (when (not (trie? t))
+      (raise-type-error 'trie-lookup "trie" t))
     (if (zero? (string-length key-string))
         (failure-thunk)
       (let* ((first-char (string-ref key-string 0))
              (rest-string (substring key-string 1))
              (probe (assq first-char (trie-alist t))))
-        (if (or (not probe)
-                (not (box? (cddr probe))))
+        (if (not probe)
             (failure-thunk)
           (if (zero? (string-length rest-string))
-              (cddr probe)
-            (trie-lookup (car probe)
+              (if (not (box? (cddr probe)))
+                  (failure-thunk)
+                (unbox (cddr probe)))
+            (trie-lookup (cadr probe)
                          (substring key-string 1)
                          failure-thunk))))))
 
@@ -59,25 +62,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (let ((probe (assq first-char (trie-alist t))))
           (when (not probe)
             (set! probe (cons first-char (cons (new-trie)  #f)))
-            (set-trie-alist! t probe))
+            (set-trie-alist! t (list probe)))
           (trie-add! (cadr probe) rest-string datum))
         )
       t))
-  (trace trie-add!)
+
   (define (trie-remove t key-string)
     (when (zero? (string-length key-string))
       (raise-type-error 'trie-remove "non-empty string" key-string))
+    (when (not (trie? t))
+      (raise-type-error 'trie-remove "trie" t))
     (let ((first-char  (string-ref key-string 0))
           (rest-string (substring key-string 1)))
       (if (= 1 (string-length key-string))
           (set-trie-alist! t (alist-delete first-char (trie-alist t)))
         (let ((probe (assq first-char (trie-alist t))))
-          (fprintf (current-error-port) "probe: ~s~n" probe)
           (when probe
             (set! t (trie-remove (cadr probe) rest-string))))))
     t)
-
-  (trace trie-remove)
 
   (define-syntax trie-remove!
     (syntax-rules ()
@@ -85,36 +87,48 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (set! t (trie-remove t key-string)))))
 
   (print-struct #t)
-  (test/text-ui
-   (make-test-suite
-    "everything"
-    (make-test-case
-     "alist-update"
-     (let ((a '()))
+  (let ((lookup (lambda (t key-string)
+                  (trie-lookup t key-string (lambda () #f)))))
+    (test/text-ui
+     (let ((t (new-trie))
+           (a '()))
+     (make-test-suite
+      "everything"
+      (make-test-case
+       "alist-update"
        (set! a (alist-update a 'key 'data))
        (assert-equal? a '((key . data)))
        (set! a (alist-update a 'key 'frobotz))
        (assert-equal? a '((key . frobotz)))
        (set! a (alist-update a 'sam 'shepherd))
        (assert-equal? a '((sam . shepherd)
-                          (key . frobotz)))))
-    (make-test-case
-     "yow"
-     (let ((t (new-trie)))
+                          (key . frobotz))))
+        
+      (make-test-case
+       "yow"
        (assert-true (trie? t))
        (assert-equal? (trie-alist t) '())
-       (assert-false (trie-lookup t "duh" (lambda () #f)))
+       (assert-false (lookup t "duh")))
 
+      (make-test-case
+       "ugh"
        (trie-add! t "a" 'zap)
-       (fprintf (current-error-port) "Here it is: ~s~n" t)
        (assert-equal? (trie-alist t) `((#\a . (,(new-trie) . #&zap))))
-       (assert-equal? (trie-lookup t "a" (lambda () #f)) #&zap)
+       (assert-equal? (lookup t "a") 'zap))
 
+      (make-test-case
+       "sam"
        (trie-remove! t "a")
-       (assert-false (trie-lookup t "a" (lambda () #f)))
+       (assert-false (lookup t "a")))
 
+      (make-test-case
+       "bob"
        (trie-add! t "a" 'letter-a)
+       (assert-equal? (lookup t "a"  ) 'letter-a))
+
+      (make-test-case
+       "tim"
        (trie-add! t "abc" 'abc)
-       #;(assert-equal? (trie-alist t) `((#\a . ((#\b . ((#\c . ()) . #f))
-                                               . #&letter-a))))
-       )))))
+       (assert-equal? (lookup t "a"  ) 'letter-a)
+       (assert-equal? (lookup t "abc") 'abc))
+      )))))
