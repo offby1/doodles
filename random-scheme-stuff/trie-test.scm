@@ -41,5 +41,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (trie-add! t "abc" 'abc)
          (assert-equal? (lookup t "a"  ) 'letter-a)
          (assert-equal? (lookup t "abc") 'abc))
+
+        (make-test-case
+         "common prefixes"
+         (trie-add! t "allen" 'funt)
+         (assert-equal? (lookup t "a"  ) 'letter-a)
+         (assert-equal? (lookup t "abc") 'abc)
+         (assert-equal? (lookup t "allen") 'funt))
         ))))
   )

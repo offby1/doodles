@@ -51,7 +51,7 @@
         (let ((probe (assq first-char (trie-alist t))))
           (when (not probe)
             (set! probe (cons first-char (cons (new-trie)  #f)))
-            (set-trie-alist! t (list probe)))
+            (set-trie-alist! t (cons  probe (trie-alist t))))
           (trie-add! (cadr probe) rest-string datum))
         )
       t))
