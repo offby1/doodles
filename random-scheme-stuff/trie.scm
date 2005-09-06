@@ -48,6 +48,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   empty alist: add alist entry for this character, with a new empty trie and empty data; call trie-add on that new trie
   ;;   otherwise: recursive call on existing trie, shorter string, and datum
   (define (trie-add! t key-string datum)
+    (when (not (trie? t))
+      (raise-type-error 'trie-add "trie" t))
     (when (zero? (string-length key-string))
       (raise-type-error 'trie-add "non-empty string" key-string))
     (let ((first-char  (string-ref key-string 0))
@@ -56,11 +58,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (set-trie-alist! t (alist-update (trie-alist t) first-char (cons (new-trie) (box datum))))
         (let ((probe (assq first-char (trie-alist t))))
           (when (not probe)
-            (set-trie-alist! t (cons first-char (cons (new-trie)) #f)))
-          (trie-add! t rest-string datum))
+            (set! probe (cons first-char (cons (new-trie)  #f)))
+            (set-trie-alist! t probe))
+          (trie-add! (cadr probe) rest-string datum))
         )
       t))
-  
+  (trace trie-add!)
   (define (trie-remove t key-string)
     (when (zero? (string-length key-string))
       (raise-type-error 'trie-remove "non-empty string" key-string))
@@ -109,4 +112,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
        (trie-remove! t "a")
        (assert-false (trie-lookup t "a" (lambda () #f)))
+
+       (trie-add! t "a" 'letter-a)
+       (trie-add! t "abc" 'abc)
+       #;(assert-equal? (trie-alist t) `((#\a . ((#\b . ((#\c . ()) . #f))
+                                               . #&letter-a))))
        )))))
