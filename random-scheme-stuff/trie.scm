@@ -1,6 +1,6 @@
 (module trie mzscheme
   (provide new-trie trie-lookup trie-add! trie-remove! trie?)
-  (require (only (lib "1.ss" "srfi") alist-delete alist-delete! alist-cons))
+  (require (only (lib "1.ss" "srfi") alist-delete))
 
   ;; a trie is an alist that maps characters to pairs.  Each pair is a
   ;; trie and an optional datum.  A datum is represented by a box:
@@ -39,11 +39,6 @@
           (cons (cons key data)
                 alist)))))
 
-  ;; empty string: failure
-  ;; single-character string: create or replace existing alist entry with empty trie and datum
-  ;; otherwise:
-  ;;   empty alist: add alist entry for this character, with a new empty trie and empty data; call trie-add on that new trie
-  ;;   otherwise: recursive call on existing trie, shorter string, and datum
   (define (trie-add! t key-string datum)
     (when (not (trie? t))
       (raise-type-error 'trie-add "trie" t))
