@@ -1,13 +1,7 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
-|#
 (module trie mzscheme
+  (provide new-trie trie-lookup trie-add! trie-remove! trie?)
   (require (only (lib "1.ss" "srfi") alist-delete alist-delete! alist-cons))
-  (require (lib "trace.ss"))
-  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
-  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
-  
+
   ;; a trie is an alist that maps characters to pairs.  Each pair is a
   ;; trie and an optional datum.  A datum is represented by a box:
   ;; whatever's in the box is the data.  If the second thing in the
@@ -84,51 +78,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define-syntax trie-remove!
     (syntax-rules ()
       ((_ t key-string)
-       (set! t (trie-remove t key-string)))))
-
-  (print-struct #t)
-  (let ((lookup (lambda (t key-string)
-                  (trie-lookup t key-string (lambda () #f)))))
-    (test/text-ui
-     (let ((t (new-trie))
-           (a '()))
-     (make-test-suite
-      "everything"
-      (make-test-case
-       "alist-update"
-       (set! a (alist-update a 'key 'data))
-       (assert-equal? a '((key . data)))
-       (set! a (alist-update a 'key 'frobotz))
-       (assert-equal? a '((key . frobotz)))
-       (set! a (alist-update a 'sam 'shepherd))
-       (assert-equal? a '((sam . shepherd)
-                          (key . frobotz))))
-        
-      (make-test-case
-       "yow"
-       (assert-true (trie? t))
-       (assert-equal? (trie-alist t) '())
-       (assert-false (lookup t "duh")))
-
-      (make-test-case
-       "ugh"
-       (trie-add! t "a" 'zap)
-       (assert-equal? (trie-alist t) `((#\a . (,(new-trie) . #&zap))))
-       (assert-equal? (lookup t "a") 'zap))
-
-      (make-test-case
-       "sam"
-       (trie-remove! t "a")
-       (assert-false (lookup t "a")))
-
-      (make-test-case
-       "bob"
-       (trie-add! t "a" 'letter-a)
-       (assert-equal? (lookup t "a"  ) 'letter-a))
-
-      (make-test-case
-       "tim"
-       (trie-add! t "abc" 'abc)
-       (assert-equal? (lookup t "a"  ) 'letter-a)
-       (assert-equal? (lookup t "abc") 'abc))
-      )))))
+       (set! t (trie-remove t key-string))))))
