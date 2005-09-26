@@ -8,7 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
    (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
    (lib "list.ss" "srfi" "1")
-   (lib "13.ss" "srfi")                 ;string-join
+   (only (lib "13.ss" "srfi") string-join)
    (lib "31.ss" "srfi")                 ;rec
 
    "constants.ss"

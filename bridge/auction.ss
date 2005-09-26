@@ -16,7 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    "exceptions.ss"
    "misc.ss"
    "score.ss"
-   (lib "13.ss" "srfi")                 ;string-join
+   (only (lib "13.ss" "srfi") string-join)
    (only (lib "1.ss" "srfi")
          alist-cons
          any

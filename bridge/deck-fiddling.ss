@@ -6,7 +6,7 @@
            "hand.ss"
            "misc.ss"
            (lib "list.ss" "srfi" "1")
-           (lib "13.ss" "srfi")
+           (only (lib "13.ss" "srfi") string-join)
            (only (lib "compat.ss") sort))
 
   ;; hand -> four-element list
@@ -22,8 +22,6 @@
 
   (define (hand->string h)
     (map card->short-string (sort card< (hand->list h))))
-
-  (define *coca-cola-hands* 0)
 
   (define *deals* 1000)
 
@@ -46,9 +44,7 @@
                 (apply max (map card-rank (hand->list h))))
               (hash-table-increment! *shapes* (sort > (shape h)))
               (hash-table-increment! *points* (high-card-points h))
-              (set! hands-seen (add1 hands-seen))
-              (when (<= (max-rank) 10)
-                (set! *coca-cola-hands* (add1 *coca-cola-hands*)))))))
+              (set! hands-seen (add1 hands-seen))))))
 
   (let loop ((d (shuffled-deck))
              (deals 0))
@@ -76,16 +72,12 @@
                             (exact->inexact (/ (second p) num-hands ))))
                   results)
              "\n"))
-    (printf "Fraction of coca-cola hands (i.e., hands with no face cards): ~a~n"
-            (exact->inexact (/ *coca-cola-hands* num-hands)))
 
     (printf "Histogram of high-card points:~%")
     (for-each
      (lambda (p) (printf "~a: ~v~%" (first p) (exact->inexact (/ (second p) num-hands))))
      (sort (lambda (a b)
              (< (car a)
-                (car b))) (hash-table-map *points* list)))
-    )
+                (car b))) (hash-table-map *points* list))))
 
-  (newline)
-  )
+  (newline))

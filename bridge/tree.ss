@@ -51,7 +51,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (let ((all-calls-period
            (reverse
             (list-quicksort
-             (map make-call (append '(pass double redouble) (list-of (list x y) (x <- (iota 7 1)) (y <- '(clubs diamonds hearts spades notrump)))))
+             (map make-call
+                  (append '(pass double redouble)
+                          (list-of (list x y)
+                                   (x <- (iota 7 1))
+                                   (y <- '(clubs diamonds hearts spades notrump)))))
              call>?))))
       (lambda (i)
         (filter (lambda (c)

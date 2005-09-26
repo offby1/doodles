@@ -7,7 +7,7 @@
    deck-ref
    )
   (require (lib "list.ss" "srfi" "1")
-           (lib "13.ss" "srfi")
+           (only (lib "13.ss" "srfi") string-join)
            (only (lib "43.ss" "srfi") vector-copy)
            "constants.ss"
            "hand.ss"

@@ -117,6 +117,9 @@ them (doing them all would almost certainly take too long, alas), and
 return the score that comes up the most, or the average score, or
 something.
 
+Note that this strategy is essentially searching a staggeringly huge
+space of possible auctions; that's why the problem is hard :-|
+
 ** Playing
 
 Probably similar to bidding: for each card that it's legal for me to
@@ -130,6 +133,9 @@ know the actual number of tricks taken by the declarer, so we can just
 figure out the score.
 
 The recursive case: "posit" a legal card, and call ourselves recursively.
+
+Something tells me that I've just waved my hands, and that this
+strategy isn't at all clear.
  
 ** How do I represent incomplete knowledge of a hand?
 
@@ -185,3 +191,7 @@ So if I give up on the brute-force method of using the double-dummy
 solver, and instead revert to the straightforward method of simply
 teaching the program to play like a human, I bet 1) this would be
 fairly easy to encode; 2) it would play reasonably well
+
+A nice Google search that brings up lots of papers about AI and bridge:
+
+http://scholar.google.com/scholar?hl=en&lr=&q=bridge++%7Egame+ginsberg&btnG=Search
