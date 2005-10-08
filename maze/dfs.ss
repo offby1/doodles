@@ -1,5 +1,4 @@
 (module dfs mzscheme
-  (require (lib "trace.ss"))
   (require (only (lib "1.ss" "srfi") append-map remove))
   (provide generic-dfs)
 
@@ -19,7 +18,5 @@
                              set-visited!
                              visited?))
                           neighs))))
-      '()))
+      '())))
 
-  #;(trace generic-dfs)
-  )

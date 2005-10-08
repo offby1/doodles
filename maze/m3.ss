@@ -17,16 +17,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 3)
-  (define *y-max* 3)
+  (define *x-max* 9)
+  (define *y-max* 9)
   
   (define (goal-node? n)
-    (and (pair? n)
-         (= (car n ) *x-max*)
-         (= (cdr n)  *y-max*)))
+    #f
+                                        ;(and (pair? n) (= (car n ) *x-max*) (= (cdr n)  *y-max*))
+    )
   (define (set-visited! n) (hash-table-put! visited-nodes n #t))
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
+    (printf "enumerate-neighbors: node ~s~%" node)
     (shuffle-list
      (filter (lambda (candidate)
                (and (<= 0 (x-coordinate candidate) *x-max*)
@@ -47,12 +48,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (cons n m))
                           (iota 3 -1)))
                    (iota 3 -1))))))
-  ;(trace enumerate-neighbors)
-  (printf "~s~%"
-          (generic-dfs '(0 . 0)
-                       enumerate-neighbors
-                       '()
-                       goal-node?
-                       set-visited!
-                       visited?))
-                        )
+                                        ;(trace enumerate-neighbors)
+  (generic-dfs '(0 . 0)
+               enumerate-neighbors
+               '()
+               goal-node?
+               set-visited!
+               visited?)
+  )
