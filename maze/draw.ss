@@ -7,7 +7,6 @@ exec mred -qu "$0" ${1+"$@"}
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
 
-  (provide draw-line-segments)
   (define frame (instantiate frame% ("Drawing Example") (width 300) (height 300)))
   
   ;; Make some pens and brushes
@@ -15,6 +14,7 @@ exec mred -qu "$0" ${1+"$@"}
   (define no-brush (instantiate brush% ("BLACK" 'transparent)))
   (define blue-brush (instantiate brush% ("BLUE" 'solid)))
   (define yellow-brush (instantiate brush% ("YELLOW" 'solid)))
+  (define gray-brush (instantiate brush% ("GREY" 'solid)))
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   
   ;; Create a 300 × 300 bitmap
@@ -60,15 +60,40 @@ exec mred -qu "$0" ${1+"$@"}
   ;; deliberately drawing slowly onto the canvas, because that looks
   ;; cool.  But we also want the bitmap around to repaint from.
 
-  (draw-face (list bm-dc (send canvas get-dc)))
+  (define (draw-grid)
+    (define pause .25)
+    (define *columns* 10)
 
-  (define (draw-line-segments segs)
-    (for-each (lambda (seg)
-                (for-each (lambda (dc)
-                            (send dc draw-rectangle
-                                  (car seg)
-                                  (cdr seg)
-                                  1 1))
-                          (list bm-dc (send canvas get-dc))))
-              segs))
+    (for-each (lambda (dc)
+                (let-values (((llx lly)      (send dc get-origin))
+                             ((width height) (send dc get-size)))
+                  (send dc set-pen red-pen)
+                  ;;(send dc draw-line)
+                  (printf "Interesting information about dc ~s: " dc)
+                  (printf "Origin: ~s~%" (cons llx lly))
+                  (printf "Size: ~s~%" (cons width height))
+
+                  (let ((column-width (/ width *columns*)))
+                    (unless (integer? column-width)
+                      (printf "Warning: columns will be ~s thingos wide~%" column-width))
+                    (let loop ((columns-drawn 0))
+                      (sleep/yield pause)
+                      (if (= columns-drawn *columns*)
+                          (send dc draw-line
+                                (+ llx width)
+                                lly
+                                (+ llx width)
+                                (+ lly height))
+                        (begin
+                          (send dc draw-line
+                                (+ llx (* columns-drawn column-width))
+                                lly
+                                (+ llx (* columns-drawn column-width))
+                                (+ lly height))
+                          (loop (add1 columns-drawn)))))))
+                )
+              (list bm-dc (send canvas get-dc))))
+
+  (draw-grid)
+
   )
