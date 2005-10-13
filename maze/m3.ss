@@ -19,13 +19,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (cons (random) elt))
                     l))))
   (define *x-max* 9)
-  (define *y-max* 9)
+  (define *y-max* *x-max*)
   
   (define (goal-node? n)
     #f
                                         ;(and (pair? n) (= (car n ) *x-max*) (= (cdr n)  *y-max*))
     )
-  (define (set-visited! n) (hash-table-put! visited-nodes n #t))
+  (define *the-grid* (make-grid *x-max*))
+  (define (get-direction from to)
+    (let ((dx (- (car to)
+                 (car from)))
+          (dy (- (cdr to)
+                 (cdr from))))
+      (unless (= 1 (+ (abs dx)
+                      (abs dy)))
+        (error "'From' point ~s and 'to' point ~s aren't adjacent" from to))
+      (if (zero? dx)
+          'vertical
+        'horizontal)))
+
+  (define (set-visited! n previous-node) 
+    (hash-table-put! visited-nodes n #t)
+    (when previous-node
+      (draw-line *the-grid*
+                 (car previous-node)
+                 (cdr previous-node)
+                 (get-direction previous-node
+                                n)
+                 1)))
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
     (printf "enumerate-neighbors: node ~s~%" node)

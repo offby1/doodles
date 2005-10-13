@@ -87,9 +87,6 @@ exec mred -qu "$0" ${1+"$@"}
        )
      dc-list))
 
-  (let ((g (make-grid 20)))
-    (draw-line g 0 0 'horizontal 9)
-    (draw-line g 9 0 'vertical 9)
-    )
+  ;;(let ((g (make-grid 20))) (draw-line g 0 0 'horizontal 9) (draw-line g 9 0 'vertical 9))
   
   )
