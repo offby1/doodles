@@ -18,14 +18,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 9)
+  (define *x-max* 1)
   (define *y-max* *x-max*)
   
   (define (goal-node? n)
     #f
                                         ;(and (pair? n) (= (car n ) *x-max*) (= (cdr n)  *y-max*))
     )
-  (define *the-grid* (make-grid *x-max*))
+  (define *the-grid* (make-grid (add1 *x-max*)))
   (define (get-direction from to)
     (let ((dx (- (car to)
                  (car from)))
@@ -34,19 +34,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (unless (= 1 (+ (abs dx)
                       (abs dy)))
         (error "'From' point ~s and 'to' point ~s aren't adjacent" from to))
-      (if (zero? dx)
-          'vertical
-        'horizontal)))
+      ;; TODO -- check for negative values
+      (if (zero? dx) 'down 'right)))
 
   (define (set-visited! n previous-node) 
     (hash-table-put! visited-nodes n #t)
     (when previous-node
-      (draw-line *the-grid*
-                 (car previous-node)
-                 (cdr previous-node)
-                 (get-direction previous-node
-                                n)
-                 1)))
+
+      (let ((direction-travelled (get-direction previous-node
+                                                n)))
+        ;; knock down the wall.
+        (if (eq? direction-travelled 'right)
+            (erase-line *the-grid*
+                        (add1 (car previous-node))
+                        (cdr previous-node)
+                        'down
+                        1)
+          (erase-line *the-grid*
+                      (car previous-node)
+                      (add1 (cdr previous-node))
+                      'right
+                      1))
+
+        ;; now draw a line from the old position to the current position.
+        (parameterize ((*offset* 1/2))
+                      (draw-line *the-grid*
+                                 (car previous-node)
+                                 (cdr previous-node)
+                                 direction-travelled
+                                 1))
+
+        )))
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
     (printf "enumerate-neighbors: node ~s~%" node)

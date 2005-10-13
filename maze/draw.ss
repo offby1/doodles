@@ -8,15 +8,23 @@ exec mred -qu "$0" ${1+"$@"}
            (lib "class.ss")
            (lib "errortrace.ss" "errortrace"))
 
-  (provide make-grid draw-line)
+  (provide make-grid draw-line erase-line *offset*)
   
   ;; Make some pens
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
+  (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
   (define *cell-width-in-pixels* 30)
-  (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3)
-                                             'solid)))
-  (define *offset* 0)
+  (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
+
+  (define *offset* (make-parameter
+                    0
+                    (lambda (value)
+                      (unless (and (exact? value)
+                                   (rational? value)
+                                   (positive? value))
+                        (raise-type-error '*offset* "exact rational positive number" value))
+                      value)))
 
   (define (make-grid ncols)
     (define frame (instantiate frame% ("Look! A maze!")
@@ -51,42 +59,47 @@ exec mred -qu "$0" ${1+"$@"}
         (when (<= columns-drawn ncols)
           (draw-line dcs
                      columns-drawn
-                     0 'vertical ncols)
+                     0 'down ncols)
           (draw-line dcs
                      0
                      columns-drawn
-                     'horizontal ncols)
+                     'right ncols)
           (loop (add1 columns-drawn))))
-
-      (set! *offset* 1/2)               ; so that subsequent lines
-                                        ; will be in the middle of the
-                                        ; cells
 
       (for-each (lambda (dc)
                   (send dc set-pen thick-black-pen))
                 dcs)
       dcs))
   
-  (define (draw-line dc-list origin-x origin-y orientation length)
+  (define (internal-draw-line dc-list origin-x origin-y orientation length erase?)
     (for-each
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))
                     ((width height) (send dc get-size)))
-         (let ((origin-x (+ ulx (* (+ *offset* origin-x) *cell-width-in-pixels*)))
-               (origin-y (+ uly (* (+ *offset* origin-y) *cell-width-in-pixels*)))
-               (length (* length *cell-width-in-pixels*)))
+         (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) *cell-width-in-pixels*)))
+               (origin-y (+ uly (* (+ (*offset*) origin-y) *cell-width-in-pixels*)))
+               (length (* length *cell-width-in-pixels*))
+               (original-pen (send dc get-pen)))
            
+           ;; Ugh.  There ought to be a 'with-pen' macro or something.
+           (if erase?
+               (send dc set-pen  thin-white-pen))
            (send/apply dc draw-line
                        origin-x
                        origin-y
                        (case orientation
-                         ((horizontal) (list (+ length origin-x) origin-y))
-                         ((vertical  ) (list origin-x (+ length origin-y)))
+                         ((right) (list (+ length origin-x) origin-y))
+                         ((down ) (list origin-x (+ length origin-y)))
                          (else
-                          (error 'draw-line "Unknown orientation" orientation))))))
+                          (error 'draw-line "Unknown orientation" orientation))))
+           (send dc set-pen original-pen)))
        )
      dc-list))
+  (define (draw-line dc-list origin-x origin-y orientation length )
+    (internal-draw-line dc-list origin-x origin-y orientation length #f))
+  (define (erase-line dc-list origin-x origin-y orientation length)
+    (internal-draw-line dc-list origin-x origin-y orientation length  #t))
 
-  ;;(let ((g (make-grid 20))) (draw-line g 0 0 'horizontal 9) (draw-line g 9 0 'vertical 9))
+  ;;(let ((g (make-grid 20))) (draw-line g 0 0 'right 9) (draw-line g 9 0 'down 9))
   
   )
