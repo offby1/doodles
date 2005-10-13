@@ -33,49 +33,45 @@ exec mred -qu "$0" ${1+"$@"}
   ;; Show the frame by calling its show method
   (send frame show #t)
 
+  (define (draw-line dc origin-x origin-y orientation length)
+    (send/apply dc draw-line
+                origin-x
+                origin-y
+                (case orientation
+                  ((horizontal) (list (+ length origin-x) origin-y))
+                  ((vertical  ) (list origin-x (+ length origin-y)))
+                  (else
+                   (error 'draw-line "Unknown orientation" orientation)))))
+  
   ;; draw into both the bitmap _and_ the canvas.  Why?  We're
   ;; deliberately drawing slowly onto the canvas, because that looks
   ;; cool.  But we also want the bitmap around to repaint from.
 
   (define (draw-grid)
-    (define pause .25)
+    (define pause .1)
     (define *columns* 10)
 
     (for-each (lambda (dc)
-                (let-values (((llx lly)      (send dc get-origin))
+                (let-values (((ulx uly)      (send dc get-origin))
                              ((width height) (send dc get-size)))
                   (send dc set-pen red-pen)
-                  ;;(send dc draw-line)
-                  (printf "Interesting information about dc ~s: " dc)
-                  (printf "Origin: ~s~%" (cons llx lly))
-                  (printf "Size: ~s~%" (cons width height))
 
                   (let ((column-width (quotient width *columns*)))
                     (let loop ((columns-drawn 0))
                       (sleep/yield pause)
                       (if (= columns-drawn *columns*)
                           (begin
-                            (send dc draw-line
-                                  (+ llx width)
-                                  lly
-                                  (+ llx width)
-                                  (+ lly height))
-                            (send dc draw-line
-                                  llx
-                                  (+ lly height)
-                                  (+ llx width)
-                                  (+ lly height)))
+                            (draw-line dc (+ ulx width) uly 'vertical   height)
+                            (draw-line dc ulx (+ uly height) 'horizontal width)
+                            )
                         (begin
-                          (send dc draw-line
-                                (+ llx (* columns-drawn column-width))
-                                lly
-                                (+ llx (* columns-drawn column-width))
-                                (+ lly height))
-                          (send dc draw-line
-                                llx
-                                (+ lly (* columns-drawn column-width))
-                                (+ llx width)
-                                (+ lly (* columns-drawn column-width)))
+                          (draw-line dc
+                                (+ ulx (* columns-drawn column-width))
+                                uly 'vertical height)
+                          (draw-line dc
+                                ulx
+                                (+ uly (* columns-drawn column-width))
+                                'horizontal width)
                           (loop (add1 columns-drawn)))))))
                 )
               (list bm-dc (send canvas get-dc))))
