@@ -26,30 +26,7 @@ exec mred -qu "$0" ${1+"$@"}
   (define canvas (instantiate canvas% (frame) 
                               (paint-callback (lambda (canvas dc)
                                                 (send dc draw-bitmap face-bitmap 0 0)))))
-
-  ;; Draw the face into two dcs at once.  There's surely a nifty
-  ;; object-oriented way to refactor this, but I haven't figured it
-  ;; out.
-  (define (draw-face dcs) 
-    (define pause 1)
-    (for-each (lambda (dc)
-                (send dc set-pen no-pen) 
-                (send dc set-brush blue-brush) 
-                (sleep/yield pause)
-                (send dc draw-ellipse 50 50 200 200) (sleep/yield pause)
-
-                (send dc set-brush yellow-brush) 
-                (send dc draw-rectangle 100 100 10 10)  (sleep/yield pause)
-                (send dc draw-rectangle 200 100 10 10)  (sleep/yield pause)
-
-                (send dc set-brush no-brush) 
-                (send dc set-pen red-pen) 
-                (let ([pi (atan 0 -1)]) 
-                  (send dc draw-arc 75 75 150 150 (* 5/4 pi) (* 7/4 pi))
-                  (sleep/yield pause)))
-              dcs)
-    ) 
-  
+   
   ;; A new bitmap's initial content is undefined, so clear it before drawing
   (send bm-dc clear) 
 
@@ -73,23 +50,32 @@ exec mred -qu "$0" ${1+"$@"}
                   (printf "Origin: ~s~%" (cons llx lly))
                   (printf "Size: ~s~%" (cons width height))
 
-                  (let ((column-width (/ width *columns*)))
-                    (unless (integer? column-width)
-                      (printf "Warning: columns will be ~s thingos wide~%" column-width))
+                  (let ((column-width (quotient width *columns*)))
                     (let loop ((columns-drawn 0))
                       (sleep/yield pause)
                       (if (= columns-drawn *columns*)
-                          (send dc draw-line
-                                (+ llx width)
-                                lly
-                                (+ llx width)
-                                (+ lly height))
+                          (begin
+                            (send dc draw-line
+                                  (+ llx width)
+                                  lly
+                                  (+ llx width)
+                                  (+ lly height))
+                            (send dc draw-line
+                                  llx
+                                  (+ lly height)
+                                  (+ llx width)
+                                  (+ lly height)))
                         (begin
                           (send dc draw-line
                                 (+ llx (* columns-drawn column-width))
                                 lly
                                 (+ llx (* columns-drawn column-width))
                                 (+ lly height))
+                          (send dc draw-line
+                                llx
+                                (+ lly (* columns-drawn column-width))
+                                (+ llx width)
+                                (+ lly (* columns-drawn column-width)))
                           (loop (add1 columns-drawn)))))))
                 )
               (list bm-dc (send canvas get-dc))))
