@@ -5,6 +5,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module m3 mzscheme
   (require "dfs.ss")
+  (require "draw.ss")
   (require (lib "trace.ss"))
   (require (only (lib "compat.ss") sort))
   (require (only (lib "1.ss" "srfi") iota zip filter append-map))
