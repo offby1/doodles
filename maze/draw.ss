@@ -12,7 +12,7 @@
 
   (define *cell-width-in-pixels* #f)
 
-  (define *pause* 00)
+  (define *pause* 3/100)
   (define *offset* (make-parameter
                     0
                     (lambda (value)

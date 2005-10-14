@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 150)
+  (define *x-max* 15)
   (define *y-max* *x-max*)
 
   (define *the-grid* (make-grid (add1 *x-max*)))
@@ -112,7 +112,7 @@
                    (iota 3 -1))))))
                                         ;(trace enumerate-neighbors)
 
-  (random-seed 0)
+  ;(random-seed 0)
   
   (generic-dfs '(0 . 0)
                enumerate-neighbors
