@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 100)
+  (define *x-max* 150)
   (define *y-max* *x-max*)
 
   (define *the-grid* (make-grid (add1 *x-max*)))
@@ -54,24 +54,24 @@
                        (add1 (car previous-node))
                        (cdr previous-node)
                        'down
-                       1 #f 'red))
+                       1 #f 'white))
           ((down) (draw-line *the-grid*
                               (car previous-node)
                               (add1 (cdr previous-node))
                               'right
-                              1 #f 'red))
+                              1 #f 'white))
           ((left)
            (draw-line *the-grid*
                        (car previous-node)
                        (cdr previous-node)
                        'down
-                       1 #f 'red))
+                       1 #f 'white))
           ((up)
            (draw-line *the-grid*
                        (car previous-node)
                        (cdr previous-node)
                        'right
-                       1 #f 'red))
+                       1 #f 'white))
           (else
            (error "Uh oh." direction-travelled)))
 
