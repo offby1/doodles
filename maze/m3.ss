@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 60)
+  (define *x-max* 5)
   (define *y-max* *x-max*)
   
   (define (goal-node? n)
@@ -29,7 +29,7 @@
                  (cdr from))))
       (unless (= 1 (+ (abs dx)
                       (abs dy)))
-        (error "'From' point ~s and 'to' point ~s aren't adjacent" from to))
+        (error "'From' point " from " and 'to' point "to  " aren't adjacent"))
       ;; TODO -- check for negative values
       (cond
        ((zero? dx)
@@ -42,39 +42,36 @@
          'left))))
 
   (define (set-visited! n previous-node) 
-    (when (and
-           (not (hash-table-get visited-nodes n (lambda () #f)))
-           previous-node)
-
+    (when previous-node
       (let ((direction-travelled (get-direction previous-node
                                                 n)))
         ;; knock down the wall.
         (case direction-travelled
-         ((right)
-          (erase-line *the-grid*
-                      (add1 (car previous-node))
-                      (cdr previous-node)
-                      'down
-                      1))
-         ((down) (erase-line *the-grid*
-                     (car previous-node)
-                     (add1 (cdr previous-node))
-                     'right
-                     1))
-         ((left)
-          (erase-line *the-grid*
-                      (car previous-node)
-                      (cdr previous-node)
-                      'down
-                      1))
-         ((up)
-          (erase-line *the-grid*
-                      (car previous-node)
-                      (cdr previous-node)
-                      'right
-                      1))
-         (else
-          (error "Uh oh." direction-travelled)))
+          ((right)
+           (erase-line *the-grid*
+                       (add1 (car previous-node))
+                       (cdr previous-node)
+                       'down
+                       1))
+          ((down) (erase-line *the-grid*
+                              (car previous-node)
+                              (add1 (cdr previous-node))
+                              'right
+                              1))
+          ((left)
+           (erase-line *the-grid*
+                       (car previous-node)
+                       (cdr previous-node)
+                       'down
+                       1))
+          ((up)
+           (erase-line *the-grid*
+                       (car previous-node)
+                       (cdr previous-node)
+                       'right
+                       1))
+          (else
+           (error "Uh oh." direction-travelled)))
 
         ;; now draw a line from the old position to the current position.
         (parameterize ((*offset* 1/2))
@@ -82,10 +79,10 @@
                                  (car previous-node)
                                  (cdr previous-node)
                                  direction-travelled
-                                 1))
+                                 1))))
 
-        ))
     (hash-table-put! visited-nodes n #t))
+  
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
     (shuffle-list

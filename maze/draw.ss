@@ -8,10 +8,10 @@
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
-  (define *cell-width-in-pixels* 15)
+  (define *cell-width-in-pixels* 150)
   (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
 
-  (define *pause* 0)
+  (define *pause* 1/10)
   (define *offset* (make-parameter
                     0
                     (lambda (value)
