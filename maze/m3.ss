@@ -1,14 +1,10 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
-|#
-
 (module m3 mzscheme
   (require "dfs.ss")
   (require "draw.ss")
   (require (lib "trace.ss"))
   (require (only (lib "compat.ss") sort))
   (require (only (lib "1.ss" "srfi") iota zip filter append-map))
+  
   (define visited-nodes (make-hash-table 'equal))
   (define x-coordinate car)
   (define y-coordinate cdr)
@@ -18,7 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 1)
+  (define *x-max* 2)
   (define *y-max* *x-max*)
   
   (define (goal-node? n)
@@ -35,26 +31,51 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (abs dy)))
         (error "'From' point ~s and 'to' point ~s aren't adjacent" from to))
       ;; TODO -- check for negative values
-      (if (zero? dx) 'down 'right)))
+      (cond
+       ((zero? dx)
+        (if (positive? dy)
+            'down
+          'up))
+        ((positive? dx)
+         'right)
+        (else
+         'left))))
 
   (define (set-visited! n previous-node) 
-    (hash-table-put! visited-nodes n #t)
-    (when previous-node
+    (printf "set-visited!: from ~s, visiting ~s~%" previous-node n)
+    (when (and
+           (not (hash-table-get visited-nodes n (lambda () #f)))
+           previous-node)
 
       (let ((direction-travelled (get-direction previous-node
                                                 n)))
         ;; knock down the wall.
-        (if (eq? direction-travelled 'right)
-            (erase-line *the-grid*
-                        (add1 (car previous-node))
-                        (cdr previous-node)
-                        'down
-                        1)
+        (case direction-travelled
+         ((right)
+          (erase-line *the-grid*
+                      (add1 (car previous-node))
+                      (cdr previous-node)
+                      'down
+                      1))
+         ((down) (erase-line *the-grid*
+                     (car previous-node)
+                     (add1 (cdr previous-node))
+                     'right
+                     1))
+         ((left)
           (erase-line *the-grid*
                       (car previous-node)
-                      (add1 (cdr previous-node))
+                      (cdr previous-node)
+                      'down
+                      1))
+         ((up)
+          (erase-line *the-grid*
+                      (car previous-node)
+                      (cdr previous-node)
                       'right
                       1))
+         (else
+          (error "Uh oh." direction-travelled)))
 
         ;; now draw a line from the old position to the current position.
         (parameterize ((*offset* 1/2))
@@ -64,10 +85,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  direction-travelled
                                  1))
 
-        )))
+        ))
+    (hash-table-put! visited-nodes n #t))
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
-    (printf "enumerate-neighbors: node ~s~%" node)
     (shuffle-list
      (filter (lambda (candidate)
                (and (<= 0 (x-coordinate candidate) *x-max*)
@@ -89,6 +110,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (iota 3 -1)))
                    (iota 3 -1))))))
                                         ;(trace enumerate-neighbors)
+
+  (random-seed 0)
+  
   (generic-dfs '(0 . 0)
                enumerate-neighbors
                '()

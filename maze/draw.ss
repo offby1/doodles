@@ -1,29 +1,25 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec mred -qu "$0" ${1+"$@"}
-|#
-
 (module draw mzscheme
   (require (lib "mred.ss" "mred")
-           (lib "class.ss")
-           (lib "errortrace.ss" "errortrace"))
-
+           (lib "class.ss"))
+  
   (provide make-grid draw-line erase-line *offset*)
   
   ;; Make some pens
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
-  (define *cell-width-in-pixels* 30)
+  (define *cell-width-in-pixels* 150)
   (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
 
+  (define *pause* 1/2)
   (define *offset* (make-parameter
                     0
                     (lambda (value)
-                      (unless (and (exact? value)
+                      (unless (or (negative? value)
+                              (and (exact? value)
                                    (rational? value)
-                                   (positive? value))
-                        (raise-type-error '*offset* "exact rational positive number" value))
+                                   ))
+                        (raise-type-error '*offset* "exact rational non-negative number" value))
                       value)))
 
   (define (make-grid ncols)
@@ -40,8 +36,6 @@ exec mred -qu "$0" ${1+"$@"}
     ;; Create a drawing context for the bitmap
     (define bm-dc (instantiate bitmap-dc% (bitmap)))
 
-    (define pause .1)
-
     ;; A new bitmap's initial content is undefined, so clear it before drawing
     (send bm-dc clear)
 
@@ -55,7 +49,6 @@ exec mred -qu "$0" ${1+"$@"}
                 dcs)
 
       (let loop ((columns-drawn 0))
-        (sleep/yield pause)
         (when (<= columns-drawn ncols)
           (draw-line dcs
                      columns-drawn
@@ -72,6 +65,13 @@ exec mred -qu "$0" ${1+"$@"}
       dcs))
   
   (define (internal-draw-line dc-list origin-x origin-y orientation length erase?)
+    (unless erase?
+      (printf "Drawing from ~s, ~s in the direction ~a, length ~a~%"
+              origin-x
+              origin-y
+              orientation
+              length))
+    (sleep/yield *pause*)
     (for-each
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))
@@ -88,13 +88,17 @@ exec mred -qu "$0" ${1+"$@"}
                        origin-x
                        origin-y
                        (case orientation
-                         ((right) (list (+ length origin-x) origin-y))
-                         ((down ) (list origin-x (+ length origin-y)))
+                         ((right) (list (+ origin-x length) origin-y))
+                         ((left ) (list (- origin-x length) origin-y))
+                         ((down ) (list origin-x (+ origin-y length)))
+                         ((up   ) (list origin-x (- origin-y length)))
                          (else
                           (error 'draw-line "Unknown orientation" orientation))))
+           
            (send dc set-pen original-pen)))
        )
-     dc-list))
+     dc-list)
+    )
   (define (draw-line dc-list origin-x origin-y orientation length )
     (internal-draw-line dc-list origin-x origin-y orientation length #f))
   (define (erase-line dc-list origin-x origin-y orientation length)
