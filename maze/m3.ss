@@ -2,6 +2,7 @@
   (require "dfs.ss")
   (require "draw.ss")
   (require (lib "trace.ss"))
+  (require (lib "cmdline.ss"))
   (require (only (lib "compat.ss") sort))
   (require (only (lib "1.ss" "srfi") iota zip filter append-map))
   
@@ -14,10 +15,18 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 50)
-  (define *y-max* *x-max*)
 
-  (define *the-grid* (make-grid (add1 *x-max*)))
+  (define *x-max* (make-parameter
+                   25
+                   (lambda (value)
+                     (unless (and (positive? value)
+                                  (exact? value)
+                                  (integer? value))
+                       (raise-type-error '*x-max* "exact positive integer" value))
+                     value)))
+  (define *lines-while-generating* (make-parameter #f))
+  (define *solution* (make-parameter #f))
+  
   (define (get-direction from to)
     (let ((dx (- (car to)
                  (car from)))
@@ -36,11 +45,6 @@
          'right)
         (else
          'left))))
-
-  (define *goal-node*
-    (cons *x-max* *y-max*))
-  
-  (define *solution* #f)
 
   (define (set-visited! n path-to-here) 
     (when (not (null? path-to-here))
@@ -76,7 +80,7 @@
            (error "Uh oh." direction-travelled)))
 
         ;; now draw a line from the old position to the current position.
-        (when #f
+        (when (*lines-while-generating*)
           (parameterize ((*offset* 1/2))
                         (draw-line *the-grid*
                                    (car previous-node)
@@ -87,16 +91,17 @@
                                               ))
 
     (hash-table-put! visited-nodes n #t)
-
-    (when (equal? *goal-node* n)
-      (set! *solution* (reverse (cons *goal-node* path-to-here)))))
+    
+    (when (and (= (*x-max*) (car n) (cdr n)))
+      (*solution* (reverse (cons (cons (*x-max*)
+                                       (*x-max*)) path-to-here)))))
   
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
     (shuffle-list
      (filter (lambda (candidate)
-               (and (<= 0 (x-coordinate candidate) *x-max*)
-                    (<= 0 (y-coordinate candidate) *y-max*)
+               (and (<= 0 (x-coordinate candidate) (*x-max*))
+                    (<= 0 (y-coordinate candidate) (*x-max*))
                     (= 1 (+ (abs (- (x-coordinate candidate)
                                     (x-coordinate node)))
                             (abs (- (y-coordinate candidate)
@@ -117,6 +122,22 @@
 
   ;(random-seed 0)
   
+  (command-line
+   "maze"
+   (current-command-line-arguments)
+   (once-each
+    [ ;; one flag to toggle the drawing of the black lines while generating the maze.
+     ("-l" "--lines-while-generating") "Draw black lines while generating the maze"
+     (*lines-while-generating* #t)]
+    ;; one integer to determine *x-max*.
+    [("-s" "--size-of-side-in-cells") x-max "Maze will be this many cells wide & tall"
+     (*x-max* (string->number x-max))]
+    ;; one integer to determine the number of milliseconds to pause.
+    [("-p" "--pause-in-milliseconds") pause "Pause this many milliseconds before drawing each line"
+     (*pause* (/ (string->number pause) 1000))]
+    )
+   )
+  (define *the-grid* (make-grid (add1 (*x-max*))))
   (generic-dfs '(0 . 0)
                enumerate-neighbors
                '()
@@ -126,7 +147,7 @@
 
   ;; draw the solution.
   (parameterize ((*offset* 1/2))
-  (let loop ((trail *solution*))
+  (let loop ((trail (*solution*)))
     (unless (or (null? trail)
                 (null? (cdr trail)))
       (let ((prev (car trail))

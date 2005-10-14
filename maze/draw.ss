@@ -2,7 +2,7 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line *offset*)
+  (provide make-grid draw-line *offset* *pause*)
 
   ;; Make some pens
   (define thin-red-pen    #f)
@@ -12,7 +12,13 @@
 
   (define *cell-width-in-pixels* #f)
 
-  (define *pause* 3/100)
+  (define *pause* (make-parameter
+                   3/100
+                   (lambda (value)
+                     (when (or (negative? value)
+                             (not (number? value)))
+                       (raise-type-error '*pause* "non-negative number" value))
+                     value)))
   (define *offset* (make-parameter
                     0
                     (lambda (value)
@@ -82,7 +88,7 @@
     )
   
   (define (draw-line dc-list origin-x origin-y orientation length thick? color)
-    (if (positive? *pause*) (sleep/yield *pause*))
+    (if (positive? (*pause*)) (sleep/yield (*pause*)))
     (for-each
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))
