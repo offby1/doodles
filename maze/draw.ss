@@ -2,11 +2,13 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line erase-line *offset*)
-  
+  (provide make-grid draw-line *offset*)
+
   ;; Make some pens
-  (define red-pen (instantiate pen% ("RED" 2 'solid)))
-  (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
+  (define thin-red-pen    #f)
+  (define thin-white-pen  #f)
+  (define thick-black-pen #f)
+  (define thick-gray-pen #f)
 
   (define *cell-width-in-pixels* #f)
 
@@ -29,6 +31,11 @@
             
             (quotient (* 9 (min width height)) (* ncols 10))
             ))
+    (set! thin-red-pen    (instantiate pen% ("RED" 2 'solid)))
+    (set! thin-white-pen  (instantiate pen% ("WHITE" 2 'solid)))
+    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
+    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient *cell-width-in-pixels* 3) 'solid)))
+
 
     (let* (( frame (instantiate frame% ("Look! A maze!")
                                 (width (* ncols *cell-width-in-pixels*))
@@ -53,7 +60,7 @@
       ;; draw the grid lines.
       (let ((dcs (list bm-dc (send canvas get-dc))))
         (for-each (lambda (dc)
-                    (send dc set-pen red-pen))
+                    (send dc set-pen thin-red-pen))
                   dcs)
 
         (let loop ((columns-drawn 0))
@@ -61,20 +68,20 @@
                      (<= columns-drawn ncols))
             (draw-line dcs
                        columns-drawn
-                       0 'down ncols)
+                       0 'down ncols #f 'red)
             (draw-line dcs
                        0
                        columns-drawn
-                       'right ncols)
+                       'right ncols #f 'red)
             (loop (add1 columns-drawn))))
 
         (for-each (lambda (dc)
-                    (send dc set-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid))))
+                    (send dc set-pen thick-black-pen))
                   dcs)
         dcs)      )
     )
   
-  (define (internal-draw-line dc-list origin-x origin-y orientation length erase?)
+  (define (draw-line dc-list origin-x origin-y orientation length thick? color)
     (if (positive? *pause*) (sleep/yield *pause*))
     (for-each
      (lambda (dc)
@@ -86,8 +93,18 @@
                (original-pen (send dc get-pen)))
            
            ;; Ugh.  There ought to be a 'with-pen' macro or something.
-           (if erase?
-               (send dc set-pen  thin-white-pen))
+           (send dc
+                 set-pen
+                 (if thick?
+                     (case color
+                       ((black) thick-black-pen)
+                       ((gray) thick-gray-pen)
+                       (else
+                        (error "Uh oh.")))
+                   (if (eq? 'red color)
+                       thin-red-pen
+                     thin-white-pen)))
+           
            (send/apply dc draw-line
                        origin-x
                        origin-y
@@ -101,13 +118,4 @@
            
            (send dc set-pen original-pen)))
        )
-     dc-list)
-    )
-  (define (draw-line dc-list origin-x origin-y orientation length )
-    (internal-draw-line dc-list origin-x origin-y orientation length #f))
-  (define (erase-line dc-list origin-x origin-y orientation length)
-    (internal-draw-line dc-list origin-x origin-y orientation length  #t))
-
-  ;;(let ((g (make-grid 20))) (draw-line g 0 0 'right 9) (draw-line g 9 0 'down 9))
-  
-  )
+     dc-list)))

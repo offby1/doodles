@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 3)
+  (define *x-max* 100)
   (define *y-max* *x-max*)
 
   (define *the-grid* (make-grid (add1 *x-max*)))
@@ -37,11 +37,8 @@
         (else
          'left))))
 
-  (define (goal-node? n)
-    (and (eq? (car n)
-              *x-max*)
-         (eq? (cdr n)
-              *y-max*)))
+  (define *goal-node*
+    (cons *x-max* *y-max*))
   
   (define *solution* #f)
 
@@ -53,28 +50,28 @@
         ;; knock down the wall.
         (case direction-travelled
           ((right)
-           (erase-line *the-grid*
+           (draw-line *the-grid*
                        (add1 (car previous-node))
                        (cdr previous-node)
                        'down
-                       1))
-          ((down) (erase-line *the-grid*
+                       1 #f 'red))
+          ((down) (draw-line *the-grid*
                               (car previous-node)
                               (add1 (cdr previous-node))
                               'right
-                              1))
+                              1 #f 'red))
           ((left)
-           (erase-line *the-grid*
+           (draw-line *the-grid*
                        (car previous-node)
                        (cdr previous-node)
                        'down
-                       1))
+                       1 #f 'red))
           ((up)
-           (erase-line *the-grid*
+           (draw-line *the-grid*
                        (car previous-node)
                        (cdr previous-node)
                        'right
-                       1))
+                       1 #f 'red))
           (else
            (error "Uh oh." direction-travelled)))
 
@@ -84,12 +81,12 @@
                                  (car previous-node)
                                  (cdr previous-node)
                                  direction-travelled
-                                 1))))
+                                 1 #t 'black))))
 
     (hash-table-put! visited-nodes n #t)
 
-    (when (goal-node? n)
-      (set! *solution* path-to-here)))
+    (when (equal? *goal-node* n)
+      (set! *solution* (cons *goal-node* path-to-here))))
   
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
@@ -131,10 +128,11 @@
                 (null? (cdr trail)))
       (let ((prev (car trail))
             (next (cadr trail)))
-        (erase-line *the-grid*
+        (draw-line *the-grid*
                    (car prev)
                    (cdr prev)
                    (get-direction prev next)
-                   1))
+                   1
+                   #t 'gray))
       (loop (cdr trail)))))
   )
