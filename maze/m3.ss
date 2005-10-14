@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 15)
+  (define *x-max* 50)
   (define *y-max* *x-max*)
 
   (define *the-grid* (make-grid (add1 *x-max*)))
@@ -47,7 +47,7 @@
       (let* ((previous-node (car path-to-here))
              (direction-travelled (get-direction previous-node
                                                 n)))
-        ;; knock down the wall.
+        ;; Mr. Gorbachev, knock down the wall.
         (case direction-travelled
           ((right)
            (draw-line *the-grid*
@@ -76,17 +76,20 @@
            (error "Uh oh." direction-travelled)))
 
         ;; now draw a line from the old position to the current position.
-        (parameterize ((*offset* 1/2))
-                      (draw-line *the-grid*
-                                 (car previous-node)
-                                 (cdr previous-node)
-                                 direction-travelled
-                                 1 #t 'black))))
+        (when #f
+          (parameterize ((*offset* 1/2))
+                        (draw-line *the-grid*
+                                   (car previous-node)
+                                   (cdr previous-node)
+                                   direction-travelled
+                                   1 #t 'black)))
+                                              
+                                              ))
 
     (hash-table-put! visited-nodes n #t)
 
     (when (equal? *goal-node* n)
-      (set! *solution* (cons *goal-node* path-to-here))))
+      (set! *solution* (reverse (cons *goal-node* path-to-here)))))
   
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
