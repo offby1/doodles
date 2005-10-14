@@ -8,8 +8,7 @@
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
-  (define *cell-width-in-pixels* 5)
-  (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
+  (define *cell-width-in-pixels* #f)
 
   (define *pause* 00)
   (define *offset* (make-parameter
@@ -23,47 +22,57 @@
                       value)))
 
   (define (make-grid ncols)
-    (define frame (instantiate frame% ("Look! A maze!")
-                               (width (* ncols *cell-width-in-pixels*))
-                               (height (* ncols *cell-width-in-pixels*))))
 
-    (define bitmap (instantiate bitmap% ((* ncols *cell-width-in-pixels*)
-                                         (* ncols *cell-width-in-pixels*))))
-    ;; Make the drawing area with a paint callback that copies the bitmap
-    (define canvas (instantiate canvas% (frame) 
-                                (paint-callback (lambda (canvas dc)
-                                                  (send dc draw-bitmap bitmap 0 0)))))
-    ;; Create a drawing context for the bitmap
-    (define bm-dc (instantiate bitmap-dc% (bitmap)))
+    (set! *cell-width-in-pixels*
+          (let-values (((width height)
+                        (get-display-size)))
+            
+            (quotient (* 9 (min width height)) (* ncols 10))
+            ))
 
-    ;; A new bitmap's initial content is undefined, so clear it before drawing
-    (send bm-dc clear)
+    (let* (( frame (instantiate frame% ("Look! A maze!")
+                                (width (* ncols *cell-width-in-pixels*))
+                                (height (* ncols *cell-width-in-pixels*))))
+           ;; Create a drawing context for the bitmap
+           ( bitmap (instantiate bitmap% ((* ncols *cell-width-in-pixels*)
+                                          (* ncols *cell-width-in-pixels*))))
+           ;; Make the drawing area with a paint callback that copies the bitmap
+           ( canvas (instantiate canvas% (frame) 
+                                 (paint-callback (lambda (canvas dc)
+                                                   (send dc draw-bitmap bitmap 0 0))))))
+      (define bm-dc (instantiate bitmap-dc% (bitmap)))
 
-    ;; Show the frame by calling its show method
-    (send frame show #t)
+    
+    
+      ;; A new bitmap's initial content is undefined, so clear it before drawing
+      (send bm-dc clear)
 
-    ;; draw the grid lines.
-    (let ((dcs (list bm-dc (send canvas get-dc))))
-      (for-each (lambda (dc)
-                  (send dc set-pen red-pen))
-                dcs)
+      ;; Show the frame by calling its show method
+      (send frame show #t)
 
-      (let loop ((columns-drawn 0))
-        (when (and #f
-              (<= columns-drawn ncols))
-          (draw-line dcs
-                     columns-drawn
-                     0 'down ncols)
-          (draw-line dcs
-                     0
-                     columns-drawn
-                     'right ncols)
-          (loop (add1 columns-drawn))))
+      ;; draw the grid lines.
+      (let ((dcs (list bm-dc (send canvas get-dc))))
+        (for-each (lambda (dc)
+                    (send dc set-pen red-pen))
+                  dcs)
 
-      (for-each (lambda (dc)
-                  (send dc set-pen thick-black-pen))
-                dcs)
-      dcs))
+        (let loop ((columns-drawn 0))
+          (when (and #t
+                     (<= columns-drawn ncols))
+            (draw-line dcs
+                       columns-drawn
+                       0 'down ncols)
+            (draw-line dcs
+                       0
+                       columns-drawn
+                       'right ncols)
+            (loop (add1 columns-drawn))))
+
+        (for-each (lambda (dc)
+                    (send dc set-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid))))
+                  dcs)
+        dcs)      )
+    )
   
   (define (internal-draw-line dc-list origin-x origin-y orientation length erase?)
     (if (positive? *pause*) (sleep/yield *pause*))

@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 100)
+  (define *x-max* 3)
   (define *y-max* *x-max*)
 
   (define *the-grid* (make-grid (add1 *x-max*)))
