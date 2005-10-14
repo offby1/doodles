@@ -8,10 +8,10 @@
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
-  (define *cell-width-in-pixels* 150)
+  (define *cell-width-in-pixels* 15)
   (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
 
-  (define *pause* 1/2)
+  (define *pause* 0)
   (define *offset* (make-parameter
                     0
                     (lambda (value)
@@ -71,7 +71,7 @@
               origin-y
               orientation
               length))
-    (sleep/yield *pause*)
+    (if (positive? *pause*) (sleep/yield *pause*))
     (for-each
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))

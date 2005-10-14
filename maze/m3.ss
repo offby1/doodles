@@ -14,7 +14,7 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 2)
+  (define *x-max* 60)
   (define *y-max* *x-max*)
   
   (define (goal-node? n)
