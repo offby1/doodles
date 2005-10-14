@@ -42,7 +42,6 @@
          'left))))
 
   (define (set-visited! n previous-node) 
-    (printf "set-visited!: from ~s, visiting ~s~%" previous-node n)
     (when (and
            (not (hash-table-get visited-nodes n (lambda () #f)))
            previous-node)

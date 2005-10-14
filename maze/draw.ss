@@ -65,12 +65,6 @@
       dcs))
   
   (define (internal-draw-line dc-list origin-x origin-y orientation length erase?)
-    (unless erase?
-      (printf "Drawing from ~s, ~s in the direction ~a, length ~a~%"
-              origin-x
-              origin-y
-              orientation
-              length))
     (if (positive? *pause*) (sleep/yield *pause*))
     (for-each
      (lambda (dc)
