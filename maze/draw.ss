@@ -8,10 +8,10 @@
   (define red-pen (instantiate pen% ("RED" 2 'solid)))
   (define thin-white-pen (instantiate pen% ("WHITE" 2 'solid)))
 
-  (define *cell-width-in-pixels* 150)
+  (define *cell-width-in-pixels* 5)
   (define thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
 
-  (define *pause* 1/10)
+  (define *pause* 00)
   (define *offset* (make-parameter
                     0
                     (lambda (value)
@@ -49,7 +49,8 @@
                 dcs)
 
       (let loop ((columns-drawn 0))
-        (when (<= columns-drawn ncols)
+        (when (and #f
+              (<= columns-drawn ncols))
           (draw-line dcs
                      columns-drawn
                      0 'down ncols)

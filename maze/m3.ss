@@ -14,13 +14,9 @@
                (map (lambda (elt)
                       (cons (random) elt))
                     l))))
-  (define *x-max* 5)
+  (define *x-max* 100)
   (define *y-max* *x-max*)
-  
-  (define (goal-node? n)
-    #f
-                                        ;(and (pair? n) (= (car n ) *x-max*) (= (cdr n)  *y-max*))
-    )
+
   (define *the-grid* (make-grid (add1 *x-max*)))
   (define (get-direction from to)
     (let ((dx (- (car to)
@@ -41,9 +37,18 @@
         (else
          'left))))
 
-  (define (set-visited! n previous-node) 
-    (when previous-node
-      (let ((direction-travelled (get-direction previous-node
+  (define (goal-node? n)
+    (and (eq? (car n)
+              *x-max*)
+         (eq? (cdr n)
+              *y-max*)))
+  
+  (define *solution* #f)
+
+  (define (set-visited! n path-to-here) 
+    (when (not (null? path-to-here))
+      (let* ((previous-node (car path-to-here))
+             (direction-travelled (get-direction previous-node
                                                 n)))
         ;; knock down the wall.
         (case direction-travelled
@@ -81,7 +86,10 @@
                                  direction-travelled
                                  1))))
 
-    (hash-table-put! visited-nodes n #t))
+    (hash-table-put! visited-nodes n #t)
+
+    (when (goal-node? n)
+      (set! *solution* path-to-here)))
   
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
@@ -112,7 +120,21 @@
   (generic-dfs '(0 . 0)
                enumerate-neighbors
                '()
-               goal-node?
+               (lambda (n) #f)
                set-visited!
                visited?)
+
+  ;; draw the solution.
+  (parameterize ((*offset* 1/2))
+  (let loop ((trail *solution*))
+    (unless (or (null? trail)
+                (null? (cdr trail)))
+      (let ((prev (car trail))
+            (next (cadr trail)))
+        (erase-line *the-grid*
+                   (car prev)
+                   (cdr prev)
+                   (get-direction prev next)
+                   1))
+      (loop (cdr trail)))))
   )
