@@ -1,0 +1,22 @@
+To make the code in here available to mzscheme programs in general:
+
+(You only need to do this once per machine)
+
+Create a .plt archive of this directory, by cd-ing to its parent, and then typing
+
+        planet --create-archive my-plt-collects
+
+(assuming, of course, that this directory is indeed named my-plt-collects)
+
+Now install that archive like so:
+
+        planet --file my-plt-collects.plt  offby1 1 0
+
+Then to use e.g. the 'howdy' module, put this in your code:
+
+        (require (planet "howdy.ss" ("offby1" "my-plt-collects.plt")))
+
+If for some reason you'd like to purge your PLaneT cache -- e.g., in
+order to test all of the above -- do
+
+        rm -rf ~/.plt-scheme/planet
