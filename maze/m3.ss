@@ -1,5 +1,5 @@
 (module m3 mzscheme
-  (require "dfs.ss")
+  (require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
   (require "draw.ss")
   (require (lib "trace.ss"))
   (require (lib "cmdline.ss"))
