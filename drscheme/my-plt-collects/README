@@ -2,15 +2,9 @@ To make the code in here available to mzscheme programs in general:
 
 (You only need to do this once per machine)
 
-Create a .plt archive of this directory, by cd-ing to its parent, and then typing
+Create and install a .plt archive of this directory, by typing
 
-        planet --create-archive my-plt-collects
-
-(assuming, of course, that this directory is indeed named my-plt-collects)
-
-Now install that archive like so:
-
-        planet --file my-plt-collects.plt  offby1 1 0
+        make check
 
 Then to use e.g. the 'howdy' module, put this in your code:
 
