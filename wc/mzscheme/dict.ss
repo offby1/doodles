@@ -2,8 +2,7 @@
   (require
    (lib "file.ss")
    (only (lib "1.ss" "srfi") filter iota)
-   (only (lib "13.ss" "srfi") string-downcase)
-   "set.ss"
+   (planet "set.ss"  ("offby1" "my-plt-collects.plt"))
    "persist.ss")
 
   (provide all-neighbors
