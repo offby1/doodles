@@ -2,8 +2,10 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line *offset* *pause*)
+  (provide make-grid draw-line *offset* *pause* my-version)
 
+  (define my-version "$Id")
+  
   ;; Make some pens
   (define thin-red-pen    #f)
   (define thin-white-pen  #f)

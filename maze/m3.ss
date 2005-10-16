@@ -1,11 +1,15 @@
 (module m3 mzscheme
   (require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
-  (require "draw.ss")
+  (require (all-except "draw.ss" my-version))
   (require (lib "trace.ss"))
   (require (lib "cmdline.ss"))
   (require (only (lib "compat.ss") sort))
   (require (only (lib "1.ss" "srfi") iota zip filter append-map))
   
+  (provide my-version)
+  
+  (define my-version "$Id")
+
   (define visited-nodes (make-hash-table 'equal))
   (define x-coordinate car)
   (define y-coordinate cdr)
