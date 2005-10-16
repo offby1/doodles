@@ -134,8 +134,8 @@
      ("-l" "--lines-while-generating") "Draw black lines while generating the maze"
      (*lines-while-generating* #t)]
     ;; one integer to determine *x-max*.
-    [("-s" "--size-of-side-in-cells") x-max "Maze will be this many cells wide & tall"
-     (*x-max* (string->number x-max))]
+    [("-s" "--size-of-side-in-cells") size "Maze will be this many cells wide & tall"
+     (*x-max* (sub1 (string->number size)))]
     ;; one integer to determine the number of milliseconds to pause.
     [("-p" "--pause-in-milliseconds") pause "Pause this many milliseconds before drawing each line"
      (*pause* (/ (string->number pause) 1000))]
