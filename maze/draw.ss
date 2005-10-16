@@ -4,7 +4,7 @@
   
   (provide make-grid draw-line *offset* *pause* my-version)
 
-  (define my-version "$Id")
+  (define my-version "$Id$")
   
   ;; Make some pens
   (define thin-red-pen    #f)

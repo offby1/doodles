@@ -8,7 +8,7 @@
   
   (provide my-version)
   
-  (define my-version "$Id")
+  (define my-version "$Id$")
 
   (define visited-nodes (make-hash-table 'equal))
   (define x-coordinate car)
