@@ -33,10 +33,10 @@
   (define *solution* (make-parameter #f))
   
   (define (get-direction from to)
-    (let ((dx (- (car to)
-                 (car from)))
-          (dy (- (cdr to)
-                 (cdr from))))
+    (let ((dx (- (x-coordinate to)
+                 (x-coordinate from)))
+          (dy (- (y-coordinate to)
+                 (y-coordinate from))))
       (unless (= 1 (+ (abs dx)
                       (abs dy)))
         (error "'From' point " from " and 'to' point "to  " aren't adjacent"))
@@ -60,25 +60,25 @@
         (case direction-travelled
           ((right)
            (draw-line *the-grid*
-                       (add1 (car previous-node))
-                       (cdr previous-node)
+                       (add1 (x-coordinate previous-node))
+                       (y-coordinate previous-node)
                        'down
                        1 #f 'white))
           ((down) (draw-line *the-grid*
-                              (car previous-node)
-                              (add1 (cdr previous-node))
+                              (x-coordinate previous-node)
+                              (add1 (y-coordinate previous-node))
                               'right
                               1 #f 'white))
           ((left)
            (draw-line *the-grid*
-                       (car previous-node)
-                       (cdr previous-node)
+                       (x-coordinate previous-node)
+                       (y-coordinate previous-node)
                        'down
                        1 #f 'white))
           ((up)
            (draw-line *the-grid*
-                       (car previous-node)
-                       (cdr previous-node)
+                       (x-coordinate previous-node)
+                       (y-coordinate previous-node)
                        'right
                        1 #f 'white))
           (else
@@ -89,8 +89,8 @@
         (when (*lines-while-generating*)
           (parameterize ((*offset* 1/2))
                         (draw-line *the-grid*
-                                   (car previous-node)
-                                   (cdr previous-node)
+                                   (x-coordinate previous-node)
+                                   (y-coordinate previous-node)
                                    direction-travelled
                                    1 #t 'black)))
                                               
@@ -98,7 +98,7 @@
 
     (hash-table-put! visited-nodes n #t)
     
-    (when (and (= (*x-max*) (car n) (cdr n)))
+    (when (and (= (*x-max*) (x-coordinate n) (y-coordinate n)))
       (*solution* (reverse (cons (cons (*x-max*)
                                        (*x-max*)) path-to-here)))))
   
@@ -113,10 +113,10 @@
                             (abs (- (y-coordinate candidate)
                                     (y-coordinate node)))))))
              (map (lambda (offset)
-                    (cons (+ (car offset)
-                             (car node))
-                          (+ (cdr offset)
-                             (cdr node))))
+                    (cons (+ (x-coordinate offset)
+                             (x-coordinate node))
+                          (+ (y-coordinate offset)
+                             (y-coordinate node))))
                  
                   (append-map 
                    (lambda (n) 
@@ -163,8 +163,8 @@
       (let ((prev (car trail))
             (next (cadr trail)))
         (draw-line *the-grid*
-                   (car prev)
-                   (cdr prev)
+                   (x-coordinate prev)
+                   (y-coordinate prev)
                    (get-direction prev next)
                    1
                    #t 'gray))
