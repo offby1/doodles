@@ -151,10 +151,6 @@
                set-visited!
                visited?)
 
-  (printf "Number of cells: ~a~%" (* (add1 (*x-max*))
-                                     (add1 (*x-max*))))
-  (printf "Number of knocked-down walls: ~a~%" *knocked-down-walls*)
-  
   ;; draw the solution.
   (parameterize ((*offset* 1/2))
   (let loop ((trail (*solution*)))
