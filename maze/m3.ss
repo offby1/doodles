@@ -28,6 +28,7 @@
                                   (integer? value))
                        (raise-type-error '*x-max* "exact positive integer" value))
                      value)))
+  (define *knocked-down-walls* 0)
   (define *lines-while-generating* (make-parameter #f))
   (define *solution* (make-parameter #f))
   
@@ -82,6 +83,7 @@
                        1 #f 'white))
           (else
            (error "Uh oh." direction-travelled)))
+        (set! *knocked-down-walls* (add1 *knocked-down-walls*))
 
         ;; now draw a line from the old position to the current position.
         (when (*lines-while-generating*)
@@ -149,6 +151,10 @@
                set-visited!
                visited?)
 
+  (printf "Number of cells: ~a~%" (* (add1 (*x-max*))
+                                     (add1 (*x-max*))))
+  (printf "Number of knocked-down walls: ~a~%" *knocked-down-walls*)
+  
   ;; draw the solution.
   (parameterize ((*offset* 1/2))
   (let loop ((trail (*solution*)))
@@ -162,5 +168,5 @@
                    (get-direction prev next)
                    1
                    #t 'gray))
-      (loop (cdr trail)))))
-  )
+      (loop (cdr trail))))))
+

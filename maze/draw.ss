@@ -6,6 +6,22 @@
 
   (define my-version "$Id$")
   
+  ;; Derive a new canvas (a generic drawing window) class to handle events
+  (define my-canvas%
+    (class canvas%                      ; The base class is canvas%
+      ;; Declare overrides:
+      (override on-event)
+      ;; Define overriding method to handle mouse events
+      (define on-event
+        (lambda (event)
+          (case  (send event get-event-type)
+            ((left-down middle-down right-down)
+             (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
+               (exit 0)))
+            )))
+      ;; Call the superclass initialization (and pass on all init args)
+      (super-instantiate ())))
+
   ;; Make some pens
   (define thin-red-pen    #f)
   (define thin-white-pen  #f)
@@ -18,16 +34,16 @@
                    3/100
                    (lambda (value)
                      (when (or (negative? value)
-                             (not (number? value)))
+                               (not (number? value)))
                        (raise-type-error '*pause* "non-negative number" value))
                      value)))
   (define *offset* (make-parameter
                     0
                     (lambda (value)
                       (unless (or (negative? value)
-                              (and (exact? value)
-                                   (rational? value)
-                                   ))
+                                  (and (exact? value)
+                                       (rational? value)
+                                       ))
                         (raise-type-error '*offset* "exact rational non-negative number" value))
                       value)))
 
@@ -45,20 +61,18 @@
     (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient *cell-width-in-pixels* 3) 'solid)))
 
 
-    (let* (( frame (instantiate frame% ("Look! A maze!")
-                                (width (* ncols *cell-width-in-pixels*))
-                                (height (* ncols *cell-width-in-pixels*))))
+    (let* ((frame (instantiate frame% ("Look! A maze!")
+                               (width (* ncols *cell-width-in-pixels*))
+                               (height (* ncols *cell-width-in-pixels*))))
            ;; Create a drawing context for the bitmap
-           ( bitmap (instantiate bitmap% ((* ncols *cell-width-in-pixels*)
-                                          (* ncols *cell-width-in-pixels*))))
+           (bitmap (instantiate bitmap% ((* ncols *cell-width-in-pixels*)
+                                         (* ncols *cell-width-in-pixels*))))
            ;; Make the drawing area with a paint callback that copies the bitmap
-           ( canvas (instantiate canvas% (frame) 
-                                 (paint-callback (lambda (canvas dc)
-                                                   (send dc draw-bitmap bitmap 0 0))))))
+           (canvas (instantiate my-canvas% (frame) 
+                                (paint-callback (lambda (canvas dc)
+                                                  (send dc draw-bitmap bitmap 0 0))))))
       (define bm-dc (instantiate bitmap-dc% (bitmap)))
 
-    
-    
       ;; A new bitmap's initial content is undefined, so clear it before drawing
       (send bm-dc clear)
 
