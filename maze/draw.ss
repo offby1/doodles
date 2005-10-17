@@ -8,19 +8,28 @@
   
   ;; Derive a new canvas (a generic drawing window) class to handle events
   (define my-canvas%
-    (class canvas%                      ; The base class is canvas%
-      ;; Declare overrides:
-      (override on-event)
-      ;; Define overriding method to handle mouse events
-      (define on-event
-        (lambda (event)
-          (case  (send event get-event-type)
-            ((left-down middle-down right-down)
-             (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
-               (exit 0)))
-            )))
-      ;; Call the superclass initialization (and pass on all init args)
-      (super-instantiate ())))
+    (let ()
+      (define (maybe-exit)
+        (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
+          (exit 0)))
+      (class canvas%                    ; The base class is canvas%
+        ;; Declare overrides:
+        (override on-event on-char)
+        ;; Define overriding methods
+        (define on-event
+          (lambda (event)
+            (case  (send event get-event-type)
+              ((left-down middle-down right-down)
+               (maybe-exit))
+              )))
+        (define on-char
+          (lambda (event)
+            (when (send event get-control-down)
+              (case (send event get-key-code)
+                ((#\q #\Q)
+                 (maybe-exit))))))
+        ;; Call the superclass initialization (and pass on all init args)
+        (super-instantiate ()))))
 
   ;; Make some pens
   (define thin-red-pen    #f)
