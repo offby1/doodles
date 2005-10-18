@@ -6,30 +6,36 @@
 
   (define my-version "$Id$")
   
+  (define (maybe-exit)
+    (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
+      (exit 0)))
+
   ;; Derive a new canvas (a generic drawing window) class to handle events
   (define my-canvas%
-    (let ()
-      (define (maybe-exit)
-        (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
-          (exit 0)))
-      (class canvas%                    ; The base class is canvas%
-        ;; Declare overrides:
-        (override on-event on-char)
-        ;; Define overriding methods
-        (define on-event
-          (lambda (event)
-            (case  (send event get-event-type)
-              ((left-down middle-down right-down)
-               (maybe-exit))
-              )))
-        (define on-char
-          (lambda (event)
-            (when (send event get-control-down)
-              (case (send event get-key-code)
-                ((#\q #\Q)
-                 (maybe-exit))))))
-        ;; Call the superclass initialization (and pass on all init args)
-        (super-instantiate ()))))
+    (class canvas%                      ; The base class is canvas%
+      ;; Declare overrides:
+      (override on-event on-char)
+      ;; Define overriding methods
+      (define on-event
+        (lambda (event)
+          (case  (send event get-event-type)
+            ((left-down middle-down right-down)
+             (maybe-exit))
+            )))
+      (define on-char
+        (lambda (event)
+          (when (send event get-control-down)
+            (case (send event get-key-code)
+              ((#\q #\Q)
+               (maybe-exit))))))
+      ;; Call the superclass initialization (and pass on all init args)
+      (super-instantiate ())))
+
+  (define my-frame%
+    (class frame%
+      (augment on-close)
+      (define on-close (lambda () (maybe-exit)))
+      (super-instantiate ())))
 
   ;; Make some pens
   (define thin-red-pen    #f)
@@ -70,7 +76,7 @@
     (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient *cell-width-in-pixels* 3) 'solid)))
 
 
-    (let* ((frame (instantiate frame% ("Look! A maze!")
+    (let* ((frame (instantiate my-frame% ("Look! A maze!")
                                (width (* ncols *cell-width-in-pixels*))
                                (height (* ncols *cell-width-in-pixels*))))
            ;; Create a drawing context for the bitmap

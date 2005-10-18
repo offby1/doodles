@@ -9,7 +9,7 @@ exec mred -qu "$0" ${1+"$@"}
   (require (lib "trace.ss"))
   (require (lib "cmdline.ss"))
   (require (only (lib "compat.ss") sort))
-  (require (only (lib "1.ss" "srfi") iota zip filter append-map))
+  (require (only (lib "1.ss" "srfi") iota filter append-map))
   
   (provide my-version)
   
@@ -23,7 +23,18 @@ exec mred -qu "$0" ${1+"$@"}
     (map cdr
          (sort (lambda (a b) (< (car a) (car b)))
                (map (lambda (elt)
-                      (cons (random) elt))
+                      
+                      ;; this oddness causes the list to be shuffled
+                      ;; only a little, making for a windier maze, and
+                      ;; hence a longer solution.  Ideally we'd use a
+                      ;; stable sort, but I don't know of one that's
+                      ;; easily available to mzscheme.
+                      (cons (let ((r (random)))
+                              (if (< r 1/10)
+                                  r
+                                1)) elt)
+                                        
+                      )
                     l))))
 
   (define *x-max* (make-parameter
