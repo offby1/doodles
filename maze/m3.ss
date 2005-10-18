@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mred -qu "$0" ${1+"$@"}
+|#
+
 (module m3 mzscheme
   (require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
   (require (all-except "draw.ss" my-version))
@@ -13,6 +18,7 @@
   (define visited-nodes (make-hash-table 'equal))
   (define x-coordinate car)
   (define y-coordinate cdr)
+
   (define (shuffle-list l)
     (map cdr
          (sort (lambda (a b) (< (car a) (car b)))
@@ -104,7 +110,7 @@
   
   (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
   (define (enumerate-neighbors node)
-    (shuffle-list
+    (shuffle-list 
      (filter (lambda (candidate)
                (and (<= 0 (x-coordinate candidate) (*x-max*))
                     (<= 0 (y-coordinate candidate) (*x-max*))
