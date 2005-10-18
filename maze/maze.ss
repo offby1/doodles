@@ -3,7 +3,7 @@
 exec mred -qu "$0" ${1+"$@"}
 |#
 
-(module m3 mzscheme
+(module maze mzscheme
   (require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
   (require (all-except "draw.ss" my-version))
   (require (lib "trace.ss"))
