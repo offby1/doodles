@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mred -qu "$0" ${1+"$@"}
+exec mred -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module maze mzscheme
@@ -15,7 +15,7 @@ exec mred -qu "$0" ${1+"$@"}
   
   (define my-version "$Id$")
 
-  (define visited-nodes (make-hash-table 'equal))
+  (define visited-nodes #f)
   (define x-coordinate car)
   (define y-coordinate cdr)
 
@@ -30,22 +30,13 @@ exec mred -qu "$0" ${1+"$@"}
                       ;; stable sort, but I don't know of one that's
                       ;; easily available to mzscheme.
                       (cons (let ((r (random)))
-                              (if (< r 1/10)
+                              (if (< r 10/10)
                                   r
                                 1)) elt)
                                         
                       )
                     l))))
-
-  (define *x-max* (make-parameter
-                   25
-                   (lambda (value)
-                     (unless (and (positive? value)
-                                  (exact? value)
-                                  (integer? value))
-                       (raise-type-error '*x-max* "exact positive integer" value))
-                     value)))
-  (define *knocked-down-walls* 0)
+  
   (define *lines-while-generating* (make-parameter #f))
   (define *solution* (make-parameter #f))
   
@@ -100,8 +91,7 @@ exec mred -qu "$0" ${1+"$@"}
                        1 #f 'white))
           (else
            (error "Uh oh." direction-travelled)))
-        (set! *knocked-down-walls* (add1 *knocked-down-walls*))
-
+        
         ;; now draw a line from the old position to the current position.
         (when (*lines-while-generating*)
           (parameterize ((*offset* 1/2))
@@ -145,6 +135,30 @@ exec mred -qu "$0" ${1+"$@"}
 
   ;(random-seed 0)
   
+  (define (main)
+    (*solution* #f)
+    (set! visited-nodes (make-hash-table 'equal))
+    (generic-dfs '(0 . 0)
+                 enumerate-neighbors
+                 '()
+                 (lambda (n) #f)
+                 set-visited!
+                 visited?)
+
+    ;; draw the solution.
+    (parameterize ((*offset* 1/2))
+                  (let loop ((trail (*solution*)))
+                    (unless (or (null? trail)
+                                (null? (cdr trail)))
+                      (let ((prev (car trail))
+                            (next (cadr trail)))
+                        (draw-line *the-grid*
+                                   (x-coordinate prev)
+                                   (y-coordinate prev)
+                                   (get-direction prev next)
+                                   1
+                                   #t 'gray))
+                      (loop (cdr trail))))))
   (command-line
    "maze"
    (current-command-line-arguments)
@@ -160,26 +174,5 @@ exec mred -qu "$0" ${1+"$@"}
      (*pause* (/ (string->number pause) 1000))]
     )
    )
-  (define *the-grid* (make-grid (add1 (*x-max*))))
-  (generic-dfs '(0 . 0)
-               enumerate-neighbors
-               '()
-               (lambda (n) #f)
-               set-visited!
-               visited?)
-
-  ;; draw the solution.
-  (parameterize ((*offset* 1/2))
-  (let loop ((trail (*solution*)))
-    (unless (or (null? trail)
-                (null? (cdr trail)))
-      (let ((prev (car trail))
-            (next (cadr trail)))
-        (draw-line *the-grid*
-                   (x-coordinate prev)
-                   (y-coordinate prev)
-                   (get-direction prev next)
-                   1
-                   #t 'gray))
-      (loop (cdr trail))))))
-
+  (define *the-grid* (make-grid main))
+  )

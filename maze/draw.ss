@@ -2,10 +2,23 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line *offset* *pause* my-version)
+  (provide make-grid draw-line *offset* *pause* my-version *x-max*)
 
   (define my-version "$Id$")
   
+  (define *x-max* (make-parameter
+                   25
+                   (lambda (value)
+                     (unless (and (positive? value)
+                                  (exact? value)
+                                  (integer? value))
+                       (raise-type-error '*x-max* "exact positive integer" value))
+                     value)))
+  (define (ncols) (add1 (*x-max*)))
+  (define *cell-width-in-pixels* (let-values (((width height)
+                                               (get-display-size)))
+            
+                                   (quotient (* 9 (min width height)) (* (ncols) 10))))
   (define (maybe-exit)
     (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
       (exit 0)))
@@ -43,8 +56,6 @@
   (define thick-black-pen #f)
   (define thick-gray-pen #f)
 
-  (define *cell-width-in-pixels* #f)
-
   (define *pause* (make-parameter
                    3/100
                    (lambda (value)
@@ -62,61 +73,76 @@
                         (raise-type-error '*offset* "exact rational non-negative number" value))
                       value)))
 
-  (define (make-grid ncols)
 
-    (set! *cell-width-in-pixels*
-          (let-values (((width height)
-                        (get-display-size)))
-            
-            (quotient (* 9 (min width height)) (* ncols 10))
-            ))
+  
+  (define frame #f)
+  (define (make-grid main-proc)
     (set! thin-red-pen    (instantiate pen% ("RED" 2 'solid)))
     (set! thin-white-pen  (instantiate pen% ("WHITE" 2 'solid)))
     (set! thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
     (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient *cell-width-in-pixels* 3) 'solid)))
-
-
-    (let* ((frame (instantiate my-frame% ("Look! A maze!")
-                               (width (* ncols *cell-width-in-pixels*))
-                               (height (* ncols *cell-width-in-pixels*))))
-           ;; Create a drawing context for the bitmap
-           (bitmap (instantiate bitmap% ((* ncols *cell-width-in-pixels*)
-                                         (* ncols *cell-width-in-pixels*))))
-           ;; Make the drawing area with a paint callback that copies the bitmap
-           (canvas (instantiate my-canvas% (frame) 
-                                (paint-callback (lambda (canvas dc)
-                                                  (send dc draw-bitmap bitmap 0 0))))))
+    (set! frame (instantiate my-frame% ("Look! A maze!")
+                             (width (* (ncols) *cell-width-in-pixels*))
+                             (height (* (ncols) *cell-width-in-pixels*))))
+    (let* ((menu-bar (instantiate menu-bar% (frame)
+                                  (demand-callback
+                                   (lambda (mb)
+                                     (printf "Menu bar ~s was clicked~%" mb)))))
+           (menu (new menu%
+                      (label "Something")
+                      (parent menu-bar)
+                      (help-string "No help for you.")
+                      (demand-callback (lambda (menu)
+                                         (printf "Menu ~s was clicked~%" menu)))
+                      )))
+      
+      ;; Create a drawing context for the bitmap
+      (define bitmap (instantiate bitmap% ((* (ncols) *cell-width-in-pixels*)
+                                           (* (ncols) *cell-width-in-pixels*))))
       (define bm-dc (instantiate bitmap-dc% (bitmap)))
+  
+      ;; Make the drawing area with a paint callback that copies the bitmap
+      (define canvas (instantiate my-canvas% (frame) 
+                                  (paint-callback (lambda (canvas dc)
+                                                    (send dc draw-bitmap bitmap 0 0)))))
+      (define dcs (list bm-dc (send canvas get-dc)))
+      
+      (define do-something (new menu-item% (label "Do something!")
+                                (parent menu)
+                                (callback (lambda (menu-item control-object)
+                                            (printf "OK, I'm doing something. ~s ~s~%" menu-item control-object)
 
+                                            (for-each (lambda (dc)
+                                                        (send dc clear)) dcs)
+                                            
+                                            ;; draw the grid lines.
+                                            (for-each (lambda (dc)
+                                                        (send dc set-pen thin-red-pen))
+                                                      dcs)
+
+                                            (let loop ((columns-drawn 0))
+                                              (when (and #t
+                                                         (<= columns-drawn (ncols)))
+                                                (draw-line dcs
+                                                           columns-drawn
+                                                           0 'down (ncols) #f 'red)
+                                                (draw-line dcs
+                                                           0
+                                                           columns-drawn
+                                                           'right (ncols) #f 'red)
+                                                (loop (add1 columns-drawn))))
+
+                                            (for-each (lambda (dc)
+                                                        (send dc set-pen thick-black-pen))
+                                                      dcs)
+                                            (main-proc)))))
       ;; A new bitmap's initial content is undefined, so clear it before drawing
-      (send bm-dc clear)
-
+      (for-each (lambda (dc)
+                  (send bm-dc clear)) dcs)
       ;; Show the frame by calling its show method
       (send frame show #t)
-
-      ;; draw the grid lines.
-      (let ((dcs (list bm-dc (send canvas get-dc))))
-        (for-each (lambda (dc)
-                    (send dc set-pen thin-red-pen))
-                  dcs)
-
-        (let loop ((columns-drawn 0))
-          (when (and #t
-                     (<= columns-drawn ncols))
-            (draw-line dcs
-                       columns-drawn
-                       0 'down ncols #f 'red)
-            (draw-line dcs
-                       0
-                       columns-drawn
-                       'right ncols #f 'red)
-            (loop (add1 columns-drawn))))
-
-        (for-each (lambda (dc)
-                    (send dc set-pen thick-black-pen))
-                  dcs)
-        dcs)      )
-    )
+      
+      dcs))
   
   (define (draw-line dc-list origin-x origin-y orientation length thick? color)
     (if (positive? (*pause*)) (sleep/yield (*pause*)))
