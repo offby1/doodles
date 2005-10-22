@@ -103,16 +103,15 @@
                                   (paint-callback (lambda (canvas dc)
                                                     (send dc draw-bitmap bitmap 0 0)))))
 
+      (define (fedc proc)
+        (for-each proc (grid-device-contexts rv)))
       (define do-something (new menu-item% (label "Do something!")
                                 (parent menu)
                                 (callback (lambda (menu-item control-object)
-                                            (for-each (lambda (dc)
-                                                        (send dc clear)) (grid-device-contexts rv))
+                                            (fedc (lambda (dc) (send dc clear)))
                                             
                                             ;; draw the grid lines.
-                                            (for-each (lambda (dc)
-                                                        (send dc set-pen (grid-thin-red rv)))
-                                                      (grid-device-contexts rv))
+                                            (fedc (lambda (dc) (send dc set-pen (grid-thin-red rv))))
 
                                             (let loop ((columns-drawn 0))
                                               (when (and #t
@@ -127,16 +126,13 @@
                                                                          'right ncols #f 'red))
                                                 (loop (add1 columns-drawn))))
 
-                                            (for-each (lambda (dc)
-                                                        (send dc set-pen (grid-thick-black rv)))
-                                                      (grid-device-contexts rv))
+                                            (fedc (lambda (dc) (send dc set-pen (grid-thick-black rv))))
                                             (main-proc)))))
 
       (set-grid-device-contexts! rv (list bm-dc (send canvas get-dc)))
 
       ;; A new bitmap's initial content is undefined, so clear it before drawing
-      (for-each (lambda (dc)
-                  (send bm-dc clear)) (grid-device-contexts rv))
+      (fedc (lambda (dc) (send bm-dc clear)))
       ;; Show the frame by calling its show method
       (send frame show #t)
       
