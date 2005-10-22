@@ -15,10 +15,7 @@
                        (raise-type-error '*x-max* "exact positive integer" value))
                      value)))
   (define (ncols) (add1 (*x-max*)))
-  (define *cell-width-in-pixels* (let-values (((width height)
-                                               (get-display-size)))
-            
-                                   (quotient (* 9 (min width height)) (* (ncols) 10))))
+  (define *cell-width-in-pixels* (make-parameter #f))
   (define (maybe-exit)
     (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
       (exit 0)))
@@ -77,28 +74,34 @@
   
   (define frame #f)
   (define (make-grid main-proc)
+    (*cell-width-in-pixels* (let-values (((width height)
+                                          (get-display-size)))
+            
+                              (quotient (* 9 (min width height)) (* (ncols) 10))))
     (set! thin-red-pen    (instantiate pen% ("RED" 2 'solid)))
     (set! thin-white-pen  (instantiate pen% ("WHITE" 2 'solid)))
-    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient *cell-width-in-pixels* 3) 'solid)))
-    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient *cell-width-in-pixels* 3) 'solid)))
+    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient (*cell-width-in-pixels*) 3) 'solid)))
+    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient (*cell-width-in-pixels*) 3) 'solid)))
+
     (set! frame (instantiate my-frame% ("Look! A maze!")
-                             (width (* (ncols) *cell-width-in-pixels*))
-                             (height (* (ncols) *cell-width-in-pixels*))))
+                             (width (* (ncols) (*cell-width-in-pixels*)))
+                             
+                             ;; TODO -- this height isn't quite
+                             ;; enough, since it must accomodate both
+                             ;; the canvas and the menu bar.
+                             (height (* (ncols) (*cell-width-in-pixels*)))
+                             ))
+                                                                          
     (let* ((menu-bar (instantiate menu-bar% (frame)
-                                  (demand-callback
-                                   (lambda (mb)
-                                     (printf "Menu bar ~s was clicked~%" mb)))))
+                                  ))
            (menu (new menu%
                       (label "Something")
                       (parent menu-bar)
-                      (help-string "No help for you.")
-                      (demand-callback (lambda (menu)
-                                         (printf "Menu ~s was clicked~%" menu)))
-                      )))
+                      (help-string "No help for you."))))
       
       ;; Create a drawing context for the bitmap
-      (define bitmap (instantiate bitmap% ((* (ncols) *cell-width-in-pixels*)
-                                           (* (ncols) *cell-width-in-pixels*))))
+      (define bitmap (instantiate bitmap% ((* (ncols) (*cell-width-in-pixels*))
+                                           (* (ncols) (*cell-width-in-pixels*)))))
       (define bm-dc (instantiate bitmap-dc% (bitmap)))
   
       ;; Make the drawing area with a paint callback that copies the bitmap
@@ -110,8 +113,6 @@
       (define do-something (new menu-item% (label "Do something!")
                                 (parent menu)
                                 (callback (lambda (menu-item control-object)
-                                            (printf "OK, I'm doing something. ~s ~s~%" menu-item control-object)
-
                                             (for-each (lambda (dc)
                                                         (send dc clear)) dcs)
                                             
@@ -123,13 +124,14 @@
                                             (let loop ((columns-drawn 0))
                                               (when (and #t
                                                          (<= columns-drawn (ncols)))
-                                                (draw-line dcs
-                                                           columns-drawn
-                                                           0 'down (ncols) #f 'red)
-                                                (draw-line dcs
-                                                           0
-                                                           columns-drawn
-                                                           'right (ncols) #f 'red)
+                                                (parameterize ((*pause* 0))
+                                                              (draw-line dcs
+                                                                         columns-drawn
+                                                                         0 'down (ncols) #f 'red)
+                                                              (draw-line dcs
+                                                                         0
+                                                                         columns-drawn
+                                                                         'right (ncols) #f 'red))
                                                 (loop (add1 columns-drawn))))
 
                                             (for-each (lambda (dc)
@@ -150,9 +152,9 @@
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))
                     ((width height) (send dc get-size)))
-         (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) *cell-width-in-pixels*)))
-               (origin-y (+ uly (* (+ (*offset*) origin-y) *cell-width-in-pixels*)))
-               (length (* length *cell-width-in-pixels*))
+         (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) (*cell-width-in-pixels*))))
+               (origin-y (+ uly (* (+ (*offset*) origin-y) (*cell-width-in-pixels*))))
+               (length (* length (*cell-width-in-pixels*)))
                (original-pen (send dc get-pen)))
            
            ;; Ugh.  There ought to be a 'with-pen' macro or something.
