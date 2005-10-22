@@ -142,6 +142,15 @@
       
       rv))
   
+  (define-syntax with-pen
+    (syntax-rules ()
+      ((_ p dc body ...)
+       (let ((original-pen (send dc get-pen)))
+         (dynamic-wind
+             (lambda () (send dc set-pen p))
+             (lambda () body ...)
+             (lambda () (send dc set-pen original-pen)))))))
+
   (define (draw-line grid origin-x origin-y orientation length thick? color)
     (define cwp (grid-cell-width-in-pixels grid))
     (if (positive? (*pause*)) (sleep/yield (*pause*)))
@@ -151,33 +160,31 @@
                     ((width height) (send dc get-size)))
          (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) cwp)))
                (origin-y (+ uly (* (+ (*offset*) origin-y) cwp)))
-               (length (* length cwp))
-               (original-pen (send dc get-pen)))
+               (length (* length cwp)))
+
+           (with-pen 
+            (if thick?
+                (case color
+                  ((black) (grid-thick-black  grid))
+                  ((gray) (grid-thick-gray grid))
+                  (else
+                   (error "Uh oh.")))
+              (if (eq? 'red color)
+                  (grid-thin-red grid)
+                (grid-thin-white grid)))
+            dc
+            (send/apply dc draw-line
+                        origin-x
+                        origin-y
+                        (case orientation
+                          ((right) (list (+ origin-x length) origin-y))
+                          ((left ) (list (- origin-x length) origin-y))
+                          ((down ) (list origin-x (+ origin-y length)))
+                          ((up   ) (list origin-x (- origin-y length)))
+                          (else
+                           (error 'draw-line "Unknown orientation" orientation)))))
            
-           ;; Ugh.  There ought to be a 'with-pen' macro or something.
-           (send dc
-                 set-pen
-                 (if thick?
-                     (case color
-                       ((black) (grid-thick-black  grid))
-                       ((gray) (grid-thick-gray grid))
-                       (else
-                        (error "Uh oh.")))
-                   (if (eq? 'red color)
-                       (grid-thin-red grid)
-                     (grid-thin-white grid))))
            
-           (send/apply dc draw-line
-                       origin-x
-                       origin-y
-                       (case orientation
-                         ((right) (list (+ origin-x length) origin-y))
-                         ((left ) (list (- origin-x length) origin-y))
-                         ((down ) (list origin-x (+ origin-y length)))
-                         ((up   ) (list origin-x (- origin-y length)))
-                         (else
-                          (error 'draw-line "Unknown orientation" orientation))))
-           
-           (send dc set-pen original-pen)))
+           ))
        )
      (grid-device-contexts grid))))
