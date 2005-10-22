@@ -2,19 +2,10 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line *offset* *pause* my-version *x-max*)
+  (provide make-grid draw-line *offset* *pause* my-version)
 
   (define my-version "$Id$")
-  
-  (define *x-max* (make-parameter
-                   25
-                   (lambda (value)
-                     (unless (and (positive? value)
-                                  (exact? value)
-                                  (integer? value))
-                       (raise-type-error '*x-max* "exact positive integer" value))
-                     value)))
-  (define (ncols) (add1 (*x-max*)))
+
   (define *cell-width-in-pixels* (make-parameter #f))
   (define (maybe-exit)
     (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
@@ -73,7 +64,8 @@
 
   
   (define frame #f)
-  (define (make-grid main-proc)
+  (define (make-grid main-proc *x-max*)
+    (define (ncols) (add1 (*x-max*)))
     (*cell-width-in-pixels* (let-values (((width height)
                                           (get-display-size)))
             

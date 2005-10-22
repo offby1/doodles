@@ -59,6 +59,14 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
         (else
          'left))))
 
+  (define *x-max* (make-parameter
+                   25
+                   (lambda (value)
+                     (unless (and (positive? value)
+                                  (exact? value)
+                                  (integer? value))
+                       (raise-type-error '*x-max* "exact positive integer" value))
+                     value)))
   (define (set-visited! n path-to-here) 
     (when (not (null? path-to-here))
       (let* ((previous-node (car path-to-here))
@@ -174,5 +182,5 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
      (*pause* (/ (string->number pause) 1000))]
     )
    )
-  (define *the-grid* (make-grid main))
+  (define *the-grid* (make-grid main *x-max*))
   )
