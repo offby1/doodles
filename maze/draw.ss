@@ -2,11 +2,13 @@
   (require (lib "mred.ss" "mred")
            (lib "class.ss"))
   
-  (provide make-grid draw-line *offset* *pause* my-version)
+  (provide (rename internal-make-grid make-grid) draw-line *offset* *pause* my-version)
 
   (define my-version "$Id$")
 
-  (define *cell-width-in-pixels* (make-parameter #f))
+  (print-struct #t)
+  (define-struct grid (device-contexts cell-width-in-pixels) #f)
+
   (define (maybe-exit)
     (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
       (exit 0)))
@@ -64,24 +66,24 @@
 
   
   (define frame #f)
-  (define (make-grid main-proc *x-max*)
-    (define (ncols) (add1 (*x-max*)))
-    (*cell-width-in-pixels* (let-values (((width height)
-                                          (get-display-size)))
-            
-                              (quotient (* 9 (min width height)) (* (ncols) 10))))
+  (define (internal-make-grid main-proc *x-max*)
+    (define ncols (add1 (*x-max*)))
+    (define cwp  (let-values (((width height)
+                               (get-display-size)))
+                   (quotient (* 9 (min width height)) (* ncols 10))))
+    (define rv (make-grid '() cwp))
     (set! thin-red-pen    (instantiate pen% ("RED" 2 'solid)))
     (set! thin-white-pen  (instantiate pen% ("WHITE" 2 'solid)))
-    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient (*cell-width-in-pixels*) 3) 'solid)))
-    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient (*cell-width-in-pixels*) 3) 'solid)))
+    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient cwp 3) 'solid)))
+    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient cwp 3) 'solid)))
 
     (set! frame (instantiate my-frame% ("Look! A maze!")
-                             (width (* (ncols) (*cell-width-in-pixels*)))
+                             (width (* ncols cwp))
                              
                              ;; TODO -- this height isn't quite
                              ;; enough, since it must accomodate both
                              ;; the canvas and the menu bar.
-                             (height (* (ncols) (*cell-width-in-pixels*)))
+                             (height (* ncols cwp))
                              ))
                                                                           
     (let* ((menu-bar (instantiate menu-bar% (frame)
@@ -90,63 +92,66 @@
                       (label "Something")
                       (parent menu-bar)
                       (help-string "No help for you."))))
-      
+
       ;; Create a drawing context for the bitmap
-      (define bitmap (instantiate bitmap% ((* (ncols) (*cell-width-in-pixels*))
-                                           (* (ncols) (*cell-width-in-pixels*)))))
+      (define bitmap (instantiate bitmap% ((* ncols cwp)
+                                           (* ncols cwp))))
       (define bm-dc (instantiate bitmap-dc% (bitmap)))
   
       ;; Make the drawing area with a paint callback that copies the bitmap
       (define canvas (instantiate my-canvas% (frame) 
                                   (paint-callback (lambda (canvas dc)
                                                     (send dc draw-bitmap bitmap 0 0)))))
-      (define dcs (list bm-dc (send canvas get-dc)))
-      
+
       (define do-something (new menu-item% (label "Do something!")
                                 (parent menu)
                                 (callback (lambda (menu-item control-object)
                                             (for-each (lambda (dc)
-                                                        (send dc clear)) dcs)
+                                                        (send dc clear)) (grid-device-contexts rv))
                                             
                                             ;; draw the grid lines.
                                             (for-each (lambda (dc)
                                                         (send dc set-pen thin-red-pen))
-                                                      dcs)
+                                                      (grid-device-contexts rv))
 
                                             (let loop ((columns-drawn 0))
                                               (when (and #t
-                                                         (<= columns-drawn (ncols)))
+                                                         (<= columns-drawn ncols))
                                                 (parameterize ((*pause* 0))
-                                                              (draw-line dcs
+                                                              (draw-line rv
                                                                          columns-drawn
-                                                                         0 'down (ncols) #f 'red)
-                                                              (draw-line dcs
+                                                                         0 'down ncols #f 'red)
+                                                              (draw-line rv
                                                                          0
                                                                          columns-drawn
-                                                                         'right (ncols) #f 'red))
+                                                                         'right ncols #f 'red))
                                                 (loop (add1 columns-drawn))))
 
                                             (for-each (lambda (dc)
                                                         (send dc set-pen thick-black-pen))
-                                                      dcs)
+                                                      (grid-device-contexts rv))
                                             (main-proc)))))
+
+      (set-grid-device-contexts! rv (list bm-dc (send canvas get-dc)))
+
       ;; A new bitmap's initial content is undefined, so clear it before drawing
       (for-each (lambda (dc)
-                  (send bm-dc clear)) dcs)
+                  (send bm-dc clear)) (grid-device-contexts rv))
       ;; Show the frame by calling its show method
       (send frame show #t)
       
-      dcs))
+      rv))
   
-  (define (draw-line dc-list origin-x origin-y orientation length thick? color)
+  (define (draw-line grid origin-x origin-y orientation length thick? color)
+    (define cwp (grid-cell-width-in-pixels grid))
     (if (positive? (*pause*)) (sleep/yield (*pause*)))
     (for-each
      (lambda (dc)
        (let-values (((ulx uly)      (send dc get-origin))
                     ((width height) (send dc get-size)))
-         (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) (*cell-width-in-pixels*))))
-               (origin-y (+ uly (* (+ (*offset*) origin-y) (*cell-width-in-pixels*))))
-               (length (* length (*cell-width-in-pixels*)))
+         (let ((origin-x (+ ulx (* (+ (*offset*) origin-x) cwp)))
+               (origin-y (+ uly (* (+ (*offset*) origin-y) cwp)))
+               (length (* length cwp))
                (original-pen (send dc get-pen)))
            
            ;; Ugh.  There ought to be a 'with-pen' macro or something.
@@ -175,4 +180,4 @@
            
            (send dc set-pen original-pen)))
        )
-     dc-list)))
+     (grid-device-contexts grid))))
