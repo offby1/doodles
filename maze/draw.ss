@@ -183,4 +183,6 @@
            
            ))
        )
-     (grid-device-contexts grid))))
+     (grid-device-contexts grid)))
+  (printf "~s~%" my-version)
+  )

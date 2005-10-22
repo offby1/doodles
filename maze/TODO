@@ -1,0 +1,5 @@
+* draw triangles or hexagons, not just squares.  Or any shape that can
+  regularly tile the plane.
+
+* Replace the command-line switches with some sort of graphical
+  control panel.

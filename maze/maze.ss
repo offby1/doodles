@@ -109,7 +109,7 @@
 
     (hash-table-put! visited-nodes n #t)
     
-    (when (and (= (*x-max*) (x-coordinate n) (y-coordinate n)))
+    (when (= (*x-max*) (x-coordinate n) (y-coordinate n))
       (*solution* (reverse (cons (cons (*x-max*)
                                        (*x-max*)) path-to-here)))))
   
@@ -179,4 +179,5 @@
     )
    )
   (define *the-grid* (make-grid main *x-max*))
+  (printf "~s~%" my-version)
   )
