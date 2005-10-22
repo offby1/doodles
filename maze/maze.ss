@@ -1,8 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec mred -M errortrace -qu "$0" ${1+"$@"}
-|#
-
 (module maze mzscheme
   (require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
   (require (all-except "draw.ss" my-version))
@@ -33,7 +28,7 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
                               (if (< r 10/10)
                                   r
                                 1)) elt)
-                                        
+                      
                       )
                     l))))
   
@@ -54,10 +49,10 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
         (if (positive? dy)
             'down
           'up))
-        ((positive? dx)
-         'right)
-        (else
-         'left))))
+       ((positive? dx)
+        'right)
+       (else
+        'left))))
 
   (define *x-max* (make-parameter
                    25
@@ -71,32 +66,33 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
     (when (not (null? path-to-here))
       (let* ((previous-node (car path-to-here))
              (direction-travelled (get-direction previous-node
-                                                n)))
+                                                 n)))
         ;; Mr. Gorbachev, knock down the wall.
         (case direction-travelled
           ((right)
            (draw-line *the-grid*
-                       (add1 (x-coordinate previous-node))
-                       (y-coordinate previous-node)
-                       'down
-                       1 #f 'white))
-          ((down) (draw-line *the-grid*
-                              (x-coordinate previous-node)
-                              (add1 (y-coordinate previous-node))
-                              'right
-                              1 #f 'white))
+                      (add1 (x-coordinate previous-node))
+                      (y-coordinate previous-node)
+                      'down
+                      1 #f 'white))
+          ((down)
+           (draw-line *the-grid*
+                      (x-coordinate previous-node)
+                      (add1 (y-coordinate previous-node))
+                      'right
+                      1 #f 'white))
           ((left)
            (draw-line *the-grid*
-                       (x-coordinate previous-node)
-                       (y-coordinate previous-node)
-                       'down
-                       1 #f 'white))
+                      (x-coordinate previous-node)
+                      (y-coordinate previous-node)
+                      'down
+                      1 #f 'white))
           ((up)
            (draw-line *the-grid*
-                       (x-coordinate previous-node)
-                       (y-coordinate previous-node)
-                       'right
-                       1 #f 'white))
+                      (x-coordinate previous-node)
+                      (y-coordinate previous-node)
+                      'right
+                      1 #f 'white))
           (else
            (error "Uh oh." direction-travelled)))
         
@@ -108,8 +104,8 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
                                    (y-coordinate previous-node)
                                    direction-travelled
                                    1 #t 'black)))
-                                              
-                                              ))
+        
+        ))
 
     (hash-table-put! visited-nodes n #t)
     
@@ -132,7 +128,7 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
                              (x-coordinate node))
                           (+ (y-coordinate offset)
                              (y-coordinate node))))
-                 
+                  
                   (append-map 
                    (lambda (n) 
                      (map (lambda (m)
@@ -141,7 +137,7 @@ exec mred -M errortrace -qu "$0" ${1+"$@"}
                    (iota 3 -1))))))
                                         ;(trace enumerate-neighbors)
 
-  ;(random-seed 0)
+                                        ;(random-seed 0)
   
   (define (main)
     (*solution* #f)

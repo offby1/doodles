@@ -1,3 +1,3 @@
 # $Id$
-maze: m3.ss draw.ss
+maze: maze.ss draw.ss
 	mzc --gui-exe $@ $<
