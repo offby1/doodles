@@ -7,7 +7,12 @@
   (define my-version "$Id$")
 
   (print-struct #t)
-  (define-struct grid (device-contexts cell-width-in-pixels) #f)
+  (define-struct grid (device-contexts
+                       cell-width-in-pixels
+                       
+                       ;; pens
+                       thin-red thin-white thick-black thick-gray
+                       ) #f)
 
   (define (maybe-exit)
     (when (eq? 'yes (message-box "Quit?" "Quit now?" #f '(yes-no)))
@@ -39,13 +44,7 @@
       (augment on-close)
       (define on-close (lambda () (maybe-exit)))
       (super-instantiate ())))
-
-  ;; Make some pens
-  (define thin-red-pen    #f)
-  (define thin-white-pen  #f)
-  (define thick-black-pen #f)
-  (define thick-gray-pen #f)
-
+    
   (define *pause* (make-parameter
                    3/100
                    (lambda (value)
@@ -71,11 +70,12 @@
     (define cwp  (let-values (((width height)
                                (get-display-size)))
                    (quotient (* 9 (min width height)) (* ncols 10))))
-    (define rv (make-grid '() cwp))
-    (set! thin-red-pen    (instantiate pen% ("RED" 2 'solid)))
-    (set! thin-white-pen  (instantiate pen% ("WHITE" 2 'solid)))
-    (set! thick-black-pen (instantiate pen% ("BLACK" (quotient cwp 3) 'solid)))
-    (set! thick-gray-pen (instantiate pen% ("GRAY" (quotient cwp 3) 'solid)))
+
+    (define rv (make-grid '() cwp
+                          (instantiate pen% ("RED" 2 'solid))
+                          (instantiate pen% ("WHITE" 2 'solid))
+                          (instantiate pen% ("BLACK" (quotient cwp 3) 'solid))
+                          (instantiate pen% ("GRAY" (quotient cwp 3) 'solid))))
 
     (set! frame (instantiate my-frame% ("Look! A maze!")
                              (width (* ncols cwp))
@@ -111,7 +111,7 @@
                                             
                                             ;; draw the grid lines.
                                             (for-each (lambda (dc)
-                                                        (send dc set-pen thin-red-pen))
+                                                        (send dc set-pen (grid-thin-red rv)))
                                                       (grid-device-contexts rv))
 
                                             (let loop ((columns-drawn 0))
@@ -128,7 +128,7 @@
                                                 (loop (add1 columns-drawn))))
 
                                             (for-each (lambda (dc)
-                                                        (send dc set-pen thick-black-pen))
+                                                        (send dc set-pen (grid-thick-black rv)))
                                                       (grid-device-contexts rv))
                                             (main-proc)))))
 
@@ -159,13 +159,13 @@
                  set-pen
                  (if thick?
                      (case color
-                       ((black) thick-black-pen)
-                       ((gray) thick-gray-pen)
+                       ((black) (grid-thick-black  grid))
+                       ((gray) (grid-thick-gray grid))
                        (else
                         (error "Uh oh.")))
                    (if (eq? 'red color)
-                       thin-red-pen
-                     thin-white-pen)))
+                       (grid-thin-red grid)
+                     (grid-thin-white grid))))
            
            (send/apply dc draw-line
                        origin-x
