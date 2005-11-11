@@ -32,12 +32,12 @@
               (let ((combined (mapcar #'list these-words)))
                 (maybe-dump combined)
                 (setf rv (append rv combined)))
-            (let ((more-anagrams (anagrams-internal smaller-bag dict (+ 1 depth))))
+              (let ((more-anagrams (anagrams-internal smaller-bag dict (+ 1 depth))))
 
-              (when more-anagrams
-                (let ((combined (combine these-words more-anagrams)))
-                  (maybe-dump combined)
-                  (setf rv (append rv combined))))))))
+                (when more-anagrams
+                  (let ((combined (combine these-words more-anagrams)))
+                    (maybe-dump combined)
+                    (setf rv (append rv combined))))))))
       (setf dict (cdr dict)))
 
     rv))
@@ -47,5 +47,5 @@
     (init b)
     (let ((result (anagrams-internal b *dict* 0)))
       (prog1 result
-            (format *error-output* ";; ~a anagrams of ~a~%" (length result)
-              string)))))
+        (format *error-output* ";; ~a anagrams of ~a~%" (length result)
+                string)))))

@@ -1,41 +1,41 @@
-processor	: 0
-vendor_id	: GenuineIntel
-cpu family	: 15
-model		: 2
-model name	: Intel(R) Pentium(R) 4 CPU 2.40GHz
-stepping	: 7
-cpu MHz		: 2391.191
-cache size	: 512 KB
-fdiv_bug	: no
-hlt_bug		: no
-f00f_bug	: no
-coma_bug	: no
-fpu		: yes
-fpu_exception	: yes
-cpuid level	: 2
-wp		: yes
-flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe cid
-bogomips	: 4771.02
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 15
+model           : 2
+model name      : Intel(R) Pentium(R) 4 CPU 2.40GHz
+stepping        : 7
+cpu MHz         : 2391.191
+cache size      : 512 KB
+fdiv_bug        : no
+hlt_bug         : no
+f00f_bug        : no
+coma_bug        : no
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 2
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe cid
+bogomips        : 4771.02
 
 time ./anagrams  > /dev/null
 
 Waah: I can't remember if these times are 'real' or 'user'.
 
-language	: time "hemingway"	time "st hemingway"	time "est hemingway"	time "Ernest Hemingway" bag implementation	dictionary cached?
+language        : time "hemingway"      time "st hemingway"     time "est hemingway"    time "Ernest Hemingway" bag implementation      dictionary cached?
 ----------------------------------------------------------------------------------------------------------------------------------
-c++ (-O2)	:  2 seconds		  2 seconds!		11 user seconds	       120 seconds		bignums			no
-guile 1.7 (gmp)	:  1 seconds		  4 seconds		> 160 user seconds				bignums			yes
-guile 1.6	:  2 seconds		  4 seconds								bignums			yes
-gambit 4	:  7 user seconds	 15 user seconds	45 user seconds					bignums			no
-mzscheme	:  7 seconds		 30 seconds								bignums			no
-perl5		:  4 seconds		 10 seconds								strings			no
-perl5/numeric	: 21 seconds		170 seconds								bignums			yes
-python		:  4 seconds		  6 seconds		15 user seconds	       293 seconds		bignums			no
-ruby		:  8 seconds		 40 seconds								bignums			no
-common lisp													bignums			no
-  cmucl		:  1 seconds		  2 seconds
-  clisp		:  3 seconds		  3 seconds		 5 user seconds	       112 seconds
-  sbcl		:  2 seconds		  3 seconds		 7 user seconds	       153 seconds
+c++ (-O2)       :  2 seconds              2 seconds!            11 user seconds       120 seconds               bignums                 no
+guile 1.7 (gmp) :  1 seconds              4 seconds             > 160 user seconds                              bignums                 yes
+guile 1.6       :  2 seconds              4 seconds                                                             bignums                 yes
+gambit 4b13     :  5 user seconds         7 user seconds        13 user seconds       > 180 user seconds        bignums                 no
+mzscheme        :  7 seconds             30 seconds                                                             bignums                 no
+perl5           :  4 seconds             10 seconds                                                             strings                 no
+perl5/numeric   : 21 seconds            170 seconds                                                             bignums                 yes
+python          :  4 seconds              6 seconds             15 user seconds       293 seconds               bignums                 no
+ruby            :  8 seconds             60 seconds                                                             bignums                 yes
+common lisp                                                                                                     bignums                 no
+  cmucl :          1 seconds              2 seconds
+  clisp :          3 seconds              3 seconds              5 user seconds       112 seconds
+  sbcl  :          2 seconds              3 seconds              7 user seconds       153 seconds
 
 ---
 Note: when gathering data to fill in the above, be sure that none of
@@ -44,4 +44,4 @@ run much slower than normal libraries.
 
 The really interesting question isn't so much "how fast is this
 language", but rather "does this language have an easy-to-use
-profiler".
+profiler".  So far, the answer in all cases has been "no" :-|

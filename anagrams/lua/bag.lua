@@ -1,28 +1,34 @@
+-- unfortunately lua doesn't grok bignums, at least by default.
+
+-- (The manual says "It is easy to build Lua interpreters that use
+-- other internal representations for numbers, such as
+-- single-precision float or long integers.")
+
 function my_setn (t)
-  table.setn (t, 0)
-  table.foreach (t,
-                function (i, v)
-                table.setn (t, v + table.getn (t))
-                end
-                )  
+   table.setn (t, 0)
+   table.foreach (t,
+                  function (i, v)
+                     table.setn (t, v + table.getn (t))
+                  end
+               )  
 end
 
 function from_string (s)
-    function is_uc_char (c)
-       return ((string.byte (c) <= string.byte ("Z"))
+   function is_uc_char (c)
+      return ((string.byte (c) <= string.byte ("Z"))
               and
-              (string.byte (c) >= string.byte ("A"))
-              )
-    end
+                 (string.byte (c) >= string.byte ("A"))
+           )
+   end
 
    local bag = {}
    local s = string.upper (s)
    while (string.len (s) > 0) do
-     local c = string.sub (s, 0, 1)
-     local orig = bag [c] 
-     if (not (orig)) then orig = 0 end
-     if (is_uc_char (c)) then bag [c] = orig + 1 end
-     s = string.sub (s, 2)  
+      local c = string.sub (s, 0, 1)
+      local orig = bag [c] 
+      if (not (orig)) then orig = 0 end
+      if (is_uc_char (c)) then bag [c] = orig + 1 end
+      s = string.sub (s, 2)  
    end 
    my_setn (bag)
    return bag
@@ -118,9 +124,9 @@ function sub (top, bottom)
    -- that appear as keys in both tables, rather than examining all 26 letters
    -- all the time.
    if (table.foreach (letters, update_diff)) then 
-     diff = Nil 
+      diff = Nil 
    else
-     my_setn (diff)
+      my_setn (diff)
    end
 
    print ("diff", dump (diff), "\n")
@@ -142,3 +148,5 @@ assert (not (diff[A]))
 should_be_empty = (sub (d1, d1))
 assert (should_be_empty)
 assert (bag_empty (should_be_empty))
+
+print ("Tests all passed.\n")

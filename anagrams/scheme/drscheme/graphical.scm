@@ -18,8 +18,10 @@
            (lib "13.ss" "srfi")
            (lib "file.ss"))
 
+  (define prefkey 'anagrams-dictionary-file-name)
+  
   (define (dictionary-file-name)
-    (let ((t (get-preference 'anagrams-dictionary-file-name)))
+    (let ((t (get-preference prefkey)))
       (and t (bytes->path t))))
   
   (define f (instantiate frame% ("Anagrams Redux")))
@@ -94,7 +96,7 @@
                                      #f
                                      '()
                                      '())))))
-                  (put-preferences '(anagrams-dictionary-file-name)
+                  (put-preferences (list prefkey)
                                    t)))
               (all-anagrams 
                input-string 

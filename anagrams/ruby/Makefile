@@ -1,5 +1,5 @@
 all:
 
 check:
-	ruby anagrams.rb "Ernest"
+	time ruby anagrams.rb "st Hemingway"
 .PHONY: all check

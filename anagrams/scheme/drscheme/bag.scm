@@ -1,6 +1,6 @@
 (module bag
   mzscheme
-  (require "assert.scm")
+  (require "assert.scm")                ;TODO: consider using SchemeUnit from PLaneT
   (provide bag subtract-bags bag-empty? bags=?)
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
@@ -20,10 +20,9 @@ regard to order."
   (let loop ((chars-to-examine (string-length s))
              (product 1))
     (if (zero? chars-to-examine)
-         product
-      (let ((factor (char->factor (string-ref s (- chars-to-examine 1)))))
-        (loop (- chars-to-examine 1)
-              (* product factor))))))
+        product
+      (loop (- chars-to-examine 1)
+            (* product (char->factor (string-ref s (- chars-to-examine 1))))))))
 
 (define (subtract-bags b1 b2)
   (if (bag-empty? b2)

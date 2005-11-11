@@ -2,6 +2,8 @@
 
 ;; How to use this file:
 
+;; start ye your repl, and type ye into it:
+
 ;; (require 'asdf)              -- note that some Lisps already have
 ;;                                 asdf loaded, so this step might not
 ;;                                 be necessary -- but it won't hurt,
@@ -11,7 +13,7 @@
 ;; (asdf:operate 'asdf:load-op 'anagrams)
 ;;
 ;; To test:
-;; (anagrams::anagrams "Ernest Hemingway")
+;; (anagrams::anagrams "Hemingway")
 
 (defpackage anagrams
   (:use :common-lisp))

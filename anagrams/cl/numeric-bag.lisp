@@ -46,9 +46,6 @@
 
 (defun bags-equalp (b1 b2) (= b1 b2))
 
-;; debugging only
-(defun bag_to_string (b)
-  (format nil "~a"  b))
 
 ;; unit tests
 (assert (bag-emptyp (bag "")))

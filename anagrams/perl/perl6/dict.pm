@@ -4,8 +4,8 @@ use bag;
 
 our @dict;
 our %dict_hash;
-#my $dict_file_name = "/usr/share/dict/words";
-my $dict_file_name = "words";
+my $dict_file_name = "/usr/share/dict/words";
+#my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
   warn "Is $word acceptable?";
@@ -25,15 +25,16 @@ sub acceptable (Str $word) returns Bool {
     return bool::true ;
   }
 
-if ($word ~~ m:perl5/^.$/) {
+  if ($word ~~ m:perl5/^.$/) {
      warn "False because it is just one letter";
-  return bool::false ;
-}
+     return bool::false ;
+    }
+
   if ($word ~~ m:perl5/[aeiou]/) {
      warn "true because it contains a vowel";
     return bool::true ;
     }
-  
+
     warn "False just because.";
     return bool::false;
 }
@@ -44,18 +45,17 @@ sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
     or die "Can't open $dict_file_name for reading 'cuz $!; stopped";
 
-  warn "Reading $dict_file_name ...";
+  print $*ERR: "Reading $dict_file_name ...";
 
-  for ($dict.readline) -> $word {
+  for (@$dict.readline) -> $word {
+                                 warn "Read '$word'";
                                  my $chopped = chomp($word);
                                  next unless (acceptable($chopped));
                                  push @{%dict_hash{&bag($chopped)}}, $chopped;
-                                }
+                                };
+  print $*ERR: " done\n";
 }
 
-warn "huh";
 snarf_wordlist();
-print %dict_hash.perl, "\n";
-warn "Gosh";
 
 1;
