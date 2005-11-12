@@ -3,6 +3,10 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
+;;; Now that I've written all this, I notice that mzscheme may have
+;;; the ability to save and restore images.  I used that technique
+;;; with scheme48, and it was _way_ easier than this was.
+
 ;;; Thanks to `foof' (aka `ashinn') for guidance and inspiration
 
 (module persist mzscheme

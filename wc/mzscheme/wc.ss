@@ -12,7 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (planet "set.ss"  ("offby1" "my-plt-collects.plt"))
    (planet "q.ss"    ("offby1" "my-plt-collects.plt"))
    "dict.ss")
-  
+
   (define (display-result chain say-bummer?)
     (cond
      (chain => (lambda (chain)

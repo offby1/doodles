@@ -10,6 +10,22 @@
 
   (define (new-trie) (make-trie '()))
 
+  ;; returns #f if no such entry
+  (define (get-alist t key-string)
+    (and (string-length key-string)
+         (let* ((first-char (string-ref key-string 0))
+                (rest-string (substring key-string 1))
+                (probe (assq first-char (trie-alist t))))
+           (if (not probe)
+               (failure-thunk)
+             (if (zero? (string-length rest-string))
+                 (if (not (box? (cddr probe)))
+                     (failure-thunk)
+                   (unbox (cddr probe)))
+               (trie-lookup (cadr probe)
+                            (substring key-string 1)
+                            failure-thunk))))))
+  
   (define (trie-lookup t key-string failure-thunk)
     (when (not (trie? t))
       (raise-type-error 'trie-lookup "trie" t))

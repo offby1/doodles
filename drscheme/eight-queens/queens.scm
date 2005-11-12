@@ -97,13 +97,13 @@
                   ;; Uncommenting the below gives you more interesting
                   ;; solutions, but of course it takes longer.
                   
-                  ;;(q6 (cons 6 (amb 1 2 3 4 5 6 7 8)))
-                  ;;(q7 (cons 7 (amb 1 2 3 4 5 6 7 8)))
-                  ;;(q8 (cons 8 (amb 1 2 3 4 5 6 7 8)))
+                  (q6 (cons 6 (amb 1 2 3 4 5 6 7 8)))
+                  (q7 (cons 7 (amb 1 2 3 4 5 6 7 8)))
+                  (q8 (cons 8 (amb 1 2 3 4 5 6 7 8)))
                   )
   
               (let ((all-queens (list 
-                                 q1 q2 q3 q4 q5 ;; q6 q7 q8
+                                 q1 q2 q3 q4 q5 q6 q7 q8
                                  )))
                 (set! tries (+ 1 tries))
                 (if (or 

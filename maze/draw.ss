@@ -138,6 +138,8 @@
       
       rv))
   
+  ;; TODO -- find an elegant way to avoid multiply evaluating dc.
+  ;; Simply replacing this syntax with a procedure oughta do it.
   (define-syntax with-pen
     (syntax-rules ()
       ((_ p dc body ...)

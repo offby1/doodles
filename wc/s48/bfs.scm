@@ -1,5 +1,6 @@
 (define (ep . args)
-  (apply display args (list (current-error-port))))
+  (apply display args (list (current-error-port)))
+  (newline (current-error-port)))
 
 (define (remove proc seq)
   (filter (lambda (x)
@@ -74,7 +75,7 @@
    (else
     (error "Unknown node" n))))
 
-(ep "This should succeed: ~s~n" (bfs "start" "goal" nodes-equal? node-neighbors))
-(ep "This too: ~s~n"            (bfs "goal" "start" nodes-equal? node-neighbors))
-(ep "This should fail: ~s~n"    (bfs "outlier" "goal" nodes-equal? node-neighbors))
-(ep "This too: ~s~n"            (bfs "cycle-a" "goal" nodes-equal? node-neighbors))
+(ep "This should succeed: " (bfs "start" "goal" nodes-equal? node-neighbors))
+(ep "This too: "            (bfs "goal" "start" nodes-equal? node-neighbors))
+(ep "This should fail: "    (bfs "outlier" "goal" nodes-equal? node-neighbors))
+(ep "This too: "            (bfs "cycle-a" "goal" nodes-equal? node-neighbors))
