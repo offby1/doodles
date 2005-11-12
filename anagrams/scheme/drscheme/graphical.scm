@@ -11,12 +11,12 @@
 (module graphical
     mzscheme
 
-  (require "anagrams.scm"
-           "ports.scm"
-           (lib "mred.ss" "mred")
-           (lib "class.ss")
-           (lib "13.ss" "srfi")
-           (lib "file.ss"))
+  (require  "anagrams.scm"
+            "ports.scm"
+            (lib "mred.ss" "mred")
+            (lib "class.ss")
+            (only (lib "13.ss" "srfi") string-join)
+            (lib "file.ss"))
 
   (define prefkey 'anagrams-dictionary-file-name)
   
