@@ -1,0 +1,8 @@
+(define (filter f l) 
+  (let lp ((l l) (a '()))
+    (if (null? l)
+        (reverse a)
+      (lp (cdr l)
+          (if (f (car l))
+              (cons (car l) a)
+            a)))))
