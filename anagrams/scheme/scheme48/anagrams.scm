@@ -28,3 +28,7 @@ list of anagrams, each of which begins with one of the WORDS."
                               (cons word an))
                             anagrams))
                      words)))
+
+(define (anagrams str)
+  (let ((w (bag str)))
+    (all-anagrams-internal w (snarf-dictionary w))))
