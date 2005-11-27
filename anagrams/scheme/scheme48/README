@@ -1,0 +1,13 @@
+21:27:11 [erich@debian scheme48]$ scheme48 -h 14000000
+Welcome to Scheme 48 1.3 (made by erich on Sun Aug  7 18:08:18 PDT 2005)
+Copyright (c) 1993-2005 by Richard Kelsey and Jonathan Rees.
+Please report bugs to scheme-48-bugs@s48.org.
+Get more information at http://www.s48.org/.
+Type ,? (comma question-mark) for help.
+> ,config ,load packages.config
+> ,open anagrams
+bag tests passed.
+> (anagrams "cat")
+Reading dictionary ... done
+'(("cat") ("act"))
+> 
