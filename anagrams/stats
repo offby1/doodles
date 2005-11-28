@@ -1,3 +1,4 @@
+home machine:
 processor       : 0
 vendor_id       : GenuineIntel
 cpu family      : 15
@@ -16,10 +17,32 @@ cpuid level     : 2
 wp              : yes
 flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe cid
 bogomips        : 4771.02
+-----
+work machine:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 15
+model		: 3
+model name	: Intel(R) Pentium(R) 4 CPU 3.20GHz
+stepping	: 3
+cpu MHz		: 3192.280
+cache size	: 1024 KB
+fdiv_bug	: no
+hlt_bug		: no
+f00f_bug	: no
+coma_bug	: no
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 5
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe pni monitor ds_cpl cid
+bogomips	: 6370.09
+----
 
 time ./anagrams  > /dev/null
 
 Waah: I can't remember if these times are 'real' or 'user'.
+All times are on the home machine, unless otherwise noted.
 
 language        : time "hemingway"      time "st hemingway"     time "est hemingway"    time "Ernest Hemingway" bag implementation      dictionary cached?
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -29,7 +52,7 @@ guile 1.6       :  2 seconds              4 seconds                             
 gambit 4b13     :  5 user seconds         7 user seconds        13 user seconds       > 180 user seconds        bignums                 no
 gambit 4b15     :  7 user seconds        16 user seconds        57 user seconds                                 bignums                 no
 mzscheme        :  7 seconds             30 seconds             ~100 CPU seconds                                bignums                 no
-scheme48 1.3    :  8 user seconds        18 user seconds        41 user seconds                                                         no(!)
+scheme48 1.3    :  8 user seconds        18 user seconds        41 user seconds       ~1200 user seconds (work machine)                 no(!) 
 perl5           :  4 seconds             10 seconds                                                             strings                 no
 perl5/numeric   : 21 seconds            170 seconds                                                             bignums                 yes
 python          :  4 seconds              6 seconds             15 user seconds       293 seconds               bignums                 no
