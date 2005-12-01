@@ -59,7 +59,7 @@ python          :  4 seconds              6 seconds             15 user seconds 
 ruby            :  8 seconds             60 seconds                                                             bignums                 yes
 common lisp                                                                                                     bignums                 no
   cmucl :          1 seconds              2 seconds
-  clisp :          3 seconds              3 seconds              5 user seconds       112 seconds
+  clisp :          3 seconds              3 seconds              5 user seconds       57 user seconds
   sbcl  :          2 seconds              3 seconds              7 user seconds       153 seconds
 
 ---
