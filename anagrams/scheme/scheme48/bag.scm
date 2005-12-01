@@ -32,6 +32,12 @@ regard to order."
 
 (define bags=? =)
 
+(define-syntax assert
+  (syntax-rules ()
+    ((assert _expr)
+     (or _expr
+         (error "failed assertion: " '_expr)))))
+
 ;;; unit tests
 
 ;; Notes about bags in general:
