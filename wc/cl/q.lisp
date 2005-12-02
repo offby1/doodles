@@ -20,10 +20,13 @@
                 (cdr (queue-last-pair q))))))
   q)
 
-(defun queue-pop (q)
+(defun queue-front (q)
   (if (queue-empty-p q)
-      (error "Can't pop an empty queue ~s" q))
-  (let ((r (car (queue-first-pair q))))
+      (error "Empty queue ~s has no 'front'!" q))
+  (car (queue-first-pair q)))
+
+(defun queue-pop (q)
+  (let ((r (queue-front q)))
     (setf (queue-first-pair q)
           (cdr (queue-first-pair q)))
     r))
