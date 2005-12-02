@@ -7,7 +7,6 @@
 (defun bfs (start-node goal-node nodes-equal-p node-neighbors)
   (let ((already-seen (make-hash-table :test 'equalp))
         (the-queue (make-queue)))
-    ;; (setf (gethash "fred" h) "fred's somewhat newer data")
     (queue-add the-queue (make-agenda-item :trail '()
                                            :word start-node))
     (loop

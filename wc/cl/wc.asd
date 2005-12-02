@@ -24,4 +24,8 @@
 (in-package :wc-system)
 
 (defsystem "wc"
-  :components ((:file "q")))
+  :components ((:file "q")
+               (:file "bfs"
+                      :depends-on
+                      ("q"))
+               (:file "wc")))
