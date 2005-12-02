@@ -46,6 +46,4 @@
       (or
        (and probe (cdr probe))
        (error "Unknown node ~s" n))))
-  (trace node-neighbors)
-  (trace bfs)
   (bfs "start" "goal" 'equalp 'node-neighbors))
