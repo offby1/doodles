@@ -10,4 +10,4 @@
                 (newline)
                 0                       ;exit status
                 )
-              "boink.image"))
+              "wc.image"))
