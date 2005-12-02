@@ -4,10 +4,13 @@
 
 ;; start ye your repl, and type ye into it:
 
-;; (require 'asdf)              -- note that some Lisps already have
+;; (require 'asdf "/usr/local/lib/common-lisp/asdf/clispfasl/asdf.fasl")
+
+;;                                 -- note that some Lisps already have
 ;;                                 asdf loaded, so this step might not
 ;;                                 be necessary -- but it won't hurt,
 ;;                                 either
+;; (the path name is for FreeBSD; other systems don't seem to need it)
 ;;
 ;; (load "anagrams.asd")
 ;; (asdf:operate 'asdf:load-op 'anagrams)
