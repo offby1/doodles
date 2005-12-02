@@ -31,3 +31,8 @@
   (remove-if #'(lambda (w)
                  (not  (gethash w *the-dictionary*)))
              (potential-neighbors word)))
+
+(defun wc (start end)
+  (let ((return-value (bfs start end #'equalp #'all-neighbors)))
+    (when return-value
+      (reverse (cons end return-value)))))

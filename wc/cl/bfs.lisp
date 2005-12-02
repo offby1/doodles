@@ -22,7 +22,7 @@
                    (queue-add the-queue (make-agenda-item
                                          :trail (cons w trail)
                                          :word n)))
-               (remove #'(lambda (word)
+               (remove-if #'(lambda (word)
                            (gethash word already-seen))
                        (funcall node-neighbors w)))
          (queue-pop the-queue)))))

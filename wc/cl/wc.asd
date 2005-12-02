@@ -28,4 +28,8 @@
                (:file "bfs"
                       :depends-on
                       ("q"))
-               (:file "wc")))
+               (:file "wc"
+                      :depends-on
+                      ("bfs"))))
+
+;; (asdf:operate 'asdf:load-op 'wc)
