@@ -1,5 +1,3 @@
-;;   -*- mode: scheme48; scheme48-package: dict -*-
-
 (define (read-line port)
   (iterate loop ((input* c port read-char))
            ((chars '()))
