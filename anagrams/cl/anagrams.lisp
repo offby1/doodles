@@ -30,13 +30,13 @@
         (when smaller-bag
           (if (bag-emptyp smaller-bag)
               (let ((combined (mapcar #'list these-words)))
-                (maybe-dump combined)
+                ;(maybe-dump combined)
                 (setf rv (append rv combined)))
               (let ((more-anagrams (anagrams-internal smaller-bag dict (+ 1 depth))))
 
                 (when more-anagrams
                   (let ((combined (combine these-words more-anagrams)))
-                    (maybe-dump combined)
+                    ;(maybe-dump combined)
                     (setf rv (append rv combined))))))))
       (setf dict (cdr dict)))
 
