@@ -3,7 +3,6 @@
 
 (select-module dict)
 
-(define *ht* (make-hash-table 'string=?))
 (define word-acceptable?
   (let ((has-vowel-regexp #/[aeiou]/i)
         (has-non-letter-regexp #/[^a-z]/i))
@@ -23,12 +22,17 @@
              (or (string=? "i" word)
                  (string=? "a" word)
                  (< 1 l)))))))
+(define *ht* (make-hash-table 'eqv?))
 (call-with-input-file "/usr/share/dict/words"
   (lambda (p)
     (let loop ((line (read-line p #t)))
       (when (not (eof-object? line))
         (when (word-acceptable? line)
-          (hash-table-put! *ht*  line (bag line)))
+          (let* ((num (bag line))
+                 (prev (hash-table-get *ht* num #f)))
+            (if (not prev)
+                (set! prev '()))
+          (hash-table-put! *ht*  num (cons line prev))))
         (loop (read-line p #t))))))
 
 (display "Dictionary has ")
