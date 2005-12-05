@@ -1,6 +1,7 @@
 (define-module dict
   (use bag)
-  (use srfi-1))
+  (use srfi-1)
+  (export dictionary-for))
 
 (select-module dict)
 
