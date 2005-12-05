@@ -43,6 +43,7 @@
   (let ((longest '(())))
     (maphash
      #'(lambda (key value)
+         (declare (ignore key))
          (cond
            ((> (length value)
                (length (car longest)))

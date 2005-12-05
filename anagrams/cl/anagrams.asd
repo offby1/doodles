@@ -17,6 +17,8 @@
 ;;
 ;; To test:
 ;; (anagrams::anagrams "Hemingway")
+;; or, to time things:
+;; (time (car (anagrams::anagrams "Ernest Hemingway")))
 
 (defpackage anagrams
   (:use :common-lisp))
