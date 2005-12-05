@@ -35,9 +35,6 @@
          (sb-profile:profile subtract-bags)
          (sb-profile:profile bag-emptyp)
          (sb-profile:profile word-acceptablep)
-         (sb-profile:profile maybe-add-word)
-         (sb-profile:profile make-dictionary-from-file)
-         (sb-profile:profile make-dictionaries-from-list)
          (sb-profile:profile init))
 
 (let ((*print-level* nil)

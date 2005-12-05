@@ -23,7 +23,7 @@
         )))
 
 (defun make-hash-from-file (fn)
-  (let ((thang (make-hash-table :test #'equalp)))
+  (let ((ht (make-hash-table :test #'equalp)))
     (with-open-file
         (dict fn :external-format
               #+clisp 'charset:ISO-8859-1
@@ -31,13 +31,27 @@
       (loop
          (let ((word (read-line dict nil nil)))
            (when (not word)
-             (return thang))
+             (return ht))
            (setf word (nstring-downcase word))
            (when (word-acceptablep word)
              (let ((b (bag word)))
-               (setf (gethash b thang '())
-                     (adjoin word (gethash b thang '())  :test #'equalp)))))))
-    thang))
+               (setf (gethash b ht '())
+                     (adjoin word (gethash b ht '())  :test #'equalp)))))))
+    ht))
+
+(defun report-longest-dictionary-anagrams (ht)
+  (let ((longest '(())))
+    (maphash
+     #'(lambda (key value)
+         (cond
+           ((> (length value)
+               (length (car longest)))
+            (setf longest (list value)))
+           ((= (length value)
+               (length (car longest)))
+            (setf longest (cons value longest)))))
+     ht)
+    longest))
 
 (let ((hash-cache nil))
   (defun init (bag)
@@ -45,7 +59,9 @@
     (when (not hash-cache)
       (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
       (setf hash-cache (make-hash-from-file "words"))
-      (format t "~a elements.~%" (hash-table-count hash-cache)))
+      (format t "~a elements.~%" (hash-table-count hash-cache))
+      (format t "Say: here's a long list of anagrams found in the dictionary: ~a~%"
+              (report-longest-dictionary-anagrams hash-cache)))
     
     (setf *dict* nil)
     (format t "Converting dictionary hash to a list ... " ) (finish-output)
