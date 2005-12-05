@@ -1,5 +1,6 @@
 (define-module dict
-  (use bag))
+  (use bag)
+  (use srfi-1))
 
 (select-module dict)
 
@@ -10,6 +11,8 @@
       (let ((l (string-length word)))
         (and (not (zero? l))
 
+             ;; it appears that word will be "incomplete" if and only
+             ;; if it contains non-ASCII characters.
              (not (string-incomplete? word))
              
              ;; it's gotta have a vowel.
@@ -27,6 +30,7 @@
   (lambda (p)
     (let loop ((line (read-line p #t)))
       (when (not (eof-object? line))
+        ;; BUGBUG -- lower-casify the string before sticking it in the table.
         (when (word-acceptable? line)
           (let* ((num (bag line))
                  (prev (hash-table-get *ht* num #f)))
@@ -39,4 +43,11 @@
 (display (hash-table-num-entries *ht*))
 (display " entries")
 (newline)
+
+;; now convert the hash table to a list
+(define (dictionary-for criterion-bag)
+  (filter 
+   (lambda (pair) (subtract-bags criterion-bag (car pair)))
+   (hash-table-map *ht* cons)))
+
 (provide "dict")
