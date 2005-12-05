@@ -7,8 +7,9 @@ prog := anagrams
 all: $(prog)
 
 check: $(prog)
+	rm -f crapola
 	for i in "hemingway" "st hemingway" "est hemingway"; \
-	do time ./$(prog) $$i; done
+	do echo $$i; time ./$(prog) $$i >> crapola; done
 
 %.c : %.scm
 	gsc -c $^
@@ -21,7 +22,7 @@ LDLIBS := -lgambc -lm -lutil -ldl
 $(prog): $(CS) $(LINKFILE)
 
 clean:
-	rm -f $(CS) $(LINKFILE) $(prog) hmm *.o
+	rm -f $(CS) $(LINKFILE) $(prog) crapola hmm *.o
 
 .PHONY: clean check
 .INTERMEDIATE: $(CS) $(LINKFILE)
