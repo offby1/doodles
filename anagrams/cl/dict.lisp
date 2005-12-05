@@ -44,7 +44,7 @@
 
     (when (not hash-cache)
       (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
-      (setf hash-cache (make-hash-from-file "/usr/share/dict/words"))
+      (setf hash-cache (make-hash-from-file "words"))
       (format t "~a elements.~%" (hash-table-count hash-cache)))
     
     (setf *dict* nil)

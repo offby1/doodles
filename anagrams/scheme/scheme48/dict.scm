@@ -50,9 +50,8 @@
               (if (word-acceptable? word)
                   (let* ((num  (bag word))
                          (prev (table-ref *the-hash-table* num)))
-                    (begin
-                      (if (not prev)
-                          (set! prev '()))
-                      (set! prev (cons word prev))
-                      (table-set! *the-hash-table* num prev))))
+                    (if (not prev)
+                        (set! prev '()))
+                    (set! prev (cons word prev))
+                    (table-set! *the-hash-table* num prev)))
               (loop (read-line p)))))))))

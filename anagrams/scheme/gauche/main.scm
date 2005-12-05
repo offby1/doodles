@@ -13,5 +13,5 @@
           (when (not (null? (cdr args)))
             (display " " op))
           (loop (cdr args))))))
-  (display (anagrams argstring)))
+  (display (length (anagrams argstring))))
 
