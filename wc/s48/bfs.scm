@@ -23,33 +23,24 @@
   (define (note! thing)
     (add! thing *already-seen*))
 
-  (define (enqueue! thing)
-    (insert-queue! *the-queue* thing))
-  
-  (define *the-queue* (make-queue (list (make-agenda-item '() start-node))))
+  (define *the-queue* (make-queue))
 
-  (define (front)
-    (front-queue *the-queue*))
-
-  (define (pop-queue!)
-    (let ((rv (front)))
-      (delete-queue! *the-queue*)
-      rv))
-  
   (define (loop)
-    (if (empty-queue? *the-queue*) #f
-      (let ((w     (agenda-item-word  (front)))
-            (trail (agenda-item-trail (front))))
+    (if (queue-empty? *the-queue*) #f
+      (let ((w     (agenda-item-word  (queue-head *the-queue*)))
+            (trail (agenda-item-trail (queue-head *the-queue*))))
 
         (cond
          ((nodes-equal? goal-node w) trail)
          (else
           (for-each (lambda (n)
                       (note! n)
-                      (enqueue! (make-agenda-item (cons w trail) n)))
+                      (enqueue! *the-queue* (make-agenda-item (cons w trail) n)))
                     (remove already-seen? (node-neighbors w)))
-          (pop-queue!)
+          (dequeue! *the-queue*)
           (loop))))))
+
+  (enqueue! *the-queue* (make-agenda-item '() start-node))
 
   (let ((rv (loop)))
     (and rv (reverse (cons goal-node rv)))))
