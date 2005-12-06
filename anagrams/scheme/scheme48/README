@@ -1,4 +1,3 @@
-$ scheme48 -h 14000000
-> ,config ,load packages.config
-> ,open anagrams
-> (anagrams "cat")
+To run it:
+
+$ scheme48 -h 14000000 < go.exec

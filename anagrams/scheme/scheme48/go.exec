@@ -1,0 +1,6 @@
+;; cat go.exec | scheme48 -h 14000000
+,exec
+(config '(load "packages.config"))
+(open 'anagrams)
+(user '(anagrams "Hemingway"))
+(exit)
