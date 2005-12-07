@@ -14,6 +14,13 @@ LDFLAGS:= $(shell chicken-config -libs)
 anagrams: $(objs)
 	gcc $^ -o $@ $(LDFLAGS)
 
+words: /usr/share/dict/words
+	ln -sv $^ $@
+
+check: anagrams words
+	time ./$^
+
 clean:
 	rm -f $(objs) $(cs) anagrams
-.PHONY: clean
+
+.PHONY: clean check
