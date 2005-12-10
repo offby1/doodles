@@ -31,3 +31,5 @@ environment variable.
 ** Haskell
 
 ** tcl !
+
+* Apply the pruning optimization that I did in r2173 to other implementations.
