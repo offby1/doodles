@@ -6,12 +6,15 @@
       (let ((key   (caar dict))
             (words (cdar dict)))
         (let ((smaller-bag (subtract-bags bag key)))
+          (define pruned
+            (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
+                    dict))
           (if smaller-bag
               (if (bag-empty? smaller-bag)
                   (begin
                     (let ((combined (map list words)))
                       (set! rv (append! rv combined))))
-                (let ((anagrams (all-anagrams-internal smaller-bag dict)))
+                (let ((anagrams (all-anagrams-internal smaller-bag pruned)))
                   (if (not (null? anagrams))
                       (begin
                         (let ((combined (combine words anagrams)))

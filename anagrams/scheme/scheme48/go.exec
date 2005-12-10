@@ -1,6 +1,12 @@
+;; -*- scheme -*-
 ;; cat go.exec | scheme48 -h 14000000
+,config ,load packages.config
+,user
+,open anagrams
+,time (let ((input-string "Hemingway"))
+        (display (length (anagrams input-string)))
+        (display " anagrams of ")
+        (display input-string)
+        (newline))
 ,exec
-(config '(load "packages.config"))
-(open 'anagrams)
-(user '(anagrams "Hemingway"))
 (exit)
