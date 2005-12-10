@@ -33,8 +33,8 @@ list of anagrams, each of which begins with one of the WORDS."
                      words)))
 
 (define (anagrams str)
-  (let ((w (bag str)))
-    (all-anagrams-internal w (snarf-dictionary w))))
+  (let ((b (bag str)))
+    (all-anagrams-internal b (dictionary-for b))))
 
 (display (anagrams "cat"))
 (newline)
