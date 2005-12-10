@@ -41,7 +41,9 @@ ruby		:  8 seconds		 60 seconds								bignums			yes
 common lisp													bignums			yes
   cmucl :	   1 seconds		  2 seconds
   clisp :	   .1 seconds		 .5 seconds		 1 user seconds	      57 user seconds
+  clisp (prune) :                                                                     20 user seconds
   sbcl	:	   0 seconds		  0 seconds		 .2 user seconds      10(!) user seconds
+  sbcl (prune):                                                                       7 user seconds
 
 ---
 Note: when gathering data to fill in the above, be sure that none of

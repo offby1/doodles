@@ -30,7 +30,12 @@
               (let ((combined (mapcar #'list these-words)))
                 (setf rv (nconc rv combined))
                 (incf length (length combined)))
-              (let ((more-anagrams (anagrams-internal smaller-bag dict limit)))
+              (let ((more-anagrams (anagrams-internal
+                                    smaller-bag
+                                    (remove-if
+                                     #'(lambda (entry) (not (subtract-bags smaller-bag (car entry))))
+                                     dict)                                 
+                                    limit)))
                 (when more-anagrams
                   (let ((combined (combine these-words more-anagrams)))
                     (setf rv (nconc rv combined))
