@@ -3,7 +3,7 @@
 ,config ,load packages.config
 ,user
 ,open anagrams
-,time (let ((input-string "Hemingway"))
+,time (let ((input-string "Ernest Hemingway"))
         (display (length (anagrams input-string)))
         (display " anagrams of ")
         (display input-string)

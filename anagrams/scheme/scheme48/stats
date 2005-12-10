@@ -1,0 +1,7 @@
+prune?  input                   time
+no      Est Hemingway           41 user seconds
+yes     Est Hemingway           16 user seconds
+no      Nest Hemingway          86 user seconds
+yes     Nest Hemingway          25 user seconds
+no      Ernest Hemingway        1450 user seconds
+yes     Ernest Hemingway        272 user seconds (required > 14 MB, but < 28 MB, heap)
