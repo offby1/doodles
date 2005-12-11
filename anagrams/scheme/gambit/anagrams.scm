@@ -36,6 +36,4 @@ list of anagrams, each of which begins with one of the WORDS."
     (display (length result))
     (display " anagrams of ")
     (display (cdr (command-line)))
-    (newline)
-    (write result)
     (newline)))

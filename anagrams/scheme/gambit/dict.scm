@@ -24,7 +24,11 @@
         (let loop ((word  (read-line))
                    (words-read 0))
           (if (eof-object? word)
-              (begin (display  " done.") (newline))
+              (begin
+                (display  " done: " (current-error-port))
+                (display words-read (current-error-port))
+                (display " words."  (current-error-port))
+                (newline (current-error-port)))
             (begin
               (if (word-acceptable? word)
                   (adjoin-word dict (string-downcase word)))
@@ -93,11 +97,6 @@
              (string-ci=? "a" word)
              (< 1 l)))))
 
-(define (bag-acceptable? this bag-to-meet)
-  (and (or (bags=? bag-to-meet this)
-           (subtract-bags bag-to-meet this))
-       this))
-
 (define (init bag-to-meet dict-file-name)
   (define (filter proc? seq)
     (let loop ((seq seq)
@@ -112,7 +111,7 @@
   (if (not *big-ol-hash-table*)
       (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
   
-  (display "Pruning dictionary ... ") 
+  (display "Pruning dictionary ... " (current-error-port)) 
 
   (set! *dictionary* 
         (let ((entries-examined 0))
@@ -124,9 +123,11 @@
                                         (display  entries-examined)
                                         ))
                                   (set! entries-examined (+ 1 entries-examined))
-                                  (bag-acceptable? (car entry) bag-to-meet))
+                                  (subtract-bags bag-to-meet (car entry)))
                                 (table->list *big-ol-hash-table*))))
             result)))
-  (display " done.")
-  (newline))
+  (display " done; down to " (current-error-port))
+  (display (length *dictionary*) (current-error-port))
+  (display " words." (current-error-port))
+  (newline (current-error-port)))
 
