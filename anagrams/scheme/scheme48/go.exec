@@ -1,5 +1,4 @@
 ;; -*- scheme -*-
-;; cat go.exec | scheme48 -h 14000000
 ,config ,load packages.config
 ,user
 ,open anagrams
