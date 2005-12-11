@@ -15,6 +15,11 @@
        ((not ,test))
      ,@body))
 
+(defun prune (bag dict)
+  (remove-if
+   #'(lambda (entry) (not (subtract-bags bag (car entry))))
+   dict))
+
 (defun anagrams-internal (bag dict limit)
   (let ((rv ())
         (length 0))
@@ -32,9 +37,7 @@
                 (incf length (length combined)))
               (let ((more-anagrams (anagrams-internal
                                     smaller-bag
-                                    (remove-if
-                                     #'(lambda (entry) (not (subtract-bags smaller-bag (car entry))))
-                                     dict)                                 
+                                    (prune smaller-bag dict)                                 
                                     limit)))
                 (when more-anagrams
                   (let ((combined (combine these-words more-anagrams)))
@@ -46,7 +49,7 @@
 (defun anagrams (string &optional limit)
   (let ((b  (bag string)))
     (init b)
-    (let ((result (anagrams-internal b *dict* limit)))
+    (let ((result (anagrams-internal b (prune b *dict*) limit)))
       (prog1 result
         (format *error-output* ";; ~a anagrams of ~a~%" (length result)
                 string)))))
