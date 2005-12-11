@@ -6,7 +6,7 @@ CFLAGS := $(shell chicken-config -cflags)
 LDFLAGS:= $(shell chicken-config -libs)
 
 %.c : %.scm
-	chicken $^
+	chicken $^ -profile
 
 %.o : %.c
 	gcc -c $^ $(CFLAGS)
@@ -18,7 +18,7 @@ words: /usr/share/dict/words
 	ln -sv $^ $@
 
 check: anagrams words
-	time ./$^
+	time ./$^ && chicken-profile
 
 clean:
 	rm -f $(objs) $(cs) anagrams

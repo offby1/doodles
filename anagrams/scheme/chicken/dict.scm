@@ -44,11 +44,12 @@
               (newline))
             (loop (read-line p)
                   (+ 1 words-read)
-                  (let ((b (bag word)))
-                    (if (and #f (word-acceptable? word))
-                        (cons (cons b word)
-                              pairs)
-                      pairs)))))))))
+                  (if (and
+                       (zero? (remainder words-read 50))
+                       (word-acceptable? word))
+                      (cons (cons (bag word) word)
+                            pairs)
+                    pairs))))))))
 
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
