@@ -20,7 +20,7 @@
       (let ((dict (make-table init: #f
                               test: eq? ; using = as the test works, but is agonizingly slow
                               )))
-        (display  "Reading dictionary ... ")
+        (display  "Reading dictionary ... " (current-error-port))
         (let loop ((word  (read-line))
                    (words-read 0))
           (if (eof-object? word)
@@ -32,11 +32,6 @@
             (begin
               (if (word-acceptable? word)
                   (adjoin-word dict (string-downcase word)))
-              (if (zero? (remainder words-read 1000))
-                  (begin
-                    (display " ")
-                    (display  words-read))
-                )
               (loop (read-line)
                     (+ 1 words-read)))
             ))
@@ -98,36 +93,17 @@
              (< 1 l)))))
 
 (define (init bag-to-meet dict-file-name)
-  (define (filter proc? seq)
-    (let loop ((seq seq)
-               (result '()))
-      (if (null? seq)
-          (reverse result)
-        (loop (cdr seq)
-              (if (proc? (car seq))
-                  (cons (car seq)
-                        result)
-                result)))))
   (if (not *big-ol-hash-table*)
       (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
   
   (display "Pruning dictionary ... " (current-error-port)) 
 
   (set! *dictionary* 
-        (let ((entries-examined 0))
-          (let ((result (filter (lambda (entry)
-                                  (if (zero? (remainder entries-examined 1000))
-                                      (begin
-                                        
-                                        (display " ")
-                                        (display  entries-examined)
-                                        ))
-                                  (set! entries-examined (+ 1 entries-examined))
-                                  (subtract-bags bag-to-meet (car entry)))
-                                (table->list *big-ol-hash-table*))))
-            result)))
-  (display " done; down to " (current-error-port))
+        (filter (lambda (entry)
+                  (subtract-bags bag-to-meet (car entry)))
+                (table->list *big-ol-hash-table*)))
+  (display " done; down to "     (current-error-port))
   (display (length *dictionary*) (current-error-port))
-  (display " words." (current-error-port))
-  (newline (current-error-port)))
+  (display " words."             (current-error-port))
+  (newline                       (current-error-port)))
 

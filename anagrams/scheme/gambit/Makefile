@@ -7,8 +7,8 @@ prog := anagrams
 all: $(prog)
 
 check: $(prog)
-	for i in "hemingway" "st hemingway" "est hemingway"; \
-	do echo $$i; time ./$(prog) $$i ; done
+	for i in "hemingway" "st hemingway" "est hemingway" "Ernest Hemingway"; \
+	do time ./$(prog) $$i ; done
 
 %.c : %.scm
 	gsc -prelude "(declare (standard-bindings) (block) (not safe))" -c $^

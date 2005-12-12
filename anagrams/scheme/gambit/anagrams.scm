@@ -1,3 +1,14 @@
+(define (filter proc seq)
+  (let loop ((seq seq)
+             (result '()))
+    (if (null? seq)
+        (reverse result)
+      (loop (cdr seq)
+            (if (proc (car seq))
+                (cons (car seq)
+                      result)
+              result)))))
+
 (define (all-anagrams-internal bag dict)
   (define rv '())
   (let loop ((dict dict))
@@ -6,13 +17,16 @@
       (let ((key   (caar dict))
             (words (cdar dict)))
         (let ((smaller-bag (subtract-bags bag key)))
+          (define pruned
+            (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
+                    dict))
           (if smaller-bag
               (if (bag-empty? smaller-bag)
                   (begin
                     (let ((combined (map list words)))
                       
                       (set! rv (append rv combined))))
-                (let ((anagrams (all-anagrams-internal smaller-bag dict)))
+                (let ((anagrams (all-anagrams-internal smaller-bag pruned)))
                   (if (not (null? anagrams))
                       (begin
                         (let ((combined (combine words anagrams)))
@@ -33,7 +47,9 @@ list of anagrams, each of which begins with one of the WORDS."
 (let ((b (bag (apply string-append (cdr (command-line))))))
   (init b  "/usr/share/dict/words")
   (let ((result (all-anagrams-internal b *dictionary*)))
-    (display (length result))
-    (display " anagrams of ")
-    (display (cdr (command-line)))
+    (display (length result)      (current-error-port))
+    (display " anagrams of "      (current-error-port))
+    (display (cdr (command-line)) (current-error-port))
+    (newline                      (current-error-port))
+    (write result)
     (newline)))
