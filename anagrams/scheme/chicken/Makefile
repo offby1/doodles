@@ -21,6 +21,6 @@ check: anagrams words
 	time ./$^ && chicken-profile
 
 clean:
-	rm -f $(objs) $(cs) anagrams
+	rm -f $(objs) $(cs) anagrams PROFILE
 
 .PHONY: clean check
