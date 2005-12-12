@@ -13,8 +13,8 @@ opts.each do |opt, arg|
 end
 
 The_Bag = Bag.new(ARGV[0])
-Read(dict_filename)
-The_Dict = Prune(The_Bag)
+the_dict = Read(dict_filename)
+the_dict = Prune(the_dict, The_Bag)
 
 def combine(words, anagrams)
   rv = []
@@ -44,7 +44,7 @@ def anagrams(bag, dict)
       }
     else
       from_smaller_bag = anagrams(smaller_bag,
-                                  dict[words_processed..dict.size() - 1])
+                                  Prune(dict[words_processed..dict.size() - 1], smaller_bag))
       next if (0 == from_smaller_bag.size)
       combine(words, from_smaller_bag).each {
         |new|
@@ -55,21 +55,21 @@ def anagrams(bag, dict)
   rv
 end
 
-result = anagrams(The_Bag, The_Dict)
+result = anagrams(The_Bag, the_dict)
 
 puts "#{result.size} anagrams of #{ARGV[0]}"
 
-printf "("
+# printf "("
 
-result.each {
-  |a|
+# result.each {
+#   |a|
 
-  a.each {
-    |words|
+#   a.each {
+#     |words|
 
-    printf words.inspect
+#     printf words.inspect
 
-  }
-  puts ""
-}
-puts ")"
+#   }
+#   puts ""
+# }
+# puts ")"

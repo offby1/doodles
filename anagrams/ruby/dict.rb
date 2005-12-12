@@ -3,17 +3,18 @@ require 'bag'
 # First snarf the dictionary and do as much pre-processing as we can
 
 def Read(fn)
+  the_dict = {}
   begin
     File.open("hash.cache", "r") do |aCache|
       printf "Snarfing hash.cache ..."
       $stdout.flush
-      @Anagrams_by_number = Marshal.load(aCache)
+      the_dict = Marshal.load(aCache)
       puts "Loaded dictionary from hash.cache"
     end
 
   rescue Errno::ENOENT
     File.open(fn, "r") do |aFile|
-      @Anagrams_by_number = {}
+      the_dict = {}
       printf "Snarfing #{fn} ..."
       $stdout.flush
       has_a_vowel_re = /[aeiou]/
@@ -27,25 +28,26 @@ def Read(fn)
         next if !long_enough_re.match(aLine)
 
         b = Bag.new(aLine)
-        if (@Anagrams_by_number.has_key?(b))
-          @Anagrams_by_number[b] = @Anagrams_by_number[b] | [aLine]     # avoid duplicates
+        if (the_dict.has_key?(b))
+          the_dict[b] = the_dict[b] | [aLine]     # avoid duplicates
         else
-          @Anagrams_by_number[b] = [aLine]
+          the_dict[b] = [aLine]
         end
 
       end
-      puts " (#{@Anagrams_by_number.length} slots) done"
+      puts " (#{the_dict.length} slots) done"
     end
     File.open("hash.cache", "w") do |aCache|
-      Marshal.dump(@Anagrams_by_number, aCache)
+      Marshal.dump(the_dict, aCache)
       puts "Wrote hash.cache"
     end
   end
+  the_dict
 end
 
-def Prune(max)
+def Prune(dict, max)
   result = []
-  @Anagrams_by_number.each {
+  dict.each {
     | bag, words |
     if (max - bag)
       result.push([bag, words])
