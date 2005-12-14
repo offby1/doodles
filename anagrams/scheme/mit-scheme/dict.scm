@@ -22,8 +22,19 @@
 
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
+
+;; Riastradh suggested:
+;; instead of using MAKE-EQV-HASH-TABLE, using
+;;                    (STRONG-HASH-TABLE/CONSTRUCTOR INTEGER-HASH =), with some suitable definition of
+;;                    INTEGER-HASH, which might be (LAMBDA (INTEGER MODULUS) (REMAINDER (ABS INTEGER)
+;;                    MODULUS))
+
 (define (snarf-dictionary criterion-bag)
-  (let ((*the-table* (make-eqv-hash-table)))
+  (let* ((ht-ctor   (strong-hash-table/constructor
+                     (lambda (integer modulus)
+                       (remainder (abs integer) modulus))
+                     =))
+         (*the-table* (ht-ctor 65000)))
     (call-with-input-file
         "/usr/share/dict/words"
       (lambda (p)
@@ -31,11 +42,17 @@
         (let loop ((word (read-line p))
                    (words-read 0))
           (if (eof-object? word)
-              (filter (lambda (number words)
-                        (subtract-bags criterion-bag number)) 
-                      (hash-table->alist *the-table*))
+              (let ((al (hash-table->alist *the-table*)))
+                (write (car al))
+                (newline)
+                (keep-matching-items al 
+                                     (lambda (p)
+                                       (let ((number (car p) )
+                                             (words (cadr p)))
+                                         (subtract-bags criterion-bag number)))))
             (begin
-              (if (word-acceptable? word)
+              (if (and (zero? (remainder words-read 1))
+                       (word-acceptable? word))
                   (let* ((num  (bag word))
                          (prev (hash-table/get *the-table* num '())))
                     (set! prev (cons word prev))
