@@ -1,1 +1,6 @@
-# no code yet, but: a reminder -- pass `--heap 6000' to mit-scheme at startup
+check:
+	time echo y | \
+	mit-scheme --heap 6000 --load bag.scm dict.scm anagrams.scm \
+	--eval '(begin (display (length (anagrams "Ernest Hemingway"))) (newline) (exit))'
+
+.PHONY: check
