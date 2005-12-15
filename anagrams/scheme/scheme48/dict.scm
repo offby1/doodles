@@ -35,15 +35,20 @@
         "/usr/share/dict/words"
       (lambda (p)
         (display "Reading dictionary ... ")
-        (let loop ((word (read-line p)))
+        (let loop ((word (read-line p))
+                   (words-read 0))
           (if (eof-object? word)
-              (begin
+              (let ((words-kept 0))
                 (table-walk (lambda (number words)
                               (if (subtract-bags criterion-bag number)
-                                  (set! rv (cons (cons number words)
-                                                 rv))))
+                                  (begin
+                                    (set! words-kept (+ 1 words-kept))
+                                    (set! rv (cons (cons number words)
+                                                   rv)))))
                             *the-hash-table*)
-                (display "done")
+                (display words-read)
+                (display " words; kept ")
+                (display words-kept)
                 (newline)
                 rv)
             (begin
@@ -54,4 +59,5 @@
                         (set! prev '()))
                     (set! prev (cons word prev))
                     (table-set! *the-hash-table* num prev)))
-              (loop (read-line p)))))))))
+              (loop (read-line p)
+                    (+ 1 words-read)))))))))

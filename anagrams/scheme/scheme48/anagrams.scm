@@ -33,5 +33,11 @@ list of anagrams, each of which begins with one of the WORDS."
                      words)))
 
 (define (anagrams str)
-  (let ((w (bag str)))
-    (all-anagrams-internal w (snarf-dictionary w))))
+  (let* ((w (bag str))
+         (pruned (snarf-dictionary w)))
+    (with-output-to-file (string-append "pruned-" str)
+      (lambda ()
+        (write (sort-list pruned (lambda (p1 p2)
+                                   (< (car p1)
+                                      (car p2)))))))
+    (all-anagrams-internal w pruned)))

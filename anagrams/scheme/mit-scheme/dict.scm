@@ -2,10 +2,10 @@
 (load-option 'rb-tree)
 (define word-acceptable?
   (let ((has-vowel-regexp (rexp-compile (rexp-case-fold (string->char-set "aeiou"))))
-        (has-non-letter-regexp (rexp-compile (rexp-case-fold (char-set-invert
-                                                             (char-set-union
-                                                              (ascii-range->char-set (char->ascii #\A) (+ 1 (char->ascii #\Z)))
-                                                              (ascii-range->char-set (char->ascii #\a) (+ 1 (char->ascii #\z)))))))))
+        (has-non-letter-regexp (rexp-compile (char-set-invert
+                                              (char-set-union
+                                               (ascii-range->char-set (char->ascii #\A) (+ 1 (char->ascii #\Z)))
+                                               (ascii-range->char-set (char->ascii #\a) (+ 1 (char->ascii #\z))))))))
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))

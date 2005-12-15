@@ -16,7 +16,7 @@
                       (set! rv (append! rv combined))))
                 (let ((anagrams (all-anagrams-internal smaller-bag pruned (+ 1 level))))
                   (if (not (null? anagrams))
-                      (set! rv (append! rv (combine words anagrams  (zero? level)))))))))
+                      (set! rv (append! rv (combine words anagrams  (and #f (zero? level))))))))))
         
         (loop (cdr dict))))))
 
@@ -32,9 +32,9 @@ list of anagrams, each of which begins with one of the WORDS."
     (if verbose? (for-each (lambda (x)
                              (for-each (lambda (y)
                                          (display y)
-                                         (newline)))
-                             
-                             ) unappended))
+                                         (newline))
+                                       x))
+                           unappended))
     (apply append unappended)))
 
 (define (anagrams str)
