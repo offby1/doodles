@@ -25,8 +25,6 @@ I wasted a lot of time trying to make the code go faster without first
 profiling.  Then I wasted a lot of time trying to profile.
 
 Finally I realized that I needed to use a *breadth-first* search.
-Doing that takes a second or two.  That code is in the "right"
-subdirectory.
 
 There's a lesson in there somewhere about the importance of algorithm
 choice ...
