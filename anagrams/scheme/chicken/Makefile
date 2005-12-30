@@ -16,11 +16,12 @@ anagrams: $(objs)
 
 words: /usr/share/dict/words
 	ln -sv $^ $@
+#	head -100 $^  > $@
 
 check: anagrams words
 	time ./$^ && chicken-profile
 
 clean:
-	rm -f $(objs) $(cs) anagrams PROFILE
+	rm -f $(objs) $(cs) anagrams PROFILE words
 
 .PHONY: clean check

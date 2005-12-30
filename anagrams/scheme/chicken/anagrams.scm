@@ -33,8 +33,11 @@ list of anagrams, each of which begins with one of the WORDS."
                      words)))
 
 (define (anagrams str)
-  (let ((b (bag str)))
-    (all-anagrams-internal b (dictionary-for b))))
+  (let* ((b (bag str))
+         (pruned (dictionary-for b)))
+    (display "The bag of ") (write str) (display " is ") (write b) (newline)
+    (display "The pruned dictionary has ") (display (length pruned)) (display " elements") (newline)
+    (all-anagrams-internal b pruned)))
 
-(display (anagrams "cat"))
+(display (anagrams "Hemingway"))
 (newline)

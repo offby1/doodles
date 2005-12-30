@@ -1,38 +1,73 @@
 (declare (unit bag))
-(require-extension numbers)
 
-(define primes (vector 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
+(define (increment! char alist)
+  (define probe (assq char alist))
+  (when (not probe)
+    (set! probe (cons char 0))
+    (set! alist (cons probe alist)))
+  (let ((prev (cdr probe)))
+    (set-cdr! probe (+ 1 prev))
+    alist))
 
-(define char->factor
-  (let ((a-code (char->integer #\a)))
-    (lambda (c)
-      (if (char-alphabetic? c)
-          (let ((index (- (char->integer (char-downcase c))
-                          a-code)))
-            (vector-ref primes index))
-        1))))
-
+;; the returned object is a simple alist mapping chars to numbers.
+;; It's sorted alphabetically by character.
 (define (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
   (let loop ((chars-to-examine (string-length s))
-             (product 1))
+             (result '()))
     (if (zero? chars-to-examine)
-        product
+        (sort result (lambda (p1 p2) (char<? (car p1) (car p2))))
       (loop (- chars-to-examine 1)
-            (* product (char->factor (string-ref s (- chars-to-examine 1))))))))
+            (increment! (char-downcase (string-ref s (- chars-to-examine 1))) result)))))
+
+(define bag-empty? null?)
+(define bags=? equal?)
+
+(define (sb-internal b1 b2 result)
+  (cond
+   ((bag-empty? b2)
+    result)
+   ((bag-empty? b1)
+    #f)
+   (else
+    (let ((entry1 (car b1))
+          (entry2 (car b2)))
+      (cond
+       ((char=? (car entry1)
+                (car entry2))
+        (let ((c (car entry2))
+              (diff (- (cdr entry1)
+                       (cdr entry2))))
+          (cond
+           ((negative? diff)
+            #f)
+           ((zero? diff)
+            (sb-internal (cdr b1)
+                         (cdr b2)
+                         result))
+           (else
+            (sb-internal (cdr b1)
+                         (cdr b2)
+                         (cons (cons c diff)
+                               result))))))
+       ((char>? (car entry1)
+                (car entry2))
+        #f)
+       (else
+        (let ((sub (sb-internal (cdr b1)
+                                b2
+                                result)))
+          (and sub
+               (cons entry1
+                     sub)))
+        ))))))
 
 (define (subtract-bags b1 b2)
   (if (bag-empty? b2)
       (error "Hey!  Don't subtract the empty bag."))
-  (let ((quotient (/ b1 b2)))
-    (and (integer? quotient)
-          quotient)))
+  (sb-internal b1 b2 '()))
 
-(define (bag-empty? b)
-  (= 1  b))
-
-(define bags=? =)
 
 
 ;;; unit tests

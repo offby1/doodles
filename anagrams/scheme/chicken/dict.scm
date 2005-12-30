@@ -23,33 +23,48 @@
                  (string=? "a" word)
                  (< 1 l)))))))
 
-(define *the-dictionary*
-  (call-with-input-file
-      "words"
-    (lambda (p)
-      (display "Reading dictionary ... ")
-      (newline)
-      (let loop ((word (read-line p))
-                 (words-read 0)
-                 ;; the CAR is a bag; the CDR is a word.  One entry per
-                 ;; dictionary word.
-                 (pairs '()))
-        (if (eof-object? word)
-            pairs
-          (begin
+(define *the-dictionary* #f)
+(define *dict-cache-file-name* "cached-dictionary")
+(if (file-exists? *dict-cache-file-name*)
+    (begin
+      (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
+      (display "Read ")
+      (display (length *the-dictionary*))
+      (display " entries from ")
+      (write *dict-cache-file-name*)
+      (newline))
+  (let ((ht  (make-hash-table)))
+    (call-with-input-file
+        "words"
+      (lambda (p)
+        (display "Reading dictionary ... ")
+        (newline)
+        (let loop ((word (read-line p))
+                   (words-read 0)
+                   )
+          (when (not (eof-object? word))
             (when (zero? (remainder words-read 1000))
               (display "Read ")
               (display words-read)
               (display " words ...")
               (newline))
+            (if (word-acceptable? word)
+                (let* ((num  (bag word))
+                       (prev (hash-table-ref ht num (lambda () #f))))
+                  (if (not prev)
+                      (set! prev '()))
+                  (set! prev (cons word prev))
+                  (hash-table-set! ht num prev)))
             (loop (read-line p)
                   (+ 1 words-read)
-                  (if (and
-                       (zero? (remainder words-read 50))
-                       (word-acceptable? word))
-                      (cons (cons (bag word) word)
-                            pairs)
-                    pairs))))))))
+                  )))))
+    (set! *the-dictionary* (hash-table->alist ht))
+    (with-output-to-file *dict-cache-file-name*
+      (lambda ()
+        (write *the-dictionary*)))
+    (display "Wrote " )
+    (write *dict-cache-file-name*)
+    (newline)))
 
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
