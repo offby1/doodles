@@ -18,8 +18,11 @@ regard to order."
              (result '()))
     (if (zero? chars-to-examine)
         (sort result (lambda (p1 p2) (char<? (car p1) (car p2))))
-      (loop (- chars-to-examine 1)
-            (increment! (char-downcase (string-ref s (- chars-to-examine 1))) result)))))
+      (let ((c (string-ref s (- chars-to-examine 1))))
+        (loop (- chars-to-examine 1)
+              (if (char-alphabetic? c )
+                  (increment! (char-downcase c) result)
+                result))))))
 
 (define bag-empty? null?)
 (define bags=? equal?)
@@ -64,8 +67,6 @@ regard to order."
         ))))))
 
 (define (subtract-bags b1 b2)
-  (if (bag-empty? b2)
-      (error "Hey!  Don't subtract the empty bag."))
   (sb-internal b1 b2 '()))
 
 
@@ -84,6 +85,9 @@ regard to order."
 (assert (not (bag-empty? (bag "a"))))
 (assert (bags=? (bag "abc")
                 (bag "cba")))
+
+(assert (bags=? (bag "X")
+                (bag "x")))
 
 (assert (not (bags=? (bag "abc")
                      (bag "bc"))))

@@ -27,11 +27,10 @@
 (define *dict-cache-file-name* "cached-dictionary")
 (if (file-exists? *dict-cache-file-name*)
     (begin
+      (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (flush-output)
       (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-      (display "Read ")
       (display (length *the-dictionary*))
-      (display " entries from ")
-      (write *dict-cache-file-name*)
+      (display " entries")
       (newline))
   (let ((ht  (make-hash-table)))
     (call-with-input-file
