@@ -24,4 +24,7 @@ check: anagrams words
 clean:
 	rm -f $(objs) $(cs) anagrams PROFILE words
 
-.PHONY: clean check
+realclean: clean
+	rm -f cached-dictionary
+
+.PHONY: clean check realclean
