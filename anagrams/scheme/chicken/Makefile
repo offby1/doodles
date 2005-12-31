@@ -16,7 +16,7 @@ anagrams: $(objs)
 
 words: /usr/share/dict/words
 	ln -sv $^ $@
-#	head -100 $^  > $@
+#head -10 $^  > $@
 
 check: anagrams words
 	time ./$^ "Ernest Hemingway" && chicken-profile
@@ -25,6 +25,6 @@ clean:
 	rm -f $(objs) $(cs) anagrams PROFILE words
 
 realclean: clean
-	rm -f cached-dictionary
+	rm -f cached-dictionary.scm
 
 .PHONY: clean check realclean

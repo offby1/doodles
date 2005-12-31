@@ -24,7 +24,7 @@
                  (< 1 l)))))))
 
 (define *the-dictionary* #f)
-(define *dict-cache-file-name* "cached-dictionary")
+(define *dict-cache-file-name* "cached-dictionary.scm")
 (if (file-exists? *dict-cache-file-name*)
     (begin
       (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (flush-output)
@@ -57,7 +57,13 @@
             (loop (read-line p)
                   (+ 1 words-read)
                   )))))
-    (set! *the-dictionary* (hash-table->alist ht))
+    (set! *the-dictionary*
+          ;; put longest words first.
+          (sort
+           (hash-table->alist ht)
+           (lambda (e1 e2)
+             (> (string-length (cadr e1))
+                (string-length (cadr e2))))))
     (with-output-to-file *dict-cache-file-name*
       (lambda ()
         (write *the-dictionary*)))
