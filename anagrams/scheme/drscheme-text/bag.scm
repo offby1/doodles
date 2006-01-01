@@ -50,7 +50,7 @@ regard to order."
 ;; be *really* fast, since I suspect we do this O(n!) times where n is
 ;; the length of the string being anagrammed.
 
- (test/text-ui
+ (unless (zero? (test/text-ui
   (test-suite
    "The one and only suite"
    (test-true "empty" (bag-empty? (bag "")))
@@ -82,5 +82,6 @@ regard to order."
      (test-false "empty-indeed" (not empty-bag))
      )
 
-   ))
+   )))
+   (error "Some test(s) failed."))
 )
