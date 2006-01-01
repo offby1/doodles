@@ -59,6 +59,10 @@ regard to order."
    (test-true "ignores-initial-order" (bags=? (bag "abc")
                                               (bag "cba")))
 
+   (test-true "case-insensitive" (bags=? (bag "X")
+                                         (bag "x")))
+   (test-true "ignores non-alpha" (bags=? (bag "a!")
+                                          (bag "a")))
    (test-false "sam"  (bags=? (bag "abc")
                               (bag "bc")))
 
