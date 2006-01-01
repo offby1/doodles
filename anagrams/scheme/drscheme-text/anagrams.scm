@@ -7,18 +7,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
     mzscheme
   (require "dict.scm"
            "bag.scm"
-           (lib "defmacro.ss")
-           (lib "pretty.ss")
-           (prefix srfi-1-  (lib "1.ss"  "srfi")))
+           (only (lib "1.ss"  "srfi") filter))
   
   (provide all-anagrams)
-  
-  (define-macro (prog1 expr . rest)
-    (let ((e (gensym)))
-      `(let ((,e ,expr))
-         (begin
-           ,@rest)
-         ,e)))
 
   (define (all-anagrams string dict-file-name )
     (let ((in-bag   (bag string)))
@@ -36,8 +27,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (words (cdar dict)))
           (let ((smaller-bag (subtract-bags bag key)))
             (define pruned
-              (srfi-1-filter (lambda (entry) (and smaller-bag (subtract-bags smaller-bag (car entry))))
-                             dict))
+              (filter (lambda (entry) (and smaller-bag (subtract-bags smaller-bag (car entry))))
+                      dict))
             (if smaller-bag
               (if (bag-empty? smaller-bag)
                   (begin
