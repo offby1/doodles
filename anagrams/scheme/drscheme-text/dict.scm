@@ -12,6 +12,7 @@
     (with-input-from-file fn
       (lambda ()
         (let ((dict (make-hash-table 'equal)))
+          (fprintf (current-error-port) "Reading dictionary ~s ... " fn)
           (let loop ((word  (read-line))
                      (words-read 0))
             (if (not (eof-object? word))
@@ -21,6 +22,7 @@
                 (loop (read-line)
                       (+ 1 words-read)))
               ))
+          (fprintf (current-error-port) "done; ~s entries~%" (hash-table-count dict))
           dict)
         )))
   
