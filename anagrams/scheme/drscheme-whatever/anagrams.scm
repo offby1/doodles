@@ -1,13 +1,16 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module anagrams
     mzscheme
-  (require "assert.scm"
-           "dict.scm"
+  (require "dict.scm"
            "bag.scm"
-           "ports.scm"
            ;(lib "errortrace.ss" "errortrace")
-           (lib "mred.ss" "mred") ;for `yield'
            (lib "defmacro.ss")
            (lib "pretty.ss")
+           (lib "trace.ss")
            (prefix srfi-1-  (lib "1.ss"  "srfi")))
   
   (provide all-anagrams)
@@ -19,36 +22,31 @@
            ,@rest)
          ,e)))
 
-  (define (all-anagrams string dict-file-name callback)
+  (define (all-anagrams string dict-file-name )
     (let ((in-bag   (bag string)))
       (init in-bag dict-file-name)
-      (fprintf *status-port* "") ;clears the status window
       (all-anagrams-internal
                  in-bag
                  *dictionary*
-                 #t
-                 callback)))
+                 #t)))
 
-  (define (all-anagrams-internal bag dict top-level? callback)
+  (define (all-anagrams-internal bag dict top-level?)
     (define rv '())
     (let loop ((dict dict))
       (if (null? dict)
           rv
         (let ((key   (caar dict))
               (words (cdar dict)))
-          (yield)
           (let ((smaller-bag (subtract-bags bag key)))
             (if smaller-bag
                 (if (bag-empty? smaller-bag)
                     (begin
                       (let ((combined (map list words)))
-                        (if top-level? (callback combined))
                         (set! rv (append! rv combined))))
-                  (let ((anagrams (all-anagrams-internal smaller-bag dict #f callback)))
+                  (let ((anagrams (all-anagrams-internal smaller-bag dict #f)))
                     (if (not (null? anagrams))
                         (begin
                           (let ((combined (combine words anagrams)))
-                            (if top-level? (callback combined))
                             (set! rv (append! rv combined)))))))))
           
           (loop (cdr dict))))))
@@ -62,4 +60,14 @@ list of anagrams, each of which begins with one of the WORDS."
                                 (cons word an))
                               anagrams))
                        words)))
+
+  ;(trace all-anagrams-internal)
+  (let* ((input  (vector-ref (current-command-line-arguments) 0))
+         (rv (all-anagrams input "/usr/share/dict/words")))
+    (fprintf (current-error-port) "~a anagrams of ~s: ~a~%"
+             (length rv)
+             input
+             ;rv
+             'placeholder
+             ))
   )

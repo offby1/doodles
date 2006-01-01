@@ -1,11 +1,7 @@
 (module dict
     mzscheme
   (require "bag.scm"
-           "ports.scm"
            (prefix list- (lib "list.ss"))
-           (lib "pretty.ss")
-           (lib "process.ss")
-           (lib "mred.ss" "mred")
            (prefix srfi-1- (lib "1.ss" "srfi"))
            (prefix srfi-13- (lib "13.ss" "srfi")))
   (provide init *dictionary*)
@@ -16,16 +12,12 @@
     (with-input-from-file fn
       (lambda ()
         (let ((dict (make-hash-table 'equal)))
-          (fprintf *status-port*  "Reading dictionary ... ")
           (let loop ((word  (read-line))
                      (words-read 0))
-            (if (eof-object? word)
-                (fprintf *status-port*  "Reading dictionary ... done.")
+            (if (not (eof-object? word))
               (begin
                 (if (word-acceptable? word)
                     (adjoin-word dict (srfi-13-string-downcase word)))
-                (if (zero? (remainder words-read 1000))
-                    (fprintf *status-port*  (format "Reading dictionary ... ~a words ..." words-read)))
                 (loop (read-line)
                       (+ 1 words-read)))
               ))
@@ -71,21 +63,15 @@
   (define (init bag-to-meet dict-file-name)
     (if (not *big-ol-hash-table*)
         (set! *big-ol-hash-table* (wordlist->hash dict-file-name)))
-    
-    (fprintf *status-port* "Pruning dictionary ... ") (flush-output)
 
     (set! *dictionary* 
           (let ((entries-examined 0))
             (let ((result (srfi-1-filter (lambda (entry)
-                                           (if (zero? (remainder entries-examined 1000))
-                                               (fprintf *status-port*
-                                                         (format "Pruning dictionary ... ~a words ..." entries-examined)))
                                            (set! entries-examined (+ 1 entries-examined))
                                            (bag-acceptable? (car entry) bag-to-meet))
                                          (hash-table-map *big-ol-hash-table* cons))))
               result)))
-    (fprintf *status-port* "Pruning dictionary ... done.")
-    
+
     (let ()
       (define (biggest-first e1 e2) 
         (let* ((s1 (cadr e1))
@@ -109,8 +95,5 @@
       (set! *dictionary* 
             (if #t
                 (list-quicksort *dictionary* biggest-first)
-              (shuffled *dictionary*))
-            )))
+              (shuffled *dictionary*))))))
 
-  
-  )

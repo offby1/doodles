@@ -1,6 +1,9 @@
 (module bag
   mzscheme
-  (require "assert.scm")
+  (require
+   (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+   (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+   (planet "plt/util.ss"    ("schematics" "schemeunit.plt" 2)))
   (provide bag subtract-bags bag-empty? bags=?)
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
@@ -47,27 +50,33 @@ regard to order."
 ;; be *really* fast, since I suspect we do this O(n!) times where n is
 ;; the length of the string being anagrammed.
 
-(assert (bag-empty? (bag "")))
-(assert (not (bag-empty? (bag "a"))))
-(assert (bags=? (bag "abc")
-                (bag "cba")))
+ (test/text-ui
+  (test-suite
+   "The one and only suite"
+   (test-true "empty" (bag-empty? (bag "")))
 
-(assert (not (bags=? (bag "abc")
-                     (bag "bc"))))
+   (test-false "notempty" (bag-empty? (bag "a")))
+   (test-true "ignores-initial-order" (bags=? (bag "abc")
+                                              (bag "cba")))
 
-(assert (bags=? (bag "a")
-                (subtract-bags (bag "ab")
-                               (bag "b"))))
+   (test-false "sam"  (bags=? (bag "abc")
+                              (bag "bc")))
 
-(assert (not (subtract-bags (bag "a")
-                            (bag "b"))))
-(assert (not (subtract-bags (bag "a")
-                            (bag "aa"))))
+   (test-true "harry" (bags=? (bag "a")
+                              (subtract-bags (bag "ab")
+                                             (bag "b"))))
 
-(let ((empty-bag (subtract-bags (bag "a")
-                                (bag "a"))))
-  (assert (bag-empty? empty-bag))
-  (assert empty-bag))
+   (test-false "ethel" (subtract-bags (bag "a")
+                                      (bag "b")))
+   (test-false "joan" (subtract-bags (bag "a")
+                                     (bag "aa")))
 
-(fprintf (current-error-port) (format "bag tests passed.~%"))
+   (let ((empty-bag (subtract-bags (bag "a")
+                                   (bag "a"))))
+     0
+     (test-pred "mt" bag-empty? empty-bag)
+     (test-false "empty-indeed" (not empty-bag))
+     )
+
+   ))
 )
