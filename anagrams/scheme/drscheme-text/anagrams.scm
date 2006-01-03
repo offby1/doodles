@@ -7,40 +7,55 @@ exec mzscheme -qu "$0" ${1+"$@"}
     mzscheme
   (require "dict.scm"
            "bag.scm"
-           (only (lib "1.ss"  "srfi") filter))
+           (only (lib "1.ss"  "srfi") filter take))
   
   (provide all-anagrams)
+
+  (define *num-to-show* 10)
 
   (define (all-anagrams string dict-file-name )
     (let ((in-bag   (bag string)))
       (init in-bag dict-file-name)
       (all-anagrams-internal
-                 in-bag
-                 *dictionary*)))
-
-  (define (all-anagrams-internal bag dict)
+       in-bag
+       *dictionary*
+       0
+       *num-to-show*)))
+  
+  (define (all-anagrams-internal bag dict level num-to-show)
     (define rv '())
-    (let loop ((dict dict))
-      (if (null? dict)
-          rv
-        (let ((key   (caar dict))
-              (words (cdar dict)))
-          (let ((smaller-bag (subtract-bags bag key)))
-            (define pruned
-              (filter (lambda (entry) (and smaller-bag (subtract-bags smaller-bag (car entry))))
-                      dict))
-            (if smaller-bag
-              (if (bag-empty? smaller-bag)
-                  (begin
-                    (let ((combined (map list words)))
-                      (set! rv (append! rv combined))))
-                (let ((anagrams (all-anagrams-internal smaller-bag pruned)))
-                  (if (not (null? anagrams))
+    (define (maybe-print thing)
+      (when (and (zero? level)
+                 (positive? num-to-show))
+        (fprintf (current-error-port) "~a~%" thing)
+        (set! num-to-show (sub1 num-to-show))))
+    
+    (if (zero? num-to-show)
+        '()
+      (let loop ((dict dict))
+        (if (null? dict)
+            rv
+          (let ((key   (caar dict))
+                (words (cdar dict)))
+            (let ((smaller-bag (subtract-bags bag key)))
+              (define pruned
+                (filter (lambda (entry) (and smaller-bag (subtract-bags smaller-bag (car entry))))
+                        dict))
+              (if smaller-bag
+                  (if (bag-empty? smaller-bag)
                       (begin
-                        (let ((combined (combine words anagrams)))
-                          (set! rv (append! rv combined)))))))))
+                        (let ((combined (map list words)))
+                          (maybe-print combined)
+                          (set! rv (append! rv combined))))
+                    (let ((anagrams (all-anagrams-internal smaller-bag pruned (add1 level) num-to-show)))
+                      (if (not (null? anagrams))
+                          (begin
+                            (let ((combined (combine words anagrams)))
+                              (maybe-print combined)
+                              (set! rv (append! rv combined)))))))))
           
-          (loop (cdr dict))))))
+            (loop (cdr dict))))))
+    )
 
 
   (define (combine words anagrams)
@@ -52,12 +67,9 @@ list of anagrams, each of which begins with one of the WORDS."
                               anagrams))
                        words)))
 
-  (let* ((input  (vector-ref (current-command-line-arguments) 0))
-         (rv (all-anagrams input "/usr/share/dict/words")))
-    (fprintf (current-error-port) "~a anagrams of ~s: ~a~%"
-             (length rv)
-             input
-             ;rv
-             'placeholder
-             ))
-  )
+  (all-anagrams
+   (vector-ref
+    (current-command-line-arguments)
+    0)
+   "/usr/share/dict/words"))
+
