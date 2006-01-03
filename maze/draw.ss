@@ -128,7 +128,9 @@
 
                                             (fedc (lambda (dc) (send dc set-pen (grid-thick-black rv))))
                                             (main-proc)))))
-
+      (define go-way (new menu-item% (label "Go 'way")
+                          (parent menu)
+                          (callback (lambda (menu-item control-object) (maybe-exit)))))
       (set-grid-device-contexts! rv (list bm-dc (send canvas get-dc)))
 
       ;; A new bitmap's initial content is undefined, so clear it before drawing
