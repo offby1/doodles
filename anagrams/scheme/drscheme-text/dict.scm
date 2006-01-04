@@ -1,9 +1,9 @@
 (module dict
     mzscheme
   (require "bag.scm"
+           (lib "trace.ss")
            (prefix list- (lib "list.ss"))
-           (prefix srfi-1- (lib "1.ss" "srfi"))
-           (prefix srfi-13- (lib "13.ss" "srfi")))
+           (prefix srfi-1- (lib "1.ss" "srfi")))
   (provide init *dictionary*)
   
   (define *big-ol-hash-table* #f)
@@ -11,16 +11,17 @@
   (define (wordlist->hash fn)
     (with-input-from-file fn
       (lambda ()
-        (let ((dict (make-hash-table 'equal)))
+        (let ((dict (make-hash-table 'equal))
+              (trailing-whitespace-re (regexp "[ \r]+$")))
           (fprintf (current-error-port) "Reading dictionary ~s ... " fn)
-          (let loop ((word  (read-line))
+          (let loop ((word (read-line))
                      (words-read 0))
-            (if (not (eof-object? word))
-              (begin
-                (if (word-acceptable? word)
-                    (adjoin-word dict (srfi-13-string-downcase word)))
-                (loop (read-line)
-                      (+ 1 words-read)))
+            (when (not (eof-object? word))
+              (set! word (regexp-replace trailing-whitespace-re (string-downcase word) ""))
+              (when (word-acceptable? word)
+                (adjoin-word! dict word))
+              (loop (read-line)
+                    (+ 1 words-read))
               ))
           (fprintf (current-error-port) "done; ~s entries~%" (hash-table-count dict))
           dict)
@@ -28,7 +29,7 @@
   
   (define *dictionary* #f)
 
-  (define (adjoin-word dict word)
+  (define (adjoin-word! dict word)
     (let* ((this-bag (bag word))
            (probe (hash-table-get dict this-bag (lambda () #f))))
       (cond
@@ -83,19 +84,11 @@
           (or (> l1 l2)
               (and (= l1 l2)
                    (string<? s1 s2)))))
-      (define (shuffled seq)
-        (let ((with-random-numbers (map (lambda (item)
-                                          (cons (random 2147483647)
-                                                item))
-                                        seq)
-                                   ))
-          (set! with-random-numbers (list-quicksort with-random-numbers (lambda (a b)
-                                                                          (< (car a)
-                                                                             (car b)))))
-          (map cdr with-random-numbers)))
       
       (set! *dictionary* 
-            (if #t
-                (list-quicksort *dictionary* biggest-first)
-              (shuffled *dictionary*))))))
+            (list-quicksort *dictionary* biggest-first)))
+    
+;;     (for-each (lambda (entry) (fprintf (current-error-port) "~s~%" (cdr entry))) *dictionary*)
+;;     (exit 0)
+    ))
 

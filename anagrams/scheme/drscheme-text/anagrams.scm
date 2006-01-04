@@ -38,10 +38,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (let ((key   (caar dict))
                 (words (cdar dict)))
             (let ((smaller-bag (subtract-bags bag key)))
-              (define pruned
-                (filter (lambda (entry) (and smaller-bag (subtract-bags smaller-bag (car entry))))
-                        dict))
-              (if smaller-bag
+              (when smaller-bag
+                (let ()
+                  (define pruned
+                    (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
+                            dict))
                   (if (bag-empty? smaller-bag)
                       (begin
                         (let ((combined (map list words)))
@@ -52,7 +53,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                           (begin
                             (let ((combined (combine words anagrams)))
                               (maybe-print combined)
-                              (set! rv (append! rv combined)))))))))
+                              (set! rv (append! rv combined))))))))))
           
             (loop (cdr dict))))))
     )
@@ -71,5 +72,7 @@ list of anagrams, each of which begins with one of the WORDS."
    (vector-ref
     (current-command-line-arguments)
     0)
-   "/usr/share/dict/words"))
+   #;"/usr/share/dict/words"
+   "words"
+   ))
 
