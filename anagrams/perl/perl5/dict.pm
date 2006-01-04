@@ -13,55 +13,67 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(@dict init);
 
 our @dict;
-my $dict_hash;
+our $dict_hash;
 my $dict_file_name = "words";
+
+my $cache_file_name = "dict-cache.pl";
 
 sub init {
   my $bag = shift;
-  carp "bag is `$bag'";
 
-  open (DICT, "<", $dict_file_name)
-    or die "Can't open $dict_file_name for reading 'cuz $!; stopped";
+  if (-r $cache_file_name) {
+    print STDERR "Snarfing pre-processed dictionary $cache_file_name ... ";
+    do $cache_file_name;
+  } else {
+    open (DICT, "<", $dict_file_name)
+      or die "Can't open $dict_file_name for reading 'cuz $!; stopped";
 
-  print STDERR "Reading $dict_file_name ...";
+    print STDERR "Reading $dict_file_name ... ";
 
-  while (<DICT>) {
-    chomp;
-    ($_ = $_) =~ s<\015$><>;
-    ($_ = $_) =~ s< +$><>;
-    next unless $_;
+    while (<DICT>) {
+      chomp;
+      ($_ = $_) =~ s<\015$><>;
+      ($_ = $_) =~ s< +$><>;
+      next unless $_;
 
-    $_ = lc ($_);
+      $_ = lc ($_);
 
-    my $b = bag ($_);
+      my $b = bag ($_);
 
-    next if (m([^[:alpha:]]));
-    next unless ((m(^i$))
-                 ||
-                 (m(^a$))
-                 ||
-                 (m(^..)));
-    next unless (m([aeiou]));
+      next if (m([^[:alpha:]]));
+      next unless ((m(^i$))
+                   ||
+                   (m(^a$))
+                   ||
+                   (m(^..)));
+      next unless (m([aeiou]));
 
-    my $entry = $dict_hash->{$b};
+      my $entry = $dict_hash->{$b};
 
-    if (defined ($entry)) {
-      my $duplicate;
-      foreach my $existing_entry (@$entry) {
-        if ($_ eq $existing_entry) {
-          $duplicate = 1;
-          last;
+      if (defined ($entry)) {
+        my $duplicate;
+        foreach my $existing_entry (@$entry) {
+          if ($_ eq $existing_entry) {
+            $duplicate = 1;
+            last;
+          }
         }
+
+        next if ($duplicate);
       }
 
-      next if ($duplicate);
+      #die "entering $_; dict is now " . Data::Dumper->Dump ([$dict], [qw(dict)]) if ($. > 10);
+      push @{$dict_hash->{$b}}, $_;
     }
+    close (DICT)
+      or die "Can't close filehandle: $!; stopped";
 
-    #die "entering $_; dict is now " . Data::Dumper->Dump ([$dict], [qw(dict)]) if ($. > 10);
-    push @{$dict_hash->{$b}}, $_;
+    if (open (DICT_CACHE, ">", $cache_file_name)) {
+      print DICT_CACHE Data::Dumper->Dump ([$dict_hash], [qw(dict_hash)]);
+      close (DICT_CACHE);
+      warn "Wrote $cache_file_name";
+    }
   }
-  close (DICT)
-    or die "Can't close filehandle: $!; stopped";
   warn " done.  Dictionary hath " . scalar (keys %$dict_hash) . " elements";
 
   warn "Before pruning: " . scalar (keys %$dict_hash);

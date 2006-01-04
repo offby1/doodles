@@ -14,7 +14,7 @@ our @EXPORT = qw(bag bag_empty bags_equal subtract_bags);
 
 sub bag {
   my $input = lc (shift);
-  my $output = join ('', sort (grep { ord($_) <= ord ('z')
+  my $output = join ('', sort { $a cmp $b} (grep { ord($_) <= ord ('z')
                                         && ord($_) >= ord('a')}
                                (split (m(), $input))));
   $output;
