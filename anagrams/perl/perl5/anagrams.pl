@@ -35,18 +35,25 @@ sub anagrams {
 
     if (bag_empty ($smaller_bag)) {
       my @combined = map { [$_]  } @$words;
-      print STDERR join (' ', map { "(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
       push @$rv, @combined;
-    } else {
-      my $from_smaller_bag = anagrams ($smaller_bag,
-                                       $l + 1,
-                                       @dict[$words_processed .. $#dict]);
-      next unless (@$from_smaller_bag);
-
-      my @combined = combine ($words, $from_smaller_bag);
-      push @$rv, @combined;
-      print STDERR join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
+      next;
     }
+
+    my @pruned = grep
+      {
+        my $candidate = $_->[0];
+        my $result = subtract_bags ($smaller_bag, $candidate);
+        defined ($result);
+      } @dict[$words_processed .. $#dict];
+
+    my $from_smaller_bag = anagrams ($smaller_bag,
+                                     $l + 1,
+                                     @pruned);
+    next unless (@$from_smaller_bag);
+
+    my @combined = combine ($words, $from_smaller_bag);
+    push @$rv, @combined;
+    #print STDERR join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
   }
 
   return $rv;

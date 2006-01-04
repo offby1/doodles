@@ -42,7 +42,8 @@ mzscheme v300 (prune)   :                                                       
 scheme48 1.3		:  8 user seconds	 18 user seconds	41 user seconds	      1450 user seconds		bignums			no(!) 
 scheme48 1.3 (prune)	:						16 user seconds	       272 user seconds		bignums			no(!) 
 
-perl5			:  4 seconds		 10 seconds								strings			no
+perl5			:  4 seconds		 10 seconds		58 user seconds					strings			no
+perl5 (pruned)          :                                               18 user seconds       300 user seconds          strings                 no
 perl5/numeric		: 21 seconds		170 seconds								bignums			yes
 python			:  4 seconds		  6 seconds		15 user seconds	      293 seconds		bignums			no
 ruby			:  8 seconds		 60 seconds								bignums			yes

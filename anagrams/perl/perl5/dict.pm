@@ -14,7 +14,7 @@ our @EXPORT = qw(@dict init);
 
 our @dict;
 my $dict_hash;
-my $dict_file_name = "/usr/share/dict/words";
+my $dict_file_name = "words";
 
 sub init {
   my $bag = shift;
@@ -27,9 +27,12 @@ sub init {
 
   while (<DICT>) {
     chomp;
+    ($_ = $_) =~ s<\015$><>;
+    ($_ = $_) =~ s< +$><>;
     next unless $_;
 
     $_ = lc ($_);
+
     my $b = bag ($_);
 
     next if (m([^[:alpha:]]));
