@@ -32,6 +32,7 @@ c++ (-O2) (prune)	:                                                             
 
 chicken -- in progress
 guile 1.7 (gmp)		:  1 seconds		  4 seconds		> 160 user seconds				bignums			yes
+guile 1.7 (gmp) (prune) :                                                40 user seconds      2400 user seconds         bignums                 yes
 guile 1.6		:  2 seconds		  4 seconds								bignums			yes
 gambit 4b13		:  5 user seconds	  7 user seconds	13 user seconds	      > 180 user seconds	bignums			no
 gambit 4b15		:  7 user seconds	 16 user seconds	57 user seconds					bignums			no

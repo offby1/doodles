@@ -8,7 +8,6 @@
 
 (use-modules (bag)
              (dict)
-             (exclusions)
              (assert))
 
 ;; TODO -- perhaps, instead of writing to standard out, we should
@@ -44,7 +43,10 @@
           (if smaller-bag
               (if (bag-empty? smaller-bag)
                   (update! (map list words))
-                (let ((anagrams (all-anagrams-internal smaller-bag dict (+ 1 depth))))
+                (let* ((pruned (filter (lambda (candidate)
+                                         (subtract-bags smaller-bag (car candidate)))
+                                       dict))
+                       (anagrams (all-anagrams-internal smaller-bag pruned (+ 1 depth))))
                   (if (not (null? anagrams))
                       (update! (combine words anagrams))))))
           (loop (cdr dict)))))))
