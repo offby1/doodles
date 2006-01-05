@@ -121,9 +121,22 @@ anagrams_internal (const bag &b,
         }
       else
         {
+          std::vector<entry> pruned;
+          for (std::vector<entry>::const_iterator i = dict;
+               i != dict_end;
+               i++)
+            {
+              const bag&candidate = i->first;
+              const bag *tmp = smaller_bag->subtract_bag(candidate);
+              if (tmp)
+                {
+                  delete tmp;
+                  pruned.push_back (*i);
+                }
+            }
           std::vector<wordlist> from_smaller_bag (anagrams_internal (*smaller_bag,
-                                                                     dict,
-                                                                     dict_end,
+                                                                     pruned.begin(),
+                                                                     pruned.end(),
                                                                      level + 1));
           if (!from_smaller_bag.size ()) continue;
           std::vector<wordlist> more (prepend_words_to_anagrams (these_words, from_smaller_bag));

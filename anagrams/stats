@@ -28,6 +28,7 @@ All times are on the home machine, unless otherwise noted.
 language		: time "hemingway"	time "st hemingway"	time "est hemingway"  time "Ernest Hemingway"	bag implementation	dictionary cached?
 ----------------	------------------------------------------------------------------------------------------------------------------
 c++ (-O2)		:  2 seconds		  2 seconds!		11 user seconds	      120 seconds		bignums			no
+c++ (-O2) (prune)	:                                                                      90 user seconds          bignums                 no
 
 chicken -- in progress
 guile 1.7 (gmp)		:  1 seconds		  4 seconds		> 160 user seconds				bignums			yes
