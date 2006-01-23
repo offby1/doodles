@@ -30,7 +30,7 @@ language		: time "hemingway"	time "st hemingway"	time "est hemingway"  time "Ern
 c++ (-O2)		:  2 seconds		  2 seconds!		11 user seconds	      120 seconds		bignums			no
 c++ (-O2) (prune)	:                                                                      90 user seconds          bignums                 no
 
-chicken -- in progress
+chicken (prune)         :                                                                     162 user seconds          bignums                 yes
 guile 1.7 (gmp)		:  1 seconds		  4 seconds		> 160 user seconds				bignums			yes
 guile 1.7 (gmp) (prune) :                                                40 user seconds      2400 user seconds         bignums                 yes
 guile 1.6		:  2 seconds		  4 seconds								bignums			yes
