@@ -45,8 +45,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (words (cdar dict)))
           (let ((smaller-bag (subtract-bags bag key)))
             (define (return stuff)
-                (maybe-print stuff)
-                (set! rv (append! rv stuff))  )
+                (when (not (null? stuff))
+                  (maybe-print stuff)
+                  (set! rv (append! rv stuff)))  )
             (when smaller-bag
               (if (bag-empty? smaller-bag)
                   (return (map list words))
@@ -56,8 +57,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                          dict)
                                  (add1 level)
                                  num-to-show)))
-                  (if (not (null? anagrams))
-                      (return (combine words anagrams)))))))
+                  (return (combine words anagrams))))))
           
           (loop (cdr dict))))))
   )
