@@ -44,11 +44,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (let ((key   (caar dict))
               (words (cdar dict)))
           (let ((smaller-bag (subtract-bags bag key)))
+            (define (return stuff)
+                (maybe-print stuff)
+                (set! rv (append! rv stuff))  )
             (when smaller-bag
               (if (bag-empty? smaller-bag)
-                  (let ((combined (map list words)))
-                    (maybe-print combined)
-                    (set! rv (append! rv combined)))
+                  (return (map list words))
                 (let ((anagrams (all-anagrams-internal
                                  smaller-bag
                                  (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
@@ -56,13 +57,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                  (add1 level)
                                  num-to-show)))
                   (if (not (null? anagrams))
-                      (let ((combined (combine words anagrams)))
-                        (maybe-print combined)
-                        (set! rv (append! rv combined))))))))
+                      (return (combine words anagrams)))))))
           
           (loop (cdr dict))))))
   )
-
 
   (define (combine words anagrams)
     "Given a list of WORDS, and a list of ANAGRAMS, creates a new
