@@ -27,42 +27,43 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  *num-to-show*
                  string))))
 
-  (define (all-anagrams-internal bag dict level num-to-show)
-    (define rv '())
-    (define (maybe-print thing)
-      (when (and (zero? level)
-                 (positive? num-to-show))
-        (display thing)
-        (newline)
-        (set! num-to-show (sub1 num-to-show))))
+(define (all-anagrams-internal bag dict level num-to-show)
+  (define rv '())
+  (define (maybe-print thing)
+    (when (and (zero? level)
+               (positive? num-to-show))
+      (display thing)
+      (newline)
+      (set! num-to-show (sub1 num-to-show))))
 
-    (if (zero? num-to-show)
-        '()
-      (let loop ((dict dict))
-        (if (null? dict)
-            rv
-          (let ((key   (caar dict))
-                (words (cdar dict)))
-            (let ((smaller-bag (subtract-bags bag key)))
-              (when smaller-bag
-                (let ()
-                  (define pruned
-                    (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
-                            dict))
-                  (if (bag-empty? smaller-bag)
+  (if (zero? num-to-show)
+      '()
+    (let loop ((dict dict))
+      (if (null? dict)
+          rv
+        (let ((key   (caar dict))
+              (words (cdar dict)))
+          (let ((smaller-bag (subtract-bags bag key)))
+            (when smaller-bag
+              (if (bag-empty? smaller-bag)
+                  (begin
+                    (let ((combined (map list words)))
+                      (maybe-print combined)
+                      (set! rv (append! rv combined))))
+                (let ((anagrams (all-anagrams-internal
+                                 smaller-bag
+                                 (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
+                                         dict)
+                                 (add1 level)
+                                 num-to-show)))
+                  (if (not (null? anagrams))
                       (begin
-                        (let ((combined (map list words)))
+                        (let ((combined (combine words anagrams)))
                           (maybe-print combined)
-                          (set! rv (append! rv combined))))
-                    (let ((anagrams (all-anagrams-internal smaller-bag pruned (add1 level) num-to-show)))
-                      (if (not (null? anagrams))
-                          (begin
-                            (let ((combined (combine words anagrams)))
-                              (maybe-print combined)
-                              (set! rv (append! rv combined))))))))))
+                          (set! rv (append! rv combined)))))))))
           
-            (loop (cdr dict))))))
-    )
+          (loop (cdr dict))))))
+  )
 
 
   (define (combine words anagrams)
