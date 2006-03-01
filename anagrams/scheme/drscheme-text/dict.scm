@@ -57,7 +57,6 @@
                    (string=? "a" word)
                    (< 1 l)))))))
   
-  
   (define (bag-acceptable? this bag-to-meet)
     (and (or (bags=? bag-to-meet this)
              (subtract-bags bag-to-meet this))
@@ -86,9 +85,4 @@
                    (string<? s1 s2)))))
       
       (set! *dictionary* 
-            (list-quicksort *dictionary* biggest-first)))
-    
-;;     (for-each (lambda (entry) (fprintf (current-error-port) "~s~%" (cdr entry))) *dictionary*)
-;;     (exit 0)
-    ))
-
+            (list-quicksort *dictionary* biggest-first)))))

@@ -8,7 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (require "dict.scm"
            "bag.scm"
            (only (lib "1.ss"  "srfi") filter take))
-  
+
   (provide all-anagrams)
 
   (define *num-to-show* 10000)
@@ -21,8 +21,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  *dictionary*
                  0
                  *num-to-show*)))
-        (fprintf (current-error-port) "~a anagrams of ~s~%" (length rv) string))))
-  
+        (fprintf (current-error-port)
+                 "~a (of at most ~a) anagrams of ~s~%"
+                 (length rv)
+                 *num-to-show*
+                 string))))
+
   (define (all-anagrams-internal bag dict level num-to-show)
     (define rv '())
     (define (maybe-print thing)
@@ -31,7 +35,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (display thing)
         (newline)
         (set! num-to-show (sub1 num-to-show))))
-    
+
     (if (zero? num-to-show)
         '()
       (let loop ((dict dict))

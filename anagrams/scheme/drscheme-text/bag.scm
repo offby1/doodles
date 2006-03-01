@@ -23,14 +23,11 @@ regard to order."
   (let loop ((chars-to-examine (string-length s))
              (product 1))
     (if (zero? chars-to-examine)
-         product
-      (let ((factor (char->factor (string-ref s (- chars-to-examine 1)))))
-        (loop (- chars-to-examine 1)
-              (* product factor))))))
+        product
+      (loop (- chars-to-examine 1)
+            (* product (char->factor (string-ref s (- chars-to-examine 1))))))))
 
 (define (subtract-bags b1 b2)
-  (if (bag-empty? b2)
-      (error "Hey!  Don't subtract the empty bag."))
   (let ((quotient (/ b1 b2)))
     (and (integer? quotient)
           quotient)))
@@ -50,37 +47,37 @@ regard to order."
 ;; be *really* fast, since I suspect we do this O(n!) times where n is
 ;; the length of the string being anagrammed.
 
- (test/text-ui
-  (make-test-suite
-   "The one and only suite"
-   (make-test-case "sam" (assert-true (bag-empty? (bag ""))))
+(test/text-ui
+ (make-test-suite
+  "The one and only suite"
+  (make-test-case "sam" (assert-true (bag-empty? (bag ""))))
 
-   (make-test-case "fred" (assert-false (bag-empty? (bag "a"))))
-   (make-test-case "tim" (assert-true  (bags=? (bag "abc")
-                                               (bag "cba"))))
+  (make-test-case "fred" (assert-false (bag-empty? (bag "a"))))
+  (make-test-case "tim" (assert-true  (bags=? (bag "abc")
+                                              (bag "cba"))))
 
-   (make-test-case "harry" (assert-true (bags=? (bag "X")
-                                                (bag "x"))))
-   (make-test-case "mumble" (assert-true (bags=? (bag "a!")
-                                                 (bag "a"))))
-   (make-test-case "frotz" (assert-false  (bags=? (bag "abc")
-                                                  (bag "bc"))))
+  (make-test-case "harry" (assert-true (bags=? (bag "X")
+                                               (bag "x"))))
+  (make-test-case "mumble" (assert-true (bags=? (bag "a!")
+                                                (bag "a"))))
+  (make-test-case "frotz" (assert-false  (bags=? (bag "abc")
+                                                 (bag "bc"))))
 
-   (make-test-case "zimbalist" (assert-true (bags=? (bag "a")
-                                                    (subtract-bags (bag "ab")
-                                                                   (bag "b")))))
+  (make-test-case "zimbalist" (assert-true (bags=? (bag "a")
+                                                   (subtract-bags (bag "ab")
+                                                                  (bag "b")))))
 
-   (make-test-case "ethel" (assert-false  (subtract-bags (bag "a")
-                                                         (bag "b"))))
-   (make-test-case "grunt" (assert-false  (subtract-bags (bag "a")
-                                                         (bag "aa"))))
+  (make-test-case "ethel" (assert-false  (subtract-bags (bag "a")
+                                                        (bag "b"))))
+  (make-test-case "grunt" (assert-false  (subtract-bags (bag "a")
+                                                        (bag "aa"))))
 
-   (let ((empty-bag (subtract-bags (bag "a")
-                                   (bag "a"))))
-     0
-     (make-test-case "snork" (assert-pred bag-empty? empty-bag))
-     (make-test-case "qquuzz" (assert-false (not empty-bag)))
-     )
+  (let ((empty-bag (subtract-bags (bag "a")
+                                  (bag "a"))))
+    0
+    (make-test-case "snork" (assert-pred bag-empty? empty-bag))
+    (make-test-case "qquuzz" (assert-false (not empty-bag)))
+    )
 
-   ))
+  ))
 )
