@@ -11,23 +11,25 @@ exec mzscheme -qu "$0" ${1+"$@"}
   
   (provide all-anagrams)
 
-  (define *num-to-show* 10)
+  (define *num-to-show* 10000)
 
   (define (all-anagrams string dict-file-name )
     (let ((in-bag   (bag string)))
       (init in-bag dict-file-name)
-      (all-anagrams-internal
-       in-bag
-       *dictionary*
-       0
-       *num-to-show*)))
+      (let ((rv (all-anagrams-internal
+                 in-bag
+                 *dictionary*
+                 0
+                 *num-to-show*)))
+        (fprintf (current-error-port) "~a anagrams of ~s~%" (length rv) string))))
   
   (define (all-anagrams-internal bag dict level num-to-show)
     (define rv '())
     (define (maybe-print thing)
       (when (and (zero? level)
                  (positive? num-to-show))
-        (fprintf (current-error-port) "~a~%" thing)
+        (display thing)
+        (newline)
         (set! num-to-show (sub1 num-to-show))))
     
     (if (zero? num-to-show)
