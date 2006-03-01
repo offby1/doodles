@@ -46,10 +46,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (let ((smaller-bag (subtract-bags bag key)))
             (when smaller-bag
               (if (bag-empty? smaller-bag)
-                  (begin
-                    (let ((combined (map list words)))
-                      (maybe-print combined)
-                      (set! rv (append! rv combined))))
+                  (let ((combined (map list words)))
+                    (maybe-print combined)
+                    (set! rv (append! rv combined)))
                 (let ((anagrams (all-anagrams-internal
                                  smaller-bag
                                  (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
@@ -57,10 +56,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                  (add1 level)
                                  num-to-show)))
                   (if (not (null? anagrams))
-                      (begin
-                        (let ((combined (combine words anagrams)))
-                          (maybe-print combined)
-                          (set! rv (append! rv combined)))))))))
+                      (let ((combined (combine words anagrams)))
+                        (maybe-print combined)
+                        (set! rv (append! rv combined))))))))
           
           (loop (cdr dict))))))
   )
