@@ -1,0 +1,30 @@
+-*- text -*-
+
+For no good reason, I'm wondering if I could merge all these
+mostly-the-same-but-slightly-different versions into one.
+
+Here are the ways in which the various implementations most seem to
+differ: 
+
+* hash tables
+
+You'd think there'd be some hash-table SRFI that I could use in all of
+these versions.
+
+http://srfi.schemers.org/srfi-69/srfi-69.html is fairly recent.  It
+appears to be supported only by PLT scheme v300.
+
+SRFI 44 is a bit older; it appears to include hash tables (and a lot
+more besides); not a single implementation supports it :-(
+
+* module systems
+
+This will probably never be standardized; it seems too contentious.
+
+* regular expressions
+
+SRFI?  Prolly not.
+
+On a Debian system with mzscheme installed, the SRFIs live at
+/usr/lib/plt/collects/doc/srfi/index.htm ... although on _this_ box,
+it's at /usr/local/stow/plt/collects/srfi
