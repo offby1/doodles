@@ -7,16 +7,15 @@
   (let ((has-vowel-regexp (pregexp "[aeiou]"))
         (has-non-ASCII-regexp (pregexp "[^a-zA-Z]")))
     (lambda (word)
-      (let ((l (string-length word))
-            (word (string-downcase word)))
+      (let ((l (string-length word)))
         (and (not (zero? l))
-             
+
              ;; it's gotta have a vowel.
              (pregexp-match has-vowel-regexp word)
-             
+
              ;; it's gotta be all ASCII, all the time.
              (not (pregexp-match has-non-ASCII-regexp word))
-             
+
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
@@ -26,7 +25,7 @@
 (define *dict-cache-file-name* "cached-dictionary.scm")
 (if (file-exists? *dict-cache-file-name*)
     (begin
-      (display "Reading ")(write *dict-cache-file-name*) (display " ... ") 
+      (display "Reading ")(write *dict-cache-file-name*) (display " ... ")
       (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
       (display (length *the-dictionary*))
       (display " entries")
@@ -37,32 +36,34 @@
       (lambda (p)
         (display "Reading dictionary ... ")
         (newline)
-        (let loop ((word (read-line p))
-                   (words-read 0)
-                   )
-          (when (not (eof-object? word))
-            (when (zero? (remainder words-read 1000))
-              (display "Read ")
-              (display words-read)
-              (display " words ...")
-              (newline))
-            (if (word-acceptable? word)
-                (let* ((num  (bag word))
-                       (prev (hashtable-get ht num)))
-                  (if (not prev)
-                      (set! prev '()))
-                  (set! prev (cons word prev))
-                  (hashtable-put! ht num prev)))
-            (loop (read-line p)
-                  (+ 1 words-read)
-                  )))))
+        (let loop ((words-read 0))
+          (let ((word  (read-line p)))
+            (when (not (eof-object? word))
+              (let ((word (string-downcase word)))
+                (when (zero? (remainder words-read 1000))
+                  (display "Read ")
+                  (display words-read)
+                  (display " words ...")
+                  (newline))
+                (if (word-acceptable? word)
+                    (let* ((num  (bag word))
+                           (prev (hashtable-get ht num)))
+                      (if (not prev)
+                          (set! prev '()))
+                      (set! prev (cons word prev))
+                      (hashtable-put! ht num prev)))
+                (loop (+ 1 words-read))))))))
+    (display "done") (newline)
     (set! *the-dictionary*
           ;; put longest words first.
-          (sort
-           (hashtable->list ht)
-           (lambda (e1 e2)
-             (> (string-length (cadr e1))
-                (string-length (cadr e2))))))
+          (if #f
+              (sort
+               (hashtable-map ht cons)
+               (lambda (e1 e2)
+                 (> (string-length (cadr e1))
+                    (string-length (cadr e2)))))
+            (hashtable-map ht cons))
+          )
     (with-output-to-file *dict-cache-file-name*
       (lambda ()
         (write *the-dictionary*)))
