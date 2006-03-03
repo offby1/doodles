@@ -4,6 +4,8 @@
 ; we'd form different groups.  I wondered how many different groups
 ; the five of us could form.
 
+; see power-set.scm in this directory for a similar thing.
+
 ; Given ()
 ; return ()
 
