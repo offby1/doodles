@@ -44,21 +44,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (let ((key   (caar dict))
               (words (cdar dict)))
 
-          (define (return stuff)
+          (define (accum stuff)
             (when (not (null? stuff))
               (maybe-print stuff)
               (set! rv (append! rv stuff)))  )
 
           (let ((smaller-bag (subtract-bags bag key)))
             (when smaller-bag
-              (return (if (bag-empty? smaller-bag)
-                          (map list words)
-                        (combine words
-                                 (all-anagrams-internal
-                                  smaller-bag
-                                  (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
-                                  (add1 level)
-                                  num-to-show))))))
+              (accum (if (bag-empty? smaller-bag)
+                         (map list words)
+                       (combine words
+                                (all-anagrams-internal
+                                 smaller-bag
+                                 (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
+                                 (add1 level)
+                                 num-to-show))))))
           (loop (cdr dict)))))))
 
   (define (combine words anagrams)
