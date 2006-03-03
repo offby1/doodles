@@ -5,7 +5,7 @@
 
 (define word-acceptable?
   (let ((has-vowel-regexp (pregexp "[aeiou]"))
-        (has-non-ASCII-regexp (pregexp "[^a-zA-Z]")))
+        (has-non-ASCII-regexp (pregexp "[^a-z]")))
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
@@ -30,6 +30,10 @@
       (display (length *the-dictionary*))
       (display " entries")
       (newline))
+
+  ;; BUGBUG -- this hash table, despite what the docs say, isn't using
+  ;; "equal?" to compare keys.  Unfortunately I don't know how to fix
+  ;; it with 2.6e.  Perhaps a newer build of bigloo will work better.
   (let ((ht  (make-hashtable)))
     (call-with-input-file
         "words"

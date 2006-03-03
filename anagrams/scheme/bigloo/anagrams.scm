@@ -44,6 +44,8 @@ list of anagrams, each of which begins with one of the WORDS."
     (display (length pruned) (current-error-port))
     (display " entries"(current-error-port))
     (newline (current-error-port))
+    (write pruned (current-error-port))
+    (newline (current-error-port))
     (let ((result (all-anagrams-internal b pruned)))
       (display (length result) (current-error-port))
       (display " anagrams of "(current-error-port))
