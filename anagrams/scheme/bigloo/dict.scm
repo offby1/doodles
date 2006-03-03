@@ -21,6 +21,49 @@
                  (string=? "a" word)
                  (< 1 l)))))))
 
+;; helper functions to work around my inability to use alists as keys
+;; in bigloo's hash tables
+(define (bag->string b)
+  (apply string-append (map (lambda (p) (make-string (cdr p)
+                                                     (car p))) b)))
+
+(define (string->bag s)
+
+  (define (merge-into-alist pair alist)
+    (define (increment-cdr! p delta)
+      (set-cdr! p (+ delta (cdr p))))
+    (cond
+     ((null? alist)
+      (list pair))
+
+     ((char>? (car pair)
+              (caar alist))
+      (error
+       "merge-into-alist"
+       "pair's key is lexicographically greater than key of alist's first entry"
+       (format "pair: ~s; alist: ~s" pair alist)))
+
+     ((char=? (car pair)
+              (caar alist))
+      (increment-cdr! (car alist) (cdr pair))
+      alist)
+
+     (else
+      (cons pair alist))))
+
+  (define (internal s)
+    (cond
+     ((null? s)
+      '())
+     ((null? (cdr s))
+      (list (cons (car s) 1)))
+     (else
+      (merge-into-alist (cons (car s) 1)
+                        (internal (cdr s))))))
+
+   (internal (string->list s)))
+
+
 (define *the-dictionary* #f)
 (define *dict-cache-file-name* "cached-dictionary.scm")
 (if (file-exists? *dict-cache-file-name*)
@@ -50,23 +93,21 @@
                   (display " words ...")
                   (newline))
                 (if (word-acceptable? word)
-                    (let* ((num  (bag word))
-                           (prev (hashtable-get ht num)))
-                      (if (not prev)
-                          (set! prev '()))
+                    (let* ((key  (bag->string (bag word)))
+                           (prev (or (hashtable-get ht key) '())))
                       (set! prev (cons word prev))
-                      (hashtable-put! ht num prev)))
+                      (hashtable-put! ht key prev)))
                 (loop (+ 1 words-read))))))))
     (display "done") (newline)
     (set! *the-dictionary*
           ;; put longest words first.
-          (if #f
-              (sort
-               (hashtable-map ht cons)
-               (lambda (e1 e2)
-                 (> (string-length (cadr e1))
-                    (string-length (cadr e2)))))
-            (hashtable-map ht cons))
+          (sort
+           (hashtable-map ht (lambda (k v)
+                               (cons (string->bag k)
+                                     v)))
+           (lambda (e1 e2)
+             (> (string-length (cadr e1))
+                (string-length (cadr e2)))))
           )
     (with-output-to-file *dict-cache-file-name*
       (lambda ()
