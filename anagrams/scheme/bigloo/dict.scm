@@ -21,62 +21,23 @@
                  (string=? "a" word)
                  (< 1 l)))))))
 
-;; helper functions to work around my inability to use alists as keys
-;; in bigloo's hash tables
-(define (bag->string b)
-  (apply string-append (map (lambda (p) (make-string (cdr p)
-                                                     (car p))) b)))
-
-(define (string->bag s)
-
-  (define (merge-into-alist pair alist)
-    (define (increment-cdr! p delta)
-      (set-cdr! p (+ delta (cdr p))))
-    (cond
-     ((null? alist)
-      (list pair))
-
-     ((char>? (car pair)
-              (caar alist))
-      (error
-       "merge-into-alist"
-       "pair's key is lexicographically greater than key of alist's first entry"
-       (format "pair: ~s; alist: ~s" pair alist)))
-
-     ((char=? (car pair)
-              (caar alist))
-      (increment-cdr! (car alist) (cdr pair))
-      alist)
-
-     (else
-      (cons pair alist))))
-
-  (define (internal s)
-    (cond
-     ((null? s)
-      '())
-     ((null? (cdr s))
-      (list (cons (car s) 1)))
-     (else
-      (merge-into-alist (cons (car s) 1)
-                        (internal (cdr s))))))
-
-   (internal (string->list s)))
-
-
 (define *the-dictionary* #f)
 (define *dict-cache-file-name* "cached-dictionary.scm")
 (if (file-exists? *dict-cache-file-name*)
     (begin
-      (display "Reading ")(write *dict-cache-file-name*) (display " ... ")
+      (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (newline)
       (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-      (display (length *the-dictionary*))
+      (display (length (apply append (map cdr *the-dictionary*))))
       (display " entries")
       (newline))
 
-  ;; BUGBUG -- this hash table, despite what the docs say, isn't using
-  ;; "equal?" to compare keys.  Unfortunately I don't know how to fix
-  ;; it with 2.6e.  Perhaps a newer build of bigloo will work better.
+  ;; This hash table, despite what the docs say, isn't using "equal?"
+  ;; to compare keys.  Unfortunately I don't know how to fix it with
+  ;; 2.6e.  Perhaps a newer build of bigloo will work better.  In any
+  ;; case, my workaround is a kludge indeed: I convert my keys (which
+  ;; are alists) into strings before putting them in the dictionary,
+  ;; and convert them back upon retrieving them.
+
   (let ((ht  (make-hashtable)))
     (call-with-input-file
         "words"
@@ -93,22 +54,27 @@
                   (display " words ...")
                   (newline))
                 (if (word-acceptable? word)
-                    (let* ((key  (bag->string (bag word)))
+                    (let* ((key (bag word))
                            (prev (or (hashtable-get ht key) '())))
-                      (set! prev (cons word prev))
+                      (if (not (member word prev))
+                          (set! prev (cons word prev)))
                       (hashtable-put! ht key prev)))
                 (loop (+ 1 words-read))))))))
-    (display "done") (newline)
+    (display "done ... ") (newline)
     (set! *the-dictionary*
-          ;; put longest words first.
-          (sort
-           (hashtable-map ht (lambda (k v)
-                               (cons (string->bag k)
-                                     v)))
-           (lambda (e1 e2)
-             (> (string-length (cadr e1))
-                (string-length (cadr e2)))))
+          (if #f
+              ;; put longest words first.
+              (begin (display "sorting ... ")
+                     (sort
+                      (hashtable-map ht cons)
+                      (lambda (e1 e2)
+                        (> (string-length (cadr e1))
+                           (string-length (cadr e2))))))
+            (begin
+              (display "converting hash to list ... ")
+              (hashtable-map ht cons)))
           )
+    (display "done; writing cache ... ") (newline)
     (with-output-to-file *dict-cache-file-name*
       (lambda ()
         (write *the-dictionary*)))

@@ -1,13 +1,14 @@
 anagrams: $(addsuffix .o,anagrams bag dict)
 
+# -g enables assertions
 %.o : %.scm
-	bigloo -g4 -c $^
+	bigloo -g -g4 -c $^
 
 % : %.o
-	bigloo -o $@ $^
+	bigloo -g4 -o $@ $^
 
 check: anagrams
-	time ./$^ "Hemingway" > /dev/null 2> /tmp/bad
+	time ./$^ "Hemingway" > /dev/null
 
 clean:
 	rm -f anagrams *.o

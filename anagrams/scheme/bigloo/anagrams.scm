@@ -2,6 +2,7 @@
     (main start)
     (import (dict "dict.scm")
             (bag "bag.scm")))
+
 (define (all-anagrams-internal bag dict)
   (define rv '())
   (let loop ((dict dict))
@@ -10,15 +11,15 @@
       (let ((key   (caar dict))
             (words (cdar dict)))
         (let ((smaller-bag (subtract-bags bag key)))
-          (define pruned
-            (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
-                    dict))
           (if smaller-bag
               (if (bag-empty? smaller-bag)
                   (begin
                     (let ((combined (map list words)))
                       (set! rv (append rv combined))))
-                (let ((anagrams (all-anagrams-internal smaller-bag pruned)))
+                (let ((anagrams (all-anagrams-internal
+                                 smaller-bag
+                                 (filter (lambda (entry) (subtract-bags smaller-bag (car entry)))
+                                         dict))))
                   (if (not (null? anagrams))
                       (begin
                         (let ((combined (combine words anagrams)))
@@ -40,9 +41,11 @@ list of anagrams, each of which begins with one of the WORDS."
   (let* ((b (bag str))
          (pruned (dictionary-for b))
          )
+
     (display "Pruned dictionary has "(current-error-port))
     (display (length pruned) (current-error-port))
     (display " entries"(current-error-port))
+    ;;     (write pruned (current-error-port))
     (newline (current-error-port))
 
     (let ((result (all-anagrams-internal b pruned)))
