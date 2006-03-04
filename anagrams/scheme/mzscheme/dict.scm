@@ -86,5 +86,5 @@
 
     (set! *dictionary*
           (list-quicksort *dictionary* biggest-first))
-    (printf "~s~%Pruned dictionary now has ~a elements~%" *dictionary* (length (apply append (map cdr *dictionary*))))
+    (printf "Pruned dictionary now has ~a elements~%" (length (apply append (map cdr *dictionary*))))
     )))
