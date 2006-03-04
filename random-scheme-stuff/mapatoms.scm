@@ -8,9 +8,9 @@
 	       (so-far '()))
       (if (< n (vector-length v))
 	  (loop (+ 1 n)
-		(append (fn (vector-ref v n) arg)
-			so-far))
-	so-far)))
+		(append so-far
+			(fn (vector-ref v n) arg)))
+	 so-far)))
 
   (cond
    ((null? x)
