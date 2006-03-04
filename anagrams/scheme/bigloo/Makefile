@@ -8,7 +8,7 @@ anagrams: $(addsuffix .o,anagrams bag dict)
 	bigloo -g4 -o $@ $^
 
 check: anagrams
-	time ./$^ "Hemingway" > /dev/null
+	time ./$^ "Ernest Hemingway" > /dev/null
 
 clean:
 	rm -f anagrams *.o
