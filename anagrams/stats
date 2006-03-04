@@ -24,38 +24,28 @@ time ./anagrams  > /dev/null
 Waah: I can't remember if these times are 'real' or 'user'.
 All times are on the home machine, unless otherwise noted.
 
-											      408198
-language		: time "hemingway"	time "st hemingway"	time "est hemingway"  time "Ernest Hemingway"	bag implementation	dictionary cached?
-----------------	------------------------------------------------------------------------------------------------------------------
-c++ (-O2)		:  2 seconds		  2 seconds!		11 user seconds	      120 seconds		bignums			no
-c++ (-O2) (prune)	:                                                                      90 user seconds          bignums                 no
+											       408198
+language		: time "hemingway"	time "st hemingway"	time "est hemingway"   time "Ernest Hemingway"	bag implementation	dictionary cached?
+----------------	-------------------------------------------------------------------------------------------------------------------
+c++ (-O2)		:									90 user seconds		bignums			no
 
-chicken (prune)         :                                                                     162 user seconds          bignums                 yes
-guile 1.7 (gmp)		:  1 seconds		  4 seconds		> 160 user seconds				bignums			yes
-guile 1.7 (gmp) (prune) :                                                40 user seconds      2400 user seconds         bignums                 yes
-guile 1.6		:  2 seconds		  4 seconds								bignums			yes
-gambit 4b13		:  5 user seconds	  7 user seconds	13 user seconds	      > 180 user seconds	bignums			no
-gambit 4b15		:  7 user seconds	 16 user seconds	57 user seconds					bignums			no
-gambit 4b15 (prune)	:  6 user seconds	 6  user seconds	9 user seconds	      225 user seconds		bignums			no
+bigloo 2.6e             :  9 user seconds                                                                               strings                 yes
+chicken			:								       162 user seconds		bignums			yes
+guile 1.7 (gmp)		:						 40 user seconds      2400 user seconds		bignums			yes
+gambit 4b17		:  5 user seconds	 6  user seconds	9 user seconds	       200 user seconds		bignums			no
 gauche 0.8.3		:  8 user seconds	 15 user seconds	45 user seconds					bignums			no
-mit-scheme 7.7.90 (prune):						15 user seconds	     180 user seconds
-mzscheme v300           :  5 user seconds        6 user seconds         8 user seconds        134 user seconds          bignums                 no
-mzscheme v300 (prune)   :                                                                     80  user seconds          bignums                 no
-scheme48 1.3		:  8 user seconds	 18 user seconds	41 user seconds	      1450 user seconds		bignums			no(!) 
-scheme48 1.3 (prune)	:						16 user seconds	       272 user seconds		bignums			no(!) 
+mit-scheme 7.7.90	:						15 user seconds	       180 user seconds
+mzscheme v301.4		:									40 user seconds		bignums			no
+scheme48 1.3		:						16 user seconds	       272 user seconds		bignums			no(!) 
 
-perl5			:  4 seconds		 10 seconds		58 user seconds					strings			no
-perl5 (pruned)          :                                               18 user seconds       300 user seconds          strings                 no
+perl5 (pruned)		:						18 user seconds	       300 user seconds		strings			no
 perl5/numeric		: 21 seconds		170 seconds								bignums			yes
-python			:  4 seconds		  6 seconds		15 user seconds	      293 seconds		bignums			no
-ruby			:  8 seconds		 60 seconds								bignums			yes
-ruby (prune)		:  8 seconds		 14 user seconds	37 user seconds	      960 user seconds		bignums			yes
+python			:  4 seconds		  6 seconds		15 user seconds	       293 seconds		bignums			no
+ruby			:  8 seconds		 14 user seconds	37 user seconds	       960 user seconds		bignums			yes
 common lisp														bignums			yes
-  cmucl :		   1 seconds		  2 seconds
-  clisp :		   .1 seconds		 .5 seconds		 1 user seconds	      57 user seconds
-  clisp (prune)		:								      20 user seconds
-  sbcl	:		   0 seconds		  0 seconds		 .2 user seconds      10(!) user seconds
-  sbcl (prune):										      7 user seconds
+  cmucl			:  1 seconds		  2 seconds
+  clisp			:								       20 user seconds
+  sbcl			:								       7 user seconds
 
 ---
 Note: when gathering data to fill in the above, be sure that none of
