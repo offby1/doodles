@@ -1,74 +1,64 @@
 (declare (unit bag))
 
-(define (increment! char alist)
-  (define probe (assq char alist))
-  (when (not probe)
-    (set! probe (cons char 0))
-    (set! alist (cons probe alist)))
-  (let ((prev (cdr probe)))
-    (set-cdr! probe (+ 1 prev))
-    alist))
+(define (string-downcase s)
+  (list->string (map char-downcase (string->list s))))
 
-;; the returned object is a simple alist mapping chars to numbers.
-;; It's sorted alphabetically by character.
 (define (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
-  (let loop ((chars-to-examine (string-length s))
-             (result '()))
-    (if (zero? chars-to-examine)
-        (sort result (lambda (p1 p2) (char<? (car p1) (car p2))))
-      (let ((c (string-ref s (- chars-to-examine 1))))
-        (loop (- chars-to-examine 1)
-              (if (char-alphabetic? c )
-                  (increment! (char-downcase c) result)
-                result))))))
+  (list->string (sort (string->list (string-downcase s)) char<?)))
 
-(define bag-empty? null?)
-(define bags=? equal?)
 
-(define (sb-internal b1 b2 result)
-  (cond
-   ((bag-empty? b2)
-    result)
-   ((bag-empty? b1)
-    #f)
-   (else
-    (let ((entry1 (car b1))
-          (entry2 (car b2)))
-      (cond
-       ((char=? (car entry1)
-                (car entry2))
-        (let ((c (car entry2))
-              (diff (- (cdr entry1)
-                       (cdr entry2))))
-          (cond
-           ((negative? diff)
-            #f)
-           ((zero? diff)
-            (sb-internal (cdr b1)
-                         (cdr b2)
-                         result))
-           (else
-            (sb-internal (cdr b1)
-                         (cdr b2)
-                         (cons (cons c diff)
-                               result))))))
-       ((char>? (car entry1)
-                (car entry2))
-        #f)
-       (else
-        (let ((sub (sb-internal (cdr b1)
-                                b2
-                                result)))
-          (and sub
-               (cons entry1
-                     sub)))
-        ))))))
+(define (bag-empty? s) (string=? s ""))
+(define bags=? string=?)
 
-(define (subtract-bags b1 b2)
-  (sb-internal b1 b2 '()))
 
+;; top minus bottom.
+
+;; if BOTTOM contains any characters that aren't in TOP, fail.
+
+;; if BOTTOM contains more of a given character than TOP does, also fail.
+
+(define (subtract-bags top bottom)
+
+  (define (string-cdr s)
+    (substring s 1 (string-length s)))
+
+  (define (internal top bottom result)
+    (cond
+     ((string=? bottom "")
+      (string-append result top))
+     ((string=? top "")
+      #f)
+     (else
+      (let ((t (string-ref top    0))
+            (b (string-ref bottom 0)))
+        (cond
+         ((char=? t b)
+          (internal (string-cdr top)
+                    (string-cdr bottom)
+                    result))
+         ((char<? t b)
+          (internal (string-cdr top)
+                    bottom
+                    (string-append result (make-string 1 t))))
+         (else
+          #f))))))
+
+;;   (display "Subtract-Bags: ")
+;;   (display "top is ")
+;;   (write top)
+;;   (display "; bottom is ")
+;;   (write bottom)
+
+  (let ((rv (internal top bottom "")))
+
+;;     (display "Returning: ")
+;;     (write rv)
+;;     (newline)
+
+    rv)
+  )
 
 
 ;;; unit tests
@@ -106,5 +96,5 @@ regard to order."
   (assert (bag-empty? empty-bag))
   (assert empty-bag))
 
-(display  "bag tests passed.")
-(newline)
+(display  "bag tests passed." (current-error-port))
+(newline (current-error-port))

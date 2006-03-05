@@ -22,7 +22,7 @@
                       (begin
                         (let ((combined (combine words anagrams)))
                           (set! rv (append rv combined)))))))))
-        
+
         (loop (cdr dict))))))
 
 
@@ -39,19 +39,17 @@ list of anagrams, each of which begins with one of the WORDS."
   (let* ((b (bag str))
          (pruned (dictionary-for b))
          )
-    (display "Pruned dictionary has ")
-    (display (length pruned))
-    (display " entries")
-    (newline)
+    (display "Pruned dictionary has " (current-error-port))
+    (display (length pruned) (current-error-port))
+    (display " entries" (current-error-port))
+    (newline (current-error-port))
     (let ((result (all-anagrams-internal b pruned)))
-      (display (length result))
-      (display " anagrams of ")
-      (write str)
-      (display ":")
-      (newline)
-      ;;(display result) (newline)
-      )
-    ))
+      (display (length result) (current-error-port))
+      (display " anagrams of " (current-error-port))
+      (write str (current-error-port))
+      (display ":" (current-error-port))
+      (newline (current-error-port))
+      result)))
 
-(display (anagrams (cadr (command-line-arguments))))
+(display (anagrams (car (command-line-arguments))))
 (newline)

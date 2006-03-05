@@ -1,3 +1,6 @@
+;;; Thanks to "zbigniew" on #scheme for pointing out that using alists
+;;; as hash keys is a _really_ bad idea.
+
 (declare (unit dict))
 (declare (uses bag))
 
@@ -11,13 +14,13 @@
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
-             
+
              ;; it's gotta have a vowel.
              (string-match has-vowel-regexp word)
-             
+
              ;; it's gotta be all ASCII, all the time.
              (not (string-match has-non-ASCII-regexp word))
-             
+
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
@@ -25,38 +28,41 @@
 
 (define *the-dictionary* #f)
 (define *dict-cache-file-name* "cached-dictionary.scm")
+(define (err . args)
+  (for-each (lambda (arg)
+              (display arg  (current-error-port)))
+           args))
+(define (string-downcase s)
+  (list->string (map char-downcase (string->list s))))
 (if (file-exists? *dict-cache-file-name*)
     (begin
-      (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (flush-output)
+      (err "Reading ")(err *dict-cache-file-name*) (err " ... ")
       (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-      (display (length *the-dictionary*))
-      (display " entries")
-      (newline))
+      (err (length *the-dictionary*))
+      (err " entries")
+      (newline (current-error-port)))
   (let ((ht  (make-hash-table)))
     (call-with-input-file
         "words"
       (lambda (p)
-        (display "Reading dictionary ... ")
-        (newline)
-        (let loop ((word (read-line p))
-                   (words-read 0)
-                   )
-          (when (not (eof-object? word))
-            (when (zero? (remainder words-read 1000))
-              (display "Read ")
-              (display words-read)
-              (display " words ...")
-              (newline))
-            (if (word-acceptable? word)
-                (let* ((num  (bag word))
-                       (prev (hash-table-ref ht num (lambda () #f))))
-                  (if (not prev)
-                      (set! prev '()))
-                  (set! prev (cons word prev))
-                  (hash-table-set! ht num prev)))
-            (loop (read-line p)
-                  (+ 1 words-read)
-                  )))))
+        (display "Reading dictionary ... " (current-error-port))
+        (newline (current-error-port))
+        (let loop ((words-read 0))
+          (let ((word (read-line p)))
+            (when (not (eof-object? word))
+              (let ((word (string-downcase word)))
+                (when (zero? (remainder words-read 1000))
+                  (display "Read " (current-error-port))
+                  (display words-read (current-error-port))
+                  (display " words ..." (current-error-port))
+                  (newline (current-error-port)))
+                (if (word-acceptable? word)
+                    (let* ((key  (bag word))
+                           (prev (hash-table-ref ht key (lambda () '()))))
+                      (if (not (member word prev))
+                          (set! prev (cons word prev)))
+                      (hash-table-set! ht key prev))))
+              (loop (+ 1 words-read)))))))
     (set! *the-dictionary*
           ;; put longest words first.
           (sort
@@ -66,7 +72,17 @@
                 (string-length (cadr e2))))))
     (with-output-to-file *dict-cache-file-name*
       (lambda ()
-        (write *the-dictionary*)))
+        ;;(write *the-dictionary*)
+
+        ;; add plenty of line breaks so that CVS Emacs (March 2006)
+        ;; can visit the file without freaking out
+        (display "(") (newline)
+        (for-each (lambda (entry)
+                    (write entry)
+                    (newline))
+                  *the-dictionary*)
+        (display ")") (newline)
+        ))
     (display "Wrote " )
     (write *dict-cache-file-name*)
     (newline)))

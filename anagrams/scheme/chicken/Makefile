@@ -1,6 +1,5 @@
 srcs := anagrams.scm dict.scm bag.scm
 objs := $(srcs:.scm=.o)
-cs   := $(srcs:.scm=.c)
 
 CFLAGS := $(shell chicken-config -cflags)
 LDFLAGS:= $(shell chicken-config -libs)
@@ -22,7 +21,7 @@ check: anagrams words
 	time ./$^ "Ernest Hemingway" && chicken-profile
 
 clean:
-	rm -f $(objs) $(cs) anagrams PROFILE words
+	rm -f $(objs) $(srcs:.scm=.c) anagrams PROFILE words
 
 realclean: clean
 	rm -f cached-dictionary.scm
