@@ -1,4 +1,5 @@
-(declare (unit bag))
+(declare (unit bag)
+         (uses srfi-1))
 
 (define (string-downcase s)
   (list->string (map char-downcase (string->list s))))
@@ -6,7 +7,7 @@
 (define (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
-  (list->string (sort (string->list (string-downcase s)) char<?)))
+  (list->string (sort (filter char-alphabetic? (string->list (string-downcase s))) char<?)))
 
 
 (define (bag-empty? s) (string=? s ""))
@@ -85,6 +86,9 @@ regard to order."
 (assert (bags=? (bag "a")
                 (subtract-bags (bag "ab")
                                (bag "b"))))
+
+(assert (bags=? (bag "a ")
+                (bag "a")))
 
 (assert (not (subtract-bags (bag "a")
                             (bag "b"))))

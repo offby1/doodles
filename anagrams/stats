@@ -29,8 +29,8 @@ language		: time "hemingway"	time "st hemingway"	time "est hemingway"   time "Er
 ----------------	-------------------------------------------------------------------------------------------------------------------
 c++ (-O2)		:									90 user seconds		bignums			no
 
-bigloo 2.6e		:  9 user seconds						       184 user seconds		strings			yes
-chicken (302)		:			 20 user seconds        47 user seconds	       145 user seconds		strings			yes
+bigloo 2.6e		:  9 user seconds	 12 user seconds			       184 user seconds		strings			yes
+chicken (302)		:  3 user seconds         6 user seconds        14 user seconds        420 user seconds         strings                 yes
 guile 1.7 (gmp)		:					        40 user seconds	      2400 user seconds		bignums			yes
 gambit 4b17		:  5 user seconds	  6 user seconds	 9 user seconds	       200 user seconds		bignums			no
 gauche 0.8.3		:  8 user seconds	 15 user seconds	45 user seconds					bignums			no
