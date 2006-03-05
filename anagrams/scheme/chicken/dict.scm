@@ -102,6 +102,11 @@
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
 (define (dictionary-for criterion-bag)
-  (filter (lambda (p)
+  (let ((rv (filter (lambda (p)
             (subtract-bags criterion-bag (car p)))
-          *the-dictionary*))
+          *the-dictionary*)))
+    (with-output-to-file "pruned" (lambda () (write (sort (map cdr rv)
+                                                          (lambda (a b)
+                                                            (string<? (car a)
+                                                                      (car b)))))))
+    rv))
