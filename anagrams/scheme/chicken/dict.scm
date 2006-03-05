@@ -38,7 +38,19 @@
     (begin
       (err "Reading ")(err *dict-cache-file-name*) (err " ... ")
       (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-      (err (length *the-dictionary*))
+
+      ;; originally I had
+
+      ;; (apply + (map (lambda (e) (length (cdr e))) *the-dictionary*))
+
+      ;; but that segfaulted, perhaps because I was passing tens of
+      ;; thousands of arguments.
+      (err (let loop ((d *the-dictionary*)
+                      (sum 0))
+             (if (null? d)
+                 sum
+               (loop (cdr d)
+                     (+ sum (length (cdar d)))))))
       (err " entries")
       (newline (current-error-port)))
   (let ((ht  (make-hash-table)))
