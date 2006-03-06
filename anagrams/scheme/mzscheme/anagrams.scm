@@ -27,28 +27,33 @@ mzscheme
                rv)))
 
 (define (all-anagrams-internal bag dict)
-  (define rv '())
 
-  (let loop ((dict dict))
+  (let loop ((rv '())
+             (dict dict))
+
     (if (null? dict)
         rv
-      (let ((key   (caar dict))
-            (words (cdar dict)))
 
-        (define (accum stuff)
-          (when (not (null? stuff))
-            (set! rv (append! rv stuff)))  )
+      (let* ((key   (caar dict))
+             (words (cdar dict))
+             (smaller-bag (subtract-bags bag key)))
 
-        (let ((smaller-bag (subtract-bags bag key)))
-          (when smaller-bag
-            (accum (if (bag-empty? smaller-bag)
-                       (map list words)
-                     (combine words
-                              (all-anagrams-internal
-                               smaller-bag
-                               (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
-                               ))))))
-        (loop (cdr dict))))))
+        (loop
+         (if smaller-bag
+             (append
+              (if (bag-empty? smaller-bag)
+                  (map list words)
+                (combine words
+                         (all-anagrams-internal
+                          smaller-bag
+                          (filter (lambda (entry)
+                                    (subtract-bags
+                                     smaller-bag
+                                     (car entry)))
+                                  dict))))
+              rv)
+           rv)
+         (cdr dict))))))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
