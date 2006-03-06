@@ -56,7 +56,8 @@ mzscheme
   (let ((result (filter (lambda (entry)
                           (subtract-bags bag-to-meet (car entry)))
                         (hash-table-map (wordlist->hash dict-file-name) cons))))
-    (printf
+    (fprintf
+     (current-error-port)
      "Pruned dictionary now has ~a elements~%"
      (apply + (map (lambda (seq)
                      (length (cdr seq)))
