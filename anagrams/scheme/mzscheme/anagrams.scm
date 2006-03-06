@@ -4,28 +4,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module anagrams
-    mzscheme
-  (require "dict.scm"
-           "bag.scm"
-           (only (lib "1.ss"  "srfi") filter take))
+mzscheme
+(require "dict.scm"
+         "bag.scm"
+         (only (lib "1.ss"  "srfi") filter take))
 
-  (provide all-anagrams)
+(provide all-anagrams)
 
-  (define *num-to-show* 10000)
+(define *num-to-show* 10000)
 
-  (define (all-anagrams string dict-file-name )
-    (let ((in-bag   (bag string)))
-      (init in-bag dict-file-name)
-      (let ((rv (all-anagrams-internal
-                 in-bag
-                 *dictionary*
-                 0
-                 *num-to-show*)))
-        (fprintf (current-error-port)
-                 "~a (of at most ~a) anagrams of ~s~%"
-                 (length rv)
-                 *num-to-show*
-                 string))))
+(define (all-anagrams string dict-file-name )
+  (let* ((in-bag   (bag string))
+         (rv (all-anagrams-internal
+              in-bag
+              (init in-bag dict-file-name)
+              0
+              *num-to-show*)))
+    (fprintf (current-error-port)
+             "~a (of at most ~a) anagrams of ~s~%"
+             (length rv)
+             *num-to-show*
+             string)))
 
 (define (all-anagrams-internal bag dict level num-to-show)
   (define rv '())
@@ -61,20 +60,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                  num-to-show))))))
           (loop (cdr dict)))))))
 
-  (define (combine words anagrams)
-    "Given a list of WORDS, and a list of ANAGRAMS, creates a new
+(define (combine words anagrams)
+  "Given a list of WORDS, and a list of ANAGRAMS, creates a new
 list of anagrams, each of which begins with one of the WORDS."
-    (apply append (map (lambda (word)
-                         (map (lambda (an)
-                                (cons word an))
-                              anagrams))
-                       words)))
+  (apply append (map (lambda (word)
+                       (map (lambda (an)
+                              (cons word an))
+                            anagrams))
+                     words)))
 
-  (all-anagrams
-   (vector-ref
-    (current-command-line-arguments)
-    0)
-   #;"/usr/share/dict/words"
-   "words"
-   ))
+(all-anagrams
+ (vector-ref
+  (current-command-line-arguments)
+  0)
+ #;"/usr/share/dict/words"
+ "words"
+ ))
 
