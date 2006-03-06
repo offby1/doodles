@@ -11,54 +11,45 @@ mzscheme
 
 (provide all-anagrams)
 
-(define *num-to-show* 10000)
-
 (define (all-anagrams string dict-file-name )
   (let* ((in-bag   (bag string))
          (rv (all-anagrams-internal
               in-bag
               (init in-bag dict-file-name)
-              0
-              *num-to-show*)))
+              0)))
     (fprintf (current-error-port)
-             "~a (of at most ~a) anagrams of ~s~%"
+             "~a anagrams of ~s~%"
              (length rv)
-             *num-to-show*
              string)))
 
-(define (all-anagrams-internal bag dict level num-to-show)
+(define (all-anagrams-internal bag dict level)
   (define rv '())
   (define (maybe-print thing)
-    (when (and (zero? level)
-               (positive? num-to-show))
+    (when (zero? level)
       (display thing)
-      (newline)
-      (set! num-to-show (sub1 num-to-show))))
+      (newline)))
 
-  (if (zero? num-to-show)
-      '()
-    (let loop ((dict dict))
-      (if (null? dict)
-          rv
-        (let ((key   (caar dict))
-              (words (cdar dict)))
+  (let loop ((dict dict))
+    (if (null? dict)
+        rv
+      (let ((key   (caar dict))
+            (words (cdar dict)))
 
-          (define (accum stuff)
-            (when (not (null? stuff))
-              (maybe-print stuff)
-              (set! rv (append! rv stuff)))  )
+        (define (accum stuff)
+          (when (not (null? stuff))
+            (maybe-print stuff)
+            (set! rv (append! rv stuff)))  )
 
-          (let ((smaller-bag (subtract-bags bag key)))
-            (when smaller-bag
-              (accum (if (bag-empty? smaller-bag)
-                         (map list words)
-                       (combine words
-                                (all-anagrams-internal
-                                 smaller-bag
-                                 (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
-                                 (add1 level)
-                                 num-to-show))))))
-          (loop (cdr dict)))))))
+        (let ((smaller-bag (subtract-bags bag key)))
+          (when smaller-bag
+            (accum (if (bag-empty? smaller-bag)
+                       (map list words)
+                     (combine words
+                              (all-anagrams-internal
+                               smaller-bag
+                               (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
+                               (add1 level)))))))
+        (loop (cdr dict))))))
 
 (define (combine words anagrams)
   "Given a list of WORDS, and a list of ANAGRAMS, creates a new
