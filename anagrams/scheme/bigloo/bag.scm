@@ -1,19 +1,10 @@
 (module bag
     (export bag-empty? subtract-bags bag))
 
-(define (increment! char alist)
-  (define probe (assq char alist))
-  (when (not probe)
-    (set! probe (cons char 0))
-    (set! alist (cons probe alist)))
-  (let ((prev (cdr probe)))
-    (set-cdr! probe (+ 1 prev))
-    alist))
-
 (define (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
-  (list->string (sort (string->list (string-downcase s)) char<?)))
+  (list->string (sort (filter char-alphabetic? (string->list (string-downcase s))) char<?)))
 
 (define (bag-empty? s) (string=? s ""))
 (define bags=? string=?)
@@ -50,19 +41,7 @@ regard to order."
          (else
           #f))))))
 
-;;   (display "Subtract-Bags: ")
-;;   (display "top is ")
-;;   (write top)
-;;   (display "; bottom is ")
-;;   (write bottom)
-
-  (let ((rv (internal top bottom "")))
-
-;;     (display "Returning: ")
-;;     (write rv)
-;;     (newline)
-
-    rv)
+  (internal top bottom "")
   )
 
 
@@ -101,6 +80,9 @@ regard to order."
 
 (my-assert (not (bags=? (bag "abc")
                      (bag "bc"))))
+
+(assert-bags= (bag "a")
+              (bag "a "))
 
 (assert-bags=  (bag "a")
                 (subtract-bags (bag "ab")
