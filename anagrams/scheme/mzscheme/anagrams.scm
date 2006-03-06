@@ -16,18 +16,18 @@ mzscheme
          (rv (all-anagrams-internal
               in-bag
               (init in-bag dict-file-name)
-              0)))
+              )))
     (fprintf (current-error-port)
              "~a anagrams of ~s~%"
              (length rv)
-             string)))
+             string)
+    (for-each (lambda (a)
+                (display a)
+                (newline))
+               rv)))
 
-(define (all-anagrams-internal bag dict level)
+(define (all-anagrams-internal bag dict)
   (define rv '())
-  (define (maybe-print thing)
-    (when (zero? level)
-      (display thing)
-      (newline)))
 
   (let loop ((dict dict))
     (if (null? dict)
@@ -37,7 +37,6 @@ mzscheme
 
         (define (accum stuff)
           (when (not (null? stuff))
-            (maybe-print stuff)
             (set! rv (append! rv stuff)))  )
 
         (let ((smaller-bag (subtract-bags bag key)))
@@ -48,7 +47,7 @@ mzscheme
                               (all-anagrams-internal
                                smaller-bag
                                (filter (lambda (entry) (subtract-bags smaller-bag (car entry))) dict)
-                               (add1 level)))))))
+                               ))))))
         (loop (cdr dict))))))
 
 (define (combine words anagrams)
