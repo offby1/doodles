@@ -23,18 +23,20 @@ mzscheme
         dict))))
 
 (define (adjoin-word! dict word)
-  (let* ((this-bag (bag word))
-         (probe (hash-table-get dict this-bag (lambda () #f))))
-    (cond
-     ((not probe)
-      (hash-table-put! dict this-bag  (list word)))
-     ((not (member word probe))
-      (hash-table-put! dict this-bag (cons word probe)))
-     )))
+  (let ((bag (bag word)))
+
+    (define (! thing)
+      (hash-table-put! dict bag thing))
+
+    (let ((probe (hash-table-get dict bag (lambda () #f))))
+      (if (not probe)
+          (! (list word))
+        (if (not (member word probe))
+            (! (cons word probe)))))))
 
 (define word-acceptable?
   (let ((has-vowel-regexp (regexp "[aeiouAEIOU]"))
-        (has-non-ASCII-regexp (regexp "[^a-zA-Z]"   )))
+        (has-non-ASCII-regexp (regexp "[^a-zA-Z]")))
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
@@ -50,31 +52,15 @@ mzscheme
                  (string=? "a" word)
                  (< 1 l)))))))
 
-(define (bag-acceptable? this bag-to-meet)
-  (and (or (bags=? bag-to-meet this)
-           (subtract-bags bag-to-meet this))
-       this))
-
 (define (init bag-to-meet dict-file-name)
-  (define (biggest-first e1 e2)
-    (let* ((s1 (cadr e1))
-           (s2 (cadr e2))
-           (l1 (string-length s1))
-           (l2 (string-length s2)))
-      (or (> l1 l2)
-          (and (= l1 l2)
-               (string<? s1 s2)))))
-
-  (quicksort
-   (let ((result (filter (lambda (entry)
-                           (bag-acceptable? (car entry) bag-to-meet))
-                         (hash-table-map (wordlist->hash dict-file-name) cons))))
-     (printf
-      "Pruned dictionary now has ~a elements~%"
-      (apply + (map (lambda (seq)
-                      (length (cdr seq)))
-                    result)))
-     result)
-   biggest-first)
+  (let ((result (filter (lambda (entry)
+                          (subtract-bags bag-to-meet (car entry)))
+                        (hash-table-map (wordlist->hash dict-file-name) cons))))
+    (printf
+     "Pruned dictionary now has ~a elements~%"
+     (apply + (map (lambda (seq)
+                     (length (cdr seq)))
+                   result)))
+    result)
 
   ))
