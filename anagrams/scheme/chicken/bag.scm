@@ -25,7 +25,9 @@ regard to order."
   (define (string-cdr s)
     (substring s 1 (string-length s)))
 
-  (define (internal top bottom result)
+  (let loop ((top top)
+             (bottom bottom)
+             (result ""))
     (cond
      ((string=? bottom "")
       (string-append result top))
@@ -36,30 +38,15 @@ regard to order."
             (b (string-ref bottom 0)))
         (cond
          ((char=? t b)
-          (internal (string-cdr top)
-                    (string-cdr bottom)
-                    result))
+          (loop (string-cdr top)
+                (string-cdr bottom)
+                result))
          ((char<? t b)
-          (internal (string-cdr top)
-                    bottom
-                    (string-append result (make-string 1 t))))
+          (loop (string-cdr top)
+                bottom
+                (string-append result (make-string 1 t))))
          (else
-          #f))))))
-
-;;   (display "Subtract-Bags: ")
-;;   (display "top is ")
-;;   (write top)
-;;   (display "; bottom is ")
-;;   (write bottom)
-
-  (let ((rv (internal top bottom "")))
-
-;;     (display "Returning: ")
-;;     (write rv)
-;;     (newline)
-
-    rv)
-  )
+          #f)))))))
 
 
 ;;; unit tests
