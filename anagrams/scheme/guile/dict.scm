@@ -9,7 +9,7 @@
 
 (define *big-ol-hash-table* #f)
 
-(define *alist-file-name* "big-dict-alist.scm")
+(define *alist-file-name* "big-dict-alist")
 
 (define (wordlist->hash)
   (with-input-from-file
@@ -50,7 +50,7 @@
 
              ;; it's gotta be all ASCII, all the time.
              (not (regexp-exec has-non-ASCII-regexp word))
-             
+
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
@@ -74,12 +74,12 @@
    (with-input-from-file *alist-file-name* read))
   ;; now clobber the alist.
   (set! *dictionary* (hash-fold (lambda (key value prior)
-                             (cons (cons key value) prior)) 
+                             (cons (cons key value) prior))
                            '()
                            *big-ol-hash-table*))
   (format #t "done~%")
 
-  
+
   ;; TODO -- consider sorting *dictionary*.  There are two ways you might
   ;; want to sort it:
 
@@ -95,7 +95,7 @@
   ;; bored.
 
   (let ()
-    (define (biggest-first e1 e2) 
+    (define (biggest-first e1 e2)
       (let* ((s1 (cadr e1))
              (s2 (cadr e2))
              (l1 (string-length s1))
@@ -116,7 +116,7 @@
 
     (format #t "Sorting or shuffling the dictionary (~a elements), for the hell of it ... "
             (length *dictionary*))
-    (set! *dictionary* 
+    (set! *dictionary*
           (if #t
               (sort! *dictionary* biggest-first)
             (shuffled *dictionary*))
@@ -144,7 +144,7 @@
       ;; don't use `call-with-output-file' since older versions of
       ;; pretty-print don't accept a port parameter.
       (let ((result (hash-fold (lambda (key value prior)
-                                 (cons (cons key value) prior)) 
+                                 (cons (cons key value) prior))
                                '()
                                (wordlist->hash))))
 
@@ -154,7 +154,7 @@
             ;; so that it's not all on on big line, but that takes for
             ;; ...  ever.
             (write result ))))
-      
+
       (format #t "done~%")))
 
 (set! *random-state* (seed->random-state (get-internal-real-time)))

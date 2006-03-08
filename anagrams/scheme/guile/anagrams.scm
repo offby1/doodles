@@ -1,6 +1,3 @@
-#!/usr/bin/guile \
---debug -ds
-!#
 (define-module (anagrams))
 (use-modules (ice-9 debug)
              (ice-9 pretty-print)
@@ -15,12 +12,15 @@
 ;; string.
 (define-public (all-anagrams string)
   (let ((in-bag         (bag string)))
-    
+
     (init in-bag)
     (let* ((result    (all-anagrams-internal in-bag *dictionary* 0)))
-      
-      (pretty-print result)
-      
+
+      (display (length result) (current-error-port))
+      (display " anagrams of " (current-error-port))
+      (write string            (current-error-port))
+      (newline                 (current-error-port))
+
       result)))
 
 (define-macro (maybe-dump ans)
