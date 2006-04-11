@@ -1,7 +1,7 @@
 (module draw mzscheme
 (require (lib "mred.ss" "mred")
          (lib "class.ss"))
-  
+
 (provide (rename internal-make-grid make-grid) draw-line *offset* *pause* my-version)
 
 (define my-version "$Id$")
@@ -9,7 +9,7 @@
 (print-struct #t)
 (define-struct grid (device-contexts
                      cell-width-in-pixels
-                       
+
                      ;; pens
                      thin-red thin-white thick-black thick-gray
                      ) #f)
@@ -42,9 +42,9 @@
 (define my-frame%
   (class frame%
     (augment on-close)
-    (define on-close (lambda () (maybe-exit)))
+    (define (on-close) (maybe-exit))
     (super-instantiate ())))
-    
+
 (define *pause* (make-parameter
                  3/100
                  (lambda (value)
@@ -63,10 +63,12 @@
                     value)))
 
 
-  
+
 (define frame #f)
 (define (internal-make-grid main-proc *x-max*)
   (define ncols (add1 (*x-max*)))
+
+  ;; column width in pixels
   (define cwp  (let-values (((width height)
                              (get-display-size)))
                  (quotient (* 9 (min width height)) (* ncols 10))))
@@ -79,13 +81,13 @@
 
   (set! frame (instantiate my-frame% ("Look! A maze!")
                 (width (* ncols cwp))
-                             
+
                 ;; TODO -- this height isn't quite
                 ;; enough, since it must accomodate both
                 ;; the canvas and the menu bar.
                 (height (* ncols cwp))
                 ))
-                                                                          
+
   (let* ((menu-bar (instantiate menu-bar% (frame)
                      ))
          (menu (new menu%
@@ -97,9 +99,9 @@
     (define bitmap (instantiate bitmap% ((* ncols cwp)
                                          (* ncols cwp))))
     (define bm-dc (instantiate bitmap-dc% (bitmap)))
-  
+
     ;; Make the drawing area with a paint callback that copies the bitmap
-    (define canvas (instantiate my-canvas% (frame) 
+    (define canvas (instantiate my-canvas% (frame)
                      (paint-callback (lambda (canvas dc)
                                        (send dc draw-bitmap bitmap 0 0)))))
 
@@ -107,27 +109,28 @@
       (for-each proc (grid-device-contexts rv)))
     (define do-something (new menu-item% (label "Do something!")
                               (parent menu)
-                              (callback (lambda (menu-item control-object)
-                                          (fedc (lambda (dc) (send dc clear)))
-                                            
-                                          ;; draw the grid lines.
-                                          (fedc (lambda (dc) (send dc set-pen (grid-thin-red rv))))
+                              (callback
+                               (lambda (menu-item control-object)
+                                 (fedc (lambda (dc) (send dc clear)))
 
-                                          (let loop ((columns-drawn 0))
-                                            (when (and #t
-                                                       (<= columns-drawn ncols))
-                                              (parameterize ((*pause* 0))
-                                                (draw-line rv
-                                                           columns-drawn
-                                                           0 'down ncols #f 'red)
-                                                (draw-line rv
-                                                           0
-                                                           columns-drawn
-                                                           'right ncols #f 'red))
-                                              (loop (add1 columns-drawn))))
+                                 ;; draw the grid lines.
+                                 (fedc (lambda (dc) (send dc set-pen (grid-thin-red rv))))
 
-                                          (fedc (lambda (dc) (send dc set-pen (grid-thick-black rv))))
-                                          (main-proc)))))
+                                 (let loop ((columns-drawn 0))
+                                   (when (and #t
+                                              (<= columns-drawn ncols))
+                                     (parameterize ((*pause* 0))
+                                       (draw-line rv
+                                                  columns-drawn
+                                                  0 'down ncols #f 'red)
+                                       (draw-line rv
+                                                  0
+                                                  columns-drawn
+                                                  'right ncols #f 'red))
+                                     (loop (add1 columns-drawn))))
+
+                                 (fedc (lambda (dc) (send dc set-pen (grid-thick-black rv))))
+                                 (main-proc)))))
       (define go-way (new menu-item% (label "Go 'way")
                           (parent menu)
                           (callback (lambda (menu-item control-object) (maybe-exit)))))
@@ -137,9 +140,9 @@
     (fedc (lambda (dc) (send bm-dc clear)))
     ;; Show the frame by calling its show method
     (send frame show #t)
-      
+
     rv))
-  
+
 ;; TODO -- find an elegant way to avoid multiply evaluating dc.
 ;; Simply replacing this syntax with a procedure oughta do it.
 (define-syntax with-pen
@@ -162,7 +165,7 @@
              (origin-y (+ uly (* (+ (*offset*) origin-y) cwp)))
              (length (* length cwp)))
 
-         (with-pen 
+         (with-pen
           (if thick?
               (case color
                 ((black) (grid-thick-black  grid))
@@ -183,8 +186,8 @@
                         ((up   ) (list origin-x (- origin-y length)))
                         (else
                          (error 'draw-line "Unknown orientation" orientation)))))
-           
-           
+
+
          ))
      )
    (grid-device-contexts grid)))

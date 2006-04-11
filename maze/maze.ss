@@ -3,7 +3,7 @@
 (require (all-except "draw.ss" my-version))
 (require (lib "trace.ss"))
 (require (lib "cmdline.ss"))
-(require (only (lib "compat.ss") sort))
+(require (only (lib "list.ss") sort))
 (require (only (lib "1.ss" "srfi") iota filter append-map))
 
 (provide my-version)
@@ -16,21 +16,21 @@
 
 (define (shuffle-list l)
   (map cdr
-       (sort (lambda (a b) (< (car a) (car b)))
-             (map (lambda (elt)
-                    
-                    ;; this oddness causes the list to be shuffled
-                    ;; only a little, making for a windier maze, and
-                    ;; hence a longer solution.  Ideally we'd use a
-                    ;; stable sort, but I don't know of one that's
-                    ;; easily available to mzscheme.
-                    (cons (let ((r (random)))
-                            (if (< r 10/10)
-                                r
-                              1)) elt)
-                    
-                    )
-                  l))))
+       (sort (map (lambda (elt)
+
+                         ;; this oddness causes the list to be shuffled
+                         ;; only a little, making for a windier maze, and
+                         ;; hence a longer solution.  Ideally we'd use a
+                         ;; stable sort, but I don't know of one that's
+                         ;; easily available to mzscheme.
+                         (cons (let ((r (random)))
+                                 (if (< r 10/10)
+                                     r
+                                   1)) elt)
+
+                         )
+                       l)
+             (lambda (a b) (< (car a) (car b))))))
 
 (define *lines-while-generating* (make-parameter #f))
 (define *solution* (make-parameter #f))
@@ -62,7 +62,7 @@
                                 (integer? value))
                      (raise-type-error '*x-max* "exact positive integer" value))
                    value)))
-(define (set-visited! n path-to-here) 
+(define (set-visited! n path-to-here)
   (when (not (null? path-to-here))
     (let* ((previous-node (car path-to-here))
            (direction-travelled (get-direction previous-node
@@ -95,7 +95,7 @@
                     1 #f 'white))
         (else
          (error "Uh oh." direction-travelled)))
-      
+
       ;; now draw a line from the old position to the current position.
       (when (*lines-while-generating*)
         (parameterize ((*offset* 1/2))
@@ -104,18 +104,18 @@
                      (y-coordinate previous-node)
                      direction-travelled
                      1 #t 'black)))
-      
+
       ))
 
   (hash-table-put! visited-nodes n #t)
-  
+
   (when (= (*x-max*) (x-coordinate n) (y-coordinate n))
     (*solution* (reverse (cons (cons (*x-max*)
                                      (*x-max*)) path-to-here)))))
 
 (define (visited? n) (hash-table-get visited-nodes n (lambda () #f)))
 (define (enumerate-neighbors node)
-  (shuffle-list 
+  (shuffle-list
    (filter (lambda (candidate)
              (and (<= 0 (x-coordinate candidate) (*x-max*))
                   (<= 0 (y-coordinate candidate) (*x-max*))
@@ -128,9 +128,9 @@
                            (x-coordinate node))
                         (+ (y-coordinate offset)
                            (y-coordinate node))))
-                
-                (append-map 
-                 (lambda (n) 
+
+                (append-map
+                 (lambda (n)
                    (map (lambda (m)
                           (cons n m))
                         (iota 3 -1)))
