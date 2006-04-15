@@ -7,7 +7,7 @@
            "misc.ss"
            (lib "list.ss" "srfi" "1")
            (only (lib "13.ss" "srfi") string-join)
-           (only (lib "compat.ss") sort))
+           (only (lib "list.ss") sort))
 
   ;; hand -> four-element list
   (define (shape h)
@@ -21,18 +21,18 @@
                   (hand->list h))))
 
   (define (hand->string h)
-    (map card->short-string (sort card< (hand->list h))))
+    (map card->short-string (sort (hand->list h) card<)))
 
   (define *deals* 1000)
 
   (define shape-distribution #f)
   (define note-hand! #f)
-  
+
   (define *points* (make-hash-table))
-  
+
   (let ()
     (define *shapes* (make-hash-table 'equal))
-    
+
     (set! shape-distribution
           (lambda ()
             (hash-table-map *shapes* (lambda (k v) (list v k)))))
@@ -42,7 +42,7 @@
             (lambda (h)
               (define (max-rank)
                 (apply max (map card-rank (hand->list h))))
-              (hash-table-increment! *shapes* (sort > (shape h)))
+              (hash-table-increment! *shapes* (sort (shape h) >))
               (hash-table-increment! *points* (high-card-points h))
               (set! hands-seen (add1 hands-seen))))))
 
@@ -60,9 +60,11 @@
                          (list
                           (second thing)
                           (first thing)))
-                       (sort (lambda (a b)
-                               (> (car a)
-                                  (car b))) (shape-distribution))))
+                       (sort
+                        (shape-distribution)
+                        (lambda (a b)
+                          (> (car a)
+                             (car b))))))
          (num-hands (apply + (map second results))))
     (printf "~a~n"
             (string-join
@@ -76,8 +78,10 @@
     (printf "Histogram of high-card points:~%")
     (for-each
      (lambda (p) (printf "~a: ~v~%" (first p) (exact->inexact (/ (second p) num-hands))))
-     (sort (lambda (a b)
-             (< (car a)
-                (car b))) (hash-table-map *points* list))))
+     (sort
+      (hash-table-map *points* list)
+      (lambda (a b)
+        (< (car a)
+           (car b))))))
 
   (newline))
