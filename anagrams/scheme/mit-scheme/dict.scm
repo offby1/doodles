@@ -9,13 +9,13 @@
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
-             
+
              ;; it's gotta have a vowel.
              (re-string-search-forward has-vowel-regexp word)
-             
+
              ;; it's gotta be all letters
              (not (re-string-search-forward has-non-letter-regexp word))
-             
+
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
@@ -24,11 +24,9 @@
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
 
-;; Riastradh suggested:
-;; instead of using MAKE-EQV-HASH-TABLE, using
-;;                    (STRONG-HASH-TABLE/CONSTRUCTOR INTEGER-HASH =), with some suitable definition of
-;;                    INTEGER-HASH, which might be (LAMBDA (INTEGER MODULUS) (REMAINDER (ABS INTEGER)
-;;                    MODULUS))
+;; Riastradh suggested the strong-hash-table/constructor instead of
+;; make-eqv-hash-table, which is what I first tried, and which was
+;; intolerably slow
 
 (define (snarf-dictionary criterion-bag)
   (let* ((ht-ctor   (strong-hash-table/constructor
@@ -60,6 +58,6 @@
                     (set! prev (cons word prev))
 
                     (hash-table/put! *the-table* num prev)))
-              
+
               (loop (read-line p)
                     (+ 1 words-read)))))))))

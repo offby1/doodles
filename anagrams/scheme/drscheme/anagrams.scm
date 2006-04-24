@@ -1,10 +1,8 @@
 (module anagrams
     mzscheme
-  (require "assert.scm"
-           "dict.scm"
+  (require "dict.scm"
            "bag.scm"
            "ports.scm"
-           ;(lib "errortrace.ss" "errortrace")
            (lib "mred.ss" "mred") ;for `yield'
            (lib "defmacro.ss")
            (lib "pretty.ss")

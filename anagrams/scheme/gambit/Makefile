@@ -8,7 +8,7 @@ all: $(prog)
 
 check: $(prog)
 	for i in "hemingway" "st hemingway" "est hemingway" "Ernest Hemingway"; \
-	do time ./$(prog) $$i ; done
+	do time ./$(prog) $$i > /dev/null ; done
 
 %.c : %.scm
 	gsc -prelude "(declare (standard-bindings) (block) (not safe))" -c $^
