@@ -1,7 +1,10 @@
 yowza: $(wildcard *.scm)
-	./top.scm
+	./compile.scm
 
 check: yowza
-	time scshvm -h 11659948 -i ./$^ hemingway
+	time scshvm -h 11659948 -i ./$^ "Ernest hemingway"
 
-.PHONY: check
+clean:
+	rm -f yowza
+
+.PHONY: check clean

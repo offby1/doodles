@@ -1,2 +1,2 @@
 check:
-	GAUCHE_LOAD_PATH=. gosh main.scm hemingway
+	GAUCHE_LOAD_PATH=. time gosh main.scm "Ernest hemingway"
