@@ -1,0 +1,2 @@
+It might be possible to use bignums as hash keys after all, if we use
+the "Tie::RefHash" module, and use _references_ to the bignums.

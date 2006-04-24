@@ -10,23 +10,22 @@ use bag;
 sub combine {
   my $words = shift;
   my $anagrams = shift;
-  my $rv = [];
+  my @rv = ();
 
   foreach my $w (@$words) {
-    push @$rv, (map {[($w, @$_)]} @$anagrams);
+    push @rv, (map {[($w, @$_)]} @$anagrams);
   }
 
-  @$rv;
+  @rv;
 }
 
 sub anagrams {
   my $bag = shift;
-  my $l = shift;
   my @dict = @_;
   my $rv = [];
 
-  foreach my $words_processed (0 .. $#dict) {
-    my $entry = $dict[$words_processed];
+  while (@dict) {
+    my $entry = shift @dict;
     my $key   = $entry->[0];
     my $words = $entry->[1];
 
@@ -44,16 +43,14 @@ sub anagrams {
         my $candidate = $_->[0];
         my $result = subtract_bags ($smaller_bag, $candidate);
         defined ($result);
-      } @dict[$words_processed .. $#dict];
+      } @dict;
 
     my $from_smaller_bag = anagrams ($smaller_bag,
-                                     $l + 1,
                                      @pruned);
     next unless (@$from_smaller_bag);
 
     my @combined = combine ($words, $from_smaller_bag);
     push @$rv, @combined;
-    #print STDERR join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
   }
 
   return $rv;
@@ -65,7 +62,7 @@ sub anagrams {
   my $input_as_bag = bag ($input);
   init ($input_as_bag);
 
-  my $result = anagrams ($input_as_bag, 0, @dict);
+  my $result = anagrams ($input_as_bag, @dict);
   print STDERR scalar (@$result),
     " anagrams of $input:\n";
   print join (' ', map { "(" . join (' ', @$_) . ")" } @$result),

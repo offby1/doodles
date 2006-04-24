@@ -30,6 +30,7 @@ sub init {
 
     print STDERR "Reading $dict_file_name ... ";
 
+    my $elts = 0;
     while (<DICT>) {
       chomp;
       ($_ = $_) =~ s<\015$><>;
@@ -41,6 +42,7 @@ sub init {
       my $b = bag ($_);
 
       next if (m([^[:alpha:]]));
+      next if (m([^[:ascii:]]));
       next unless ((m(^i$))
                    ||
                    (m(^a$))
@@ -63,6 +65,7 @@ sub init {
       }
 
       #die "entering $_; dict is now " . Data::Dumper->Dump ([$dict], [qw(dict)]) if ($. > 10);
+      $elts++;
       push @{$dict_hash->{$b}}, $_;
     }
     close (DICT)
@@ -73,10 +76,9 @@ sub init {
       close (DICT_CACHE);
       warn "Wrote $cache_file_name";
     }
+    warn " done.  Dictionary hath $elts elements";
   }
-  warn " done.  Dictionary hath " . scalar (keys %$dict_hash) . " elements";
 
-  warn "Before pruning: " . scalar (keys %$dict_hash);
   while ((my $k, my $v) = (each %$dict_hash)) {
     my $makeable = subtract_bags ($bag, $k);
     #cluck "$bag minus $k is $makeable";
