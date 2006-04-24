@@ -1,17 +1,21 @@
 #!/usr/bin/env gosh
 
 (use anagrams)
+(use srfi-13)
 
 (define (main args)
-  (define op (open-output-string))
-  (define argstring
-    (let loop ((args (cdr args)))
-      (if (null? args)
-          (get-output-string op)
-        (begin
-          (display (car args) op)
-          (when (not (null? (cdr args)))
-            (display " " op))
-          (loop (cdr args))))))
-  (display (length (anagrams argstring))))
+  (let* ((input-string (string-join (cdr args) " "))
+         (result  (anagrams input-string)))
+
+    (display (length result))
+    (display " anagrams of ")
+    (write input-string)
+    (display ":")
+    (newline)
+    (for-each (lambda (a)
+                (display a)
+                (newline))
+              result)
+    )
+  (exit 0))
 
