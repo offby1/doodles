@@ -27,7 +27,7 @@
                  (< 1 l)))))))
 
 (define *the-dictionary* #f)
-(define *dict-cache-file-name* "cached-dictionary.scm")
+(define *dict-cache-file-name* "cached-dictionary")
 (define (err . args)
   (for-each (lambda (arg)
               (display arg  (current-error-port)))

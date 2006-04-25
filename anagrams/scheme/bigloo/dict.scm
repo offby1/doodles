@@ -22,7 +22,7 @@
                  (< 1 l)))))))
 
 (define *the-dictionary* #f)
-(define *dict-cache-file-name* "cached-dictionary.scm")
+(define *dict-cache-file-name* "cached-dictionary")
 (if (file-exists? *dict-cache-file-name*)
     (begin
       (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (newline)
