@@ -1,6 +1,8 @@
 require 'dict'
 require 'bag'
 require 'getoptlong'
+require 'rubygems'
+require 'zenprofile'
 
 dict_filename = "/usr/share/dict/words"
 
