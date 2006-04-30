@@ -5,18 +5,20 @@
   word)
 
 (defun bfs (start-node goal-node nodes-equal-p node-neighbors)
-  (let ((already-seen (make-hash-table :test 'equalp))
+  (let ((words-examined 0)
+        (already-seen (make-hash-table :test 'equalp))
         (the-queue (make-queue)))
     (queue-add the-queue (make-agenda-item :trail '()
                                            :word start-node))
     (loop
        (when (queue-empty-p the-queue)
-         (return nil))
+         (return (values nil words-examined)))
        (let* ((this-item (queue-front the-queue))
               (w (agenda-item-word this-item))
               (trail (agenda-item-trail this-item)))
+         (incf words-examined)
          (when (funcall nodes-equal-p goal-node w)
-           (return trail))
+           (return (values trail words-examined)))
          (mapc #'(lambda (n)
                    (setf (gethash n already-seen) t)
                    (queue-add the-queue (make-agenda-item

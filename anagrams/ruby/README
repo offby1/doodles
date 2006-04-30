@@ -1,0 +1,3 @@
+Profiling is agonizingly slow.  But I hear there's a package called
+"ZenHacks" (http://rubyforge.org/projects/zenhacks/) which includes a
+faster profiler.

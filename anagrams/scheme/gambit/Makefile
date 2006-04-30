@@ -1,8 +1,7 @@
-SCMS 	 := bag.scm dict.scm anagrams.scm 
+prog	 := anagrams
+SCMS 	 := bag.scm dict.scm $(prog).scm 
 CS   	 := $(SCMS:.scm=.c)
-LINKFILE := $(basename $(word $(words $(SCMS)),$(SCMS)))_.c
-
-prog := anagrams
+LINKFILE := $(prog)_.c
 
 all: $(prog)
 

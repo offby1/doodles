@@ -4,148 +4,146 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module tree mzscheme
-  (print-struct #t)
+(print-struct #t)
 
-  ;; Creates trees of possible auctions.
-  (provide best-auction-from-prefix)
-  (require 
-           "auction.ss"
-           "call.ss"
-           "exceptions.ss"
-           "misc.ss"
-           "nad.ss"
-           (lib "trace.ss")
-           (lib "pretty.ss")
-           (only (lib "misc.ss" "swindle") list-of)
-           (prefix list- (lib "list.ss"))
-           (lib "list.ss" "srfi" "1")
-           )
+;; Creates trees of possible auctions.
+(provide best-auction-from-prefix)
+(require
+ "auction.ss"
+ "call.ss"
+ "exceptions.ss"
+ "misc.ss"
+ "nad.ss"
+ (lib "trace.ss")
+ (lib "pretty.ss")
+ (only (lib "misc.ss" "swindle") list-of)
+ (prefix list- (lib "list.ss"))
+ (lib "list.ss" "srfi" "1")
+ )
 
-  (random-seed 0)
-  
-  (define identity (lambda (arg) arg))
+(random-seed 0)
 
-  (define-syntax false-if-exception
-    (syntax-rules ()
-      ((_ body-forms ...)
-       (with-handlers
-           ((exn:fail:bridge?
-             (lambda (exn) #f)))
-         body-forms ...
-         #t))))
+(define-syntax false-if-exception
+  (syntax-rules ()
+    ((_ body-forms ...)
+     (with-handlers
+         ((exn:fail:bridge?
+           (lambda (exn) #f)))
+       body-forms ...
+       #t))))
 
-  (define (would-be-legal? call incomplete-auction)
-    (let ((c (copy-auction incomplete-auction)))
-      (false-if-exception
-       (auction-add! c call))))
+(define (would-be-legal? call incomplete-auction)
+  (let ((c (copy-auction incomplete-auction)))
+    (false-if-exception
+     (auction-add! c call))))
 
-  (define (call>? c1 c2)
-    (define (call->int c)
-      (if (bid? c)
-          (bid-to-number c)
-        0))
-    (> (call->int c1)
-       (call->int c2)))
+(define (call>? c1 c2)
+  (define (call->int c)
+    (if (bid? c)
+        (bid-to-number c)
+      0))
+  (> (call->int c1)
+     (call->int c2)))
 
-  (define all-legal-calls
-    (let ((all-calls-period
-           (reverse
-            (list-quicksort
-             (map make-call
-                  (append '(pass double redouble)
-                          (list-of (list x y)
-                                   (x <- (iota 7 1))
-                                   (y <- '(clubs diamonds hearts spades notrump)))))
-             call>?))))
-      (lambda (i)
-        (filter (lambda (c)
-                  (would-be-legal? c i))
-                all-calls-period)
-        )))
+(define all-legal-calls
+  (let ((all-calls-period
+         (reverse
+          (list-quicksort
+           (map make-call
+                (append '(pass double redouble)
+                        (list-of (list x y)
+                                 (x <- (iota 7 1))
+                                 (y <- '(clubs diamonds hearts spades notrump)))))
+           call>?))))
+    (lambda (i)
+      (filter (lambda (c)
+                (would-be-legal? c i))
+              all-calls-period)
+      )))
 
-  (define *best-scoring-auction-so-far* #f)
+(define *best-scoring-auction-so-far* #f)
 
-  ;; for debugging only
-  (define *num-auctions-considered* 0)
-  
-  ;; I'm not certain that this semaphore is necessary.
-  (define *the-semaphore* (make-semaphore 1))
-  
-  (define (consider-one-auction ca my-hand)
-    (call-with-semaphore
-     *the-semaphore*
-     (lambda ()
-       (when (or (not *best-scoring-auction-so-far*)
-                 (> (auction-score ca my-hand)
-                    (auction-score *best-scoring-auction-so-far* my-hand)))
-         (set! *best-scoring-auction-so-far*  ca)
-         ;;(printf "Best auction so far: ~n~a~n" (auction->string *best-scoring-auction-so-far*))
-         )
-       (set! *num-auctions-considered* (add1 *num-auctions-considered*))
-       )))
+;; for debugging only
+(define *num-auctions-considered* 0)
 
-  (define (consider-auctions-with-prefix i my-hand)
-    (define alc (all-legal-calls i))
+;; I'm not certain that this semaphore is necessary.
+(define *the-semaphore* (make-semaphore 1))
 
-    ;; this depeonds upon all-legal-calls being sorted in increasing order.
-    (define minimum-bid (find bid? alc))
+(define (consider-one-auction ca my-hand)
+  (call-with-semaphore
+   *the-semaphore*
+   (lambda ()
+     (when (or (not *best-scoring-auction-so-far*)
+               (> (auction-score ca my-hand)
+                  (auction-score *best-scoring-auction-so-far* my-hand)))
+       (set! *best-scoring-auction-so-far*  ca)
+       ;;(printf "Best auction so far: ~n~a~n" (auction->string *best-scoring-auction-so-far*))
+       )
+     (set! *num-auctions-considered* (add1 *num-auctions-considered*))
+     )))
 
-    ;; a heuristic: don't consider auctions which have two doubles,
-    ;; since they're kind of rare.
-    (define silly-double?
+(define (consider-auctions-with-prefix i my-hand)
+  (define alc (all-legal-calls i))
+
+  ;; this depeonds upon all-legal-calls being sorted in increasing order.
+  (define minimum-bid (find bid? alc))
+
+  ;; a heuristic: don't consider auctions which have two doubles,
+  ;; since they're kind of rare.
+  (define silly-double?
+    (lambda (c)
+      (and (auction-has-a-double? i)
+           (double? c))))
+
+  ;; Don't consider auctions in which both sides are bidding to the
+  ;; four level.
+  (define silly-competition?
+    (let* ((maxes (auction-max-levels i))
+           (my-side (car maxes))
+           (opponents (cdr maxes)))
+      (when (odd? (auction-length i))
+        (swap! my-side opponents))
+
       (lambda (c)
-        (and (auction-has-a-double? i)
-             (double? c))))
-
-    ;; Don't consider auctions in which both sides are bidding to the
-    ;; four level.
-    (define silly-competition?
-      (let* ((maxes (auction-max-levels i))
-             (my-side (car maxes))
-             (opponents (cdr maxes)))
-        (when (odd? (auction-length i))
-          (swap! my-side opponents))
-      
-        (lambda (c)
-          ;; actual bid, where opponents have bid to the four level
-          (and (bid? c)
-               (< 3 opponents)))))
-
-    ;; Don't consider auctions which contain a bid whose level is more
-    ;; than two more than the minimum possible
-    (define crazy-jump?
-      (lambda (c)
+        ;; actual bid, where opponents have bid to the four level
         (and (bid? c)
-             (< 2 (- (level-or-zero c)
-                     (level-or-zero minimum-bid))))
-        ))
+             (< 3 opponents)))))
 
-    (define same-suit-repeatedly?
-      (lambda (c)
-        (any identity (map (lambda (hand)
-                             (< 1 (length  (non-adjacent-duplicates   (map denomination (filter bid? hand))))))
-                           (map cdr (auction->alist i))))))
-    
-    (unless (and (auction? i)
-                 (not (auction-complete? i)))
-      (raise-type-error 'consider-auctions-with-prefix "incomplete auction" i))
+  ;; Don't consider auctions which contain a bid whose level is more
+  ;; than two more than the minimum possible
+  (define crazy-jump?
+    (lambda (c)
+      (and (bid? c)
+           (< 2 (- (level-or-zero c)
+                   (level-or-zero minimum-bid))))
+      ))
 
-    (for-each
-     (lambda (c)
-       (let ((extended (copy-auction i)))
-         (auction-add! extended c)
-         (if (auction-complete? extended )
-             (consider-one-auction extended my-hand)
-           (consider-auctions-with-prefix extended my-hand))))
-     (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
-    )
+  (define same-suit-repeatedly?
+    (lambda (c)
+      (any values (map (lambda (hand)
+                         (< 1 (length  (non-adjacent-duplicates   (map denomination (filter bid? hand))))))
+                       (map cdr (auction->alist i))))))
+
+  (unless (and (auction? i)
+               (not (auction-complete? i)))
+    (raise-type-error 'consider-auctions-with-prefix "incomplete auction" i))
+
+  (for-each
+   (lambda (c)
+     (let ((extended (copy-auction i)))
+       (auction-add! extended c)
+       (if (auction-complete? extended )
+           (consider-one-auction extended my-hand)
+         (consider-auctions-with-prefix extended my-hand))))
+   (remove same-suit-repeatedly? (remove crazy-jump? (remove silly-competition? (remove silly-double? alc)))))
+  )
 
-  (define (best-auction-from-prefix a my-hand seconds-to-wait)
-    (define thread-id (thread (lambda ()
-                                (consider-auctions-with-prefix a my-hand))))
-    (sync/timeout seconds-to-wait thread-id)
-    (call-with-semaphore
-     *the-semaphore*
-     (lambda () (kill-thread thread-id)))
+(define (best-auction-from-prefix a my-hand seconds-to-wait)
+  (define thread-id (thread (lambda ()
+                              (consider-auctions-with-prefix a my-hand))))
+  (sync/timeout seconds-to-wait thread-id)
+  (call-with-semaphore
+   *the-semaphore*
+   (lambda () (kill-thread thread-id)))
 
-    *best-scoring-auction-so-far*))
+  *best-scoring-auction-so-far*))

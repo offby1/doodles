@@ -1,41 +1,41 @@
-#!/usr/local/src/pugs/pugs
+#!/usr/local/src/langs/pugs/pugs
 
 use bag;
 
 our @dict;
 our %dict_hash;
-my $dict_file_name = "/usr/share/dict/words";
-#my $dict_file_name = "words";
+#my $dict_file_name = "/usr/share/dict/words";
+my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
-  warn "Is $word acceptable?";
+  print $*ERR: "Is '$word' acceptable? ... ";
 
   if ($word ~~ m:perl5/[^[:alpha:]]/) {
-     warn "False because it contains non-alpha";
+     print $*ERR: "False because it contains non-alpha\n";
      return bool::false ;
   }
 
   if ($word ~~ "i") {
-     warn "true because it is 'i'";
+     print $*ERR: "true because it is 'i'\n";
     return bool::true ;
   }
 
   if ($word ~~ "a") {
-     warn "true because it is 'a'";
+     print $*ERR: "true because it is 'a'\n";
     return bool::true ;
   }
 
   if ($word ~~ m:perl5/^.$/) {
-     warn "False because it is just one letter";
+     print $*ERR: "False because it is just one letter\n";
      return bool::false ;
     }
 
   if ($word ~~ m:perl5/[aeiou]/) {
-     warn "true because it contains a vowel";
+     print $*ERR: "true because it contains a vowel\n";
     return bool::true ;
     }
 
-    warn "False just because.";
+    print $*ERR: "False just because.\n";
     return bool::false;
 }
 
@@ -47,9 +47,9 @@ sub snarf_wordlist {
 
   print $*ERR: "Reading $dict_file_name ...";
 
-  for (@$dict.readline) -> $word {
-                                 warn "Read '$word'";
+  for ($dict.readline) -> $word {
                                  my $chopped = chomp($word);
+                                 warn "Read '$chopped'";
                                  next unless (acceptable($chopped));
                                  push @{%dict_hash{&bag($chopped)}}, $chopped;
                                 };

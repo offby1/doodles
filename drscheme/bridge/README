@@ -4,9 +4,9 @@ How to run it:
 
 * Install version 300 or later of drscheme (http://www.drscheme.org).
 
-* Run `drscheme bridge.ss'.  Click the "Run" button. You should
-  see some messages in the bottom (from tests) reporting successes, 0
-  errors, and 0 failures.  Then the program will draw a table on the
-  screen, and you're off.
+* Run `drscheme bridge.ss'.  Choose the "module" language.  Click the
+  "Run" button. You should see some messages in the bottom (from
+  tests) reporting successes, 0 errors, and 0 failures.  Then the
+  program will draw a table on the screen, and you're off.
 
 There's a similar-looking program at http://abridgegame.org/.

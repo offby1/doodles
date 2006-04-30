@@ -33,3 +33,10 @@ environment variable.
 ** tcl !
 
 * Apply the pruning optimization that I did in r2173 to other implementations.
+
+* Factor out common Scheme code.
+
+This is probably much harder than it should be, because I really mean
+"write one program which will work in all the scheme implementations".
+Writing portable Scheme is hard (and, as I repeatedly announce on IRC,
+not worth the effort).  Let's go shopping.

@@ -1,6 +1,7 @@
 ;; works on mzscheme v301
+(module power-law-demo mzscheme
 (require (only (lib "list.ss") mergesort))
-(require (lib "1.ss" "srfi"))
+(require (only (lib "1.ss" "srfi") iota))
 
 ;; the alists we deal with here look like ((cat . 10) (dog . 7) (human
 ;; . 3)) -- that is, the CARs are items one might choose, and the CDRs
@@ -10,7 +11,9 @@
 ;; find the total of all the weights.
 (define (sum al) (apply + (map cdr al)))
 
-;; pick one item based on the weights.
+;; given an alist like ((dog . 3) (human . 4) (cat . 5)), pick one of
+;; the cars at random.  Weight the choice by the cdrs.  I.e., in the
+;; above example, we'd pick "cat" five times out of 12.
 (define (choose choices)
   (let loop ((choices choices)
              (r (random (sum choices))))
@@ -47,13 +50,37 @@
 ;; http://www.shirky.com/writings/powerlaw_weblog.html
 
 ;; may modify its input
-(define (alist-inc list key)
-  (let* ((probe (assq key list)))
-    (when (not probe)
-      (set! probe (cons key 0))
-      (set! list (cons probe list)))
-    (set-cdr! probe (+ 1 (cdr probe)))
-    list))
+(define (alist-inc alist key)           ;thanks, Riastradh
+  (cond ((assq key alist)
+         => (lambda (probe)
+              (set-cdr! probe (+ 1 (cdr probe)))
+              alist))
+        (else
+         (cons (cons key 1) alist))))
+
+(define (percentify al)
+  (let ((sum (sum al)))
+    (map (lambda (p)
+           (cons (car p)
+                 (exact->inexact(/(round
+                                (* 1000
+                    (/ (cdr p)
+                       sum)))
+                   10))))
+         al)))
+
+(display
+ (let loop ((choices (map (lambda (n)
+                            (cons (number->string n)
+                                  1))
+                          (iota 20)))
+            (trials 1000))
+   (if (positive? trials)
+       (loop (alist-inc choices (choose choices))
+             (sub1 trials))
+     (percentify (reverse (sort-alist choices)))
+     )))
+(newline)
 
 (let loop ((choices (map (lambda (n)
                            (cons (string->symbol (number->string n))
@@ -65,5 +92,5 @@
             (sub1 trials))
     (let ((numbers  (map cdr (reverse (sort-alist choices)))))
       (map (lambda (n)
-               (exact->inexact (/ n (car numbers)))) numbers))
-    ))
+             (exact->inexact (/ n (car numbers)))) numbers))
+    )))

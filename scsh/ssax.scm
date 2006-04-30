@@ -1,5 +1,5 @@
 #!/usr/local/bin/scsh \
--lm /usr/local/src/SSAX/lib/packages.scm -m ssax-vanilla -o extended-ports -s
+-lm /usr/local/src/SSAX/lib/packages.scm -m ssax-vanilla -m ssax-warnings-vanilla -o extended-ports -s
 !#
 
 ;;(call-with-input-string "<a href=\"http://www.bar.org/\">a link to bar</a>" (lambda (p) (write (SSAX:XML->SXML p '()))))
