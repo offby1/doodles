@@ -1,5 +1,6 @@
 all:
 
 check:
-	time ruby anagrams.rb "Ernest"
+	ruby test_bag.rb
+	time ruby -I /usr/local/stow/ruby/lib/ruby/gems/1.8/gems/ZenHacks-1.0.1/lib/ -rzenprofile anagrams.rb "Ernest"
 .PHONY: all check

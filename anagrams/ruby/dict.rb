@@ -5,10 +5,10 @@ require 'bag'
 def Read(fn)
   the_dict = {}
   begin
-    File.open("hash.cache", "r") do |aCache|
+    File.open("hash.cache", "r") do |fp|
       printf "Snarfing hash.cache ..."
       $stdout.flush
-      the_dict = Marshal.load(aCache)
+      the_dict = Marshal.load(fp.read)
       puts "Loaded dictionary from hash.cache"
     end
 
