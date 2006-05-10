@@ -1,31 +1,11 @@
 -*-text-*-
-zenhacks has a bug: it needs to #include <time.h> somewhere or other
-on GNU libc systems.  The symptom is that "make check" here will fail
-with an error from the C compiler, complaining that CLOCKS_PER_SEC
-isn't defined.
 
-And this works on my Ubuntu "dapper" laptop, but doesn't work on my
-Debian sarge box; I don't know why.  The symptom is:
+zenhacks 1.0.1 has a bug: it needs to #include <time.h> somewhere or
+other on GNU libc systems.  The symptom is that "make check" here will
+fail with an error from the C compiler, complaining that
+CLOCKS_PER_SEC isn't defined.
 
-/usr/local/stow/ruby/lib/ruby/gems/1.8/gems/ZenHacks-1.0.1/lib/zenprofile.rb:1:in `require': no such file to load -- inline (LoadError) 
-from /usr/local/stow/ruby/lib/ruby/gems/1.8/gems/ZenHacks-1.0.1/lib/zenprofile.rb:1
-
-The only differences I can see between the two systems are
-
-* On Sarge, I built ruby and rubygems under /usr/local/src/lang/ruby,
-  whereas on the laptop each was built under /usr/local/src;
-
-* On Sarge, I used "bison -y" (not intentionally; that's simply the
-  program that 'configure' chose) whereas on the laptop it used
-  "yacc";
-
-* Sarge was using gcc 3.3.5 (from Debian) whereas the laptop was using
-  gcc 4.0.2 (from Ubuntu)
-
-* Sarge is running Linux kernel 2.4.27 and the laptop is running
-  2.6.12
-
-I suspect the compiler!  Building zenhacks with gcc 3.3 on the Ubuntu
-laptop caused the same problem.  But ... building with gcc 4.1 on
-Sarge didn't cure the problem :-|
+This works on my Ubuntu "dapper" laptop, but didn't work on my Debian
+sarge box; I don't know why.  But I don't care, since that box is now
+running Ubuntu just like the laptop ...
 

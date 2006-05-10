@@ -59,17 +59,17 @@ result = anagrams(The_Bag, the_dict)
 
 puts "#{result.size} anagrams of #{ARGV[0]}"
 
-# printf "("
+puts "("
 
-# result.each {
-#   |a|
+result.each {
+  |a|
 
-#   a.each {
-#     |words|
+  a.each {
+    |words|
 
-#     printf words.inspect
+    printf words.inspect
 
-#   }
-#   puts ""
-# }
-# puts ")"
+  }
+  puts ""
+}
+puts ")"
