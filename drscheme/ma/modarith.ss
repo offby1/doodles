@@ -1,6 +1,6 @@
 (module modarith mzscheme
   (require "invert.ss")
-  (provide *modulus*
+  (provide with-arithmetic-modulo
            (rename m+ +)
            (rename m- -)
            (rename m* *)
@@ -13,13 +13,19 @@
                                                      (not value))
                                            (raise-type-error '*modulus* "exact natural number > 1" value))
                                          value)))
+  (define-syntax with-arithmetic-modulo
+    (syntax-rules ()
+      ((_ m body ...)
+       (parameterize ((*modulus* m))
+         body ...))))
+
   (define-syntax maybe
     (syntax-rules ()
       ((_ op input)
        (if (*modulus*)
            (op input (*modulus*))
          input))))
-  
+
   (define (maybe-modulo input)
     (maybe modulo input))
 
@@ -27,7 +33,7 @@
     (if (*modulus*)
         (invert input (*modulus*))
       (/ input)))
-  
+
   (define m+
     (lambda args
       (maybe-modulo (apply + args))))
@@ -36,7 +42,7 @@
   (define m*
     (lambda args
       (maybe-modulo (apply * args))))
-  
+
   (define m/
     (case-lambda
       [(x) (maybe-invert x)]
