@@ -21,21 +21,24 @@
       (list->string (reverse chars)))))
 
 (call-with-input-file
-    "/usr/share/dict/words"
+    "/usr/share/dict/american-english"
+
 
   (lambda (p)
-    (let loop ((word (read-line p))
-               (result '()))
-      (if (eof-object? word)
-          result
-        (let* ((wl (string-length word))
-               (sub-table (table-ref *the-hash-table* wl)))
-          (if (not sub-table)
-              (begin
-                (set! sub-table (make-string-table))
-                (table-set! *the-hash-table* wl sub-table)))
-          (table-set! sub-table word #t)
-          (loop (read-line p)
-                (cons word result)))
-        ))))
+    (display "Oh, I'm reading that dictionary ... ")
+    (let loop ((result '()))
+      (let ((word (read-line p)))
+        (if (eof-object? word)
+            result
+          (let* ((wl (string-length word))
+                 (sub-table (table-ref *the-hash-table* wl)))
+            (if (not sub-table)
+                (begin
+                  (set! sub-table (make-string-table))
+                  (table-set! *the-hash-table* wl sub-table)))
+            (table-set! sub-table word #t)
+            (loop (cons word result)))
+          )))
 
+    (display "done.")
+    (newline)))
