@@ -1,3 +1,4 @@
+;; for PLT scheme 301 (and probably earlier too)
 (define memoize
   (let ((cache (make-hash-table 'equal)))
     (lambda (func)
