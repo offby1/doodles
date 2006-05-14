@@ -1,10 +1,11 @@
-yowza: $(wildcard *.scm)
+bytecode := anagrams.scshvm
+$(bytecode): $(wildcard *.scm)
 	./compile.scm
 
-check: yowza
-	time scshvm -h 11659948 -i ./$^ "Ernest hemingway"
+check: $(bytecode)
+	time scshvm -h 11659948 -i ./$^ "Ernest"
 
 clean:
-	rm -f yowza
+	rm -f $(bytecode)
 
 .PHONY: check clean

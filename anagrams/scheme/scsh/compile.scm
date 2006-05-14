@@ -4,5 +4,5 @@
 
 (define (compile args)
   (snarf-dictionary)
-  (dump-scsh-program main "yowza"))
+  (dump-scsh-program main "anagrams.scshvm"))
 

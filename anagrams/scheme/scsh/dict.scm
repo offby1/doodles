@@ -27,32 +27,20 @@
     rv))
 
 (define *the-dictionary* (make-integer-table))
-(define (snarf-dictionary )
-  (call-with-input-file
-      ;;"words"
-      "/usr/share/dict/words"
-    (lambda (p)
-      (display "Reading dictionary ... ")
-      (let loop ((words-read 0)
-                 (next-power-of-two 1)  ;for diagnostics
-                 )
-
-        (let ((word (read-line p)))
-          (if (not (eof-object? word))
-              (begin
-                (if (= words-read next-power-of-two)
-                    (begin
-                      (for-each display (list "Read " words-read " words: " word) )
-                      (newline)
-                      ))
-                (if (word-acceptable? word)
-                    (let* ((num  (bag word))
-                           (prev (table-ref *the-dictionary* num)))
-                      (if (not prev)
-                          (set! prev '()))
-                      (set! prev (cons word prev))
-                      (table-set! *the-dictionary* num prev)))
-                (loop (+ 1 words-read)
-                      (if (= words-read next-power-of-two)
-                          (* 2 next-power-of-two)
-                        next-power-of-two)))))))))
+(define (snarf-dictionary)
+  (display "Reading dictionary; this takes a long time ... ")
+  (let loop ((wordlist (call-with-input-file "/usr/share/dict/american-english"
+                         (lambda (p)
+                           (port->string-list p)))))
+    (if (pair? wordlist)
+        (let ((word (car wordlist)))
+          (if (word-acceptable? word)
+              (let* ((num  (bag word))
+                     (prev (table-ref *the-dictionary* num)))
+                (if (not prev)
+                    (set! prev '()))
+                (set! prev (cons word prev))
+                (table-set! *the-dictionary* num prev)))
+          (loop (cdr wordlist)))))
+  (display "done")
+  (newline))
