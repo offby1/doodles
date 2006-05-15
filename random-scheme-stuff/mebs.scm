@@ -14,11 +14,17 @@ mzscheme
                       ;; thereafter.  That's so that if the contract
                       ;; breaks, the error message can include the
                       ;; name of the function that detected the error.
-                      (define less-than-modulus
+
+
+                      ;; It might also be nice to assert that the
+                      ;; result is at least as inexact as the base.
+                      ;; Too lazy to do that, though.
+                      (define positive-but-less-than-modulus
                         (lambda (result)
                           (and (number? result)
+                               (positive? result)
                                (< result mod))))
-                      less-than-modulus)
+                      positive-but-less-than-modulus)
                     )])
 
 (define (modular-exponent-by-successive-squares base exponent modulus)
@@ -26,15 +32,16 @@ mzscheme
   (let loop ((exponent exponent)
              (accumulator 1)
              (current-factor base))
+    (define (*cf x) (->m (* current-factor x)))
     (cond
      ((= 1 exponent)
-      (->m (* current-factor accumulator)))
+      (*cf accumulator))
      ((odd? exponent)
       (loop (- exponent 1)
-            (->m (* current-factor accumulator ))
+            (*cf accumulator )
             current-factor))
      (#t
       (loop (/ exponent 2)
             accumulator
-            (->m (* current-factor current-factor))))))))
+            (*cf current-factor)))))))
 
