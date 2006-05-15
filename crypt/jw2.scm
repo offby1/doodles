@@ -134,15 +134,15 @@
 
 (define (make-spindle-from-string input)
   (map (lambda ignored (make-one-wheel)) (string->integers input)))
+(define (test spindle plaintext)
+  (define ciphers (encrypt  plaintext spindle))
+  (define recovereds (map (lambda (c) (decrypt c spindle)) ciphers))
+  (printf "~s encrypts to ~s~%" plaintext ciphers)
+  (printf "~s decrypts to ~s~%" ciphers recovereds)
+  )
+
 (define plain "Hello")
 (define spindle (make-spindle-from-string plain))
-(define ciphers (encrypt  plain spindle))
-(printf "~s encrypts to ~s~%" plain ciphers)
-(define recovereds (map (lambda (c) (decrypt c spindle)) ciphers))
-(printf "~s decrypts to ~s~%" ciphers recovereds)
+(test spindle plain)
+(test spindle "More of the same")
 
-(set! plain  "More of the same")
-(set! ciphers (encrypt plain spindle))
-(printf "~s encrypts to ~s~%" plain ciphers)
-(set! recovereds (map (lambda (c) (decrypt c spindle))  ciphers))
-(printf "~s decrypts to ~s~%" ciphers recovereds)
