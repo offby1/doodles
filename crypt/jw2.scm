@@ -1,4 +1,4 @@
-(require (only (lib "1.ss" "srfi") filter iota)
+(require (only (lib "1.ss" "srfi") filter iota take drop)
          (lib "trace.ss"))
 
 ;; #\A => 0
@@ -66,12 +66,8 @@
 (define (string->integers string)
   (map letter->integer (lc-letters-only string)))
 
-(define (jw input)
-  (map (lambda ignored (make-one-wheel)) (string->integers input)))
-
 (define (random-offset)
-   (random *alphabet-length*)
-)
+   (random *alphabet-length*))
 
 (define (general-purpose input-string spindle encrypting? offset)
   (let ((original-spindle spindle))
@@ -99,6 +95,19 @@
      offset
      '())))
 
+(define (split-into-lists-of-size size input)
+  (let loop ((input input)
+             (output '()))
+    (cond
+     ((null? input)
+      (reverse output))
+     ((< (length input) size)
+      (reverse (cons input output)))
+     (else
+      (loop (drop input size)
+            (cons (take input size)
+                  output))))))
+
 ;; if offset is not #f, then encrypt, using a that offset.
 ;; otherwise, decrypt by returning possible offsets.
 (define (hmm input-string spindle offset)
@@ -107,8 +116,12 @@
                    (exact? offset )
                    (not (negative? offset))))
     (raise-type-error 'hmm "#f, or exact non-negative integer" offset))
+  (unless (string? input-string)
+    (raise-type-error 'hmm "string" input-string))
   (if offset
-      (general-purpose input-string spindle #t offset)
+      (map (lambda (letters)  (general-purpose (list->string letters) spindle #t offset))
+           (split-into-lists-of-size (length spindle)
+                                     (lc-letters-only input-string)))
     (map (lambda (offset)
            (general-purpose input-string spindle #f offset))
          (iota *alphabet-length*))))
@@ -118,10 +131,18 @@
 
 (define (decrypt input spindle)
   (hmm input spindle #f))
+
+(define (make-spindle-from-string input)
+  (map (lambda ignored (make-one-wheel)) (string->integers input)))
+(define plain "Hello")
+(define spindle (make-spindle-from-string plain))
+(define ciphers (encrypt  plain spindle))
+(printf "~s encrypts to ~s~%" plain ciphers)
+(define recovereds (map (lambda (c) (decrypt c spindle)) ciphers))
+(printf "~s decrypts to ~s~%" ciphers recovereds)
 
-(define input "Hello, world!!")
-(define spindle (jw input))
-(define cipher (encrypt  input spindle))
-(printf "~s encrypts to ~s~%" input cipher)
-(define recovered (decrypt cipher spindle))
-(printf "~s decrypts to ~s~%" cipher recovered)
+(set! plain  "More of the same")
+(set! ciphers (encrypt plain spindle))
+(printf "~s encrypts to ~s~%" plain ciphers)
+(set! recovereds (map (lambda (c) (decrypt c spindle))  ciphers))
+(printf "~s decrypts to ~s~%" ciphers recovereds)
