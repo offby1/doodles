@@ -9,21 +9,14 @@
 
 (define (split-into-short-strings input max-length)
   (let loop ((input (string-downcase (string-filter char-alphabetic? input)))
-             (current-string "")
              (output '()))
     (if (zero? (string-length input))
-        (if (zero? (string-length current-string))
-            (reverse output)
-          (reverse (cons current-string output)))
-      (let ((first (string-ref input 0))
-            (rest  (substring input 1)))
-        (if (= max-length (string-length current-string))
-            (loop rest
-                  (string first)
-                  (cons current-string output))
-          (loop rest
-                (string-append current-string (string first))
-                output))))))
+        (reverse output)
+      (let* ((input-length (string-length input))
+             (left (min input-length max-length))
+             (right (- input-length left)))
+        (loop (string-take-right input right)
+              (cons (string-take input left) output))))))
 
 (let ((s (make-spindle *wheels-per-spindle*)))
   (let ((encrypted
