@@ -1,6 +1,14 @@
 (module wheel-test mzscheme
-(require (only (lib "1.ss" "srfi") drop every filter iota take)
-         (only (lib "13.ss" "srfi") string-filter)
+(require (only (lib "1.ss" "srfi")
+               drop
+               every
+               filter
+               iota
+               take)
+         (only (lib "13.ss" "srfi")
+               string-filter
+               string-take
+               string-take-right)
          "spindle.scm")
 
 (print-struct #t)
