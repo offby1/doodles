@@ -1,38 +1,38 @@
 (module wheel-test mzscheme
 (require (only (lib "1.ss" "srfi") drop every filter iota take)
+         (only (lib "13.ss" "srfi") string-filter)
          "spindle.scm")
 
 (print-struct #t)
 
 (define *wheels-per-spindle* 10)
 
-(define (split-into-lists input)
-  (unless (and (list? input)
-               (every char? input))
-    (raise-type-error 'split-into-lists "list of chars" input))
-  (let loop ((input input)
+(define (split-into-short-strings input max-length)
+  (let loop ((input (string-downcase (string-filter char-alphabetic? input)))
+             (current-string "")
              (output '()))
-    (cond
-     ((null? input)
-      (reverse output))
-     ((< (length input) *wheels-per-spindle*)
-      (reverse (cons input output)))
-     (else
-      (loop (drop input *wheels-per-spindle*)
-            (cons (take input *wheels-per-spindle*)
-                  output))))))
-
-(define (lc-letters-only string)
-  (map char-downcase (filter char-alphabetic? (string->list string))))
+    (if (zero? (string-length input))
+        (if (zero? (string-length current-string))
+            (reverse output)
+          (reverse (cons current-string output)))
+      (let ((first (string-ref input 0))
+            (rest  (substring input 1)))
+        (if (= max-length (string-length current-string))
+            (loop rest
+                  (string first)
+                  (cons current-string output))
+          (loop rest
+                (string-append current-string (string first))
+                output))))))
 
 (let ((s (make-spindle *wheels-per-spindle*)))
   (let ((encrypted
-         (map (lambda (letter-list)
-                (rotate-to-display! s (list->string letter-list))
+         (map (lambda (str)
+                (rotate-to-display! s str)
                 (string-at-offset s
                                   (random *alphabet-length*)
                                   ))
-              (split-into-lists (lc-letters-only "A pleasantly long text which we shall encrypt")))))
+              (split-into-short-strings  "A pleasantly long text which we shall encrypt" *wheels-per-spindle*))))
     (printf "Long encryption: ~s~%"  encrypted)
     (for-each (lambda (ciphertext)
                 (rotate-to-display! s ciphertext)
