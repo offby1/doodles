@@ -30,9 +30,7 @@
   (let ((encrypted
          (map (lambda (str)
                 (rotate-to-display! s str)
-                (string-at-offset s
-                                  (random *alphabet-length*)
-                                  ))
+                (string-at-offset s (random *alphabet-length*)))
               (split-into-short-strings  "A pleasantly long text which we shall encrypt" *wheels-per-spindle*))))
     (printf "Long encryption: ~s~%"  encrypted)
     (for-each (lambda (ciphertext)

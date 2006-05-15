@@ -1,4 +1,4 @@
-;; used by jw2
+;; a "Jefferson Wheel" (http://en.wikipedia.org/wiki/Jefferson_disk)
 (module spindle mzscheme
 (require (only (lib "1.ss" "srfi") circular-list filter iota))
 (provide
