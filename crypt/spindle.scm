@@ -1,12 +1,17 @@
 ;; a "Jefferson Wheel" (http://en.wikipedia.org/wiki/Jefferson_disk)
 (module spindle mzscheme
-(require (only (lib "1.ss" "srfi") circular-list filter iota))
+(require (only (lib "1.ss" "srfi") circular-list filter iota)
+         (only (lib "13.ss" "srfi") string-join)
+         (only (lib "43.ss" "srfi" ) vector-fold vector-map)
+         (lib "trace.ss")
+         )
 (provide
 
  *alphabet-length*
  (rename public-make-spindle make-spindle)
  rotate-to-display!
  string-at-offset
+ tableaux
  )
 
 (define *alphabet-length* 26)
@@ -62,50 +67,48 @@
 (define-struct spindle (wheels) #f)
 (define (public-make-spindle num-wheels)
   (make-spindle
-   ;; this should probably be a vector, not a list
-   (map
-    (lambda ignored
-      (public-make-wheel))
-    (iota num-wheels))))
+   (apply vector
+    (map
+     (lambda ignored
+       (public-make-wheel))
+     (iota num-wheels)))))
 
-(define (spindle-size s)
-  (length (spindle-wheels s)))
-
-;; s is a spindle
-;; 0 <= index < size of s
-;; 0 <= another-offset < *alphabet-length*
-(define (read-wheel s index another-offset)
-  (letter-at
-   (list-ref (spindle-wheels s) index)
-   another-offset))
-
-(define (read-spindle s another-offset)
-  (list->string
-   (map (lambda (index)
-          (read-wheel s index another-offset))
-        (iota 0 (spindle-size s)))))
+;;(trace public-make-spindle)
+(define (num-wheels s)
+  (vector-length (spindle-wheels s)))
 
 (define (rotate-to-display! s string)
   (unless (string? string)
     (raise-type-error 'rotate-to-display! "string" string))
   (let  ((chars  (map char-downcase (filter char-alphabetic? (string->list string))))
          (wheels (spindle-wheels s)))
-    (if (not (<= (length chars) (length wheels)))
+    (if (not (<= (length chars) (num-wheels s)))
         (error 'rotate-to-display! (format "~a wheels but ~a chars in input string"
-                                           (length wheels)
+                                           (num-wheels s)
                                            (length chars))))
     (let loop ((chars chars)
-               (wheels wheels))
-      (if (not (null? chars))
-          (let ((this-char (car chars))
-                (this-wheel (car wheels)))
-            (rotate-until! this-wheel this-char)
-            (loop (cdr chars)
-                  (cdr wheels)))))))
+               (wheels (vector->list wheels)))
+      (cond
+       ((not (null? chars))
+        (let ((this-char (car chars)))
+          (rotate-until! (car wheels) this-char)
+          (loop (cdr chars)
+                (cdr wheels))))
+       ((not (null? wheels))
+        (rotate-until! (car wheels) #\a)
+        (loop chars
+              (cdr wheels))))
+      )))
+
+(define (vector->string v)
+  (vector-fold (lambda (i state char)
+                 (string-append state (string char)))  "" v))
 
 (define (string-at-offset s offset)
-  (list->string (map (lambda (w)
-                       (letter-at w offset))
-                     (spindle-wheels s))))
-
+  (vector->string (vector-map (lambda (index wheel)
+                                (letter-at wheel offset))
+                              (spindle-wheels s))))
+
+(define (tableaux s)
+  (string-join (map (lambda (i) (string-at-offset s i)) (iota *alphabet-length*)) (string #\newline) 'infix))
 )
