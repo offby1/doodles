@@ -12,6 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                take)
          (only (lib "13.ss" "srfi")
                string-filter
+               string-join
                string-take
                string-take-right)
          "spindle.scm")
@@ -34,21 +35,29 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (counted-string s)
   (format "~a:~s"(string-length s) s))
 
+(define encrypting? #f)
+(define text #f)
+(define encryption-key #f)
+
+(cond
+ ((= 1 (vector-length (current-command-line-arguments)))
+  (set! encrypting? #t)
+  (set! text (string-join (vector->list (current-command-line-arguments)))))
+ ((= 2 (vector-length (current-command-line-arguments)))
+  (set! encryption-key (string->number (vector-ref (current-command-line-arguments) 0)))
+  (set! text (string-join (cdr (vector->list (current-command-line-arguments))))))
+ (else
+  (error "Usage: wheel-test [key] string" )))
+
+(if encryption-key
+    (random-seed encryption-key)
+  (let ((new-key (modulo (current-milliseconds) 2147483647)))
+    (printf "Key: ~s~%" new-key)
+    (random-seed new-key)))
+
 (let ((s (make-spindle *wheels-per-spindle*)))
-  (let* ((plain   "A pleasantly long text which we shall encrypt")
-         (encrypted
-          (map (lambda (str)
-                 (rotate-to-display! s str)
-                 (printf "Encrypting:~%~a~%" (tableaux s))
-                 (string-at-offset s (random *alphabet-length*)))
-               (split-into-short-strings plain *wheels-per-spindle*))))
-    (printf "~a~%=> Long encryption: ~a ~%"
-            (counted-string plain)
-            (map counted-string encrypted)
-            )
-    (for-each (lambda (short-ciphertext)
-                (rotate-to-display! s short-ciphertext)
-                (printf "~%Possible cleartexts: ~%~%~a~%" (tableaux s)))
-              encrypted)))
-
+  (for-each (lambda (str)
+              (rotate-to-display! s str)
+              (printf "~%~a~%" (tableaux s)))
+       (split-into-short-strings text *wheels-per-spindle*)))
 )
