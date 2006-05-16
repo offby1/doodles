@@ -2,9 +2,8 @@
 (module spindle mzscheme
 (require (only (lib "1.ss" "srfi") circular-list filter iota)
          (only (lib "13.ss" "srfi") string-join)
-         (only (lib "43.ss" "srfi" ) vector-fold vector-map)
-         (lib "trace.ss")
-         )
+         (only (lib "43.ss" "srfi" ) vector-fold vector-map))
+
 (provide
 
  *alphabet-length*
@@ -49,7 +48,10 @@
 
 ;; a wheel with the letters of the alphabet distributed randomly about
 ;; its circumference.
-(define-struct wheel (cl) #f)
+
+(define-struct wheel
+  (cl) ;; circular list
+  #f)
 
 (define (public-make-wheel)
   (make-wheel (apply circular-list (shuffled-list (map integer->letter (iota *alphabet-length*))))))
@@ -59,8 +61,12 @@
 
 ;; rotate the wheel until the given letter is at the front
 (define (rotate-until! wheel letter)
+
+  ;; witnout this check, you might accidentally cause "member" to loop
+  ;; forever.  It's a circular list, after all
   (unless (< (letter->integer letter) *alphabet-length*)
     (raise-type-error 'rotate-until! "alphabetic" letter))
+
   (set-wheel-cl! wheel (member letter (wheel-cl wheel))))
 
 
@@ -73,10 +79,12 @@
        (public-make-wheel))
      (iota num-wheels)))))
 
-;;(trace public-make-spindle)
 (define (num-wheels s)
   (vector-length (spindle-wheels s)))
 
+;; Rotate each wheel so that the given string is "displayed" -- that
+;; is, each character of the string is the "front" value of some
+;; wheel.
 (define (rotate-to-display! s string)
   (unless (string? string)
     (raise-type-error 'rotate-to-display! "string" string))
@@ -94,11 +102,15 @@
           (rotate-until! (car wheels) this-char)
           (loop (cdr chars)
                 (cdr wheels))))
+
+       ;; if we've run out of characters, rotate the remaining wheels
+       ;; to show 'a'.
        ((not (null? wheels))
         (rotate-until! (car wheels) #\a)
         (loop chars
-              (cdr wheels))))
-      )))
+              (cdr wheels)))
+
+       ))))
 
 (define (vector->string v)
   (vector-fold (lambda (i state char)
@@ -110,5 +122,6 @@
                               (spindle-wheels s))))
 
 (define (tableaux s)
-  (string-join (map (lambda (i) (string-at-offset s i)) (iota *alphabet-length*)) (string #\newline) 'infix))
+  (string-join (map (lambda (i) (string-at-offset s i)) (iota *alphabet-length*)) (string #\newline) 'infix))
+
 )

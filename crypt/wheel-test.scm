@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module wheel-test mzscheme
 (require (only (lib "1.ss" "srfi")
                drop
@@ -35,9 +40,7 @@
           (map (lambda (str)
                  (rotate-to-display! s str)
                  (printf "Encrypting:~%~a~%" (tableaux s))
-                 (string-at-offset
-                  s
-                  (random *alphabet-length*)))
+                 (string-at-offset s (random *alphabet-length*)))
                (split-into-short-strings plain *wheels-per-spindle*))))
     (printf "~a~%=> Long encryption: ~a ~%"
             (counted-string plain)
@@ -45,7 +48,7 @@
             )
     (for-each (lambda (short-ciphertext)
                 (rotate-to-display! s short-ciphertext)
-                (printf "Possible cleartexts: ~%~a~%" (tableaux s)))
+                (printf "~%Possible cleartexts: ~%~%~a~%" (tableaux s)))
               encrypted)))
 
 )
