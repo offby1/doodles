@@ -30,11 +30,11 @@
 
 (define (snarf-dictionary)
   (display "Reading dictionary; this takes a long time ... ")
-  (let loop ((wordlist (with-cwd
-                        "/usr/share/dict"
-                        (call-with-input-file (find file-readable? (list "words" "american-english") )
-                          (lambda (p)
-                            (port->string-list p))))))
+  (let loop ((wordlist (call-with-input-file (find file-readable? (list
+                                                                   "/usr/share/dict/words"
+                                                                   "/usr/share/dict/american-english") )
+                         (lambda (p)
+                           (port->string-list p)))))
     (if (pair? wordlist)
         (let ((word (car wordlist)))
           (if (word-acceptable? word)
