@@ -1,4 +1,4 @@
-bytecode := anagrams.scshvm
+bytecode := anagrams.image
 vm := /usr/local/bin/scshvm
 
 $(bytecode): $(vm) $(wildcard *.scm)
@@ -11,7 +11,7 @@ $(vm):
 	@false
 
 check: $(bytecode)
-	time scshvm -h 11659948 -i ./$^ "Ernest"
+	time scshvm -h 11805544 -i ./$^ "Hemingway"
 
 clean:
 	rm -f $(bytecode)
