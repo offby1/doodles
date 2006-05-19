@@ -4,4 +4,14 @@
 
 (define (compile args)
   (snarf-dictionary)
-  (dump-scsh-program main "anagrams.image"))
+
+  ;; this call to with-resources-aligned shouldn't be necessary, but
+  ;; is, because of a bug in scsh 0.6.7.  (The bug is simply that
+  ;; dump-scsh-program should use with-resources-aligned to wrap its
+  ;; own guts for me)
+
+  ;; Thanks to Taylor Cambell
+  (with-resources-aligned
+   (list cwd-resource)
+   (lambda ()
+     (dump-scsh-program main "anagrams.image"))))

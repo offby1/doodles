@@ -1,20 +1,21 @@
+(define *the-dictionary* (make-integer-table))
+
 (define word-acceptable?
   (let ((has-vowel-regexp (make-regexp "[aeiouAEIOU]"))
-        (has-non-ASCII-regexp (make-regexp "[^a-zA-Z]")))
+        (has-non-letter-regexp (make-regexp "[^a-zA-Z]")))
     (lambda (word)
-      (let ((l (string-length word)))
-        (and (not (zero? l))
+      (and
+       ;; it's gotta have a vowel.
+       (string-match has-vowel-regexp word)
 
-             ;; it's gotta have a vowel.
-             (string-match has-vowel-regexp word)
+       ;; it's gotta be all letters -- no weird un-American characters
+       ;; allowed!
+       (not (string-match has-non-letter-regexp word))
 
-             ;; it's gotta be all ASCII, all the time.
-             (not (string-match has-non-ASCII-regexp word))
-
-             ;; it's gotta be two letters long, unless it's `i' or `a'.
-             (or (string=? "i" word)
-                 (string=? "a" word)
-                 (< 1 l)))))))
+       ;; it's gotta be two letters long, unless it's `i' or `a'.
+       (or (string=? "i" word)
+           (string=? "a" word)
+           (< 1 (string-length word)))))))
 
 ;; returns a list of words that can be made from CRITERION-BAG.
 (define (prune-dictionary criterion-bag)
@@ -26,15 +27,14 @@
                 *the-dictionary*)
     rv))
 
-(define *the-dictionary* (make-integer-table))
-
 (define (snarf-dictionary)
   (display "Reading dictionary; this takes a long time ... ")
-  (let loop ((wordlist (call-with-input-file (find file-readable? (list
-                                                                   "/usr/share/dict/words"
-                                                                   "/usr/share/dict/american-english") )
-                         (lambda (p)
-                           (port->string-list p)))))
+  (let loop ((wordlist (with-cwd "/usr/share/dict"
+                                 (call-with-input-file (find file-readable? (list
+                                                                             "words"
+                                                                             "american-english") )
+                                   (lambda (p)
+                                     (port->string-list p))))))
     (if (pair? wordlist)
         (let ((word (car wordlist)))
           (if (word-acceptable? word)
