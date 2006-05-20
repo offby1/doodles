@@ -24,14 +24,14 @@
               (if (bag-empty? smaller-bag)
                   (begin
                     (let ((combined (map list words)))
-                      
+
                       (set! rv (append rv combined))))
                 (let ((anagrams (all-anagrams-internal smaller-bag pruned)))
                   (if (not (null? anagrams))
                       (begin
                         (let ((combined (combine words anagrams)))
                           (set! rv (append rv combined)))))))))
-        
+
         (loop (cdr dict))))))
 
 
@@ -44,8 +44,20 @@ list of anagrams, each of which begins with one of the WORDS."
                             anagrams))
                      words)))
 
+(define (find pred seq)
+  (cond
+   ((null? seq)
+    #f)
+   ((pred (car seq))
+    (car seq))
+   (else
+    (find pred (cdr seq)))))
+
 (let ((b (bag (apply string-append (cdr (command-line))))))
-  (init b  "/usr/share/dict/words")
+  (init b  (find file-exists? (list
+                                 "/usr/share/dict/words"
+                                 "/usr/share/dict/american-english") )
+           )
   (let ((result (all-anagrams-internal b *dictionary*)))
     (display (length result)      (current-error-port))
     (display " anagrams of "      (current-error-port))

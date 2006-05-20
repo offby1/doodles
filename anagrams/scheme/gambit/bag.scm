@@ -21,8 +21,6 @@ regard to order."
               (* product factor))))))
 
 (define (subtract-bags b1 b2)
-  (if (bag-empty? b2)
-      (error "Hey!  Don't subtract the empty bag."))
   (let ((quotient (/ b1 b2)))
     (and (integer? quotient)
           quotient)))
