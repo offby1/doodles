@@ -18,9 +18,8 @@
 ;; returns the same value as (length (hailstone-sequence-from x)), but
 ;; doesn't cons.
 
-(define memoize (make-memoizer))
 (define length-of-hailstone-sequence
-  (memoize
+  ((make-memoizer)
    (lambda (x)
      (let loop ((x x)
                 (accumulator 1))

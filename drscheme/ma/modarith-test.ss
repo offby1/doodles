@@ -38,12 +38,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (assert = 4 (/ 4 6))
           (assert = 1 (/ 2 3 4)))
         (with-arithmetic-modulo  7
-          (assert = 6 (/ 2 3 4))))
-
-       (make-test-case
-        "macro"
-        (with-arithmetic-modulo
-         3
-         'ok
-         (assert = 0 (+ 2 1)))))))
+          (assert = 6 (/ 2 3 4)))))))
   (exit 1)))
