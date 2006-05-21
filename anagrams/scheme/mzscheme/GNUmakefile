@@ -1,5 +1,5 @@
 check: words
-	time ./anagrams.scm  "Ernest Hemingway" > /dev/null
+	time ./anagrams.scm  "Hemingway"
 
 words: /usr/share/dict/words
 	ln -sv $< $@

@@ -12,21 +12,16 @@ mzscheme
 (provide all-anagrams)
 
 (define (all-anagrams string dict-file-name )
-  (let* ((in-bag   (bag string))
-         (rv (all-anagrams-internal
-              in-bag
-              (init in-bag dict-file-name)
-              )))
-    (fprintf (current-error-port)
-             "~a anagrams of ~s~%"
-             (length rv)
-             string)
-    (for-each (lambda (a)
-                (display a)
-                (newline))
-               rv)))
+  (let ((in-bag   (bag string)))
+    (all-anagrams-internal
+     in-bag
+     (init in-bag dict-file-name)
+     0
+     (lambda args (display args) (newline))
+     )
+    ))
 
-(define (all-anagrams-internal bag dict)
+(define (all-anagrams-internal bag dict level callback)
 
   (let loop ((rv '())
              (dict dict))
@@ -40,18 +35,26 @@ mzscheme
 
         (loop
          (if smaller-bag
-             (append
-              (if (bag-empty? smaller-bag)
-                  (map list words)
-                (combine words
-                         (all-anagrams-internal
-                          smaller-bag
-                          (filter (lambda (entry)
-                                    (subtract-bags
-                                     smaller-bag
-                                     (car entry)))
-                                  dict))))
-              rv)
+             (let ((new-stuff
+                    (if (bag-empty? smaller-bag)
+                        (map list words)
+                      (combine words
+                               (all-anagrams-internal
+                                smaller-bag
+                                (filter (lambda (entry)
+                                          (subtract-bags
+                                           smaller-bag
+                                           (car entry)))
+                                        dict)
+                                (add1 level)
+                                callback)))))
+               (if (and (zero? level)
+                        (procedure? callback)
+                        (not (null? new-stuff)))
+                   (for-each (lambda (w)
+                               (callback w))
+                             new-stuff))
+               (append new-stuff rv))
            rv)
          (cdr dict))))))
 
