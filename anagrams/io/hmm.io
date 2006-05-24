@@ -4,10 +4,11 @@
 Sequence asMap  := method (
   result := Map clone
   self foreach(i, c, 
-    ch := c asCharacter
-    if (result hasKey (ch),
-      result atPut (ch, 1 + result at (ch)),
-      result atPut (ch, 1)) 
+    ch := c asCharacter asLowercase
+    if ((ch >= "a" at(0) asCharacter and ch <= "z" at(0) asCharacter),
+      if (result hasKey (ch),
+        result atPut (ch, 1 + result at (ch)),
+        result atPut (ch, 1)))
     result))
 
 Map asString := method (
@@ -16,8 +17,6 @@ Map asString := method (
     for (n, 0, count -1,
       result := result asMutable appendSeq (char)))
   result)
-
-Nil asString := method ("Nil!")
 
 f := File setPath ("/usr/share/dict/american-english") openForReading
 
