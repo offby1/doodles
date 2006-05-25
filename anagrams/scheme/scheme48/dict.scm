@@ -14,17 +14,20 @@
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
-             
+
              ;; it's gotta have a vowel.
              (match has-vowel-regexp word)
-             
+
              ;; it's gotta be all ASCII, all the time.
              (not (match has-non-ASCII-regexp word))
-             
+
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
                  (string=? "a" word)
                  (< 1 l)))))))
+
+(define (file-readable? f)
+  (accessible? f (access-mode read)))
 
 ;; return a dictionary of words that can be made from CRITERION-BAG.
 ;; The dictionary is a list of entries; each entry is (cons key words)
@@ -32,7 +35,9 @@
   (let ((*the-hash-table* (make-integer-table))
         (rv '()))
     (call-with-input-file
-        "/usr/share/dict/words"
+        (find file-readable? (list
+                              "/usr/share/dict/words"
+                              "/usr/share/dict/american-english") )
       (lambda (p)
         (display "Reading dictionary ... ")
         (let loop ((word (read-line p))
