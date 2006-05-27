@@ -7,19 +7,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
 mzscheme
 (require "dict.scm"
          "bag.scm"
-         (only (lib "1.ss"  "srfi") filter take))
+         (only (lib "1.ss"  "srfi") filter find take))
 
 (provide all-anagrams)
 
 (define (all-anagrams string dict-file-name )
-  (let ((in-bag   (bag string)))
-    (all-anagrams-internal
-     in-bag
-     (init in-bag dict-file-name)
-     0
-     (lambda args (display args) (newline))
-     )
-    ))
+  (call/cc
+   (lambda (k)
+     (let ((in-bag   (bag string)))
+       (all-anagrams-internal
+        in-bag
+        (init in-bag dict-file-name)
+        0
+        (let ((displayed 0))
+          (lambda args
+            (if (= 10 displayed)
+                (k 'outta-here))
+            (begin
+              (display args)
+              (newline)
+              (set! displayed (add1 displayed)))))
+        )
+       ))))
 
 (define (all-anagrams-internal bag dict level callback)
 
@@ -71,7 +80,7 @@ list of anagrams, each of which begins with one of the WORDS."
  (vector-ref
   (current-command-line-arguments)
   0)
- #;"/usr/share/dict/words"
- "words"
+ (find file-exists? '("/usr/share/dict/words"
+                      "/usr/share/dict/american-english"))
  ))
 
