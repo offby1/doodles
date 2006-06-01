@@ -17,31 +17,31 @@ regard to order."
 
 (define (subtract-bags top bottom)
 
-  (define (string-cdr s)
-    (substring s 1 (string-length s)))
-
   (define (internal top bottom result)
     (cond
-     ((string=? bottom "")
-      (string-append result top))
-     ((string=? top "")
+     ((null? bottom)
+      (append top result))
+     ((null? top)
       #f)
      (else
-      (let ((t (string-ref top    0))
-            (b (string-ref bottom 0)))
+      (let ((t (car top))
+            (b (car bottom)))
         (cond
          ((char=? t b)
-          (internal (string-cdr top)
-                    (string-cdr bottom)
+          (internal (cdr top)
+                    (cdr bottom)
                     result))
          ((char<? t b)
-          (internal (string-cdr top)
+          (internal (cdr top)
                     bottom
-                    (string-append result (make-string 1 t))))
+                    (cons t result)))
          (else
           #f))))))
 
-  (internal top bottom "")
+  (let ((rv (internal (string->list top)
+                      (string->list bottom)
+                      '())))
+    (and rv (list->string (reverse rv))))
   )
 
 

@@ -1,3 +1,6 @@
+# TODO -- see if the program "bglmake" would simplify the process of
+#compilation
+
 anagrams: $(addsuffix .o,anagrams bag dict)
 
 # -g enables assertions
@@ -8,7 +11,7 @@ anagrams: $(addsuffix .o,anagrams bag dict)
 	bigloo -g4 -o $@ $^
 
 check: anagrams
-	time ./$^ "Ernest Hemingway" > /dev/null
+	LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH time ./$^ "Ernest Hemingway" > /dev/null
 
 clean:
 	rm -f anagrams *.o
