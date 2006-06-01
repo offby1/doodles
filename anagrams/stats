@@ -24,9 +24,15 @@ time ./anagrams  > /dev/null
 Waah: I can't remember if these times are 'real' or 'user'.
 All times are on the home machine, unless otherwise noted.
 
+
+For testing a new implementation, note that /usr/share/dict/words
+should wind up with 72717 entries, and after pruning for "Ernest
+Hemingway", it should have 1716 entries.
+
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
 |language         |time           |time "st       |time "est      |time "Ernest     |bag           |dictionary    |
 |                 |"hemingway"    |hemingway"     |hemingway"     |Hemingway"       |implementation|cached?       |
+|                 |               |               |               |(457602 anagrams)|              |              |
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
 |          schemes|               |               |               |                 |              |              |
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
@@ -34,7 +40,9 @@ All times are on the home machine, unless otherwise noted.
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
 |mit-scheme 7.7.90|               |               |15 user seconds|180 user seconds |bignums       |no            |
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
-|bigloo 2.7a      |               |               |58 user seconds| segfault :-(    |strings       |yes           |
+|bigloo 2.8a      |               |               |               |49 user seconds, |strings       |yes           |
+|                 |               |               |               |but got the wrong|              |              |
+|                 |               |               |               |answer           |              |              |
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
 |gambit 4b17      |5 user seconds |6 user seconds |9 user seconds |200 user seconds |bignums       |no            |
 +-----------------+---------------+---------------+---------------+-----------------+--------------+--------------+
