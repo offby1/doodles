@@ -76,11 +76,17 @@ list of anagrams, each of which begins with one of the WORDS."
                             anagrams))
                      words)))
 
-(all-anagrams
- (vector-ref
-  (current-command-line-arguments)
-  0)
- (find file-exists? '("/usr/share/dict/words"
-                      "/usr/share/dict/american-english"))
- ))
+(let ((in (vector-ref
+           (current-command-line-arguments)
+           0)))
+  (fprintf (current-error-port)
+           "~a anagrams of ~s~%"
+           (length
+            (all-anagrams
+             in
+             (find file-exists? '("/usr/share/dict/words"
+                                  "/usr/share/dict/american-english"))
+             ))
+           in
+           )))
 

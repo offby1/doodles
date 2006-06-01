@@ -59,22 +59,24 @@
 
     (when (not hash-cache)
       (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
-      (setf hash-cache (make-hash-from-file "words"))
-      (format t "~a elements.~%" (hash-table-count hash-cache))
-      (format t "Say: here's a long list of anagrams found in the dictionary: ~a~%"
-              (report-longest-dictionary-anagrams hash-cache)))
+      (setf hash-cache (make-hash-from-file "words")))
     
     (setf *dict* nil)
     (format t "Converting dictionary hash to a list ... " ) (finish-output)
-    (maphash
-     #'(lambda (bag words)
-         (push (cons bag (sort
-                          ;; sort is destructive, but we don't want to
-                          ;; clobber the hash, so we must copy the
-                          ;; list of words before sorting it.
-                          (copy-list words)
-                          #'string<)) *dict*))
-     hash-cache)
+    (let ((words-found 0))
+      (maphash
+       #'(lambda (bag words)
+           (incf words-found (length words))
+           (push (cons bag (sort
+                            ;; sort is destructive, but we don't want to
+                            ;; clobber the hash, so we must copy the
+                            ;; list of words before sorting it.
+                            (copy-list words)
+                            #'string<)) *dict*))
+       hash-cache)
+      (format t "~a elements.~%" words-found)
+      (format t "Say: here's a long list of anagrams found in the dictionary: ~a~%"
+              (report-longest-dictionary-anagrams hash-cache)))
     (format t "done~%")
     (format t "Sorting & pruning ...") (finish-output)
     (setf *dict* (sort (delete-if #'(lambda (entry)
@@ -89,4 +91,4 @@
                                          (length w2))
                                       (string< w1 w2))))
                            )))
-    (format t "done -- down to ~a elements.~%" (length *dict*) )))
+    (format t "done -- down to ~a elements.~%" (apply #'+ (mapcar #'length (mapcar #'cdr  *dict*))))))

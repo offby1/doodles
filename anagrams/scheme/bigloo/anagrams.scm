@@ -43,7 +43,7 @@ list of anagrams, each of which begins with one of the WORDS."
          )
 
     (display "Pruned dictionary has "(current-error-port))
-    (display (length pruned) (current-error-port))
+    (display (apply + (map length (map cdr pruned))) (current-error-port))
     (display " entries"(current-error-port))
     ;;     (write pruned (current-error-port))
     (newline (current-error-port))

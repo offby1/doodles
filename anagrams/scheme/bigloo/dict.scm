@@ -28,7 +28,7 @@
       (lambda ()
         (display "Reading ")(write *dict-cache-file-name*) (display " ... ")
         (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-        (display (length (apply append (map cdr *the-dictionary*))))
+        (display (apply + (map length (map cdr *the-dictionary*))))
         (display " entries")
         (newline)))
 
