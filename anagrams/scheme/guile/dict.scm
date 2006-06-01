@@ -16,10 +16,15 @@
       "/usr/share/dict/words"
     (lambda ()
       (let ((dict (make-hash-table 10000)))
-        (format #t "Reading dictionary ... ") (force-output)
+        (format (current-error-port) "Reading dictionary ... ") (force-output)
         (let loop ((word  (read-delimited "\n")))
           (if (eof-object? word)
-              (format #t "done~%")
+              (let ((sum 0))
+                (hash-fold (lambda (key value prior-result)
+                             (set! sum (+ sum (length value)))
+                             ) 0 dict)
+                (format (current-error-port) "done; ~a words~%"
+                        sum))
             (begin
               (if (word-acceptable? word)
                   (adjoin-word dict (string-downcase word)))
@@ -63,7 +68,7 @@
 
 (define-public (init bag-to-meet)
   (set! *big-ol-hash-table* (make-hash-table 10000))
-  (format #t "Pruning dictionary ... ") (force-output)
+  (format (current-error-port) "Pruning dictionary ... ") (force-output)
   (for-each
    (lambda (pair)
      (let ((bag (car pair))
@@ -77,7 +82,7 @@
                              (cons (cons key value) prior))
                            '()
                            *big-ol-hash-table*))
-  (format #t "done~%")
+  (format (current-error-port) "done~%")
 
 
   ;; TODO -- consider sorting *dictionary*.  There are two ways you might
@@ -114,14 +119,14 @@
                                                                   (car b)))))
         (map cdr with-random-numbers)))
 
-    (format #t "Sorting or shuffling the dictionary (~a elements), for the hell of it ... "
-            (length *dictionary*))
+    (format (current-error-port) "Sorting or shuffling the dictionary (~a words), for the hell of it ... "
+            (apply + (map length (map cdr *dictionary*))))
     (set! *dictionary*
           (if #t
               (sort! *dictionary* biggest-first)
             (shuffled *dictionary*))
           )
-    (format #t "done.~%"))
+    (format (current-error-port) "done.~%"))
   )
 
 (define-public (test-init)
@@ -136,7 +141,7 @@
 
 (if (not (access? *alist-file-name* R_OK))
     (begin
-      (format #t "Caching dictionary ... ")
+      (format (current-error-port) "Caching dictionary ... ")
       ;; keep the computation of `result' out of the call to
       ;; `with-output-to-file', since that computation might spew
       ;; stuff to the current output port.
@@ -155,6 +160,6 @@
             ;; ...  ever.
             (write result ))))
 
-      (format #t "done~%")))
+      (format (current-error-port) "done~%")))
 
 (set! *random-state* (seed->random-state (get-internal-real-time)))

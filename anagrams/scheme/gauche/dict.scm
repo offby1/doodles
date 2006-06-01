@@ -40,17 +40,21 @@
             (! (cons word probe)))))))
 (call-with-input-file "/usr/share/dict/words"
   (lambda (p)
-    (let loop ()
+    (let loop ((words-saved 0))
       (let ((line (read-line p #t)))
-        (when (not (eof-object? line))
-          (when (word-acceptable? line)
-            (adjoin-word! *ht* (list->string (map char-downcase (string->list line)))))
-          (loop))))))
-
-(display "Dictionary has ")
-(display (hash-table-num-entries *ht*))
-(display " entries")
-(newline)
+        (if (eof-object? line)
+            (begin
+              (display "Dictionary has ")
+              (display words-saved)
+              (display " entries")
+              (newline)
+              )
+            (if (word-acceptable? line)
+                (begin
+                  (adjoin-word! *ht* (list->string (map char-downcase (string->list line))))
+                  (loop (+ 1 words-saved)))
+              (loop words-saved))
+          )))))
 
 ;; now convert the hash table to a list
 (define (dictionary-for criterion-bag)

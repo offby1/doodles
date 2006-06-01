@@ -12,23 +12,14 @@ mzscheme
 (provide all-anagrams)
 
 (define (all-anagrams string dict-file-name )
-  (call/cc
-   (lambda (k)
-     (let ((in-bag   (bag string)))
-       (all-anagrams-internal
-        in-bag
-        (init in-bag dict-file-name)
-        0
-        (let ((displayed 0))
-          (lambda args
-            (if (= 10 displayed)
-                (k 'outta-here))
-            (begin
-              (display args)
-              (newline)
-              (set! displayed (add1 displayed)))))
-        )
-       ))))
+  (let ((in-bag   (bag string)))
+    (all-anagrams-internal
+     in-bag
+     (init in-bag dict-file-name)
+     0
+     display
+     )
+    ))
 
 (define (all-anagrams-internal bag dict level callback)
 

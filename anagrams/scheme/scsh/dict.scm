@@ -19,12 +19,23 @@
 
 ;; returns a list of words that can be made from CRITERION-BAG.
 (define (prune-dictionary criterion-bag)
-  (let ((rv '()))
+  (let ((rv '())
+        (words-seen 0)
+        (words-saved 0))
+    (display "Pruning dictionary ... " (current-error-port))
     (table-walk (lambda (number words)
+                  (set! words-seen (+ words-seen (length words)))
                   (if (subtract-bags criterion-bag number)
-                      (set! rv (cons (cons number words)
-                                     rv))))
+                      (begin
+                        (set! words-saved (+ words-saved (length words)))
+                        (set! rv (cons (cons number words)
+                                       rv)))))
                 *the-dictionary*)
+    (display "Before: "  (current-error-port))
+    (display words-seen  (current-error-port))
+    (display "; after: " (current-error-port))
+    (display words-saved (current-error-port))
+    (newline             (current-error-port))
     rv))
 
 (define (snarf-dictionary)

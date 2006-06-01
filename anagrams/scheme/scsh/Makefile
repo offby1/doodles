@@ -11,7 +11,7 @@ $(vm):
 	@false
 
 check: $(bytecode)
-	time scshvm -h 11805544 -i ./$^ "Hemingway"
+	time scshvm -h 12000000 -i ./$^ "Hemingway" > /dev/null
 
 clean:
 	rm -f $(bytecode)

@@ -9,6 +9,15 @@
                       result)
               result)))))
 
+(define (find pred seq)
+  (cond
+   ((null? seq)
+    #f)
+   ((pred (car seq))
+    (car seq))
+   (else
+    (find pred (cdr seq)))))
+
 (define (all-anagrams-internal bag dict)
   (define rv '())
   (let loop ((dict dict))
@@ -43,15 +52,6 @@ list of anagrams, each of which begins with one of the WORDS."
                               (cons word an))
                             anagrams))
                      words)))
-
-(define (find pred seq)
-  (cond
-   ((null? seq)
-    #f)
-   ((pred (car seq))
-    (car seq))
-   (else
-    (find pred (cdr seq)))))
 
 (let ((b (bag (apply string-append (cdr (command-line))))))
   (init b  (find file-exists? (list
