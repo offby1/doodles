@@ -1,13 +1,14 @@
 (module bag
-    (export bag-empty? subtract-bags bag))
+    (export bag-empty? subtract-bags bag bag->string))
 
 (define (bag s)
   "Return an object that describes all the letters in S, without
 regard to order."
-  (list->string (sort (filter char-alphabetic? (string->list (string-downcase s))) char<?)))
+  (sort (filter char-alphabetic? (string->list (string-downcase s))) char<?))
 
-(define (bag-empty? s) (string=? s ""))
-(define bags=? string=?)
+(define bag-empty? null?)
+(define bags=? equal?)
+(define bag->string list->string)
 
 ;; top minus bottom.
 
@@ -38,11 +39,9 @@ regard to order."
          (else
           #f))))))
 
-  (let ((rv (internal (string->list top)
-                      (string->list bottom)
-                      '())))
-    (and rv (list->string (reverse rv))))
-  )
+  (cond
+   ((internal top bottom '()) => reverse)
+   (else #f)))
 
 
 
@@ -98,7 +97,9 @@ regard to order."
   (my-assert (bag-empty? empty-bag))
   (my-assert (not (not empty-bag))))
 
-(my-assert (string=? "g" (subtract-bags (bag "dgo") (bag "do"))))
+(my-assert (bags=? (bag "g") (subtract-bags (bag "dgo") (bag "do"))))
+(my-assert (string=? (bag->string (bag "g")) "g"))
+(my-assert (string=? (bag->string (bag "Dog!")) "dgo"))
 
 (display  "bag tests passed.")
 (newline)

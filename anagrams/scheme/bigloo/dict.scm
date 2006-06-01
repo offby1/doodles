@@ -24,19 +24,20 @@
 (define *the-dictionary* #f)
 (define *dict-cache-file-name* "cached-dictionary")
 (if (file-exists? *dict-cache-file-name*)
-    (begin
-      (display "Reading ")(write *dict-cache-file-name*) (display " ... ") (newline)
-      (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
-      (display (length (apply append (map cdr *the-dictionary*))))
-      (display " entries")
-      (newline))
+    (with-output-to-port (current-error-port)
+      (lambda ()
+        (display "Reading ")(write *dict-cache-file-name*) (display " ... ")
+        (set! *the-dictionary* (with-input-from-file *dict-cache-file-name* read))
+        (display (length (apply append (map cdr *the-dictionary*))))
+        (display " entries")
+        (newline)))
 
   ;; This hash table, despite what the docs say, isn't using "equal?"
   ;; to compare keys.  Unfortunately I don't know how to fix it with
-  ;; 2.6e.  Perhaps a newer build of bigloo will work better.  In any
-  ;; case, my workaround is a kludge indeed: I convert my keys (which
-  ;; are alists) into strings before putting them in the dictionary,
-  ;; and convert them back upon retrieving them.
+  ;; 2.8a.  Perhaps a newer build of bigloo will work better.  In any
+  ;; case, my workaround is a kludge indeed: I convert my keys into
+  ;; strings before putting them in the dictionary, and convert them
+  ;; back upon retrieving them.
 
   (let ((ht  (make-hashtable)))
     (call-with-input-file
@@ -54,26 +55,15 @@
                   (display " words ...")
                   (newline))
                 (if (word-acceptable? word)
-                    (let* ((key (bag word))
+                    (let* ((key (bag->string (bag word)))
                            (prev (or (hashtable-get ht key) '())))
                       (if (not (member word prev))
                           (set! prev (cons word prev)))
                       (hashtable-put! ht key prev)))
                 (loop (+ 1 words-read))))))))
     (display "done ... ") (newline)
-    (set! *the-dictionary*
-          (if #f
-              ;; put longest words first.
-              (begin (display "sorting ... ")
-                     (sort
-                      (hashtable-map ht cons)
-                      (lambda (e1 e2)
-                        (> (string-length (cadr e1))
-                           (string-length (cadr e2))))))
-            (begin
-              (display "converting hash to list ... ")
-              (hashtable-map ht cons)))
-          )
+    (display "converting hash to list ... ")
+    (set! *the-dictionary* (hashtable-map ht (lambda (key-string anagrams) (cons (bag key-string) anagrams))))
     (display "done; writing cache ... ") (newline)
     (with-output-to-file *dict-cache-file-name*
       (lambda ()

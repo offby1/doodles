@@ -14,6 +14,6 @@ check: anagrams
 	LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH time ./$^ "Ernest Hemingway" > /dev/null
 
 clean:
-	rm -f anagrams *.o
+	rm -f anagrams *.o cached-dictionary
 
 .PHONY: check clean
