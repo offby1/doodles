@@ -21,7 +21,7 @@ regard to order."
   (define (internal top bottom result)
     (cond
      ((null? bottom)
-      (append top result))
+      (append (reverse result) top))
      ((null? top)
       #f)
      (else
@@ -40,7 +40,7 @@ regard to order."
           #f))))))
 
   (cond
-   ((internal top bottom '()) => reverse)
+   ((internal top bottom '()) => values)
    (else #f)))
 
 
@@ -92,14 +92,17 @@ regard to order."
 (my-assert (not (subtract-bags (bag "a")
                             (bag "aa"))))
 
-(let ((empty-bag (subtract-bags (bag "a")
-                                (bag "a"))))
+(let ((empty-bag (subtract-bags (bag "on")
+                                (bag "no"))))
   (my-assert (bag-empty? empty-bag))
   (my-assert (not (not empty-bag))))
 
 (my-assert (bags=? (bag "g") (subtract-bags (bag "dgo") (bag "do"))))
 (my-assert (string=? (bag->string (bag "g")) "g"))
 (my-assert (string=? (bag->string (bag "Dog!")) "dgo"))
+
+;; ensure we maintain alphabetical order
+(my-assert (string=? (bag->string (subtract-bags (bag "Fonda") (bag "fa"))) "dno"))
 
 (display  "bag tests passed.")
 (newline)
