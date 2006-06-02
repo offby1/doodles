@@ -22,7 +22,7 @@ sub bag {
 }
 
 sub bag_empty {
-  "" eq shift;
+  ! shift;
 }
 
 sub bags_equal {
@@ -35,19 +35,17 @@ sub subtract_bags {
   my $difference = "";
 
   while (1) {
-    confess "Undefined arg to subtract_bags" unless defined ($b2);
-
     my $c1 = substr ($b1, 0, 1);
     my $c2 = substr ($b2, 0, 1);
 
-    return $difference . $b1 if ($c2 eq "");
-    return undef             if ($c1 eq "");
+    return $difference . $b1 if (!$c2);
+    return undef             if (!$c1);
     next                     if ($c1 eq $c2);
 
     my $comparison = ($c1 cmp $c2);
     while ($comparison < 0) {
 
-      return undef if ($c1 eq "");
+      return undef if (!$c1);
 
       $difference .= $c1;
 
@@ -140,6 +138,6 @@ EOF
                                        bag ($silly_long_string))));
 }
 
-print "We cool!\n";
+print STDERR "We cool!\n";
 
 1;
