@@ -38,19 +38,11 @@ sub anagrams {
       next;
     }
 
-    my @pruned = grep
-      {
-        my $candidate = $_->[0];
-        my $result = subtract_bags ($smaller_bag, $candidate);
-        defined ($result);
-      } @dict;
-
     my $from_smaller_bag = anagrams ($smaller_bag,
-                                     @pruned);
+                                     grep {defined (subtract_bags ($smaller_bag, $_->[0]));} @dict);
     next unless (@$from_smaller_bag);
 
-    my @combined = combine ($words, $from_smaller_bag);
-    push @$rv, @combined;
+    push @$rv, combine ($words, $from_smaller_bag);
   }
 
   return $rv;
