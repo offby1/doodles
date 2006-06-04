@@ -1,7 +1,3 @@
-(define (ep . args)
-  (apply display args (list (current-error-port)))
-  (newline (current-error-port)))
-
 (define (remove proc seq)
   (filter (lambda (x)
             (not (proc x)))
@@ -16,10 +12,10 @@
 (define (bfs start-node goal-node nodes-equal? node-neighbors)
 
   (define *already-seen* (make-set))
-  
+
   (define (already-seen? thing)
     (is-present? thing *already-seen*))
-  
+
   (define (note! thing)
     (add! thing *already-seen*))
 
@@ -65,6 +61,10 @@
     => cdr)
    (else
     (error "Unknown node" n))))
+
+(define (ep . args)
+  (apply display args (list (current-error-port)))
+  (newline (current-error-port)))
 
 (ep "This should succeed: " (bfs "start" "goal" nodes-equal? node-neighbors))
 (ep "This too: "            (bfs "goal" "start" nodes-equal? node-neighbors))

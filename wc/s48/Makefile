@@ -13,7 +13,7 @@ $(image): build-image.exec $(sources)
 	[ -r $(image) ]		
 
 check: $(image)
-	time $(s48) -i $< -a giant raven
+	time -p $(s48) -i $< -a giant raven
 
 clean:
 	-rm -f $(image)

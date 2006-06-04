@@ -1,9 +1,8 @@
-(define make-set
-  (lambda words
-    (let ((rv (make-string-table)))
-      (for-each (lambda (word) (add! word rv))
-                words)
-      rv)))
+(define (make-set words)
+  (let ((rv (make-string-table)))
+    (for-each (lambda (word) (add! word rv))
+              words)
+    rv))
 
 (define (is-present? word set)
   (table-ref set word))
