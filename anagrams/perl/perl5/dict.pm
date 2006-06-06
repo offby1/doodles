@@ -66,6 +66,7 @@ unless (-r $cache_file_name) {
         or die "Can't close filehandle: $!; stopped";
 
       if (open (DICT_CACHE, ">", $cache_file_name)) {
+        local $Data::Dumper::Sortkeys = 1;
         print DICT_CACHE Data::Dumper->Dump ([$dict_hash], [qw(dict_hash)]);
         close (DICT_CACHE);
         warn "Wrote $cache_file_name";
