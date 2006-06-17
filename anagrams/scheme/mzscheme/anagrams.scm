@@ -79,5 +79,6 @@ list of anagrams, each of which begins with one of the WORDS."
                                   "/usr/share/dict/american-english"))
              ))
            in
-           )))
+           )
+  (newline)))
 

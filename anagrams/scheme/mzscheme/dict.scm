@@ -9,13 +9,12 @@ mzscheme
 (define (wordlist->hash fn)
   (with-input-from-file fn
     (lambda ()
-      (let ((dict (make-hash-table 'equal))
-            (trailing-whitespace-re (regexp "[ \r]+$")))
+      (let ((dict (make-hash-table 'equal)))
         (fprintf (current-error-port) "Reading dictionary ~s ... " fn)
         (let loop ((words-read 0))
           (let ((word (read-line)))
             (when (not (eof-object? word))
-              (let ((word (regexp-replace trailing-whitespace-re (string-downcase word) "")))
+              (let ((word (string-downcase word)))
                 (when (word-acceptable? word)
                   (adjoin-word! dict word))
                 (loop (+ 1 words-read))))))
@@ -28,11 +27,15 @@ mzscheme
     (define (! thing)
       (hash-table-put! dict bag thing))
 
-    (let ((probe (hash-table-get dict bag (lambda () #f))))
-      (if (not probe)
-          (! (list word))
-        (if (not (member word probe))
-            (! (cons word probe)))))))
+    (let ((probe (hash-table-get
+                  dict
+                  bag
+                  (lambda ()
+                    (let ((new (list word)))
+                      (! new)
+                      new)))))
+      (if (not (member word probe))
+          (! (cons word probe))))))
 
 (define word-acceptable?
   (let ((has-vowel-regexp (regexp "[aeiouAEIOU]"))

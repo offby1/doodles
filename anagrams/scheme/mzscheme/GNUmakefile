@@ -1,4 +1,4 @@
-check: words
+check:
 	time ./anagrams.scm  "Ernest Hemingway" > /dev/null
 
 profile:
