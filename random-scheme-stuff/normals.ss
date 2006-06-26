@@ -14,6 +14,10 @@
                              sum-of-squares))))
           (list (* x hmph)
                 (* y hmph)))))))
+
+;; TODO -- find a nifty way to write this, without using assignment,
+;; and without just throwing away one of the two return values from
+;; pair-of-unit-normals
 (define one-unit-normal
   (let ((buffer '()))
     (lambda ()
