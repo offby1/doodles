@@ -6,7 +6,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module t2 mzscheme
 (require (only (lib "1.ss" "srfi") fold iota)
          (only (lib "13.ss" "srfi") string-join)
-         (only (lib "list.ss") quicksort))
+         (only (lib "list.ss") quicksort)
+         "normals.ss")
 
 (print-struct #t)
 (define-struct item (name size) #f)
@@ -33,8 +34,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                         (item-size i))))
 (define *random-items*
   (map (lambda (n)
-         (make-item (number->string n) (random 100)))
-       (iota 20)))
+         (make-item (number->string n) (inexact->exact (round (* (one-unit-normal) 100)))))
+       (iota 50)))
 
 (for-each (lambda (i)
             (let ((c (emptiest *containers*)))
@@ -44,7 +45,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (lambda (i1 i2)
              (> (item-size i1)
                 (item-size i2)))))
-(printf "~a~%" (map item-size *random-items*))
+;(printf "~a~%" (map item-size *random-items*))
 (for-each (lambda (c)
             (let ((sizes (map item-size (container-items c))))
             (printf "~a = ~a~%"

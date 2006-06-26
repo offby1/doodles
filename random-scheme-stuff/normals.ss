@@ -1,0 +1,25 @@
+(module normals mzscheme
+(provide one-unit-normal)
+;; http://en.wikipedia.org/wiki/Box-Muller_transform
+(define (pair-of-unit-normals)
+  (let loop ((x (random))
+             (y (random)))
+    (let ((sum-of-squares (+ (* x x)
+                             (* y y))))
+      (if (or (zero? sum-of-squares)
+              (< 1 sum-of-squares))
+          (loop (random)
+                (random))
+        (let ((hmph (sqrt (/ (* -2 (log sum-of-squares))
+                             sum-of-squares))))
+          (list (* x hmph)
+                (* y hmph)))))))
+(define one-unit-normal
+  (let ((buffer '()))
+    (lambda ()
+      (when (null? buffer)
+        (set! buffer (pair-of-unit-normals)))
+      (begin0
+        (car buffer)
+        (set! buffer (cdr buffer))))))
+)
