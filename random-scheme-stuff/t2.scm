@@ -12,9 +12,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; each item, add it to the emptiest container.
 
 ;; see "triumph.scm" for a longer explanation of why this is
-;; interesting.  That file says that it took me _hours_ to write it,
-;; which is appalling; this here took maybe half an hour.  Perhaps I'm
-;; a better programmer now :-|.
+;; interesting (to me, anyway).  That file says that it took me
+;; _hours_ to write it, which is appalling; this here took maybe half
+;; an hour.  Perhaps I'm a better programmer now :-|.
 (module t2 mzscheme
 (require (only (lib "1.ss" "srfi") fold iota)
          (only (lib "13.ss" "srfi") string-join)
