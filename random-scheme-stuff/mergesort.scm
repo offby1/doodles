@@ -1,12 +1,18 @@
 (module mergesort mzscheme
 
-(require (only (lib "1.ss" "srfi") take drop))
-
-(define (split seq )
-  (let* ((half  (round (/ (length seq) 2)))
-         (left  (take seq half) )
-         (right (drop seq half)))
-    (values left right)))
+(define (split seq)
+  (let loop ((seq seq)
+             (left '())
+             (right '())
+             (left? #t))
+    (if (null? seq)
+        (values left right)
+      (let ((this (car seq)))
+        (loop
+         (cdr seq)
+         (if left? (cons this left) left)
+         (if left? right (cons this right))
+         (not left?))))))
 
 (define (merge a b <)
   (let loop ((a a)
