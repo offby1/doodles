@@ -1,6 +1,6 @@
 (module mergesort mzscheme
 
-(require (lib "1.ss" "srfi"))
+(require (only (lib "1.ss" "srfi") take drop))
 
 (define (split seq )
   (let* ((half  (round (/ (length seq) 2)))
@@ -38,4 +38,6 @@
              <))))
 
 
+(let ((l  '(2 1 4 3)))
+  (printf "~a => ~a~%" l (mergesort l <)))
 )
