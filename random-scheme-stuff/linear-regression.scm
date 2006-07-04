@@ -1,5 +1,7 @@
 ;; formulas are from the CRC Standard Mathematical Tables, 23d edition
 
+(module linear-regression mzscheme
+(provide (all-defined))
 (define (find-best-fit-line points)
   (define (square x) (* x x))
 
@@ -11,7 +13,7 @@
          (mean-of-xs (/ sum-of-xs n))
          (mean-of-ys (/ sum-of-ys n))
 
-         (slope (/ (- (* n 
+         (slope (/ (- (* n
                          ;; sum (x_i * y_i)
                          (apply + (map (lambda (point)
                                          (* (car point)
@@ -26,7 +28,7 @@
 
          (correlation-coefficient
           (/
-           
+
            (apply + (map
                      (lambda (point) (* (- (car point) mean-of-xs) (- (cdr point) mean-of-ys)))
                      points))
@@ -36,5 +38,5 @@
                     (apply + (map (lambda (y)
                                     (square (- y mean-of-ys)))
                                   ys)))))))
-    
-    (list y-intercept slope correlation-coefficient)))
+
+    (list y-intercept slope correlation-coefficient))))
