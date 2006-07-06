@@ -42,11 +42,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (increment! datum)
         (loop (- experiments-left 1)))
     (let ((barchart-data (reverse (hash-table-map *stats* cons))))
+
+      ;; the expected value for each X is  (* *passes* (log10 (+ 1 (/ x))))
       (define (invert actual)
         (/ (- (ten-to-the (/ actual *passes*)) 1)))
+
       (write barchart-data)
       (newline)
-      ;; the expected value for each X is  (* *passes* (log10 (+ 1 (/ x))))
       (printf
        "correlation coefficient: ~a~%"
        (list-ref
