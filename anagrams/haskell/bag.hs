@@ -1,6 +1,6 @@
 -- -*-haskell-*-
 
-module Bag (make_bag, subtract_bags) where
+module Bag (make_bag, subtract_bags, bag_empty, bags_equal) where
 import Char
 
 make_bag :: String -> Integer
