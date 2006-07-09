@@ -28,3 +28,6 @@ subtract_bags top bot = let r = rem top bot in
 -- that last should print 828806486967613
 
 -- subtract_bags (make_bag ("ola")) (make_bag ("lo")) => 2
+
+bag_empty b = (b == 1)
+bags_equal b1 b2 = (b1 == b2)
