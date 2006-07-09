@@ -4,8 +4,10 @@ objs := $(srcs:.scm=.o)
 CFLAGS := $(shell chicken-config -cflags)
 LDFLAGS:= $(shell chicken-config -libs)
 
+# The -profile option seems to slow it waaay down, at least with build
+# 315
 %.c : %.scm
-	chicken $^ -profile
+	chicken $^ # -profile
 
 %.o : %.c
 	gcc -c $^ $(CFLAGS)
@@ -18,7 +20,7 @@ words: /usr/share/dict/words
 #head -10 $^  > $@
 
 check: anagrams words
-	time ./$< "Ernest Hemingway" > /dev/null && chicken-profile
+	time ./$< "Ernest Hemingway" > /dev/null && if [ -f PROFILE ]; then chicken-profile; fi
 
 clean:
 	rm -f $(objs) $(srcs:.scm=.c) anagrams PROFILE words
