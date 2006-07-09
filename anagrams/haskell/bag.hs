@@ -1,13 +1,14 @@
 -- -*-haskell-*-
 
 module Bag where
+import Char
 
 make_bag :: String -> Integer
 make_bag []     = 1
 make_bag (c:cs) = char_prime (c) * make_bag cs
 
 char_prime :: Char -> Integer
-char_prime c = case c of
+char_prime c = case toLower (c) of
            'a' -> 2
            'b' -> 3
            'c' -> 5
