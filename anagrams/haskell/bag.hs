@@ -1,6 +1,6 @@
 -- -*-haskell-*-
 
-module Bag (make_bag) where
+module Bag (make_bag, subtract_bags) where
 import Char
 
 make_bag :: String -> Integer
@@ -16,9 +16,15 @@ char_prime c | (lc >= 'a') && (lc <= 'z') = primes !! (ord (lc) - ord('a'))
              | True = 1
              where lc = toLower (c)
 
+subtract_bags :: Integer -> Integer -> Integer
+subtract_bags top bot = let r = rem top bot in
+                            if (r == 0) then quot top bot else 0
+
 -- to test this, start ghci, and type
 -- :load bag.hs
 --  print "Hello, world "
 --  print (make_bag ("Hello, world"))
 
 -- that last should print 828806486967613
+
+-- subtract_bags (make_bag ("ola")) (make_bag ("lo")) => 2
