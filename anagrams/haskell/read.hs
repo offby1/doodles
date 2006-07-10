@@ -1,4 +1,5 @@
 module Main where
+import Bag
 
 main= do
       x <- readFile ("words")
