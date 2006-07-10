@@ -2,7 +2,7 @@
 	ghc -c $^ -o $@
 
 check: read
-	./$^
+	time ./$^
 
 read: Bag.o read.o
 	ghc -o $@ $^
