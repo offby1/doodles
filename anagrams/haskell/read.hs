@@ -3,4 +3,4 @@ import Bag
 
 main= do
       x <- readFile ("words")
-      print (map (\w -> "golly" : [w]) (lines(x)))
+      print (map (\w -> (make_bag (w), w))  (lines(x)))
