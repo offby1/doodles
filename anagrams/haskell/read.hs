@@ -1,5 +1,5 @@
 module Main where
 
 main= do
-      x <- readFile ("/etc/passwd")
-      print (lines(x))
+      x <- readFile ("words")
+      print (map (\w -> "golly" : [w]) (lines(x)))
