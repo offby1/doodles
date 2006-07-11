@@ -3,20 +3,21 @@ import Bag
 import Char
 import qualified Data.Map as M
 
-type Dict = M.Map Integer [String]
+type DictMap = M.Map Integer [String]
+type Dict = [(Integer, [String])]
 
 member :: String -> [String] -> Bool
 member string [] = False
 member string (x:xs) =
       if string == x then True else member string xs
 
-adjoin :: Integer -> String -> Dict -> Dict
+adjoin :: Integer -> String -> DictMap -> DictMap
 adjoin key string dict =
        M.insertWith (\new -> (\old -> ( 
                     if member (head new) old then old else (new ++ old) ))) key [string] dict
            
 
-from_strings :: [String] -> Dict
+from_strings :: [String] -> DictMap
 from_strings [] = M.empty
 from_strings (line:lines) =
              adjoin (make_bag (line)) line (from_strings (lines))
@@ -38,6 +39,10 @@ acceptable word =
                || word == "a"
                || word == "i")
 
+prune :: Integer -> Dict -> Dict
+prune bag [] = []
+prune bag (x:xs) = if (Bag.subtract_bags bag (fst x) ) > 0 then (x : (prune bag xs)) else prune bag xs
+          
 main= do
       x <- readFile ("/usr/share/dict/words")
       let dict = from_strings (filter acceptable (map (map toLower) (lines x)))
@@ -45,6 +50,7 @@ main= do
              print ("words: "        , (sum (map length (M.elems dict))))
              print ("distinct bags: ", length (M.elems dict))
              --print dict
+             print ("pruned to 'dogs': ", prune (make_bag "dogs") (M.toList dict))
              print (dict M.! make_bag ("steal"))
              print (dict M.! make_bag ("dog"))
-             print (dict M.! 18)
+
