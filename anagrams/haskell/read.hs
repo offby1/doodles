@@ -17,10 +17,14 @@ from_strings (line:lines) =
 
 acceptable :: String -> Bool
 acceptable word =
-           all isAlpha word           
+           all isAlpha word && ((length (word) > 1)
+                                || word == "a"
+                                || word == "i")          
 
 main= do
       x <- readFile ("/usr/share/dict/words")
       let dict = from_strings (map (map toLower) (filter acceptable (lines x)))
           in do
+             print (sum (map length (M.elems dict)))
+             print (take 3 (M.toList dict));
              print (dict M.! make_bag ("steal"))
