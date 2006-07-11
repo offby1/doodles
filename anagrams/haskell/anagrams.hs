@@ -51,14 +51,13 @@ anagrams :: Integer -> Dict -> [[String]]
 anagrams bag [] = []
 anagrams bag (x:xs) =
          let smaller = subtract_bags bag (fst x) in
-         if (smaller > 0) then
-             (if (Bag.empty smaller) then
+         (if (smaller > 0) then
+             if (Bag.empty smaller) then
                                 map (\item -> [item]) (snd x)
                                 else
-                                    combine (snd x) (anagrams smaller (prune smaller (x:xs))))
-                  ++ anagrams bag xs
+                                    combine (snd x) (anagrams smaller (prune smaller (x:xs)))
          else
-            anagrams bag xs
+             []) ++ anagrams bag xs
 
 main= do
       x <- readFile ("/usr/share/dict/words")
