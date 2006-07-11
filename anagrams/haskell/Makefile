@@ -1,5 +1,5 @@
 %.o : %.hs
-	ghc -c $^ -o $@
+	ghc -O -c $^ -o $@
 
 check: anagrams
 	time ./$^

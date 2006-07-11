@@ -62,6 +62,6 @@ anagrams bag (x:xs) =
 
 main= do
       x <- readFile ("/usr/share/dict/words")
-      let dict = M.toList from_strings (filter acceptable (map (map toLower) (lines x)))
+      let dict = M.toList (from_strings (filter acceptable (map (map toLower) (lines x))))
           in let answer = anagrams (make_bag ("Ernest Hemingway")) dict
             in print [show (length answer), "anagrams"]
