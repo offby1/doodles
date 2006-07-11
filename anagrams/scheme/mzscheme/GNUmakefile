@@ -4,4 +4,12 @@ check:
 profile:
 	time ./profile.ss  "Ernest Hemingway" > $@
 
-.PHONY: check
+tags: TAGS
+
+TAGS: $(wildcard *.scm)
+	-etags.ss $^
+
+clean:
+	-rm TAGS
+
+.PHONY: check clean tags

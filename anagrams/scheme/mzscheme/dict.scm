@@ -18,7 +18,9 @@ mzscheme
                 (when (word-acceptable? word)
                   (adjoin-word! dict word))
                 (loop (+ 1 words-read))))))
-        (fprintf (current-error-port) "done; ~s entries~%" (length (apply append (map cdr (hash-table-map dict cons)))))
+        (fprintf (current-error-port) "done; ~s words, ~a distinct bags~%"
+                 (length (apply append (map cdr (hash-table-map dict cons))))
+                 (hash-table-count dict))
         dict))))
 
 (define (adjoin-word! dict word)
@@ -39,7 +41,7 @@ mzscheme
 
 (define word-acceptable?
   (let ((has-vowel-regexp (regexp "[aeiouAEIOU]"))
-        (has-non-ASCII-regexp (regexp "[^a-zA-Z]")))
+        (has-non-letter-regexp (regexp "[^a-zA-Z]")))
     (lambda (word)
       (let ((l (string-length word)))
         (and (not (zero? l))
@@ -47,8 +49,8 @@ mzscheme
              ;; it's gotta have a vowel.
              (regexp-match has-vowel-regexp word)
 
-             ;; it's gotta be all ASCII, all the time.
-             (not (regexp-match has-non-ASCII-regexp word))
+             ;; it's gotta be all letters
+             (not (regexp-match has-non-letter-regexp word))
 
              ;; it's gotta be two letters long, unless it's `i' or `a'.
              (or (string=? "i" word)
@@ -61,7 +63,7 @@ mzscheme
                         (hash-table-map (wordlist->hash dict-file-name) cons))))
     (fprintf
      (current-error-port)
-     "Pruned dictionary now has ~a elements~%"
+     "Pruned dictionary now has ~a words~%"
      (apply + (map (lambda (seq)
                      (length (cdr seq)))
                    result)))
