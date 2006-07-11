@@ -52,11 +52,11 @@ anagrams bag [] = []
 anagrams bag (x:xs) =
          let smaller = Bag.subtract_bags bag (fst x) in
          if (smaller > 0) then
-         let new_stuff = if (Bag.empty smaller) then
-                            map (\item -> [item]) (snd x)
-                            else
-                                combine (snd x) (anagrams smaller (prune smaller (x:xs))) in
-             new_stuff ++ anagrams bag xs
+             (if (Bag.empty smaller) then
+                                map (\item -> [item]) (snd x)
+                                else
+                                    combine (snd x) (anagrams smaller (prune smaller (x:xs))))
+                  ++ anagrams bag xs
          else
             anagrams bag xs
 
@@ -70,4 +70,4 @@ main= do
              print ("pruned to 'dogs': ", prune (make_bag "dogs") (M.toList dict))
              print (dict M.! make_bag ("steal"))
              print (dict M.! make_bag ("dog"))
-
+             print (anagrams (make_bag ("Ernest")) (M.toList dict))

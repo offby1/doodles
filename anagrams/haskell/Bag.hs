@@ -1,6 +1,6 @@
 -- -*-haskell-*-
 
-module Bag (make_bag, subtract_bags, bag_empty, bags_equal) where
+module Bag (make_bag, subtract_bags, empty, bags_equal) where
 import Char
 
 make_bag :: String -> Integer
@@ -29,5 +29,5 @@ subtract_bags top bot = let r = rem top bot in
 
 -- subtract_bags (make_bag ("ola")) (make_bag ("lo")) => 2
 
-bag_empty b = (b == 1)
+empty b = (b == 1)
 bags_equal b1 b2 = (b1 == b2)
