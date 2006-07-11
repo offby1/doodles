@@ -1,13 +1,13 @@
 %.o : %.hs
 	ghc -c $^ -o $@
 
-check: read
+check: anagrams
 	time ./$^
 
-read: Bag.o read.o
+anagrams: Bag.o anagrams.o
 	ghc -o $@ $^
 
 clean:
-	-rm *.o *.hi read
+	-rm *.o *.hi anagrams
 
 .PHONY: clean check

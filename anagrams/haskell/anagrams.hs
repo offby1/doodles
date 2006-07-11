@@ -62,12 +62,6 @@ anagrams bag (x:xs) =
 
 main= do
       x <- readFile ("/usr/share/dict/words")
-      let dict = from_strings (filter acceptable (map (map toLower) (lines x)))
-          in do
-             print ("words: "        , (sum (map length (M.elems dict))))
-             print ("distinct bags: ", length (M.elems dict))
-             --print dict
-             print ("pruned to 'dogs': ", prune (make_bag "dogs") (M.toList dict))
-             print (dict M.! make_bag ("steal"))
-             print (dict M.! make_bag ("dog"))
-             print (anagrams (make_bag ("Ernest")) (M.toList dict))
+      let dict = M.toList from_strings (filter acceptable (map (map toLower) (lines x)))
+          in let answer = anagrams (make_bag ("Ernest Hemingway")) dict
+            in print [show (length answer), "anagrams"]
