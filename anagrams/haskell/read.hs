@@ -15,12 +15,12 @@ from_strings [] = M.empty
 from_strings (line:lines) =
              adjoin (make_bag (line)) line (from_strings (lines))
 
---acceptable :: String -> Bool
---acceptable word =
-           
+acceptable :: String -> Bool
+acceptable word =
+           all isAlpha word           
 
 main= do
       x <- readFile ("/usr/share/dict/words")
-      let dict = from_strings (map (map toLower) (lines x))
+      let dict = from_strings (map (map toLower) (filter acceptable (lines x)))
           in do
              print (dict M.! make_bag ("steal"))
