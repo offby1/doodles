@@ -1,22 +1,25 @@
 module Main where
 import Bag
-import qualified Data.Map as Map
+import qualified Data.Map as M
 
-flubber :: [String] -> Map.Map Integer String
-flubber lines =
-        -- BUGBUG -- data needs to be a _list_ of strings, not a single string.
-        let dict = Map.empty
-            in Map.fromList (map (\w -> (make_bag (w), w)) lines)
+type Dict = M.Map Integer [String]
 
---prepend :: a -> [a] -> [a]
-prepend item [] = [item]
-prepend item [xs]
-        | item `elem` xs = xs
-        | True = item:xs
+adjoin :: Integer -> String -> Dict -> Dict
+adjoin key datum dict =
+       M.insertWith (\old -> (\new -> ( new ++ old ))) key [datum] dict
+           
+
+from_strings :: [String] -> Dict
+from_strings lines =
+        let dict = M.empty
+            in last (map (\w -> (adjoin (make_bag (w)) w dict)) lines)
 
 main= do
       x <- readFile ("words")
-      let dict = flubber (lines (x))
+      let dict = from_strings (lines (x))
           in do
              print (dict);
-             print (dict Map.! 710)
+             print (dict M.! 710)
+
+
+
