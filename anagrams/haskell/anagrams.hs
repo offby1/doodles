@@ -41,7 +41,7 @@ acceptable word =
 
 prune :: Integer -> Dict -> Dict
 prune bag [] = []
-prune bag (x:xs) = if (Bag.subtract_bags bag (fst x) ) > 0 then (x : (prune bag xs)) else prune bag xs
+prune bag (x:xs) = if (subtract_bags bag (fst x) ) > 0 then (x : (prune bag xs)) else prune bag xs
           
 combine :: [String] -> [[String]] -> [[String]]
 combine words anagrams = 
@@ -50,7 +50,7 @@ combine words anagrams =
 anagrams :: Integer -> Dict -> [[String]]
 anagrams bag [] = []
 anagrams bag (x:xs) =
-         let smaller = Bag.subtract_bags bag (fst x) in
+         let smaller = subtract_bags bag (fst x) in
          if (smaller > 0) then
              (if (Bag.empty smaller) then
                                 map (\item -> [item]) (snd x)
@@ -63,5 +63,6 @@ anagrams bag (x:xs) =
 main= do
       x <- readFile ("/usr/share/dict/words")
       let dict = M.toList (from_strings (filter acceptable (map (map toLower) (lines x))))
-          in let answer = anagrams (make_bag ("Ernest Hemingway")) dict
-            in print [show (length answer), "anagrams"]
+          in let b = make_bag ("Ernest Hemingway")
+              in let answer = anagrams (b) (prune b dict)
+                 in print [show (length answer), "anagrams"]
