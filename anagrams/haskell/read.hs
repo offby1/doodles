@@ -4,6 +4,7 @@ import qualified Data.Map as Map
 
 flubber :: [String] -> Map.Map Integer String
 flubber lines =
+        -- BUGBUG -- data needs to be a _list_ of strings, not a single string.
         Map.fromList (map (\w -> (make_bag (w), w)) lines)
 
 --prepend :: a -> [a] -> [a]
