@@ -21,7 +21,7 @@ subtract_bags top bot = let r = rem top bot in
                             if (r == 0) then quot top bot else 0
 
 -- to test this, start ghci, and type
--- :load bag.hs
+-- :load Bag.hs
 --  print "Hello, world "
 --  print (make_bag ("Hello, world"))
 
