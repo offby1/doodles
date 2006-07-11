@@ -43,6 +43,23 @@ prune :: Integer -> Dict -> Dict
 prune bag [] = []
 prune bag (x:xs) = if (Bag.subtract_bags bag (fst x) ) > 0 then (x : (prune bag xs)) else prune bag xs
           
+combine :: [String] -> [[String]] -> [[String]]
+combine words anagrams = 
+        concatMap (\w -> (map (\an -> w : an) anagrams)) words
+
+anagrams :: Integer -> Dict -> [[String]]
+anagrams bag [] = []
+anagrams bag (x:xs) =
+         let smaller = Bag.subtract_bags bag (fst x) in
+         if (smaller > 0) then
+         let new_stuff = if (Bag.empty smaller) then
+                            map (\item -> [item]) (snd x)
+                            else
+                                combine (snd x) (anagrams smaller (prune smaller (x:xs))) in
+             new_stuff ++ anagrams bag xs
+         else
+            anagrams bag xs
+
 main= do
       x <- readFile ("/usr/share/dict/words")
       let dict = from_strings (filter acceptable (map (map toLower) (lines x)))
