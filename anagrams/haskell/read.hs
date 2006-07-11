@@ -10,16 +10,12 @@ adjoin key datum dict =
            
 
 from_strings :: [String] -> Dict
-from_strings lines =
-        let dict = M.empty
-            in last (map (\w -> (adjoin (make_bag (w)) w dict)) lines)
+from_strings [] = M.empty
+from_strings (line:lines) =
+             adjoin (make_bag (line)) line (from_strings (lines))
 
 main= do
-      x <- readFile ("words")
+      x <- readFile ("/usr/share/dict/words")
       let dict = from_strings (lines (x))
           in do
-             print (dict);
-             print (dict M.! 710)
-
-
-
+             print (dict M.! make_bag ("steal"))
