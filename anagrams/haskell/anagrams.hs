@@ -1,6 +1,8 @@
 module Main where
 import Bag
 import Char
+import System
+import IO
 import qualified Data.Map as M
 
 type DictMap = M.Map Integer [String]
@@ -61,7 +63,12 @@ anagrams bag (x:xs) =
 
 main= do
       x <- readFile ("/usr/share/dict/words")
+
+      args <- System.getArgs
       let dict = M.toList (from_strings (filter acceptable (map (map toLower) (lines x))))
-          in let b = make_bag ("Ernest Hemingway")
+          in let b = make_bag (head args)
               in let answer = anagrams (b) (prune b dict)
-                 in print [show (length answer), "anagrams"]
+                 in do
+                 print  answer
+                 hPrint stderr [show (length answer), "anagrams"] 
+                 

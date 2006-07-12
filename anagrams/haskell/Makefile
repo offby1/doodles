@@ -1,13 +1,16 @@
 PROG := anagrams
 PROF := $(PROG).prof
 
+all: $(PROG)
+
 prof: $(PROF)
 
 $(PROF): $(PROG)
-	time ./$^ +RTS -p
+	time ./$^ ernest +RTS -p  > /dev/null
 
 check: $(PROG)
-	time ./$^
+	time ./$^ ernest > /dev/null
+	@if [ -e $(PROF) -a ! -s $(PROF) ]; then echo Removing empty $(PROF); rm $(PROF); fi
 
 $(PROG): $(wildcard *.hs)
 	ghc -O -prof -auto-all --make -o $@ $@.hs
@@ -15,4 +18,4 @@ $(PROG): $(wildcard *.hs)
 clean:
 	-rm *.o *.hi $(PROG) $(PROF)
 
-.PHONY: clean check prof
+.PHONY: clean check prof all
