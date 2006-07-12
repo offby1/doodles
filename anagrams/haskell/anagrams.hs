@@ -65,10 +65,11 @@ main= do
       x <- readFile ("/usr/share/dict/words")
 
       args <- System.getArgs
-      let dict = M.toList (from_strings (filter acceptable (map (map toLower) (lines x))))
-          in let b = make_bag (head args)
-              in let answer = anagrams (b) (prune b dict)
-                 in do
-                 print  answer
-                 hPrint stderr [show (length answer), "anagrams"] 
+      let dict = M.toList (from_strings (filter acceptable (map (map toLower) (lines x))));
+          input = head args
+          in (let b = make_bag input;
+                  answer = anagrams (b) (prune b dict)
+                  in do
+                  print  answer
+                  hPrint stderr (show (length answer) ++ " anagrams of " ++ input))
                  

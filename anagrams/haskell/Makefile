@@ -1,31 +1,27 @@
 PROG := anagrams
+PROF_PROG := profiled-anagrams
 
-CLEANFILES := $(PROG)
-PROF := $(PROG).prof
-CLEANUP := @if [ -e $(PROF) -a ! -s $(PROF) ]; then echo Removing empty $(PROF); rm $(PROF); fi
-CLEANFILES += $(PROF)
-
-#profiling := t
-
-ifdef profiling
-GHCARGS :=  -prof -auto-all
-prof: $(PROF)
-
-$(PROF): $(PROG)
-	time ./$^ ernest +RTS -p  > /dev/null
-
-endif
+INPUT :=  Hemingway
+PROF_OUTPUT := $(PROG).prof
+CLEANFILES := $(PROG) $(PROF_OUTPUT) $(PROF_PROG)
 
 all: $(PROG)
 
 check: $(PROG)
-	time ./$^ ernest > /dev/null
-	$(CLEANUP)
+	time ./$^ "$(INPUT)" > /dev/null
 
-$(PROG): $(wildcard *.hs)
-	ghc -O $(GHCARGS) --make -o $@ $@.hs
+prof: $(PROF_OUTPUT)
+
+$(PROF_OUTPUT): $(PROF_PROG)
+	time ./$^ "$(INPUT)" +RTS -p  > /dev/null
+
+$(PROG) : $(wildcard *.hs)
+	ghc -O                 --make -o $@ anagrams.hs
+
+$(PROF_PROG): $(wildcard *.hs)
+	ghc -O -prof -auto-all --make -o $@ anagrams.hs
 
 clean:
-	-rm *.o *.hi $(CLEANFILES)
+	-rm -f *.o *.hi $(CLEANFILES)
 
 .PHONY: clean check prof all
