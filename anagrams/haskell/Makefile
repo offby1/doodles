@@ -1,18 +1,18 @@
-%.o : %.hs
-	ghc -O -prof -auto-all -c $^ -o $@
+PROG := anagrams
+PROF := $(PROG).prof
 
-prof: anagrams.prof
+prof: $(PROF)
 
-anagrams.prof: anagrams
+$(PROF): $(PROG)
 	time ./$^ +RTS -p
 
-check: anagrams
+check: $(PROG)
 	time ./$^
 
-anagrams: Bag.o anagrams.o
-	ghc -prof -auto-all -o $@ $^
+$(PROG): $(wildcard *.hs)
+	ghc -O -prof -auto-all --make -o $@ $@.hs
 
 clean:
-	-rm *.o *.hi anagrams anagrams.prof
+	-rm *.o *.hi $(PROG) $(PROF)
 
 .PHONY: clean check prof
