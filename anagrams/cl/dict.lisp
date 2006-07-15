@@ -59,7 +59,14 @@
 
     (when (not hash-cache)
       (format t "~%~a reading dictionary ... " (lisp-implementation-type)) (finish-output)
-      (setf hash-cache (make-hash-from-file "words")))
+      (setf hash-cache 
+            (make-hash-from-file 
+             (find-if
+              'identity
+              (mapcar
+               'probe-file
+               '("/usr/share/dict/words"
+                 "/usr/share/dict/american-english"))))))
     
     (setf *dict* nil)
     (format t "Converting dictionary hash to a list ... " ) (finish-output)
