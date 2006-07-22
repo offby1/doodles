@@ -10,8 +10,9 @@
 (define (writer-proc port)
   (let loop ((lines-written 0))
     (when (< lines-written 10)
-      (let ((datum (format "Snurkly #~a!~%" lines-written)))
+      (let ((datum (random 10000)))
         (display datum port)
+        (newline port)
         (fprintf (current-error-port) "Wrote ~s~%" datum)
         (loop (add1 lines-written)))))
   (close-output-port port))
@@ -25,8 +26,12 @@
   (close-input-port port))
 
 (let-values (((proc readme writeme errors)
-              (subprocess #f #f (current-error-port)
-                          (find-executable-path "tac"))))
+              (subprocess
+               #f
+               #f
+               (current-error-port)
+               (find-executable-path "sort")
+               "-n")))
   (let ((reader-thread  (thread (lambda () (reader-proc readme))))
         (writer-thread  (thread (lambda () (writer-proc writeme)))))
 
