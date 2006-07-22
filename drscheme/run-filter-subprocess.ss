@@ -7,17 +7,25 @@
 ;; times I've run it, but multi-threaded stuff is tricky enough that
 ;; I'm still not convinced.  Still, it seems reasonable.
 
+;;
+
+
 (define (writer-proc port)
-  (let loop ((lines-written 0))
-    (when (< lines-written 10)
-      (let ((datum (random 10000000)))
-        (display datum port)
-        (newline port)
-        ;; uncomment this watch the whole program hang :-
-        ;;(error "Oh shit!  Something awful happened when writing!!")
-        (fprintf (current-error-port) "Wrote ~s~%" datum)
-        (loop (add1 lines-written)))))
-  (close-output-port port))
+  (dynamic-wind
+      void
+      (lambda ()
+        (let loop ((lines-written 0))
+          (when (< lines-written 10)
+            (let ((datum (random 10000000)))
+              (display datum port)
+              (newline port)
+              ;; uncomment this to watch the whole program _not_ hang
+              ;; :-)
+              (error "Oh shit!  Something awful happened when writing!!")
+              (fprintf (current-error-port) "Wrote ~s~%" datum)
+              (loop (add1 lines-written))))))
+      (lambda ()
+        (close-output-port port))))
 
 (define (reader-proc port)
   (let loop ()
