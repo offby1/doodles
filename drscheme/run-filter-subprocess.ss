@@ -1,4 +1,4 @@
-(module run-grep mzscheme
+(module run-filter-subprocess mzscheme
 
 ;; this is something that's hard to do in Perl -- writing to, and
 ;; reading from, the same subprocess at once (run 'perldoc IPC::Open2'
