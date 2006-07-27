@@ -2,12 +2,7 @@
 
 ;; this is something that's hard to do in Perl -- writing to, and
 ;; reading from, the same subprocess at once (run 'perldoc IPC::Open2'
-;; for an explanation of how to do it in Perl).  I'm not actually sure
-;; that this technique is foolproof -- this program has worked the few
-;; times I've run it, but multi-threaded stuff is tricky enough that
-;; I'm still not convinced.  Still, it seems reasonable.
-
-;;
+;; for an explanation of how to do it in Perl).
 
 (require (lib "process.ss")
          (lib "match.ss"))
