@@ -81,10 +81,7 @@
                             (copy-list words)
                             #'string<)) *dict*))
        hash-cache)
-      (format t "~a elements.~%" words-found)
-      (format t "Say: here's a long list of anagrams found in the dictionary: ~a~%"
-              (report-longest-dictionary-anagrams hash-cache)))
-    (format t "done~%")
+      (format t "~a elements.~%" words-found))
     (format t "Sorting & pruning ...") (finish-output)
     (setf *dict* (sort (delete-if #'(lambda (entry)
                                           (not (subtract-bags bag (car entry)))) *dict*) 

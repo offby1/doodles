@@ -17,9 +17,7 @@ mzscheme
      in-bag
      (init in-bag dict-file-name)
      0
-     display
-     )
-    ))
+     display)))
 
 (define (all-anagrams-internal bag dict level callback)
 
@@ -38,16 +36,17 @@ mzscheme
              (let ((new-stuff
                     (if (bag-empty? smaller-bag)
                         (map list words)
-                      (combine words
-                               (all-anagrams-internal
-                                smaller-bag
-                                (filter (lambda (entry)
-                                          (subtract-bags
-                                           smaller-bag
-                                           (car entry)))
-                                        dict)
-                                (add1 level)
-                                callback)))))
+                      (combine
+                       words
+                       (all-anagrams-internal
+                        smaller-bag
+                        (filter (lambda (entry)
+                                  (subtract-bags
+                                   smaller-bag
+                                   (car entry)))
+                                dict)
+                        (add1 level)
+                        callback)))))
                (if (and (zero? level)
                         (procedure? callback)
                         (not (null? new-stuff)))

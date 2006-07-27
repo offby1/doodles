@@ -15,20 +15,15 @@ And yet I tried this first when writing the C++ version.  It worked
 OK, but I then tried using bignums ... and they were twice as fast.
 Hmm.
 
-* Use `configure' to figure out where the dictionary lives.
+* Look in more than one place for the dictionary.
 
 I've only tried the programs on a few computers, and yet each has the
 dictionary in a different place.  Windows is of course particularly
-bad.  If using `configure' is too complicated, perhaps just an
-environment variable.
-
-* Allow a command-line option to specify the location of the dictionary
+bad.
 
 * Languages to do
 
 ** perl6
-
-** Haskell
 
 ** tcl !
 
@@ -38,5 +33,5 @@ environment variable.
 
 This is probably much harder than it should be, because I really mean
 "write one program which will work in all the scheme implementations".
-Writing portable Scheme is hard (and, as I repeatedly announce on IRC,
+Writing portable Scheme is hard (and, as I repeatedly proclaim on IRC,
 not worth the effort).  Let's go shopping.

@@ -10,7 +10,7 @@
   ;; dump-scsh-program should use with-resources-aligned to wrap its
   ;; own guts for me)
 
-  ;; Thanks to Taylor Cambell
+  ;; Thanks to Taylor Campbell
   (with-resources-aligned
    (list cwd-resource)
    (lambda ()

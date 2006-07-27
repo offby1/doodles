@@ -1,10 +1,10 @@
-#!/usr/bin/mred -qu
+#!/usr/local/bin/mred -qu
 
 (module go mzscheme
   (require (prefix srfi-19- (lib "19.ss" "srfi"))
            "anagrams.scm")
   (define start-time (srfi-19-current-time))
-  (define rv (all-anagrams 
+  (define rv (all-anagrams
               (vector-ref (current-command-line-arguments) 0)
               "/usr/share/dict/words"
               (lambda args ())))

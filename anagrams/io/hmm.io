@@ -1,3 +1,5 @@
+Importer addSearchPath("/usr/local/src/langs/io/cifre/stdlib")
+
 # keys are characters; values are the number of times that character
 # appeared in the original string.
 
@@ -19,6 +21,8 @@ Map asString := method (
   result)
 
 f := File setPath ("/usr/share/dict/american-english") openForReading
+
+dict := 
 
 while(line := f readLine,
   line := line asString

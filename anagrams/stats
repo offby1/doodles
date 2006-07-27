@@ -21,10 +21,8 @@ bogomips        : 4771.02
 
 time ./anagrams  > /dev/null
 
-Waah: I can't remember if these times are 'real' or 'user'.
 All times are on the home machine, unless otherwise noted.
 
-
 For testing a new implementation, note that /usr/share/dict/words
 should wind up with 72717 words (66890 distinct bags), and after
 pruning for "Ernest Hemingway", it should have 1716 entries.
@@ -36,20 +34,28 @@ pruning for "Ernest Hemingway", it should have 1716 entries.
 |                 |answer?|"hemingway"    |hemingway"     |hemingway"     |Hemingway"       |Hemingway"       |implementation|cached?       |
 |                 |       |               |               |               |(113466 anagrams)|(457602 anagrams)|              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|      common lisp|yes    |               |               |               |                 |                 |bignums       |yes           |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|sbcl             |       |               |               |               |                 |7 user seconds   |              |              |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|cmucl            |       |1 seconds      |2 seconds      |               |                 |10 user seconds  |              |              |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|clisp            |       |               |               |               |                 |20 user seconds  |              |              |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |          schemes|       |               |               |               |                 |                 |              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |mzscheme v301.4  |yes    |               |               |               |10 user seconds  |40 user seconds  |bignums       |no            |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|mit-scheme 7.7.90|       |               |               |15 user seconds|                 |180 user seconds |bignums       |no            |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |bigloo 2.8a      |yes    |               |               |               |14 user seconds  |runs outta memory|strings       |yes           |
 |                 |       |               |               |               |                 |                 |              |              |
 |                 |       |               |               |               |                 |                 |              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|gambit 4b17      |not    |5 user seconds |6 user seconds |9 user seconds |                 |200 user seconds |bignums       |no            |
+|mit-scheme 7.7.90|       |               |               |15 user seconds|40 user seconds  |180 user seconds |bignums       |no            |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|gambit 4b17      |not    |5 user seconds |6 user seconds |9 user seconds |41 user seconds  |200 user seconds |bignums       |no            |
 |                 |quite  |               |               |               |                 |                 |              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|scheme48 1.3     |no     |               |               |16 user seconds|                 |272 user seconds |bignums       |no(!)         |
+|scheme48 1.3     |no     |               |               |16 user seconds|55 user seconds  |272 user seconds |bignums       |no(!)         |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |chicken (302)    |no     |3 user seconds |6 user seconds |14 user seconds|                 |420 user seconds |strings       |yes           |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
@@ -61,14 +67,6 @@ pruning for "Ernest Hemingway", it should have 1716 entries.
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |scsh             |no     |48 user seconds|80 seconds     |107 seconds    |                 |                 |bignums       |yes (code too)|
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|      common lisp|yes    |               |               |               |                 |                 |bignums       |yes           |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|cmucl            |       |1 seconds      |2 seconds      |               |                 |10 user seconds  |              |              |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|clisp            |       |               |               |               |                 |20 user seconds  |              |              |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|sbcl             |       |               |               |               |                 |7 user seconds   |              |              |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |             misc|       |               |               |               |                 |                 |              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |c++ (-O2)        |yes    |               |               |               |                 |90 user seconds  |bignums       |no            |
@@ -76,10 +74,10 @@ pruning for "Ernest Hemingway", it should have 1716 entries.
 |haskell (ghc     |yes    |               |               |               |                 |90 user seconds  |bignums       |no            |
 |6.4.1) -O        |       |               |               |               |                 |                 |              |              |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
+|python           |       |4 seconds      |6 seconds      |15 user seconds|                 |270 user seconds |bignums       |no            |
++-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |perl5            |not    |               |               |18 user seconds|                 |300 user seconds |strings       |yes           |
 |                 |quite  |               |               |               |                 |                 |              |              |
-+-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
-|python           |       |4 seconds      |6 seconds      |15 user seconds|                 |270 user seconds |bignums       |no            |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |ruby             |       |8 seconds      |14 user seconds|37 user seconds|                 |960 user seconds |bignums       |yes           |
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
@@ -91,7 +89,40 @@ run much slower than normal libraries.
 
 The really interesting question isn't so much "how fast is this
 language", but rather "does this language have an easy-to-use
-profiler".  So far, the answer in most cases has been "no" :-| C++ has
-gperf, which takes a bit of doing, but provides useful numbers; some
-of the Common Lisps have something similar built in.  But most of the
-Schemes, python, and ruby have nothing, so far as I can tell.
+profiler".  So far, the answer in most cases has been "no" :-| 
+
+* C++ has gperf, which takes a bit of doing, but provides useful numbers; 
+
+* some of the Common Lisps have something similar
+
+* most of the Schemes, python, and ruby have nothing, so far as I can
+  tell
+
+* Haskell's profiler was quite easy to use
+
+For comparison, note that the program "an"
+(http://ftp.debian.org/pool/main/a/an/) appears to be about three
+times faster than my SBCL version:
+
+time an -m 2 -l 4  "Intelligent Design" | LANG= wc
+=>
+ 291684 1158130 6532034
+
+real	0m1.536s
+user	0m1.464s
+sys	0m0.032s
+
+whereas
+
+(time (length (remove-if-not #'(lambda (seq) (= 4 (length seq))) (anagrams::anagrams "Intelligent Design"))))
+=>
+Evaluation took:
+  4.483 seconds of real time
+  4.232265 seconds of user run time
+  0.212013 seconds of system run time
+  0 page faults and
+  228,563,456 bytes consed.
+105533
+
+So: 1.5 seconds versus my 4.2 seconds, and it found 300,000 results
+whereas I found only 100,000.  Hmph.
