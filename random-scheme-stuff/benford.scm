@@ -34,7 +34,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (ten-to-the x)
   (expt 10 x))
 
-(define *passes* 100000)
+(define *passes* 1000000)
 (define *stats* (make-hash-table 'equal))
 (let loop ((experiments-left *passes*))
   (if (positive? experiments-left )

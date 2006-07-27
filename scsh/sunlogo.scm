@@ -1,13 +1,14 @@
 #!/usr/bin/scsh \
--lm /usr/local/src/fps-1.0-orig/fps-package.scm -o fps -s
+-lm /usr/local/src/fps-1.0/fps-package.scm -o fps -s
 !#
 
-;; written in `functional postscript' -- ftp://ftp-swiss.ai.mit.edu/pub/su/scsh/contrib/fps/fps-1.0.tar.gz
+;; written in `functional postscript' --
+;; ftp://ftp-swiss.ai.mit.edu/pub/su/scsh/contrib/fps/fps-1.0.tar.gz
 (begin
   (define thickness 1)
-  
+
   (define arc-center (pt (/ (- thickness 1) 2) 0))
-  
+
   (define quarter-circle (stroke (arc arc-center 1 (/ pi 2) pi)
                                  (:line-width thickness)
                                  (:line-cap 'round)))

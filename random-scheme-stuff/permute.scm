@@ -7,14 +7,14 @@
 
 ; From SICP, 2nd ed., more or less
 
-(require 'filter)
+(module permute mzscheme
+(require (only (lib "1.ss" "srfi") delete append-map))
 (define (perms s)
 
-  (define (remove item sequence) (filter (lambda (x) (not (eq? x item))) sequence))
-
-  (if (null? s)                         ; empty set?
-      (list '())                        ; sequence containing empty set
-    (flatmap (lambda (x)
-               (map (lambda (p) (cons x p))
-                    (perms (remove x s))))
-             s)))
+  (if (null? s)
+      (list '())
+    (append-map (lambda (x)
+                  (map (lambda (p) (cons x p))
+                       (perms (delete x s))))
+                s)))
+)
