@@ -15,11 +15,16 @@
                        ;; Unlike DIRECTORY-FILES, DIRECTORY-FOLD will
                        ;; produce the entire file name (based on DIR,
                        ;; of course, not necessarily absolute).
-                       (apply f (string-append dir "/" file) seeds))
+                       (apply f (string-append dir (if (string=? dir "/")
+                                                       ""
+                                                     "/") file) seeds))
                      list))
                  initial-seeds
                  (directory-files dir #t)))))
 
+;; I have the vague suspicion that I'm doing something wrong -- if
+;; there's more than one initial seed, and f returns multiple values
+;; ...
 (define (safe-directory-fold f dir . initial-seeds)
   (let ((result (ignore-errors
                  (lambda () (apply directory-fold f dir initial-seeds))
@@ -28,8 +33,7 @@
              (not (null? result))
              (eq? 'syscall-error (car result)))
         (apply values initial-seeds)
-      result))
-  )
+      result)))
 
 (define (directory-tree-fold f dir . initial-seeds)
   (let loop ((dir dir) (seeds initial-seeds))
@@ -42,7 +46,7 @@
            dir
            seeds)))
 
-;;; Example
+;;; Examples
 
 ; (define (directory-tree-size dir)
 ;   (directory-tree-fold (lambda (file size)
@@ -51,6 +55,7 @@
 ;                              size))
 ;                        dir 0))
 
+;;; find all files except .svn and its children
 ;; (directory-tree-fold (lambda (new seq)
 ;;                        (if (not (member ".svn" (split-file-name new)))
 ;;                            (cons new seq)
