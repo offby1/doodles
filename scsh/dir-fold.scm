@@ -5,6 +5,7 @@
 ;;; This code is written by Taylor R. Campbell and placed in the Public
 ;;; Domain.  All warranties are disclaimed.
 
+;; ,open handle
 (define (directory-fold f dir . initial-seeds)
   (let ((dir (directory-as-file-name dir)))
     (apply values
@@ -19,9 +20,20 @@
                  initial-seeds
                  (directory-files dir #t)))))
 
+(define (safe-directory-fold f dir . initial-seeds)
+  (let ((result (ignore-errors
+                 (lambda () (apply directory-fold f dir initial-seeds))
+                 )))
+    (if (and (list? result)
+             (not (null? result))
+             (eq? 'syscall-error (car result)))
+        (apply values initial-seeds)
+      result))
+  )
+
 (define (directory-tree-fold f dir . initial-seeds)
   (let loop ((dir dir) (seeds initial-seeds))
-    (apply directory-fold
+    (apply safe-directory-fold
            (lambda (file . seeds)
              (receive new-seeds (apply f file seeds)
                (if (file-directory? file #f)
@@ -38,3 +50,9 @@
 ;                              (+ size (file-size file))
 ;                              size))
 ;                        dir 0))
+
+;; (directory-tree-fold (lambda (new seq)
+;;                        (if (not (member ".svn" (split-file-name new)))
+;;                            (cons new seq)
+;;                          seq)
+;;                        ) ".." '())
