@@ -8,7 +8,7 @@
 (define (mappfx d seq)
   (map (lambda (entry)
          (pfx  d entry))
-        seq))
+       seq))
 
 (define (dir->list d)
   (cons (directory-name d)
@@ -21,12 +21,14 @@
     (list (pfx  current-dir thing)))
    ((list? thing)
     (apply append (map (lambda (entry)
-           (flatten current-dir entry))
-         thing)))
+                         (flatten current-dir entry))
+                       thing)))
    ((directory? thing)
     (mappfx  current-dir (dir->list thing)))
    (#t
     (error "Ain't no thang" thing))))
 (trace flatten)
 
-(flatten "." example)
+(printf "I hope ~s is equal to ~s~% "
+        (flatten "." example)
+        output)
