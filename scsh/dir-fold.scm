@@ -5,7 +5,7 @@
 ;;; This code is written by Taylor R. Campbell and placed in the Public
 ;;; Domain.  All warranties are disclaimed.
 
-;; ,open handle
+;; ,open handle conditions
 (define (directory-fold f dir . initial-seeds)
   (let ((dir (directory-as-file-name dir)))
     (apply values
@@ -15,34 +15,39 @@
                        ;; Unlike DIRECTORY-FILES, DIRECTORY-FOLD will
                        ;; produce the entire file name (based on DIR,
                        ;; of course, not necessarily absolute).
-                       (apply f (string-append dir (if (string=? dir "/")
-                                                       ""
-                                                     "/") file) seeds))
+                       (apply
+                        f
+                        (string-append
+                         dir
+                         (if (string=? dir "/") "" "/")
+                         file)
+                        seeds))
                      list))
                  initial-seeds
                  (directory-files dir #t)))))
 
-;; I have the vague suspicion that I'm doing something wrong -- if
-;; there's more than one initial seed, and f returns multiple values
-;; ...
 (define (safe-directory-fold f dir . initial-seeds)
-  (let ((result (ignore-errors
-                 (lambda () (apply directory-fold f dir initial-seeds))
-                 )))
-    (if (and (list? result)
-             (not (null? result))
-             (eq? 'syscall-error (car result)))
-        (apply values initial-seeds)
-      result)))
+  (define (syscall-error? thing)
+    (and (error? thing)
+         (eq? 'syscall-error (car thing))))
+  (call-with-current-continuation
+   (lambda (abort)
+     (with-handler
+      (lambda (condition propagate)
+        (if (syscall-error? condition)
+            (abort (apply values initial-seeds))
+          (propagate)))
+      (lambda () (apply directory-fold f dir initial-seeds))))))
 
-(define (directory-tree-fold f dir . initial-seeds)
+(define (directory-tree-fold descend? f dir . initial-seeds)
   (let loop ((dir dir) (seeds initial-seeds))
     (apply safe-directory-fold
            (lambda (file . seeds)
              (receive new-seeds (apply f file seeds)
-               (if (file-directory? file #f)
+               (if (and (file-directory? file #f)
+                        (descend? file))
                    (loop file new-seeds)
-                   (apply values new-seeds))))
+                 (apply values new-seeds))))
            dir
            seeds)))
 
@@ -61,3 +66,16 @@
 ;;                            (cons new seq)
 ;;                          seq)
 ;;                        ) ".." '())
+
+(define (ok fn)
+  (not (member ".svn" (split-file-name fn))))
+
+(directory-tree-fold ok
+                     (lambda (new seq)
+                       (if (ok new)
+                           (cons new seq)
+                         seq))
+
+                     "/tmp/wc" '())
+
+(directory-tree-fold values cons "/tmp/" '())
