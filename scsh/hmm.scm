@@ -1,11 +1,13 @@
 #!/usr/local/bin/scsh \
--lel exceptions/load.scm -o srfi-34 -s
+-lel dir-fold/load.scm -o dir-fold -s
 !#
 
-(guard (condition
-        (else
-         (display "condition: ")
-         (write condition)
-         (newline)
-         'exception))
-       (+ 1 (raise 'an-error)))
+(define (dnl thing)
+  (display thing)
+  (newline))
+
+(let ((arg (if (null? command-line-arguments)
+               "."
+             (car command-line-arguments))))
+  (for-each dnl (pruning-tree-fold cons arg '())))
+
