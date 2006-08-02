@@ -7,6 +7,8 @@
 (require (lib "process.ss")
          (lib "match.ss"))
 
+;; I'm not certain that using "process*" from process.ss works any
+;; better than using the "process" that's built in to mzscheme.
 (define (noisily-find-exe-path fn)
   (or (find-executable-path fn)
       (raise-user-error 'find-executable-path "Couldn't find executable ~s" fn)))
