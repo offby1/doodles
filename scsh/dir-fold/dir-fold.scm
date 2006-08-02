@@ -89,6 +89,6 @@
          dir
          initial-seeds))
 
-(for-each (lambda (x)
-            (display x)
-            (newline)) (pruning-tree-fold cons "/tmp/wc" '()))
+;; (for-each (lambda (x)
+;;             (display x)
+;;             (newline)) (pruning-tree-fold cons "/tmp/wc" '()))
