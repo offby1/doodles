@@ -1,34 +1,32 @@
-(define-struct directory (name entries) #f)
-(define example `(".bashrc" ,(make-directory "Itineraries" '("mexico" "new york")) "Phones"))
-(define output `("./.bashrc" "./Itineraries" "./Itineraries/mexico" "./Itineraries/new york" "./Phones"))
+(module find mzscheme
+(require (lib "file.ss")
+         (lib "1.ss" "srfi"))
 
-(define (pfx d f)
-  (string-append d "/" f))
+(define (sans-tail path)
+  (let-values (((base name must-be-dir?)
+                (split-path path)))
+    base))
 
-(define (mappfx d seq)
-  (map (lambda (entry)
-         (pfx  d entry))
-       seq))
+(define (path->components p)
+  (let ((p (simplify-path
+            (if (not (path? p))
+                (build-path p)
+              p))))
+    (reverse
+     (unfold (lambda (thing)
+               (not (path? thing)))
+             tail
+             sans-tail
+             p))))
 
-(define (dir->list d)
-  (cons (directory-name d)
-        (mappfx (directory-name d) (directory-entries d))))
+(define (is-svn? path)
+  (member (build-path ".svn")
+          (path->components path)))
 
-(require (lib "trace.ss"))
-(define (flatten current-dir thing)
-  (cond
-   ((string? thing)
-    (list (pfx  current-dir thing)))
-   ((list? thing)
-    (apply append (map (lambda (entry)
-                         (flatten current-dir entry))
-                       thing)))
-   ((directory? thing)
-    (mappfx  current-dir (dir->list thing)))
-   (#t
-    (error "Ain't no thang" thing))))
-(trace flatten)
-
-(printf "I hope ~s is equal to ~s~% "
-        (flatten "." example)
-        output)
+(fold-files
+ (lambda (path flavor seeds)
+   (if (is-svn? path)
+       seeds
+     (cons path seeds)))
+ '())
+)
