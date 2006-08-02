@@ -1,5 +1,5 @@
 (module find mzscheme
-(require (lib "file.ss")
+(require (only (lib "file.ss"    ) fold-files)
          (only (lib "1.ss" "srfi") unfold))
 
 (define (tail path)
