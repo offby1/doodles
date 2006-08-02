@@ -1,16 +1,15 @@
 (module find mzscheme
-(require (only (lib "file.ss"    ) fold-files)
+(require (only (lib "etc.ss"     ) compose)
+         (only (lib "file.ss"    ) fold-files)
          (only (lib "1.ss" "srfi") unfold))
 
-(define (tail path)
-  (let-values (((base name must-be-dir?)
-                (split-path path)))
-    name))
+(define (split-to-list path)
+  (call-with-values
+      (lambda ()(split-path path))
+    list))
 
-(define (sans-tail path)
-  (let-values (((base name must-be-dir?)
-                (split-path path)))
-    base))
+(define tail      (compose cadr split-to-list))
+(define sans-tail (compose car  split-to-list))
 
 (define (path->components p)
   (let ((p (simplify-path
@@ -18,8 +17,7 @@
                 (build-path p)
               p))))
     (reverse
-     (unfold (lambda (thing)
-               (not (path? thing)))
+     (unfold (compose not path?)
              tail
              sans-tail
              p))))
