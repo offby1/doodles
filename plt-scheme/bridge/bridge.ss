@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mred -qu "$0" ${1+"$@"}
+|#
+
 ;; TODO:
 
 ;; find a better way to chatter than printf.  Perhaps make a scrolling
@@ -85,29 +90,27 @@
 
           ;; Doesn't this clobber any existing double-click-action?  Isn't
           ;; that a Bad Thing?
-          (send *t* set-double-click-action
-                (lambda (card)
-                  (if (member card hand)
-                      (begin
-                        (set! choice card)
-                        (semaphore-post sem))
-                    (begin
-                      (bell)
+          (send
+           *t*
+           set-double-click-action
+           (lambda (card)
+             (printf "Double-clicked ~s~%" card)
+             (if (member card hand)
+                 (set! choice card)
+               (printf
+                (if
+                    ;; this isn't quite the right test -- I
+                    ;; really want to say something like "if
+                    ;; this card doesn't belong to the human".
+                    ;; The human's cards include their own
+                    ;; hand, of course, but also, if they're
+                    ;; the declarer, the dummy.
 
-                      (printf
-                       (if
-                           ;; this isn't quite the right test -- I
-                           ;; really want to say something like "if
-                           ;; this card doesn't belong to the human".
-                           ;; The human's cards include their own
-                           ;; hand, of course, but also, if they're
-                           ;; the declarer, the dummy.
-
-                           (send card face-down?)
-                           "You gotta click your own cards.~%"
-                         "It's not that player's turn.~%")
-                       )))
-                  ))
+                    (send card face-down?)
+                    "You gotta click your own cards.~%"
+                  "It's not that player's turn.~%")))
+             (semaphore-post sem)))
+          (printf "OK, double-click a card.~%")
           (yield sem)
           (unless choice
             (error "Looks like I don't understand semaphores."))

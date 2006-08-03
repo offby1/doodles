@@ -12,10 +12,7 @@
 (define sans-tail (compose car  split-to-list))
 
 (define (path->components p)
-  (let ((p (simplify-path
-            (if (not (path? p))
-                (build-path p)
-              p))))
+  (let ((p (simplify-path (build-path p))))
     (reverse
      (unfold (compose not path?)
              tail
