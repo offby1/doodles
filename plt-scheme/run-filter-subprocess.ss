@@ -1,78 +1,59 @@
-(module run-filter-subprocess mzscheme
-
 ;; this is something that's hard to do in Perl -- writing to, and
 ;; reading from, the same subprocess at once (run 'perldoc IPC::Open2'
-;; for an explanation of how to do it in Perl).
+;; for an explanation of how to do it in Perl).  I'm not actually sure
+;; that this technique is foolproof -- this program has worked the few
+;; times I've run it, but multi-threaded stuff is tricky enough that
+;; I'm still not convinced.  Still, it seems reasonable.
 
-;; However, this doesn't really demonstrate anything useful -- I was
-;; hoping it would demonstrate that "subprocess" magically avoids
-;; deadlock, but because I'm sending "sort" a ton of input, then
-;; closing its input and reading all its input, there's no risk of
-;; deadlock.
+;; The problem that I'm afraid of is deadlock.  Eli Barzilay says this
+;; technique (using separate threads to read and write) is fine.
 
-;; For a while I thought that the "process" procedure from
-;; "process.ss", which looks supercifically similar to "subprocess",
-;; did a better job, but it's now clear that I don't understand what
-;; the difference is between the two procedures.  (I've begged Eli
-;; Barzilay to improve the doc for process.ss to make the difference
-;; clear)
+(define (writer-proc port)
+  (let loop ((lines-written 0))
+    (when (< lines-written 100)
+      (let ((datum (random 10)))
+        (display datum port)
+        (newline port)
+        (fprintf (current-error-port) "Wrote ~s~%" datum)
+        (loop (add1 lines-written)))))
+  (close-output-port port))
 
-;; in any case, he advises using a separate thread for each port, to
-;; be sure to avoid deadlock:
+(define (reader-proc port)
+  (let loop ()
+    (let ((datum (read-line port)))
+      (when (not (eof-object? datum))
+        (fprintf (current-error-port) "Got ~s~%" datum)
+        (loop))))
+  (close-input-port port))
 
-;; <elibarzilay> If you always start a thread, then it doesn't matter which facility you use.
-
-(define (noisily-find-exe-path fn)
+(define (find-exe-or-die fn)
   (or (find-executable-path fn)
-      (raise-user-error 'find-executable-path "Couldn't find executable ~s" fn)))
+      (find-executable-path (string-append fn ".exe"))
+      (raise-user-error 'find-exe-or-die "Couldn't find executable ~s" fn)))
 
-(let ((program-name (noisily-find-exe-path "sort")))
-  (let-values (((pid readme writeme err)
-                (subprocess #f #f #f program-name "-n")))
+(let ((program-name "grep"))
+  (let-values (((proc readme writeme errors)
+                (subprocess
+                 #f
+                 #f
+                 (current-error-port)
+                 (find-exe-or-die program-name)
+                 "7")))
+    (let ((reader-thread  (thread (lambda () (reader-proc readme))))
+          (writer-thread  (thread (lambda () (writer-proc writeme)))))
+      (subprocess-wait proc)
+      (when (not (zero? (subprocess-status proc)))
+        (raise-user-error
+         'subprocess
+         "~s returned non-zero exit status: ~a"
+         program-name
+         (subprocess-status proc)))
 
-    (fprintf (current-error-port)
-             "Started ~a, PID ~s; status is ~s~%"
-             program-name
-             pid
-             (subprocess-status pid))
-    (when (eq? 'running (subprocess-status pid))
-      ;; write some data.
-      (let loop ((lines-written 0))
-        (when (< lines-written 10000)
-          (let ((datum (random 10000000)))
-            (display datum writeme)
-            (newline writeme)
-            (fprintf (current-error-port) "Wrote ~s~%" datum)
-            (loop (add1 lines-written))))
-        (close-output-port writeme))
+      ;; There are three waitable things here -- the subprocess, and
+      ;; the two threads.  It's not clear which subset of those three
+      ;; I should wait on.
 
-      ;; read the processed data.
-      (let loop ()
-        (let ((datum (read-line readme)))
-          (when (not (eof-object? datum))
-            (fprintf (current-error-port) "Got ~s~%" datum)
-            (loop)))
-        (close-input-port readme))
-
-       (subprocess-wait pid))
-
-    (case (subprocess-status pid)
-      ((running)
-       (fprintf (current-error-port)
-                "hmm, for some reason ~a is still running~%"
-                program-name)
-       )
-      ((0)
-       (fprintf (current-error-port)
-                "Ain't life grand?~%"))
-      (else
-       (raise-user-error
-        'subprocess
-        "~s returned a failure exit status: ~a"
-        program-name
-        (subprocess-status pid))))
-
-    ;; just for tidyness
-    (close-input-port err)
-    )))
-
+      ;; It probably doesn't hurt to wait on these, although they're
+      ;; probably always going to be ready, since the subprocess has
+      ;; exited.
+      (for-each thread-wait (list writer-thread reader-thread)))))
