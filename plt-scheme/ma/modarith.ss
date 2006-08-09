@@ -1,5 +1,6 @@
 (module modarith mzscheme
-  (require "invert.ss")
+  (require "invert.ss"
+           (only (lib "1.ss" "srfi") fold))
   (provide with-arithmetic-modulo
            (rename m+ +)
            (rename m- -)
@@ -36,12 +37,22 @@
 
   (define m+
     (lambda args
-      (maybe-modulo (apply + args))))
+      (maybe-modulo
+       (fold (lambda (x y)
+               (modulo (+ x y)
+                       (*modulus*)))
+             0
+             args))))
 
-  ;; this could probably be more efficient!
   (define m*
     (lambda args
-      (maybe-modulo (apply * args))))
+      (maybe-modulo
+       (fold
+        (lambda (x y)
+          (modulo (* x y)
+                  (*modulus*)))
+        1
+        args))))
 
   (define m/
     (case-lambda

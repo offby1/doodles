@@ -11,22 +11,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require "normals.ss")
 (require "linear-regression.scm")
 
+(define *stats* (make-hash-table 'equal))
 (define (increment! datum)
   (hash-table-put! *stats* datum (+ 1 (hash-table-get *stats* datum (lambda () 0)))))
 
 (define (first-digit x)
-  (let loop ((x x))
-    (cond
-     ((zero? x)
-      0)
-     ((negative? x)
-      (loop (- x)))
-     ((< x 1)
-      (loop (* x 10)))
-     ((>= x 10)
-      (loop (/ x 10)))
-     (else
-      (inexact->exact (truncate x))))))
+  (cond
+   ((zero? x)
+    0)
+   ((negative? x)
+    (first-digit (- x)))
+   ((< x 1)
+    (first-digit (* x 10)))
+   ((>= x 10)
+    (first-digit (/ x 10)))
+   (else
+    (inexact->exact (truncate x)))))
 
 (define (log10 x)
   (/ (log x) (log 10)))
@@ -35,11 +35,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (expt 10 x))
 
 (define *passes* 1000000)
-(define *stats* (make-hash-table 'equal))
+
 (let loop ((experiments-left *passes*))
   (if (positive? experiments-left )
-      (let ((datum (first-digit (one-unit-normal))))
-        (increment! datum)
+      (begin
+        (increment! (first-digit (one-unit-normal)))
         (loop (- experiments-left 1)))
     (let ((barchart-data (reverse (hash-table-map *stats* cons))))
 

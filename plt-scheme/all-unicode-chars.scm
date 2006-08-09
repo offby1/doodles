@@ -9,9 +9,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module all-unicode-chars mzscheme
 (let loop ((chars-considered 0))
   (when (< chars-considered #x110000)
-    (when (and (positive? chars-considered)
-               (zero? (modulo chars-considered 20)))
-      (newline))
     (unless (<= #xd800 chars-considered #xdfff)
-      (display (integer->char chars-considered)))
+      (let ((c  (integer->char chars-considered)))
+      (printf "~a ~a ~%"c  (char-general-category c))))
     (loop (+ 1 chars-considered)))))

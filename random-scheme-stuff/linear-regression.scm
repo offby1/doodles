@@ -30,7 +30,9 @@
           (/
 
            (apply + (map
-                     (lambda (point) (* (- (car point) mean-of-xs) (- (cdr point) mean-of-ys)))
+                     (lambda (point)
+                       (* (- (car point) mean-of-xs)
+                          (- (cdr point) mean-of-ys)))
                      points))
            (sqrt (* (apply + (map (lambda (x)
                                     (square (- x mean-of-xs)))
