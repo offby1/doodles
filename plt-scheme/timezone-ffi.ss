@@ -1,17 +1,16 @@
 ;; char * tzname [2]
-(require (lib "foreign.ss"))
+(require (lib "foreign.ss")
+         (lib "errortrace.ss" "errortrace"))
 (define libc (ffi-lib "libc" "6"))
 (unsafe!)
 (define tzset
   (get-ffi-obj "tzset" libc (_fun -> _void)))
 (tzset)
-(define tzname
+(define tzname0
   (get-ffi-obj "tzname" libc _string))
 
-;; (define first  (ptr-ref tzname _pointer 0))
-;; (define second (ptr-ref tzname _pointer 1))
+(printf "~s~%" tzname0 )
 
-;; (printf "~s~%" first)
-;; (printf "~s~%" (ptr-ref first _bytes))
+(define array  (ffi-obj-ref "tzname" libc))
 
-(printf "~s~%" tzname)
+(printf "~s~%" (ptr-ref array _string 1))
