@@ -26,21 +26,21 @@
 
 ;; factor n by brute force.
 (define (factor n)
-  (define (loop n candidate-prime num-tried factors)
+  (define (loop n candidate-prime primes-tried factors)
     (if (< n candidate-prime)
-        factors
-      (let-values (((q r )
+        (reverse factors)
+      (let-values (((q r)
                     (quotient/remainder n candidate-prime)))
-        (let ((next-prime (nth-prime (add1 num-tried))))
+        (let ((next-prime (nth-prime (add1 primes-tried))))
           (if (zero? r)
               (loop q
                     candidate-prime
-                    num-tried
+                    primes-tried
                     (cons candidate-prime factors))
             (loop n
-                next-prime
-                (add1 num-tried)
-                factors))
+                  next-prime
+                  (add1 primes-tried)
+                  factors))
           ))))
-  (trace loop)
+  ;(trace loop)
   (loop  n  (nth-prime 0) 0 '()))
