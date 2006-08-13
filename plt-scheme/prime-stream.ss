@@ -1,4 +1,5 @@
-(require (lib "40.ss" "srfi"))
+(require (lib "40.ss" "srfi")
+         (lib "trace.ss"))
 
 (define (integers-starting-from n)
   (stream-cons n (integers-starting-from (add1 n))))
@@ -22,3 +23,24 @@
         (stream-car s)
       (loop (sub1 n)
             (without-multiples-of-first-element s)))))
+
+;; factor n by brute force.
+(define (factor n)
+  (define (loop n candidate-prime num-tried factors)
+    (if (< n candidate-prime)
+        factors
+      (let-values (((q r )
+                    (quotient/remainder n candidate-prime)))
+        (let ((next-prime (nth-prime (add1 num-tried))))
+          (if (zero? r)
+              (loop q
+                    candidate-prime
+                    num-tried
+                    (cons candidate-prime factors))
+            (loop n
+                next-prime
+                (add1 num-tried)
+                factors))
+          ))))
+  (trace loop)
+  (loop  n  (nth-prime 0) 0 '()))
