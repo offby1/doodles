@@ -1,10 +1,8 @@
 (module compact mzscheme
 (require
  (planet "test.ss"     ("schematics" "schemeunit.plt" 1 1))
- (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 1 1))
- (planet "util.ss" ("schematics" "schemeunit.plt" 1 1))
- (lib "trace.ss")
- (only (lib "1.ss" "srfi") fold))
+ (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 1 1)))
+
 (provide compact-sequence)
 
 (define (compact-sequence s)
