@@ -1,10 +1,15 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mzscheme -qr "$0" ${1+"$@"}
+|#
+
 ;; $Id$
-(require (lib "40.ss" "srfi"))
+(require (lib "40.ss" "srfi")
+         (lib "1.ss" "srfi")
+         (only (lib "misc.ss" "swindle") memoize!))
 
 (define (integers-starting-from n)
   (stream-cons n (integers-starting-from (add1 n))))
-
-(define positive-integers (integers-starting-from 1))
 
 (define (without-multiples-of-first-element s)
   (stream-filter (lambda (n)
@@ -26,4 +31,10 @@
             (loop n
                   (without-multiples-of-first-element semi-filtered-primes)
                   factors))))))
-  (loop n (stream-cdr positive-integers) '()))
+  (loop n (integers-starting-from 2) '()))
+
+(memoize! factor)
+
+(display
+ (map (lambda (n)
+        (format "~a: ~a~%" n ( factor n))) (iota 100)))
