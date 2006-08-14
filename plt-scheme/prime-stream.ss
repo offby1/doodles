@@ -3,7 +3,9 @@
 exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
-;; $Id$
+(display "$Id$")
+(newline)
+
 (require (lib "40.ss" "srfi")
          (lib "1.ss" "srfi")
          "compact.ss")
@@ -42,4 +44,4 @@ exec mzscheme -qr "$0" ${1+"$@"}
                                          thing
                                        (cons 'expt thing)))
                                    (compact-sequence (factor n))))))
- (iota 100))
+ (iota 20 1))
