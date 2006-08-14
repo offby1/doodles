@@ -5,7 +5,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 ;; $Id$
 (require (lib "40.ss" "srfi")
-         (lib "1.ss" "srfi"))
+         (lib "1.ss" "srfi")
+         "compact.ss")
 
 (define (integers-starting-from n)
   (stream-cons n (integers-starting-from (add1 n))))
@@ -35,5 +36,5 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 (for-each
  (lambda (n)
-   (printf "~a: ~a~%" n (factor n)))
+   (printf "~a: ~a~%" n (compact-sequence (factor n))))
  (iota 100))
