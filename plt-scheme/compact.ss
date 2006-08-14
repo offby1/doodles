@@ -1,7 +1,7 @@
 (module compact mzscheme
 (require
- (planet "test.ss"     ("schematics" "schemeunit.plt" 1 1))
- (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 1 1)))
+ (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
+ (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2)))
 
 (provide compact-sequence)
 
@@ -31,13 +31,12 @@
   )
 
 (test/text-ui
- (make-test-suite
+ (test-suite
   "The one and only suite"
-  (make-test-case "empty"   (assert-equal? (compact-sequence '()) '()))
-  (make-test-case "no dups" (assert-equal? (compact-sequence '(a b c)) '(a b c)))
-  (make-test-case "one dup" (assert-equal? (compact-sequence '(a a b c)) '((a 2) b c)))
-  (make-test-case "two dups" (assert-equal? (compact-sequence '(a a a b c)) '((a 3) b c)))
-  (make-test-case "no dup because out of order"
-                  (assert-equal? (compact-sequence '(a b a c))
-                                 '(a b a c)))))
-)
+  (test-case "empty"   (check-equal? (compact-sequence '()) '()))
+  (test-case "no dups" (check-equal? (compact-sequence '(a b c)) '(a b c)))
+  (test-case "one dup" (check-equal? (compact-sequence '(a a b c)) '((a 2) b c)))
+  (test-case "two dups" (check-equal? (compact-sequence '(a a a b c)) '((a 3) b c)))
+  (test-case "no dup because out of order"
+             (check-equal? (compact-sequence '(a b a c))
+                           '(a b a c))))))
