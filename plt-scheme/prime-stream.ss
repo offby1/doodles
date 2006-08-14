@@ -17,7 +17,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 ;; factor n by brute force.
 (define (factor n)
-  (define (loop n semi-filtered-primes factors)
+  (let loop ((n n)
+             (semi-filtered-primes (integers-starting-from 2))
+             (factors '()))
     (let ((candidate-prime (stream-car semi-filtered-primes)))
       (if (< n candidate-prime)
           (reverse factors)
@@ -29,9 +31,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
                     (cons candidate-prime factors))
             (loop n
                   (without-multiples-of-first-element semi-filtered-primes)
-                  factors))))))
-  (loop n (integers-starting-from 2) '()))
+                  factors)))))))
 
-(display
- (map (lambda (n)
-        (format "~a: ~a~%" n ( factor n))) (iota 100)))
+(for-each
+ (lambda (n)
+   (printf "~a: ~a~%" n (factor n)))
+ (iota 100))
