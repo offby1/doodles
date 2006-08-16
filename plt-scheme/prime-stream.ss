@@ -38,10 +38,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 (for-each
  (lambda (n)
-   (printf "~a: ~a~%" n (cons '*
-                              (map (lambda (thing)
-                                     (if (number? thing)
-                                         thing
-                                       (cons 'expt thing)))
-                                   (compact-sequence (factor n))))))
+   (printf
+    "(= ~a ~a)~%"
+    n
+    (cons
+     '*
+     (map
+      (lambda (thing)
+        (if (number? thing)
+            thing
+          (cons 'expt thing)))
+          (compact-sequence (factor n))))))
  (iota 20 1))
