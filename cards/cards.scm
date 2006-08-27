@@ -2,88 +2,77 @@
 ;; example, if I deal 1000 hands, what's the longest suit that I can
 ;; expect to appear?
 
-(define (new-deck) 
-  
-  ;; An unshuffled deck.  Each element is an integer representing a
-  ;; card.  The card's suit is the remainder of the integer when
-  ;; divided by four.  The rank would be the integer quotient when
-  ;; divided by four (except this code doesn't use the rank).
-  (let ((virgin (make-vector 52)))
+(module cards mzscheme
+(require (only (lib "1.ss" "srfi") unfold)
+         (only (lib "43.ss" "srfi") vector-unfold vector-for-each)
+         (only (lib "setf.ss" "swindle") push!))
 
-    ;; Return a list that has the same elements as L, but in random
-    ;; order.
-    (define (shuffle-list l)
-      (map
-       car
-       (sort
+(print-struct #t)
+(define-struct card (rank suit) #f)
+(define-struct hand (clubs diamonds hearts spades) #f)
+(define *num-suits* 4)
+(define *num-ranks* 13)
+(define *deck-size* (* *num-ranks* *num-suits*))
 
-        ;; Make a new list whose elements are conses; each car is the
-        ;; corresponding element of the input list, and each cdr is a
-        ;; random number.
-        (map
-         (lambda (entry)
-           (cons entry (random most-positive-fixnum)))
-         l)
+(define (num->rank n)
+  (vector-ref #(2 3 4 5 6 7 8 9 10 jack queen king ace) n))
+(define (num->suit n)
+  (vector-ref #(clubs diamonds hearts spades) n))
 
-        (lambda (entry1 entry2)
-          (< (cdr entry1)
-             (cdr entry2))))))
+(define (new-deck)
+  (let ((virgin (vector-unfold (lambda (i s)
+                                 (values (make-card
+                                          (num->rank (remainder i *num-ranks*))
+                                          (num->suit (quotient  i *num-ranks*)))
+                                         s))
+                               *deck-size*
+                               0)))
 
-    (define (shuffle-vector v)
-      (list->vector
-       (shuffle-list
-        (vector->list v))))
+    (define (fisher-yates-shuffle! v)
+      (define (swap! a b)
+        (let ((tmp (vector-ref v a)))
+          (vector-set! v a (vector-ref v b))
+          (vector-set! v b tmp)))
+      (do ((i 0 (add1 i)))
+          ((= i (vector-length v)) v)
+        (let ((j (+ i (random (- (vector-length v) i)))))
+          (swap! i j))))
 
-    (let loop ((slots-initialized 0))
-      (if (< slots-initialized (vector-length virgin))
-          (begin
-            (vector-set! virgin slots-initialized slots-initialized)
-            (loop (+ 1 slots-initialized)))
-        (shuffle-vector virgin)))))
+    (fisher-yates-shuffle! virgin)))
 
-(define (hand n deck)
-  (let ((return (make-vector 13)))
-    (let loop ((slots-initialized 0))
-      (if (< slots-initialized (vector-length return))
-          (begin
-            (vector-set! 
-             return 
-             slots-initialized 
-             (vector-ref deck (+ slots-initialized (* 13 n))))
-            (loop (+ 1 slots-initialized)))
-        return))))
+(define (get-hand n deck)
+  (let ((h (make-hand '() '() '() '())))
+    (vector-for-each
+     (lambda (i c)
+       (case (card-suit c)
+         ((clubs)   (push! c (hand-clubs    h)))
+         ((diamonds)(push! c (hand-diamonds h)))
+         ((hearts)  (push! c (hand-hearts   h)))
+         ((spades)  (push! c (hand-spades   h)))))
 
-(define (tally item alist)
-  (let ((cell (assq item alist)))
-    (if cell
-        (begin
-          (set-cdr! cell (+ 1 (cdr cell)))
-          alist)
-      (cons (cons item 1)
-            alist))))
+     (vector-unfold (lambda (index seed)
+                      (values (vector-ref deck (+ (* n *num-ranks*) index)) seed))
+                    *num-ranks*
+                    0))
+    h))
 
-(define (longest-suit hand)
-  (define (suit number) (remainder number 4))
+(define (longest-suit-length hand)
+  (apply
+   max
+   (map (lambda (accessor)
+          (length (accessor hand)))
+        (list hand-clubs hand-diamonds hand-hearts hand-spades))))
 
-  (let ((return '()))
-    (for-each (lambda (card)
-                (set! return (tally (suit card) return)))
-              (vector->list hand))
-    (apply max (map cdr return))))
+;; Deal a bunch of deals, and report the length of the longest suit in
+;; the most unbalanced hand.
+(let ((deals 1000))
+  (printf "After ~a deals, longest suit had ~a cards~%" deals
+          (apply
+           max
+           (unfold
+            (lambda (p) (= deals  p))
+            (lambda ignored (longest-suit-length (get-hand 0 (new-deck))))
+            add1
+            0))))
 
-(define (repeat n thing)
-  (if (not (and (exact? n)
-                (integer? n)
-                (not (negative? n))))
-      (error "N must be an exact non-negative integer, but is" n))
-
-  (let loop ((n n)
-             (result '()))
-    (if (zero? n)
-        (reverse result)
-      (loop (- n 1)
-            (cons (thing n) result)))))
-
-;; Deal 100 deals, and report the length of the longest suit in the
-;; most unbalanced hand.
-(apply max (repeat 100 (lambda (dummy) (longest-suit (hand 0 (new-deck))))))
+)
