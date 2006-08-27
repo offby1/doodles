@@ -5,7 +5,9 @@
 (module cards mzscheme
 (require (only (lib "1.ss" "srfi") unfold)
          (only (lib "43.ss" "srfi") vector-unfold vector-for-each)
-         (only (lib "setf.ss" "swindle") push!))
+         (only (lib "setf.ss" "swindle") push!)
+         (lib "pretty.ss")
+         (lib "histogram.ss" "offby1"))
 
 (print-struct #t)
 (define-struct card (rank suit) #f)
@@ -34,7 +36,8 @@
           (vector-set! v a (vector-ref v b))
           (vector-set! v b tmp)))
       (do ((i 0 (add1 i)))
-          ((= i (vector-length v)) v)
+          ((= i (vector-length v))
+           v)
         (let ((j (+ i (random (- (vector-length v) i)))))
           (swap! i j))))
 
@@ -66,13 +69,18 @@
 ;; Deal a bunch of deals, and report the length of the longest suit in
 ;; the most unbalanced hand.
 (let ((deals 1000))
-  (printf "After ~a deals, longest suit had ~a cards~%" deals
-          (apply
-           max
-           (unfold
-            (lambda (p) (= deals  p))
-            (lambda ignored (longest-suit-length (get-hand 0 (new-deck))))
-            add1
-            0))))
+
+  (printf "After ~a deals, longest-suit-lengths were distributed like this:~%"
+          deals)
+
+  (parameterize ((pretty-print-columns 10))
+    (pretty-display
+     (list->histogram
+      (unfold
+       (lambda (p) (= deals  p))
+       (lambda ignored (longest-suit-length (get-hand 0 (new-deck))))
+       add1
+       0))))
+  )
 
 )
