@@ -73,19 +73,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (shape hand)
   (sort (hand-map length hand) >))
 
+(define (notrumpy? shape)
+  (member shape '((4 4 3 2) (5 3 3 2) (4 3 3 3))))
+
 ;; Deal a bunch of deals, and report the shapes of each hand.
 (let ((deals 10000))
 
-  (printf "After ~a deals, suit lengths were distributed like this:~%"
+  (printf "After ~a deals, suit lengths were distributed like this ('*' represents notrump shape) :~%"
           deals)
 
-  (parameterize ((pretty-print-columns 20))
+  (parameterize ((pretty-print-columns 24))
     (pretty-display
-     (cdr-sort
-      (list->histogram
-       (unfold
-        (lambda (p) (= deals  p))
-        (lambda ignored (shape (get-hand 0 (new-deck))))
-        add1
-        0)))))
+     (map (lambda (entry)
+            (let ((shape (car entry)))
+              (if (notrumpy? shape)
+                  (cons entry '(*))
+                (list entry))))
+          (cdr-sort
+           (list->histogram
+            (unfold
+             (lambda (p) (= deals  p))
+             (lambda ignored (shape (get-hand 0 (new-deck))))
+             add1
+             0))))))
   ))
