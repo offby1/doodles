@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 ;; Stuff to examine statistical properties of a bridge hand.  For
 ;; example, if I deal 1000 hands, what's the longest suit that I can
 ;; expect to appear?
