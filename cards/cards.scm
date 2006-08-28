@@ -7,7 +7,8 @@
          (only (lib "43.ss" "srfi") vector-unfold vector-for-each)
          (only (lib "setf.ss" "swindle") push!)
          (lib "pretty.ss")
-         (lib "histogram.ss" "offby1"))
+         (lib "histogram.ss" "offby1")
+         (only (lib "list.ss") sort))
 
 (print-struct #t)
 (define-struct card (rank suit) #f)
@@ -59,28 +60,34 @@
                     0))
     h))
 
-(define (longest-suit-length hand)
-  (apply
-   max
-   (map (lambda (accessor)
-          (length (accessor hand)))
-        (list hand-clubs hand-diamonds hand-hearts hand-spades))))
+(define (hand-map suit-func hand)
+  (map (lambda (accessor)
+         (suit-func (accessor hand)))
+       (list hand-clubs hand-diamonds hand-hearts hand-spades)))
 
-;; Deal a bunch of deals, and report the length of the longest suit in
-;; the most unbalanced hand.
-(let ((deals 1000))
+(define (shape hand)
+  (sort (hand-map length hand) >))
 
-  (printf "After ~a deals, longest-suit-lengths were distributed like this:~%"
+;; Deal a bunch of deals, and report the shapes of each hand.
+(let ((deals 10000))
+
+  (printf "After ~a deals, suit lengths were distributed like this:~%"
           deals)
 
-  (parameterize ((pretty-print-columns 10))
+  (parameterize ((pretty-print-columns 20))
     (pretty-display
-     (list->histogram
-      (unfold
-       (lambda (p) (= deals  p))
-       (lambda ignored (longest-suit-length (get-hand 0 (new-deck))))
-       add1
-       0))))
+     (sort
+      (list->histogram
+       (unfold
+        (lambda (p) (= deals  p))
+        (lambda ignored (shape (get-hand 0 (new-deck))))
+        add1
+        0)
+       (lambda (shape1 shape2)
+         #t))
+      (lambda (a b)
+        (< (cdr a)
+           (cdr b))))))
   )
 
 )
