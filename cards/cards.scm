@@ -76,18 +76,11 @@
 
   (parameterize ((pretty-print-columns 20))
     (pretty-display
-     (sort
+     (cdr-sort
       (list->histogram
        (unfold
         (lambda (p) (= deals  p))
         (lambda ignored (shape (get-hand 0 (new-deck))))
         add1
-        0)
-       (lambda (shape1 shape2)
-         #t))
-      (lambda (a b)
-        (< (cdr a)
-           (cdr b))))))
-  )
-
-)
+        0)))))
+  ))
