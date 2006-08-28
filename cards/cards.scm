@@ -23,26 +23,26 @@
   (vector-ref #(clubs diamonds hearts spades) n))
 
 (define (new-deck)
-  (let ((virgin (vector-unfold (lambda (i s)
-                                 (values (make-card
-                                          (num->rank (remainder i *num-ranks*))
-                                          (num->suit (quotient  i *num-ranks*)))
-                                         s))
-                               *deck-size*
-                               0)))
+  (define (fisher-yates-shuffle! v)
+    (define (swap! a b)
+      (let ((tmp (vector-ref v a)))
+        (vector-set! v a (vector-ref v b))
+        (vector-set! v b tmp)))
+    (do ((i 0 (add1 i)))
+        ((= i (vector-length v))
+         v)
+      (let ((j (+ i (random (- (vector-length v) i)))))
+        (swap! i j))))
 
-    (define (fisher-yates-shuffle! v)
-      (define (swap! a b)
-        (let ((tmp (vector-ref v a)))
-          (vector-set! v a (vector-ref v b))
-          (vector-set! v b tmp)))
-      (do ((i 0 (add1 i)))
-          ((= i (vector-length v))
-           v)
-        (let ((j (+ i (random (- (vector-length v) i)))))
-          (swap! i j))))
-
-    (fisher-yates-shuffle! virgin)))
+  (fisher-yates-shuffle!
+   (vector-unfold
+    (lambda (index seed)
+      (values (make-card
+               (num->rank (remainder index *num-ranks*))
+               (num->suit (quotient  index *num-ranks*)))
+              seed))
+    *deck-size*
+    0)))
 
 (define (get-hand n deck)
   (let ((h (make-hand '() '() '() '())))
