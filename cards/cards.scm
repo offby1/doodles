@@ -16,7 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (print-struct #t)
 
-(define *deck-size* (* *num-ranks* *num-suits*))
+(define *deck-size* (* *num-ranks* (num-suits)))
 
 (define (num->rank n)
   (vector-ref #(2 3 4 5 6 7 8 9 10 jack queen king ace) n))
