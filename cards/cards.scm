@@ -14,14 +14,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "histogram.ss" "offby1")
          "hand.scm")
 
-(print-struct #t)
-
 (define *deck-size* (* *num-ranks* (num-suits)))
-
-(define (num->rank n)
-  (vector-ref #(2 3 4 5 6 7 8 9 10 jack queen king ace) n))
-(define (num->suit n)
-  (vector-ref #(clubs diamonds hearts spades) n))
 
 (define (new-deck)
   (define (fisher-yates-shuffle! v)
@@ -39,8 +32,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (vector-unfold
     (lambda (index seed)
       (values (make-card
-               (num->rank (remainder index *num-ranks*))
-               (num->suit (quotient  index *num-ranks*)))
+               (vector-ref #(2 3 4 5 6 7 8 9 10 jack queen king ace)  (remainder index *num-ranks*))
+               (vector-ref #(clubs diamonds hearts spades) (quotient  index *num-ranks*)))
               seed))
     *deck-size*
     0)))
@@ -67,5 +60,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (lambda (p) (= deals  p))
              (lambda ignored (shape (get-hand 0 (new-deck))))
              add1
-             0))))))
-  ))
+             0))))))))
+

@@ -16,6 +16,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename my-make-card make-card)
          (rename my-make-hand make-hand))
 
+(print-struct #t)
+
 (define *suits* '(clubs diamonds hearts spades))
 (define (num-suits) (length *suits*))
 (define *num-ranks* 13)
