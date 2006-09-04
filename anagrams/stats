@@ -98,6 +98,9 @@ profiler".  So far, the answer in most cases has been "no" :-|
 * most of the Schemes, python, and ruby have nothing, so far as I can
   tell
 
+* mzscheme has a decent one, which you activate by requiring
+  errortrace.ss, then turning on a bunch of profiling parameters
+
 * Haskell's profiler was quite easy to use
 
 For comparison, note that the program "an"

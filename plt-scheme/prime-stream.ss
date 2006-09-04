@@ -18,22 +18,25 @@ exec mzscheme -qr "$0" ${1+"$@"}
                    (positive? (remainder n (stream-car s))))
                  (stream-cdr s)))
 
+(define prime-generator (integers-starting-from 2))
+(define next-prime stream-car)
+
 ;; factor n by brute force.
 (define (factor n)
   (let loop ((n n)
-             (semi-filtered-primes (integers-starting-from 2))
+             (prime-generator prime-generator)
              (factors '()))
-    (let ((candidate-prime (stream-car semi-filtered-primes)))
+    (let ((candidate-prime (next-prime prime-generator)))
       (if (< n candidate-prime)
           (reverse factors)
         (let-values (((q r)
                       (quotient/remainder n candidate-prime)))
           (if (zero? r)
               (loop q
-                    semi-filtered-primes
+                    prime-generator
                     (cons candidate-prime factors))
             (loop n
-                  (without-multiples-of-first-element semi-filtered-primes)
+                  (without-multiples-of-first-element prime-generator)
                   factors)))))))
 
 (for-each

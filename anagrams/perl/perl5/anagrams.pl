@@ -33,8 +33,7 @@ sub anagrams {
     next unless (defined ($smaller_bag));
 
     if (bag_empty ($smaller_bag)) {
-      my @combined = map { [$_]  } @$words;
-      push @$rv, @combined;
+      push @$rv, map { [$_]  } @$words;
       next;
     }
 

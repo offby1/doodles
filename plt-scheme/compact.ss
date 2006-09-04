@@ -27,8 +27,7 @@
      (else
       (loop (cdr s)
             1
-            (cons (maybe-listify) result)))))
-  )
+            (cons (maybe-listify) result))))))
 
 (test/text-ui
  (test-suite
@@ -39,4 +38,11 @@
   (test-case "two dups" (check-equal? (compact-sequence '(a a a b c)) '((a 3) b c)))
   (test-case "no dup because out of order"
              (check-equal? (compact-sequence '(a b a c))
-                           '(a b a c))))))
+                           '(a b a c)))
+  (test-case "Not just the first"
+             (check-equal? (compact-sequence '(a b b b c d))
+                           '(a (b 3) c d)))
+
+  (test-case "More than one"
+             (check-equal? (compact-sequence '(a a a b c c c d))
+                           '((a 3) b (c 3) d))))))
