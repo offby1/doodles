@@ -17,7 +17,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "trace.ss")
  (lib "pretty.ss")
  (only (lib "misc.ss" "swindle") list-of)
- (prefix list- (lib "list.ss"))
+ (only (lib "list.ss") sort)
  (lib "list.ss" "srfi" "1")
  )
 
@@ -48,7 +48,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define all-legal-calls
   (let ((all-calls-period
          (reverse
-          (list-quicksort
+          (sort
            (map make-call
                 (append '(pass double redouble)
                         (list-of (list x y)

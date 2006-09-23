@@ -23,7 +23,7 @@ exec mred -qu "$0" ${1+"$@"}
   (require (all-except (lib "classes.ss" "games" "cards") pasteboard%))
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
-  (require (lib "list.ss"))
+  (require (only (lib "list.ss") sort remove))
   (require "rotate.ss")
   (require "call.ss")
   (require "interactive-call.ss")
@@ -276,10 +276,10 @@ exec mred -qu "$0" ${1+"$@"}
                       ((4) 4))))
            (- (ace-high (send c get-value)) 2)))
 
-      (let loop ((cards-to-relocate (mergesort cards ;; decreasing left-to-right
-                                                     (lambda (c1 c2)
-                                                       (> (card->alternate-colors-value c1)
-                                                          (card->alternate-colors-value c2)))))
+      (let loop ((cards-to-relocate (sort cards ;; decreasing left-to-right
+                                          (lambda (c1 c2)
+                                            (> (card->alternate-colors-value c1)
+                                               (card->alternate-colors-value c2)))))
                  (cards-located 0))
         (when (not (null? cards-to-relocate))
           (let ((c (car cards-to-relocate)))

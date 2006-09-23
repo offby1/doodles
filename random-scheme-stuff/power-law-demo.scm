@@ -1,6 +1,6 @@
 ;; works on mzscheme v301
 (module power-law-demo mzscheme
-(require (only (lib "list.ss") mergesort))
+(require (only (lib "list.ss") sort))
 (require (only (lib "1.ss" "srfi") iota))
 
 ;; the alists we deal with here look like ((cat . 10) (dog . 7) (human
@@ -29,9 +29,9 @@
 
 ;; increasing order by weight.
 (define (sort-alist al)
-  (mergesort al (lambda (a b)
-                  (< (cdr a)
-                     (cdr b)))))
+  (sort al (lambda (a b)
+             (< (cdr a)
+                (cdr b)))))
 
 ;; call "choose" a bunch of times, and show each item, and how many
 ;; times it got chosen.

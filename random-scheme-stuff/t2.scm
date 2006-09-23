@@ -18,7 +18,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module t2 mzscheme
 (require (only (lib "1.ss" "srfi") fold iota)
          (only (lib "13.ss" "srfi") string-join)
-         (only (lib "list.ss") quicksort)
+         (only (lib "list.ss") sort)
          "normals.ss")
 
 (define-struct item (name size) #f)
@@ -54,7 +54,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (for-each (lambda (i)
             (let ((c (emptiest *containers*)))
               (container-add! c i)))
-          (quicksort
+          (sort
            *random-items*
            (lambda (i1 i2)
              (> (item-size i1)
@@ -71,7 +71,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (map number->string (reverse sizes))
                        " + "
                        'infix))))
-          (quicksort
+          (sort
            *containers*
            (lambda (c1 c2)
              (> (container-remaining-capacity c1)
