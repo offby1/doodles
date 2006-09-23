@@ -2,6 +2,7 @@ prog	 := anagrams
 SCMS 	 := bag.scm dict.scm $(prog).scm 
 CS   	 := $(SCMS:.scm=.c)
 LINKFILE := $(prog)_.c
+gsc	 := /usr/local/stow/gambit/current/bin/gsc
 
 all: $(prog)
 
@@ -10,10 +11,10 @@ check: $(prog)
 	do time ./$(prog) $$i > /dev/null ; done
 
 %.c : %.scm
-	gsc -prelude "(declare (standard-bindings) (block) (not safe))" -c $^
+	$(gsc) -prelude "(declare (standard-bindings) (block) (not safe))" -c $^
 
 $(LINKFILE): $(CS)
-	gsc $^
+	$(gsc) $^
 
 LDLIBS := -lgambc -lm -lutil -ldl 
 
