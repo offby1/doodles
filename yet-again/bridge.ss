@@ -6,52 +6,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; same old stuff, expressed perhaps a bit more simply.
 
-(module yet-again mzscheme
-(require (only (lib "1.ss" "srfi") every filter lset-intersection append-map))
+(module bridge mzscheme
+(require (only (lib "1.ss" "srfi") every filter lset-intersection append-map)
+         (lib "assert.ss" "offby1")
+         "card.ss"
+         "trick.ss"
+         "history.ss")
 
 (print-struct #t)
-(define-syntax assert
-  (syntax-rules ()
-    ((assert _expr)
-     (or _expr
-         (error "failed assertion: " '_expr)))))
-
-;; I'm using make-struct-type rather than define-struct here, simply
-;; so that I can provide a guard procedure.
-(define-values (struct:card make-card card? card-ref card-set!)
-  (make-struct-type 'card #f 2 0 #f null #f #f '(0 1)
-                    (lambda (suit rank name)
-                      (unless (memq suit '(clubs diamonds hearts spades))
-                        (error (string->symbol (format "make-~a" name))
-                               "first field must be a suit"))
-                      (unless (and (exact? rank)
-                                   (integer? rank)
-                                   (<= 2 rank 14))
-                        (error (string->symbol (format "make-~a" name))
-                               "second field must be a number 'twixt 2 and 14"))
-                      (values suit rank))))
 
-(define (card-suit c) (card-ref c 0))
+
 (define suits= eq?)
 
-(define-struct trick (cards) #f)
-(define (trick-complete? t)
-  (= (length (trick-cards) 4)))
-
-(define-struct history (tricks) #f)
-(define (history-length h)
-  (vector-length (history-tricks h)))
-(define (history-empty? h)
-  (zero? (history-length h)))
-(define (history-latest-trick h)
-  (vector-ref (history-tricks h)
-              (history-length h)))
-(define (history-complete? h)
-  (and (= 13 (history-length h))
-       (trick-complete? (history-latest-trick h))))
-(define (history-card-set h)
-  (append-map trick-cards (vector->list (history-tricks h))))
-
 ;;; choose-card
 
 ;; sequence of tricks, set of cards -> card
