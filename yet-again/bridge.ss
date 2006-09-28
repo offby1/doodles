@@ -11,7 +11,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "assert.ss" "offby1")
          "card.ss"
          "trick.ss"
-         "history.ss")
+         "history.ss"
+         (lib "trace.ss"))
 
 (print-struct #t)
 
@@ -75,8 +76,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;   that's the answer.
 
 
-(let ((c  (make-card 'spades 2)))
+(let* ((c  (make-card 'spades 2)))
   (printf "A card: ~s~%"
-          (choose-card (make-history (vector))
+          (choose-card (make-history (vector ))
                        (list c))))
 )

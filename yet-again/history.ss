@@ -8,7 +8,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (only (lib "1.ss" "srfi" ) append-map)
-         "trick.ss")
+         "trick.ss"
+         (lib "trace.ss"))
 (provide (all-defined))
 
 
@@ -26,5 +27,4 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (trick-complete? (history-latest-trick h))))
 (define (history-card-set h)
   (append-map trick-cards (vector->list (history-tricks h))))
-
 )
