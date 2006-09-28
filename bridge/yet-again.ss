@@ -1,20 +1,39 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 ;; same old stuff, expressed perhaps a bit more simply.
 
 (module yet-again mzscheme
-(require (only (lib "1.ss" "srfi") lset-intersection append-map))
+(require (only (lib "1.ss" "srfi") every filter lset-intersection append-map))
 
+(print-struct #t)
 (define-syntax assert
   (syntax-rules ()
     ((assert _expr)
      (or _expr
          (error "failed assertion: " '_expr)))))
+
+;; I'm using make-struct-type rather than define-struct here, simply
+;; so that I can provide a guard procedure.
+(define-values (struct:card make-card card? card-ref card-set!)
+  (make-struct-type 'card #f 2 0 #f null #f #f '(0 1)
+                    ;; Guard checks for a number, and makes it inexact
+                    (lambda (suit rank name)
+                      (unless (memq suit '(clubs diamonds hearts spades))
+                        (error (string->symbol (format "make-~a" name))
+                               "first field must be a suit"))
+                      (unless (and (exact? rank)
+                                   (integer? rank)
+                                   (<= 2 rank 14))
+                        (error (string->symbol (format "make-~a" name))
+                               "second field must be a number 'twixt 2 and 14"))
+                      (values suit rank))))
 
+(define (card-suit c) (card-ref c 0))
+(define suits= =)
 (define-struct trick (cards) #f)
 (define (trick-complete? t)
   (= (length (trick-cards) 4)))
@@ -22,6 +41,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define-struct history (tricks) #f)
 (define (history-length h)
   (vector-length (history-tricks h)))
+(define (history-empty? h)
+  (zero? (history-length h)))
 (define (history-latest-trick h)
   (vector-ref (history-tricks h)
               (history-length h)))
@@ -45,17 +66,29 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; rules of bridge (i.e., it is the same suit as the card that led the
 ;; current trick, if it can be)
 
-(define (choose-card history hand)
-  (assert (not (history-complete? history)))
-  (assert (null? (lset-intersection eq? (history-card-set history)
-                                        hand)))
-  (let ((choice (car hand)))
-    (assert (memq choice hand))
-    choice))
-
 ;; find which cards are legal (i.e., which follow suit)
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
+
+(define (choose-card history hand)
+  (assert (not (history-complete? history)))
+  (assert (null? (lset-intersection eq? (history-card-set history)
+                                    hand)))
+  (assert (every card? hand))
+  (let ((legal-choices
+         (if (history-empty? history)
+             hand
+           (let* ((suit-led (card-suit (car (history-latest-trick history))))
+                  (mine-of-led-suit (filter (lambda (mine)
+                                              (suits= (card-suit mine)
+                                                      suit-led)))))
+             (if (null? mine-of-led-suit)
+                 hand
+               mine-of-led-suit)))))
+    (let ((choice (car legal-choices)))
+      (assert (card? choice))
+      (assert (memq choice hand))
+      choice)))
 
 ;;; predict-score
 
@@ -77,5 +110,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (printf "A card: ~s~%"
         (choose-card (make-history (vector))
-                     '(1 2 3 4)))
+                     (list (make-card 'spades 2))))
 )
