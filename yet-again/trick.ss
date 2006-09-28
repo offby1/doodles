@@ -16,13 +16,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-struct trick (cards) #f)
 (define (my-make-trick cards)
-  (assert (list? cards))
+  (check-type 'make-trick list?  cards)
+  (assert (not (null? cards)))
   (assert (every card? cards))
   (make-trick cards))
 (define (trick-ref t k)
   (list-ref (trick-cards t)
             k))
 (define (trick-complete? t)
-  (= (length (trick-cards) 4)))
+  (= (length (trick-cards t))
+      4))
 
 )

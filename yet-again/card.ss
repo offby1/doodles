@@ -6,8 +6,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module card mzscheme
 (print-struct #t)
-(require (lib "assert.ss" "offby1"))
-(provide make-card card? card-suit)
+(require (lib "assert.ss" "offby1")
+         (lib "trace.ss"))
+(provide make-card card? card-suit cards=)
 
 ;; I'm using make-struct-type rather than define-struct here, simply
 ;; so that I can provide a guard procedure.
@@ -25,5 +26,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       (values suit rank))))
 
 (define (card-suit c) (card-ref c 0))
-
+(define (card-rank c) (card-ref c 1))
+(define (cards= a b)
+  (and (eq? (card-suit a)
+          (card-suit b))
+       (= (card-rank a)
+            (card-rank b))
+       ))
 )
