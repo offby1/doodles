@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "card.ss"
          "trick.ss"
          "history.ss"
+         (only (lib "list.ss") sort)
          (lib "trace.ss"))
 (provide choose-card)
 (print-struct #t)
@@ -47,22 +48,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (unless (null? already-played-cards)
       (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
 
-  (let ((legal-choices
-         (if (history-empty? history)
-             hand
-           (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
-                  (mine-of-led-suit (filter (lambda (mine)
-                                              (suits= (card-suit mine)
-                                                      suit-led))
-                                            hand)))
-             (if (null? mine-of-led-suit)
-                 hand
-               mine-of-led-suit)))))
-    (let ((choice (car legal-choices)))
-      (assert (card? choice))
-      (assert (memq choice hand))
-      choice)))
+  (let* ((legal-choices
+          (if (history-empty? history)
+              hand
+            (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
+                   (mine-of-led-suit (filter (lambda (mine)
+                                               (suits= (card-suit mine)
+                                                       suit-led))
+                                             hand)))
+              (if (null? mine-of-led-suit)
+                  hand
+                mine-of-led-suit))))
 
+         (choice (cdar
+                  (sort
+                   (map (lambda (card)
+                          (cons (predict-score card) card)) legal-choices)
+                   (lambda (a b)
+                     (< (car a)
+                        (car b)))))))
+
+    (assert (card? choice))
+    (assert (memq choice hand))
+    (printf "Some legal choices: ~s~%" legal-choices)
+    choice))
+
+(define (predict-score card)
+  1)
 ;;; predict-score
 
 ;; same inputs as choose-card, plus a single card.

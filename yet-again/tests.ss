@@ -40,7 +40,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (choose-card
                    (make-history
                     (vector (make-trick (list d10 s2 ha))))
-                   (list s3 d2)))
+                   (list s3 d2 (make-card 'diamonds 9))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
               (lambda ()
