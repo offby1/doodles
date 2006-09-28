@@ -11,13 +11,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
          "card.ss")
 (provide (rename my-make-trick make-trick)
          trick-cards
-         trick-complete?)
+         trick-complete?
+         trick-ref)
 
 (define-struct trick (cards) #f)
 (define (my-make-trick cards)
   (assert (list? cards))
   (assert (every card? cards))
   (make-trick cards))
+(define (trick-ref t k)
+  (list-ref (trick-cards t)
+            k))
 (define (trick-complete? t)
   (= (length (trick-cards) 4)))
 

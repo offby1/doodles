@@ -12,8 +12,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "trace.ss"))
 (provide (all-defined))
 
-
-
 (define-struct history (tricks) #f)
 (define (history-length h)
   (vector-length (history-tricks h)))
@@ -21,7 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (zero? (history-length h)))
 (define (history-latest-trick h)
   (vector-ref (history-tricks h)
-              (history-length h)))
+              (sub1 (history-length h))))
 (define (history-complete? h)
   (and (= 13 (history-length h))
        (trick-complete? (history-latest-trick h))))

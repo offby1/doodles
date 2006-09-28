@@ -46,10 +46,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((legal-choices
          (if (history-empty? history)
              hand
-           (let* ((suit-led (card-suit (car (history-latest-trick history))))
+           (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
                   (mine-of-led-suit (filter (lambda (mine)
                                               (suits= (card-suit mine)
-                                                      suit-led)))))
+                                                      suit-led))
+                                            hand)))
              (if (null? mine-of-led-suit)
                  hand
                mine-of-led-suit)))))
@@ -76,8 +77,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;   that's the answer.
 
 
-(let* ((c  (make-card 'spades 2)))
+(let* ((s2  (make-card 'spades 2))
+       (d10 (make-card 'diamonds 10))
+       (ha (make-card 'hearts 14))
+       (t (make-trick (list d10 s2 ha))))
+
   (printf "A card: ~s~%"
-          (choose-card (make-history (vector ))
-                       (list c))))
+          (choose-card (make-history (vector t ))
+                       (list (make-card 'spades 3)
+                             (make-card 'diamonds 2)))))
 )
