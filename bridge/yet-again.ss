@@ -15,15 +15,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (or _expr
          (error "failed assertion: " '_expr)))))
 
+(define-struct trick (cards) #f)
 (define (trick-complete? t)
-  (= (length t 4)))
-(define trick-cards values)
+  (= (length (trick-cards) 4)))
 
+(define-struct history (tricks) #f)
+(define (history-length h)
+  (vector-length (history-tricks h)))
+(define (history-latest-trick h)
+  (vector-ref (history-tricks h)
+              (history-length h)))
 (define (history-complete? h)
-  (and (= 13 (vector-length h))
-       (trick-complete? (vector-ref h 12))))
+  (and (= 13 (history-length h))
+       (trick-complete? (history-latest-trick h))))
 (define (history-card-set h)
-  (append-map trick-cards (vector->list h)))
+  (append-map trick-cards (vector->list (history-tricks h))))
 ;;; choose-card
 
 ;; sequence of tricks, set of cards -> card
@@ -42,7 +48,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (choose-card history hand)
   (assert (not (history-complete? history)))
   (assert (null? (lset-intersection eq? (history-card-set history)
-                                        hand))))
+                                        hand)))
+  (let ((choice (car hand)))
+    (assert (memq choice hand))
+    choice))
 
 ;; find which cards are legal (i.e., which follow suit)
 ;; if there's exactly one, play it.
@@ -66,4 +75,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;   that's the answer.
 
 
+(printf "A card: ~s~%"
+        (choose-card (make-history (vector))
+                     '(1 2 3 4)))
 )
