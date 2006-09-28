@@ -7,7 +7,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; same old stuff, expressed perhaps a bit more simply.
 
 (module yet-again mzscheme
+(require (only (lib "1.ss" "srfi") lset-intersection append-map))
 
+(define-syntax assert
+  (syntax-rules ()
+    ((assert _expr)
+     (or _expr
+         (error "failed assertion: " '_expr)))))
+
+(define (trick-complete? t)
+  (= (length t 4)))
+(define trick-cards values)
+
+(define (history-complete? h)
+  (and (= 13 (vector-length h))
+       (trick-complete? (vector-ref h 12))))
+(define (history-card-set h)
+  (append-map trick-cards (vector->list h)))
 ;;; choose-card
 
 ;; sequence of tricks, set of cards -> card
@@ -22,6 +38,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; postconditions: the returned card is in the set, and follows the
 ;; rules of bridge (i.e., it is the same suit as the card that led the
 ;; current trick, if it can be)
+
+(define (choose-card history hand)
+  (assert (not (history-complete? history)))
+  (assert (null? (lset-intersection eq? (history-card-set history)
+                                        hand))))
 
 ;; find which cards are legal (i.e., which follow suit)
 ;; if there's exactly one, play it.
