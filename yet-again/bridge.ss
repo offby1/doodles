@@ -39,10 +39,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
 (define (choose-card history hand)
-  (assert (not (history-complete? history)))
-  (assert (null? (lset-intersection eq? (history-card-set history)
-                                    hand)))
-  (assert (every card? hand))
+  (unless (every card? hand)
+    (raise-mismatch-error 'choose-card "What's this crap in your hand?" hand))
+  (if (history-complete? history)
+      (raise-mismatch-error 'choose-card "the game's already over!" history))
+  (let ((already-played-cards (lset-intersection eq? (history-card-set history) hand)))
+    (unless (null? already-played-cards)
+      (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
+
   (let ((legal-choices
          (if (history-empty? history)
              hand

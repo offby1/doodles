@@ -29,21 +29,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (test/text-ui
    (test-suite
     "The one and only suite"
-    (test-equal? "follows suit 1" s3
-                (choose-card
-                 (make-history
-                  (vector (make-trick (list s2 d10 ha))))
-                 (list s3 d2)))
+    (test-equal? "follows suit 1"
+                 s3
+                 (choose-card
+                  (make-history
+                   (vector (make-trick (list s2 d10 ha))))
+                  (list s3 d2)))
     (test-equal?  "follows suit 2"
                   d2
+                  (choose-card
+                   (make-history
+                    (vector (make-trick (list d10 s2 ha))))
+                   (list s3 d2)))
+    (test-exn "Notices garbage in hand"
+              exn:fail:contract?
+              (lambda ()
+                (choose-card (make-history (vector))
+                 (list 77))))
+    (test-exn "Notices card in both history and hand"
+              exn:fail:contract?
+              (lambda ()
                 (choose-card
                  (make-history
                   (vector (make-trick (list d10 s2 ha))))
-                 (list s3 d2))
-
-                )
-
-
-
-    )))
+                 (list s3 ha)))))))
+
 )
+
