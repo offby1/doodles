@@ -13,7 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "trick.ss"
          "history.ss"
          (lib "trace.ss"))
-
+(provide choose-card)
 (print-struct #t)
 
 
@@ -77,13 +77,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;   that's the answer.
 
 
-(let* ((s2  (make-card 'spades 2))
-       (d10 (make-card 'diamonds 10))
-       (ha (make-card 'hearts 14))
-       (t (make-trick (list d10 s2 ha))))
-
-  (printf "A card: ~s~%"
-          (choose-card (make-history (vector t ))
-                       (list (make-card 'spades 3)
-                             (make-card 'diamonds 2)))))
 )
