@@ -20,7 +20,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; so that I can provide a guard procedure.
 (define-values (struct:card make-card card? card-ref card-set!)
   (make-struct-type 'card #f 2 0 #f null #f #f '(0 1)
-                    ;; Guard checks for a number, and makes it inexact
                     (lambda (suit rank name)
                       (unless (memq suit '(clubs diamonds hearts spades))
                         (error (string->symbol (format "make-~a" name))
@@ -33,7 +32,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (values suit rank))))
 
 (define (card-suit c) (card-ref c 0))
-(define suits= =)
+(define suits= eq?)
+
 (define-struct trick (cards) #f)
 (define (trick-complete? t)
   (= (length (trick-cards) 4)))
@@ -51,6 +51,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (trick-complete? (history-latest-trick h))))
 (define (history-card-set h)
   (append-map trick-cards (vector->list (history-tricks h))))
+
 ;;; choose-card
 
 ;; sequence of tricks, set of cards -> card
@@ -108,7 +109,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;   that's the answer.
 
 
-(printf "A card: ~s~%"
-        (choose-card (make-history (vector))
-                     (list (make-card 'spades 2))))
+(let ((c  (make-card 'spades 2)))
+  (printf "A card: ~s~%"
+          (choose-card (make-history (vector))
+                       (list c))))
 )
