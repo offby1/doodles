@@ -29,10 +29,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (ha (make-card 'hearts 14))
        (s2  (make-card 'spades 2))
        (s3 (make-card 'spades 3))
-       )
+       (first-annotated-card (car (annotated-cards (make-trick (list s2 d10 ha) 'south)))))
   (test/text-ui
    (test-suite
     "The one and only suite"
+
+    (test-case
+     "Annotations 1"
+     (check cards= (car first-annotated-card) s2))
+
+    (test-case
+     "Annotations 2"
+     (check eq? (cdr first-annotated-card) 'south))
+
     (test-equal? "follows suit 1"
                  s3
                  (choose-card
@@ -49,7 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               exn:fail:contract?
               (lambda ()
                 (choose-card (make-history (list))
-                  (list (list 77)))))
+                             (list (list 77)))))
     (test-exn "Notices card in both history and hand"
               exn:fail:contract?
               (lambda ()
