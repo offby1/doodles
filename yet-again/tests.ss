@@ -47,25 +47,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (choose-card
                   (make-history
                    (list (make-trick (list s2 d10 ha) 'east)))
-                  (list (list s3 d2))))
+                  (list (list s3 d2))
+                  #t))
     (test-equal?  "follows suit 2"
                   d2
                   (choose-card
                    (make-history
                     (list (make-trick (list d10 s2 ha) 'west)))
-                   (list (list s3 d2 (make-card 'diamonds 9)))))
+                   (list (list s3 d2 (make-card 'diamonds 9)))
+                   #t))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
               (lambda ()
                 (choose-card (make-history (list))
-                             (list (list 77)))))
+                             (list (list 77))
+                             #t)))
     (test-exn "Notices card in both history and hand"
               exn:fail:contract?
               (lambda ()
                 (choose-card
                  (make-history
                   (list (make-trick (list d10 s2 ha) 'north)))
-                 (list (list s3 ha))))))))
+                 (list (list s3 ha))
+                 #t))))))
 
 )
 

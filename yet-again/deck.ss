@@ -1,16 +1,21 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
 
-(module deck mzscheme
+(require (lib "errortrace.ss" "errortrace"))
+
+(profiling-enabled #t)
+(profiling-record-enabled #t)
+;(profile-paths-enabled #t)
+
 (require "card.ss"
          "bridge.ss"
          "history.ss"
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take))
-(define *ranks* 4)                      ;should of course be 13, but
+(define *ranks* 5)                      ;should of course be 13, but
                                         ;... *sigh* ... that's too
                                         ;slow
 (define *deck*
@@ -45,6 +50,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (printf "North plays ~s~%"
         (choose-card (make-history (list))
-                     (list north east south west)))
-
-)
+                     (list north east south west)
+                     #t))
+(output-profile-results #t #t)

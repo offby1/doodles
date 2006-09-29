@@ -63,7 +63,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
-(define (choose-card history hands)
+(define (choose-card history hands top-level?)
 
   (define us (history:whose-turn history))
 
@@ -102,7 +102,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (null? (car hands))
            )
           (our-trick-score history)
-        (let ((choice  (choose-card history hands)))
+        (let ((choice  (choose-card history hands #f)))
           (loop (add-card history choice)
                 (let ((new-hand (remove (lambda (c)
                                           (cards= c choice))
@@ -147,20 +147,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (map (lambda (card)
                      (cons (predict-score card) card))
                    (list (car legal-choices))
-                   #;(at-most
-                    (map car (group-into-adjacent-runs
-                              legal-choices
-                              (lambda (a b)
-                                (= (card-rank a)
-                                   (add1 (card-rank b))))))
-                    1))
+                   ;; (at-most
+;;                     (map car (group-into-adjacent-runs
+;;                               legal-choices
+;;                               (lambda (a b)
+;;                                 (= (card-rank a)
+;;                                    (add1 (card-rank b))))))
+;;                     1)
+                   )
               (lambda (a b)
                 (< (car a)
                    (car b)))))))
 
       (assert (card? choice))
       (assert (memq choice hand))
-      (printf "~s: choosing ~s~%" us choice)
+      (when top-level?
+        (printf "~s: choosing ~s~%" us choice))
       choice)))
 
 )
