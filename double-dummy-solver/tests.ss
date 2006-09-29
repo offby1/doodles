@@ -17,6 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "bridge.ss"
          "card.ss"
          "trick.ss"
+         (prefix ha: "hand.ss")
          (all-except "history.ss" whose-turn)
          (lib "trace.ss"))
 
@@ -24,12 +25,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 (let* (
-       (d10 (make-card 'diamonds 10))
-       (d2 (make-card 'diamonds 2))
-       (ha (make-card 'hearts 14))
-       (s2  (make-card 'spades 2))
-       (s3 (make-card 'spades 3))
+       (d10 (make-card 'd 10))
+       (d2 (make-card 'd 2))
+       (ha (make-card 'h 14))
+       (s2  (make-card 's 2))
+       (s3 (make-card 's 3))
        (first-annotated-card (car (annotated-cards (make-trick (list s2 d10 ha) 'south)))))
+
   (test/text-ui
    (test-suite
     "The one and only suite"
@@ -47,15 +49,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (choose-card
                   (make-history
                    (list (make-trick (list s2 d10 ha) 'east)))
-                  (list (list s3 d2))
+                  (list (ha:make-hand (list s3 d2)))
                   0))
-    (test-equal?  "follows suit 2"
-                  d2
-                  (choose-card
-                   (make-history
-                    (list (make-trick (list d10 s2 ha) 'west)))
-                   (list (list s3 d2 (make-card 'diamonds 9)))
-                   0))
+    (test-case
+     "follows suit 2"
+     (check eq?
+            'd
+            (card-suit
+             (choose-card
+              (make-history
+               (list (make-trick (list d10 s2 ha) 'west)))
+              (list (ha:make-hand (list s3 d2 (make-card 'd 9))))
+              0))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
               (lambda ()
@@ -69,6 +74,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (make-history
                   (list (make-trick (list d10 s2 ha) 'north)))
                  (list (list s3 ha))
-                 0))))))
+                 0)))
+    (test-exn "Can't remove non-existant card from hand"
+              exn:fail:contract?
+              (lambda ()
+                (define s2 (make-card 's 2))
+                (define h (ha:make-hand (list s2)))
+                (set! h (ha:remove-card h s2))
+                (set! h (ha:remove-card h s2))
+                ))
+    (test-exn "Can't add card twice to hand"
+              exn:fail:contract?
+              (lambda ()
+                (define s2 (make-card 's 2))
+                (define h (ha:make-hand (list s2)))
+                (ha:add-card! h s2)
+                )))))
 
 )

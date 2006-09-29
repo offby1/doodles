@@ -19,6 +19,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "trick.ss"
          (all-except "history.ss" whose-turn)
          (rename "history.ss" history:whose-turn whose-turn)
+         (prefix ha: "hand.ss")
          (only (lib "list.ss") sort)
          (lib "trace.ss"))
 (provide choose-card)
@@ -90,51 +91,45 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
                     (filter trick-complete? (history-tricks history)))))
     (let loop ((history (add-card history card))
-               (hands (cons (remove (lambda (c)
-                                      (cards= c card))
-                                    (car hands))
+               (hands (cons (ha:remove-card (car hands) card)
                             (cdr hands))))
       (if (or
            (history-complete? history)
            ;; the only way the first hand might be empty is if we're
            ;; running a test, and didn't bother putting 13 cards into
            ;; the hand.
-           (null? (car hands))
+           (ha:empty? (car hands))
            )
           (our-trick-score history)
         (let ((choice  (choose-card history hands (add1 level))))
           (loop (add-card history choice)
-                (let ((new-hand (remove (lambda (c)
-                                          (cards= c choice))
-                                        (car hands))))
-                  (append (cdr hands)
-                          (list new-hand))))))))
+                (append (cdr hands)
+                        (list (ha:remove-card (car hands) choice))))))))
 
   ;(trace predict-score)
   (let ((hand (car hands)))
-    (unless (and (list? hands))
-      (raise-mismatch-error 'choose-card "Not a list" hands))
-    (if (null? hand)
+    (check-type 'choose-card history? history)
+    (unless (ha:hand? hand)
+      (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
+    (if (ha:empty? hand)
         (raise-mismatch-error 'choose-card "Empty hand!" hands))
-    (unless (every card? hand)
-      (raise-mismatch-error 'choose-card "What's this crap in your hand?" hand))
     (if (history-complete? history)
         (raise-mismatch-error 'choose-card "the game's already over!" history))
-    (let ((already-played-cards (lset-intersection eq? (history-card-set history) hand)))
+    (let ((already-played-cards (lset-intersection eq? (history-card-set history) (ha:cards hand))))
       (unless (null? already-played-cards)
         (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
 
     (let* (
            (legal-choices
             (if (history-empty? history)
-                hand
+                (ha:hand-cards hand)
               (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
                      (mine-of-led-suit (filter (lambda (mine)
                                                  (suits= (card-suit mine)
                                                          suit-led))
-                                               hand)))
+                                               (ha:hand-cards hand))))
                 (if (null? mine-of-led-suit)
-                    hand
+                    (ha:hand-cards hand)
                   mine-of-led-suit))))
 
            ;; Don't consider _every_ legal choice; instead, prune
@@ -165,7 +160,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (car b))))))))
 
       (assert (card? choice))
-      (assert (memq choice hand))
+      ;;(assert (memq choice (ha:hand-cards hand)))
       ;;(printf "~a~s: choosing ~s~%" (make-string (* 2 level)  #\space) us choice)
       choice)))
 

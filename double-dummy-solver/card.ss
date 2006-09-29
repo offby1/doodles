@@ -16,21 +16,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card<
          *suits*)
 
-(define *suits*  '(clubs diamonds hearts spades))
+(define *suits*  '(c d h s))
 (define *num-ranks* 13)
 
-(define-struct card (suit rank) #f)
+(define-struct card (rank suit) #f)
 (define my-make-card
   (lambda (suit rank )
     (unless (memq suit *suits*)
-      (error make-card
+      (error 'make-card
              "first field must be a suit"))
     (unless (and (exact? rank)
                  (integer? rank)
                  (<= 2 rank (add1 *num-ranks*)))
       (error make-card
              "second field must be a number 'twixt 2 and 14"))
-    (make-card suit rank)))
+    (make-card rank suit)))
 
 (define (cards= a b)
   (and (eq? (card-suit a)

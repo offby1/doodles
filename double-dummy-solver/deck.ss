@@ -13,6 +13,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (require "card.ss"
          "bridge.ss"
          "history.ss"
+         (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list))
@@ -51,36 +52,34 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (set! *deck* (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
 (define hands (circular-list
-               (box '())
-               (box '())
-               (box '())
-               (box '())))
+               (ha:make-hand '())
+               (ha:make-hand '())
+               (ha:make-hand '())
+               (ha:make-hand '())))
 
 ;; deal 'em out
 (let loop ((d *deck*)
-           (h hands))
+           (hs hands))
   (unless (null? d)
-    (let ((victim (car h)))
-      (set-box! victim (cons (car d)
-                             (unbox victim))))
+    (let ((victim (car hs)))
+      (ha:add-card! victim (car d)))
+
     (loop (cdr d)
-          (cdr h))))
+          (cdr hs))))
 
 ;; sort the hands.  This is actually important, since
 ;; group-into-adjacent-runs will be more likely to return exactly 1
 ;; group, and hence things will go faster.
 (let loop ((h (take hands 4)))
   (unless (null? h)
-    (set-box! (car h)
-              (sort (unbox (car h))
-                    card<))))
+    (ha:sort! (car h))))
 
 (printf "All hands hold ~a cards.~%"
-        (length (apply append (map unbox (take hands 4)))))
+        (length (apply append  (map ha:cards (take hands 4)))))
 
 (printf "North plays ~s from "
         (choose-card (make-history (list))
-                     (map unbox (take hands 4))
+                     (take hands 4)
                      0))
-(pretty-display (unbox (car hands)))
+(pretty-display (ha:cards (car hands)))
 (output-profile-results #t #t)
