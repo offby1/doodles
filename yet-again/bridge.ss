@@ -137,27 +137,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     hand
                   mine-of-led-suit))))
 
-           ;; TODO -- don't consider _every_ legal choice; prune them.
-           ;; Perhaps consider only the lowest and highest; perhaps
-           ;; treat sequences of cards like 2-3-4-5 as all the same,
-           ;; and thus consider only one card from such sequences.
+           ;; Don't consider _every_ legal choice; instead, prune
+           ;; them.  Perhaps consider only the lowest and highest;
+           ;; perhaps treat sequences of cards like 2-3-4-5 as all the
+           ;; same, and thus consider only one card from such
+           ;; sequences.
+           (legal-choices (at-most
+                           (map car (group-into-adjacent-runs
+                                     legal-choices
+                                     (lambda (a b)
+                                       (= (card-rank a)
+                                          (add1 (card-rank b))))))
+                           2))
+
            (choice
-            (cdar
-             (sort
-              (map (lambda (card)
-                     (cons (predict-score card) card))
-                   (list (car legal-choices))
-                   ;; (at-most
-;;                     (map car (group-into-adjacent-runs
-;;                               legal-choices
-;;                               (lambda (a b)
-;;                                 (= (card-rank a)
-;;                                    (add1 (card-rank b))))))
-;;                     1)
-                   )
-              (lambda (a b)
-                (< (car a)
-                   (car b)))))))
+            ;; don't call predict-score if there's just one choice.
+            (if (null? (cdr legal-choices))
+                (car legal-choices)
+              (cdar
+               (sort
+                (map (lambda (card)
+                       (cons (predict-score card) card))
+                     legal-choices)
+
+                (lambda (a b)
+                  (< (car a)
+                     (car b))))))))
 
       (assert (card? choice))
       (assert (memq choice hand))

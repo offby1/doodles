@@ -13,9 +13,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (require "card.ss"
          "bridge.ss"
          "history.ss"
+         (lib "pretty.ss")
          (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") iota take))
-(define *ranks* 5)                      ;should of course be 13, but
+         (only (lib "1.ss" "srfi") iota take circular-list))
+(define *ranks* 3)                      ;should of course be 13, but
                                         ;... *sigh* ... that's too
                                         ;slow
 (define *deck*
@@ -37,19 +38,38 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                              result))))
              result)))))
 
-(define east (take *deck* *ranks*))
-(set! *deck*  (list-tail *deck* *ranks*))
+(define (fisher-yates-shuffle! v)
+  (define (swap! i1 i2)
+    (let ((tmp (vector-ref v i1)))
+      (vector-set! v i1 (vector-ref v i2))
+      (vector-set! v i2 tmp)))
+  (let ((l (vector-length v)))
+    (do ((top-index (sub1 l) (sub1 top-index)))
+        ((zero? top-index) v)
+      (let ((bottom-index (random top-index)))
+        (swap! bottom-index top-index)))))
 
-(define south (take *deck* *ranks*))
-(set! *deck* (list-tail *deck* *ranks*))
+;(set! *deck* (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
+(define hands (circular-list
+               (box '())
+               (box '())
+               (box '())
+               (box '())))
+(let loop ((d *deck*)
+           (h hands))
+  (unless (null? d)
+    (let ((victim (car h)))
+      (set-box! victim (cons (car d)
+                             (unbox victim))))
+    (loop (cdr d)
+          (cdr h))))
 
-(define west (take *deck* *ranks*))
-(set! *deck* (list-tail *deck* *ranks*))
+(printf "All hands hold ~a cards.~%"
+        (length (apply append (map unbox (take hands 4)))))
 
-(define north (take *deck* *ranks*))
-
-(printf "North plays ~s~%"
+(printf "North plays ~s from "
         (choose-card (make-history (list))
-                     (list north east south west)
+                     (map unbox (take hands 4))
                      #t))
+(pretty-display (unbox (car hands)))
 (output-profile-results #t #t)
