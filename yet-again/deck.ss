@@ -6,15 +6,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module deck mzscheme
 (require "card.ss"
+         "bridge.ss"
+         "history.ss"
+         (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take))
+(define *ranks* 4)                      ;should of course be 13, but
+                                        ;... *sigh* ... that's too
+                                        ;slow
 (define *deck*
   (let loop ((suits *suits*)
              (result '()))
     (if (null? suits)
-        result
+        (sort result (lambda (a b)
+                       (< (card-rank a)
+                          (card-rank b))))
       (loop (cdr suits)
             (append
-             (let loop ((ranks (iota 13 2))
+             (let loop ((ranks (iota *ranks* 2))
                         (result '()))
                (if (null? ranks)
                    result
@@ -24,17 +32,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              result))))
              result)))))
 
-(define east (take *deck* 13))
-(set! *deck* (list-tail *deck* 13))
+(define east (take *deck* *ranks*))
+(set! *deck*  (list-tail *deck* *ranks*))
 
-(define south (take *deck* 13))
-(set! *deck* (list-tail *deck* 13))
+(define south (take *deck* *ranks*))
+(set! *deck* (list-tail *deck* *ranks*))
 
-(define west (take *deck* 13))
-(set! *deck* (list-tail *deck* 13))
+(define west (take *deck* *ranks*))
+(set! *deck* (list-tail *deck* *ranks*))
 
-(define north (take *deck* 13))
+(define north (take *deck* *ranks*))
 
-
+(printf "North plays ~s~%"
+        (choose-card (make-history (list))
+                     (list north east south west)))
 
 )

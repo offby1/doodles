@@ -14,6 +14,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (rename my-make-trick make-trick)
          annotated-cards
          (rename my-trick-cards trick-cards)
+         (rename add-card t:add-card)
          leader
          trick?
          trick-complete?
@@ -84,9 +85,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                         (seat (cdr c-s)))
                    (cons rank seat)))
                (trick-card-seat-pairs t))))
-    (car
+    (cdar
      (my-max (lambda (a b)
-            (> (car a)
-               (car b)))
-          rank-seat-pairs))))
+               (> (car a)
+                  (car b)))
+             rank-seat-pairs))))
+;(trace winner)
 )

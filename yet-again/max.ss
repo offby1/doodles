@@ -6,13 +6,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module max mzscheme
 (provide (rename my-max max))
+(require (lib "trace.ss")
+         (only (lib "1.ss" "srfi") reduce))
+
 (define (my-max > item . items)
-  (let loop ((items items)
-             (so-far item))
-    (if (null? items)
-        so-far
-      (loop (cdr items)
-            (if (> item (car items))
-                item
-              (car items))))))
+  (reduce (lambda (a b)
+            (if (> a b) a b)) item (cons item items)))
+
 )

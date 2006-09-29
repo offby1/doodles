@@ -12,7 +12,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                filter
                lset-intersection
                append-map
-               remove)
+               remove
+               take)
          (lib "assert.ss" "offby1")
          "card.ss"
          "trick.ss"
@@ -24,7 +25,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (print-struct #t)
 
 
+;; (list 1 2 3 9 10 11 7 6 5) (lambda (a b) (= a (add1 b))) => ((1 2
+;; 3) (9 10 11) (7) (6) (5))
+(define (group-into-adjacent-runs seq adjacent?)
+  (let loop ((in seq)
+             (out '()))
+    (if (null? in)
+        (reverse (map reverse out))
+      (let ((this (car in)))
+        (loop (cdr in)
+              (if (or (null? out)
+                      (not (adjacent? this (caar out))))
+                  (cons (list this) out)
+                (cons (cons this (car out))
+                      (cdr out))))))))
 (define suits= eq?)
+(define (at-most x i)
+  (let ((l (length x)))
+    (take x (min l i))))
 
 ;;; choose-card
 
@@ -47,6 +65,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-card history hands)
 
+  (define us (history:whose-turn history))
+
 ;;; predict-score
 
   ;; same inputs as choose-card, plus a single card.
@@ -65,15 +85,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card)
-
-    ;; ignore trumps for now.  The winner of a trick is either 'evens
-    ;; (the leader, or his partner) or 'odds.
     (define (we-won? t) (eq? (whose-turn t) (winner t)))
     (define (our-trick-score history)
-      (apply + (map (lambda (t)
-                      (if (we-won? t)
-                          1
-                        -1))
+      (apply + (map (lambda (t) (if (we-won? t) 1 -1))
                     (filter trick-complete? (history-tricks history)))))
     (let loop ((history (add-card history card))
                (hands (cons (remove (lambda (c)
@@ -123,17 +137,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     hand
                   mine-of-led-suit))))
 
-           (choice (cdar
-                    (sort
-                     (map (lambda (card)
-                            (cons (predict-score card) card)) legal-choices)
-                     (lambda (a b)
-                       (< (car a)
-                          (car b)))))))
+           ;; TODO -- don't consider _every_ legal choice; prune them.
+           ;; Perhaps consider only the lowest and highest; perhaps
+           ;; treat sequences of cards like 2-3-4-5 as all the same,
+           ;; and thus consider only one card from such sequences.
+           (choice
+            (cdar
+             (sort
+              (map (lambda (card)
+                     (cons (predict-score card) card))
+                   (list (car legal-choices))
+                   #;(at-most
+                    (map car (group-into-adjacent-runs
+                              legal-choices
+                              (lambda (a b)
+                                (= (card-rank a)
+                                   (add1 (card-rank b))))))
+                    1))
+              (lambda (a b)
+                (< (car a)
+                   (car b)))))))
 
       (assert (card? choice))
       (assert (memq choice hand))
-      (printf "Some legal choices: ~s~%" legal-choices)
+      (printf "~s: choosing ~s~%" us choice)
       choice)))
 
 )
