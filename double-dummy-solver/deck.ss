@@ -73,9 +73,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
   (unless (null? h)
     (ha:sort! (car h))))
 
-(printf "All hands hold ~a cards.~%"
-        (length (apply append  (map ha:cards (take hands 4)))))
-
 (printf "North plays ~s from "
         (choose-card (make-history (list))
                      (take hands 4)

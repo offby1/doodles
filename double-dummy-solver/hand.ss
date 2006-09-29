@@ -24,7 +24,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (raise-mismatch-error 'make-hand "Not a list of cards: " cards))
 
   (if #f
-      ;; calling add-card on each input card is slow but safe.
+      ;; calling add-card on each input card is slow but safe: it'll
+      ;; detect duplicates.
       (let ((rv  (make-hand '())))
         (for-each (lambda (c)
                     (add-card! rv c))
