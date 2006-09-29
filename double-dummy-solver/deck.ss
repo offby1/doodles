@@ -17,9 +17,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list))
-(define *ranks* 5)                      ;should of course be 13, but
-                                        ;... *sigh* ... that's too
-                                        ;slow
+(define *ranks* 13)
+
 (define *deck*
   (let loop ((suits *suits*)
              (result '()))
@@ -80,6 +79,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (printf "North plays ~s from "
         (choose-card (make-history (list))
                      (take hands 4)
-                     0))
+                     2))
 (pretty-display (ha:cards (car hands)))
 (output-profile-results #t #t)

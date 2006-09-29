@@ -64,20 +64,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
-(define (choose-card history hands level)
+(define (choose-card history hands num-tricks)
 
   (define us (history:whose-turn history))
 
 ;;; predict-score
 
-  ;; same inputs as choose-card, plus a single card.
+  ;; same inputs as choose-card, plus a single card, plus the number
+  ;; of tricks into the future to look.
 
   ;; extra precondition: the single card could have been returned from a call to choose-card.
 
   ;; add this card to the last trick in the sequence.
 
   ;; let the current player be the guy to our left
-  ;; while the history is thus incomplete
+  ;; while the history is thus incomplete and num-tricks > 0
   ;;   call choose-card with the current player
   ;;   modify the history
   ;;   bump the current player
@@ -85,7 +86,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   count the number of tricks won by us, and by them, and subtract;
   ;;   that's the answer.
 
-  (define (predict-score card)
+  (define (predict-score card num-tricks)
     (define (we-won? t) (eq? (whose-turn t) (winner t)))
     (define (our-trick-score history)
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
@@ -95,13 +96,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (cdr hands))))
       (if (or
            (history-complete? history)
+           (zero? num-tricks)
+
            ;; the only way the first hand might be empty is if we're
            ;; running a test, and didn't bother putting 13 cards into
            ;; the hand.
            (ha:empty? (car hands))
            )
           (our-trick-score history)
-        (let ((choice  (choose-card history hands (add1 level))))
+        (let ((choice  (choose-card history hands
+                                    (sub1 num-tricks))))
           (loop (add-card history choice)
                 (append (cdr hands)
                         (list (ha:remove-card (car hands) choice))))))))
@@ -152,7 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (cdar
                (sort
                 (map (lambda (card)
-                       (cons (predict-score card) card))
+                       (cons (predict-score card num-tricks) card))
                      legal-choices)
 
                 (lambda (a b)
@@ -161,7 +165,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (assert (card? choice))
       ;;(assert (memq choice (ha:hand-cards hand)))
-      ;;(printf "~a~s: choosing ~s~%" (make-string (* 2 level)  #\space) us choice)
       choice)))
 
 )
