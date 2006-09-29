@@ -12,12 +12,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card?
          card-suit
          card-rank
-         cards=)
+         cards=
+         *suits*)
+
+(define *suits*  '(clubs diamonds hearts spades))
 
 (define-struct card (suit rank) #f)
 (define my-make-card
   (lambda (suit rank )
-    (unless (memq suit '(clubs diamonds hearts spades))
+    (unless (memq suit *suits*)
       (error make-card
              "first field must be a suit"))
     (unless (and (exact? rank)
