@@ -7,15 +7,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module history mzscheme
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
-         (only (lib "1.ss" "srfi" ) append-map)
-         "trick.ss"
+         (only (lib "1.ss" "srfi" ) every append-map)
+         (all-except "trick.ss" whose-turn)
+         (rename "trick.ss" trick:whose-turn whose-turn)
          (lib "trace.ss"))
 (provide (all-defined-except make-history)
          (rename my-make-history make-history))
 
 (define-struct history (tricks) #f)
 (define (my-make-history tricks)
-  (unless (list? tricks)
+  (unless (and (list? tricks)
+               (every trick? tricks))
     (raise-mismatch-error 'make-history "I want a list, not " tricks))
   (make-history tricks))
 (define (history-length h)
@@ -31,12 +33,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (history-card-set h)
   (append-map trick-cards (history-tricks h)))
 
+(define (whose-turn h)
+  (assert (not (history-complete? h)))
+  (let ((latest (history-latest-trick h)))
+    (if (trick-complete? latest)
+        (winner latest)
+      (trick:whose-turn latest))))
+
 ;; nondestructive
 (define (add-card h c)
-  (let ((latest-trick (history-latest-trick h)))
-    (my-make-history (if (trick-complete? latest-trick)
-                         (cons (make-trick (list c)) (history-tricks h))
-                       (cons (make-trick (cons c (trick-cards latest-trick)))
-                             (cdr (history-tricks h)))))))
+  (printf "h: ~s; c: ~s~%" h c)
+  (let ((t (history-latest-trick h)))
+    (my-make-history
+     (if (trick-complete? t)
+         (cons (make-trick (list c)) (history-tricks h) (leader (winner t)))
+       (cons (make-trick (cons c (trick-cards t)) (whose-turn t))
+             (cdr (history-tricks h)))))))
 ;(trace add-card)
 )

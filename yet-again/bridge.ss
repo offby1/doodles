@@ -16,7 +16,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "assert.ss" "offby1")
          "card.ss"
          "trick.ss"
-         "history.ss"
+         (all-except "history.ss" whose-turn)
+         (rename "history.ss" history:whose-turn whose-turn)
          (only (lib "list.ss") sort)
          (lib "trace.ss"))
 (provide choose-card)
@@ -67,7 +68,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     ;; ignore trumps for now.  The winner of a trick is either 'evens
     ;; (the leader, or his partner) or 'odds.
-    (define (we-won? t) #t)
+    (define (we-won? t) (eq? (whose-turn t) (winner t)))
     (define (our-trick-score history)
       (apply + (map (lambda (t)
                       (if (we-won? t)

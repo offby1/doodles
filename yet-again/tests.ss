@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "bridge.ss"
          "card.ss"
          "trick.ss"
-         "history.ss"
+         (all-except "history.ss" whose-turn)
          (lib "trace.ss"))
 
 (print-struct #t)
@@ -46,13 +46,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  s3
                  (choose-card
                   (make-history
-                   (list (make-trick (list s2 d10 ha))))
+                   (list (make-trick (list s2 d10 ha) 'east)))
                   (list (list s3 d2))))
     (test-equal?  "follows suit 2"
                   d2
                   (choose-card
                    (make-history
-                    (list (make-trick (list d10 s2 ha))))
+                    (list (make-trick (list d10 s2 ha) 'west)))
                    (list (list s3 d2 (make-card 'diamonds 9)))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
@@ -64,7 +64,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (lambda ()
                 (choose-card
                  (make-history
-                  (list (make-trick (list d10 s2 ha))))
+                  (list (make-trick (list d10 s2 ha) 'north)))
                  (list (list s3 ha))))))))
 
 )

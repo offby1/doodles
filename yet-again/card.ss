@@ -8,7 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "trace.ss"))
-(provide make-card card? card-suit cards=)
+(provide make-card card? card-suit card-rank cards=)
 
 ;; I'm using make-struct-type rather than define-struct here, simply
 ;; so that I can provide a guard procedure.
