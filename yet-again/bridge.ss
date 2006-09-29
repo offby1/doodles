@@ -74,7 +74,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (if (we-won? t)
                           1
                         -1))
-                    (history-tricks history))))
+                    (filter trick-complete? (history-tricks history)))))
     (let loop ((history (add-card history card))
                (hands (cons (remove (lambda (c)
                                       (cards= c card))

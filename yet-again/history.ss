@@ -42,12 +42,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;; nondestructive
 (define (add-card h c)
-  (printf "h: ~s; c: ~s~%" h c)
   (let ((t (history-latest-trick h)))
     (my-make-history
      (if (trick-complete? t)
-         (cons (make-trick (list c)) (history-tricks h) (leader (winner t)))
-       (cons (make-trick (cons c (trick-cards t)) (whose-turn t))
+         (cons (make-trick (list c)
+                           (cdr (winner t)))
+               (history-tricks h) )
+       (cons (make-trick (cons c (trick-cards t)) (trick:whose-turn t))
              (cdr (history-tricks h)))))))
 ;(trace add-card)
 )

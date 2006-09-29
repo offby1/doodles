@@ -9,7 +9,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require (lib "assert.ss" "offby1")
          (only (lib "1.ss" "srfi" ) last every circular-list list-tabulate)
          "card.ss"
-         (lib "trace.ss"))
+         (lib "trace.ss")
+         (prefix my- "max.ss"))
 (provide (rename my-make-trick make-trick)
          annotated-cards
          (rename my-trick-cards trick-cards)
@@ -67,7 +68,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
       4))
 
 (define (whose-turn t)
-  (error "I don't know whose turn it is!"))
+  (with-seat-circle
+   (cdr (last (trick-card-seat-pairs t)))
+   cadr))
 
 (define (winner t)
   (assert (trick-complete? t))
@@ -80,9 +83,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                 0))
                         (seat (cdr c-s)))
                    (cons rank seat)))
-               (trick-card-seat-pairs))))
+               (trick-card-seat-pairs t))))
     (car
-     (max (lambda (a b)
+     (my-max (lambda (a b)
             (> (car a)
                (car b)))
           rank-seat-pairs))))

@@ -5,8 +5,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module max mzscheme
-(provide max)
-(define (max > item . items)
+(provide (rename my-max max))
+(define (my-max > item . items)
   (let loop ((items items)
              (so-far item))
     (if (null? items)
