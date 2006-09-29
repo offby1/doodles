@@ -68,6 +68,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define us (history:whose-turn history))
 
+  (define (play-loop history hands num-tricks termination-history-proc)
+    (let loop ((history history)
+               (hands hands))
+      (let ((h (car hands)))
+        (if (or
+             (history-complete? history)
+             (zero? num-tricks)
+
+             ;; the only way the first hand might be empty is if we're
+             ;; running a test, and didn't bother putting 13 cards into
+             ;; the hand.
+             (ha:empty? h)
+             )
+            (termination-history-proc history)
+          (let ((choice  (choose-card history hands
+                                      (sub1 num-tricks))))
+            (loop (add-card history choice)
+                  (append (cdr hands)
+                          (list (ha:remove-card h choice)))))))))
 ;;; predict-score
 
   ;; same inputs as choose-card, plus a single card, plus the number
@@ -91,24 +110,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (define (our-trick-score history)
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
                     (filter trick-complete? (history-tricks history)))))
-    (let loop ((history (add-card history card))
-               (hands (cons (ha:remove-card (car hands) card)
-                            (cdr hands))))
-      (if (or
-           (history-complete? history)
-           (zero? num-tricks)
-
-           ;; the only way the first hand might be empty is if we're
-           ;; running a test, and didn't bother putting 13 cards into
-           ;; the hand.
-           (ha:empty? (car hands))
-           )
-          (our-trick-score history)
-        (let ((choice  (choose-card history hands
-                                    (sub1 num-tricks))))
-          (loop (add-card history choice)
-                (append (cdr hands)
-                        (list (ha:remove-card (car hands) choice))))))))
+    (play-loop
+     (add-card history card)
+     (cons (ha:remove-card (car hands) card)
+           (cdr hands))
+     num-tricks
+     our-trick-score))
 
   ;(trace predict-score)
   (let ((hand (car hands)))
