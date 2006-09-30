@@ -62,13 +62,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (new-hi (add-card history choice)))
         (when (zero? (*recursion-level*))
           (printf "~a plays ~a~%" (history:whose-turn history) choice)
-          (when  (trick-complete? (history-latest-trick new-hi))
+          (when  (hi:trick-complete? new-hi)
             (newline)))
 
         (play-loop new-hi
                    (append (cdr hands)
                            (list (ha:remove-card ha choice)))
-                   (if (trick-complete? (history-latest-trick new-hi))
+                   (if (hi:trick-complete? new-hi)
                        (sub1 num-tricks)
                      num-tricks)
                    termination-history-proc)))))
@@ -149,16 +149,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (ha:cards hand))
 
              ;; if we're leading, all cards are legal.
-             ((trick-complete?  (history-latest-trick history))
+             ((hi:trick-complete? history)
               (ha:cards hand))
              (else
               ;; otherwise me have to follow suit if we can.
-              (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
-                     (mine-of-led-suit (filter (lambda (mine)
-                                                 (suits= (card-suit mine)
-                                                         suit-led))
-                                               (ha:cards hand))))
-                ;(printf "~a: Suit led was ~a ... " us suit-led)
+              (let ((mine-of-led-suit (filter (lambda (mine)
+                                                (suits= (card-suit mine)
+                                                        (suit-led history)))
+                                              (ha:cards hand))))
+                ;(printf "~a: Suit led was ~a ... " us (suit-led history))
                 (if (null? mine-of-led-suit)
                     (begin
                       ;(printf "but I'm out ... ")
