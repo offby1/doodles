@@ -37,6 +37,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (raise-mismatch-error 'make-history (format "leader must be in ~a, not " *seats*) opening-leader))
       (make-history opening-leader '()))))
 
+;; I considered keeping the length in a cache (i.e., a separate slot
+;; in the history structure), rather than recomputing it each time as
+;; I do here, but that only sped the overall program up by about 2%.
 (define (history-length h)
   (length (history-tricks h)))
 (define (history-empty? h)
