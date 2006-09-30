@@ -1,5 +1,5 @@
 check:
 	./tests.ss
-	./deck.ss
+	time ./deck.ss
 
 .PHONY: check

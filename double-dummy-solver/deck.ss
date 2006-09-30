@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (profiling-enabled #t)
 (profiling-record-enabled #t)
+(execute-counts-enabled #t)
 ;(profile-paths-enabled #t)
 
 (require "card.ss"
@@ -16,7 +17,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") iota take circular-list))
+         (only (lib "1.ss" "srfi") iota take circular-list filter))
 (random-seed 0)
 (define *ranks* 13)
 
@@ -76,7 +77,30 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history 'north)
   hands
  13
- 3
+ 3 ;; max lookahead
  pretty-display)
 
-(output-profile-results #t #f)
+;(output-profile-results #t #f)
+(let ((od "coverage"))
+  (unless (directory-exists? od)
+    (make-directory od))
+  (for-each (lambda (fn)
+              (let ((ofn  (build-path "coverage" fn)))
+                (when (file-exists? ofn)
+                  (delete-file ofn))
+                (with-output-to-file ofn
+                  (lambda ()
+                    (annotate-executed-file fn)))
+                (fprintf (current-error-port)
+                         "Created ~a~%" ofn)))
+            ;; TODO -- change this to "the directory of the
+            ;; currently-compiling source file", once I figure out how
+            ;; -- the PLT equivalent of Perl's $Findbin::Bin
+            (filter (lambda (path)
+                      (and (file-exists? path)
+                           (regexp-match "\\.ss$" (path->string path))))
+                    (directory-list)))
+  (fprintf (current-error-port)
+           "^: 0~%.: 1~%,: >1~%"))
+
+
