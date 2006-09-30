@@ -8,7 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "trace.ss")
-         (lib "misc.ss" "swindle"))
+         (only (lib "misc.ss" "swindle") memoize!))
 (provide (rename my-make-card make-card)
          card?
          card-suit

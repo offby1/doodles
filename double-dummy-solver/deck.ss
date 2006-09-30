@@ -78,7 +78,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history 'north)
   hands
  13
- 1 ;; max lookahead
+ 3 ;; max lookahead
  pretty-display)
 
 (output-profile-results #t #f)
