@@ -224,9 +224,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (printf "from ~a ... " pairs))
                 (cdar pairs)))))
 
-      (when (zero? (*recursion-level*))
-        (printf "Chose ~a~%" choice))
-
       (assert (card? choice))
       ;(printf "playing ~a~%" choice)
       ;;(assert (memq choice (ha:hand-cards hand)))
