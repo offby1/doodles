@@ -80,7 +80,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  3 ;; max lookahead
  pretty-display)
 
-;(output-profile-results #t #f)
+(output-profile-results #t #f)
 (let ((od "coverage"))
   (unless (directory-exists? od)
     (make-directory od))
