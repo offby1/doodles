@@ -27,13 +27,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define *seats* (list 'north 'east 'south 'west))
 
-(define (with-seat-circle seat proc)
-  (let loop ((seat-circle (apply circular-list *seats*)))
-    (if (eq? (car seat-circle) seat)
-        (proc seat-circle)
-      (loop (cdr seat-circle)))))
+(define with-seat-circle
+  (let ((seat-circle (apply circular-list *seats*)))
+    (lambda (seat proc)
+      (let loop ((seat-circle seat-circle))
+        (if (eq? (car seat-circle) seat)
+            (proc seat-circle)
+          (loop (cdr seat-circle)))))))
 
-(define-struct trick (card-seat-pairs) #f)
+;; complete? is redundant -- it's always (= 4 (length
+;; card-seat-pairs)).  But profiling shows that cacheing that number
+;; saves noticeable time.
+(define-struct trick (card-seat-pairs complete?) #f)
 
 (define (my-make-trick cards leader)
   (check-type 'make-trick list?  cards)
@@ -44,12 +49,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (with-seat-circle
    leader
    (lambda (sc)
-     (make-trick (map cons cards (take sc  (length cards)))))))
+     (let ((l (length cards)))
+       (make-trick (map cons cards (take sc  l)) (= 4 l))))))
 
 ;(trace my-make-trick)
 
 (define (copy t)
-  (make-trick (alist-copy (trick-card-seat-pairs t))))
+  (make-trick (alist-copy (trick-card-seat-pairs t))
+              (trick-complete? t)))
 
 (define (leader t)
   (cdr (car (trick-card-seat-pairs t))))
@@ -71,9 +78,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (trick-ref t k)
   (list-ref (my-trick-cards t)
             k))
-(define (trick-complete? t)
-  (= (length (trick-card-seat-pairs t))
-      4))
 
 (define (whose-turn t)
   (assert (not (trick-complete? t)))
@@ -94,10 +98,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                    (cons rank seat)))
                (trick-card-seat-pairs t))))
     (cdr
-     (reduce (lambda (a b)
-               (if (> (car a) (car b))
-                   a
-                 b))
+     (reduce (lambda (a b) (if (> (car a) (car b)) a b))
              (car rank-seat-pairs)
              rank-seat-pairs))))
 ;(trace winner)

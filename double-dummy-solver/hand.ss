@@ -36,8 +36,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (make-hand (list-copy (hand-cards h))))
 
 (define (all-distinct? seq < =)
-  (let loop ((seq (sort seq <))
-             )
+  (let loop ((seq (sort seq <)))
     (cond
      ((null? seq) #t)
      ((null? (cdr seq)) #t)
@@ -49,8 +48,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (remove-card! h c)
   (unless (member c (hand-cards h))
     (raise-mismatch-error 'remove-card (format "Can't remove from ~a because it's not present: "  h) c))
-  (unless (all-distinct? (hand-cards h) card< cards=)
-    (raise-mismatch-error 'remove-card "Duplicate card: " h))
+
   (set-hand-cards! h (remove c (hand-cards h)))
   h)
 (define (remove-card h c)

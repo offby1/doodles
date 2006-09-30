@@ -7,7 +7,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module card mzscheme
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
-         (lib "trace.ss"))
+         (lib "trace.ss")
+         (lib "misc.ss" "swindle"))
 (provide (rename my-make-card make-card)
          card?
          card-suit
@@ -52,4 +53,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (rank->number (card-rank c))))
   (< (card->number a)
      (card->number b)))
+(memoize! card<)
 )

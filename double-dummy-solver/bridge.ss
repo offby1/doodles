@@ -45,16 +45,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((l (length x)))
     (take x (min l i))))
 
+(define *recursion-level* (make-parameter 0))
+
 (define (play-loop history hands num-tricks termination-history-proc)
   (let ((ha (car hands)))
-    (if (or
-         (zero? num-tricks)
-         (ha:empty? ha)
-         )
+    (if (or (zero? num-tricks)
+            (ha:empty? ha))
         (termination-history-proc history)
       (let* ((choice (choose-card history hands
                                   (sub1 num-tricks)))
              (new-hi (add-card history choice)))
+        (when (zero? (*recursion-level*))
+          (printf "~a plays ~a~%" (history:whose-turn history) choice)
+          (when  (trick-complete? (history-latest-trick new-hi))
+            (newline)))
+
         (play-loop new-hi
                    (append (cdr hands)
                            (list (ha:remove-card ha choice)))
@@ -62,7 +67,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (sub1 num-tricks)
                      num-tricks)
                    termination-history-proc)))))
-;(trace play-loop)
+
 ;;; choose-card
 
 ;; sequence of tricks, list of (set of cards) -> card
@@ -82,7 +87,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
-(define (choose-card history hands num-tricks)
+(define (choose-card history hands lookahead)
 
   (define us (history:whose-turn history))
 
@@ -91,12 +96,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; same inputs as choose-card, plus a single card, plus the number
   ;; of tricks into the future to look.
 
-  ;; extra precondition: the single card could have been returned from a call to choose-card.
+  ;; extra precondition: the single card could have been returned from
+  ;; a call to choose-card.
 
   ;; add this card to the last trick in the sequence.
 
   ;; let the current player be the guy to our left
-  ;; while the history is thus incomplete and num-tricks > 0
+  ;; while the history is thus incomplete and lookahead > 0
   ;;   call choose-card with the current player
   ;;   modify the history
   ;;   bump the current player
@@ -104,17 +110,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   count the number of tricks won by us, and by them, and subtract;
   ;;   that's the answer.
 
-  (define (predict-score card num-tricks)
+  (define (predict-score card lookahead)
     (define (we-won? t) (eq? us (winner t)))
     (define (our-trick-score history)
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
                     (filter trick-complete? (history-tricks history)))))
-    (play-loop
-     (add-card history card)
-     (cons (ha:remove-card (car hands) card)
-           (cdr hands))
-     num-tricks
-     our-trick-score))
+    (parameterize
+        ((*recursion-level* (add1 (*recursion-level*))))
+      (play-loop
+       (add-card history card)
+       (cons (ha:remove-card (car hands) card)
+             (cdr hands))
+       lookahead
+       our-trick-score)))
 
   ;(trace predict-score)
   (let ((hand (car hands)))
@@ -158,11 +166,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            ;; same, and thus consider only one card from such
            ;; sequences.
            (legal-choices (at-most
-                           (map car (group-into-adjacent-runs
-                                     legal-choices
-                                     (lambda (a b)
-                                       (= (card-rank a)
-                                          (add1 (card-rank b))))))
+                           (map car
+                                ;; TODO: do better than this -- note
+                                ;; that even if two cards have a gap
+                                ;; between them, they're effectively
+                                ;; adjacent if the cards in the gap
+                                ;; have already been played.
+                                (group-into-adjacent-runs
+                                 legal-choices
+                                 (lambda (a b)
+                                   (= (card-rank a)
+                                      (add1 (card-rank b))))))
                            2))
 
            (choice
@@ -172,7 +186,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (cdar
                (sort
                 (map (lambda (card)
-                       (cons (predict-score card num-tricks) card))
+                       (cons (predict-score card lookahead) card))
                      legal-choices)
 
                 (lambda (a b)

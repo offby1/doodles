@@ -32,6 +32,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (s3 (make-card 's 3))
        (first-annotated-card (car (annotated-cards (make-trick (list s2 d10 ha) 'south)))))
 
+  (choose-card
+   (make-history
+    (list (make-trick (list d10 s2 ha) 'west)))
+   (list (ha:make-hand (list s3 d2 (make-card 'd 9))))
+   13)
+
   (test/text-ui
    (test-suite
     "The one and only suite"
