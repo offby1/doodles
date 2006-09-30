@@ -9,6 +9,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi")  string-join)
          (only (lib "list.ss") remove sort)
          "card.ss"
+         (only "trick.ss" *seats*)
          (lib "trace.ss"))
 (provide (rename my-make-hand make-hand)
          (rename hand-cards cards)
@@ -18,24 +19,24 @@ exec mzscheme -qu "$0" ${1+"$@"}
          remove-card
          add-card!
          sort!)
-(define-struct hand (cards) #f)
-(define (my-make-hand cards)
+(define-struct hand (cards seat) #f)
+(define (my-make-hand cards . seat)
   (unless (and (list? cards)
                (every card? cards))
     (raise-mismatch-error 'make-hand "Not a list of cards: " cards))
 
-  (if #f
-      ;; calling add-card on each input card is slow but safe: it'll
-      ;; detect duplicates.
-      (let ((rv  (make-hand '())))
-        (for-each (lambda (c)
-                    (add-card! rv c))
-                  cards)
-        rv)
-    (make-hand cards)))
+  (when (not (null? seat))
+    (set! seat (car seat))              ; "car seat".  Haw haw.
 
+    (unless (memq seat *seats*)
+      (raise-mismatch-error 'make-hand (format "Seat gotta be one of ~a, not " *seats*) seat)))
+
+  (make-hand cards (if (null? seat)
+                       'unknown
+                     seat)))
+;(trace my-make-hand)
 (define (copy h)
-  (make-hand (list-copy (hand-cards h))))
+  (make-hand (list-copy (hand-cards h)) (hand-seat h)))
 
 (define (all-distinct? seq < =)
   (let loop ((seq (sort seq <)))

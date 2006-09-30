@@ -53,15 +53,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (ha:empty? ha))
         (termination-history-proc history)
       (let* ((choice (choose-card history hands max-lookahead))
-             (new-hi (add-card history choice)))
+             (new-hi (add-card history choice))
+             (new-hands (append (cdr hands)
+                                (list (ha:remove-card ha choice)))))
+
         (when (zero? (*recursion-level*))
           (printf "~a plays ~a~%" (history:whose-turn history) choice)
           (when  (hi:trick-complete? new-hi)
-            (newline)))
+            (newline))
+
+;;           (when (hi:trick-complete? new-hi)
+;;             (error "Now it's my turn: " (history:whose-turn new-hi)))
+          )
 
         (play-loop new-hi
-                   (append (cdr hands)
-                           (list (ha:remove-card ha choice)))
+                   new-hands
                    (if (hi:trick-complete? new-hi)
                        (sub1 num-tricks)
                      num-tricks)

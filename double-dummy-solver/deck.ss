@@ -54,10 +54,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (set! *deck* (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
 (define hands (list
-               (ha:make-hand '())
-               (ha:make-hand '())
-               (ha:make-hand '())
-               (ha:make-hand '())))
+               (ha:make-hand '() 'north)
+               (ha:make-hand '() 'east)
+               (ha:make-hand '() 'south)
+               (ha:make-hand '() 'west)))
 
 ;; deal 'em out
 (let loop ((d *deck*)
