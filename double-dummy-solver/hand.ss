@@ -13,6 +13,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "trace.ss"))
 (provide (rename my-make-hand make-hand)
          (rename hand-cards cards)
+         (rename hand-seat seat)
          ->string
          hand?
          empty?

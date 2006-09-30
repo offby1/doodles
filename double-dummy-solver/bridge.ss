@@ -13,7 +13,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                lset-intersection
                append-map
                remove
+               circular-list
                take)
+         (lib "pretty.ss")
          (lib "assert.ss" "offby1")
          "card.ss"
          "trick.ss"
@@ -62,9 +64,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (when  (hi:trick-complete? new-hi)
             (newline))
 
-;;           (when (hi:trick-complete? new-hi)
-;;             (error "Now it's my turn: " (history:whose-turn new-hi)))
-          )
+          ;; rotate the hands until the winner is in front.
+          (when (and (hi:trick-complete? new-hi)
+                     (not (history-complete? new-hi)))
+            (let loop ((hc (apply circular-list new-hands))
+                       (rotations 0))
+              (when (= 4 rotations)
+                (pretty-display hc)
+                (error (format "Oh shit, our hand circle doesn't contain the winner ~s: "
+                               (history:whose-turn new-hi))
+                       'damn-it)
+                )
+              (if (eq? (ha:seat (car hc))
+                       (history:whose-turn new-hi))
+                  (set! new-hands (take hc 4))
+                (loop (cdr hc)
+                      (add1 rotations))))))
 
         (play-loop new-hi
                    new-hands
