@@ -16,6 +16,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          "history.ss"
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
+         (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
 (random-seed 0)
@@ -77,15 +78,16 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history 'north)
   hands
  13
- 3 ;; max lookahead
+ 1 ;; max lookahead
  pretty-display)
 
 (output-profile-results #t #f)
-(let ((od "coverage"))
+(let* ((here (this-expression-source-directory))
+       (od (simplify-path (build-path here "coverage"))))
   (unless (directory-exists? od)
     (make-directory od))
   (for-each (lambda (fn)
-              (let ((ofn  (build-path "coverage" fn)))
+              (let ((ofn  (build-path od fn)))
                 (when (file-exists? ofn)
                   (delete-file ofn))
                 (with-output-to-file ofn
@@ -99,7 +101,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
             (filter (lambda (path)
                       (and (file-exists? path)
                            (regexp-match "\\.ss$" (path->string path))))
-                    (directory-list)))
+                    (directory-list here)))
   (fprintf (current-error-port)
            "^: 0~%.: 1~%,: >1~%"))
 
