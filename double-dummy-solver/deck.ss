@@ -75,7 +75,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (play-loop
  (make-history 'north)
   hands
- 6
+ 13
+ 3
  pretty-display)
 
 (output-profile-results #t #f)

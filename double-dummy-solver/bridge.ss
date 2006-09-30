@@ -47,18 +47,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *recursion-level* (make-parameter 0))
 
-(define (play-loop history hands num-tricks termination-history-proc)
+(define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (let ((ha (car hands)))
     (if (or (zero? num-tricks)
             (ha:empty? ha))
         (termination-history-proc history)
-      (let* ((choice (choose-card history hands
-                                  ;; TODO -- passing num-tricks to
-                                  ;; choose-card feels wrong -- I
-                                  ;; think it makes the whole mess
-                                  ;; take longer to compute earlier
-                                  ;; tricks than later ones.
-                                  (sub1 num-tricks)))
+      (let* ((choice (choose-card history hands max-lookahead))
              (new-hi (add-card history choice)))
         (when (zero? (*recursion-level*))
           (printf "~a plays ~a~%" (history:whose-turn history) choice)
@@ -71,6 +65,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (if (hi:trick-complete? new-hi)
                        (sub1 num-tricks)
                      num-tricks)
+                   max-lookahead
                    termination-history-proc)))))
 
 ;;; choose-card
@@ -92,7 +87,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
-(define (choose-card history hands lookahead)
+(define (choose-card history hands max-lookahead)
 
   (define us (history:whose-turn history))
 
@@ -107,7 +102,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; add this card to the last trick in the sequence.
 
   ;; let the current player be the guy to our left
-  ;; while the history is thus incomplete and lookahead > 0
+  ;; while the history is thus incomplete and max-lookahead > 0
   ;;   call choose-card with the current player
   ;;   modify the history
   ;;   bump the current player
@@ -115,7 +110,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   count the number of tricks won by us, and by them, and subtract;
   ;;   that's the answer.
 
-  (define (predict-score card lookahead)
+  (define (predict-score card max-lookahead)
     (define (we-won? t) (eq? us (winner t)))
     (define (our-trick-score history)
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
@@ -126,7 +121,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (add-card history card)
        (cons (ha:remove-card (car hands) card)
              (cdr hands))
-       lookahead
+       max-lookahead
+       (sub1 max-lookahead)
        our-trick-score)))
 
   ;(trace predict-score)
@@ -190,7 +186,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (cdar
                (sort
                 (map (lambda (card)
-                       (cons (predict-score card lookahead) card))
+                       (cons (predict-score card max-lookahead) card))
                      legal-choices)
 
                 (lambda (a b)
