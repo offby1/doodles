@@ -92,6 +92,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (ha:add-card! h s2)
                 ))
 
+    (test-exn "mt pukes if too few cards"
+              exn:fail:contract?
+              (lambda ()
+                (mt 'north 'c6 'c9 'c3 )))
+
+    (test-exn "mt detects duplicate cards"
+              exn:fail:contract?
+              (lambda ()
+                (mt 'north 'c6 'c9 'c3 'c3)))
+
     (test-equal? "Winner 1"
                  'west
                  (winner (mt 'north 'c3 'c6 'c9 'cj)))
@@ -100,14 +110,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (winner (mt 'north 'c3 'c6 'cj 'c9)))
     (test-equal? "Winner 3"
                  'east
-                 (winner (mt 'north 'c6 'c9 'c3 'dj)))
-
-    (test-exn "Winner 4"
-              exn:fail:contract?
-              (lambda ()
-                (winner (mt 'north 'c6 'c9 'c3 ))))
-
-    )))
-
+                 (winner (mt 'north 'c6 'c9 'c3 'dj))))))
 
 )

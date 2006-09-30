@@ -41,11 +41,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; saves noticeable time.
 (define-struct trick (card-seat-pairs complete?) #f)
 
+
 (define (my-make-trick cards leader)
+  (define (all-distinct? seq)
+    (let ((h (make-hash-table 'equal)))
+      (for-each (lambda (i)
+                  (hash-table-put! h i #t))
+                seq)
+      (= (length seq)
+         (hash-table-count h))))
   (check-type 'make-trick list?  cards)
-  (assert (not (null? cards)))
-  (assert (every card? cards))
-  (assert (memq leader *seats*))
+  (check-type 'make-trick (lambda (c) (not (null? c))) cards)
+  (check-type 'make-trick (lambda (cs) (every card? cs)) cards)
+  (check-type 'make-trick all-distinct? cards)
+  (check-type 'make-trick (lambda (leader) (memq leader *seats*)) leader)
   ;;(printf "Making trick led by ~a ... " leader)
   (with-seat-circle
    leader

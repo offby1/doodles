@@ -1,0 +1,7 @@
+-*- outline -*-
+
+* factor out "distinct" code ...
+
+Both tricks and hands are essentially sets: they require that they
+never have two of the same card.  Perhaps create a new type that is a
+set, and build tricks and hands on top of that.
