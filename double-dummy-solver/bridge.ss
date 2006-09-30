@@ -53,6 +53,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (ha:empty? ha))
         (termination-history-proc history)
       (let* ((choice (choose-card history hands
+                                  ;; TODO -- passing num-tricks to
+                                  ;; choose-card feels wrong -- I
+                                  ;; think it makes the whole mess
+                                  ;; take longer to compute earlier
+                                  ;; tricks than later ones.
                                   (sub1 num-tricks)))
              (new-hi (add-card history choice)))
         (when (zero? (*recursion-level*))
