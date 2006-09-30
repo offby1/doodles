@@ -10,8 +10,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi" ) last every circular-list take alist-copy reduce)
          "card.ss"
          (lib "trace.ss")
-         (lib "pretty.ss")
-         (prefix my- "max.ss"))
+         (lib "pretty.ss"))
+
 (provide (rename my-make-trick make-trick)
          annotated-cards
          (rename my-trick-cards trick-cards)
