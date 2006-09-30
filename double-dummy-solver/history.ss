@@ -8,16 +8,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "pretty.ss")
-         (only (lib "1.ss" "srfi" ) every append-map remove drop-right)
+         (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
          (all-except "trick.ss" whose-turn)
          (rename "trick.ss" trick:whose-turn whose-turn)
          (lib "trace.ss"))
 (provide (all-defined-except make-history)
          (rename my-make-history make-history))
 
-(define-struct history (tricks opening-leader) #f)
+(define-struct history (opening-leader tricks) #f)
 
-(define (my-make-history tricks)
+(define (my-make-history tricks opening-leader)
 
   (define (mostly-complete? tricks)
     (or (null? tricks)
@@ -30,7 +30,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (raise-mismatch-error 'make-history "I want a list, not " tricks))
   (unless (mostly-complete? tricks)
     (raise-mismatch-error 'make-history "I want mostly complete tricks, not " tricks))
-  (make-history tricks 'north))
+  (unless (member opening-leader *seats*)
+    (raise-mismatch-error 'make-history (format "leader must be in ~a, not " *seats*) opening-leader))
+  (make-history opening-leader tricks))
+
 (define (history-length h)
   (length (history-tricks h)))
 (define (history-empty? h)
@@ -57,18 +60,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;(trace whose-turn)
 ;; nondestructive
 (define (add-card h c)
-  (if (history-empty? h)
-      (my-make-history (list (make-trick (list c) (history-opening-leader h))))
-    (let ((last (history-latest-trick h)))
-      (my-make-history
-       (if (trick-complete? last)
-           (append (history-tricks h)
-                   (list (make-trick (list c)
-                                     (winner last))) )
+  ;; copy the history wholesale, then either add a new trick, or add a
+  ;; card to the last one
+  (let ((rv (make-history (history-opening-leader h)
+                          (list-copy (history-tricks h)))))
 
-         (append (drop-right (history-tricks h) 1)
-                 (list (t:add-card last c)))
-         )))))
+    (set-history-tricks!
+     rv
+     (cond
+      ((history-empty? rv)
+       (list (make-trick (list c) (history-opening-leader rv))))
+      ((let ((l (history-latest-trick rv)))
+         (and (trick-complete? l)
+              l))
+       => (lambda (l)
+            (append (history-tricks rv)
+                    (list (make-trick (list c) (winner l))))))
+      (else
+       (append (drop-right (history-tricks rv) 1)
+               (list (t:add-card (t:copy (history-latest-trick rv)) c))))))
 
-;(trace add-card)
+    (assert (= 1 (- (length (history-card-set rv))
+                    (length (history-card-set h)))))
+    rv))
+
 )

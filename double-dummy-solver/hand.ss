@@ -12,7 +12,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (rename my-make-hand make-hand)
          (rename hand-cards cards)
          hand?
-         hand-cards
          empty?
          remove-card
          add-card!

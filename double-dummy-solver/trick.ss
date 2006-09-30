@@ -7,20 +7,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module trick mzscheme
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
-         (only (lib "1.ss" "srfi" ) last every circular-list list-tabulate)
+         (only (lib "1.ss" "srfi" ) last every circular-list take alist-copy)
          "card.ss"
          (lib "trace.ss")
+         (lib "pretty.ss")
          (prefix my- "max.ss"))
 (provide (rename my-make-trick make-trick)
          annotated-cards
          (rename my-trick-cards trick-cards)
          (rename add-card t:add-card)
+         (rename copy t:copy)
          leader
          trick?
          trick-complete?
          trick-ref
          whose-turn
-         winner)
+         winner
+         *seats*)
 
 (define *seats* (list 'north 'east 'south 'west))
 
@@ -37,14 +40,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (assert (not (null? cards)))
   (assert (every card? cards))
   (assert (memq leader *seats*))
+  ;;(printf "Making trick led by ~a ... " leader)
   (with-seat-circle
    leader
    (lambda (sc)
-     (make-trick (map cons cards (list-tabulate (length cards)
-                                                (lambda (i)
-                                                  (list-ref sc i))))))))
+     (make-trick (map cons cards (take sc  (length cards)))))))
 
 ;(trace my-make-trick)
+
+(define (copy t)
+  (make-trick (alist-copy (trick-card-seat-pairs t))))
 
 (define (leader t)
   (cdr (car (trick-card-seat-pairs t))))
@@ -55,6 +60,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (my-trick-cards t)
   (map car (trick-card-seat-pairs t)))
 
+;; nondestructive, but the returned value can share structure with the
+;; input.
 (define (add-card t c)
   (assert (not (trick-complete? t)))
   (my-make-trick (append (my-trick-cards t)
@@ -69,6 +76,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       4))
 
 (define (whose-turn t)
+  (assert (not (trick-complete? t)))
   (with-seat-circle
    (cdr (last (trick-card-seat-pairs t)))
    cadr))
@@ -85,8 +93,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                         (seat (cdr c-s)))
                    (cons rank seat)))
                (trick-card-seat-pairs t))))
-    (cdar
-     (my-max (lambda (a b)
+    (cdr
+     (apply my-max (lambda (a b)
                (> (car a)
                   (car b)))
              rank-seat-pairs))))

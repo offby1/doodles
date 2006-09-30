@@ -22,7 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (prefix ha: "hand.ss")
          (only (lib "list.ss") sort)
          (lib "trace.ss"))
-(provide choose-card)
+(provide choose-card play-loop)
 (print-struct #t)
 
 
@@ -45,6 +45,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((l (length x)))
     (take x (min l i))))
 
+(define (play-loop history hands num-tricks termination-history-proc)
+  (let ((ha (car hands)))
+    (if (or
+         (zero? num-tricks)
+         (ha:empty? ha)
+         )
+        (termination-history-proc history)
+      (let* ((choice (choose-card history hands
+                                  (sub1 num-tricks)))
+             (new-hi (add-card history choice)))
+        (play-loop new-hi
+                   (append (cdr hands)
+                           (list (ha:remove-card ha choice)))
+                   (if (trick-complete? (history-latest-trick new-hi))
+                       (sub1 num-tricks)
+                     num-tricks)
+                   termination-history-proc)))))
+;(trace play-loop)
 ;;; choose-card
 
 ;; sequence of tricks, list of (set of cards) -> card
@@ -68,25 +86,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define us (history:whose-turn history))
 
-  (define (play-loop history hands num-tricks termination-history-proc)
-    (let loop ((history history)
-               (hands hands))
-      (let ((h (car hands)))
-        (if (or
-             (history-complete? history)
-             (zero? num-tricks)
-
-             ;; the only way the first hand might be empty is if we're
-             ;; running a test, and didn't bother putting 13 cards into
-             ;; the hand.
-             (ha:empty? h)
-             )
-            (termination-history-proc history)
-          (let ((choice  (choose-card history hands
-                                      (sub1 num-tricks))))
-            (loop (add-card history choice)
-                  (append (cdr hands)
-                          (list (ha:remove-card h choice)))))))))
 ;;; predict-score
 
   ;; same inputs as choose-card, plus a single card, plus the number
@@ -106,7 +105,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card num-tricks)
-    (define (we-won? t) (eq? (whose-turn t) (winner t)))
+    (define (we-won? t) (eq? us (winner t)))
     (define (our-trick-score history)
       (apply + (map (lambda (t) (if (we-won? t) 1 -1))
                     (filter trick-complete? (history-tricks history)))))
@@ -130,18 +129,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (unless (null? already-played-cards)
         (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
 
-    (let* (
-           (legal-choices
-            (if (history-empty? history)
-                (ha:hand-cards hand)
+    (let* ((legal-choices
+            (cond
+             ((history-empty? history)
+              ;; on the opening lead, all cards are legal.
+              (ha:cards hand))
+
+             ;; if we're leading, all cards are legal.
+             ((trick-complete?  (history-latest-trick history))
+              (ha:cards hand))
+             (else
+              ;; otherwise me have to follow suit if we can.
               (let* ((suit-led (card-suit (trick-ref (history-latest-trick history) 0)))
                      (mine-of-led-suit (filter (lambda (mine)
                                                  (suits= (card-suit mine)
                                                          suit-led))
-                                               (ha:hand-cards hand))))
+                                               (ha:cards hand))))
+                ;(printf "~a: Suit led was ~a ... " us suit-led)
                 (if (null? mine-of-led-suit)
-                    (ha:hand-cards hand)
-                  mine-of-led-suit))))
+                    (begin
+                      ;(printf "but I'm out ... ")
+                      (ha:cards hand))
+                  mine-of-led-suit)))))
 
            ;; Don't consider _every_ legal choice; instead, prune
            ;; them.  Perhaps consider only the lowest and highest;
@@ -171,6 +180,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (car b))))))))
 
       (assert (card? choice))
+      ;(printf "playing ~a~%" choice)
       ;;(assert (memq choice (ha:hand-cards hand)))
       choice)))
 
