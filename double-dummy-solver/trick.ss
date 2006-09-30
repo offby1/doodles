@@ -7,7 +7,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module trick mzscheme
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
-         (only (lib "1.ss" "srfi" ) last every circular-list take alist-copy)
+         (only (lib "1.ss" "srfi" ) last every circular-list take alist-copy reduce)
          "card.ss"
          (lib "trace.ss")
          (lib "pretty.ss")
@@ -94,9 +94,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                    (cons rank seat)))
                (trick-card-seat-pairs t))))
     (cdr
-     (apply my-max (lambda (a b)
-               (> (car a)
-                  (car b)))
+     (reduce (lambda (a b)
+               (if (> (car a) (car b))
+                   a
+                 b))
+             (car rank-seat-pairs)
              rank-seat-pairs))))
 ;(trace winner)
 )
