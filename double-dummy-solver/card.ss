@@ -25,7 +25,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (lambda (suit rank )
     (unless (memq suit *suits*)
       (error 'make-card
-             "first field must be a suit"))
+             (format "first field must be one of ~a, not ~s"
+                     *suits*
+                     suit)))
     (unless (and (exact? rank)
                  (integer? rank)
                  (<= 2 rank (add1 *num-ranks*)))

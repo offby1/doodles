@@ -24,6 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (print-struct #t)
 
 
+
 (let* (
        (d10 (make-card 'd 10))
        (d2 (make-card 'd 2))
@@ -31,12 +32,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (s2  (make-card 's 2))
        (s3 (make-card 's 3))
        (first-annotated-card (car (annotated-cards (make-trick (list s2 d10 ha) 'south)))))
-
-  (choose-card
-   (make-history
-    (list (make-trick (list d10 s2 ha) 'west)))
-   (list (ha:make-hand (list s3 d2 (make-card 'd 9))))
-   13)
 
   (test/text-ui
    (test-suite
@@ -95,6 +90,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (define s2 (make-card 's 2))
                 (define h (ha:make-hand (list s2)))
                 (ha:add-card! h s2)
-                )))))
+                ))
+
+    (test-equal? "Winner 1"
+                 'west
+                 (winner (mt 'north 'c3 'c6 'c9 'cj)))
+
+    )))
+
 
 )
