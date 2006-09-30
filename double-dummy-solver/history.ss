@@ -95,4 +95,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (length (history-card-set h)))))
     rv))
 
+(define (compute-score h)
+  (let ((tricks-by-seat (make-hash-table)))
+    (define (hash-table-increment! k)
+      (let ((v (hash-table-get tricks-by-seat k (lambda () 0))))
+        (hash-table-put! tricks-by-seat k (add1 v))))
+    (for-each (lambda (t)
+                (hash-table-increment! (winner t)))
+              (history-tricks h))
+    (hash-table-map tricks-by-seat cons)))
 )

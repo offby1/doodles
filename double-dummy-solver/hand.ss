@@ -6,11 +6,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module hand mzscheme
 (require (only (lib "1.ss" "srfi") every list-copy)
+         (only (lib "13.ss" "srfi")  string-join)
          (only (lib "list.ss") remove sort)
          "card.ss"
          (lib "trace.ss"))
 (provide (rename my-make-hand make-hand)
          (rename hand-cards cards)
+         ->string
          hand?
          empty?
          remove-card
@@ -67,5 +69,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (empty? h)
   (null? (hand-cards h)))
+(define (->string h)
+  (string-join (map ca->string (reverse (hand-cards h)))))
 
 )

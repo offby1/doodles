@@ -73,14 +73,19 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 ;; group-into-adjacent-runs will be more likely to return exactly 1
 ;; group, and hence things will go faster.
 (for-each ha:sort!  hands)
-;(for-each pretty-display  hands)
+
+(for-each (lambda (h)
+            (display (ha:->string h))
+            (newline))  hands)
 (play-loop
  (make-history 'north)
   hands
  13
- 3 ;; max lookahead
- pretty-display)
+ 2 ;; max lookahead
+ (lambda (h)
+   (printf "~a~%" (compute-score h))))
 
+(printf "~%~%~%")
 (output-profile-results #t #f)
 (let* ((here (this-expression-source-directory))
        (od (simplify-path (build-path here "coverage"))))

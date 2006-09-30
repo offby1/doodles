@@ -15,12 +15,24 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card-rank
          cards=
          card<
-         *suits*)
+         *suits*
+         ca->string)
 
 (define *suits*  '(c d h s))
 (define *num-ranks* 13)
 
 (define-struct card (rank suit) #f)
+(define (ca->string c)
+  (string-append (case (card-rank c)
+                   ((10)"t")
+                   ((11)"j")
+                   ((12)"q")
+                   ((13)"k")
+                   ((14)"a")
+
+                   (else (number->string (card-rank c)))
+                   )
+                 (symbol->string (card-suit c))))
 (define my-make-card
   (lambda (suit rank )
     (unless (memq suit *suits*)
