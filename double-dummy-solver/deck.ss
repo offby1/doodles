@@ -73,7 +73,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (for-each ha:sort!  hands)
 ;(for-each pretty-display  hands)
 (play-loop
- (make-history (list) 'north)
+ (make-history 'north)
   hands
  3
  pretty-display)

@@ -48,8 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  s3
                  (choose-card
                   (make-history
-                   (list (make-trick (list s2 d10 ha) 'east))
-                   'east)
+                   (list (make-trick (list s2 d10 ha) 'east)))
                   (list (ha:make-hand (list s3 d2)))
                   13))
     (test-case
@@ -59,14 +58,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (card-suit
              (choose-card
               (make-history
-               (list (make-trick (list d10 s2 ha) 'west))
-               'west)
+               (list (make-trick (list d10 s2 ha) 'west)))
               (list (ha:make-hand (list s3 d2 (make-card 'd 9))))
               13))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
               (lambda ()
-                (choose-card (make-history (list) 'north)
+                (choose-card (make-history 'north)
                              (list (list 77))
                              13)))
     (test-exn "Notices card in both history and hand"
@@ -74,7 +72,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (lambda ()
                 (choose-card
                  (make-history
-                  (list (make-trick (list d10 s2 ha) 'north)) 'north)
+                  (list (make-trick (list d10 s2 ha) 'north)))
                  (list (list s3 ha))
                  13)))
     (test-exn "Can't remove non-existant card from hand"

@@ -17,7 +17,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-struct history (opening-leader tricks) #f)
 
-(define (my-make-history tricks opening-leader)
+(define (my-make-history tricks-or-opening-leader)
 
   (define (mostly-complete? tricks)
     (or (null? tricks)
@@ -25,14 +25,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (and (trick-complete? (car tricks))
              (mostly-complete? (cdr tricks)))))
 
-  (unless (and (list? tricks)
-               (every trick? tricks))
-    (raise-mismatch-error 'make-history "I want a list, not " tricks))
-  (unless (mostly-complete? tricks)
-    (raise-mismatch-error 'make-history "I want mostly complete tricks, not " tricks))
-  (unless (member opening-leader *seats*)
-    (raise-mismatch-error 'make-history (format "leader must be in ~a, not " *seats*) opening-leader))
-  (make-history opening-leader tricks))
+  (if (list? tricks-or-opening-leader)
+      (let ((tricks tricks-or-opening-leader))
+        (unless (every trick? tricks)
+          (raise-mismatch-error 'make-history "I want a list, not " tricks))
+        (unless (mostly-complete? tricks)
+          (raise-mismatch-error 'make-history "I want mostly complete tricks, not " tricks))
+        (make-history (leader (car tricks )) tricks))
+    (let ((opening-leader tricks-or-opening-leader))
+      (unless (member opening-leader *seats*)
+        (raise-mismatch-error 'make-history (format "leader must be in ~a, not " *seats*) opening-leader))
+      (make-history opening-leader '()))))
 
 (define (history-length h)
   (length (history-tricks h)))
@@ -57,7 +60,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (winner latest)
         (trick:whose-turn latest)))))
 
-;(trace whose-turn)
+                                        ;(trace whose-turn)
 ;; nondestructive
 (define (add-card h c)
   ;; copy the history wholesale, then either add a new trick, or add a
