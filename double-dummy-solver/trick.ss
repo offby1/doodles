@@ -51,34 +51,37 @@ exec mzscheme -qu "$0" ${1+"$@"}
    leader
    (lambda (sc)
      (let ((l (length cards)))
-       (make-trick (map cons cards (take sc  l)) (= 4 l))))))
+       (make-trick (map cons cards (take sc  l))
+                   (= 4 l))))))
 
 ;(trace my-make-trick)
 
 ;; for testing -- allows me to build a trick with a lot less typing
 ;; e.g., (mt 'north 'c3 'c6 'c9 'cj)
 (define (mt leader . card-syms)
-  (my-make-trick
-   (map (lambda (pair)
-          (let ((suit (string->symbol (string (car pair))))
-                (rank (cond
-                       ((char-numeric? (cadr pair))
-                        (- (char->integer (cadr pair))
-                           (char->integer #\0)))
-                       (else
-                        (case (cadr pair)
-                          ((#\t) 10)
-                          ((#\j) 11)
-                          ((#\q) 12)
-                          ((#\k) 13)
-                          ((#\a) 14)
-                          (else (error "Bad character: " (cadr pair)))))
+  (let ((rv  (my-make-trick
+              (map (lambda (pair)
+                     (let ((suit (string->symbol (string (car pair))))
+                           (rank (cond
+                                  ((char-numeric? (cadr pair))
+                                   (- (char->integer (cadr pair))
+                                      (char->integer #\0)))
+                                  (else
+                                   (case (cadr pair)
+                                     ((#\t) 10)
+                                     ((#\j) 11)
+                                     ((#\q) 12)
+                                     ((#\k) 13)
+                                     ((#\a) 14)
+                                     (else (error "Bad character: " (cadr pair)))))
 
-                       )))
-            (make-card suit rank)))
-        (map string->list (map symbol->string card-syms)))
-   leader))
-
+                                  )))
+                       (make-card suit rank)))
+                   (map string->list (map symbol->string card-syms)))
+              leader)))
+    (check-type 'mt trick-complete? rv)
+    rv))
+;(trace mt)
 (define (copy t)
   (make-trick (alist-copy (trick-card-seat-pairs t))
               (trick-complete? t)))

@@ -95,6 +95,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (test-equal? "Winner 1"
                  'west
                  (winner (mt 'north 'c3 'c6 'c9 'cj)))
+    (test-equal? "Winner 2"
+                 'south
+                 (winner (mt 'north 'c3 'c6 'cj 'c9)))
+    (test-equal? "Winner 3"
+                 'east
+                 (winner (mt 'north 'c6 'c9 'c3 'dj)))
+
+    (test-exn "Winner 4"
+              exn:fail:contract?
+              (lambda ()
+                (winner (mt 'north 'c6 'c9 'c3 ))))
 
     )))
 
