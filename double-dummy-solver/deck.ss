@@ -108,6 +108,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                            (regexp-match "\\.ss$" (path->string path))))
                     (directory-list here)))
   (fprintf (current-error-port)
-           "^: 0~%.: 1~%,: >1~%"))
+           "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%"))
 
 
