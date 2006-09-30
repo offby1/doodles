@@ -8,13 +8,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module bridge mzscheme
 (require (only (lib "1.ss" "srfi")
+               append-map
+               circular-list
                every
                filter
+               last-pair
                lset-intersection
-               append-map
                remove
-               circular-list
-               take)
+               take
+               )
          (lib "pretty.ss")
          (lib "assert.ss" "offby1")
          "card.ss"
@@ -43,9 +45,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (cons (cons this (car out))
                       (cdr out))))))))
 (define suits= eq?)
-(define (at-most x i)
-  (let ((l (length x)))
-    (take x (min l i))))
+(define (hi-lo seq)
+  (cons (car seq)
+        (last-pair seq)))
 
 (define *recursion-level* (make-parameter 0))
 
@@ -60,7 +62,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (list (ha:remove-card ha choice)))))
 
         (when (zero? (*recursion-level*))
-          (printf "~a plays ~a~%" (history:whose-turn history) choice)
+          (printf "~a plays ~a~%" (history:whose-turn history) (ca->string choice))
           (when  (hi:trick-complete? new-hi)
             (newline))
 
@@ -159,6 +161,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (unless (null? already-played-cards)
         (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
 
+    (when (zero? (*recursion-level*))
+      (printf "~a: " us))
+
     (let* ((legal-choices
             (cond
              ((history-empty? history)
@@ -174,11 +179,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                 (suits= (card-suit mine)
                                                         (suit-led history)))
                                               (ha:cards hand))))
-                ;(printf "~a: Suit led was ~a ... " us (suit-led history))
                 (if (null? mine-of-led-suit)
-                    (begin
-                      ;(printf "but I'm out ... ")
-                      (ha:cards hand))
+                    (ha:cards hand)
                   mine-of-led-suit)))))
 
            ;; Don't consider _every_ legal choice; instead, prune
@@ -186,7 +188,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            ;; perhaps treat sequences of cards like 2-3-4-5 as all the
            ;; same, and thus consider only one card from such
            ;; sequences.
-           (legal-choices (at-most
+           (legal-choices (hi-lo
                            (map car
                                 ;; TODO: do better than this -- note
                                 ;; that even if two cards have a gap
@@ -197,22 +199,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  legal-choices
                                  (lambda (a b)
                                    (= (card-rank a)
-                                      (add1 (card-rank b))))))
-                           2))
+                                      (add1 (card-rank b))))))))
 
            (choice
             ;; don't call predict-score if there's just one choice.
             (if (null? (cdr legal-choices))
                 (car legal-choices)
-              (cdar
-               (sort
-                (map (lambda (card)
-                       (cons (predict-score card max-lookahead) card))
-                     legal-choices)
+              (let ((pairs (sort
+                            (map (lambda (card)
+                                   (cons (predict-score card max-lookahead) card))
+                                 legal-choices)
 
-                (lambda (a b)
-                  (< (car a)
-                     (car b))))))))
+                            ;; sort by score, of course; but if the
+                            ;; scores are equal, choose the
+                            ;; lower-ranking card.
+                            (lambda (a b)
+                              (if (= (car a)
+                                     (car b))
+                                  (< (card-rank (cdr a))
+                                     (card-rank (cdr b)))
+                                (> (car a)
+                                   (car b)))))))
+                (when (zero? (*recursion-level*))
+                  (printf "from ~a ... " pairs))
+                (cdar pairs)))))
+
+      (when (zero? (*recursion-level*))
+        (printf "Chose ~a~%" choice))
 
       (assert (card? choice))
       ;(printf "playing ~a~%" choice)
