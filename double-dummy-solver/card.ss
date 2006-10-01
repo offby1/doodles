@@ -20,6 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          *suits*
          mc
          mc*
+         *num-ranks*
          ca->string
          cards-between)
 
