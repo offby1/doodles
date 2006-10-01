@@ -53,35 +53,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (cons (car seq)
           (take-right seq (min 2 (length seq))))))
 
+;; nondestructive.  Take CARD from (car HANDS), and move it into the
+;; history.  Return that new history, and the new set of hands, with
+;; the card gone, and with the hands rotated one notch.
+(define (play-card history hands c)
+  (let ((h (car hands)))
+    (assert (member c (ha:cards h)))
+    (zprintf "~a plays ~a~%" (ha:seat (car hands)) (ca->string c))
+    (let* ((new-hand (ha:remove-card h c))
+           (new-history (add-card history c))
+           (new-hand-list (cons new-hand (cdr hands)))
+           (rotated (if (hi:trick-complete? new-history)
+                        (rotate-until new-hand-list (lambda (h)
+                                                      (eq? (ha:seat (car h))
+                                                           (history:whose-turn new-history))))
+                      (rotate new-hand-list 1))))
+      (when (hi:trick-complete? new-history)
+        (zprintf "~%"))
+      (values new-history rotated))))
+;;(trace play-card)
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (let ((ha (car hands)))
     (if (or (zero? num-tricks)
             (ha:empty? ha))
         (termination-history-proc history)
-      (let* ((choice (choose-card history hands max-lookahead))
-             (new-hi (add-card history choice))
-             (new-hands (append (cdr hands)
-                                (list (ha:remove-card ha choice)))))
-
-        (zprintf "~a plays ~a~%" (history:whose-turn history) (ca->string choice))
-        (when (hi:trick-complete? new-hi)
-          (zprintf "~%")
-          ;; rotate the hands until the winner is in front.
-          (when (and (hi:trick-complete? new-hi)
-                     (not (history-complete? new-hi)))
-            (let loop ((hc (apply circular-list new-hands))
-                       (rotations 0))
-              (when (= 4 rotations)
-                (pretty-display hc)
-                (error (format "Oh shit, our hand circle doesn't contain the winner ~s: "
-                               (history:whose-turn new-hi))
-                       'damn-it)
-                )
-              (if (eq? (ha:seat (car hc))
-                       (history:whose-turn new-hi))
-                  (set! new-hands (take hc 4))
-                (loop (cdr hc)
-                      (add1 rotations))))))
+      (let-values (((new-hi new-hands)
+                    (play-card history hands (choose-card history hands max-lookahead))))
+        ;; rotate the hands until the winner is in front.
 
         (play-loop new-hi
                    new-hands
@@ -215,7 +213,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (or
                      (= 1 (abs (- (card-rank a)
                                   (card-rank b))))
-                     (every already-played? (cards-between a b)))))))
+                     ;;(all (lambda (c) (not (held-by-enemy? c))) (cards-between a b))
+                     (every already-played? (cards-between a b))
+                     )))))
            (pruned-legal-choices (bot-one/top-two (map car grouped)))
            (choice
             ;; don't call predict-score if there's just one choice.
@@ -249,7 +249,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (assert (card? choice))
                                         ;(printf "playing ~a~%" choice)
-      ;;(assert (memq choice (ha:hand-cards hand)))
       choice)))
 
 )

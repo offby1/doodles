@@ -20,6 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename copy t:copy)
          leader
          rotate
+         rotate-until
          trick?
          trick-complete?
          trick-ref
