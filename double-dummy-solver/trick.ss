@@ -19,6 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename add-card t:add-card)
          (rename copy t:copy)
          leader
+         rotate
          trick?
          trick-complete?
          trick-ref
@@ -29,15 +30,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define *seats* (list 'north 'east 'south 'west))
 
+(define (rotate seq steps)
+  (if (positive? steps)
+      (rotate (append (cdr seq)
+                      (list (car seq)))
+              (sub1 steps))
+    seq))
+
+(define (rotate-until seq criterion)
+  (if (criterion seq)
+      seq
+    (rotate-until (rotate seq 1)
+                  criterion)))
+
+(define (rotate-until-car-eq seq sought)
+  (rotate-until seq (lambda (x) (eq? (car x) sought))))
+
 ;; rotate the seats until SEAT is first, then apply the proc to the
-;; circular list.
-(define with-seat-circle
-  (let ((seat-circle (apply circular-list *seats*)))
-    (lambda (seat proc)
-      (let loop ((seat-circle seat-circle))
-        (if (eq? (car seat-circle) seat)
-            (proc seat-circle)
-          (loop (cdr seat-circle)))))))
+;; list.
+(define (with-seat-circle seat proc)
+  (proc (rotate-until-car-eq *seats* seat)))
 
 ;; complete? is redundant -- it's always (= 4 (length
 ;; card-seat-pairs)).  But profiling shows that cacheing that number
