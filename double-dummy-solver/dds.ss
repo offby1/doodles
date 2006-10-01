@@ -152,7 +152,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (parameterize
         ((*recursion-level* (add1 (*recursion-level*))))
       (play-loop
-       (add-card history card)
+       (add-card (make-history
+                  (if (or
+                       (history-empty? history)
+                       (hi:trick-complete? history))
+                      us
+                    (list (history-latest-trick history))))
+                 card)
        (cons (ha:remove-card (car hands) card)
              (cdr hands))
        max-lookahead

@@ -1,10 +1,5 @@
 -*- outline -*-
 
-* !! In predict-score, use a _fresh_ history ...
-
-... rather than dragging along the current history.  That will
-certainly be faster, and ought to return the same result.
-
 * factor out "distinct" code ...
 
 Both tricks and hands are essentially sets: they require that they

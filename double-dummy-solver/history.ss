@@ -15,7 +15,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (all-except "trick.ss" whose-turn)
          (rename "trick.ss" trick:whose-turn whose-turn)
          (lib "trace.ss"))
-(provide (all-defined-except make-history history-latest-trick)
+(provide (all-defined-except make-history)
          (rename my-make-history make-history))
 
 (define-struct history (opening-leader tricks) #f)
