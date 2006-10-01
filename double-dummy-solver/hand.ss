@@ -12,7 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only "trick.ss" *seats*)
          (lib "trace.ss"))
 (provide (rename my-make-hand make-hand)
-         mh
+         mh mhs
          (rename hand-cards cards)
          (rename hand-seat seat)
          ->string
@@ -45,6 +45,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ((_ seat card-syms ...)
      (my-make-hand (map mc* `(card-syms ...)) 'seat ))))
 
+(define-syntax mhs
+  (syntax-rules ()
+    ((_ (n ...)
+        (e ...)
+        (s ...)
+        (w ...))
+     (list (mh north n ...)
+           (mh east  e ...)
+           (mh south s ...)
+           (mh west  w ...)))))
 
 (define (copy h)
   (make-hand (list-copy (hand-cards h)) (hand-seat h)))

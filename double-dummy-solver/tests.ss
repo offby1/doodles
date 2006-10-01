@@ -54,7 +54,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (choose-card
               (make-history
                (list (mt west  dt s2 ha)))
-              (list (ha:mh south s3 d2 d9))
+              (ha:mhs (s2 da d8)
+                      (sa dk d7)
+                      (s3 d2 d9)
+                      (sk dq d6))
               13))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
@@ -83,11 +86,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (define h (ha:mh  s2))
                 (ha:add-card! h (mc s2))
                 ))
-
-    (test-exn "mt pukes if too few cards"
-              exn:fail:contract?
-              (lambda ()
-                (mt north c6 c9 c3 )))
 
     (test-exn "mt detects duplicate cards"
               exn:fail:contract?
