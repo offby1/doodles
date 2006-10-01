@@ -74,9 +74,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 ;; group, and hence things will go faster.
 (for-each ha:sort!  hands)
 
+(newline)
 (for-each (lambda (h)
             (display (ha:->string h))
             (newline))  hands)
+(newline)
+
 (play-loop
  (make-history 'north)
   hands
