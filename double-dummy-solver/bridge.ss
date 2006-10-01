@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                circular-list
                every
                filter
+               fold
                last-pair
                lset-intersection
                remove
@@ -136,9 +137,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (predict-score card max-lookahead)
     (define (we-won? t) (eq? us (winner t)))
+
     (define (our-trick-score history)
-      (apply + (map (lambda (t) (if (we-won? t) 1 -1))
-                    (filter trick-complete? (history-tricks history)))))
+      (fold
+       (lambda (t sum)
+         (+ sum (if (and (trick-complete? t)
+                         (we-won? t)) 1 -1)))
+       0
+       (history-tricks history)))
+
     (parameterize
         ((*recursion-level* (add1 (*recursion-level*))))
       (play-loop
