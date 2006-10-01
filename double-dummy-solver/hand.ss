@@ -12,6 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only "trick.ss" *seats*)
          (lib "trace.ss"))
 (provide (rename my-make-hand make-hand)
+         mh
          (rename hand-cards cards)
          (rename hand-seat seat)
          ->string
@@ -36,6 +37,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        'unknown
                      seat)))
 ;(trace my-make-hand)
+
+;; similar to my-make-hand, but nicer: I don't have to quote the
+;; symbols.
+(define-syntax mh
+  (syntax-rules ()
+    ((_ seat card-syms ...)
+     (my-make-hand (map mc* `(card-syms ...)) 'seat ))))
+
+
 (define (copy h)
   (make-hand (list-copy (hand-cards h)) (hand-seat h)))
 

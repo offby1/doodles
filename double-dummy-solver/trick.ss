@@ -16,7 +16,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
          annotated-cards
          (rename my-trick-cards trick-cards)
          mt
-         mt2
          (rename add-card t:add-card)
          (rename copy t:copy)
          leader
@@ -59,7 +58,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (check-type 'with-seat-circle (lambda (thing)
                                   (memq thing *seats*))
               seat)
-  (printf "with-seat-circle: seat is ~s~%" seat)
+
   (proc (rotate-until-car-eq *seats* seat)))
 
 ;; complete? is redundant -- it's always (= 4 (length
@@ -92,18 +91,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;; for testing -- allows me to build a trick with a lot less typing
 ;; e.g., (mt 'north 'c3 'c6 'c9 'cj)
-(define (mt leader . card-syms)
+(define (mt* leader . card-syms)
   (let ((rv  (my-make-trick
-              (map mc/quick card-syms)
+              (map mc* card-syms)
               leader)))
     rv))
 ;(trace mt)
 
 ;; similar to mt, but even nicer: I don't have to quote the symbols.
-(define-syntax mt2
+(define-syntax mt
   (syntax-rules ()
     ((_ leader card-syms ...)
-     (apply mt `(leader card-syms ...)))))
+     (apply mt* `(leader card-syms ...)))))
 
 (define (copy t)
   (make-trick (alist-copy (trick-card-seat-pairs t))

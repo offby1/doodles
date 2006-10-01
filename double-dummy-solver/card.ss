@@ -18,7 +18,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card</rank
          card</suit
          *suits*
-         mc/quick
+         mc
+         mc*
          ca->string
          cards-between)
 
@@ -87,7 +88,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (memoize! card</suit)
 
 ;; for testing -- allows me to type a card easily -- e.g. 'c3
-(define (mc/quick card-sym)
+(define (mc* card-sym)
   (let ((chars (string->list (symbol->string card-sym))))
     (let ((suit (string->symbol (string (car chars))))
           (rank (cond
@@ -105,6 +106,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
                  )))
       (my-make-card suit rank))))
+
+;; similar to mc*, but even quicker: I don't have to quote the
+;; symbol.
+(define-syntax mc
+  (syntax-rules ()
+    ((_ card-sym)
+     (mc* 'card-sym))))
 
 (define (cards-between l u)
   (assert (eq? (card-suit l)

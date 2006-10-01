@@ -25,13 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 
-(let* (
-       (d10 (make-card 'd 10))
-       (d2 (make-card 'd 2))
-       (ha (make-card 'h 14))
-       (s2  (make-card 's 2))
-       (s3 (make-card 's 3))
-       (first-annotated-card (car (annotated-cards (make-trick (list s2 d10 ha) 'south)))))
+(let ((first-annotated-card (car (annotated-cards (mt south s2 dt ha)))))
 
   (test/text-ui
    (test-suite
@@ -39,18 +33,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (test-case
      "Annotations 1"
-     (check cards= (car first-annotated-card) s2))
+     (check cards= (car first-annotated-card) (mc s2)))
 
     (test-case
      "Annotations 2"
      (check eq? (cdr first-annotated-card) 'south))
 
     (test-equal? "follows suit 1"
-                 s3
+                 (mc s3)
                  (choose-card
                   (make-history
-                   (list (make-trick (list s2 d10 ha) 'east)))
-                  (list (ha:make-hand (list s3 d2)))
+                   (list (mt east  s2 dt ha)))
+                  (list (ha:mh north s3 d2))
                   13))
     (test-case
      "follows suit 2"
@@ -59,8 +53,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (card-suit
              (choose-card
               (make-history
-               (list (make-trick (list d10 s2 ha) 'west)))
-              (list (ha:make-hand (list s3 d2 (make-card 'd 9))))
+               (list (mt west  dt s2 ha)))
+              (list (ha:mh south s3 d2 d9))
               13))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
@@ -73,43 +67,41 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (lambda ()
                 (choose-card
                  (make-history
-                  (list (make-trick (list d10 s2 ha) 'north)))
-                 (list (list s3 ha))
+                  (list (mt north  dt s2 ha)))
+                 (list (ha:mh s3 ha))
                  13)))
     (test-exn "Can't remove non-existant card from hand"
               exn:fail:contract?
               (lambda ()
-                (define s2 (make-card 's 2))
-                (define h (ha:make-hand (list s2)))
-                (set! h (ha:remove-card h s2))
-                (set! h (ha:remove-card h s2))
+                (define h (ha:mh  s2))
+                (set! h (ha:remove-card h (mc s2)))
+                (set! h (ha:remove-card h (mc s2)))
                 ))
     (test-exn "Can't add card twice to hand"
               exn:fail:contract?
               (lambda ()
-                (define s2 (make-card 's 2))
-                (define h (ha:make-hand (list s2)))
-                (ha:add-card! h s2)
+                (define h (ha:mh  s2))
+                (ha:add-card! h (mc s2))
                 ))
 
     (test-exn "mt pukes if too few cards"
               exn:fail:contract?
               (lambda ()
-                (mt 'north 'c6 'c9 'c3 )))
+                (mt north c6 c9 c3 )))
 
     (test-exn "mt detects duplicate cards"
               exn:fail:contract?
               (lambda ()
-                (mt 'north 'c6 'c9 'c3 'c3)))
+                (mt north c6 c9 c3 c3)))
 
     (test-equal? "Winner 1"
                  'west
-                 (winner (mt 'north 'c3 'c6 'c9 'cj)))
+                 (winner (mt north c3 c6 c9 cj)))
     (test-equal? "Winner 2"
                  'south
-                 (winner (mt 'north 'c3 'c6 'cj 'c9)))
+                 (winner (mt north c3 c6 cj c9)))
     (test-equal? "Winner 3"
                  'east
-                 (winner (mt 'north 'c6 'c9 'c3 'dj))))))
+                 (winner (mt north c6 c9 c3 dj))))))
 
 )
