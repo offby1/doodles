@@ -20,7 +20,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
 (random-seed 0)
-(define *ranks* 13)
 
 (define *deck*
   (let loop ((suits *suits*)
@@ -31,7 +30,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                           (card-rank b))))
       (loop (cdr suits)
             (append
-             (let loop ((ranks (iota *ranks* 2))
+             (let loop ((ranks (iota *num-ranks* 2))
                         (result '()))
                (if (null? ranks)
                    result
@@ -82,7 +81,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (play-loop
  (make-history 'north)
-  hands
+ hands
  13
  3 ;; max lookahead
  (lambda (h)
@@ -103,9 +102,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                     (annotate-executed-file fn)))
                 (fprintf (current-error-port)
                          "Created ~a~%" ofn)))
-            ;; TODO -- change this to "the directory of the
-            ;; currently-compiling source file", once I figure out how
-            ;; -- the PLT equivalent of Perl's $Findbin::Bin
             (filter (lambda (path)
                       (and (file-exists? path)
                            (regexp-match "\\.ss$" (path->string path))))
