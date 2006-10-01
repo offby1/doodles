@@ -114,7 +114,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-card history hands max-lookahead)
 
-  (define us (history:whose-turn history))
+  (define us          (history:whose-turn history))
+  (define our-partner (with-seat-circle us (lambda (circle)
+                                             (car (cdr (cdr circle))))))
 
 ;;; predict-score
 
@@ -136,13 +138,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card max-lookahead)
-    (define (we-won? t) (eq? us (winner t)))
+    (define (we-won? t) (or (eq? us (winner t))
+                            (eq? our-partner (winner t))))
 
     (define (our-trick-score history)
       (fold
        (lambda (t sum)
-         (+ sum (if (and (trick-complete? t)
-                         (we-won? t)) 1 -1)))
+         (+ sum (cond
+                 ((not (trick-complete? t)) 0)
+                 ((we-won? t) 1)
+                 (else -1))))
        0
        (history-tricks history)))
 
@@ -155,7 +160,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        max-lookahead
        (sub1 max-lookahead)
        our-trick-score)))
-
                                         ;(trace predict-score)
   (let ((hand (car hands)))
     (define already-played-cards
@@ -233,7 +237,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (map ca->string legal-choices)
                          (map (lambda (seq) (map ca->string seq)) grouped)
                          (map ca->string pruned-legal-choices)
-                         pairs)
+                         (map (lambda (p )
+                                (cons (ca->string (cdr p))
+                                      (car p))) pairs))
 
                 (cdar pairs)))))
 

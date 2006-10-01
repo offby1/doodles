@@ -24,10 +24,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
          trick-ref
          whose-turn
          winner
+         with-seat-circle
          *seats*)
 
 (define *seats* (list 'north 'east 'south 'west))
 
+;; rotate the seats until SEAT is first, then apply the proc to the
+;; circular list.
 (define with-seat-circle
   (let ((seat-circle (apply circular-list *seats*)))
     (lambda (seat proc)

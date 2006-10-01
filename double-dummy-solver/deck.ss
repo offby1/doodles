@@ -86,7 +86,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
    (printf "~a~%" (compute-score h))))
 
 (printf "~%~%~%")
-(output-profile-results #t #f)
+;(output-profile-results #t #f)
 (let* ((here (this-expression-source-directory))
        (od (simplify-path (build-path here "coverage"))))
   (unless (directory-exists? od)
