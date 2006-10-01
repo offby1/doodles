@@ -1,7 +1,30 @@
 -*- outline -*-
 
+* !! In predict-score, use a _fresh_ history ...
+
+... rather than dragging along the current history.  That will
+certainly be faster, and ought to return the same result.
+
 * factor out "distinct" code ...
 
 Both tricks and hands are essentially sets: they require that they
 never have two of the same card.  Perhaps create a new type that is a
 set, and build tricks and hands on top of that.
+
+* find dead code ...
+
+... by using
+http://planet.plt-scheme.org/300/docs/clements/no-brainer.plt/1/0/doc.txt
+(thanks for the tip, Eli!)
+
+* cause all my structures to print nicely
+
+... so that I don't have to call "hand->string" all the time.  See
+http://download.plt-scheme.org/doc/352/html/mzscheme/mzscheme-Z-H-11.html#node_sec_11.2.10
+(thanks, Kilimanjaro!)
+
+* see if the U of Alberta has any hints
+
+... since they have a games site at http://www.cs.ualberta.ca/~games/,
+which mentions hearts and spades
+
