@@ -14,7 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                lset-intersection
                append-map)
          (lib "assert.ss" "offby1")
-         "bridge.ss"
+         "dds.ss"
          "card.ss"
          "trick.ss"
          (prefix ha: "hand.ss")

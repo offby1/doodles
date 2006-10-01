@@ -12,7 +12,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 ;(profile-paths-enabled #t)
 
 (require "card.ss"
-         "bridge.ss"
+         "dds.ss"
          "history.ss"
          (prefix ha: "hand.ss")
          (lib "pretty.ss")

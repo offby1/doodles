@@ -4,9 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-;; same old stuff, expressed perhaps a bit more simply.
-
-(module bridge mzscheme
+(module dds mzscheme
 (require (only (lib "1.ss" "srfi")
                append-map
                circular-list
