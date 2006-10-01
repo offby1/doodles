@@ -30,7 +30,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-struct card (rank suit) #f)
 (define (ca->string c)
-  (string-append (case (card-rank c)
+  (string-append (symbol->string (card-suit c))
+                 (case (card-rank c)
                    ((10)"t")
                    ((11)"j")
                    ((12)"q")
@@ -38,8 +39,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                    ((14)"a")
 
                    (else (number->string (card-rank c)))
-                   )
-                 (symbol->string (card-suit c))))
+                   )))
 (define my-make-card
   (lambda (suit rank )
     (unless (memq suit *suits*)

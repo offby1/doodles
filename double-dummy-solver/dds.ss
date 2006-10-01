@@ -80,16 +80,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (if (or (zero? num-tricks)
             (ha:empty? ha))
         (termination-history-proc history)
-      (let-values (((new-hi new-hands)
-                    (play-card history hands (choose-card history hands max-lookahead))))
-
-        (play-loop new-hi
-                   new-hands
-                   (if (hi:trick-complete? new-hi)
-                       (sub1 num-tricks)
-                     num-tricks)
-                   max-lookahead
-                   termination-history-proc)))))
+      (begin
+        (when (or (history-empty? history)
+                  (hi:trick-complete? history))
+          (zprintf "Trick ~a:~%" (add1 (history-length history))))
+        (let-values (((new-hi new-hands)
+                      (play-card history hands (choose-card history hands max-lookahead))))
+          (play-loop new-hi
+                     new-hands
+                     (if (hi:trick-complete? new-hi)
+                         (sub1 num-tricks)
+                       num-tricks)
+                     max-lookahead
+                     termination-history-proc))))))
 
 ;;; choose-card
 
@@ -170,6 +173,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (or (member c (ha:cards lho))
         (member c (ha:cards rho))))
 
+  (define (in-play-by-the-enemy? c)
+    (and (not (history-empty? history))
+         (let loop ((lt (annotated-cards (history-latest-trick history))))
+           ;; grr.  annotated-cards returns what looks like an alist, but
+           ;; the keys are in the cdrs, not the cars ... so I can't use
+           ;; assq.
+           (if (null? lt)
+               #f
+             (let* ((cs (car lt))
+                    (cd (car cs))
+                    (st (cdr cs)))
+               (if (and (member st  (map ha:seat (list lho rho)))
+                        (cards= c cd))
+                   #t
+                 (loop (cdr lt))))))))
+
   (check-type 'choose-card history? history)
   (unless (ha:hand? us)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
@@ -209,14 +228,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (grouped
           (group-into-adjacent-runs
            legal-choices
+
+           ;; Note that we might consider two cards adjacent even if I
+           ;; hold one, and my partner holds the other.  This is
+           ;; probably a bad idea.
            (lambda (a b)
              (and (eq? (card-suit a)
                        (card-suit b))
                   (or
                    (= 1 (abs (- (card-rank a)
                                 (card-rank b))))
-                   (every (lambda (c) (not (held-by-enemy? c))) (cards-between a b)))))))
+                   (every (lambda (c)
+                            (and (not (in-play-by-the-enemy? c))
+                                 (not (held-by-enemy? c))))
+                          (cards-between a b)))))))
+
          (pruned-legal-choices (bot-one/top-two (map car grouped)))
+
          (choice
           ;; don't call predict-score if there's just one choice.
           (if (null? (cdr pruned-legal-choices))
@@ -239,7 +267,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (card-rank (cdr b)))
                               (> (car a)
                                  (car b)))))))
-
               (zprintf "~a -> ~a -> ~a -> ~a ... "
                        (map ca->string legal-choices)
                        (map (lambda (seq) (map ca->string seq)) grouped)
@@ -249,6 +276,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     (car p))) pairs))
 
               (cdar pairs)))))
+
+
 
     choice))
 ;;(trace choose-card)
