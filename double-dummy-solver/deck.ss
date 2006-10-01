@@ -81,7 +81,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history 'north)
   hands
  13
- 2 ;; max lookahead
+ 3 ;; max lookahead
  (lambda (h)
    (printf "~a~%" (compute-score h))))
 

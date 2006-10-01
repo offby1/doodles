@@ -15,7 +15,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card-suit
          card-rank
          cards=
-         card<
+         card</rank
+         card</suit
          *suits*
          mc/quick
          ca->string
@@ -23,6 +24,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define *suits*  '(c d h s))
 (define *num-ranks* 13)
+(define *num-suits* (length *suits*))   ;duh!
 
 (define-struct card (rank suit) #f)
 (define (ca->string c)
@@ -57,20 +59,32 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (card-rank b))
        ))
 
-(define (card< a b)
-  (define (card->number c)
+(define (card->number c by-rank?)
 
-    (define (suit->number s)
-      (- (length *suits*)
-         (length (member s *suits*))))
-    (define (rank->number r)
-      (- r 2))
+  (define suit-number
+    (- (length *suits*)
+       (length (member (card-suit c) *suits*))))
+  (define rank-number
+    (- (card-rank c) 2))
 
-    (+ (* *num-ranks* (suit->number (card-suit c)))
-       (rank->number (card-rank c))))
-  (< (card->number a)
-     (card->number b)))
-(memoize! card<)
+  (if by-rank?
+      (+ (* *num-suits* rank-number) suit-number)
+    (+ (* *num-ranks* suit-number) rank-number)))
+
+;; sorting by rank first, and by suits _within_ a rank, is
+;; inconvenient for display, but essential for determining which to
+;; play.
+(define (card</rank a b)
+  (< (card->number a #t)
+     (card->number b #t)))
+
+(memoize! card</rank)
+
+(define (card</suit a b)
+  (< (card->number a #f)
+     (card->number b #f)))
+
+(memoize! card</suit)
 
 ;; for testing -- allows me to type a card easily -- e.g. 'c3
 (define (mc/quick card-sym)

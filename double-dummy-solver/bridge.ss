@@ -17,11 +17,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                lset-intersection
                remove
                take
+               take-right
                )
          (lib "pretty.ss")
          (lib "assert.ss" "offby1")
          "card.ss"
          "trick.ss"
+         "zprintf.ss"
          (all-except "history.ss" whose-turn)
          (rename "history.ss" history:whose-turn whose-turn)
          (prefix ha: "hand.ss")
@@ -47,11 +49,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (cdr out))))))))
 
 (define suits= eq?)
-(define (hi-lo seq)
-  (cons (car seq)
-        (last-pair seq)))
-
-(define *recursion-level* (make-parameter 0))
+(define (bot-one/top-two seq)
+  (if (< (length seq) 4)
+      seq
+    (cons (car seq)
+          (take-right seq (min 2 (length seq))))))
 
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (let ((ha (car hands)))
@@ -63,11 +65,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (new-hands (append (cdr hands)
                                 (list (ha:remove-card ha choice)))))
 
-        (when (zero? (*recursion-level*))
-          (printf "~a plays ~a~%" (history:whose-turn history) (ca->string choice))
-          (when  (hi:trick-complete? new-hi)
-            (newline))
-
+        (zprintf "~a plays ~a~%" (history:whose-turn history) (ca->string choice))
+        (when (hi:trick-complete? new-hi)
+          (zprintf "~%")
           ;; rotate the hands until the winner is in front.
           (when (and (hi:trick-complete? new-hi)
                      (not (history-complete? new-hi)))
@@ -156,10 +156,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (sub1 max-lookahead)
        our-trick-score)))
 
-  ;(trace predict-score)
+                                        ;(trace predict-score)
   (let ((hand (car hands)))
     (define already-played-cards
-      (lset-intersection eq? (history-card-set history) (ha:cards hand)))
+      (history-card-set history))
     (define (already-played? c)
       (member c already-played-cards))
     (check-type 'choose-card history? history)
@@ -169,11 +169,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (raise-mismatch-error 'choose-card "Empty hand!" hands))
     (if (history-complete? history)
         (raise-mismatch-error 'choose-card "the game's already over!" history))
-    (unless (null? already-played-cards)
+    (unless (null? (lset-intersection eq? (ha:cards hand) already-played-cards))
       (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
-    (when (zero? (*recursion-level*))
-      (printf "~a: " us))
+    (zprintf "~a: " us)
 
     (let* ((legal-choices
             (cond
@@ -199,31 +198,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            ;; perhaps treat sequences of cards like 2-3-4-5 as all the
            ;; same, and thus consider only one card from such
            ;; sequences.
-           (legal-choices (hi-lo
-                           (map car
-                                ;; TODO: do better than this -- note
-                                ;; that even if two cards have a gap
-                                ;; between them, they're effectively
-                                ;; adjacent if the cards in the gap
-                                ;; have already been played.
-                                (group-into-adjacent-runs
-                                 legal-choices
-                                 (lambda (a b)
-                                   (and (eq? (card-suit a)
-                                             (card-suit b))
-                                        (or
-                                         (= 1 (abs (- (card-rank a)
-                                                      (card-rank b))))
-                                         (every already-played? (cards-between a b)))))))))
-
+           (grouped
+            (group-into-adjacent-runs
+             legal-choices
+             (lambda (a b)
+               (and (eq? (card-suit a)
+                         (card-suit b))
+                    (or
+                     (= 1 (abs (- (card-rank a)
+                                  (card-rank b))))
+                     (every already-played? (cards-between a b)))))))
+           (pruned-legal-choices (bot-one/top-two (map car grouped)))
            (choice
             ;; don't call predict-score if there's just one choice.
-            (if (null? (cdr legal-choices))
-                (car legal-choices)
+            (if (null? (cdr pruned-legal-choices))
+                (car pruned-legal-choices)
               (let ((pairs (sort
                             (map (lambda (card)
                                    (cons (predict-score card max-lookahead) card))
-                                 legal-choices)
+                                 pruned-legal-choices)
 
                             ;; sort by score, of course; but if the
                             ;; scores are equal, choose the
@@ -235,8 +228,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      (card-rank (cdr b)))
                                 (> (car a)
                                    (car b)))))))
-                (when (zero? (*recursion-level*))
-                  (printf "from ~a ... " pairs))
+
+                (zprintf "~a -> ~a -> ~a -> ~a ... "
+                         (map ca->string legal-choices)
+                         (map (lambda (seq) (map ca->string seq)) grouped)
+                         (map ca->string pruned-legal-choices)
+                         pairs)
+
                 (cdar pairs)))))
 
       (assert (card? choice))

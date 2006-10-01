@@ -9,7 +9,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require (lib "assert.ss" "offby1")
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
-         (only "card.ss" card-suit)
+         (only "card.ss" card-suit ca->string)
+         "zprintf.ss"
          (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
          (all-except "trick.ss" whose-turn)
          (rename "trick.ss" trick:whose-turn whose-turn)
@@ -99,14 +100,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (compute-score h)
   (let ((tricks-by-seat (make-hash-table)))
     (define (hash-table-increment! k)
-      (let ((v (hash-table-get tricks-by-seat k (lambda () 0))))
+      (let ((v (hash-table-get tricks-by-seat k 0)))
         (hash-table-put! tricks-by-seat k (add1 v))))
     (for-each (lambda (t)
                 (hash-table-increment! (winner t)))
               (history-tricks h))
     (map (lambda (seat)
            (cons seat
-                 (hash-table-get tricks-by-seat seat)))
+                 (hash-table-get tricks-by-seat seat 0)))
               *seats*)))
 
 )

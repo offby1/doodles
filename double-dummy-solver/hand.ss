@@ -67,11 +67,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   h)
 
 (define (sort! h)
-  (set-hand-cards! h (sort (hand-cards h) card<)))
+  (set-hand-cards! h (sort (hand-cards h) card</rank)))
 
 (define (empty? h)
   (null? (hand-cards h)))
 (define (->string h)
-  (string-join (map ca->string (reverse (hand-cards h)))))
+  (string-join (map ca->string (sort (hand-cards h) card</suit))))
 
 )

@@ -41,7 +41,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; saves noticeable time.
 (define-struct trick (card-seat-pairs complete?) #f)
 
-
 (define (my-make-trick cards leader)
   (define (all-distinct? seq)
     (let ((h (make-hash-table 'equal)))
