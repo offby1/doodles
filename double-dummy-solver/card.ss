@@ -74,8 +74,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (+ (* *num-ranks* suit-number) rank-number)))
 
 ;; sorting by rank first, and by suits _within_ a rank, is
-;; inconvenient for display, but essential for determining which to
-;; play.
+;; inconvenient for display, but might be useful for determining which
+;; to play.
 (define (card</rank a b)
   (< (card->number a #t)
      (card->number b #t)))
@@ -125,6 +125,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (set! ur lr)
         (set! lr tmp)))
     (map (lambda (rank)
-           (my-make-card (card-suit l)
-                         rank)) (iota (- ur lr 1) (add1 lr)))))
+           (my-make-card (card-suit l) rank))
+         (iota (- ur lr 1) (add1 lr)))))
 )
