@@ -16,6 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          annotated-cards
          (rename my-trick-cards trick-cards)
          mt
+         mt2
          (rename add-card t:add-card)
          (rename copy t:copy)
          leader
@@ -39,10 +40,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
     seq))
 
 (define (rotate-until seq criterion)
-  (if (criterion seq)
-      seq
-    (rotate-until (rotate seq 1)
-                  criterion)))
+  (define (inner seq counter)
+    (unless (< counter (length seq))
+      (error 'rotate-until  "We're in an endless loop! seq is ~s; criterion is ~s" seq
+             criterion))
+    (if (criterion seq)
+        seq
+      (inner (rotate seq 1) (add1 counter))))
+  (inner seq 0))
+
 
 (define (rotate-until-car-eq seq sought)
   (rotate-until seq (lambda (x) (eq? (car x) sought))))
@@ -50,6 +56,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; rotate the seats until SEAT is first, then apply the proc to the
 ;; list.
 (define (with-seat-circle seat proc)
+  (check-type 'with-seat-circle (lambda (thing)
+                                  (memq thing *seats*))
+              seat)
+  (printf "with-seat-circle: seat is ~s~%" seat)
   (proc (rotate-until-car-eq *seats* seat)))
 
 ;; complete? is redundant -- it's always (= 4 (length
@@ -86,9 +96,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (let ((rv  (my-make-trick
               (map mc/quick card-syms)
               leader)))
-    (check-type 'mt trick-complete? rv)
     rv))
 ;(trace mt)
+
+;; similar to mt, but even nicer: I don't have to quote the symbols.
+(define-syntax mt2
+  (syntax-rules ()
+    ((_ leader card-syms ...)
+     (apply mt `(leader card-syms ...)))))
+
 (define (copy t)
   (make-trick (alist-copy (trick-card-seat-pairs t))
               (trick-complete? t)))
@@ -135,3 +151,4 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (trick-card-seat-pairs t)))))
 ;(trace winner)
 )
+

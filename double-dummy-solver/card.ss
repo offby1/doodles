@@ -48,8 +48,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (unless (and (exact? rank)
                  (integer? rank)
                  (<= 2 rank (add1 *num-ranks*)))
-      (error make-card
-             "second slot must be a number 'twixt 2 and 14"))
+      (error 'make-card
+             "second slot must be a number 'twixt 2 and 14, not ~s" rank))
     (make-card rank suit)))
 
 (define (cards= a b)

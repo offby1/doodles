@@ -64,7 +64,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (new-history (add-card history c))
            (new-hand-list (cons new-hand (cdr hands)))
            (rotated (if (and (not (history-complete? new-history))
-                            (hi:trick-complete? new-history))
+                             (hi:trick-complete? new-history))
                         (rotate-until new-hand-list (lambda (h)
                                                       (eq? (ha:seat (car h))
                                                            (history:whose-turn new-history))))
@@ -73,6 +73,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (zprintf "~%"))
       (values new-history rotated))))
 ;;(trace play-card)
+
+;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (let ((ha (car hands)))
     (if (or (zero? num-tricks)
@@ -80,7 +82,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (termination-history-proc history)
       (let-values (((new-hi new-hands)
                     (play-card history hands (choose-card history hands max-lookahead))))
-        ;; rotate the hands until the winner is in front.
 
         (play-loop new-hi
                    new-hands
@@ -135,8 +136,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card max-lookahead)
-    (define (we-won? t) (or (eq? us (winner t))
-                            (eq? our-partner (winner t))))
+    (define (we-won? t) (member (winner t)
+                                (list us our-partner)))
 
     (define (our-trick-score history)
       (fold
@@ -148,22 +149,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        0
        (history-tricks history)))
 
-    (parameterize
-        ((*recursion-level* (add1 (*recursion-level*))))
-      (play-loop
-       (add-card (make-history
-                  (if (or
-                       (history-empty? history)
-                       (hi:trick-complete? history))
-                      us
-                    (list (history-latest-trick history))))
-                 card)
-       (cons (ha:remove-card (car hands) card)
-             (cdr hands))
-       max-lookahead
-       (sub1 max-lookahead)
-       our-trick-score)))
-                                        ;(trace predict-score)
+    (parameterize ((*recursion-level* (add1 (*recursion-level*))))
+      (let-values (((new-hi new-hands)
+                    (play-card history hands card)))
+        (play-loop
+         new-hi
+         new-hands
+         max-lookahead
+         (sub1 max-lookahead)
+         our-trick-score))))
+;;  (trace predict-score)
   (let ((hand (car hands)))
     (define already-played-cards
       (history-card-set history))
@@ -251,5 +246,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (assert (card? choice))
                                         ;(printf "playing ~a~%" choice)
       choice)))
+;;(trace choose-card)
 
 )
