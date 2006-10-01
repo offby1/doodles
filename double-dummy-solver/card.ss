@@ -8,6 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "trace.ss")
+         (only (lib "1.ss" "srfi") iota)
          (only (lib "misc.ss" "swindle") memoize!))
 (provide (rename my-make-card make-card)
          card?
@@ -16,7 +17,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
          cards=
          card<
          *suits*
-         ca->string)
+         mc/quick
+         ca->string
+         cards-between)
 
 (define *suits*  '(c d h s))
 (define *num-ranks* 13)
@@ -37,14 +40,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (lambda (suit rank )
     (unless (memq suit *suits*)
       (error 'make-card
-             (format "first field must be one of ~a, not ~s"
+             (format "first slot must be one of ~a, not ~s"
                      *suits*
                      suit)))
     (unless (and (exact? rank)
                  (integer? rank)
                  (<= 2 rank (add1 *num-ranks*)))
       (error make-card
-             "second field must be a number 'twixt 2 and 14"))
+             "second slot must be a number 'twixt 2 and 14"))
     (make-card rank suit)))
 
 (define (cards= a b)
@@ -68,4 +71,37 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (< (card->number a)
      (card->number b)))
 (memoize! card<)
+
+;; for testing -- allows me to type a card easily -- e.g. 'c3
+(define (mc/quick card-sym)
+  (let ((chars (string->list (symbol->string card-sym))))
+    (let ((suit (string->symbol (string (car chars))))
+          (rank (cond
+                 ((char-numeric? (cadr chars))
+                  (- (char->integer (cadr chars))
+                     (char->integer #\0)))
+                 (else
+                  (case (cadr chars)
+                    ((#\t) 10)
+                    ((#\j) 11)
+                    ((#\q) 12)
+                    ((#\k) 13)
+                    ((#\a) 14)
+                    (else (error "Bad character: " (cadr chars)))))
+
+                 )))
+      (my-make-card suit rank))))
+
+(define (cards-between l u)
+  (assert (eq? (card-suit l)
+               (card-suit u)))
+  (let ((lr (card-rank l))
+        (ur (card-rank u)))
+    (when (< ur lr)
+      (let ((tmp ur))
+        (set! ur lr)
+        (set! lr tmp)))
+    (map (lambda (rank)
+           (my-make-card (card-suit l)
+                         rank)) (iota (- ur lr 1) (add1 lr)))))
 )

@@ -8,6 +8,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "pretty.ss")
+         (only (lib "list.ss") sort)
          (only "card.ss" card-suit)
          (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
          (all-except "trick.ss" whose-turn)
@@ -103,5 +104,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (for-each (lambda (t)
                 (hash-table-increment! (winner t)))
               (history-tricks h))
-    (hash-table-map tricks-by-seat cons)))
+    (map (lambda (seat)
+           (cons seat
+                 (hash-table-get tricks-by-seat seat)))
+              *seats*)))
+
 )

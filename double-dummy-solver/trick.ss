@@ -69,24 +69,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; e.g., (mt 'north 'c3 'c6 'c9 'cj)
 (define (mt leader . card-syms)
   (let ((rv  (my-make-trick
-              (map (lambda (pair)
-                     (let ((suit (string->symbol (string (car pair))))
-                           (rank (cond
-                                  ((char-numeric? (cadr pair))
-                                   (- (char->integer (cadr pair))
-                                      (char->integer #\0)))
-                                  (else
-                                   (case (cadr pair)
-                                     ((#\t) 10)
-                                     ((#\j) 11)
-                                     ((#\q) 12)
-                                     ((#\k) 13)
-                                     ((#\a) 14)
-                                     (else (error "Bad character: " (cadr pair)))))
-
-                                  )))
-                       (make-card suit rank)))
-                   (map string->list (map symbol->string card-syms)))
+              (map mc/quick card-syms)
               leader)))
     (check-type 'mt trick-complete? rv)
     rv))

@@ -81,12 +81,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history 'north)
   hands
  13
- 3 ;; max lookahead
+ 2 ;; max lookahead
  (lambda (h)
    (printf "~a~%" (compute-score h))))
 
 (printf "~%~%~%")
-;(output-profile-results #t #f)
+(output-profile-results #t #f)
 (let* ((here (this-expression-source-directory))
        (od (simplify-path (build-path here "coverage"))))
   (unless (directory-exists? od)

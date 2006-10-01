@@ -44,6 +44,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (cons (list this) out)
                 (cons (cons this (car out))
                       (cdr out))))))))
+
 (define suits= eq?)
 (define (hi-lo seq)
   (cons (car seq)
@@ -150,6 +151,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   ;(trace predict-score)
   (let ((hand (car hands)))
+    (define already-played-cards
+      (lset-intersection eq? (history-card-set history) (ha:cards hand)))
+    (define (already-played? c)
+      (member c already-played-cards))
     (check-type 'choose-card history? history)
     (unless (ha:hand? hand)
       (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
@@ -157,9 +162,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (raise-mismatch-error 'choose-card "Empty hand!" hands))
     (if (history-complete? history)
         (raise-mismatch-error 'choose-card "the game's already over!" history))
-    (let ((already-played-cards (lset-intersection eq? (history-card-set history) (ha:cards hand))))
-      (unless (null? already-played-cards)
-        (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards)))
+    (unless (null? already-played-cards)
+      (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
     (when (zero? (*recursion-level*))
       (printf "~a: " us))
@@ -198,8 +202,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (group-into-adjacent-runs
                                  legal-choices
                                  (lambda (a b)
-                                   (= (card-rank a)
-                                      (add1 (card-rank b))))))))
+                                   (and (eq? (card-suit a)
+                                             (card-suit b))
+                                        (or
+                                         (= 1 (abs (- (card-rank a)
+                                                      (card-rank b))))
+                                         (every already-played? (cards-between a b)))))))))
 
            (choice
             ;; don't call predict-score if there's just one choice.
@@ -225,7 +233,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (cdar pairs)))))
 
       (assert (card? choice))
-      ;(printf "playing ~a~%" choice)
+                                        ;(printf "playing ~a~%" choice)
       ;;(assert (memq choice (ha:hand-cards hand)))
       choice)))
 
