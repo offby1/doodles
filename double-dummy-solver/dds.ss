@@ -112,9 +112,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-card history hands max-lookahead)
 
-  (define us          (history:whose-turn history))
-  (define our-partner (with-seat-circle us (lambda (circle)
-                                             (car (cdr (cdr circle))))))
+  (define us      (car (rotate hands 0)))
+  (define lho     (car (rotate hands 1)))
+  (define partner (car (rotate hands 2)))
+  (define rho     (car (rotate hands 3)))
 
 ;;; predict-score
 
@@ -137,7 +138,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (predict-score card max-lookahead)
     (define (we-won? t) (member (winner t)
-                                (list us our-partner)))
+                                (map ha:seat (list  us partner))))
 
     (define (our-trick-score history)
       (fold
@@ -158,94 +159,98 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          max-lookahead
          (sub1 max-lookahead)
          our-trick-score))))
-;;  (trace predict-score)
-  (let ((hand (car hands)))
-    (define already-played-cards
-      (history-card-set history))
-    (define (already-played? c)
-      (member c already-played-cards))
-    (check-type 'choose-card history? history)
-    (unless (ha:hand? hand)
-      (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
-    (if (ha:empty? hand)
-        (raise-mismatch-error 'choose-card "Empty hand!" hands))
-    (if (history-complete? history)
-        (raise-mismatch-error 'choose-card "the game's already over!" history))
-    (unless (null? (lset-intersection eq? (ha:cards hand) already-played-cards))
-      (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
+  ;;  (trace predict-score)
 
-    (zprintf "~a: " us)
+  (define already-played-cards
+    (history-card-set history))
+  (define (already-played? c)
+    (member c already-played-cards))
 
-    (let* ((legal-choices
-            (cond
-             ((history-empty? history)
-              ;; on the opening lead, all cards are legal.
-              (ha:cards hand))
+  (define (held-by-enemy? c)
+    (or (member c (ha:cards lho))
+        (member c (ha:cards rho))))
 
-             ;; if we're leading, all cards are legal.
-             ((hi:trick-complete? history)
-              (ha:cards hand))
-             (else
-              ;; otherwise me have to follow suit if we can.
-              (let ((mine-of-led-suit (filter (lambda (mine)
-                                                (suits= (card-suit mine)
-                                                        (suit-led history)))
-                                              (ha:cards hand))))
-                (if (null? mine-of-led-suit)
-                    (ha:cards hand)
-                  mine-of-led-suit)))))
+  (check-type 'choose-card history? history)
+  (unless (ha:hand? us)
+    (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
+  (if (ha:empty? us)
+      (raise-mismatch-error 'choose-card "Empty hand!" hands))
+  (if (history-complete? history)
+      (raise-mismatch-error 'choose-card "the game's already over!" history))
+  (unless (null? (lset-intersection eq? (ha:cards us) already-played-cards))
+    (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
-           ;; Don't consider _every_ legal choice; instead, prune
-           ;; them.  Perhaps consider only the lowest and highest;
-           ;; perhaps treat sequences of cards like 2-3-4-5 as all the
-           ;; same, and thus consider only one card from such
-           ;; sequences.
-           (grouped
-            (group-into-adjacent-runs
-             legal-choices
-             (lambda (a b)
-               (and (eq? (card-suit a)
-                         (card-suit b))
-                    (or
-                     (= 1 (abs (- (card-rank a)
-                                  (card-rank b))))
-                     ;;(all (lambda (c) (not (held-by-enemy? c))) (cards-between a b))
-                     (every already-played? (cards-between a b))
-                     )))))
-           (pruned-legal-choices (bot-one/top-two (map car grouped)))
-           (choice
-            ;; don't call predict-score if there's just one choice.
-            (if (null? (cdr pruned-legal-choices))
-                (car pruned-legal-choices)
-              (let ((pairs (sort
-                            (map (lambda (card)
-                                   (cons (predict-score card max-lookahead) card))
-                                 pruned-legal-choices)
+  (zprintf "~a: " (ha:seat us))
 
-                            ;; sort by score, of course; but if the
-                            ;; scores are equal, choose the
-                            ;; lower-ranking card.
-                            (lambda (a b)
-                              (if (= (car a)
-                                     (car b))
-                                  (< (card-rank (cdr a))
-                                     (card-rank (cdr b)))
-                                (> (car a)
-                                   (car b)))))))
+  (let* ((legal-choices
+          (cond
+           ((history-empty? history)
+            ;; on the opening lead, all cards are legal.
+            (ha:cards us))
 
-                (zprintf "~a -> ~a -> ~a -> ~a ... "
-                         (map ca->string legal-choices)
-                         (map (lambda (seq) (map ca->string seq)) grouped)
-                         (map ca->string pruned-legal-choices)
-                         (map (lambda (p )
-                                (cons (ca->string (cdr p))
-                                      (car p))) pairs))
+           ;; if we're leading, all cards are legal.
+           ((hi:trick-complete? history)
+            (ha:cards us))
+           (else
+            ;; otherwise me have to follow suit if we can.
+            (let ((mine-of-led-suit (filter (lambda (mine)
+                                              (suits= (card-suit mine)
+                                                      (suit-led history)))
+                                            (ha:cards us))))
+              (if (null? mine-of-led-suit)
+                  (ha:cards us)
+                mine-of-led-suit)))))
 
-                (cdar pairs)))))
+         ;; Don't consider _every_ legal choice; instead, prune
+         ;; them.  Perhaps consider only the lowest and highest;
+         ;; perhaps treat sequences of cards like 2-3-4-5 as all the
+         ;; same, and thus consider only one card from such
+         ;; sequences.
+         (grouped
+          (group-into-adjacent-runs
+           legal-choices
+           (lambda (a b)
+             (and (eq? (card-suit a)
+                       (card-suit b))
+                  (or
+                   (= 1 (abs (- (card-rank a)
+                                (card-rank b))))
+                   (every (lambda (c) (not (held-by-enemy? c))) (cards-between a b)))))))
+         (pruned-legal-choices (bot-one/top-two (map car grouped)))
+         (choice
+          ;; don't call predict-score if there's just one choice.
+          (if (null? (cdr pruned-legal-choices))
+              (car pruned-legal-choices)
 
-      (assert (card? choice))
-                                        ;(printf "playing ~a~%" choice)
-      choice)))
+            ;; TODO -- use "fold" or "reduce".  Won't save any time,
+            ;; but might be a tad neater.
+            (let ((pairs (sort
+                          (map (lambda (card)
+                                 (cons (predict-score card max-lookahead) card))
+                               pruned-legal-choices)
+
+                          ;; sort by score, of course; but if the
+                          ;; scores are equal, choose the
+                          ;; lower-ranking card.
+                          (lambda (a b)
+                            (if (= (car a)
+                                   (car b))
+                                (< (card-rank (cdr a))
+                                   (card-rank (cdr b)))
+                              (> (car a)
+                                 (car b)))))))
+
+              (zprintf "~a -> ~a -> ~a -> ~a ... "
+                       (map ca->string legal-choices)
+                       (map (lambda (seq) (map ca->string seq)) grouped)
+                       (map ca->string pruned-legal-choices)
+                       (map (lambda (p )
+                              (cons (ca->string (cdr p))
+                                    (car p))) pairs))
+
+              (cdar pairs)))))
+
+    choice))
 ;;(trace choose-card)
 
 )
