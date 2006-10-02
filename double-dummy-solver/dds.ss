@@ -276,7 +276,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (begin
                 (if (null? (cdr legal-choices))
                     (zprintf " (duh, singleton)")
-                  (zprintf " ~a all the same" legal-choices))
+                  (when (null? (cdr grouped))
+                    (zprintf " ~a all the same" (car grouped))))
+
                 (car pruned-legal-choices))
 
             ;; TODO -- use "fold" or "reduce".  Won't save any time,
@@ -291,11 +293,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    ;; this trick, let's not strain
                                    ;; our brains -- we'll simply try
                                    ;; to win the trick if we can.
-                                   (if (equal? 3 cards-in-current-trick)
-                                       0
-                                     max-lookahead)
-
-                                   )
+                                   (cond
+                                    ((equal? 3 cards-in-current-trick)
+                                     0)
+                                    (else
+                                     max-lookahead)))
                                   card))
                                (zp " considers ~a ..." pruned-legal-choices))
 
