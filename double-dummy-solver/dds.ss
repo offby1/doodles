@@ -249,7 +249,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (cards-between a b))))))
 
          ;;(pruned-legal-choices (top-two (map car grouped)))
-         (pruned-legal-choices (bot-one/top-two (map car grouped)))
+         (pruned-legal-choices
+          (let ((grouped  (map car grouped))
+                (l (and (not (history-empty? history))
+                        (length (annotated-cards (history-latest-trick history))))))
+            (cond
+             ((not l)                   ; opening lead
+              (bot-one/top-two grouped))
+             ((= l 1)                   ; second hand -- play low
+              (list (car grouped)))
+             ((= l 2)                   ; third hand -- play high
+              (last-pair grouped))
+             (else
+              (bot-one/top-two grouped)))))
 
          (choice
           ;; don't call predict-score if there's just one choice.

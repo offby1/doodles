@@ -2,11 +2,6 @@
 
 * potential speedups
 
-** second hand low, third hand high
-
-If we are the second or third hand, don't bother calling predict-score
-at all; instead, just follow the above mindless advice.
-
 * factor out "distinct" code ...
 
 Both tricks and hands are essentially sets: they require that they
