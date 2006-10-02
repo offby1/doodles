@@ -18,10 +18,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (all-defined-except make-history)
          (rename my-make-history make-history))
 
+;; TRICKS is a simple list of tricks, but in reverse chronological
+;; order.  I.e., the car is the most recent.
 (define-struct history (opening-leader tricks) #f)
 
 (define (my-make-history tricks-or-opening-leader)
 
+  ;; are all tricks (except possibly the last) complete?
   (define (mostly-complete? tricks)
     (or (null? tricks)
         (null? (cdr tricks))
@@ -34,7 +37,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (raise-mismatch-error 'make-history "I want a list, not " tricks))
         (unless (mostly-complete? tricks)
           (raise-mismatch-error 'make-history "I want mostly complete tricks, not " tricks))
-        (make-history (leader (car tricks )) tricks))
+        (make-history (leader (car tricks )) (reverse tricks)))
     (let ((opening-leader tricks-or-opening-leader))
       (unless (member opening-leader *seats*)
         (raise-mismatch-error 'make-history (format "leader must be in ~a, not " *seats*) opening-leader))
@@ -49,8 +52,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (zero? (history-length h)))
 (define (history-latest-trick h)
   (assert (not (history-empty? h)))
-  (list-ref (history-tricks h)
-            (sub1 (history-length h))))
+  (car (history-tricks h)))
 (define (hi:trick-complete? h)
   (trick-complete? (history-latest-trick h)))
 (define (suit-led h)
@@ -73,10 +75,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                         ;(trace whose-turn)
 ;; nondestructive
 (define (add-card h c)
-  ;; copy the history wholesale, then either add a new trick, or add a
-  ;; card to the last one
+  ;; either add a new trick, or add a card to the last one
   (let ((rv (make-history (history-opening-leader h)
-                          (list-copy (history-tricks h)))))
+                          (history-tricks h))))
 
     (set-history-tricks!
      rv
@@ -87,14 +88,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (and (trick-complete? l)
               l))
        => (lambda (l)
-            (append (history-tricks rv)
-                    (list (make-trick (list c) (winner l))))))
+            (cons (make-trick (list c) (winner l))
+                  (history-tricks rv))))
       (else
-       (append (drop-right (history-tricks rv) 1)
-               (list (t:add-card (t:copy (history-latest-trick rv)) c))))))
+       (cons (t:add-card (t:copy (history-latest-trick rv)) c)
+             (cdr (history-tricks rv))))))
 
-    (assert (= 1 (- (length (history-card-set rv))
-                    (length (history-card-set h)))))
+    (unless (= 1 (- (length (history-card-set rv))
+                    (length (history-card-set h))))
+      (error
+       'add-card
+       "Internal error: expected ~s to have exactly one more card than ~s"
+       rv h))
     rv))
 
 (define (compute-score h)
