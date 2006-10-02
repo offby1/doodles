@@ -66,7 +66,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (play-card history hands c)
   (let ((h (car hands)))
     (assert (member c (ha:cards h)))
-    (zprintf "~a plays ~a~%" (ha:seat (car hands)) c)
     (let* ((new-hand (ha:remove-card h c))
            (new-history (add-card history c))
            (new-hand-list (cons new-hand (cdr hands)))
@@ -76,8 +75,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                       (eq? (ha:seat (car h))
                                                            (history:whose-turn new-history))))
                       (rotate new-hand-list 1))))
-      (when (hi:trick-complete? new-history)
-        (zprintf "~%"))
       (values new-history rotated))))
 ;;(trace play-card)
 
@@ -90,9 +87,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (begin
         (when (or (history-empty? history)
                   (hi:trick-complete? history))
-          (zprintf "Trick ~a:~%" (add1 (history-length history))))
+          (zprintf "~%Trick ~a:~%" (add1 (history-length history))))
+        (zprintf "~a thinks ... " (ha:seat ha))
         (let-values (((new-hi new-hands)
-                      (play-card history hands (choose-card history hands max-lookahead))))
+                      (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
           (play-loop new-hi
                      new-hands
                      (if (hi:trick-complete? new-hi)
@@ -273,7 +271,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (let ((pairs (sort
                           (map (lambda (card)
                                  (cons (predict-score card max-lookahead) card))
-                               pruned-legal-choices)
+                               (zp "considers ~a ..." pruned-legal-choices))
 
                           ;; sort by score, of course; but if the
                           ;; scores are equal, choose the
@@ -285,13 +283,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (card-rank (cdr b)))
                               (> (car a)
                                  (car b)))))))
-              (zprintf "~a -> ~a -> ~a -> ~a ... "
-                       legal-choices
-                       grouped
-                       pruned-legal-choices
-                       pairs)
 
-              (cdar pairs)))))
+              (cdar (zp " -> ~a" pairs))))))
 
 
 

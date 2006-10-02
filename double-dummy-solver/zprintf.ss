@@ -17,11 +17,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;; handy for debugging -- wrap it around a call like this
 
-;; (zd "is ~a held by ~a or ~a? ~a~%" c lho rho
+;; (zp "is ~a held by ~a or ~a? ~a~%" c lho rho
 ;;     (or (member c (ha:cards lho))
 ;;         (member c (ha:cards rho))))
 
-(define (zd . args)
+(define (zp . args)
   (apply zprintf args)
   (car (last-pair args)))
 )
