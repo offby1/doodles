@@ -71,6 +71,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (for-each ha:sort!  hands)
 
 (newline)
+(define max-lookahead 3)
+(printf "Looking ahead ~a tricks.~%" max-lookahead)
 (for-each (lambda (h)
             (display h)
             (newline))  hands)
@@ -80,7 +82,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  (make-history (car *seats*))
  hands
  13
- 3 ;; max lookahead
+ max-lookahead
  (lambda (h)
    (printf "~a~%" (compute-score h))))
 

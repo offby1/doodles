@@ -67,7 +67,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((h (car hands)))
     (assert (member c (ha:cards h)))
     (let* ((new-hand (ha:remove-card h c))
-           (new-history (add-card history c))
+           (new-history
+            (add-card (make-history
+                       (if (or
+                            (history-empty? history)
+                            (hi:trick-complete? history))
+                           (ha:seat h)
+                         (list (history-latest-trick history))))
+                      c))
            (new-hand-list (cons new-hand (cdr hands)))
            (rotated (if (and (not (history-complete? new-history))
                              (hi:trick-complete? new-history))
@@ -81,13 +88,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (let ((ha (car hands)))
-    (if (or (zero? num-tricks)
+    (if (or (not (positive? num-tricks))
             (ha:empty? ha))
         (termination-history-proc history)
       (begin
         (when (or (history-empty? history)
                   (hi:trick-complete? history))
-          (zprintf "~%Trick ~a:~%" (add1 (history-length history))))
+          (zprintf "~%~%"))
         (zprintf "~a thinks ..." (ha:seat ha))
         (let-values (((new-hi new-hands)
                       (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
@@ -168,7 +175,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          max-lookahead
          (sub1 max-lookahead)
          our-trick-score))))
-  ;;  (trace predict-score)
 
   (define already-played-cards
     (history-card-set history))
@@ -192,7 +198,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (cards= c cd))
                    #t
                  (loop (cdr lt))))))))
-
+  ;;(trace predict-score)
   (check-type 'choose-card history? history)
   (unless (ha:hand? us)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
@@ -246,19 +252,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (not (held-by-enemy? c))))
                          (cards-between a b))))))
 
+         (cards-in-current-trick  (and (not (history-empty? history))
+                                       (length (annotated-cards (history-latest-trick history)))))
+
          ;;(pruned-legal-choices (top-two (map car grouped)))
          (pruned-legal-choices
-          (let ((grouped  (map car grouped))
-                (l (and (not (history-empty? history))
-                        (length (annotated-cards (history-latest-trick history))))))
+          (let ((grouped  (map car grouped)))
             (cond
-             ((not l)                   ; opening lead
+             ((not cards-in-current-trick)                   ; opening lead
               (bot-one/top-two grouped))
-             ((= l 1)                   ; second hand -- play low
+             ((= cards-in-current-trick 1)                   ; second hand -- play low
               (unless (null? (cdr grouped))
                 (zprintf " second hand low!"))
               (list (car grouped)))
-             ((= l 2)                   ; third hand -- play high
+             ((= cards-in-current-trick 2)                   ; third hand -- play high
               (unless (null? (cdr grouped)) (zprintf " third hand high!"))
               (last-pair grouped))
              (else
@@ -276,7 +283,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ;; but might be a tad neater.
               (let ((pairs (sort
                             (map (lambda (card)
-                                   (cons (predict-score card max-lookahead) card))
+                                   (cons
+                                    (predict-score
+                                     card
+
+                                     ;; if we're the last to play to
+                                     ;; this trick, let's not strain
+                                     ;; our brains -- we'll simply try
+                                     ;; to win the trick if we can.
+                                     (if (equal? 3 cards-in-current-trick)
+                                         (min max-lookahead 1)
+                                       max-lookahead)
+
+                                     )
+                                    card))
                                  (zp " considers ~a ..." pruned-legal-choices))
 
                             ;; sort by score, of course; but if the
