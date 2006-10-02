@@ -9,7 +9,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require (lib "assert.ss" "offby1")
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
-         (only "card.ss" card-suit ca->string)
+         (only "card.ss" card-suit)
          "zprintf.ss"
          (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
          (all-except "trick.ss" whose-turn)

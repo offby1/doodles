@@ -60,7 +60,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (play-card history hands c)
   (let ((h (car hands)))
     (assert (member c (ha:cards h)))
-    (zprintf "~a plays ~a~%" (ha:seat (car hands)) (ca->string c))
+    (zprintf "~a plays ~a~%" (ha:seat (car hands)) c)
     (let* ((new-hand (ha:remove-card h c))
            (new-history (add-card history c))
            (new-hand-list (cons new-hand (cdr hands)))
@@ -268,12 +268,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (> (car a)
                                  (car b)))))))
               (zprintf "~a -> ~a -> ~a -> ~a ... "
-                       (map ca->string legal-choices)
-                       (map (lambda (seq) (map ca->string seq)) grouped)
-                       (map ca->string pruned-legal-choices)
-                       (map (lambda (p )
-                              (cons (ca->string (cdr p))
-                                    (car p))) pairs))
+                       legal-choices
+                       grouped
+                       pruned-legal-choices
+                       pairs)
 
               (cdar pairs)))))
 

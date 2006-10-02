@@ -39,13 +39,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "Annotations 2"
      (check eq? (cdr first-annotated-card) 'south))
 
-    (test-equal? "follows suit 1"
-                 (mc s3)
-                 (choose-card
-                  (make-history
-                   (list (mt east  s2 dt ha)))
-                  (list (ha:mh north s3 d2))
-                  13))
+    (test-case
+     "follows suit 1"
+     (check cards=
+            (mc s3)
+            (choose-card
+             (make-history
+              (list (mt east  s2 dt ha)))
+             (list (ha:mh north s3 d2))
+             13)))
     (test-case
      "follows suit 2"
      (check eq?

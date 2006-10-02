@@ -93,6 +93,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (null? (hand-cards h)))
 (define (->string h)
   (format "~a: ~a" (hand-seat h)
-                   (string-join (map ca->string (sort (hand-cards h) card</suit)))))
+          (sort (hand-cards h) card</suit)))
 
 )

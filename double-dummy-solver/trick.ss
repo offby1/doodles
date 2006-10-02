@@ -70,7 +70,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (all-distinct? seq)
     (let ((h (make-hash-table 'equal)))
       (for-each (lambda (i)
-                  (hash-table-put! h i #t))
+                  (hash-table-put! h (card->number i #f) #t))
                 seq)
       (= (length seq)
          (hash-table-count h))))

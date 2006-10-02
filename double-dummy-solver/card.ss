@@ -5,6 +5,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module card mzscheme
+
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
          (lib "trace.ss")
@@ -17,18 +18,29 @@ exec mzscheme -qu "$0" ${1+"$@"}
          cards=
          card</rank
          card</suit
+         card->number
          *suits*
          mc
          mc*
          *num-ranks*
-         ca->string
          cards-between)
 
 (define *suits*  '(c d h s))
 (define *num-ranks* 13)
 (define *num-suits* (length *suits*))   ;duh!
 
-(define-struct card (rank suit) #f)
+(define (card-print card port write?)
+  (when write? (write-string "<" port))
+  (display (ca->string card) port)
+  (when write? (write-string ">" port)))
+
+(define-values (s:card make-card card? card-ref card-set!)
+  (make-struct-type 'card #f 2 0 #f
+                    (list (cons prop:custom-write card-print))))
+
+(define (card-rank c) (card-ref c 0))
+(define (card-suit c) (card-ref c 1))
+
 (define (ca->string c)
   (string-append (symbol->string (card-suit c))
                  (case (card-rank c)
@@ -56,10 +68,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (cards= a b)
   (and (eq? (card-suit a)
-          (card-suit b))
+            (card-suit b))
        (= (card-rank a)
-            (card-rank b))
-       ))
+          (card-rank b))))
 
 (define (card->number c by-rank?)
 
@@ -127,4 +138,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (map (lambda (rank)
            (my-make-card (card-suit l) rank))
          (iota (- ur lr 1) (add1 lr)))))
+
 )
