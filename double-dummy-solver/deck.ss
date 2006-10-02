@@ -75,7 +75,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (newline)
 (for-each (lambda (h)
-            (display (ha:->string h))
+            (display h)
             (newline))  hands)
 (newline)
 
