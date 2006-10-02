@@ -10,4 +10,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *recursion-level* (make-parameter 0))
 (define (zprintf . args)
   (when (zero? (*recursion-level*))
-    (apply printf args))))
+    (apply printf args)
+    (flush-output))))
