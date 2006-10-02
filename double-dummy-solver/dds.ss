@@ -46,12 +46,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (cons (cons this (car out))
                       (cdr out))))))))
 
-(define suits= eq?)
+;; Returns the least, and the two greatest, cards, based on rank.
 (define (bot-one/top-two seq)
   (if (< (length seq) 4)
       seq
-    (cons (car seq)
-          (take-right seq (min 2 (length seq))))))
+    (let ((sorted (sort seq card</rank)))
+      (cons (car sorted)
+            (take-right sorted (min 2 (length sorted)))))))
 
 ;; nondestructive.  Take CARD from (car HANDS), and move it into the
 ;; history.  Return that new history, and the new set of hands, with
@@ -203,18 +204,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (let* ((legal-choices
           (cond
-           ((history-empty? history)
-            ;; on the opening lead, all cards are legal.
-            (ha:cards us))
+           ;; If we're leading, all cards are legal.
+           ((or (history-empty? history)
+                (hi:trick-complete? history))
 
-           ;; if we're leading, all cards are legal.
-           ((hi:trick-complete? history)
-            (ha:cards us))
+            ;; we sort by suits so that it will be easy to make groups
+            ;; of adjacent cards of the same suit.
+            (sort (ha:cards us) card</suit)
+            )
            (else
             ;; otherwise me have to follow suit if we can.
             (let ((mine-of-led-suit (filter (lambda (mine)
-                                              (suits= (card-suit mine)
-                                                      (suit-led history)))
+                                              (eq? (card-suit mine)
+                                                   (suit-led history)))
                                             (ha:cards us))))
               (if (null? mine-of-led-suit)
                   (ha:cards us)

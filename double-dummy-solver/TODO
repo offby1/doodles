@@ -23,3 +23,9 @@ http://download.plt-scheme.org/doc/352/html/mzscheme/mzscheme-Z-H-11.html#node_s
 ... since they have a games site at http://www.cs.ualberta.ca/~games/,
 which mentions hearts and spades
 
+* keep track of the returns from predict-score ...
+
+... and at the end of the hand, see how well it did.  I'd expect the
+predictions from the beginning of the hand to be wild, but as the hand
+progresses, they'd close in on accurate ... sort of the way Firefox's
+file-download progress bar predicts how long it'll take to finish.
