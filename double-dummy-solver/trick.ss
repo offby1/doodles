@@ -29,7 +29,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          with-seat-circle
          *seats*)
 
-(define *seats* (list 'north 'east 'south 'west))
+(define *seats* '(n e s w))
 
 (define (rotate seq steps)
   (if (positive? steps)
@@ -77,7 +77,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-values (s:trick make-trick trick? s:trick-ref trick-set!)
   (make-struct-type 'trick #f 2 0 #f
-                    (list (cons prop:custom-write trick-print))))
+                    (list (cons prop:custom-write trick-print)) #f))
 (define (trick-card-seat-pairs t) (s:trick-ref t 0))
 (define (trick-complete?       t) (s:trick-ref t 1))
 

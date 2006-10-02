@@ -24,7 +24,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (hand-print hand port write?)
   (when write? (write-string "<" port))
   (fprintf port "~a: " (hand-seat hand))
-  (let loop ((cs (hand-cards hand)))
+  (let loop ((cs
+              (hand-cards hand)
+              ;;(sort (hand-cards hand) card</suit)
+              ))
     (when (not (null? cs))
       (display (car cs) port)
       (when (not (null? (cdr cs)))
@@ -35,7 +38,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-values (s:hand make-hand hand? hand-ref hand-set!)
   (make-struct-type 'hand #f 2 0 #f
-                    (list (cons prop:custom-write hand-print))))
+                    (list (cons prop:custom-write hand-print)) #f))
 
 (define (hand-cards h) (hand-ref h 0))
 (define (hand-seat  h) (hand-ref h 1))
@@ -66,14 +69,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-syntax mhs
   (syntax-rules ()
-    ((_ (n ...)
-        (e ...)
-        (s ...)
-        (w ...))
-     (list (mh north n ...)
-           (mh east  e ...)
-           (mh south s ...)
-           (mh west  w ...)))))
+    ((_ (nc ...)
+        (ec ...)
+        (sc ...)
+        (wc ...))
+     (list (mh n nc ...)
+           (mh e ec ...)
+           (mh s sc ...)
+           (mh w wc ...)))))
 
 (define (copy h)
   (make-hand (list-copy (hand-cards h)) (hand-seat h)))
@@ -106,9 +109,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   h)
 
 (define (sort! h)
-  (set-hand-cards! h (sort (hand-cards h) card</rank)))
+  (set-hand-cards! h (sort (hand-cards h) card</suit))
+  h)
 
 (define (empty? h)
   (null? (hand-cards h)))
+
 
 )

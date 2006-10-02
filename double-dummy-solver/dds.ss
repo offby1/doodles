@@ -54,6 +54,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (cons (car sorted)
             (take-right sorted (min 2 (length sorted)))))))
 
+(define (top-two seq)
+  (if (< (length seq) 3)
+      seq
+    (let ((sorted (sort seq card</rank)))
+      (take-right sorted (min 2 (length sorted))))))
+
 ;; nondestructive.  Take CARD from (car HANDS), and move it into the
 ;; history.  Return that new history, and the new set of hands, with
 ;; the card gone, and with the hands rotated one notch.
@@ -141,8 +147,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card max-lookahead)
-    (define (we-won? t) (member (winner t)
-                                (map ha:seat (list  us partner))))
+    (define (we-won? t) (let ((w (winner t)))
+                          (or (eq? w (ha:seat us))
+                              (eq? w (ha:seat partner)))))
 
     (define (our-trick-score history)
       (fold
@@ -198,8 +205,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (unless (null? (lset-intersection eq? (ha:cards us) already-played-cards))
     (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
-  (zprintf "~a: " (ha:seat us))
-
   (let* ((legal-choices
           (cond
            ;; If we're leading, all cards are legal.
@@ -226,8 +231,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          ;; same, and thus consider only one card from such
          ;; sequences.
          (grouped
-          (group-into-adjacent-runs
-           legal-choices
+
+          ;; here we're counting on the cards in the hand having been
+          ;; sorted with card</rank previously.  Presumably if we were
+          ;; to do that sorting ourselves here, we'd waste time.
+          (group-into-adjacent-runs legal-choices
 
            ;; Note that we might consider two cards adjacent even if I
            ;; hold one, and my partner holds the other.  This is
@@ -235,14 +243,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (lambda (a b)
              (and (eq? (card-suit a)
                        (card-suit b))
-                  (or
-                   (= 1 (abs (- (card-rank a)
-                                (card-rank b))))
-                   (every (lambda (c)
-                            (and (not (in-play-by-the-enemy? c))
-                                 (not (held-by-enemy? c))))
-                          (cards-between a b)))))))
+                  (every (lambda (c)
+                           (and (not (in-play-by-the-enemy? c))
+                                (not (held-by-enemy? c))))
+                         (cards-between a b))))))
 
+         ;;(pruned-legal-choices (top-two (map car grouped)))
          (pruned-legal-choices (bot-one/top-two (map car grouped)))
 
          (choice

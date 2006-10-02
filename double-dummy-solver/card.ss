@@ -44,7 +44,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define-values (s:card make-card card? card-ref card-set!)
   (make-struct-type 'card #f 2 0 #f
-                    (list (cons prop:custom-write card-print))))
+                    (list (cons prop:custom-write card-print)) #f))
 
 (define (card-rank c) (card-ref c 0))
 (define (card-suit c) (card-ref c 1))

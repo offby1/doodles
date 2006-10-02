@@ -14,6 +14,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (require "card.ss"
          "dds.ss"
          "history.ss"
+         (only "trick.ss" *seats*)
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (only (lib "etc.ss") this-expression-source-directory)
@@ -52,11 +53,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 (set! *deck* (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-(define hands (list
-               (ha:make-hand '() 'north)
-               (ha:make-hand '() 'east)
-               (ha:make-hand '() 'south)
-               (ha:make-hand '() 'west)))
+(define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
 ;; deal 'em out
 (let loop ((d *deck*)
@@ -80,7 +77,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (newline)
 
 (play-loop
- (make-history 'north)
+ (make-history (car *seats*))
  hands
  13
  3 ;; max lookahead
