@@ -88,7 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (when (or (history-empty? history)
                   (hi:trick-complete? history))
           (zprintf "~%Trick ~a:~%" (add1 (history-length history))))
-        (zprintf "~a thinks ... " (ha:seat ha))
+        (zprintf "~a thinks ..." (ha:seat ha))
         (let-values (((new-hi new-hands)
                       (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
           (play-loop new-hi
@@ -255,36 +255,42 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              ((not l)                   ; opening lead
               (bot-one/top-two grouped))
              ((= l 1)                   ; second hand -- play low
+              (unless (null? (cdr grouped))
+                (zprintf " second hand low!"))
               (list (car grouped)))
              ((= l 2)                   ; third hand -- play high
+              (unless (null? (cdr grouped)) (zprintf " third hand high!"))
               (last-pair grouped))
              (else
               (bot-one/top-two grouped)))))
 
          (choice
-          ;; don't call predict-score if there's just one choice.
-          (if (null? (cdr pruned-legal-choices))
-              (car pruned-legal-choices)
+          (let ()
+            (when (null? (cdr legal-choices))
+              (zprintf " (duh, singleton)" ))
+            ;; don't call predict-score if there's just one choice.
+            (if (null? (cdr pruned-legal-choices))
+                (car pruned-legal-choices)
 
-            ;; TODO -- use "fold" or "reduce".  Won't save any time,
-            ;; but might be a tad neater.
-            (let ((pairs (sort
-                          (map (lambda (card)
-                                 (cons (predict-score card max-lookahead) card))
-                               (zp "considers ~a ..." pruned-legal-choices))
+              ;; TODO -- use "fold" or "reduce".  Won't save any time,
+              ;; but might be a tad neater.
+              (let ((pairs (sort
+                            (map (lambda (card)
+                                   (cons (predict-score card max-lookahead) card))
+                                 (zp " considers ~a ..." pruned-legal-choices))
 
-                          ;; sort by score, of course; but if the
-                          ;; scores are equal, choose the
-                          ;; lower-ranking card.
-                          (lambda (a b)
-                            (if (= (car a)
-                                   (car b))
-                                (< (card-rank (cdr a))
-                                   (card-rank (cdr b)))
-                              (> (car a)
-                                 (car b)))))))
+                            ;; sort by score, of course; but if the
+                            ;; scores are equal, choose the
+                            ;; lower-ranking card.
+                            (lambda (a b)
+                              (if (= (car a)
+                                     (car b))
+                                  (< (card-rank (cdr a))
+                                     (card-rank (cdr b)))
+                                (> (car a)
+                                   (car b)))))))
 
-              (cdar (zp " -> ~a" pairs))))))
+                (cdar (zp " -> ~a" pairs)))))))
 
 
 
