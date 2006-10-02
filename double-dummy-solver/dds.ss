@@ -272,45 +272,45 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (bot-one/top-two grouped)))))
 
          (choice
-          (let ()
-            (when (null? (cdr legal-choices))
-              (zprintf " (duh, singleton)" ))
-            ;; don't call predict-score if there's just one choice.
-            (if (null? (cdr pruned-legal-choices))
-                (car pruned-legal-choices)
+          (if (null? (cdr pruned-legal-choices))
+              (begin
+                (if (null? (cdr legal-choices))
+                    (zprintf " (duh, singleton)")
+                  (zprintf " ~a all the same" legal-choices))
+                (car pruned-legal-choices))
 
-              ;; TODO -- use "fold" or "reduce".  Won't save any time,
-              ;; but might be a tad neater.
-              (let ((pairs (sort
-                            (map (lambda (card)
-                                   (cons
-                                    (predict-score
-                                     card
+            ;; TODO -- use "fold" or "reduce".  Won't save any time,
+            ;; but might be a tad neater.
+            (let ((pairs (sort
+                          (map (lambda (card)
+                                 (cons
+                                  (predict-score
+                                   card
 
-                                     ;; if we're the last to play to
-                                     ;; this trick, let's not strain
-                                     ;; our brains -- we'll simply try
-                                     ;; to win the trick if we can.
-                                     (if (equal? 3 cards-in-current-trick)
-                                         0
-                                       max-lookahead)
+                                   ;; if we're the last to play to
+                                   ;; this trick, let's not strain
+                                   ;; our brains -- we'll simply try
+                                   ;; to win the trick if we can.
+                                   (if (equal? 3 cards-in-current-trick)
+                                       0
+                                     max-lookahead)
 
-                                     )
-                                    card))
-                                 (zp " considers ~a ..." pruned-legal-choices))
+                                   )
+                                  card))
+                               (zp " considers ~a ..." pruned-legal-choices))
 
-                            ;; sort by score, of course; but if the
-                            ;; scores are equal, choose the
-                            ;; lower-ranking card.
-                            (lambda (a b)
-                              (if (= (car a)
-                                     (car b))
-                                  (< (card-rank (cdr a))
-                                     (card-rank (cdr b)))
-                                (> (car a)
-                                   (car b)))))))
+                          ;; sort by score, of course; but if the
+                          ;; scores are equal, choose the
+                          ;; lower-ranking card.
+                          (lambda (a b)
+                            (if (= (car a)
+                                   (car b))
+                                (< (card-rank (cdr a))
+                                   (card-rank (cdr b)))
+                              (> (car a)
+                                 (car b)))))))
 
-                (cdar (zp " -> ~a" pairs)))))))
+              (cdar (zp " -> ~a" pairs))))))
 
 
 
