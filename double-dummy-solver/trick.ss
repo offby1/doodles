@@ -64,7 +64,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; complete? is redundant -- it's always (= 4 (length
 ;; card-seat-pairs)).  But profiling shows that cacheing that number
 ;; saves noticeable time.
-(define-struct trick (card-seat-pairs complete?) #f)
+(define (trick-print trick port write?)
+  (when write? (write-string "<" port))
+  (let loop ((tcps (trick-card-seat-pairs trick)))
+    (when (not (null? tcps))
+      (display (car tcps) port)
+      (when (not (null? (cdr tcps)))
+        (display " " port))
+      (loop (cdr tcps))))
+
+  (when write? (write-string ">" port)))
+
+(define-values (s:trick make-trick trick? s:trick-ref trick-set!)
+  (make-struct-type 'trick #f 2 0 #f
+                    (list (cons prop:custom-write trick-print))))
+(define (trick-card-seat-pairs t) (s:trick-ref t 0))
+(define (trick-complete?       t) (s:trick-ref t 1))
 
 (define (my-make-trick cards leader)
   (define (all-distinct? seq)

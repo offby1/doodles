@@ -29,9 +29,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *num-ranks* 13)
 (define *num-suits* (length *suits*))   ;duh!
 
-(define (card-print card port write?)
+(define (card-print c port write?)
   (when write? (write-string "<" port))
-  (display (ca->string card) port)
+  (display (card-suit c) port)
+  (display (case (card-rank c)
+             ((10)"t")
+             ((11)"j")
+             ((12)"q")
+             ((13)"k")
+             ((14)"a")
+             (else (card-rank c)))
+           port)
   (when write? (write-string ">" port)))
 
 (define-values (s:card make-card card? card-ref card-set!)
@@ -41,17 +49,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (card-rank c) (card-ref c 0))
 (define (card-suit c) (card-ref c 1))
 
-(define (ca->string c)
-  (string-append (symbol->string (card-suit c))
-                 (case (card-rank c)
-                   ((10)"t")
-                   ((11)"j")
-                   ((12)"q")
-                   ((13)"k")
-                   ((14)"a")
-
-                   (else (number->string (card-rank c)))
-                   )))
 (define my-make-card
   (lambda (suit rank )
     (unless (memq suit *suits*)
