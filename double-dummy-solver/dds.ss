@@ -252,20 +252,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (not (held-by-enemy? c))))
                          (cards-between a b))))))
 
-         (cards-in-current-trick  (and (not (history-empty? history))
-                                       (length (annotated-cards (history-latest-trick history)))))
+         (cards-in-current-trick (or (and (not (history-empty? history))
+                                          (length (annotated-cards (history-latest-trick history))))
+                                     0))
 
          ;;(pruned-legal-choices (top-two (map car grouped)))
          (pruned-legal-choices
           (let ((grouped  (map car grouped)))
-            (cond
-             ((not cards-in-current-trick)                   ; opening lead
+            (case cards-in-current-trick
+             ((0)                   ; opening lead
               (bot-one/top-two grouped))
-             ((= cards-in-current-trick 1)                   ; second hand -- play low
+             ((1)                   ; second hand -- play low
               (unless (null? (cdr grouped))
                 (zprintf " second hand low!"))
               (list (car grouped)))
-             ((= cards-in-current-trick 2)                   ; third hand -- play high
+             ((2)                   ; third hand -- play high
               (unless (null? (cdr grouped)) (zprintf " third hand high!"))
               (last-pair grouped))
              (else
@@ -289,15 +290,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (predict-score
                                    card
 
-                                   ;; if we're the last to play to
-                                   ;; this trick, let's not strain
-                                   ;; our brains -- we'll simply try
-                                   ;; to win the trick if we can.
-                                   (cond
-                                    ((equal? 3 cards-in-current-trick)
-                                     0)
-                                    (else
-                                     max-lookahead)))
+                                   (case  cards-in-current-trick
+                                     ;; if we're the last to play to
+                                     ;; this trick, let's not strain our
+                                     ;; brains -- we'll simply try to
+                                     ;; win the trick if we can.
+                                     ((3) 0)
+                                     (else
+                                      max-lookahead)))
                                   card))
                                (zp " considers ~a ..." pruned-legal-choices))
 
