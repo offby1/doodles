@@ -292,7 +292,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      ;; our brains -- we'll simply try
                                      ;; to win the trick if we can.
                                      (if (equal? 3 cards-in-current-trick)
-                                         (min max-lookahead 1)
+                                         0
                                        max-lookahead)
 
                                      )
