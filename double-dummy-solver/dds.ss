@@ -167,8 +167,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define already-played-cards
     (history-card-set history))
-  (define (already-played? c)
-    (member c already-played-cards))
 
   (define (held-by-enemy? c)
     (or (member c (ha:cards lho))
