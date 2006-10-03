@@ -52,7 +52,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
       (let ((bottom-index (random top-index)))
         (swap! bottom-index top-index)))))
 
-(define max-lookahead 0)
+(define max-lookahead 1)
 
 (for-each
  (lambda (hand-number)
@@ -87,14 +87,19 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
     (play-loop
      (make-history (car *seats*))
      hands
-     13
      max-lookahead
+
+     ;; always returns false -- thus we'll stop only when the hands
+     ;; have been emptied.
      (lambda (hi hands)
-       (printf "~a~%" (compute-score hi)))))
+       (when (history-complete? hi)
+         (printf "~a~%" (compute-score hi)))
+       #f
+       )))
 
    (printf "~%~%~%"))
 
- (iota 10))
+ (iota 1))
 
 ;;; Spew coverage, profiling stuff
 
@@ -133,5 +138,3 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
       . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))
 
 )
-
-

@@ -96,38 +96,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (values new-history rotated))))
 ;;(trace play-card)
 
-;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
-(define (play-loop history hands num-tricks max-lookahead termination-history-proc)
-  (define (inner history hands num-tricks max-lookahead counter)
+;; plays tricks from the given hands, starting with (car HANDS),
+;; stopping when TERMINATION-PROC returns a true value, and returns
+;; that value.  This function is starting to look like "unfold".
+;; Perhaps someday I should explcitily write it to call "unfold".
+(define (play-loop history hands max-lookahead termination-proc)
+  (define (inner history hands max-lookahead counter)
     (let ((trick-number (add1 (quotient counter 4)))
           (ha (car hands)))
-      (if (or (zero? num-tricks)
-              (ha:empty? ha))
-          (termination-history-proc history hands)
-        (begin
-          (when (or (history-empty? history)
-                    (hi:trick-complete? history))
-            (zprintf "~%Trick ~a:~%" trick-number))
-          (zprintf "~a thinks ..." (ha:seat ha))
-          (let-values (((new-hi new-hands)
-                        (play-card
-                         history
-                         hands
-                         (parameterize ((*really-loud* (and #f
-                                                            (or (*really-loud*)
-                                                                (= trick-number 1)))) )
-                           (zp " plays ~a~%"
-                               (choose-card history hands max-lookahead))))))
-            (inner new-hi
-                   new-hands
-                   (if (hi:trick-complete? new-hi)
-                       (sub1 num-tricks)
-                     num-tricks)
-                   max-lookahead
-                   (add1 counter)))))))
-   (check-type 'play-loop non-negative? num-tricks)
+      (let ((rv (termination-proc history hands)))
+        (or rv
+            (ha:empty? ha)
+            (begin
+              (when (or (history-empty? history)
+                        (hi:trick-complete? history))
+                (zprintf "~%Trick ~a:~%" trick-number))
+              (zprintf "~a thinks ..." (ha:seat ha))
+              (let-values (((new-hi new-hands)
+                            (play-card
+                             history
+                             hands
+                             (parameterize ((*really-loud* (and #f
+                                                                (or (*really-loud*)
+                                                                    (= trick-number 1)))) )
+                               (zp " plays ~a~%"
+                                   (choose-card history hands max-lookahead))))))
+                (inner new-hi
+                       new-hands
+                       max-lookahead
+                       (add1 counter))))))))
+
    (check-type 'play-loop non-negative? max-lookahead)
-   (inner history hands num-tricks max-lookahead 0))
+   (inner history hands max-lookahead 0))
 ;;(trace play-loop)
 ;;; choose-card
 
@@ -154,13 +154,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define lho     (car (rotate hands 1)))
   (define partner (car (rotate hands 2)))
   (define rho     (car (rotate hands 3)))
-
+
   ;; computes the score from the point of view of whoever played last.
   ;; If the last trick is incomplete, it guesses (which is why it
   ;; needs to a set of hands).
   (define (score-from-history history hands)
     (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
-    (zp " returning ~a ..."
+    (zp " score-from-history(~a): returning ~a ..."
+        (ha:seat us)
         (fold
          (lambda (t sum)
 
@@ -175,9 +176,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
                            (cards-in-current-trick (length (trick-cards t))))
 
-                      ;; "us" is the set who _last_ played, as contrasted to
-                      ;; choose-card, in which case "us" is the seat who is _about_ to
-                      ;; play.
+                      ;; "us" is the seat who _last_ played, as
+                      ;; contrasted to choose-card, in which case
+                      ;; "us" is the seat who is _about_ to play.
                       (define us      (ha:filter right-suit? (car (rotate hands 3))))
                       (define lho     (ha:filter right-suit? (car (rotate hands 0))))
                       (define partner (ha:filter right-suit? (car (rotate hands 1))))
@@ -196,11 +197,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ;; has a singleton ace.
                       (define (relevant-cards playa)
                         (let ((already (assoc-backwards
-                                         (ha:seat playa)
-                                         (annotated-cards t))))
-                           (if already
-                               (filter right-suit? (list (car already)))
-                             (ha:cards playa))))
+                                        (ha:seat playa)
+                                        (annotated-cards t))))
+                          (if already
+                              (filter right-suit? (list (car already)))
+                            (ha:cards playa))))
 
                       (if (right-suit? card)
                           (let ((theirs (append-map relevant-cards (list lho rho)))
@@ -232,7 +233,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (else (zp " complete trick; we lost:~a" -1)))))
          0
          (history-tricks history))))
-
+
 ;;; predict-score
 
   ;; same inputs as choose-card, plus a single card, plus the number
@@ -254,24 +255,51 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (predict-score card max-lookahead)
     (check-type 'predict-score non-negative? max-lookahead)
-    (parameterize ((*recursion-level* (add1 (*recursion-level*))))
+    (let ((rl (*recursion-level*)))
       (let-values (((new-hi new-hands)
                     (play-card history hands card)))
-        (play-loop
-         new-hi
-         new-hands
 
-         ;; BUGBUG: This is bogus.  Rather than insisting that we play
-         ;; a fixed number of tricks, we should instead play _at most_
-         ;; that many tricks, but stop early if it's obvious that
-         ;; we'll win or lose.  For example, if this card is an ace,
-         ;; and we're leading, and it's notrump, it's silly to look
-         ;; ahead at all; we're clearly going to win.
-         max-lookahead
+        (define us (ha:seat (car hands)))
 
-         (max (sub1 max-lookahead) 0)
-         score-from-history))))
+        (zp " ~a proposes to play ~a"
+            us
+            (car (last-play (history-latest-trick new-hi))))
+        (parameterize ((*recursion-level* (add1 (*recursion-level*))))
+          (play-loop
+           new-hi
+           new-hands
+           (max (sub1 max-lookahead) 0)
 
+           ;; hypo-thetical, that is.
+           (lambda (hypo-history hypo-hands)
+
+             ;; this function returns #f if the play loop should
+             ;; continue, and a predicted score otherwise.  Note that
+             ;; the predicted score is 0 if we've adanced max-lookahead
+             ;; tricks beyond new-hi -- i.e., we've looked into the
+             ;; future and _still_ haven't gotten a decisive answer from
+             ;; score-from-history.
+
+             ;; Also note that the predicted score is with respect to
+             ;; the player who played the last trick before we gave up
+             ;; -- and that player isn't necessarily the player who
+             ;; called predict-score.  So we somehow need to
+             ;; compensate.
+             (let ((sc (score-from-history hypo-history hypo-hands)))
+               (parameterize ((*recursion-level* rl))
+                 (if (not (zero? sc))
+                     (zp " Oh good, ~a knows for certain that ~a yields ~a" us card sc)
+                   (and
+                    (zp " ~a: is trick complete? ~a"
+                        us
+                        (trick-complete? (history-latest-trick hypo-history)))
+                    (zp " has ~a looked far enough into the future? ~a"
+                        us
+                        (= max-lookahead
+                           (- (history-length hypo-history)
+                              (history-length new-hi))))
+                    (zp " drat; ~a never found out if ~a wins or loses, so:~a" us card 0)))))))))))
+
   (define already-played-cards
     (history-card-set history))
 

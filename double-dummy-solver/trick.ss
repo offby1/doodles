@@ -7,7 +7,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module trick mzscheme
 (print-struct #t)
 (require (lib "assert.ss" "offby1")
-         (only (lib "1.ss" "srfi" ) last every circular-list take alist-copy reduce)
+         (only (lib "1.ss" "srfi" )
+               alist-copy
+               circular-list
+               every
+               last
+               last-pair
+               reduce
+               take
+               )
          "card.ss"
          (lib "trace.ss")
          (lib "pretty.ss"))
@@ -19,6 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename add-card t:add-card)
          (rename copy t:copy)
          led-suit
+         last-play
          leader
          rotate
          rotate-until
@@ -142,6 +151,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (trick-ref t k)
   (list-ref (my-trick-cards t)
             k))
+
+(define (last-play t)
+  (let ((pairs (trick-card-seat-pairs t)))
+    (assert (not (null? pairs)))
+    (car (last-pair pairs))))
 
 (define (whose-turn t)
   (assert (not (trick-complete? t)))
