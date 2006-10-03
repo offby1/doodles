@@ -84,21 +84,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
   (define (inner history hands num-tricks max-lookahead counter)
-    (let ((ha (car hands)))
+    (let ((trick-number (add1 (quotient counter 4)))
+          (ha (car hands)))
       (if (or (zero? num-tricks)
               (ha:empty? ha))
           (termination-history-proc history hands)
         (begin
           (when (or (history-empty? history)
                     (hi:trick-complete? history))
-            (zprintf "~%Trick ~a:~%" (add1 (/ counter 4))))
+            (zprintf "~%Trick ~a:~%" trick-number))
           (zprintf "~a thinks ..." (ha:seat ha))
           (let-values (((new-hi new-hands)
                         (play-card
                          history
                          hands
-                         (zp " plays ~a~%"
-                             (choose-card history hands max-lookahead)))))
+                         (parameterize ((*really-loud* (and #f
+                                                            (or (*really-loud*)
+                                                                (= trick-number 1)))) )
+                           (zp " plays ~a~%"
+                               (choose-card history hands max-lookahead))))))
             (inner new-hi
                    new-hands
                    (if (hi:trick-complete? new-hi)
@@ -141,7 +145,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; needs to a set of hands).
   (define (score-from-history history hands)
     (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
-    (zp " returning ~a~%"
+    (zp " returning ~a ..."
         (fold
          (lambda (t sum)
 
@@ -175,39 +179,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ;; from "will this card win this trick", because
                       ;; this card might be a deuce, but our partner
                       ;; has a singleton ace.
-                      (define (relevant-ranks playa)
-                        (map
-                         card-rank
-                         (let ((already (assoc-backwards
+                      (define (relevant-cards playa)
+                        (let ((already (assoc-backwards
                                          (ha:seat playa)
                                          (annotated-cards t))))
                            (if already
                                (filter right-suit? (list (car already)))
-                             (ha:cards playa)))))
+                             (ha:cards playa))))
 
                       (if (right-suit? card)
-                          (let ((e-ranks (append-map relevant-ranks (list lho rho)))
-                                (o-ranks (append-map relevant-ranks (list us partner))))
+                          (let ((theirs (append-map relevant-cards (list lho rho)))
+                                (pards (relevant-cards partner)))
                             (define (beats-all-enemy-cards? c)
-                              (or (null? e-ranks) (< (apply max e-ranks) (card-rank c))))
+                              (or (null? theirs)
+                                  (< (apply max (map card-rank theirs)) (card-rank c))))
                             (cond
                              ((beats-all-enemy-cards? card)
                               (zp " my ~a beats enemy's ~a:~a"
                                   card
-                                  (append-map ha:cards (list lho rho))
+                                  (append-map relevant-cards (list lho rho))
                                   1))
 
-                             ;; if partner hasn't yet played, and all
-                             ;; his cards beat all the enemy cards,
-                             ;; then we's gonna win.
-                             ((and (not (assoc-backwards
-                                         (ha:seat  partner)
-                                         (annotated-cards t)))
-                                   (every beats-all-enemy-cards? (ha:cards partner)))
+                             ;; if all partner's relevant cards beat
+                             ;; all the enemy cards, then we's gonna
+                             ;; win.
+                             ((and (not (null? pards))
+                                   (every beats-all-enemy-cards? pards))
                               (zp " each of partner's ~a beats enemy's ~a:~a"
-                                  (ha:cards partner)
-                                  (append-map ha:cards (list lho rho))
-                                  1))
+                                  pards theirs 1))
                              (else
                               (zp " ~a ain't the boss:~a" card 0))))
                         ;; Wrong suit?  We'll surely lose.  (This will
