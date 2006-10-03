@@ -18,9 +18,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (all-defined-except make-history)
          (rename my-make-history make-history))
 
+(define (history-print history port write?)
+  (display "(" port)
+  (let loop ((printed 0)
+             (tricks (reverse (history-tricks history))))
+    (when (not (null? tricks))
+      (fprintf port "t ~a: ~a" (add1 printed) (car tricks))
+      (when (not (null? (cdr tricks)))
+        (display "; " port))
+      (loop (add1 printed)
+            (cdr tricks))))
+  (display ")" port))
+
+(define-values (s:history make-history history? s:history-ref history-set!)
+  (make-struct-type 'history #f 2 0 #f
+                    (list (cons prop:custom-write history-print)) #f))
+
+(define (history-opening-leader h) (s:history-ref h 0))
 ;; TRICKS is a simple list of tricks, but in reverse chronological
 ;; order.  I.e., the car is the most recent.
-(define-struct history (opening-leader tricks) #f)
+(define (history-tricks         h) (s:history-ref h 1))
+
+(define (set-history-tricks! h t) (history-set! h 1 t))
 
 (define (my-make-history tricks-or-opening-leader)
 

@@ -92,7 +92,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (zprintf "~%~%"))
           (zprintf "~a thinks ..." (ha:seat ha))
           (let-values (((new-hi new-hands)
-                        (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
+                        (play-card
+                         history
+                         hands
+                         (zp " plays ~a~%"
+                             (choose-card history hands max-lookahead)))))
             (play-loop new-hi
                        new-hands
                        (if (hi:trick-complete? new-hi)
@@ -134,54 +138,74 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; If the last trick is incomplete, it guesses (which is why it
   ;; needs to a set of hands).
   (define (score-from-history history hands)
-
-    ;; "us" is the set who _last_ played, as contrasted to
-    ;; choose-card, in which case "us" is the seat who is _about_ to
-    ;; play.
-    (define us      (car (rotate hands 3)))
-    (define lho     (car (rotate hands 0)))
-    (define partner (car (rotate hands 1)))
-    (define rho     (car (rotate hands 2)))
-
-    (define (we-won? t)
-      (let ((w (winner t)))
-        (or (eq? w (ha:seat us))
-            (eq? w (ha:seat partner)))))
-
     (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
     (zp " returning ~a~%"
         (fold
          (lambda (t sum)
+
+           (define (we-won? t)
+             (let ((w (winner t)))
+               (or (eq? w (ha:seat us))
+                   (eq? w (ha:seat partner)))))
+
            (+ sum (cond
                    ((not (trick-complete? t))
                     (let* ((card (car (last-pair (trick-cards t))))
                            (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
                            (cards-in-current-trick (length (trick-cards t))))
 
+                      ;; "us" is the set who _last_ played, as contrasted to
+                      ;; choose-card, in which case "us" is the seat who is _about_ to
+                      ;; play.
+                      (define us      (ha:filter right-suit? (car (rotate hands 3))))
+                      (define lho     (ha:filter right-suit? (car (rotate hands 0))))
+                      (define partner (ha:filter right-suit? (car (rotate hands 1))))
+                      (define rho     (ha:filter right-suit? (car (rotate hands 2))))
+
                       ;; if a given side has played, or been forced
                       ;; to play, a card that is higher than their
                       ;; enemy's cards of that suit, then they will
                       ;; win.
+
+                      ;; Keep in mind that the question we're trying
+                      ;; to answer is: "if we play this card, will we
+                      ;; win this trick?"  That's subtly different
+                      ;; from "will this card win this trick", because
+                      ;; this card might be a deuce, but our partner
+                      ;; has a singleton ace.
                       (define (relevant-ranks playa)
                         (map
                          card-rank
-                         (filter
-                          right-suit?
-                          (let ((already (assoc-backwards
-                                          (ha:seat playa)
-                                          (annotated-cards t))))
-                            (if already
-                                (list (car already))
-                              (ha:cards playa))))))
+                         (let ((already (assoc-backwards
+                                         (ha:seat playa)
+                                         (annotated-cards t))))
+                           (if already
+                               (filter right-suit? (list (car already)))
+                             (ha:cards playa)))))
 
                       (if (right-suit? card)
                           (let ((e-ranks (append-map relevant-ranks (list lho rho)))
                                 (o-ranks (append-map relevant-ranks (list us partner))))
+                            (define (beats-all-enemy-cards? c)
+                              (or (null? e-ranks) (< (apply max e-ranks) (card-rank c))))
                             (cond
-                             ((or (null? e-ranks) (< (apply max e-ranks) (card-rank card)))
-                              (zp " ~a beats enemy's ~a:~a" card (filter right-suit? (append-map ha:cards (list lho rho))) 1))
-                             ((or (null? o-ranks) (< (apply max o-ranks) (card-rank card)))
-                              (zp " ~a beats our ~a:~a" card (filter right-suit? (append-map ha:cards (list us partner))) -1))
+                             ((beats-all-enemy-cards? card)
+                              (zp " my ~a beats enemy's ~a:~a"
+                                  card
+                                  (append-map ha:cards (list lho rho))
+                                  1))
+
+                             ;; if partner hasn't yet played, and all
+                             ;; his cards beat all the enemy cards,
+                             ;; then we's gonna win.
+                             ((and (not (assoc-backwards
+                                         (ha:seat  partner)
+                                         (annotated-cards t)))
+                                   (every beats-all-enemy-cards? (ha:cards partner)))
+                              (zp " each of partner's ~a beats enemy's ~a:~a"
+                                  (ha:cards partner)
+                                  (append-map ha:cards (list lho rho))
+                                  1))
                              (else
                               (zp " ~a ain't the boss:~a" card 0))))
                         ;; Wrong suit?  We'll surely lose.  (This will

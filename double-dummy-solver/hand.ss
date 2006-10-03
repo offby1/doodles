@@ -6,6 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module hand mzscheme
 (require (only (lib "1.ss" "srfi") every list-copy)
+         (rename (lib "1.ss" "srfi") s1:filter filter)
          (only (lib "13.ss" "srfi")  string-join)
          (only (lib "list.ss") remove sort)
          "card.ss"
@@ -15,6 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          mh mhs
          (rename hand-cards cards)
          (rename hand-seat seat)
+         filter
          hand?
          empty?
          remove-card
@@ -43,6 +45,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (hand-cards h) (hand-ref h 0))
 (define (hand-seat  h) (hand-ref h 1))
 (define (set-hand-cards! h c) (hand-set! h 0 c))
+
+(define (filter proc h)
+  (my-make-hand (s1:filter proc (hand-cards h))
+                (hand-seat h)))
 
 (define (my-make-hand cards . seat)
   (unless (and (list? cards)
