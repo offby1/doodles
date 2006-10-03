@@ -260,7 +260,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (play-loop
          new-hi
          new-hands
+
+         ;; BUGBUG: This is bogus.  Rather than insisting that we play
+         ;; a fixed number of tricks, we should instead play _at most_
+         ;; that many tricks, but stop early if it's obvious that
+         ;; we'll win or lose.  For example, if this card is an ace,
+         ;; and we're leading, and it's notrump, it's silly to look
+         ;; ahead at all; we're clearly going to win.
          max-lookahead
+
          (max (sub1 max-lookahead) 0)
          score-from-history))))
 
