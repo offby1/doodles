@@ -25,3 +25,22 @@ which mentions hearts and spades
 predictions from the beginning of the hand to be wild, but as the hand
 progresses, they'd close in on accurate ... sort of the way Firefox's
 file-download progress bar predicts how long it'll take to finish.
+
+** measure the cost/benefit of "predict-score" and max-lookahead
+
+The cost of course is the time it takes.  Hard to measure usefully,
+since CPU time depends on ... the CPU.  Perhaps I could measure some
+sort of fundamental unit, like the function that determines which of
+four cards in a trick wins.
+
+The benefit is the amount of information returned.  If we call it on
+three cards, and it returns the same score for each, then we'll assume
+that the benefit was 0, since we could have guessed that.  (That's not
+quite a valid assumption -- the cards might in fact _be_ of equal
+value; but often they're not).  So we could estimate the benefit by
+
+        number of distinct scores returned - 1
+        ----------------------------------
+        number of times called - 1
+
+I suspect this ratio will drop as max-lookahead rises.
