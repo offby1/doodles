@@ -329,6 +329,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      0))
 
          ;;(pruned-legal-choices (top-two (map car grouped)))
+
+         ;; TODO -- if we can't follow suit, perhaps we should only
+         ;; consider low cards.
+
+         ;; And when we're leading, we should probably consider at
+         ;; least one card from each suit.
          (pruned-legal-choices (bot-one/top-two (map car grouped)))
 
          (choice
