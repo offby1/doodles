@@ -52,42 +52,51 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
       (let ((bottom-index (random top-index)))
         (swap! bottom-index top-index)))))
 
-(set! *deck* (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-(define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
-
-;; deal 'em out
-(let loop ((d *deck*)
-           (hs (apply circular-list hands)))
-  (unless (null? d)
-    (let ((victim (car hs)))
-      (ha:add-card! victim (car d)))
-
-    (loop (cdr d)
-          (cdr hs))))
-
-;; sort the hands.  This is actually important, since
-;; group-into-adjacent-runs will be more likely to return exactly 1
-;; group, and hence things will go faster.
-(for-each ha:sort!  hands)
-
-(newline)
 (define max-lookahead 0)
-(printf "Looking ahead ~a tricks.~%" max-lookahead)
-(for-each (lambda (h)
-            (display h)
-            (newline))  hands)
-(newline)
 
-(time
- (play-loop
-  (make-history (car *seats*))
-  hands
-  13
-  max-lookahead
-  (lambda (hi hands)
-    (printf "~a~%" (compute-score hi)))))
+(for-each
+ (lambda (hand-number)
+   (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
-(printf "~%~%~%")
+   ;; deal 'em out
+   (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
+              (hs (apply circular-list hands)))
+     (unless (null? d)
+       (let ((victim (car hs)))
+         (ha:add-card! victim (car d)))
+
+       (loop (cdr d)
+             (cdr hs))))
+
+   ;; sort the hands.  This is actually important, since
+   ;; group-into-adjacent-runs will be more likely to return exactly 1
+   ;; group, and hence things will go faster.
+   (for-each ha:sort!  hands)
+
+   (display #\page) (newline)
+   (printf "~a~%" (make-string 60 #\=))
+   (printf "Hand ~a~%" hand-number)
+   (printf "~a~%" (make-string 60 #\=))
+
+   (for-each (lambda (h)
+               (display h)
+               (newline))  hands)
+   (newline)
+
+   (time
+    (play-loop
+     (make-history (car *seats*))
+     hands
+     13
+     max-lookahead
+     (lambda (hi hands)
+       (printf "~a~%" (compute-score hi)))))
+
+   (printf "~%~%~%"))
+
+ (iota 10))
+
+;;; Spew coverage, profiling stuff
 
 ;; for emacs
 ;; (put 'mit-clobbering 'scheme-indent-function (get 'with-output-to-file 'scheme-indent-function))
