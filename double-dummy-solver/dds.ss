@@ -17,6 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                take
                take-right
                )
+         (only (lib "etc.ss") compose)
          (lib "pretty.ss")
          (lib "assert.ss" "offby1")
          "card.ss"
@@ -29,7 +30,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "trace.ss"))
 (provide choose-card play-loop)
 (print-struct #t)
-
+(define non-negative? (compose not negative?))
 
 ;; (list 1 2 3 9 10 11 7 6 5) (lambda (a b) (= a (add1 b))) => ((1 2
 ;; 3) (9 10 11) (7) (6) (5))
@@ -66,15 +67,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (play-card history hands c)
   (let ((h (car hands)))
     (assert (member c (ha:cards h)))
-    (let* ((new-hand (ha:remove-card h c))
-           (new-history
-            (add-card (make-history
-                       (if (or
-                            (history-empty? history)
-                            (hi:trick-complete? history))
-                           (ha:seat h)
-                         (list (history-latest-trick history))))
-                      c))
+    (let* ((new-hand    (ha:remove-card h c))
+           (new-history (add-card history c))
            (new-hand-list (cons new-hand (cdr hands)))
            (rotated (if (and (not (history-complete? new-history))
                              (hi:trick-complete? new-history))
@@ -87,25 +81,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
-  (let ((ha (car hands)))
-    (if (or (not (positive? num-tricks))
-            (ha:empty? ha))
-        (termination-history-proc history hands)
-      (begin
-        (when (or (history-empty? history)
-                  (hi:trick-complete? history))
-          (zprintf "~%~%"))
-        (zprintf "~a thinks ..." (ha:seat ha))
-        (let-values (((new-hi new-hands)
-                      (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
-          (play-loop new-hi
-                     new-hands
-                     (if (hi:trick-complete? new-hi)
-                         (sub1 num-tricks)
-                       num-tricks)
-                     max-lookahead
-                     termination-history-proc))))))
-
+  (define (inner history hands num-tricks max-lookahead termination-history-proc)
+    (let ((ha (car hands)))
+      (if (or (zero? num-tricks)
+              (ha:empty? ha))
+          (termination-history-proc history hands)
+        (begin
+          (when (or (history-empty? history)
+                    (hi:trick-complete? history))
+            (zprintf "~%~%"))
+          (zprintf "~a thinks ..." (ha:seat ha))
+          (let-values (((new-hi new-hands)
+                        (play-card history hands (zp " plays ~a~%" (choose-card history hands max-lookahead)))))
+            (play-loop new-hi
+                       new-hands
+                       (if (hi:trick-complete? new-hi)
+                           (sub1 num-tricks)
+                         num-tricks)
+                       max-lookahead
+                       termination-history-proc))))))
+   (check-type 'play-loop non-negative? num-tricks)
+   (check-type 'play-loop non-negative? max-lookahead)
+   (inner history hands num-tricks max-lookahead termination-history-proc))
+;;(trace play-loop)
 ;;; choose-card
 
 ;; sequence of tricks, list of (set of cards) -> card
@@ -152,48 +150,48 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
     (zp " returning ~a~%"
-       (fold
-        (lambda (t sum)
-          (+ sum (cond
-                  ((not (trick-complete? t))
-                   (let* ((card (car (last-pair (trick-cards t))))
-                          (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
-                          (cards-in-current-trick (length (trick-cards t))))
+        (fold
+         (lambda (t sum)
+           (+ sum (cond
+                   ((not (trick-complete? t))
+                    (let* ((card (car (last-pair (trick-cards t))))
+                           (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
+                           (cards-in-current-trick (length (trick-cards t))))
 
-                     ;; if a given side has played, or been forced
-                     ;; to play, a card that is higher than their
-                     ;; enemy's cards of that suit, then they will
-                     ;; win.
-                     (define (relevant-ranks playa)
-                       (map
-                        card-rank
-                        (filter
-                         right-suit?
-                         (let ((already (assoc-backwards
-                                         (ha:seat playa)
-                                         (annotated-cards t))))
-                           (if already
-                               (list (car already))
-                             (ha:cards playa))))))
+                      ;; if a given side has played, or been forced
+                      ;; to play, a card that is higher than their
+                      ;; enemy's cards of that suit, then they will
+                      ;; win.
+                      (define (relevant-ranks playa)
+                        (map
+                         card-rank
+                         (filter
+                          right-suit?
+                          (let ((already (assoc-backwards
+                                          (ha:seat playa)
+                                          (annotated-cards t))))
+                            (if already
+                                (list (car already))
+                              (ha:cards playa))))))
 
-                     (if (right-suit? card)
-                         (let ((e-ranks (append-map relevant-ranks (list lho rho)))
-                               (o-ranks (append-map relevant-ranks (list us partner))))
-                           (cond
-                            ((or (null? e-ranks) (< (apply max e-ranks) (card-rank card)))
-                             (zp " ~a beats enemy's ~a:~a" card (filter right-suit? (append-map ha:cards (list lho rho))) 1))
-                            ((or (null? o-ranks) (< (apply max o-ranks) (card-rank card)))
-                             (zp " ~a beats our ~a:~a" card (filter right-suit? (append-map ha:cards (list us partner))) -1))
-                            (else
-                             (zp " ~a ain't the boss:~a" card 0))))
-                       ;; Wrong suit?  We'll surely lose.  (This will
-                       ;; of course need to be updated once I introduce
-                       ;; trumps.)
-                       (zp " ~a is wrong suit:~a" card -1))))
-                  ((we-won? t) (zp " complete trick; we won:~a" 1))
-                  (else (zp " complete trick; we lost:~a" -1)))))
-        0
-        (history-tricks history))))
+                      (if (right-suit? card)
+                          (let ((e-ranks (append-map relevant-ranks (list lho rho)))
+                                (o-ranks (append-map relevant-ranks (list us partner))))
+                            (cond
+                             ((or (null? e-ranks) (< (apply max e-ranks) (card-rank card)))
+                              (zp " ~a beats enemy's ~a:~a" card (filter right-suit? (append-map ha:cards (list lho rho))) 1))
+                             ((or (null? o-ranks) (< (apply max o-ranks) (card-rank card)))
+                              (zp " ~a beats our ~a:~a" card (filter right-suit? (append-map ha:cards (list us partner))) -1))
+                             (else
+                              (zp " ~a ain't the boss:~a" card 0))))
+                        ;; Wrong suit?  We'll surely lose.  (This will
+                        ;; of course need to be updated once I introduce
+                        ;; trumps.)
+                        (zp " ~a is wrong suit:~a" card -1))))
+                   ((we-won? t) (zp " complete trick; we won:~a" 1))
+                   (else (zp " complete trick; we lost:~a" -1)))))
+         0
+         (history-tricks history))))
 
 ;;; predict-score
 
@@ -215,7 +213,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card max-lookahead)
-    ;;(trace score-from-history)
+    (check-type 'predict-score non-negative? max-lookahead)
     (parameterize ((*recursion-level* (add1 (*recursion-level*))))
       (let-values (((new-hi new-hands)
                     (play-card history hands card)))
@@ -223,7 +221,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          new-hi
          new-hands
          max-lookahead
-         (sub1 max-lookahead)
+         (max (sub1 max-lookahead) 0)
          score-from-history))))
 
   (define already-played-cards
@@ -247,6 +245,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (assoc-backwards c (annotated-cards (history-latest-trick hi)))))
 
   ;;(trace predict-score)
+  ;;(trace score-from-history)
+  (check-type 'choose-card non-negative? max-lookahead)
   (check-type 'choose-card history? history)
   (unless (ha:hand? us)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
