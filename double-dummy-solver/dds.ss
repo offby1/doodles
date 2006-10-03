@@ -160,6 +160,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (fold
        (lambda (t sum)
          (+ sum (cond
+                 ;; TODO -- do better!  Surely we can predict whether
+                 ;; we'll win, sometimes, before the trick is
+                 ;; complete: if we led an ace at notrump, e.g.
                  ((not (trick-complete? t)) 0)
                  ((we-won? t) 1)
                  (else -1))))
@@ -257,20 +260,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      0))
 
          ;;(pruned-legal-choices (top-two (map car grouped)))
-         (pruned-legal-choices
-          (let ((grouped  (map car grouped)))
-            (case cards-in-current-trick
-             ((0)                   ; opening lead
-              (bot-one/top-two grouped))
-             ((1)                   ; second hand -- play low
-              (unless (null? (cdr grouped))
-                (zprintf " second hand low!"))
-              (list (car grouped)))
-             ((2)                   ; third hand -- play high
-              (unless (null? (cdr grouped)) (zprintf " third hand high!"))
-              (last-pair grouped))
-             (else
-              (bot-one/top-two grouped)))))
+         (pruned-legal-choices (bot-one/top-two (map car grouped)))
 
          (choice
           (if (null? (cdr pruned-legal-choices))
@@ -290,14 +280,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (predict-score
                                    card
 
-                                   (case  cards-in-current-trick
-                                     ;; if we're the last to play to
-                                     ;; this trick, let's not strain our
-                                     ;; brains -- we'll simply try to
-                                     ;; win the trick if we can.
-                                     ((3) 0)
-                                     (else
-                                      max-lookahead)))
+                                   (zp " looks ahead ~a"
+                                       (case  cards-in-current-trick
+                                         ;; if we're the last to play to
+                                         ;; this trick, let's not strain our
+                                         ;; brains -- we'll simply try to
+                                         ;; win the trick if we can.
+                                         ((1 2 3) 0)
+                                         (else
+                                          max-lookahead))))
                                   card))
                                (zp " considers ~a ..." pruned-legal-choices))
 
