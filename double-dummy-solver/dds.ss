@@ -35,17 +35,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; (list 1 2 3 9 10 11 7 6 5) (lambda (a b) (= a (add1 b))) => ((1 2
 ;; 3) (9 10 11) (7) (6) (5))
 (define (group-into-adjacent-runs seq adjacent?)
-  (let loop ((in seq)
-             (out '()))
-    (if (null? in)
-        (reverse (map reverse out))
-      (let ((this (car in)))
-        (loop (cdr in)
-              (if (or (null? out)
-                      (not (adjacent? this (caar out))))
-                  (cons (list this) out)
-                (cons (cons this (car out))
-                      (cdr out))))))))
+  (reverse
+   (map reverse
+        (fold (lambda (item seq)
+                (if (null? seq)
+                    (list (list item))
+                  (if (adjacent? item (caar seq))
+                      (cons (cons item (car seq))
+                            (cdr seq))
+                    (cons (list item)
+                          seq))))
+              '()
+              seq))))
 
 ;; Returns the least, and the two greatest, cards, based on rank.
 (define (bot-one/top-two seq)
