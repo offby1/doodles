@@ -63,6 +63,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((sorted (sort seq card</rank)))
       (take-right sorted (min 2 (length sorted))))))
 
+(define (hi-lo seq)
+  (if (< (length seq) 3)
+      seq
+    (let ((sorted (sort seq card</rank)))
+      (cons (car sorted) (last-pair sorted)))))
+
+(define (partition-by-suits cs)
+  (list (filter spade? cs)
+        (filter heart? cs)
+        (filter diamond? cs)
+        (filter club? cs)))
+
+(define (hi-lo-each-suit seq)
+  (append-map hi-lo (partition-by-suits seq)))
+
 ;; nondestructive.  Take CARD from (car HANDS), and move it into the
 ;; history.  Return that new history, and the new set of hands, with
 ;; the card gone, and with the hands rotated one notch.
@@ -338,14 +353,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                           (length (trick-cards (history-latest-trick history))))
                                      0))
 
-         ;;(pruned-legal-choices (top-two (map car grouped)))
-
          ;; TODO -- if we can't follow suit, perhaps we should only
          ;; consider low cards.
 
          ;; And when we're leading, we should probably consider at
          ;; least one card from each suit.
-         (pruned-legal-choices (bot-one/top-two (map car grouped)))
+         ;;(pruned-legal-choices (bot-one/top-two (map car grouped)))
+         (pruned-legal-choices (hi-lo-each-suit (map car grouped)))
 
          (choice
           (if (null? (cdr pruned-legal-choices))
@@ -357,17 +371,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                 (car pruned-legal-choices))
 
-            (let* ((max-lookahead
-                    (zp " looks ahead ~a"
-                        (min max-lookahead
-                             (case  cards-in-current-trick
-                               ;; if we're the last to play to
-                               ;; this trick, let's not strain our
-                               ;; brains -- we'll simply try to
-                               ;; win the trick if we can.
-                               ((1 2) 0)
-                               ((3) 1)
-                               (else max-lookahead)))))
+            (let* ((max-lookahead (zp " looks ahead ~a" max-lookahead))
                    (pairs (sort
                            (map (lambda (card)
                                   (cons (predict-score card max-lookahead)

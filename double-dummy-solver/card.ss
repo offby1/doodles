@@ -19,6 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          card</rank
          card</suit
          card->number
+         club? diamond? heart? spade?
          *suits*
          mc
          mc*
@@ -48,6 +49,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (card-rank c) (card-ref c 0))
 (define (card-suit c) (card-ref c 1))
+
+(define (club? c) (eq? (card-suit c) 'c))
+(define (diamond? c) (eq? (card-suit c) 'd))
+(define (heart? c) (eq? (card-suit c) 'h))
+(define (spade? c) (eq? (card-suit c) 's))
 
 (define my-make-card
   (lambda (suit rank )
