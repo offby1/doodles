@@ -13,6 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                fold
                last-pair
                lset-intersection
+               pair-fold
                remove
                take
                take-right
@@ -82,7 +83,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; plays at most NUM-TRICKS from the given hands, starting with (car HANDS).
 (define (play-loop history hands num-tricks max-lookahead termination-history-proc)
-  (define (inner history hands num-tricks max-lookahead termination-history-proc)
+  (define (inner history hands num-tricks max-lookahead counter)
     (let ((ha (car hands)))
       (if (or (zero? num-tricks)
               (ha:empty? ha))
@@ -90,7 +91,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (begin
           (when (or (history-empty? history)
                     (hi:trick-complete? history))
-            (zprintf "~%~%"))
+            (zprintf "~%Trick ~a:~%" (add1 (/ counter 4))))
           (zprintf "~a thinks ..." (ha:seat ha))
           (let-values (((new-hi new-hands)
                         (play-card
@@ -98,16 +99,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          hands
                          (zp " plays ~a~%"
                              (choose-card history hands max-lookahead)))))
-            (play-loop new-hi
-                       new-hands
-                       (if (hi:trick-complete? new-hi)
-                           (sub1 num-tricks)
-                         num-tricks)
-                       max-lookahead
-                       termination-history-proc))))))
+            (inner new-hi
+                   new-hands
+                   (if (hi:trick-complete? new-hi)
+                       (sub1 num-tricks)
+                     num-tricks)
+                   max-lookahead
+                   (add1 counter)))))))
    (check-type 'play-loop non-negative? num-tricks)
    (check-type 'play-loop non-negative? max-lookahead)
-   (inner history hands num-tricks max-lookahead termination-history-proc))
+   (inner history hands num-tricks max-lookahead 0))
 ;;(trace play-loop)
 ;;; choose-card
 
@@ -265,10 +266,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (else
       (assoc-backwards obj (cdr backwards-alist)))))
 
-  (define (in-play-by-the-enemy? c hi)
-    (and (not (history-empty? hi))
-         (assoc-backwards c (annotated-cards (history-latest-trick hi)))))
-
   ;;(trace predict-score)
   ;;(trace score-from-history)
   (check-type 'choose-card non-negative? max-lookahead)
@@ -312,18 +309,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           ;; here we're counting on the cards in the hand having been
           ;; sorted with card</rank previously.  Presumably if we were
           ;; to do that sorting ourselves here, we'd waste time.
-          (group-into-adjacent-runs legal-choices
 
-                                    ;; Note that we might consider two cards adjacent even if I
-                                    ;; hold one, and my partner holds the other.  This is
-                                    ;; probably a bad idea.
-                                    (lambda (a b)
-                                      (and (eq? (card-suit a)
-                                                (card-suit b))
-                                           (every (lambda (c)
-                                                    (and (not (in-play-by-the-enemy? c history))
-                                                         (not (held-by-enemy? c))))
-                                                  (cards-between a b))))))
+          (group-into-adjacent-runs
+           legal-choices
+           (lambda (a b)
+             (and (eq? (card-suit a)
+                       (card-suit b))
+                  (every (lambda (c) (member c (ha:cards us)))
+                         (cards-between a b))))))
+
+         ;; diagnostic only--vvvvv
+         (runs (filter (lambda (l)
+                         (< 1 (length l)))
+                       grouped))
+         (has-a-gap (lambda (seq)
+                      (pair-fold
+                       (lambda (pair accumulator)
+                         (or accumulator
+                             (and (not (null? (cdr pair)))
+                                  (< 1 (- (card-rank (cadr pair))
+                                          (card-rank (car pair)))))))
+                       #f seq)))
+         (gappy-runs (filter has-a-gap runs))
+         (dummy (when (not (null? gappy-runs))
+                  (printf " gappy runs: ~a" gappy-runs)))
+         ;; diagnostic only--^^^^^
 
          (cards-in-current-trick (or (and (not (history-empty? history))
                                           (length (trick-cards (history-latest-trick history))))
