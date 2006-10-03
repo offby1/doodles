@@ -90,7 +90,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((ha (car hands)))
     (if (or (not (positive? num-tricks))
             (ha:empty? ha))
-        (termination-history-proc history)
+        (termination-history-proc history hands)
       (begin
         (when (or (history-empty? history)
                   (hi:trick-complete? history))
@@ -132,6 +132,69 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define partner (car (rotate hands 2)))
   (define rho     (car (rotate hands 3)))
 
+  ;; computes the score from the point of view of whoever played last.
+  ;; If the last trick is incomplete, it guesses (which is why it
+  ;; needs to a set of hands).
+  (define (score-from-history history hands)
+
+    ;; "us" is the set who _last_ played, as contrasted to
+    ;; choose-card, in which case "us" is the seat who is _about_ to
+    ;; play.
+    (define us      (car (rotate hands 3)))
+    (define lho     (car (rotate hands 0)))
+    (define partner (car (rotate hands 1)))
+    (define rho     (car (rotate hands 2)))
+
+    (define (we-won? t)
+      (let ((w (winner t)))
+        (or (eq? w (ha:seat us))
+            (eq? w (ha:seat partner)))))
+
+    (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
+    (zp " returning ~a~%"
+       (fold
+        (lambda (t sum)
+          (+ sum (cond
+                  ((not (trick-complete? t))
+                   (let* ((card (car (last-pair (trick-cards t))))
+                          (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
+                          (cards-in-current-trick (length (trick-cards t))))
+
+                     ;; if a given side has played, or been forced
+                     ;; to play, a card that is higher than their
+                     ;; enemy's cards of that suit, then they will
+                     ;; win.
+                     (define (relevant-ranks playa)
+                       (map
+                        card-rank
+                        (filter
+                         right-suit?
+                         (let ((already (assoc-backwards
+                                         (ha:seat playa)
+                                         (annotated-cards t))))
+                           (if already
+                               (list (car already))
+                             (ha:cards playa))))))
+
+                     (if (right-suit? card)
+                         (let ((e-ranks (append-map relevant-ranks (list lho rho)))
+                               (o-ranks (append-map relevant-ranks (list us partner))))
+                           (cond
+                            ((or (null? e-ranks) (< (apply max e-ranks) (card-rank card)))
+                             (zp " ~a beats enemy's ~a:~a" card (filter right-suit? (append-map ha:cards (list lho rho))) 1))
+                            ((or (null? o-ranks) (< (apply max o-ranks) (card-rank card)))
+                             (zp " ~a beats our ~a:~a" card (filter right-suit? (append-map ha:cards (list us partner))) -1))
+                            (else
+                             (zp " ~a ain't the boss:~a" card 0))))
+                       ;; Wrong suit?  We'll surely lose.  (This will
+                       ;; of course need to be updated once I introduce
+                       ;; trumps.)
+                       (zp " ~a is wrong suit:~a" card -1))))
+                  ((we-won? t) (zp " complete trick; we won:~a" 1))
+                  (else (zp " complete trick; we lost:~a" -1)))))
+        0
+        (history-tricks history))))
+
 ;;; predict-score
 
   ;; same inputs as choose-card, plus a single card, plus the number
@@ -152,23 +215,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;   that's the answer.
 
   (define (predict-score card max-lookahead)
-    (define (we-won? t) (let ((w (winner t)))
-                          (or (eq? w (ha:seat us))
-                              (eq? w (ha:seat partner)))))
-
-    (define (our-trick-score history)
-      (fold
-       (lambda (t sum)
-         (+ sum (cond
-                 ;; TODO -- do better!  Surely we can predict whether
-                 ;; we'll win, sometimes, before the trick is
-                 ;; complete: if we led an ace at notrump, e.g.
-                 ((not (trick-complete? t)) 0)
-                 ((we-won? t) 1)
-                 (else -1))))
-       0
-       (history-tricks history)))
-
+    ;;(trace score-from-history)
     (parameterize ((*recursion-level* (add1 (*recursion-level*))))
       (let-values (((new-hi new-hands)
                     (play-card history hands card)))
@@ -177,7 +224,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          new-hands
          max-lookahead
          (sub1 max-lookahead)
-         our-trick-score))))
+         score-from-history))))
 
   (define already-played-cards
     (history-card-set history))
@@ -186,21 +233,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (or (member c (ha:cards lho))
         (member c (ha:cards rho))))
 
-  (define (in-play-by-the-enemy? c)
-    (and (not (history-empty? history))
-         (let loop ((lt (annotated-cards (history-latest-trick history))))
-           ;; grr.  annotated-cards returns what looks like an alist, but
-           ;; the keys are in the cdrs, not the cars ... so I can't use
-           ;; assq.
-           (if (null? lt)
-               #f
-             (let* ((cs (car lt))
-                    (cd (car cs))
-                    (st (cdr cs)))
-               (if (and (member st  (map ha:seat (list lho rho)))
-                        (cards= c cd))
-                   #t
-                 (loop (cdr lt))))))))
+  (define (assoc-backwards obj backwards-alist)
+    (cond
+     ((null? backwards-alist)
+      #f)
+     ((equal? obj (cdr (car backwards-alist)))
+      (car backwards-alist))
+     (else
+      (assoc-backwards obj (cdr backwards-alist)))))
+
+  (define (in-play-by-the-enemy? c hi)
+    (and (not (history-empty? hi))
+         (assoc-backwards c (annotated-cards (history-latest-trick hi)))))
+
   ;;(trace predict-score)
   (check-type 'choose-card history? history)
   (unless (ha:hand? us)
@@ -244,19 +289,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           ;; to do that sorting ourselves here, we'd waste time.
           (group-into-adjacent-runs legal-choices
 
-           ;; Note that we might consider two cards adjacent even if I
-           ;; hold one, and my partner holds the other.  This is
-           ;; probably a bad idea.
-           (lambda (a b)
-             (and (eq? (card-suit a)
-                       (card-suit b))
-                  (every (lambda (c)
-                           (and (not (in-play-by-the-enemy? c))
-                                (not (held-by-enemy? c))))
-                         (cards-between a b))))))
+                                    ;; Note that we might consider two cards adjacent even if I
+                                    ;; hold one, and my partner holds the other.  This is
+                                    ;; probably a bad idea.
+                                    (lambda (a b)
+                                      (and (eq? (card-suit a)
+                                                (card-suit b))
+                                           (every (lambda (c)
+                                                    (and (not (in-play-by-the-enemy? c history))
+                                                         (not (held-by-enemy? c))))
+                                                  (cards-between a b))))))
 
          (cards-in-current-trick (or (and (not (history-empty? history))
-                                          (length (annotated-cards (history-latest-trick history))))
+                                          (length (trick-cards (history-latest-trick history))))
                                      0))
 
          ;;(pruned-legal-choices (top-two (map car grouped)))
@@ -272,36 +317,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                 (car pruned-legal-choices))
 
-            ;; TODO -- use "fold" or "reduce".  Won't save any time,
-            ;; but might be a tad neater.
-            (let ((pairs (sort
-                          (map (lambda (card)
-                                 (cons
-                                  (predict-score
-                                   card
+            (let* ((max-lookahead
+                    (zp " looks ahead ~a"
+                        (min max-lookahead
+                             (case  cards-in-current-trick
+                               ;; if we're the last to play to
+                               ;; this trick, let's not strain our
+                               ;; brains -- we'll simply try to
+                               ;; win the trick if we can.
+                               ((1 2) 0)
+                               ((3) 1)
+                               (else max-lookahead)))))
+                   (pairs (sort
+                           (map (lambda (card)
+                                  (cons (predict-score card max-lookahead)
+                                        card))
+                                (zp " considers ~a ..." pruned-legal-choices))
 
-                                   (zp " looks ahead ~a"
-                                       (case  cards-in-current-trick
-                                         ;; if we're the last to play to
-                                         ;; this trick, let's not strain our
-                                         ;; brains -- we'll simply try to
-                                         ;; win the trick if we can.
-                                         ((1 2 3) 0)
-                                         (else
-                                          max-lookahead))))
-                                  card))
-                               (zp " considers ~a ..." pruned-legal-choices))
-
-                          ;; sort by score, of course; but if the
-                          ;; scores are equal, choose the
-                          ;; lower-ranking card.
-                          (lambda (a b)
-                            (if (= (car a)
-                                   (car b))
-                                (< (card-rank (cdr a))
-                                   (card-rank (cdr b)))
-                              (> (car a)
-                                 (car b)))))))
+                           ;; sort by score, of course; but if the
+                           ;; scores are equal, choose the
+                           ;; lower-ranking card.
+                           (lambda (a b)
+                             (if (= (car a)
+                                    (car b))
+                                 (< (card-rank (cdr a))
+                                    (card-rank (cdr b)))
+                               (> (car a)
+                                  (car b)))))))
 
               (cdar (zp " -> ~a" pairs))))))
 

@@ -18,6 +18,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          mt
          (rename add-card t:add-card)
          (rename copy t:copy)
+         led-suit
          leader
          rotate
          rotate-until
@@ -65,15 +66,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; card-seat-pairs)).  But profiling shows that cacheing that number
 ;; saves noticeable time.
 (define (trick-print trick port write?)
-  (when write? (write-string "<" port))
   (let loop ((tcps (trick-card-seat-pairs trick)))
     (when (not (null? tcps))
-      (display (car tcps) port)
+      (let ((p (car tcps)))
+        (fprintf port "~a:~a" (cdr p) (car p)))
       (when (not (null? (cdr tcps)))
-        (display " " port))
-      (loop (cdr tcps))))
-
-  (when write? (write-string ">" port)))
+        (display ", " port))
+      (loop (cdr tcps)))))
 
 (define-values (s:trick make-trick trick? s:trick-ref trick-set!)
   (make-struct-type 'trick #f 2 0 #f
@@ -150,19 +149,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (cdr (last (trick-card-seat-pairs t)))
    cadr))
 
+(define (led-suit t)
+   (card-suit (trick-ref t 0)))
+
 (define (winner t)
+  (define (worth card)
+    (if (eq? (led-suit t)
+             (card-suit card))
+        (card-rank card)
+      0))
   (assert (trick-complete? t))
-  (let ((led-suit (card-suit (trick-ref t 0))))
-    (define (worth card)
-      (if (eq? led-suit (card-suit card))
-          (card-rank card)
-        0))
-    (cdr
-     (reduce (lambda (a b) (if (> (worth (car a))
-                                  (worth (car b)))
-                               a b))
-             (car (trick-card-seat-pairs t))
-             (trick-card-seat-pairs t)))))
+  (cdr
+   (reduce (lambda (a b) (if (> (worth (car a))
+                                (worth (car b)))
+                             a b))
+           (car (trick-card-seat-pairs t))
+           (trick-card-seat-pairs t))))
 ;(trace winner)
 )
 

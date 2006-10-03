@@ -24,4 +24,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (zp . args)
   (apply zprintf args)
   (car (last-pair args)))
+(define (p . args)
+  (apply printf args)
+  (car (last-pair args)))
 )

@@ -83,8 +83,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  hands
  13
  max-lookahead
- (lambda (h)
-   (printf "~a~%" (compute-score h))))
+ (lambda (hi hands)
+   (printf "~a~%" (compute-score hi))))
 
 (printf "~%~%~%")
 ;(output-profile-results #t #f)
