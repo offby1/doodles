@@ -71,41 +71,58 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (for-each ha:sort!  hands)
 
 (newline)
-(define max-lookahead 2)
+(define max-lookahead 0)
 (printf "Looking ahead ~a tricks.~%" max-lookahead)
 (for-each (lambda (h)
             (display h)
             (newline))  hands)
 (newline)
 
-(play-loop
- (make-history (car *seats*))
- hands
- 13
- max-lookahead
- (lambda (hi hands)
-   (printf "~a~%" (compute-score hi))))
+(time
+ (play-loop
+  (make-history (car *seats*))
+  hands
+  13
+  max-lookahead
+  (lambda (hi hands)
+    (printf "~a~%" (compute-score hi)))))
 
 (printf "~%~%~%")
-;(output-profile-results #t #f)
+
+;; for emacs
+;; (put 'mit-clobbering 'scheme-indent-function (get 'with-output-to-file 'scheme-indent-function))
+(define (mit-clobbering string thunk)
+  (when (file-exists? string)
+    (delete-file string))
+  (with-output-to-file string
+    thunk))
+
 (let* ((here (this-expression-source-directory))
        (od (simplify-path (build-path here "coverage"))))
   (unless (directory-exists? od)
     (make-directory od))
   (for-each (lambda (fn)
               (let ((ofn  (build-path od fn)))
-                (when (file-exists? ofn)
-                  (delete-file ofn))
-                (with-output-to-file ofn
+                (mit-clobbering ofn
                   (lambda ()
-                    (annotate-executed-file fn)))
-                (fprintf (current-error-port)
-                         "Created ~a~%" ofn)))
+                    (annotate-executed-file fn)))))
             (filter (lambda (path)
                       (and (file-exists? path)
                            (regexp-match "\\.ss$" (path->string path))))
                     (directory-list here)))
-  (fprintf (current-error-port)
-           "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%"))
+  (for-each
+   (lambda (p)
+     (let ((ofn (simplify-path (build-path od (car p)))))
+       (mit-clobbering ofn
+         (cdr p))
+       (fprintf (current-error-port)
+                "Wrote ~a.~%" ofn))
+     )
+   `(("profile-stuff"
+      . ,(lambda () (output-profile-results #t #f)))
+     ("README"
+      . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))
+
+)
 
 
