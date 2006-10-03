@@ -9,9 +9,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (all-defined))
 (require (only (lib "1.ss" "srfi") last-pair))
 (define *recursion-level* (make-parameter 0))
+(define *really-loud* (make-parameter #f))
 
 (define (zprintf . args)
-  (when (zero? (*recursion-level*))
+  (when (or (*really-loud*)
+            (zero? (*recursion-level*)))
     (apply printf args)
     (flush-output)))
 
