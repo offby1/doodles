@@ -1,5 +1,5 @@
 #! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
+#| Hey Emacs, this is -*-mode: scheme; coding:utf-8 -*- code!
 #$Id$
 exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
