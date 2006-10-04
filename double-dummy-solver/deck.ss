@@ -23,7 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi") iota take circular-list filter))
 (define max-lookahead 0)
 (random-seed 0)
-
+
 (define *deck*
   (let loop ((suits *suits*)
              (result '()))
@@ -92,11 +92,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
      ;; always returns false -- thus we'll stop only when the hands
      ;; have been emptied.
+     (lambda args #f)
+
      (lambda (hi hands)
-       (when (history-complete? hi)
-         (printf "~a -> ~a~%" hi (compute-score hi)))
-       #f
-       )))
+       (printf "~a -> ~a~%" hi (compute-score hi)))))
 
    (printf "~%~%~%"))
 

@@ -105,6 +105,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        *seats*))
 
 (define (numeric-team-score sp our-seat)
+  (check-type 'numeric-team-score list? sp)
   (+ (ass0 our-seat sp)
      (ass0 (partner our-seat) sp)))
 
@@ -155,36 +156,44 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;(trace play-card)
 
 ;; plays tricks from the given hands, starting with (car HANDS),
-;; stopping when TERMINATION-PROC returns a true value, and returns
-;; that value.  This function is starting to look like "unfold".
-;; Perhaps someday I should explcitily write it to call "unfold".
-(define (play-loop history hands max-lookahead termination-proc)
+;; stopping when TERMINATION-PROC returns a true value, or the hands
+;; run out.  Calls SUMMARIZE-PROC on the then-currnet history and
+;; hands.
+
+;; This function is starting to look like "unfold".  Perhaps someday I
+;; should explcitily write it to call "unfold".
+(define (play-loop history hands max-lookahead termination-proc summarize-proc)
   (define (inner history hands max-lookahead counter)
     (let ((trick-number (add1 (quotient counter 4)))
           (ha (car hands)))
       (let ((rv (termination-proc history hands)))
-        (or rv
-            (ha:empty? ha)
-            (begin
-              (when (or (history-empty? history)
-                        (hi:trick-complete? history))
-                (zprintf "~%Trick ~a:~%" trick-number))
-              (zprintf "~a thinks ..." (ha:seat ha))
-              (let-values (((new-hi new-hands)
-                            (play-card
-                             history
-                             hands
-                             (zp "plays ~a~%"
-                                 (choose-card history hands max-lookahead)))))
-                (inner new-hi
-                       new-hands
-                       max-lookahead
-                       (add1 counter))))))))
+        (if (or rv (ha:empty? ha))
+            (summarize-proc history hands)
+          (begin
+            (when (or (history-empty? history)
+                      (hi:trick-complete? history))
+              (zprintf "~%Trick ~a:~%" trick-number))
+            (zprintf "~a thinks ..." (ha:seat ha))
+            (let-values (((new-hi new-hands)
+                          (play-card
+                           history
+                           hands
+                           (zp "plays ~a~%"
+                               (choose-card history hands max-lookahead)))))
+              (inner new-hi
+                     new-hands
+                     max-lookahead
+                     (add1 counter))))))))
 
-   (check-type 'play-loop non-negative? max-lookahead)
-   (inner history hands max-lookahead 0))
+  (check-type 'play-loop non-negative? max-lookahead)
+  (inner history hands max-lookahead 0))
 ;;(trace play-loop)
 
+(define (assert-alist-or-false value)
+  (unless (or (not value)
+              (and (list? value)))
+    (raise-type-error 'choose-card (format "Wanted an alist or #f; got:" value)))
+  value)
 ;;; choose-card
 
 ;; sequence of tricks, list of (set of cards) -> card
@@ -262,16 +271,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
            ;; hypo-thetical, that is.
            (lambda (hypo-history hypo-hands)
+             (= (* (length *seats*)
+                   max-lookahead)
+                ( - (history-length-cards hypo-history)
+                    (history-length-cards new-hi))))
 
-             ;; this function returns #f if the play loop should
-             ;; continue, and a predicted score otherwise.
-             (let ((done (= (* (length *seats*)
-                               max-lookahead)
-                            ( - (history-length-cards hypo-history)
-                                (history-length-cards new-hi)))))
-               (and done
-                    (parameterize ((*recursion-level* rl))
-                      (score-from-history hypo-history hypo-hands))))))))
+           (lambda (hypo-history hypo-hands)
+             (parameterize ((*recursion-level* rl))
+               (score-from-history hypo-history hypo-hands))))))
       ))
 
   (define already-played-cards
