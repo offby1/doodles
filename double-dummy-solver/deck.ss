@@ -133,6 +133,29 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                 "Wrote ~a.~%" ofn))
      )
    `(("profile-stuff"
-      . ,(lambda () (output-profile-results #t #f)))
+      . ,(lambda ()
+           (for-each (lambda (datum)
+                       (let (
+                             ;; grr.  Aren't there macros that
+                             ;; destructure for me?
+                             (called          (list-ref datum 0))
+                             (milliseconds    (list-ref datum 1))
+                             (name            (list-ref datum 2))
+                             (source          (list-ref datum 3))
+                             (paths           (list-ref datum 4))
+                             )
+                       (printf "time = ~a : no. = ~a : time per call = ~a : ~a in ~a~%"
+                               milliseconds
+                               called
+                               (if (or (zero? called))
+                                   +inf.0
+                                 (exact->inexact (/ milliseconds called)))
+                               name
+                               source)))
+                     (sort (get-profile-results)
+                           (lambda (a b)
+                             (< (car a)
+                                (car b)))))
+           ))
      ("README"
       . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%"))))))
