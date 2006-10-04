@@ -66,3 +66,7 @@ I suspect this ratio will drop as max-lookahead rises.
 It's slow, of course; and if the ultimate goal here is to use this
 solver as part of a real bridge playing program, it's _too_ slow.  And
 I haven't noticed that lookahead improves the results much.
+
+* have deck.ss get max-lookahead from the command line
+
+... rather than hard-coding it
