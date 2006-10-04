@@ -126,6 +126,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (rotate new-hand-list 1))))
 
       ;; just for fun, see if the winner took a finesse.
+
+      ;; BUGBUG -- it's only really a finesse if the winner was in the
+      ;; third seat.
       (when (hi:trick-complete? new-history)
         (letrec ((hand-of (lambda (seat hands)
                             (if (eq? seat (ha:seat (car hands)))

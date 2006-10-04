@@ -1,6 +1,22 @@
 -*- outline -*-
 
-* potential speedups
+* make it smarter!
+
+There are a lot of things we could do to improve the play, without
+resorting to lookahead:
+
+** unblock
+
+See the comment on r2954
+
+** try for finesses
+
+I think that would require "cooperation" from both first and third
+seats: first seat would have to lead low, even if he'd otherwise lead
+high; third seat would have to play the lower card.
+
+Although, since third seat can see all the cards, he'd probably do the
+right thing anyway.
 
 * factor out "distinct" code ...
 
