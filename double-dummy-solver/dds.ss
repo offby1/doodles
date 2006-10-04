@@ -222,13 +222,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         accum
         (cond
          ((not (trick-complete? t))
-          (zp "~a isn't complete, so we're predicting the winner: ~a"
-              t
-              (list (cons (predict-winner-of-incomplete-trick t hands) 1))))
+          (list (cons (predict-winner-of-incomplete-trick t hands) 1)))
          (else
-          (zp "~a is complete, so it counts as ~a"
-              t
-              (list (cons (winner t) 1)))))))
+          (list (cons (winner t) 1))))))
      '()
      (history-tricks history)))
 
@@ -254,7 +250,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (predict-score card max-lookahead)
     (check-type 'predict-score non-negative? max-lookahead)
-    (zp "~a proposes to play ~a" (ha:seat (car hands)) card)
     (let ((rl (*recursion-level*)))
       (parameterize ((*recursion-level* (add1 (*recursion-level*))))
         (let-values (((new-hi new-hands)
@@ -320,11 +315,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (ha:cards ours)
                 mine-of-led-suit)))))
 
-         ;; Don't consider _every_ legal choice; instead, prune
-         ;; them.  Perhaps consider only the lowest and highest;
-         ;; perhaps treat sequences of cards like 2-3-4-5 as all the
-         ;; same, and thus consider only one card from such
-         ;; sequences.
+         ;; Don't consider _every_ legal choice; instead, treat
+         ;; sequences of cards like 2-3-4-5 as all the same, and thus
+         ;; consider only one card from such sequences.
          (grouped
 
           ;; here we're counting on the cards in the hand having been
@@ -340,6 +333,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (cards-between a b))))))
 
          ;; diagnostic only--vvvvv
+         ;; I don't think I've ever seen this diagnostic; it's prolly broken
          (runs (filter (lambda (l)
                          (< 1 (length l)))
                        grouped))
@@ -366,7 +360,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          ;; And when we're leading, we should probably consider at
          ;; least one card from each suit.
          ;;(pruned-legal-choices (bot-one/top-two (map car grouped)))
-         (pruned-legal-choices (hi-lo-each-suit (map car grouped)))
+
+         (pruned-legal-choices
+          (if (zero? max-lookahead)
+              ;; Shit, Jackson: as long as we're only looking ahead
+              ;; zero, why not consider every group?  Shouldn't slow
+              ;; us down _too_ much.  I hope.
+              (map car grouped)
+            (hi-lo-each-suit (map car grouped))))
 
          (choice
           (if (null? (cdr pruned-legal-choices))
@@ -419,8 +420,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            choice)))
                        (when (or (not best)
                                  (better (cons score choice) best))
-                         (set! best (zp "Suboptimal choice ~a is the best so far"
-                                        (cons score choice))))))
+                         (set! best (cons score choice)))))
 
                    (zp "considers ~a ..." pruned-legal-choices))
                   (cdr best)))))))

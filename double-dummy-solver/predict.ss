@@ -66,18 +66,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  (< (apply max (map card-rank theirs)) (card-rank c)))))
       (cond
        ((beats-all-enemy-cards? card)
-        (zp "~a's ~a beats enemy's ~a:~a" us card theirs us))
+        us)
 
        ;; if all partner's relevant cards beat
        ;; all the enemy cards, then we's gonna
        ;; win.
        ((and (not (null? pards))
              (every beats-all-enemy-cards? pards))
-        (zp "each of ~a's partner's ~a beats enemy's ~a:~a"
-            us pards theirs pard))
+        pard)
 
        (else
-        (zp "~a ain't the boss:~a" card 'depends-on-what-they-play))))))
+        'depends-on-what-they-play)))))
 
 
 )

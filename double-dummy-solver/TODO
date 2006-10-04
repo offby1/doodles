@@ -44,3 +44,9 @@ value; but often they're not).  So we could estimate the benefit by
         number of times called - 1
 
 I suspect this ratio will drop as max-lookahead rises.
+
+** consider abandoning lookahead entirely!
+
+It's slow, of course; and if the ultimate goal here is to use this
+solver as part of a real bridge playing program, it's _too_ slow.  And
+I haven't noticed that lookahead improves the results much.
