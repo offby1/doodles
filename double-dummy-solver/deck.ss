@@ -1,9 +1,9 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
-(module deck mzscheme
+
 (require (lib "errortrace.ss" "errortrace"))
 
 (profiling-enabled #t)
@@ -135,7 +135,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    `(("profile-stuff"
       . ,(lambda () (output-profile-results #t #f)))
      ("README"
-      . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))
-
-)
-)
+      . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%"))))))

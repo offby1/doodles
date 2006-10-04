@@ -432,6 +432,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  (better (cons score choice) best))
                          (set! best (cons score choice)))))
 
+                   ;; TODO: consider sorting these in decreasing order
+                   ;; of trick-taking power, so as to reduce the
+                   ;; number of cards we consider before we bail out
+                   ;; of the let/ec.
                    (zp "considers ~a ..." pruned-legal-choices))
                   (cdr best)))))))
 

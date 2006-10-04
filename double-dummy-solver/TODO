@@ -18,6 +18,30 @@ high; third seat would have to play the lower card.
 Although, since third seat can see all the cards, he'd probably do the
 right thing anyway.
 
+Maybe we shouldn't try all the time.  Remember, our goal isn't to
+"win" (winning is meaningless since we're playing both sides); rather,
+it's to predict what good human players would do.  And a good human
+player doesn't try for every finesse; rather, he tries for those whose
+benefits would exceed their cost.  Further: when there's a finesse
+opportunity, there are three possibilties:
+
+*** we don't even try
+
+we win one trick (the high card of the tenace)
+
+*** we try and fail
+
+we lose some number of tricks, depending.  It's possible we'd lose a
+shitload, if it's notrump and the enemy has a long suit he can run.
+
+*** we try and win
+
+we win two tricks: both cards in the tenace
+
+A good player will figure his chances of winning, the cost of losing,
+and thus the average return on the finesse -- and if that return is
+greater than one trick, he'll try it.  We should do likewise.
+
 * factor out "distinct" code ...
 
 Both tricks and hands are essentially sets: they require that they
