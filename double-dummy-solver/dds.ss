@@ -136,7 +136,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (parameterize ((*really-loud* (and #t
                                                                 (or (*really-loud*)
                                                                     (= trick-number 1)))) )
-                               (zp " plays ~a~%"
+                               (zp "plays ~a~%"
                                    (choose-card history hands max-lookahead))))))
                 (inner new-hi
                        new-hands
@@ -176,8 +176,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; If the last trick is incomplete, it guesses (which is why it
   ;; needs to a set of hands).
   (define (score-from-history history hands)
-    (zprintf " score-from-history: we are ~a; ~a ..." (ha:seat us) history)
-    (zp " score-from-history(~a): returning ~a ..."
+    (zprintf "score-from-history: we are ~a; ~a ..." (ha:seat us) history)
+    (zp "score-from-history(~a): returning ~a ..."
         (ha:seat us)
         (fold
          (lambda (t sum)
@@ -228,7 +228,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (< (apply max (map card-rank theirs)) (card-rank c))))
                             (cond
                              ((beats-all-enemy-cards? card)
-                              (zp " ~a's ~a beats enemy's ~a:~a"
+                              (zp "~a's ~a beats enemy's ~a:~a"
                                   (ha:seat us)
                                   card
                                   (append-map relevant-cards (list lho rho))
@@ -239,16 +239,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              ;; win.
                              ((and (not (null? pards))
                                    (every beats-all-enemy-cards? pards))
-                              (zp " each of ~a's partner's ~a beats enemy's ~a:~a"
+                              (zp "each of ~a's partner's ~a beats enemy's ~a:~a"
                                   (ha:seat us) pards theirs 1))
                              (else
-                              (zp " ~a ain't the boss:~a" card 0))))
+                              (zp "~a ain't the boss:~a" card 0))))
                         ;; Wrong suit?  We'll surely lose.  (This will
                         ;; of course need to be updated once I introduce
                         ;; trumps.)
-                        (zp " ~a is wrong suit:~a" card -1))))
-                   ((we-won? t) (zp " complete trick; ~a won:~a" (ha:seat us) 1))
-                   (else (zp " complete trick; ~a lost:~a" (ha:seat us) -1)))))
+                        (zp "~a is wrong suit:~a" card -1))))
+                   ((we-won? t) (zp "complete trick; ~a won:~a" (ha:seat us) 1))
+                   (else (zp "complete trick; ~a lost:~a" (ha:seat us) -1)))))
          0
          (history-tricks history))))
 
@@ -279,7 +279,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
         (define us (ha:seat (car hands)))
 
-        (zp " ~a proposes to play ~a"
+        (zp "~a proposes to play ~a"
             us
             (car (last-play (history-latest-trick new-hi))))
         (parameterize ((*recursion-level* (add1 (*recursion-level*))))
@@ -308,18 +308,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (score-from-history hypo-history hypo-hands))))
                (parameterize ((*recursion-level* rl))
                  (if (not (zero? sc))
-                     (zp " Oh good, ~a knows for certain that ~a yields ~a" us card sc)
+                     (zp "Oh good, ~a knows for certain that ~a yields ~a" us card sc)
                    (and
-                    (zp " ~a: is trick ~a complete? ~a"
+                    (zp "~a: is trick ~a complete? ~a"
                         us
                         (history-latest-trick hypo-history)
                         (trick-complete? (history-latest-trick hypo-history)))
-                    (zp " has ~a looked far enough into the future? ~a"
+                    (zp "has ~a looked far enough into the future? ~a"
                         us
                         (= max-lookahead
                            (- (history-length hypo-history)
                               (history-length new-hi))))
-                    (zp " drat; ~a never found out if ~a wins or loses, so:~a" us card 0)))))))))))
+                    (zp "drat; ~a never found out if ~a wins or loses, so:~a" us card 0)))))))))))
 
   (define already-played-cards
     (history-card-set history))
@@ -413,14 +413,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (if (null? (cdr pruned-legal-choices))
               (begin
                 (if (null? (cdr legal-choices))
-                    (zprintf " (duh, singleton)")
+                    (zprintf "(duh, singleton)")
                   (when (null? (cdr grouped))
-                    (zprintf " ~a all the same" (car grouped))))
+                    (zprintf "~a all the same" (car grouped))))
 
                 (car pruned-legal-choices))
 
             (begin
-              (zprintf " looks ahead ~a" max-lookahead)
+              (zprintf "looks ahead ~a" max-lookahead)
 
               ;; Don't call predict-score on _every_ card; rather,
               ;; stop as soon as we find a card whose score is 1.
@@ -445,7 +445,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  (better (cons score choice) best))
                          (set! best (cons score choice)))))
 
-                   (zp " considers ~a ..." pruned-legal-choices))
+                   (zp "considers ~a ..." pruned-legal-choices))
                   (cdr best)))))))
 
     choice))
