@@ -123,7 +123,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (cons (make-trick (list c) (winner l))
                   (history-tricks rv))))
       (else
-       (cons (t:add-card (t:copy (history-latest-trick rv)) c)
+       (cons (t:add-card (history-latest-trick rv) c)
              (cdr (history-tricks rv))))))
 
     (unless (= 1 (- (length (history-card-set rv))

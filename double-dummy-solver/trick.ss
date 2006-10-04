@@ -16,6 +16,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
                reduce
                take
                )
+         (only (lib "43.ss" "srfi")
+               vector-copy
+               vector-every
+               vector-for-each
+               vector-map
+               )
          "card.ss"
          (lib "trace.ss")
          (only (lib "etc.ss") compose)
@@ -26,7 +32,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename my-trick-cards trick-cards)
          mt
          (rename add-card t:add-card)
-         (rename copy t:copy)
          led-suit
          last-play
          leader
@@ -76,23 +81,25 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (partner seat)
   (with-seat-circle seat caddr))
 
-;; complete? is redundant -- it's always (= 4 (length
-;; card-seat-pairs)).  But profiling shows that cacheing that number
-;; saves noticeable time.
 (define (trick-print trick port write?)
-  (let loop ((tcps (trick-card-seat-pairs trick)))
-    (when (not (null? tcps))
-      (let ((p (car tcps)))
-        (fprintf port "~a:~a" (cdr p) (car p)))
-      (when (not (null? (cdr tcps)))
-        (display ", " port))
-      (loop (cdr tcps)))))
+  (vector-for-each (lambda (i tcp)
+                     (fprintf port "~a:~a" (cdr tcp) (car tcp))
+                     (if (< i (sub1 (vector-length (trick-card-seat-pairs trick))))
+                         (fprintf port ", ")))
+                   (trick-card-seat-pairs trick)))
 
 (define-values (s:trick make-trick trick? s:trick-ref trick-set!)
-  (make-struct-type 'trick #f 2 0 #f
+  (make-struct-type 'trick #f 1 0 #f
                     (list (cons prop:custom-write trick-print)) #f))
 (define (trick-card-seat-pairs t) (s:trick-ref t 0))
-(define (trick-complete?       t) (s:trick-ref t 1))
+(define (trick-complete?       t)
+  (= 4 (vector-length (trick-card-seat-pairs t))))
+
+(define (my-is-trick? thing)
+  (and (trick? thing)
+       (let ((v (trick-card-seat-pairs thing)))
+         (and (vector v)
+              (vector-every pair? v)))))
 
 (define (my-make-trick cards leader)
   (define (all-distinct? seq)
@@ -112,8 +119,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    leader
    (lambda (sc)
      (let ((l (length cards)))
-       (make-trick (map cons cards (take sc  l))
-                   (= 4 l))))))
+       (make-trick (list->vector (map cons cards (take sc  l))))))))
 
 ;(trace my-make-trick)
 
@@ -132,40 +138,41 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ((_ leader card-syms ...)
      (apply mt* `(leader card-syms ...)))))
 
-(define (copy t)
-  (make-trick (alist-copy (trick-card-seat-pairs t))
-              (trick-complete? t)))
-
 (define (leader t)
-  (cdr (car (trick-card-seat-pairs t))))
+  (cdr (vector-ref (trick-card-seat-pairs t) 0)))
 
 (define (annotated-cards t)
-  (trick-card-seat-pairs t))
+  (vector->list (trick-card-seat-pairs t)))
 
 (define (my-trick-cards t)
-  (map car (trick-card-seat-pairs t)))
+  (map car (vector->list (trick-card-seat-pairs t))))
 
-;; nondestructive, but the returned value can share structure with the
-;; input.
+;; nondestructive
 (define (add-card t c)
+  (assert (my-is-trick? t))
   (assert (not (trick-complete? t)))
-  (my-make-trick (append (my-trick-cards t)
-                         (list c))
-                 (leader t)))
-
+  (let* ((new-length (add1 (vector-length (trick-card-seat-pairs t))))
+         (v (vector-copy (trick-card-seat-pairs t) 0 new-length))
+         (next-seat (with-seat-circle (cdr (vlast (trick-card-seat-pairs t))) cadr)))
+    (vector-set! v (sub1 new-length) (cons c  next-seat))
+    (make-trick v)))
+;;(trace add-card)
 (define (trick-ref t k)
-  (list-ref (my-trick-cards t)
-            k))
+  (car (vector-ref (trick-card-seat-pairs t)
+                   k)))
+
+(define (vlast v)
+  (vector-ref v (sub1 (vector-length v))))
 
 (define (last-play t)
   (let ((pairs (trick-card-seat-pairs t)))
-    (assert (not (null? pairs)))
-    (car (last-pair pairs))))
+    (assert (not (zero? (vector-length pairs))))
+    (car (vlast pairs))))
 
 (define (whose-turn t)
   (assert (not (trick-complete? t)))
   (with-seat-circle
-   (cdr (last (trick-card-seat-pairs t)))
+   (cdr (vlast (trick-card-seat-pairs t)))
    cadr))
 
 (define (led-suit t)
@@ -179,11 +186,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
       0))
   (assert (trick-complete? t))
   (cdr
-   (reduce (lambda (a b) (if (> (worth (car a))
-                                (worth (car b)))
-                             a b))
-           (car (trick-card-seat-pairs t))
-           (trick-card-seat-pairs t))))
+   (let ((cards (trick-card-seat-pairs t)))
+     (let loop ((best (vector-ref cards 0))
+                (examined 1))
+       (if (= examined (vector-length cards))
+           best
+         (let ((this (vector-ref cards examined)))
+           (loop (if (> (worth (car this))
+                        (worth (car best)))
+                     this best)
+                 (add1 examined))))))))
+
 ;(trace winner)
 )
 
