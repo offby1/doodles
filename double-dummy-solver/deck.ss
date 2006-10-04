@@ -53,7 +53,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
       (let ((bottom-index (random top-index)))
         (swap! bottom-index top-index)))))
 
-(define max-lookahead 0)
+(define max-lookahead 1)
 
 (parameterize ((*really-loud* #t))
   (for-each
