@@ -49,6 +49,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               '()
               seq))))
 
+(define (same-team? s1 s2)
+  (with-seat-circle
+   s1
+   (lambda (sc)
+     (or (eq? s2 (car sc))
+         (eq? s2 (caddr sc)))))
+  )
+
+(define (assoc-backwards obj backwards-alist)
+    (cond
+     ((null? backwards-alist)
+      #f)
+     ((equal? obj (cdr (car backwards-alist)))
+      (car backwards-alist))
+     (else
+      (assoc-backwards obj (cdr backwards-alist)))))
+
 ;; Returns the least, and the two greatest, cards, based on rank.
 (define (bot-one/top-two seq)
   (if (< (length seq) 4)
@@ -116,7 +133,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (play-card
                              history
                              hands
-                             (parameterize ((*really-loud* (and #f
+                             (parameterize ((*really-loud* (and #t
                                                                 (or (*really-loud*)
                                                                     (= trick-number 1)))) )
                                (zp " plays ~a~%"
@@ -211,7 +228,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (< (apply max (map card-rank theirs)) (card-rank c))))
                             (cond
                              ((beats-all-enemy-cards? card)
-                              (zp " my ~a beats enemy's ~a:~a"
+                              (zp " ~a's ~a beats enemy's ~a:~a"
+                                  (ha:seat us)
                                   card
                                   (append-map relevant-cards (list lho rho))
                                   1))
@@ -221,16 +239,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              ;; win.
                              ((and (not (null? pards))
                                    (every beats-all-enemy-cards? pards))
-                              (zp " each of partner's ~a beats enemy's ~a:~a"
-                                  pards theirs 1))
+                              (zp " each of ~a's partner's ~a beats enemy's ~a:~a"
+                                  (ha:seat us) pards theirs 1))
                              (else
                               (zp " ~a ain't the boss:~a" card 0))))
                         ;; Wrong suit?  We'll surely lose.  (This will
                         ;; of course need to be updated once I introduce
                         ;; trumps.)
                         (zp " ~a is wrong suit:~a" card -1))))
-                   ((we-won? t) (zp " complete trick; we won:~a" 1))
-                   (else (zp " complete trick; we lost:~a" -1)))))
+                   ((we-won? t) (zp " complete trick; ~a won:~a" (ha:seat us) 1))
+                   (else (zp " complete trick; ~a lost:~a" (ha:seat us) -1)))))
          0
          (history-tricks history))))
 
@@ -279,19 +297,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              ;; tricks beyond new-hi -- i.e., we've looked into the
              ;; future and _still_ haven't gotten a decisive answer from
              ;; score-from-history.
+             (let ((sc (*
 
-             ;; Also note that the predicted score is with respect to
-             ;; the player who played the last trick before we gave up
-             ;; -- and that player isn't necessarily the player who
-             ;; called predict-score.  So we somehow need to
-             ;; compensate.
-             (let ((sc (score-from-history hypo-history hypo-hands)))
+                        ;; The predicted score is with respect to the
+                        ;; player who played the last trick before we
+                        ;; gave up -- and that player isn't
+                        ;; necessarily the player who called
+                        ;; predict-score.  So we compensate.
+                        (if (same-team? us (history:whose-turn hypo-history)) -1 1)
+                        (score-from-history hypo-history hypo-hands))))
                (parameterize ((*recursion-level* rl))
                  (if (not (zero? sc))
                      (zp " Oh good, ~a knows for certain that ~a yields ~a" us card sc)
                    (and
-                    (zp " ~a: is trick complete? ~a"
+                    (zp " ~a: is trick ~a complete? ~a"
                         us
+                        (history-latest-trick hypo-history)
                         (trick-complete? (history-latest-trick hypo-history)))
                     (zp " has ~a looked far enough into the future? ~a"
                         us
@@ -307,17 +328,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (or (member c (ha:cards lho))
         (member c (ha:cards rho))))
 
-  (define (assoc-backwards obj backwards-alist)
-    (cond
-     ((null? backwards-alist)
-      #f)
-     ((equal? obj (cdr (car backwards-alist)))
-      (car backwards-alist))
-     (else
-      (assoc-backwards obj (cdr backwards-alist)))))
-
-  ;;(trace predict-score)
   ;;(trace score-from-history)
+  ;;(trace predict-score)
   (check-type 'choose-card non-negative? max-lookahead)
   (check-type 'choose-card history? history)
   (unless (ha:hand? us)
@@ -407,27 +419,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                 (car pruned-legal-choices))
 
-            (let* ((max-lookahead (zp " looks ahead ~a" max-lookahead))
-                   (pairs (sort
-                           (map (lambda (card)
-                                  (cons (predict-score card max-lookahead)
-                                        card))
-                                (zp " considers ~a ..." pruned-legal-choices))
+            (begin
+              (zprintf " looks ahead ~a" max-lookahead)
 
-                           ;; sort by score, of course; but if the
-                           ;; scores are equal, choose the
-                           ;; lower-ranking card.
-                           (lambda (a b)
-                             (if (= (car a)
-                                    (car b))
-                                 (< (card-rank (cdr a))
-                                    (card-rank (cdr b)))
-                               (> (car a)
-                                  (car b)))))))
+              ;; Don't call predict-score on _every_ card; rather,
+              ;; stop as soon as we find a card whose score is 1.
+              (let/ec return
+                (let ((best #f))
+                  (for-each
+                   (lambda (choice)
+                     ;; sort by score, of course; but if the
+                     ;; scores are equal, choose the
+                     ;; lower-ranking card.
+                     (define (better a b)
+                       (if (= (car a)
+                              (car b))
+                           (< (card-rank (cdr a))
+                              (card-rank (cdr b)))
+                         (> (car a)
+                            (car b))))
+                     (let ((score (predict-score choice max-lookahead)))
+                       (when (= 1 score)
+                         (return choice))
+                       (when (or (not best)
+                                 (better (cons score choice) best))
+                         (set! best (cons score choice)))))
 
-              (cdar (zp " -> ~a" pairs))))))
-
-
+                   (zp " considers ~a ..." pruned-legal-choices))
+                  (cdr best)))))))
 
     choice))
 ;;(trace choose-card)

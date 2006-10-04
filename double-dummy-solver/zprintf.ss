@@ -14,6 +14,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (zprintf . args)
   (when (or (*really-loud*)
             (zero? (*recursion-level*)))
+    (newline)
+    (display (make-string (* 2 (*recursion-level*)) #\space))
     (apply printf args)
     (flush-output)))
 
