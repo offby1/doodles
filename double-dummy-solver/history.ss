@@ -81,7 +81,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (hi:trick-complete? h)))
 (define (history-card-set h)
   (append-map trick-cards (history-tricks h)))
-
+(define (history-length-cards h)
+  (length (history-card-set h)))
 (define (whose-turn h)
   (assert (not (history-complete? h)))
   (if (history-empty? h)

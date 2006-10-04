@@ -18,6 +18,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                )
          "card.ss"
          (lib "trace.ss")
+         (only (lib "etc.ss") compose)
          (lib "pretty.ss"))
 
 (provide (rename my-make-trick make-trick)
@@ -29,6 +30,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          led-suit
          last-play
          leader
+         partner
          rotate
          rotate-until
          trick?
@@ -70,6 +72,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
               seat)
 
   (proc (rotate-until-car-eq *seats* seat)))
+
+(define (partner seat)
+  (with-seat-circle seat caddr))
 
 ;; complete? is redundant -- it's always (= 4 (length
 ;; card-seat-pairs)).  But profiling shows that cacheing that number

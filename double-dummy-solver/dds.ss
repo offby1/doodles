@@ -24,6 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "card.ss"
          "trick.ss"
          "zprintf.ss"
+         "predict.ss"
          (all-except "history.ss" whose-turn)
          (rename "history.ss" history:whose-turn whose-turn)
          (prefix ha: "hand.ss")
@@ -95,6 +96,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (hi-lo-each-suit seq)
   (append-map hi-lo (partition-by-suits seq)))
 
+(define (ass0 obj alist)
+  (let ((probe (assq obj alist)))
+    (or (and probe (cdr probe)) 0)))
+
+;; each is (cons seat integer?)
+(define (sum-scores a b)
+  (for-each (lambda (s)
+              (assert (list? s))
+              (assert (every (lambda (p) (or (eq? (car p) 'depends-on-what-they-play) (member (car p) *seats*))) s)))
+            (list a b))
+
+  (map (lambda (pair)
+         (let ((seat (car pair))
+               (score (cdr pair)))
+           (cons seat
+                 (+ (ass0 seat a) score))))
+       b))
+
+(define (numeric-team-score sp our-seat)
+  (+ (ass0 our-seat sp)
+     (ass0 (partner our-seat) sp)))
+
 ;; nondestructive.  Take CARD from (car HANDS), and move it into the
 ;; history.  Return that new history, and the new set of hands, with
 ;; the card gone, and with the hands rotated one notch.
@@ -167,90 +190,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-card history hands max-lookahead)
 
-  (define us      (car (rotate hands 0)))
-  (define lho     (car (rotate hands 1)))
-  (define partner (car (rotate hands 2)))
-  (define rho     (car (rotate hands 3)))
+  (define ours      (car (rotate hands 0)))
+  (define us        (ha:seat ours))
+  (define lho^s     (car (rotate hands 1)))
+  (define partner^s (car (rotate hands 2)))
+  (define rho^s     (car (rotate hands 3)))
 
-  ;; computes the score from the point of view of whoever played last.
-  ;; If the last trick is incomplete, it guesses (which is why it
-  ;; needs to a set of hands).
+  ;; computes the score from the given history.  If the last trick is
+  ;; incomplete, it guesses (which is why it needs to a set of hands).
+  ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
   (define (score-from-history history hands)
-    (zprintf "score-from-history: we are ~a; ~a ..." (ha:seat us) history)
-    (zp "score-from-history(~a): returning ~a ..."
-        (ha:seat us)
+    (zprintf "score-from-history ~a ..." history)
+    (zp "score-from-history: returning ~a ..."
         (fold
-         (lambda (t sum)
-
-           (define (we-won? t)
-             (let ((w (winner t)))
-               (or (eq? w (ha:seat us))
-                   (eq? w (ha:seat partner)))))
-
-           (+ sum (cond
-                   ((not (trick-complete? t))
-                    (let* ((card (car (last-pair (trick-cards t))))
-                           (right-suit? (lambda (c) (eq? (card-suit c) (led-suit t))))
-                           (cards-in-current-trick (length (trick-cards t))))
-
-                      ;; "us" is the seat who _last_ played, as
-                      ;; contrasted to choose-card, in which case
-                      ;; "us" is the seat who is _about_ to play.
-                      (define us      (ha:filter right-suit? (car (rotate hands 3))))
-                      (define lho     (ha:filter right-suit? (car (rotate hands 0))))
-                      (define partner (ha:filter right-suit? (car (rotate hands 1))))
-                      (define rho     (ha:filter right-suit? (car (rotate hands 2))))
-
-                      ;; if a given side has played, or been forced
-                      ;; to play, a card that is higher than their
-                      ;; enemy's cards of that suit, then they will
-                      ;; win.
-
-                      ;; Keep in mind that the question we're trying
-                      ;; to answer is: "if we play this card, will we
-                      ;; win this trick?"  That's subtly different
-                      ;; from "will this card win this trick", because
-                      ;; this card might be a deuce, but our partner
-                      ;; has a singleton ace.
-                      (define (relevant-cards playa)
-                        (let ((already (assoc-backwards
-                                        (ha:seat playa)
-                                        (annotated-cards t))))
-                          (if already
-                              (filter right-suit? (list (car already)))
-                            (ha:cards playa))))
-
-                      (if (right-suit? card)
-                          (let ((theirs (append-map relevant-cards (list lho rho)))
-                                (pards (relevant-cards partner)))
-                            (define (beats-all-enemy-cards? c)
-                              (or (null? theirs)
-                                  (< (apply max (map card-rank theirs)) (card-rank c))))
-                            (cond
-                             ((beats-all-enemy-cards? card)
-                              (zp "~a's ~a beats enemy's ~a:~a"
-                                  (ha:seat us)
-                                  card
-                                  (append-map relevant-cards (list lho rho))
-                                  1))
-
-                             ;; if all partner's relevant cards beat
-                             ;; all the enemy cards, then we's gonna
-                             ;; win.
-                             ((and (not (null? pards))
-                                   (every beats-all-enemy-cards? pards))
-                              (zp "each of ~a's partner's ~a beats enemy's ~a:~a"
-                                  (ha:seat us) pards theirs 1))
-                             (else
-                              (zp "~a ain't the boss:~a" card 0))))
-                        ;; Wrong suit?  We'll surely lose.  (This will
-                        ;; of course need to be updated once I introduce
-                        ;; trumps.)
-                        (zp "~a is wrong suit:~a" card -1))))
-                   ((we-won? t) (zp "complete trick; ~a won:~a" (ha:seat us) 1))
-                   (else (zp "complete trick; ~a lost:~a" (ha:seat us) -1)))))
-         0
+         (lambda (t accum)
+           (sum-scores
+            accum
+            (cond
+             ((not (trick-complete? t))
+              (list (cons (predict-winner-of-incomplete-trick t hands) 1)))
+             (else
+              (zp "complete trick; ~a won" (list (cons (winner t) 1)))))))
+         '()
          (history-tricks history))))
+
 
 ;;; predict-score
 
@@ -292,53 +255,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (lambda (hypo-history hypo-hands)
 
              ;; this function returns #f if the play loop should
-             ;; continue, and a predicted score otherwise.  Note that
-             ;; the predicted score is 0 if we've adanced max-lookahead
-             ;; tricks beyond new-hi -- i.e., we've looked into the
-             ;; future and _still_ haven't gotten a decisive answer from
-             ;; score-from-history.
-             (let ((sc (*
-
-                        ;; The predicted score is with respect to the
-                        ;; player who played the last trick before we
-                        ;; gave up -- and that player isn't
-                        ;; necessarily the player who called
-                        ;; predict-score.  So we compensate.
-                        (if (same-team? us (history:whose-turn hypo-history)) -1 1)
-                        (score-from-history hypo-history hypo-hands))))
-               (parameterize ((*recursion-level* rl))
-                 (if (not (zero? sc))
-                     (zp "Oh good, ~a knows for certain that ~a yields ~a" us card sc)
-                   (and
-                    (zp "~a: is trick ~a complete? ~a"
-                        us
-                        (history-latest-trick hypo-history)
-                        (trick-complete? (history-latest-trick hypo-history)))
-                    (zp "has ~a looked far enough into the future? ~a"
-                        us
-                        (= max-lookahead
-                           (- (history-length hypo-history)
-                              (history-length new-hi))))
-                    (zp "drat; ~a never found out if ~a wins or loses, so:~a" us card 0)))))))))))
+             ;; continue, and a predicted score otherwise.
+             (let ((done (= (* (length *seats*)
+                               max-lookahead)
+                            ( - (history-length-cards hypo-history)
+                                (history-length-cards new-hi)))))
+               (and done
+                    (parameterize ((*recursion-level* rl))
+                      (score-from-history hypo-history hypo-hands))))))))))
 
   (define already-played-cards
     (history-card-set history))
 
   (define (held-by-enemy? c)
-    (or (member c (ha:cards lho))
-        (member c (ha:cards rho))))
+    (or (member c (ha:cards lho^s))
+        (member c (ha:cards rho^s))))
 
   ;;(trace score-from-history)
   ;;(trace predict-score)
+  ;;(trace numeric-team-score)
   (check-type 'choose-card non-negative? max-lookahead)
   (check-type 'choose-card history? history)
-  (unless (ha:hand? us)
+  (unless (ha:hand? ours)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
-  (if (ha:empty? us)
+  (if (ha:empty? ours)
       (raise-mismatch-error 'choose-card "Empty hand!" hands))
   (if (history-complete? history)
       (raise-mismatch-error 'choose-card "the game's already over!" history))
-  (unless (null? (lset-intersection eq? (ha:cards us) already-played-cards))
+  (unless (null? (lset-intersection eq? (ha:cards ours) already-played-cards))
     (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
   (let* ((legal-choices
@@ -349,16 +293,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
             ;; we sort by suits so that it will be easy to make groups
             ;; of adjacent cards of the same suit.
-            (sort (ha:cards us) card</suit)
+            (sort (ha:cards ours) card</suit)
             )
            (else
             ;; otherwise me have to follow suit if we can.
             (let ((mine-of-led-suit (filter (lambda (mine)
                                               (eq? (card-suit mine)
                                                    (suit-led history)))
-                                            (ha:cards us))))
+                                            (ha:cards ours))))
               (if (null? mine-of-led-suit)
-                  (ha:cards us)
+                  (ha:cards ours)
                 mine-of-led-suit)))))
 
          ;; Don't consider _every_ legal choice; instead, prune
@@ -377,7 +321,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (lambda (a b)
              (and (eq? (card-suit a)
                        (card-suit b))
-                  (every (lambda (c) (member c (ha:cards us)))
+                  (every (lambda (c) (member c (ha:cards ours)))
                          (cards-between a b))))))
 
          ;; diagnostic only--vvvvv
@@ -438,7 +382,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (card-rank (cdr b)))
                          (> (car a)
                             (car b))))
-                     (let ((score (predict-score choice max-lookahead)))
+                     (let ((score (numeric-team-score
+                                   (predict-score choice max-lookahead)
+                                   us)))
                        (when (= 1 score)
                          (return choice))
                        (when (or (not best)
