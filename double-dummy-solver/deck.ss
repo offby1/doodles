@@ -21,7 +21,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
-(define max-lookahead 0)
+(define max-lookahead 2)
 (random-seed 0)
 
 (define *deck*
@@ -137,12 +137,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
            (for-each (lambda (datum)
                        (apply
                         (lambda (called milliseconds name source paths)
-                          (printf "time = ~a : no. = ~a : time per call = ~a : ~a in ~a~%"
+                          (printf "time = ~a : no. = ~a : µs per call = ~a : ~a in ~a~%"
                                   milliseconds
                                   called
                                   (if (or (zero? called))
                                       +inf.0
-                                    (exact->inexact (/ milliseconds called)))
+                                    (exact->inexact (* 1000 (/ milliseconds called))))
                                   name
                                   source))
                         datum))
