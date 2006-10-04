@@ -123,9 +123,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                       (eq? (ha:seat (car h))
                                                            (history:whose-turn new-history))))
                       (rotate new-hand-list 1))))
+
+      ;; just for fun, see if the winner took a finesse.
+      (when (hi:trick-complete? new-history)
+        (letrec ((hand-of (lambda (seat hands)
+                            (if (eq? seat (ha:seat (car hands)))
+                                (car hands)
+                              (hand-of seat (cdr hands))))))
+          (let* ((t (history-latest-trick new-history))
+                 (winning-seat (winner t))
+                 (winning-card (car (assoc-backwards winning-seat (annotated-cards t))))
+                 (lho (with-seat-circle winning-seat cadr))
+                 (rho (with-seat-circle lho caddr))
+
+                 (enemy-holding
+                  (append (ha:cards (hand-of lho new-hand-list))
+                          (ha:cards (hand-of rho new-hand-list))))
+                 (trick-rank (lambda (c t)
+                               (if (eq? (card-suit c)
+                                        (card-suit (trick-ref t 0)))
+                                   (card-rank c)
+                                 0)))
+                 (suckers (filter (lambda (en)
+                                    (< (trick-rank winning-card t)
+                                       (trick-rank en t)))
+                                  enemy-holding)))
+            (when (not (null? suckers))
+              (zprintf "Ha! ~a just finessed the ~a" winning-seat suckers)))))
+
       (values new-history rotated))))
 ;;(trace play-card)
-
+
 ;; plays tricks from the given hands, starting with (car HANDS),
 ;; stopping when TERMINATION-PROC returns a true value, and returns
 ;; that value.  This function is starting to look like "unfold".
@@ -146,11 +174,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (play-card
                              history
                              hands
-                             (parameterize ((*really-loud* (and #t
-                                                                (or (*really-loud*)
-                                                                    (= trick-number 1)))) )
-                               (zp "plays ~a~%"
-                                   (choose-card history hands max-lookahead))))))
+                             (zp "plays ~a~%"
+                                 (choose-card history hands max-lookahead)))))
                 (inner new-hi
                        new-hands
                        max-lookahead
@@ -159,6 +184,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (check-type 'play-loop non-negative? max-lookahead)
    (inner history hands max-lookahead 0))
 ;;(trace play-loop)
+
 ;;; choose-card
 
 ;; sequence of tricks, list of (set of cards) -> card
@@ -185,7 +211,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define lho^s     (car (rotate hands 1)))
   (define partner^s (car (rotate hands 2)))
   (define rho^s     (car (rotate hands 3)))
-
+
   ;; computes the score from the given history.  If the last trick is
   ;; incomplete, it guesses (which is why it needs to a set of hands).
   ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
@@ -230,16 +256,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (define (predict-score card max-lookahead)
     (check-type 'predict-score non-negative? max-lookahead)
+    (zp "~a proposes to play ~a" (ha:seat (car hands)) card)
     (let ((rl (*recursion-level*)))
-      (let-values (((new-hi new-hands)
-                    (play-card history hands card)))
+      (parameterize ((*recursion-level* (add1 (*recursion-level*))))
+        (let-values (((new-hi new-hands)
+                      (play-card history hands card)))
 
-        (define us (ha:seat (car hands)))
-
-        (zp "~a proposes to play ~a"
-            us
-            (car (last-play (history-latest-trick new-hi))))
-        (parameterize ((*recursion-level* (add1 (*recursion-level*))))
           (play-loop
            new-hi
            new-hands
@@ -256,7 +278,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (history-length-cards new-hi)))))
                (and done
                     (parameterize ((*recursion-level* rl))
-                      (score-from-history hypo-history hypo-hands))))))))))
+                      (score-from-history hypo-history hypo-hands))))))))
+      ))
 
   (define already-played-cards
     (history-card-set history))
