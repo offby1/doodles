@@ -55,53 +55,52 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
-(parameterize ((*really-loud* #t))
-  (for-each
-   (lambda (hand-number)
-     (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
+(for-each
+ (lambda (hand-number)
+   (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
-     ;; deal 'em out
-     (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-                (hs (apply circular-list hands)))
-       (unless (null? d)
-         (let ((victim (car hs)))
-           (ha:add-card! victim (car d)))
+   ;; deal 'em out
+   (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
+              (hs (apply circular-list hands)))
+     (unless (null? d)
+       (let ((victim (car hs)))
+         (ha:add-card! victim (car d)))
 
-         (loop (cdr d)
-               (cdr hs))))
+       (loop (cdr d)
+             (cdr hs))))
 
-     ;; sort the hands.  This is actually important, since
-     ;; group-into-adjacent-runs will be more likely to return exactly 1
-     ;; group, and hence things will go faster.
-     (for-each ha:sort!  hands)
+   ;; sort the hands.  This is actually important, since
+   ;; group-into-adjacent-runs will be more likely to return exactly 1
+   ;; group, and hence things will go faster.
+   (for-each ha:sort!  hands)
 
-     (display #\page) (newline)
-     (printf "~a~%" (make-string 60 #\=))
-     (printf "Hand ~a~%" hand-number)
-     (printf "~a~%" (make-string 60 #\=))
+   (display #\page) (newline)
+   (printf "~a~%" (make-string 60 #\=))
+   (printf "Hand ~a~%" hand-number)
+   (printf "~a~%" (make-string 60 #\=))
 
-     (for-each (lambda (h)
-                 (display h)
-                 (newline))  hands)
-     (newline)
+   (for-each (lambda (h)
+               (display h)
+               (newline))  hands)
+   (newline)
 
-     (time
-      (play-loop
-       (make-history (car *seats*))
-       hands
-       max-lookahead
+   (time
+    (play-loop
+     (make-history (car *seats*))
+     hands
+     max-lookahead
 
-       ;; always returns false -- thus we'll stop only when the hands
-       ;; have been emptied.
-       (lambda (hi hands)
-         (when (history-complete? hi)
-           (printf "~a~%" (compute-score hi)))
-         #f
-         )))
+     ;; always returns false -- thus we'll stop only when the hands
+     ;; have been emptied.
+     (lambda (hi hands)
+       (when (history-complete? hi)
+         (printf "~a -> ~a~%" hi (compute-score hi)))
+       #f
+       )))
 
-     (printf "~%~%~%"))
+   (printf "~%~%~%"))
 
-   (iota 1)))
+ (iota 1))
 
 ;;; Spew coverage, profiling stuff
 

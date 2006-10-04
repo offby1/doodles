@@ -25,7 +25,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (when (not (null? tricks))
       (fprintf port "t ~a: ~a" (add1 printed) (car tricks))
       (when (not (null? (cdr tricks)))
-        (display "; " port))
+        (display (if write? "; " #\newline) port))
       (loop (add1 printed)
             (cdr tricks))))
   (display ")" port))
