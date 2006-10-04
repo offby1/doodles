@@ -216,23 +216,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; incomplete, it guesses (which is why it needs to a set of hands).
   ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
   (define (score-from-history history hands)
-    (zp "score-from-history: ~a -> ~a ..."
-        history
-        (fold
-         (lambda (t accum)
-           (sum-scores
-            accum
-            (cond
-             ((not (trick-complete? t))
-              (zp "~a isn't complete, so we're predicting the winner: ~a"
-                  t
-                  (list (cons (predict-winner-of-incomplete-trick t hands) 1))))
-             (else
-              (zp "~a is complete, so it counts as ~a"
-                  t
-                  (list (cons (winner t) 1)))))))
-         '()
-         (history-tricks history))))
+    (fold
+     (lambda (t accum)
+       (sum-scores
+        accum
+        (cond
+         ((not (trick-complete? t))
+          (zp "~a isn't complete, so we're predicting the winner: ~a"
+              t
+              (list (cons (predict-winner-of-incomplete-trick t hands) 1))))
+         (else
+          (zp "~a is complete, so it counts as ~a"
+              t
+              (list (cons (winner t) 1)))))))
+     '()
+     (history-tricks history)))
 
 
 ;;; predict-score
