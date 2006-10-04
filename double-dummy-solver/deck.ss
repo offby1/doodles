@@ -1,9 +1,9 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
-
+(module deck mzscheme
 (require (lib "errortrace.ss" "errortrace"))
 
 (profiling-enabled #t)
@@ -21,6 +21,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
+(define max-lookahead 0)
 (random-seed 0)
 
 (define *deck*
@@ -53,7 +54,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
       (let ((bottom-index (random top-index)))
         (swap! bottom-index top-index)))))
 
-(define max-lookahead 1)
 
 (parameterize ((*really-loud* #t))
   (for-each
@@ -139,4 +139,5 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
      ("README"
       . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))
 
+)
 )

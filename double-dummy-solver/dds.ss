@@ -58,15 +58,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (eq? s2 (caddr sc)))))
   )
 
-(define (assoc-backwards obj backwards-alist)
-    (cond
-     ((null? backwards-alist)
-      #f)
-     ((equal? obj (cdr (car backwards-alist)))
-      (car backwards-alist))
-     (else
-      (assoc-backwards obj (cdr backwards-alist)))))
-
 ;; Returns the least, and the two greatest, cards, based on rank.
 (define (bot-one/top-two seq)
   (if (< (length seq) 4)
@@ -107,12 +98,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (assert (every (lambda (p) (or (eq? (car p) 'depends-on-what-they-play) (member (car p) *seats*))) s)))
             (list a b))
 
-  (map (lambda (pair)
-         (let ((seat (car pair))
-               (score (cdr pair)))
-           (cons seat
-                 (+ (ass0 seat a) score))))
-       b))
+  (map (lambda (seat)
+         (cons seat
+               (+ (ass0 seat a)
+                  (ass0 seat b))))
+       *seats*))
 
 (define (numeric-team-score sp our-seat)
   (+ (ass0 our-seat sp)
@@ -200,17 +190,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; incomplete, it guesses (which is why it needs to a set of hands).
   ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
   (define (score-from-history history hands)
-    (zprintf "score-from-history ~a ..." history)
-    (zp "score-from-history: returning ~a ..."
+    (zp "score-from-history: ~a -> ~a ..."
+        history
         (fold
          (lambda (t accum)
            (sum-scores
             accum
             (cond
              ((not (trick-complete? t))
-              (list (cons (predict-winner-of-incomplete-trick t hands) 1)))
+              (zp "~a isn't complete, so we're predicting the winner: ~a"
+                  t
+                  (list (cons (predict-winner-of-incomplete-trick t hands) 1))))
              (else
-              (zp "complete trick; ~a won" (list (cons (winner t) 1)))))))
+              (zp "~a is complete, so it counts as ~a"
+                  t
+                  (list (cons (winner t) 1)))))))
          '()
          (history-tricks history))))
 
@@ -382,14 +376,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (card-rank (cdr b)))
                          (> (car a)
                             (car b))))
-                     (let ((score (numeric-team-score
-                                   (predict-score choice max-lookahead)
-                                   us)))
-                       (when (= 1 score)
-                         (return choice))
+                     (let* ((score (numeric-team-score
+                                    (predict-score choice max-lookahead)
+                                    us))
+                            (score-delta
+                             (-
+                              score
+                              (numeric-team-score
+                               (compute-score
+                                (history-complete-tricks-only
+                                 history))
+                               us))))
+                       ;; if no card could possibly be better than
+                       ;; this one, then we might as well stop
+                       ;; looking.
+                       (when (= score-delta (add1 max-lookahead))
+                         (return
+                          (zp
+                           "Since this card will cause us to win every (~a) foreseeable trick, we might's well stop looking for a better one:~a"
+                           score-delta
+                           choice)))
                        (when (or (not best)
                                  (better (cons score choice) best))
-                         (set! best (cons score choice)))))
+                         (set! best (zp "Suboptimal choice ~a is the best so far"
+                                        (cons score choice))))))
 
                    (zp "considers ~a ..." pruned-legal-choices))
                   (cdr best)))))))

@@ -39,6 +39,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; order.  I.e., the car is the most recent.
 (define (history-tricks         h) (s:history-ref h 1))
 
+(define (history-complete-tricks-only h)
+  (check-type 'history-complete-tricks-only history? h)
+  (make-history
+   (history-opening-leader h)
+   (let ((ts (history-tricks h)))
+     (cond
+      ((or (null? ts)
+           (trick-complete? (car ts)))
+       ts)
+      (else
+       (cdr ts))))))
+
 (define (set-history-tricks! h t) (history-set! h 1 t))
 
 (define (my-make-history tricks-or-opening-leader)
@@ -123,6 +135,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     rv))
 
 (define (compute-score h)
+  (check-type 'compute-score history? h)
   (let ((tricks-by-seat (make-hash-table)))
     (define (hash-table-increment! k)
       (let ((v (hash-table-get tricks-by-seat k 0)))
@@ -134,5 +147,4 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (cons seat
                  (hash-table-get tricks-by-seat seat 0)))
               *seats*)))
-
 )
