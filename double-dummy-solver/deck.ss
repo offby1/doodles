@@ -9,7 +9,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 (execute-counts-enabled #t)
-;(profile-paths-enabled #t)
+(profile-paths-enabled #t)
 
 (require "card.ss"
          "dds.ss"
@@ -134,17 +134,26 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
      )
    `(("profile-stuff"
       . ,(lambda ()
+           (printf "Hey Emacs, -*- coding:utf-8 -*- rocks!~%")
            (for-each (lambda (datum)
                        (apply
                         (lambda (called milliseconds name source paths)
-                          (printf "time = ~a : no. = ~a : µs per call = ~a : ~a in ~a~%"
+                          (printf "time = ~a : no. = ~a : µs per call = ~a : ~a ~a~%"
                                   milliseconds
                                   called
                                   (if (or (zero? called))
                                       +inf.0
                                     (exact->inexact (* 1000 (/ milliseconds called))))
                                   name
-                                  source))
+                                  source)
+                          (for-each (lambda (path)
+                                      (printf "   ~a~%" (car path))
+                                      (for-each (lambda (location)
+                                                  (printf "      ~a~%" location))
+                                                (cdr path)))
+                                    (sort paths (lambda (a b)
+                                                  (> (car a)
+                                                     (car b))))))
                         datum))
                      (sort (get-profile-results)
                            (lambda (a b)
