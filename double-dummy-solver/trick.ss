@@ -82,8 +82,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (with-seat-circle seat caddr))
 
 (define (trick-print trick port write?)
-  (vector-for-each (lambda (i tcp)
-                     (fprintf port "~a:~a" (cdr tcp) (car tcp))
+  (vector-for-each (lambda (i cs)
+                     (fprintf port "~a:~a" (cdr cs) (car cs))
                      (if (< i (sub1 (vector-length (trick-card-seat-pairs trick))))
                          (fprintf port ", ")))
                    (trick-card-seat-pairs trick)))
