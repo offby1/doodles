@@ -36,12 +36,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
    ;; these look reasonably nice on Windows with Lucida Console.
 
-;;    (case (card-suit c)
-;;      ((c) #\u2663)
-;;      ((d) #\u2666)
-;;      ((h) #\u2665)
-;;      ((s) #\u2660))
-   (card-suit c)
+   (case (card-suit c)
+     ((c) #\u2663)
+     ((d) #\u2666)
+     ((h) #\u2665)
+     ((s) #\u2660))
+   ;(card-suit c)
    port)
   (display (case (card-rank c)
              ((10)"t")

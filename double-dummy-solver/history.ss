@@ -19,7 +19,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (rename my-make-history make-history))
 
 (define (history-print history port write?)
-  (display "(" port)
   (let loop ((printed 0)
              (tricks (reverse (history-tricks history))))
     (when (not (null? tricks))
@@ -27,8 +26,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (when (not (null? (cdr tricks)))
         (display (if write? "; " #\newline) port))
       (loop (add1 printed)
-            (cdr tricks))))
-  (display ")" port))
+            (cdr tricks)))))
 
 (define-values (s:history make-history history? s:history-ref history-set!)
   (make-struct-type 'history #f 2 0 #f

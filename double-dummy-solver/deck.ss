@@ -6,10 +6,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (require (lib "errortrace.ss" "errortrace"))
 
-(profiling-enabled #t)
-(profiling-record-enabled #t)
-(execute-counts-enabled #t)
-(profile-paths-enabled #t)
+;; (profiling-enabled #t)
+;; (profiling-record-enabled #t)
+;; (execute-counts-enabled #t)
+;; (profile-paths-enabled #t)
 
 (require "card.ss"
          "dds.ss"
@@ -21,8 +21,9 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
-(define max-lookahead 2)
+(define max-lookahead 0)
 (random-seed 0)
+(*shaddap* #t)
 
 (define *deck*
   (let loop ((suits *suits*)
@@ -99,7 +100,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
    (printf "~%~%~%"))
 
- (iota 1))
+ (iota 10))
 
 ;;; Spew coverage, profiling stuff
 
