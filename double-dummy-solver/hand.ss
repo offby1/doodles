@@ -5,7 +5,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module hand mzscheme
-(require (only (lib "1.ss" "srfi") every list-copy)
+(require (only (lib "1.ss" "srfi")
+               every
+               fold
+               list-copy
+               )
          (rename (lib "1.ss" "srfi") s1:filter filter)
          (only (lib "13.ss" "srfi")  string-join)
          (only (lib "list.ss") remove sort)
@@ -22,6 +26,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
          remove-card
          add-card!
          sort!)
+
+(define suit car)
+(define ranks cdr)
 
 (define (hand-print hand port write?)
   (when write? (write-string "<" port))
@@ -54,6 +61,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (unless (and (list? cards)
                (every card? cards))
     (raise-mismatch-error 'make-hand "Not a list of cards: " cards))
+
+  ;; TODO -- maybe ensure all the cards are distinct.
 
   (when (not (null? seat))
     (set! seat (car seat))              ; "car seat".  Haw haw.
@@ -121,5 +130,37 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (empty? h)
   (null? (hand-cards h)))
 
+;; ♣3 ♣6 ♣9 ♣j ♣a ♦2 ♦9 ♦t ♥7 ♥j ♥q ♠6 ♠9 => ((♣ 3 6 9 j a) (♦ 2 9 t) (♥ 7 j q) (♠ 6 9))
+
+(define (collate h)
+  (fold (lambda (card output)
+          (cond
+           ((or (null? output)
+                (not (eq? (card-suit card)
+                          (caar output))))
+            (cons (list (card-suit card)
+                        (card-rank card))
+                  output))
+           (else
+            (append! (car output)
+                     (list (card-rank card)))
+            output)))
+        '()
+        (sort (hand-cards h)  card</suit)))
+
+(define (ps hand port)
+  (fprintf port "~a:~%=======================~%" (hand-seat hand))
+  (for-each (lambda (holding)
+              (define (r->s r)
+                (let ((o (open-output-string)))
+                  (rp r o)
+                  (get-output-string o)))
+              (sp (suit holding) port)
+              (display (string-join (map r->s (ranks holding))) port)
+              (newline port))
+            (collate hand)))
+(let ((h (mh e s2 da d8 s2)))
+  (printf "~a, fancy style:~%" h )
+  (ps h (current-output-port)))
 
 )

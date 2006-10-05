@@ -12,45 +12,54 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi") iota)
          (only (lib "misc.ss" "swindle") memoize!))
 (provide (rename my-make-card make-card)
-         card?
-         card-suit
+         *num-ranks*
+         *suits*
+         card->number
          card-rank
-         cards=
+         card-suit
          card</rank
          card</suit
-         card->number
+         card?
+         cards-between
+         cards=
          club? diamond? heart? spade?
-         *suits*
          mc
          mc*
-         *num-ranks*
-         cards-between)
+         rp
+         sp
+         )
 
 (define *suits*  '(c d h s))
 (define *num-ranks* 13)
 (define *num-suits* (length *suits*))   ;duh!
 
-(define (card-print c port write?)
-  (when write? (write-string "<" port))
-  (display
-
-   ;; these look reasonably nice on Windows with Lucida Console.
-
-   (case (card-suit c)
-     ((c) #\u2663)
-     ((d) #\u2666)
-     ((h) #\u2665)
-     ((s) #\u2660))
-   ;(card-suit c)
-   port)
-  (display (case (card-rank c)
+(define (rp r port)
+  (display (case r
              ((10)"t")
              ((11)"j")
              ((12)"q")
              ((13)"k")
              ((14)"a")
-             (else (card-rank c)))
-           port)
+             (else r))
+           port))
+
+(define (sp s port)
+  (display
+
+   ;; these look reasonably nice on Windows with Lucida Console.
+
+   (case s
+     ((c) #\u2663)
+     ((d) #\u2666)
+     ((h) #\u2665)
+     ((s) #\u2660))
+   ;s
+   port))
+
+(define (card-print c port write?)
+  (when write? (write-string "<" port))
+  (sp (card-suit c) port)
+  (rp (card-rank c) port)
   (when write? (write-string ">" port)))
 
 (define-values (s:card make-card card? card-ref card-set!)
