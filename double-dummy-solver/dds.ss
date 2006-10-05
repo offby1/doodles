@@ -126,16 +126,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (rotate new-hand-list 1))))
 
       ;; just for fun, see if the winner took a finesse.
-
-      ;; BUGBUG -- it's only really a finesse if the winner was in the
-      ;; third seat.
       (when (hi:trick-complete? new-history)
         (letrec ((hand-of (lambda (seat hands)
                             (if (eq? seat (ha:seat (car hands)))
                                 (car hands)
                               (hand-of seat (cdr hands))))))
           (let* ((t (history-latest-trick new-history))
+                 (leader (leader t))
                  (winning-seat (winner t))
+                 (offset
+                  (with-seat-circle
+                   winning-seat
+                   (lambda (sc)  (length (member leader sc)))))
                  (winning-card (car (assoc-backwards winning-seat (annotated-cards t))))
                  (lho (with-seat-circle winning-seat cadr))
                  (rho (with-seat-circle lho caddr))
@@ -152,8 +154,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     (< (trick-rank winning-card t)
                                        (trick-rank en t)))
                                   enemy-holding)))
-            (when (not (null? suckers))
-              (zprintf "Ha! ~a just finessed the ~a" winning-seat suckers)))))
+            (case offset
+              ((2 3)
+               (when (not (null? suckers))
+                 (zprintf "Ha! ~a just finessed the ~a: ~a~%" winning-seat suckers t)
+                 ))))))
 
       (values new-history rotated))))
 ;;(trace play-card)

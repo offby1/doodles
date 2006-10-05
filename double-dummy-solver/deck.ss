@@ -100,7 +100,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
    (printf "~%~%~%"))
 
- (iota 10))
+ (iota 100))
 
 ;;; Spew coverage, profiling stuff
 
