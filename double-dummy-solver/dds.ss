@@ -88,8 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (append-map hi-lo (partition-by-suits seq)))
 
 (define (ass0 obj alist)
-  (let ((probe (assq obj alist)))
-    (or (and probe (cdr probe)) 0)))
+  (cond ((assq obj alist)=> cdr) (else 0)))
 
 ;; each is (cons seat integer?)
 (define (sum-scores a b)
