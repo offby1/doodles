@@ -49,12 +49,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ;; subtly different from "will this card win this trick", because
     ;; this card might be a deuce, but our partner has a singleton
     ;; ace.
+
+    ;; a player's relevant cards are either: the single card he's
+    ;; already played to this trick; or else all the cards in his hand.
     (define (relevant-cards playa)
       (let ((already (assoc-backwards
                       (ha:seat playa)
                       (annotated-cards t))))
         (if already
-            (filter right-suit? (list (car already)))
+            (list (car already))
           (ha:cards playa))))
 
     (let ((theirs (append-map relevant-cards (list lho^s rho^s)))
