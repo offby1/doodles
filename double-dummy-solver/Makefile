@@ -6,4 +6,9 @@ check:
 	./tests.ss
 	./deck.ss
 
+ETAGS ?= etags
+
+tags: $(wildcard *.ss)
+	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
+
 .PHONY: check
