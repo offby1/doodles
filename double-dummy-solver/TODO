@@ -1,5 +1,34 @@
 -*- outline -*-
 
+* take command-line args 
+
+... to control things like
+
+** fancy UTF-8 suit characters, versus 's h d c'
+
+** diagnostic messages
+
+** profiling
+
+* save hand summaries
+
+For testing, for each hand, write out
+
+** the entire deal, or perhaps just the random seed that generated it
+
+** the parameters that affect the play:
+
+*** max-lookahead
+
+** the resulting history, or perhaps just the count of tricks won
+
+If we do this regularly, then we can quickly see if a code change
+causes those things to change, by comparing the current run to a
+previous run.
+
+Perhaps the saved file should include a serial number, or a timestamp,
+or something, to ensure that newer ones don't clobber older ones.
+
 * make it smarter!
 
 There are a lot of things we could do to improve the play, without
