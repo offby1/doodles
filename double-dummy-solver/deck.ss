@@ -24,7 +24,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (define max-lookahead 0)
 (random-seed 0)
 ;;(*shaddap* #t)
-(*fancy-suits* #t)
+(*fancy-suits* #f)
 
 (define *deck*
   (let loop ((suits *suits*)

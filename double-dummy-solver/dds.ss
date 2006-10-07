@@ -40,13 +40,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (reverse
    (map reverse
         (fold (lambda (item seq)
-                (if (null? seq)
-                    (list (list item))
-                  (if (adjacent? item (caar seq))
-                      (cons (cons item (car seq))
-                            (cdr seq))
-                    (cons (list item)
-                          seq))))
+                (if (or (null? seq)
+                        (not (adjacent? item (caar seq))))
+                    (cons (list item) seq)
+                  (cons (cons item (car seq))
+                        (cdr seq))))
               '()
               seq))))
 
