@@ -15,6 +15,8 @@ cards at once.
 
 ** profiling
 
+** max-lookahead
+
 * save hand summaries
 
 For testing, for each hand, write out
@@ -100,6 +102,10 @@ predictions from the beginning of the hand to be wild, but as the hand
 progresses, they'd close in on accurate ... sort of the way Firefox's
 file-download progress bar predicts how long it'll take to finish.
 
+Now that I think about it, this is semi-silly.  At least with
+max-lookahead at 0, predict-score only returns non-zero if it's
+certain.
+
 ** measure the cost/benefit of "predict-score" and max-lookahead
 
 The cost of course is the time it takes.  Hard to measure usefully,
@@ -124,7 +130,3 @@ I suspect this ratio will drop as max-lookahead rises.
 It's slow, of course; and if the ultimate goal here is to use this
 solver as part of a real bridge playing program, it's _too_ slow.  And
 I haven't noticed that lookahead improves the results much.
-
-* have deck.ss get max-lookahead from the command line
-
-... rather than hard-coding it
