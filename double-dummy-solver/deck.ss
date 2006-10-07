@@ -23,7 +23,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi") iota take circular-list filter))
 (define max-lookahead 0)
 (random-seed 0)
-(*shaddap* #t)
+;;(*shaddap* #t)
+(*fancy-suits* #t)
 
 (define *deck*
   (let loop ((suits *suits*)
@@ -100,7 +101,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
    (printf "~%~%~%"))
 
- (iota 100))
+ (iota 1))
 
 ;;; Spew coverage, profiling stuff
 
@@ -144,7 +145,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                                   called
                                   (if (or (zero? called))
                                       +inf.0
-                                    (exact->inexact (* 1000 (/ milliseconds called))))
+                                    (exact->inexact
+                                     (/ (truncate (* 10000
+                                                     (/ milliseconds called)))
+                                        10)))
                                   name
                                   source)
                           (for-each (lambda (path)

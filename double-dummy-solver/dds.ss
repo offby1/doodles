@@ -398,6 +398,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
               ;; Don't call predict-score on _every_ card; rather,
               ;; stop as soon as we find a card whose score is 1.
+
+              ;; BUGBUG -- don't play a high card if our partner has
+              ;; already played a card that's sure to win.
               (let/ec return
                 (let ((best #f))
                   (for-each
@@ -424,8 +427,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  history))
                                us))))
                        ;; if no card could possibly be better than
-                       ;; this one, then we might as well stop
-                       ;; looking.
+                       ;; this one, and our partner hasn't yet played,
+                       ;; then we might as well stop looking.
+                       ;; (Ideally we'd take into account our
+                       ;; partner's singleton ace ...)
                        (when (= score-delta (add1 max-lookahead))
                          (return
                           (zp

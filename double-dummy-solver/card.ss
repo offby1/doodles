@@ -14,6 +14,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (rename my-make-card make-card)
          *num-ranks*
          *suits*
+         *fancy-suits*
          card->number
          card-rank
          card-suit
@@ -30,6 +31,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          )
 
 (define *suits*  '(c d h s))
+(define *fancy-suits* (make-parameter #f))
 (define *num-ranks* 13)
 (define *num-suits* (length *suits*))   ;duh!
 
@@ -48,12 +50,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
    ;; these look reasonably nice on Windows with Lucida Console.
 
-   (case s
-     ((c) #\u2663)
-     ((d) #\u2666)
-     ((h) #\u2665)
-     ((s) #\u2660))
-   ;s
+   (if (*fancy-suits*)
+       (case s
+         ((c) #\u2663)
+         ((d) #\u2666)
+         ((h) #\u2665)
+         ((s) #\u2660))
+     s)
    port))
 
 (define (card-print c port write?)
