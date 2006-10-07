@@ -159,7 +159,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; plays tricks from the given hands, starting with (car HANDS),
 ;; stopping when TERMINATION-PROC returns a true value, or the hands
-;; run out.  Calls SUMMARIZE-PROC on the then-currnet history and
+;; run out.  Calls SUMMARIZE-PROC on the then-current history and
 ;; hands.
 
 ;; This function is starting to look like "unfold".  Perhaps someday I
@@ -421,11 +421,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (history-complete-tricks-only
                                  history))
                                us))))
-                       ;; if no card could possibly be better than
-                       ;; this one, and our partner hasn't yet played,
-                       ;; then we might as well stop looking.
-                       ;; (Ideally we'd take into account our
-                       ;; partner's singleton ace ...)
+
                        (when (= score-delta (add1 max-lookahead))
                          (return
                           (zp
@@ -436,11 +432,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  (better (cons score choice) best))
                          (set! best (cons score choice)))))
 
-                   ;; TODO: consider sorting these in decreasing order
-                   ;; of trick-taking power, so as to reduce the
-                   ;; number of cards we consider before we bail out
-                   ;; of the let/ec.
-                   (zp "considers ~a ..." pruned-legal-choices))
+                   ;; if our partner has already played, sort 'em so
+                   ;; that we look at the smaller cards first -- that
+                   ;; way we should avoid playing a high card on our
+                   ;; partner's winner.
+                   (zp "considers ~a ..."
+                       (case cards-in-current-trick
+                         ((2 3)
+                          (sort pruned-legal-choices card</rank))
+                         (else
+                          pruned-legal-choices)
+                         )))
                   (cdr best)))))))
 
     choice))
