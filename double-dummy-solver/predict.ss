@@ -64,7 +64,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (pards (relevant-cards partner^s)))
 
       (define (beats-all-enemy-cards? c)
-        (and (right-suit? card)
+        (and (right-suit? c)
              (or (null? theirs)
                  (< (apply max (map card-rank theirs)) (card-rank c)))))
       (cond
