@@ -44,6 +44,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          whose-turn
          winner
          with-seat-circle
+         worth
          *seats*)
 
 (define *seats* '(n e s w))
@@ -178,12 +179,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (led-suit t)
    (card-suit (trick-ref t 0)))
 
+(define (worth card t)
+  (if (eq? (led-suit t)
+           (card-suit card))
+      (card-rank card)
+    0))
+
 (define (winner t)
-  (define (worth card)
-    (if (eq? (led-suit t)
-             (card-suit card))
-        (card-rank card)
-      0))
   (assert (trick-complete? t))
   (cdr
    (let ((cards (trick-card-seat-pairs t)))
@@ -192,8 +194,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (if (= examined (vector-length cards))
            best
          (let ((this (vector-ref cards examined)))
-           (loop (if (> (worth (car this))
-                        (worth (car best)))
+           (loop (if (> (worth (car this) t)
+                        (worth (car best) t))
                      this best)
                  (add1 examined))))))))
 

@@ -92,7 +92,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (sum-scores a b)
   (for-each (lambda (s)
               (assert (list? s))
-              (assert (every (lambda (p) (or (eq? (car p) 'depends-on-what-they-play) (member (car p) *seats*))) s)))
+              (assert (every (lambda (p)
+                               (or (eq? (car p) 'depends-on-what-they-play)
+                                   (member (car p) *seats*))) s)))
             (list a b))
 
   (map (lambda (seat)
@@ -142,14 +144,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (enemy-holding
                   (append (ha:cards (hand-of lho new-hand-list))
                           (ha:cards (hand-of rho new-hand-list))))
-                 (trick-rank (lambda (c t)
-                               (if (eq? (card-suit c)
-                                        (card-suit (trick-ref t 0)))
-                                   (card-rank c)
-                                 0)))
                  (suckers (filter (lambda (en)
-                                    (< (trick-rank winning-card t)
-                                       (trick-rank en t)))
+                                    (< (worth winning-card t)
+                                       (worth en t)))
                                   enemy-holding)))
             (case offset
               ((2 3)
