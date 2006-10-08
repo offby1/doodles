@@ -6,11 +6,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (require (lib "errortrace.ss" "errortrace"))
 
-;; (profiling-enabled #t)
-;; (profiling-record-enabled #t)
-;; (execute-counts-enabled #t)
-;; (profile-paths-enabled #t)
-
 (require "card.ss"
          "dds.ss"
          "history.ss"
@@ -18,13 +13,13 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only "trick.ss" *seats*)
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
+         (lib "cmdline.ss")
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
 (define max-lookahead 0)
 (random-seed 0)
-;;(*shaddap* #t)
-(*fancy-suits* #f)
+
 
 (define *deck*
   (let loop ((suits *suits*)
@@ -57,6 +52,23 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
+(command-line
+ "dds"
+ (current-command-line-arguments)
+ (once-each
+  (("-p" "--profile") "Enable profiling, duh."
+   (profiling-enabled #t)
+   (profiling-record-enabled #t)
+   (execute-counts-enabled #t)
+   (profile-paths-enabled #t)
+   )
+  (("-f" "--fancy-suits") "Display little suit symbols instead of c, d, h, s"
+   (*fancy-suits* #f))
+  (("-q" "--quiet") "Suppress all diagnostics"
+   (*shaddap* #t))
+  (("-l" "--lookahead") ml
+   "Maximum number of tricks to look ahead when predicting"
+   (set! max-lookahead (string->number ml)))))
 (for-each
  (lambda (hand-number)
    (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
@@ -113,57 +125,58 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
   (with-output-to-file string
     thunk))
 
-(let* ((here (this-expression-source-directory))
-       (od (simplify-path (build-path here "coverage"))))
-  (unless (directory-exists? od)
-    (make-directory od))
-  (for-each (lambda (fn)
-              (let ((ofn  (build-path od fn)))
-                (mit-clobbering ofn
-                  (lambda ()
-                    (annotate-executed-file fn)))))
-            (filter (lambda (path)
-                      (and (file-exists? path)
-                           (regexp-match "\\.ss$" (path->string path))))
-                    (directory-list here)))
-  (for-each
-   (lambda (p)
-     (let ((ofn (simplify-path (build-path od (car p)))))
-       (mit-clobbering ofn
-         (cdr p))
-       (fprintf (current-error-port)
-                "Wrote ~a.~%" ofn))
-     )
-   `(("profile-stuff"
-      . ,(lambda ()
-           (printf "Hey Emacs, -*- coding:utf-8 -*- rocks!~%")
-           (for-each (lambda (datum)
-                       (apply
-                        (lambda (called milliseconds name source paths)
-                          (printf "time = ~a : no. = ~a : µs per call = ~a : ~a ~a~%"
-                                  milliseconds
-                                  called
-                                  (if (or (zero? called))
-                                      +inf.0
-                                    (exact->inexact
-                                     (/ (truncate (* 10000
-                                                     (/ milliseconds called)))
-                                        10)))
-                                  name
-                                  source)
-                          (for-each (lambda (path)
-                                      (printf "   ~a~%" (car path))
-                                      (for-each (lambda (location)
-                                                  (printf "      ~a~%" location))
-                                                (cdr path)))
-                                    (sort paths (lambda (a b)
-                                                  (> (car a)
-                                                     (car b))))))
-                        datum))
-                     (sort (get-profile-results)
-                           (lambda (a b)
-                             (< (car a)
-                                (car b)))))
-           ))
-     ("README"
-      . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%"))))))
+(when (profiling-enabled)
+  (let* ((here (this-expression-source-directory))
+         (od (simplify-path (build-path here "coverage"))))
+    (unless (directory-exists? od)
+      (make-directory od))
+    (for-each (lambda (fn)
+                (let ((ofn  (build-path od fn)))
+                  (mit-clobbering ofn
+                    (lambda ()
+                      (annotate-executed-file fn)))))
+              (filter (lambda (path)
+                        (and (file-exists? path)
+                             (regexp-match "\\.ss$" (path->string path))))
+                      (directory-list here)))
+    (for-each
+     (lambda (p)
+       (let ((ofn (simplify-path (build-path od (car p)))))
+         (mit-clobbering ofn
+           (cdr p))
+         (fprintf (current-error-port)
+                  "Wrote ~a.~%" ofn))
+       )
+     `(("profile-stuff"
+        . ,(lambda ()
+             (printf "Hey Emacs, -*- coding:utf-8 -*- rocks!~%")
+             (for-each (lambda (datum)
+                         (apply
+                          (lambda (called milliseconds name source paths)
+                            (printf "time = ~a : no. = ~a : µs per call = ~a : ~a ~a~%"
+                                    milliseconds
+                                    called
+                                    (if (or (zero? called))
+                                        +inf.0
+                                      (exact->inexact
+                                       (/ (truncate (* 10000
+                                                       (/ milliseconds called)))
+                                          10)))
+                                    name
+                                    source)
+                            (for-each (lambda (path)
+                                        (printf "   ~a~%" (car path))
+                                        (for-each (lambda (location)
+                                                    (printf "      ~a~%" location))
+                                                  (cdr path)))
+                                      (sort paths (lambda (a b)
+                                                    (> (car a)
+                                                       (car b))))))
+                          datum))
+                       (sort (get-profile-results)
+                             (lambda (a b)
+                               (< (car a)
+                                  (car b)))))
+             ))
+       ("README"
+        . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))))
