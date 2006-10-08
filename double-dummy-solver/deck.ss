@@ -1,9 +1,10 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-mode: scheme; coding:utf-8 -*- code!
 #$Id$
-exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+(module deck mzscheme
 (require "card.ss"
          "dds.ss"
          "history.ss"
@@ -12,10 +13,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (lib "cmdline.ss")
-         (lib "errortrace.ss" "errortrace")
-         (only (lib "etc.ss") this-expression-source-directory)
+
+
          (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") iota take circular-list filter))
+         (only (lib "1.ss" "srfi") iota take circular-list ))
 (define max-lookahead 0)
 (random-seed 0)
 
@@ -56,12 +57,6 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
  "dds"
  (current-command-line-arguments)
  (once-each
-  (("-p" "--profile") "Enable profiling, duh."
-   (profiling-enabled #t)
-   (profiling-record-enabled #t)
-   (execute-counts-enabled #t)
-   (profile-paths-enabled #t)
-   )
   (("-f" "--fancy-suits") "Display little suit symbols instead of c, d, h, s"
    (*fancy-suits* #f))
   (("-q" "--quiet") "Suppress all diagnostics"
@@ -74,36 +69,36 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
    (*num-hands* (string->number nh)))
   ))
 
-(for-each
- (lambda (hand-number)
-   (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
+(time
+ (for-each
+  (lambda (hand-number)
+    (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
-   ;; deal 'em out
-   (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-              (hs (apply circular-list hands)))
-     (unless (null? d)
-       (let ((victim (car hs)))
-         (ha:add-card! victim (car d)))
+    ;; deal 'em out
+    (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
+               (hs (apply circular-list hands)))
+      (unless (null? d)
+        (let ((victim (car hs)))
+          (ha:add-card! victim (car d)))
 
-       (loop (cdr d)
-             (cdr hs))))
+        (loop (cdr d)
+              (cdr hs))))
 
-   ;; sort the hands.  This is actually important, since
-   ;; group-into-adjacent-runs will be more likely to return exactly 1
-   ;; group, and hence things will go faster.
-   (for-each ha:sort!  hands)
+    ;; sort the hands.  This is actually important, since
+    ;; group-into-adjacent-runs will be more likely to return exactly 1
+    ;; group, and hence things will go faster.
+    (for-each ha:sort!  hands)
 
-   (display #\page) (newline)
-   (printf "~a~%" (make-string 60 #\=))
-   (printf "Hand ~a~%" hand-number)
-   (printf "~a~%" (make-string 60 #\=))
+    (display #\page) (newline)
+    (printf "~a~%" (make-string 60 #\=))
+    (printf "Hand ~a~%" hand-number)
+    (printf "~a~%" (make-string 60 #\=))
 
-   (for-each (lambda (h)
-               (display h)
-               (newline))  hands)
-   (newline)
+    (for-each (lambda (h)
+                (display h)
+                (newline))  hands)
+    (newline)
 
-   (time
     (play-loop
      (make-history (car *seats*))
      hands
@@ -114,75 +109,9 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
      (lambda args #f)
 
      (lambda (hi hands)
-       (printf "~a -> ~a~%" hi (compute-score hi)))))
+       (printf "~a -> ~a~%" hi (compute-score hi))))
+    (printf "~%~%~%"))
 
-   (printf "~%~%~%"))
+  (iota (*num-hands*)))))
 
- (iota (*num-hands*)))
-
-;;; Spew coverage, profiling stuff
-
-;; for emacs
-;; (put 'mit-clobbering 'scheme-indent-function (get 'with-output-to-file 'scheme-indent-function))
-(define (mit-clobbering string thunk)
-  (when (file-exists? string)
-    (delete-file string))
-  (with-output-to-file string
-    thunk))
-
-(when (profiling-enabled)
-  (let* ((here (this-expression-source-directory))
-         (od (simplify-path (build-path here "coverage"))))
-    (unless (directory-exists? od)
-      (make-directory od))
-    (for-each (lambda (fn)
-                (let ((ofn  (build-path od fn)))
-                  (mit-clobbering ofn
-                    (lambda ()
-                      (annotate-executed-file fn)))))
-              (filter (lambda (path)
-                        (and (file-exists? path)
-                             (regexp-match "\\.ss$" (path->string path))))
-                      (directory-list here)))
-    (for-each
-     (lambda (p)
-       (let ((ofn (simplify-path (build-path od (car p)))))
-         (mit-clobbering ofn
-           (cdr p))
-         (fprintf (current-error-port)
-                  "Wrote ~a.~%" ofn))
-       )
-     `(("profile-stuff"
-        . ,(lambda ()
-             (printf "Hey Emacs, -*- coding:utf-8 -*- rocks!~%")
-             (for-each (lambda (datum)
-                         (apply
-                          (lambda (called milliseconds name source paths)
-                            (printf "time = ~a : no. = ~a : µs per call = ~a : ~a ~a~%"
-                                    milliseconds
-                                    called
-                                    (if (or (zero? called))
-                                        +inf.0
-                                      (exact->inexact
-                                       (/ (truncate (* 10000
-                                                       (/ milliseconds called)))
-                                          10)))
-                                    name
-                                    source)
-                            (for-each (lambda (path)
-                                        (printf "   ~a~%" (car path))
-                                        (for-each (lambda (location)
-                                                    (printf "      ~a~%" location))
-                                                  (cdr path)))
-                                      (sort paths (lambda (a b)
-                                                    (> (car a)
-                                                       (car b))))))
-                          datum))
-                       (sort (get-profile-results)
-                             (lambda (a b)
-                               (< (car a)
-                                  (car b)))))
-             ))
-       ("README"
-        . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))))
 
