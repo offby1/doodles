@@ -58,7 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (current-command-line-arguments)
  (once-each
   (("-f" "--fancy-suits") "Display little suit symbols instead of c, d, h, s"
-   (*fancy-suits* #f))
+   (*fancy-suits* #t))
   (("-q" "--quiet") "Suppress all diagnostics"
    (*shaddap* #t))
   (("-l" "--lookahead") ml
