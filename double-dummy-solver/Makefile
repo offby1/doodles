@@ -6,9 +6,6 @@ check:
 	./tests.ss
 	./deck.ss --profile --lookahead 0 --quiet
 
-dds: $(wildcard *.ss)
-	mzc --exe $@ deck.ss
-
 ETAGS ?= etags
 
 tags: TAGS
@@ -17,6 +14,6 @@ TAGS: $(wildcard *.ss)
 	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 clean:
-	rm -rf dds TAGS coverage
+	rm -rf TAGS coverage
 
 .PHONY: check clean tags

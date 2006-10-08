@@ -1,11 +1,8 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-mode: scheme; coding:utf-8 -*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
-
-(module deck mzscheme
-(require (lib "errortrace.ss" "errortrace"))
 
 (require "card.ss"
          "dds.ss"
@@ -15,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (lib "cmdline.ss")
+         (lib "errortrace.ss" "errortrace")
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list filter))
@@ -37,7 +35,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    result
                  (loop (cdr ranks)
                        (cons (make-card (car suits)
-                                   (car ranks))
+                                        (car ranks))
                              result))))
              result)))))
 
@@ -187,4 +185,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              ))
        ("README"
         . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))))
-)
+
