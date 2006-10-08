@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
@@ -17,6 +16,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "trace.ss"))
 (provide (all-defined-except make-history)
          (rename my-make-history make-history))
+
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 
 (define (history-print history port write?)
   (let loop ((printed 0)

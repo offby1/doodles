@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
@@ -26,6 +25,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
          remove-card
          add-card!
          sort!)
+
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 
 (define suit car)
 (define ranks cdr)

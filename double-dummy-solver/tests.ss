@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
@@ -21,6 +20,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "hand.ss" mh mhs)
          (all-except "history.ss" whose-turn)
          (lib "trace.ss"))
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 
 (print-struct #t)
 

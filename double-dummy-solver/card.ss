@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
@@ -29,6 +28,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
          rp
          sp
          )
+
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 
 (define *suits*  '(c d h s))
 (define *fancy-suits* (make-parameter #f))

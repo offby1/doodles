@@ -46,6 +46,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          with-seat-circle
          worth
          *seats*)
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 
 (define *seats* '(n e s w))
 

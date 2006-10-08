@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-mode: scheme; coding:utf-8 -*- code!
-#$Id$
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
@@ -17,6 +16,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota take circular-list ))
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
 (define max-lookahead 0)
 (random-seed 0)
 

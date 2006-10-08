@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
@@ -31,6 +30,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "list.ss") sort)
          (lib "trace.ss"))
 (provide choose-card play-loop)
+(display "$Id$" (current-error-port))
+(newline (current-error-port))
+
 (print-struct #t)
 (define non-negative? (compose not negative?))
 
