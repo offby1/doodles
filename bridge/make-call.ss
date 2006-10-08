@@ -14,8 +14,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
            "tree.ss"
            (only "call.ss" call->string) ;gotta avoid "make-call" :-|
            (lib "trace.ss")
-           (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+           (planet "test.ss" ("schematics" "schemeunit.plt" 2))
+           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
 
   (define *seconds-per-call* 1/10)
   
@@ -27,9 +27,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   ;; a little exercise
   (when
       (not (test/text-ui
-       (make-test-suite
+       (test-suite
         "Exercise make-call"
-        (make-test-case
+        (test-case
          "poo"
          (let ((dealer 'south)
                (deck (shuffled-deck)))

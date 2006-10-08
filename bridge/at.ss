@@ -4,9 +4,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
 (require
- (planet "test.ss" ("schematics" "schemeunit.plt" 1))
- (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
- (planet "util.ss" ("schematics" "schemeunit.plt" 1))
+ (planet "test.ss" ("schematics" "schemeunit.plt" 2))
+ (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+ (planet "util.ss" ("schematics" "schemeunit.plt" 2))
  "contract.ss"
  "call.ss"
  "auction.ss"
@@ -14,19 +14,19 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
 (when
     (test/text-ui
-     (make-test-suite
+     (test-suite
       "Tests for the auction stuff."
 
-      (make-test-case
+      (test-case
        "error when given garbage"
-       (assert-exn exn:fail:bridge? (lambda () (make-auction "you ugly")))
-       (assert-not-exn                (lambda () (make-auction 'east)))
+       (check-exn exn:fail:bridge? (lambda () (make-auction "you ugly")))
+       (check-not-exn                (lambda () (make-auction 'east)))
 
        ;; Didn't you know the reader is case-sensitive?
-       (assert-exn exn:fail:bridge? (lambda () (make-auction 'EAST)))
+       (check-exn exn:fail:bridge? (lambda () (make-auction 'EAST)))
        )
 
-      (make-test-case
+      (test-case
        "Copying"
        
        (let ((incomplete (make-auction 'south))
@@ -39,46 +39,46 @@ exec mzscheme -qr "$0" ${1+"$@"}
          
          (let ((c-of-i (copy-auction incomplete))
                (c-of-c (copy-auction complete)))
-           (assert = (auction-length incomplete) (auction-length c-of-i))
-           (assert = (auction-length   complete) (auction-length c-of-c))
-           (assert eq? (auction-complete? incomplete) (auction-complete? c-of-i))
-           (assert eq? (auction-complete?   complete) (auction-complete? c-of-c))
+           (check = (auction-length incomplete) (auction-length c-of-i))
+           (check = (auction-length   complete) (auction-length c-of-c))
+           (check eq? (auction-complete? incomplete) (auction-complete? c-of-i))
+           (check eq? (auction-complete?   complete) (auction-complete? c-of-c))
 
            (let ((ct1 (auction-contract complete))
                  (ct2 (auction-contract c-of-c)))
-             (assert eq? (contract-denomination ct1) (contract-denomination ct2))
-             (assert eq? (contract-declarer ct1)     (contract-declarer ct2))
-             (assert =   (contract-level ct1)        (contract-level ct2))
-             (assert =   (contract-risk ct1)         (contract-risk ct2))
+             (check eq? (contract-denomination ct1) (contract-denomination ct2))
+             (check eq? (contract-declarer ct1)     (contract-declarer ct2))
+             (check =   (contract-level ct1)        (contract-level ct2))
+             (check =   (contract-risk ct1)         (contract-risk ct2))
 
              (auction-add! incomplete 'pass)
-             (assert-false (= (auction-length incomplete) (auction-length c-of-i))
+             (check-false (= (auction-length incomplete) (auction-length c-of-i))
                            "Aagh!  Modifying one auction caused its copy to change!")
              
              )
            )))
 
-      (make-test-suite
+      (test-suite
        "Rolanda"
 
-       (make-test-case
+       (test-case
         "Trivial auction"
         (let ((a (make-auction 'north)))
           (auction-add! a '(1 club))
-          (assert = 1 (auction-length a))
+          (check = 1 (auction-length a))
           (auction-add! a 'pass)
-          (assert = 2 (auction-length a))
-          (assert-false (auction-contract a))))
+          (check = 2 (auction-length a))
+          (check-false (auction-contract a))))
 
-       (make-test-case
+       (test-case
         "Can only add calls to an auction"
         (let ((a (make-auction 'north)))
-          (assert-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
-          (assert-not-exn (lambda () (auction-add! a '(4 notrump))) "Converts data to calls if necessary")
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! a "you _really_ ugly")))
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! a 'piss)) "Isn't fooled by non-calls")
+          (check-not-exn (lambda () (auction-add! a (make-bid 3 'notrump))))
+          (check-not-exn (lambda () (auction-add! a '(4 notrump))) "Converts data to calls if necessary")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! a "you _really_ ugly")))
+          (check-exn exn:fail:bridge? (lambda () (auction-add! a 'piss)) "Isn't fooled by non-calls")
           ))
-       (make-test-case
+       (test-case
         "accepts valid, and rejects invalid, doubles & redoubles"
           ;;; existing risk         attempted double        attempted redouble
           ;;;    undefined               reject                   reject
@@ -101,46 +101,46 @@ exec mzscheme -qr "$0" ${1+"$@"}
 
           (auction-add! four 'redouble)
 
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! undef   'double)) "rejects double   when risk undefined")
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! undef 'redouble)) "rejects redouble when risk undefined")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! undef   'double)) "rejects double   when risk undefined")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! undef 'redouble)) "rejects redouble when risk undefined")
 
           ;; check for failures before successes, so that the side
           ;; effect from the success doesn't interfere with the
           ;; failure check.
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! one   'redouble)) "rejects redouble when risk is one")
-          (assert-not-exn                (lambda () (auction-add! one     'double)) "accepts double   when risk is one")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! one   'redouble)) "rejects redouble when risk is one")
+          (check-not-exn                (lambda () (auction-add! one     'double)) "accepts double   when risk is one")
 
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! two     'double)) "rejects double   when risk is two")
-          (assert-not-exn                (lambda () (auction-add! two   'redouble)) "accepts redouble when risk is two")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! two     'double)) "rejects double   when risk is two")
+          (check-not-exn                (lambda () (auction-add! two   'redouble)) "accepts redouble when risk is two")
 
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! four    'double)) "rejects double   when risk is four")
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! four  'redouble)) "rejects redouble when risk is four")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! four    'double)) "rejects double   when risk is four")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! four  'redouble)) "rejects redouble when risk is four")
           ) )
-       (make-test-case
+       (test-case
         "Recognizes a 'passed-out auction"
         (let ((a (make-auction 'north)))
           (auction-add! a 'pass)
           (auction-add! a 'pass)
           (auction-add! a 'pass)
-          (assert-false (auction-complete? a))
+          (check-false (auction-complete? a))
           (auction-add! a 'pass)
-          (assert-true (auction-complete? a))
-          (assert-eq? 'passed-out (auction-contract a))))
+          (check-true (auction-complete? a))
+          (check-eq? 'passed-out (auction-contract a))))
 
-       (make-test-case
+       (test-case
         "Knows the contract"
         (let ((a (make-auction 'north)))
           (define (expect-maxes dealer dealers-opps)
             (let ((maxes (auction-max-levels a)))
-              (assert = dealer (car maxes))
-              (assert = dealers-opps (cdr maxes))))
+              (check = dealer (car maxes))
+              (check = dealers-opps (cdr maxes))))
           (expect-maxes 0 0)
           (auction-add! a 'pass)
           (auction-add! a 'pass)
           (expect-maxes 0 0)
           (auction-add! a '(1 club))
           (expect-maxes 1 0)
-          (assert-false (auction-complete? a))
+          (check-false (auction-complete? a))
           (auction-add! a '(1 diamond))
           (expect-maxes 1 1)
           (auction-add! a 'pass)
@@ -148,35 +148,35 @@ exec mzscheme -qr "$0" ${1+"$@"}
           (auction-add! a 'pass)
           (auction-add! a 'pass)
           (auction-add! a 'pass)
-          (assert-true (auction-complete? a))
+          (check-true (auction-complete? a))
           (expect-maxes 1 2)
           (let ((c  (auction-contract a)))
-            (assert =   2      (contract-level c))
-            (assert eq? 'diamonds (contract-denomination c))
-            (assert eq? 'west (contract-declarer c))
-            (assert =   1      (contract-risk c)))))
+            (check =   2      (contract-level c))
+            (check eq? 'diamonds (contract-denomination c))
+            (check eq? 'west (contract-declarer c))
+            (check =   1      (contract-risk c)))))
 
-       (make-test-case
+       (test-case
         "Gacks if we try to add an insufficient bid"
         (let ((a (make-auction 'north)))
           (auction-add! a '(2 notrump))
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(1 clubs))) "strictly less")
-          (assert-exn exn:fail:bridge? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
+          (check-exn exn:fail:bridge? (lambda () (auction-add! a '(1 clubs))) "strictly less")
+          (check-exn exn:fail:bridge? (lambda () (auction-add! a '(2 notrump))) "exactly the same")))
          
-       (make-test-case
+       (test-case
         "Gacks if we add to a completed auction"
         (let ((completed (make-auction 'west)))
           (auction-add! completed '(1 notrump))
           (for-each (lambda (c)
                       (auction-add! completed c)) '(pass pass pass))
-          (assert-true (auction-complete? completed))
-          (assert-exn exn:fail? (lambda () (auction-add! completed '(2 diamonds))))
-          (assert-exn exn:fail? (lambda () (auction-add! completed 'pass)))
-          (assert-exn exn:fail? (lambda () (auction-add! completed 'double)))
-          (assert-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
+          (check-true (auction-complete? completed))
+          (check-exn exn:fail? (lambda () (auction-add! completed '(2 diamonds))))
+          (check-exn exn:fail? (lambda () (auction-add! completed 'pass)))
+          (check-exn exn:fail? (lambda () (auction-add! completed 'double)))
+          (check-exn exn:fail? (lambda () (auction-add! completed 'redouble)))
           ))
 
-       (make-test-case
+       (test-case
         "alist"
         (let ((a (make-auction 'west)))
           (auction-add! a 'pass)          ;west
@@ -190,10 +190,10 @@ exec mzscheme -qr "$0" ${1+"$@"}
                  (east  (cdr (assq 'east  alist)))
                  (south (cdr (assq 'south alist)))
                  (west  (cdr (assq 'west  alist))))
-            (assert-equal? north (map make-call '((1 diamond) pass)))
-            (assert-equal? east  (map make-call '((1 heart)       )))
-            (assert-equal? south (map make-call '(            pass)))
-            (assert-equal? west  (map make-call '(pass        pass)))
+            (check-equal? north (map make-call '((1 diamond) pass)))
+            (check-equal? east  (map make-call '((1 heart)       )))
+            (check-equal? south (map make-call '(            pass)))
+            (check-equal? west  (map make-call '(pass        pass)))
             )
           ))
          

@@ -5,8 +5,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module nad mzscheme
   (require (only (lib "1.ss" "srfi") lset-adjoin)
-           (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+           (planet "test.ss" ("schematics" "schemeunit.plt" 2))
+           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
   (provide non-adjacent-duplicates)
 
   (define (non-adjacent-duplicates l)
@@ -27,18 +27,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
   (when
       (not (test/text-ui
-            (make-test-suite
+            (test-suite
              "aargh"
-             (make-test-case
+             (test-case
               "simple cases"
-              (assert-equal? '() (non-adjacent-duplicates '()))
-              (assert-equal? '() (non-adjacent-duplicates '(foo)))
-              (assert-equal? '() (non-adjacent-duplicates '(foo bar)))
-              (assert-equal? '() (non-adjacent-duplicates '(foo foo bar)))
+              (check-equal? '() (non-adjacent-duplicates '()))
+              (check-equal? '() (non-adjacent-duplicates '(foo)))
+              (check-equal? '() (non-adjacent-duplicates '(foo bar)))
+              (check-equal? '() (non-adjacent-duplicates '(foo foo bar)))
               )
-             (make-test-case "foo bar foo"     (assert-equal? '(foo) (non-adjacent-duplicates '(foo bar foo))))
-             (make-test-case "bar foo foo bar" (assert-equal? '(bar) (non-adjacent-duplicates '(bar foo foo bar))))
-             (make-test-case "yow!  yadda! ouch!" (assert-equal? '(foo bar) (non-adjacent-duplicates '(bar foo foo bar foo))))
+             (test-case "foo bar foo"     (check-equal? '(foo) (non-adjacent-duplicates '(foo bar foo))))
+             (test-case "bar foo foo bar" (check-equal? '(bar) (non-adjacent-duplicates '(bar foo foo bar))))
+             (test-case "yow!  yadda! ouch!" (check-equal? '(foo bar) (non-adjacent-duplicates '(bar foo foo bar foo))))
              )))
     
     (exit 1)))

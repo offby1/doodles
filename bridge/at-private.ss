@@ -4,37 +4,38 @@ exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
 (require
- (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
- (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
- (planet "util.ss"    ("schematics" "schemeunit.plt" 1)))
+ (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+ (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+ (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
 (require/expose "auction.ss" (a-risk))
+(require (only "auction.ss"  make-auction auction-add!))
 
 (exit (if (test/text-ui
            (let ((a (make-auction 'north)))
-             (make-test-suite
+             (test-suite
               "Tests for private auction stuff."
-              (make-test-case
+              (test-case
                "right risk"
-               (assert = 0 (a-risk a))
+               (check = 0 (a-risk a))
                (auction-add! a 'pass)
-               (assert eq? 0 (a-risk a))
+               (check eq? 0 (a-risk a))
                (auction-add! a '(1 heart))
-               (assert = 1 (a-risk a))
+               (check = 1 (a-risk a))
                (auction-add! a 'double)
-               (assert = 2 (a-risk a))
+               (check = 2 (a-risk a))
                (auction-add! a 'redouble)
-               (assert = 4 (a-risk a))
+               (check = 4 (a-risk a))
                (auction-add! a 'pass)
-               (assert = 4 (a-risk a))
+               (check = 4 (a-risk a))
                (auction-add! a '(1 spade))
-               (assert = 1 (a-risk a))
+               (check = 1 (a-risk a))
                (auction-add! a 'double)
                (auction-add! a 'pass)
                (auction-add! a 'pass)
-               (assert = 2 (a-risk a))
+               (check = 2 (a-risk a))
                (auction-add! a 'pass)
-               (assert = 2 (a-risk a)))
+               (check = 2 (a-risk a)))
               )))
           0 1)
       )

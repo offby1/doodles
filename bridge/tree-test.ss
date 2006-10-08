@@ -4,9 +4,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module tree-test mzscheme
-  (require (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
-           (planet "util.ss" ("schematics" "schemeunit.plt" 1))
+  (require (planet "test.ss" ("schematics" "schemeunit.plt" 2))
+           (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+           (planet "util.ss" ("schematics" "schemeunit.plt" 2))
 
            "auction.ss"
            "deck.ss"
@@ -15,9 +15,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define deck (shuffled-deck))
   (when (not
          (test/text-ui
-          (make-test-suite
+          (test-suite
            "Tree"
-           (make-test-case
+           (test-case
             "Exercise best-auction-from-prefix"
             (let ((seconds-to-wait 10))
               (printf "Waiting ~a seconds for auction generator to come up with some auctions ... " seconds-to-wait)
@@ -25,7 +25,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (let ((bsa (best-auction-from-prefix  (make-auction 'south) (holding deck 'north) seconds-to-wait)))
                 (when bsa
                   (let ((s (auction->string bsa)))
-                    (assert-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
+                    (write s) (newline)
+                    (check-regexp-match "^S +W +N +E\n-+\np- +p- +p- +" s "Auction string don't look right!")
                     (printf "One auction:~n~a~n ~n"
                             s)
                     )

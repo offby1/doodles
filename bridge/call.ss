@@ -5,8 +5,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module call mzscheme
   (require
-   (planet "test.ss"    ("schematics" "schemeunit.plt" 1))
-   (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
+   (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+   (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
    (lib "list.ss" "srfi" "1")
    (only (lib "13.ss" "srfi") string-join)
    (lib "31.ss" "srfi")                 ;rec
