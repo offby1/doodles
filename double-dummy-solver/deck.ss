@@ -1,9 +1,10 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-mode: scheme; coding:utf-8 -*- code!
 #$Id$
-exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+(module deck mzscheme
 (require (lib "errortrace.ss" "errortrace"))
 
 (require "card.ss"
@@ -186,3 +187,4 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
              ))
        ("README"
         . ,(lambda () (printf "Key to the code-coverage symbols:~%^: 0~%.: 1~%,: >1~%")))))))
+)

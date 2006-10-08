@@ -57,8 +57,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (mostly-complete? tricks)
     (or (null? tricks)
         (null? (cdr tricks))
-        (and (trick-complete? (car tricks))
-             (mostly-complete? (cdr tricks)))))
+        (and
+         (every trick-complete? (cdr tricks)))))
 
   (if (list? tricks-or-opening-leader)
       (let ((tricks tricks-or-opening-leader))
