@@ -159,8 +159,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (display (string-join (map r->s (ranks holding))) port)
               (newline port))
             (collate hand)))
-(let ((h (mh e s2 da d8 s2)))
-  (printf "~a, fancy style:~%" h )
-  (ps h (current-output-port)))
 
 )

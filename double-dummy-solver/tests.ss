@@ -17,13 +17,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "dds.ss"
          "card.ss"
          "trick.ss"
-         (prefix ha: "hand.ss")
+         (prefix ha:  "hand.ss")
+         (only "hand.ss" mh mhs)
          (all-except "history.ss" whose-turn)
          (lib "trace.ss"))
 
 (print-struct #t)
 
 
+
 
 (let ((first-annotated-card (car (annotated-cards (mt s s2 dt ha)))))
 
@@ -48,7 +50,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (choose-card
              (make-history
               (list (mt e  s2 dt ha)))
-             (list (ha:mh n s3 d2))
+             (list (mh n s3 d2))
              13)))
     (test-case
      "follows suit 2"
@@ -58,10 +60,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (choose-card
               (make-history
                (list (mt w  dt s2 ha)))
-              (ha:mhs (s2 da d8)
-                      (sa dk d7)
-                      (s3 d2 d9)
-                      (sk dq d6))
+              (mhs (s2 da d8)
+                   (sa dk d7)
+                   (s3 d2 d9)
+                   (sk dq d6))
               13))))
     (test-exn "Notices garbage in hand"
               exn:fail:contract?
@@ -75,19 +77,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (choose-card
                  (make-history
                   (list (mt n  dt s2 ha)))
-                 (list (ha:mh s3 ha))
+                 (list (mh s3 ha))
                  13)))
     (test-exn "Can't remove non-existant card from hand"
               exn:fail:contract?
               (lambda ()
-                (define h (ha:mh  s2))
+                (define h (mh  s2))
                 (set! h (ha:remove-card h (mc s2)))
                 (set! h (ha:remove-card h (mc s2)))
                 ))
     (test-exn "Can't add card twice to hand"
               exn:fail:contract?
               (lambda ()
-                (define h (ha:mh  s2))
+                (define h (mh  s2))
                 (ha:add-card! h (mc s2))
                 ))
 
@@ -104,6 +106,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (winner (mt n c3 c6 cj c9)))
     (test-equal? "Winner 3"
                  'e
-                 (winner (mt n c6 c9 c3 dj))))))
+                 (winner (mt n c6 c9 c3 dj)))
+    (test-equal? "Takes finesses"
+                 2
+                 (cdr
+                  (assq 'n
+                        (play-loop
+                         (make-history
+                          's)
+                         (mhs (sq sa)
+                              (s2 s3)
+                              (s4 s5)
+                              (sj sk)
+
+                              )
+                         0
+                         (lambda args #f)
+                         (lambda (hi hands)
+                           (compute-score hi)))))))))
 
 )

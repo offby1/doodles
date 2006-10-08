@@ -52,6 +52,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
+(define *num-hands* (make-parameter 1))
 (command-line
  "dds"
  (current-command-line-arguments)
@@ -68,7 +69,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
    (*shaddap* #t))
   (("-l" "--lookahead") ml
    "Maximum number of tricks to look ahead when predicting"
-   (set! max-lookahead (string->number ml)))))
+   (set! max-lookahead (string->number ml)))
+  (("-n" "--num-hands") nh
+   "Number of hands to deal"
+   (*num-hands* (string->number nh)))
+  ))
+
 (for-each
  (lambda (hand-number)
    (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
@@ -113,7 +119,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
    (printf "~%~%~%"))
 
- (iota 1))
+ (iota (*num-hands*)))
 
 ;;; Spew coverage, profiling stuff
 

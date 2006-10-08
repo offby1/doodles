@@ -188,7 +188,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (add1 counter))))))))
 
   (check-type 'play-loop non-negative? max-lookahead)
-  (inner history hands max-lookahead 0))
+  (inner history (rotate-until hands (lambda (hands)
+                                       (eq? (ha:seat (car hands))
+                                            (history:whose-turn history))))
+         max-lookahead 0))
 ;;(trace play-loop)
 
 (define (assert-alist-or-false value)
@@ -389,7 +392,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (car pruned-legal-choices))
 
             (begin
-              (zprintf "looks ahead ~a" max-lookahead)
+              (zprintf "~a looks ahead ~a" us max-lookahead)
 
               ;; Don't call predict-score on _every_ card; rather,
               ;; stop as soon as we find a card whose score is 1.
