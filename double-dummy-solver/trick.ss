@@ -19,6 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "43.ss" "srfi")
                vector-copy
                vector-every
+               vector-fold
                vector-for-each
                vector-map
                )
@@ -190,16 +191,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (winner t)
   (assert (trick-complete? t))
   (cdr
-   (let ((cards (trick-card-seat-pairs t)))
-     (let loop ((best (vector-ref cards 0))
-                (examined 1))
-       (if (= examined (vector-length cards))
-           best
-         (let ((this (vector-ref cards examined)))
-           (loop (if (> (worth (car this) t)
-                        (worth (car best) t))
-                     this best)
-                 (add1 examined))))))))
+   (vector-fold
+    (lambda (index state element)
+      (if (> (worth (car element) t)
+             (worth (car state) t))
+          element
+        state))
+    (vector-ref (trick-card-seat-pairs t) 0)
+    (trick-card-seat-pairs t))))
 
 ;(trace winner)
 )
