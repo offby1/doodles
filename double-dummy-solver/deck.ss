@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "dds.ss"
          "history.ss"
          "zprintf.ss"
-         (only "trick.ss" *seats*)
+         (only "trick.ss" *seats* *trump-suit*)
          (prefix ha: "hand.ss")
          (lib "pretty.ss")
          (lib "cmdline.ss")
@@ -78,46 +78,53 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (time
  (for-each
   (lambda (hand-number)
-    (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
+    (for-each
+     (lambda (trump-suit)
+       (parameterize ((*trump-suit* trump-suit))
 
-    ;; deal 'em out
-    (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-               (hs (apply circular-list hands)))
-      (unless (null? d)
-        (let ((victim (car hs)))
-          (ha:add-card! victim (car d)))
+         (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
-        (loop (cdr d)
-              (cdr hs))))
+         ;; deal 'em out
+         (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
+                    (hs (apply circular-list hands)))
+           (unless (null? d)
+             (let ((victim (car hs)))
+               (ha:add-card! victim (car d)))
 
-    ;; sort the hands.  This is actually important, since
-    ;; group-into-adjacent-runs will be more likely to return exactly 1
-    ;; group, and hence things will go faster.
-    (for-each ha:sort!  hands)
+             (loop (cdr d)
+                   (cdr hs))))
 
-    (display #\page) (newline)
-    (printf "~a~%" (make-string 60 #\=))
-    (printf "Hand ~a~%" hand-number)
-    (printf "~a~%" (make-string 60 #\=))
+         ;; sort the hands.  This is actually important, since
+         ;; group-into-adjacent-runs will be more likely to return exactly 1
+         ;; group, and hence things will go faster.
+         (for-each ha:sort!  hands)
 
-    (for-each (lambda (h)
-                (display h)
-                (newline))  hands)
-    (newline)
+         (when (not (*trump-suit*))
+           (display #\page) (newline)
+           (printf "~a~%" (make-string 60 #\=))
+           (printf "Hand ~a~%" hand-number)
+           (printf "~a~%" (make-string 60 #\=))
 
-    (play-loop
-     (make-history (car *seats*))
-     hands
-     max-lookahead
+           (for-each (lambda (h)
+                       (display h)
+                       (newline))  hands)
+           (newline))
 
-     ;; always returns false -- thus we'll stop only when the hands
-     ;; have been emptied.
-     (lambda args #f)
+         (printf "Trump suit: ~a~%"
+                 (or (*trump-suit*)
+                     "notrump"))
+         (play-loop
+          (make-history (car *seats*))
+          hands
+          max-lookahead
 
-     (lambda (hi hands)
-       (printf "~a -> ~a~%" hi (compute-score hi))))
-    (printf "~%~%~%"))
+          ;; always returns false -- thus we'll stop only when the hands
+          ;; have been emptied.
+          (lambda args #f)
 
+          (lambda (hi hands)
+            (printf "~a~%" (compute-score hi))))
+         (printf "~%~%~%")
+         ))
+     (cons #f *suits*)))
   (iota (*num-hands*)))))
-
-

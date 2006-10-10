@@ -1,7 +1,7 @@
 # -*-makefile-*-
 check: dds
 	./tests.ss
-	./dds --lookahead 0 
+	./dds --lookahead 0 --quiet
 
 profile:
 	./profile.ss --quiet
