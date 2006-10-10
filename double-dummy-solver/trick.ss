@@ -43,6 +43,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          trick?
          trick-complete?
          trick-ref
+         *trump-suit*
          whose-turn
          winner
          with-seat-circle
@@ -52,7 +53,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 
 (define *seats* '(n e s w))
-(define *trump-suit* (make-parameter 's))
+(define *trump-suit* (make-parameter #f))
 (define (rotate seq steps)
   (if (positive? steps)
       (rotate (append (cdr seq)

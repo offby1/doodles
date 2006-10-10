@@ -58,8 +58,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  "dds"
  (current-command-line-arguments)
  (once-each
+
+  ;;Seeing octal escapes in Emacs?  Try C-x RET c utf-8 RET M-x make
+  ;;And use Lucida Console, if your terminal is running on Windows; on
+  ;;*nix, '10x20' from Emacs' font menu also works
   (("-f" "--fancy-suits") "Display little suit symbols instead of c, d, h, s"
-   (*fancy-suits* #t))
+   (*fancy-suits* #f))
+
   (("-q" "--quiet") "Suppress all diagnostics"
    (*shaddap* #t))
   (("-l" "--lookahead") ml
