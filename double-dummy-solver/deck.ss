@@ -60,22 +60,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
-;; grr.  Gotta manually strip carriage-returns, which appear if we run
-;; this from Cygwin.  NOTE: if the last argument was emtpy, this will
-;; clobber it.  I don't see how to avoid that.
-(let ((*args* (vector->list (current-command-line-arguments))))
-  (define (strip-cr s)
-    (regexp-replace "\r$" s ""))
-
-  (when (not (null? *args*))
-    (let ((lp (last-pair *args*)))
-      (set-car! lp (strip-cr (car lp)))
-      (current-command-line-arguments
-       (list->vector
-        (drop-right
-         *args*
-         (if (zero? (string-length (car lp))) 1 0)))))))
-
 (define *num-hands* (make-parameter 1))
 (command-line
  "dds"
