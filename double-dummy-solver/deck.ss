@@ -15,7 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
          (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") iota take circular-list ))
+         (only (lib "1.ss" "srfi") iota remove take circular-list ))
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
 (define max-lookahead 0)
@@ -53,6 +53,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
+;; grr.  Gotta manually strip carriage-returns.  BUGBUG: this will
+;; clobber arguments that were initially empty.  Now, I don't need any
+;; such, but note that this isn't a good general way to strip
+;; carriage-returns.
+(let ((*args* (remove (lambda (s)
+                        (zero? (string-length s)))
+                      (map (lambda (arg) (regexp-replace "\r$" arg ""))
+                           (vector->list (current-command-line-arguments))))))
+
+  (current-command-line-arguments (list->vector *args*)))
+
 (define *num-hands* (make-parameter 1))
 (command-line
  "dds"
