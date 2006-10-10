@@ -60,9 +60,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
-;; grr.  Gotta manually strip carriage-returns.  NOTE: if the last
-;; argument was emtpy, this will clobber it.  I don't see how to avoid
-;; that.
+;; grr.  Gotta manually strip carriage-returns, which appear if we run
+;; this from Cygwin.  NOTE: if the last argument was emtpy, this will
+;; clobber it.  I don't see how to avoid that.
 (let ((*args* (vector->list (current-command-line-arguments))))
   (define (strip-cr s)
     (regexp-replace "\r$" s ""))
