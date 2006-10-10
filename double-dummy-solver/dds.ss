@@ -50,41 +50,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               '()
               seq))))
 
-(define (same-team? s1 s2)
-  (with-seat-circle
-   s1
-   (lambda (sc)
-     (or (eq? s2 (car sc))
-         (eq? s2 (caddr sc)))))
-  )
+(define (hi-lo-each-suit seq t)
 
-;; Returns the least, and the two greatest, cards, based on rank.
-(define (bot-one/top-two seq)
-  (if (< (length seq) 4)
-      seq
-    (let ((sorted (sort seq card</rank)))
-      (cons (car sorted)
-            (take-right sorted (min 2 (length sorted)))))))
+  (define (w c) (worth c t))
 
-(define (top-two seq)
-  (if (< (length seq) 3)
-      seq
-    (let ((sorted (sort seq card</rank)))
-      (take-right sorted (min 2 (length sorted))))))
+  (define (hi-lo seq)
+    (if (< (length seq) 3)
+        seq
+      (let ((sorted (sort seq worth)))
+        (cons (car sorted) (last-pair sorted)))))
 
-(define (hi-lo seq)
-  (if (< (length seq) 3)
-      seq
-    (let ((sorted (sort seq card</rank)))
-      (cons (car sorted) (last-pair sorted)))))
+  (define (partition-by-suits cs)
+    (list (filter spade? cs)
+          (filter heart? cs)
+          (filter diamond? cs)
+          (filter club? cs)))
 
-(define (partition-by-suits cs)
-  (list (filter spade? cs)
-        (filter heart? cs)
-        (filter diamond? cs)
-        (filter club? cs)))
-
-(define (hi-lo-each-suit seq)
   (append-map hi-lo (partition-by-suits seq)))
 
 (define (ass0 obj alist)
@@ -147,8 +128,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (append (ha:cards (hand-of lho new-hand-list))
                           (ha:cards (hand-of rho new-hand-list))))
                  (suckers (filter (lambda (en)
-                                    (< (worth winning-card t)
-                                       (worth en t)))
+                                    (and (eq? (card-suit en)
+                                              (card-suit (trick-ref t 0)))
+                                         (< (worth winning-card t)
+                                            (worth en t))))
                                   enemy-holding)))
             (case offset
               ((2 3)
@@ -309,12 +292,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (unless (null? (lset-intersection eq? (ha:cards ours) already-played-cards))
     (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
-  (let* ((legal-choices
+  (let* ((t (and (not (history-empty? history))
+                 (not (hi:trick-complete? history))
+                 (history-latest-trick history)))
+         (legal-choices
           (cond
            ;; If we're leading, all cards are legal.
-           ((or (history-empty? history)
-                (hi:trick-complete? history))
-
+           ((not t)
             ;; we sort by suits so that it will be easy to make groups
             ;; of adjacent cards of the same suit.
             (sort (ha:cards ours) card</suit)
@@ -346,26 +330,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (every (lambda (c) (member c (ha:cards ours)))
                          (cards-between a b))))))
 
-         ;; diagnostic only--vvvvv
-         ;; I don't think I've ever seen this diagnostic; it's prolly broken
-         (runs (filter (lambda (l)
-                         (< 1 (length l)))
-                       grouped))
-         (has-a-gap (lambda (seq)
-                      (pair-fold
-                       (lambda (pair accumulator)
-                         (or accumulator
-                             (and (not (null? (cdr pair)))
-                                  (< 1 (- (card-rank (cadr pair))
-                                          (card-rank (car pair)))))))
-                       #f seq)))
-         (gappy-runs (filter has-a-gap runs))
-         (dummy (when (not (null? gappy-runs))
-                  (printf " gappy runs: ~a" gappy-runs)))
-         ;; diagnostic only--^^^^^
-
-         (cards-in-current-trick (or (and (not (history-empty? history))
-                                          (length (trick-cards (history-latest-trick history))))
+         (cards-in-current-trick (or (and t
+                                          (length (trick-cards t)))
                                      0))
 
          ;; TODO -- if we can't follow suit, perhaps we should only
@@ -373,7 +339,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
          ;; And when we're leading, we should probably consider at
          ;; least one card from each suit.
-         ;;(pruned-legal-choices (bot-one/top-two (map car grouped)))
 
          (pruned-legal-choices
           (if (zero? max-lookahead)
@@ -381,7 +346,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ;; zero, why not consider every group?  Shouldn't slow
               ;; us down _too_ much.  I hope.
               (map car grouped)
-            (hi-lo-each-suit (map car grouped))))
+            (hi-lo-each-suit (map car grouped) t)))
 
          (choice
           (if (null? (cdr pruned-legal-choices))
@@ -399,20 +364,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ;; Don't call predict-score on _every_ card; rather,
               ;; stop as soon as we find a card whose score is 1.
 
-              ;; BUGBUG -- don't play a high card if our partner has
-              ;; already played a card that's sure to win.
               (let/ec return
                 (let ((best #f))
+
+                  ;; if our partner has already played, sort 'em so
+                  ;; that we look at the smaller cards first -- that
+                  ;; way we should avoid playing a high card on our
+                  ;; partner's winner.
+                  (zp "considers ~a ..." pruned-legal-choices)
+
                   (for-each
                    (lambda (choice)
-                     ;; sort by score, of course; but if the
-                     ;; scores are equal, choose the
-                     ;; lower-ranking card.
+                     ;; sort by score, of course; but if the scores
+                     ;; are equal, choose the lower-ranking card.
                      (define (better a b)
                        (if (= (car a)
                               (car b))
-                           (< (card-rank (cdr a))
-                              (card-rank (cdr b)))
+                           (< (worth (cdr a))
+                              (worth (cdr b)))
                          (> (car a)
                             (car b))))
                      (let* ((score (numeric-team-score
@@ -437,17 +406,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  (better (cons score choice) best))
                          (set! best (cons score choice)))))
 
-                   ;; if our partner has already played, sort 'em so
-                   ;; that we look at the smaller cards first -- that
-                   ;; way we should avoid playing a high card on our
-                   ;; partner's winner.
-                   (zp "considers ~a ..."
-                       (case cards-in-current-trick
-                         ((2 3)
-                          (sort pruned-legal-choices card</rank))
-                         (else
-                          pruned-legal-choices)
-                         )))
+                   (case cards-in-current-trick
+                     ((2 3)
+                      (sort
+                       pruned-legal-choices
+                       (lambda (a b)
+                         (let ((wa (worth a t))
+                               (wb (worth b t)))
+                           (if (= wa wb)
+                               (< (card-rank a)
+                                  (card-rank b))
+                             (< wa wb))))))
+                     (else
+                      pruned-legal-choices)
+                     ))
                   (cdr best)))))))
 
     choice))

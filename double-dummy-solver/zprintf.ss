@@ -20,7 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (when (and (not (*shaddap*))
              (or (*really-loud*)
                  (zero? (*recursion-level*))))
- ;;    (newline)
+;;     (newline)
 ;;     (display (make-string (* 2 (*recursion-level*)) #\space))
     (let-values (((line col pos)
                   (port-next-location (current-output-port))))

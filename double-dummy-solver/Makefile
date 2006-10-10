@@ -4,7 +4,7 @@ check: dds
 	@echo "And use Lucida Console, if your terminal is running on Windows;"
 	@echo "on *nix, '10x20' from Emacs' font menu also works"
 	./tests.ss
-	./dds --lookahead 0 --quiet
+	./dds --lookahead 0 
 
 profile:
 	./profile.ss --quiet

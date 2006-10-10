@@ -24,6 +24,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                vector-map
                )
          "card.ss"
+         "zprintf.ss"
          (lib "trace.ss")
          (only (lib "etc.ss") compose)
          (lib "pretty.ss"))
@@ -51,7 +52,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 
 (define *seats* '(n e s w))
-
+(define *trump-suit* (make-parameter 's))
 (define (rotate seq steps)
   (if (positive? steps)
       (rotate (append (cdr seq)
@@ -182,23 +183,40 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (led-suit t)
    (card-suit (trick-ref t 0)))
 
-(define (worth card t)
-  (if (eq? (led-suit t)
-           (card-suit card))
-      (card-rank card)
-    0))
+;; the "trick-taking power" of this card.  It's pretty much the rank,
+;; except: if it's in the trump suit, it gets a boost of 13 so that it
+;; beats all cards from all other suits; and if we were passed a
+;; trick, and it's not of the led suit, then its power is 0.
+(define (worth card . t)
+  (when (pair? t)
+    (set! t (car t)))
+
+  (cond
+   ((eq? (*trump-suit*)
+         (card-suit card))
+    (+ (card-rank card) *num-ranks*))
+   ((and (not (null? t))
+         (not (eq? (led-suit t)
+                   (card-suit card))))
+    0)
+   (else
+    (card-rank card)))  )
+
+;;(trace worth)
 
 (define (winner t)
+  (cdr (winner/int t)))
+
+(define (winner/int t)
   (assert (trick-complete? t))
-  (cdr
-   (vector-fold
-    (lambda (index state element)
-      (if (> (worth (car element) t)
-             (worth (car state) t))
-          element
-        state))
-    (vector-ref (trick-card-seat-pairs t) 0)
-    (trick-card-seat-pairs t))))
+  (vector-fold
+   (lambda (index state element)
+     (if (> (worth (car element) t)
+            (worth (car state) t))
+         element
+       state))
+   (vector-ref (trick-card-seat-pairs t) 0)
+   (trick-card-seat-pairs t)))
 
 ;(trace winner)
 )
