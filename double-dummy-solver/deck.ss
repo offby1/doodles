@@ -15,7 +15,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
          (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") iota remove take circular-list ))
+         (only (lib "1.ss" "srfi")
+               circular-list
+               drop-right
+               fold
+               iota
+               last-pair
+               take
+               ))
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
 (define max-lookahead 0)
@@ -53,16 +60,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (swap! bottom-index top-index)))))
 
 
-;; grr.  Gotta manually strip carriage-returns.  BUGBUG: this will
-;; clobber arguments that were initially empty.  Now, I don't need any
-;; such, but note that this isn't a good general way to strip
-;; carriage-returns.
-(let ((*args* (remove (lambda (s)
-                        (zero? (string-length s)))
-                      (map (lambda (arg) (regexp-replace "\r$" arg ""))
-                           (vector->list (current-command-line-arguments))))))
+;; grr.  Gotta manually strip carriage-returns.  NOTE: if the last
+;; argument was emtpy, this will clobber it.  I don't see how to avoid
+;; that.
+(let ((*args* (vector->list (current-command-line-arguments))))
+  (define (strip-cr s)
+    (regexp-replace "\r$" s ""))
 
-  (current-command-line-arguments (list->vector *args*)))
+  (when (not (null? *args*))
+    (let ((lp (last-pair *args*)))
+      (set-car! lp (strip-cr (car lp)))
+      (current-command-line-arguments
+       (list->vector
+        (drop-right
+         *args*
+         (if (zero? (string-length (car lp))) 1 0)))))))
 
 (define *num-hands* (make-parameter 1))
 (command-line
