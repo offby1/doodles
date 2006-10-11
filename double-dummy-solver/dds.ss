@@ -52,12 +52,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (hi-lo-each-suit seq t)
 
-  (define (w c) (worth c t))
+  (define (w c) (augmented-rank c t))
 
   (define (hi-lo seq)
     (if (< (length seq) 3)
         seq
-      (let ((sorted (sort seq worth)))
+      (let ((sorted (sort seq augmented-rank)))
         (cons (car sorted) (last-pair sorted)))))
 
   (define (partition-by-suits cs)
@@ -130,8 +130,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (suckers (filter (lambda (en)
                                     (and (eq? (card-suit en)
                                               (card-suit (trick-ref t 0)))
-                                         (< (worth winning-card t)
-                                            (worth en t))))
+                                         (< (augmented-rank winning-card t)
+                                            (augmented-rank en t))))
                                   enemy-holding)))
             (case offset
               ((2 3)
@@ -380,8 +380,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (define (better a b)
                        (if (= (car a)
                               (car b))
-                           (< (worth (cdr a))
-                              (worth (cdr b)))
+                           (< (augmented-rank (cdr a))
+                              (augmented-rank (cdr b)))
                          (> (car a)
                             (car b))))
                      (let* ((score (numeric-team-score
@@ -408,8 +408,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (sort
                        pruned-legal-choices
                        (lambda (a b)
-                         (let ((wa (worth a t))
-                               (wb (worth b t)))
+                         (let ((wa (augmented-rank a t))
+                               (wb (augmented-rank b t)))
                            (if (= wa wb)
                                (< (card-rank a)
                                   (card-rank b))

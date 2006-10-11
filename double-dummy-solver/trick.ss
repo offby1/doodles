@@ -47,7 +47,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          whose-turn
          winner
          with-seat-circle
-         worth
+         augmented-rank
          *seats*)
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
@@ -188,7 +188,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; except: if it's in the trump suit, it gets a boost of 13 so that it
 ;; beats all cards from all other suits; and if we were passed a
 ;; trick, and it's not of the led suit, then its power is 0.
-(define (worth card . t)
+(define (augmented-rank card . t)
   (when (pair? t)
     (set! t (car t)))
 
@@ -203,7 +203,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (else
     (card-rank card)))  )
 
-;;(trace worth)
+;;(trace augmented-rank)
 
 (define (winner t)
   (cdr (winner/int t)))
@@ -212,8 +212,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (assert (trick-complete? t))
   (vector-fold
    (lambda (index state element)
-     (if (> (worth (car element) t)
-            (worth (car state) t))
+     (if (> (augmented-rank (car element) t)
+            (augmented-rank (car state) t))
          element
        state))
    (vector-ref (trick-card-seat-pairs t) 0)
