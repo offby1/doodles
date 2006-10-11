@@ -52,12 +52,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (hi-lo-each-suit seq t)
 
-  (define (w c) (augmented-rank c t))
+  (define (w< a b) (< (augmented-rank a t)
+                      (augmented-rank b t)))
 
   (define (hi-lo seq)
     (if (< (length seq) 3)
         seq
-      (let ((sorted (sort seq augmented-rank)))
+      (let ((sorted (sort seq w<)))
         (cons (car sorted) (last-pair sorted)))))
 
   (define (partition-by-suits cs)

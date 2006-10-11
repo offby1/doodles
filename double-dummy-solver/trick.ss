@@ -196,7 +196,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
    ((eq? (*trump-suit*)
          (card-suit card))
     (+ (card-rank card) *num-ranks*))
-   ((and (not (null? t))
+   ((and t
+         (not (null? t))
          (not (eq? (led-suit t)
                    (card-suit card))))
     0)
