@@ -29,7 +29,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (prefix ha: "hand.ss")
          (only (lib "list.ss") sort)
          (lib "trace.ss"))
-(provide choose-card play-loop)
+(provide
+ choose-card
+ play-loop
+ predict-score
+ )
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
 
@@ -212,65 +216,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define partner^s (car (rotate hands 2)))
   (define rho^s     (car (rotate hands 3)))
 
-  ;; computes the score from the given history.  If the last trick is
-  ;; incomplete, it guesses (which is why it needs to a set of hands).
-  ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
-  (define (score-from-history history hands)
-    (fold
-     (lambda (t accum)
-       (sum-scores
-        accum
-        (cond
-         ((not (trick-complete? t))
-          (list (cons (predict-winner-of-incomplete-trick t hands) 1)))
-         (else
-          (list (cons (winner t) 1))))))
-     '()
-     (history-tricks history)))
-
-
-;;; predict-score
-
-  ;; same inputs as choose-card, plus a single card, plus the number
-  ;; of tricks into the future to look.
-
-  ;; extra precondition: the single card could have been returned from
-  ;; a call to choose-card.
-
-  ;; add this card to the last trick in the sequence.
-
-  ;; let the current player be the guy to our left
-  ;; while the history is thus incomplete and max-lookahead > 0
-  ;;   call choose-card with the current player
-  ;;   modify the history
-  ;;   bump the current player
-
-  ;;   count the number of tricks won by us, and by them, and subtract;
-  ;;   that's the answer.
-
-  (define (predict-score card max-lookahead)
-    (check-type 'predict-score non-negative? max-lookahead)
-    (let ((rl (*recursion-level*)))
-      (parameterize ((*recursion-level* (add1 (*recursion-level*))))
-        (let-values (((new-hi new-hands)
-                      (play-card history hands card)))
-
-          (play-loop
-           new-hi
-           new-hands
-           (max (sub1 max-lookahead) 0)
-
-           ;; hypo-thetical, that is.
-           (lambda (hypo-history hypo-hands)
-             (= (* (length *seats*)
-                   max-lookahead)
-                ( - (history-length-cards hypo-history)
-                    (history-length-cards new-hi))))
-
-           (lambda (hypo-history hypo-hands)
-             (parameterize ((*recursion-level* rl))
-               (score-from-history hypo-history hypo-hands))))))
-      ))
 
   (define already-played-cards
     (history-card-set history))
@@ -279,7 +224,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (or (member c (ha:cards lho^s))
         (member c (ha:cards rho^s))))
 
-  ;;(trace score-from-history)
   ;;(trace predict-score)
   ;;(trace numeric-team-score)
   (check-type 'choose-card non-negative? max-lookahead)
@@ -386,7 +330,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (> (car a)
                             (car b))))
                      (let* ((score (numeric-team-score
-                                    (predict-score choice max-lookahead)
+                                    (predict-score choice history hands max-lookahead)
                                     us))
                             (score-delta
                              (-
@@ -421,6 +365,67 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (cdr best)))))))
 
     choice))
+
+;;; predict-score
+
+;; same inputs as choose-card, plus a single card, plus the number
+;; of tricks into the future to look.
+
+;; extra precondition: the single card could have been returned from
+;; a call to choose-card.
+
+;; add this card to the last trick in the sequence.
+
+;; let the current player be the guy to our left
+;; while the history is thus incomplete and max-lookahead > 0
+;;   call choose-card with the current player
+;;   modify the history
+;;   bump the current player
+
+;;   count the number of tricks won by us, and by them, and subtract;
+;;   that's the answer.
+
+(define (predict-score card history hands max-lookahead)
+
+  ;; computes the score from the given history.  If the last trick is
+  ;; incomplete, it guesses (which is why it needs to a set of hands).
+  ;; returns an alist like: ((n . 3) (e . 2) (s . 0) (w . 1))
+  (define (score-from-history history hands)
+    (fold
+     (lambda (t accum)
+       (sum-scores
+        accum
+        (cond
+         ((not (trick-complete? t))
+          (list (cons (predict-winner-of-incomplete-trick t hands) 1)))
+         (else
+          (list (cons (winner t) 1))))))
+     '()
+     (history-tricks history)))
+  ;;(trace score-from-history)
+
+  (check-type 'predict-score non-negative? max-lookahead)
+  (let ((rl (*recursion-level*)))
+    (parameterize ((*recursion-level* (add1 (*recursion-level*))))
+      (let-values (((new-hi new-hands)
+                    (play-card history hands card)))
+
+        (play-loop
+         new-hi
+         new-hands
+         (max (sub1 max-lookahead) 0)
+
+         ;; hypo-thetical, that is.
+         (lambda (hypo-history hypo-hands)
+           (= (* (length *seats*)
+                 max-lookahead)
+              ( - (history-length-cards hypo-history)
+                  (history-length-cards new-hi))))
+
+         (lambda (hypo-history hypo-hands)
+           (parameterize ((*recursion-level* rl))
+             (score-from-history hypo-history hypo-hands))))))
+    ))
 ;;(trace choose-card)
 
 )
