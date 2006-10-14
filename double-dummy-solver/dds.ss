@@ -187,7 +187,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (assert-alist-or-false value)
   (unless (or (not value)
               (and (list? value)))
-    (raise-type-error 'choose-card (format "Wanted an alist or #f; got:" value)))
+    (raise-type-error 'choose-card (format "alist or #f") value))
   value)
 ;;; choose-card
 

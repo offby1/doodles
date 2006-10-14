@@ -10,11 +10,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
  (only "card.ss" cards=)
- (only "hand.ss" cards mhs)
+ (only "hand.ss"
+       cards
+       hand?
+       mhs
+       )
  (only "history.ss" make-history)
  (only "trick.ss" *seats*)
  "zprintf.ss"
  (only (lib "1.ss" "srfi")
+       every
        iota
        lset-union
        ))
@@ -26,8 +31,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (fill-out-hands hands history)
   (unless (and (pair? hands)
                (= (length *seats*)
-                  (length hands)))
-    (raise-type-error 'fill-out-hands (format "Wanted ~a hands; got: ~a" (length *seats*) hands)))
+                  (length hands))
+               (every hand? hands))
+    (raise-type-error 'fill-out-hands (format "list of ~a hands" (length *seats*) ) 0 hands))
   (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
        (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
        (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
@@ -48,7 +54,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (map
       cards
       (fill-out-hands
-       '(#f #f #f #f)
+       (mhs () () () ())
        (make-history 'e))))))
 
   (test-exn "Requires four args"
