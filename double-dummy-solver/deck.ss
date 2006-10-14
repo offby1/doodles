@@ -118,7 +118,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (newline))  hands)
            (newline))
 
-         (printf "Trump suit: ~a~%"
+         (printf "Trump suit: ~a => "
                  (or (*trump-suit*)
                      "notrump"))
          (play-loop
@@ -132,7 +132,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
           (lambda (hi hands)
             (printf "~a~%" (compute-score hi))))
-         (printf "~%~%~%")
          ))
      (cons #f *suits*)
      ))
