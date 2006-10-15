@@ -3,9 +3,10 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module deck mzscheme
+(module test-predictions mzscheme
 (require "card.ss"
          "dds.ss"
+         "deck.ss"
          "history.ss"
          "zprintf.ss"
          (only "trick.ss" *seats* *trump-suit*)
@@ -29,24 +30,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (random-seed 0)
 
 
-(define *deck*
-  (let loop ((suits *suits*)
-             (result '()))
-    (if (null? suits)
-        (sort result (lambda (a b)
-                       (< (card-rank a)
-                          (card-rank b))))
-      (loop (cdr suits)
-            (append
-             (let loop ((ranks (iota *num-ranks* 2))
-                        (result '()))
-               (if (null? ranks)
-                   result
-                 (loop (cdr ranks)
-                       (cons (make-card (car suits)
-                                        (car ranks))
-                             result))))
-             result)))))
 
 (define (fisher-yates-shuffle! v)
   (define (swap! i1 i2)

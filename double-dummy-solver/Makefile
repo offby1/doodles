@@ -2,12 +2,13 @@
 check: dds
 	./tests.ss
 	./dds --lookahead 0 --quiet
+	./fill-out-hands.ss
 
 profile:
 	./profile.ss --quiet
 
 dds: $(wildcard *.ss)
-	mzc --exe $@ deck.ss
+	mzc --exe $@ test-predictions.ss
 
 ETAGS ?= etags
 

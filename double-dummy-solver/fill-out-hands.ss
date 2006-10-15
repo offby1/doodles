@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
  (only "card.ss" cards=)
+ "deck.ss"
  (only "hand.ss"
        cards
        hand?
@@ -17,12 +18,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        mhs
        unknown?
        )
- (only "history.ss" make-history)
+ (only "history.ss"
+       history-card-set
+       make-history
+       )
  (only "trick.ss" *seats*)
  "zprintf.ss"
  (only (lib "1.ss" "srfi")
+       append-map
        every
        iota
+       lset-difference
        lset-union
        partition
        ))
@@ -48,13 +54,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; partition hands into ? and other
   (let-values (((unks knowns)
                 (partition unknown? hands) ))
-    ;; let "hidden cards" be: *deck* minus known hands minus cards from history
 
-    ;; somehow distribute those hidden cards among the ? hands.  Make
-    ;; sure, if the number of ? hands doesn't evenly divide the number
-    ;; of hidden cards, that the odd cards go to the hands that haven't
-    ;; yet played to the current trick.
-    (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
+    (let ((hidden (lset-difference
+                   cards=
+                   *deck*
+                   (append-map cards knowns)
+                   (history-card-set history))))
+      ;; somehow distribute those hidden cards among the ? hands.  Make
+      ;; sure, if the number of ? hands doesn't evenly divide the number
+      ;; of hidden cards, that the odd cards go to the hands that haven't
+      ;; yet played to the current trick.
+      (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
+      (printf "Hidden cards: ~s~%" hidden))
+
     *test-hand*
     )
   )
