@@ -71,15 +71,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
 
-    ;; deal 'em out
-    (let loop ((d (vector->list (fisher-yates-shuffle! (list->vector *deck*))))
-               (hs (apply circular-list hands)))
-      (unless (null? d)
-        (let ((victim (car hs)))
-          (ha:add-card! victim (car d)))
-
-        (loop (cdr d)
-              (cdr hs))))
+    (deal! (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+            hands)
 
     (for-each
      (lambda (trump-suit)

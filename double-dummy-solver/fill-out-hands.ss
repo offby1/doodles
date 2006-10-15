@@ -65,7 +65,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ;; of hidden cards, that the odd cards go to the hands that haven't
       ;; yet played to the current trick.
       (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
-      (printf "Hidden cards: ~s~%" hidden))
+      (printf "Hidden cards: ~s~%" hidden)
+
+      ;; rotate the hands so that the next guy to play as at the
+      ;; front, then just deal out the unknowns.
+      ;; (let ((hands
+;;              (rotate-until
+;;               (lambda (hands)
+;;                 (eq? (hand-seat (car hands))
+;;                      (whose-turn history))))))
+;;         )
+      )
+
+
 
     *test-hand*
     )

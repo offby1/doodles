@@ -206,9 +206,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;;(trace augmented-rank)
 
+;; returns just a seat
 (define (winner t)
   (cdr (winner/int t)))
 
+;; returns (cons card seat)
 (define (winner/int t)
   (assert (trick-complete? t))
   (vector-fold
