@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module fill-out-hands mzscheme
@@ -13,7 +13,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (only "hand.ss"
        cards
        hand?
+       mh
        mhs
+       unknown?
        )
  (only "history.ss" make-history)
  (only "trick.ss" *seats*)
@@ -22,6 +24,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        every
        iota
        lset-union
+       partition
        ))
 
 (define *test-hand*
@@ -41,7 +44,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (length hands))
                (every hand? hands))
     (raise-type-error 'fill-out-hands (format "list of ~a hands" (length *seats*) ) 0 hands))
-  *test-hand*)
+
+  ;; partition hands into ? and other
+  (let-values (((unks knowns)
+                (partition unknown? hands) ))
+    ;; let "hidden cards" be: *deck* minus known hands minus cards from history
+
+    ;; somehow distribute those hidden cards among the ? hands.  Make
+    ;; sure, if the number of ? hands doesn't evenly divide the number
+    ;; of hidden cards, that the odd cards go to the hands that haven't
+    ;; yet played to the current trick.
+    (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
+    *test-hand*
+    )
+  )
 
 (test/text-ui
  (test-suite
@@ -58,6 +74,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
       cards
       (fill-out-hands
        *test-hand*
+       (make-history 'e))))))
+
+  (test-equal?
+   "52, part deux"
+   52
+   (length
+    (apply
+     lset-union
+     cards=
+     (map
+      cards
+      (fill-out-hands
+       (list (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+             (mh e ?)
+             (mh s ?)
+             (mh w ?)
+             )
        (make-history 'e))))))
 
   (test-exn "Requires four args"

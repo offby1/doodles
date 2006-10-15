@@ -15,16 +15,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
          "card.ss"
          (only "trick.ss" *seats*)
          (lib "trace.ss"))
-(provide (rename my-make-hand make-hand)
-         mh mhs
-         (rename hand-cards cards)
-         (rename hand-seat seat)
-         filter
-         hand?
-         empty?
-         remove-card
-         add-card!
-         sort!)
+(provide
+ (rename hand-cards cards)
+ (rename hand-seat seat)
+ (rename my-make-hand make-hand)
+ add-card!
+ empty?
+ filter
+ hand?
+ mh mhs
+ remove-card
+ sort!
+ unknown?
+ )
 
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
@@ -39,11 +42,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (hand-cards hand)
               ;;(sort (hand-cards hand) card</suit)
               ))
-    (when (not (null? cs))
+    (cond
+     ((eq? '? cs)
+      (display "?" port))
+     ((not (null? cs))
       (display (car cs) port)
       (when (not (null? (cdr cs)))
         (display " " port))
-      (loop (cdr cs))))
+      (loop (cdr cs)))))
 
   (when write? (write-string ">" port)))
 
@@ -53,6 +59,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (hand-cards h) (hand-ref h 0))
 (define (hand-seat  h) (hand-ref h 1))
+(define (unknown? h) (eq? '? (hand-cards h)))
 (define (set-hand-cards! h c) (hand-set! h 0 c))
 
 (define (filter proc h)
