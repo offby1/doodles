@@ -24,6 +24,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
        lset-union
        ))
 
+(define *test-hand*
+  (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+       (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
+       (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
+       (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
+       ))
+
 ;; returns a new set of hands that is like the input set, but with
 ;; each "unknown" hand replaced by a randomly-generated hand.  The
 ;; cards of the returned hands, combined with the cards of the
@@ -34,11 +41,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (length hands))
                (every hand? hands))
     (raise-type-error 'fill-out-hands (format "list of ~a hands" (length *seats*) ) 0 hands))
-  (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
-       (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
-       (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
-       (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
-       ))
+  *test-hand*)
 
 (test/text-ui
  (test-suite
@@ -54,7 +57,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (map
       cards
       (fill-out-hands
-       (mhs () () () ())
+       *test-hand*
        (make-history 'e))))))
 
   (test-exn "Requires four args"
@@ -62,5 +65,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (lambda ()
               (fill-out-hands
                '(#f #f #f)
+               (make-history 'e))))
+
+  (test-exn "Requires four hands"
+            exn:fail:contract?
+            (lambda ()
+              (fill-out-hands
+               '(#f #f #f 'sam)
                (make-history 'e))))))
 )

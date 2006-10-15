@@ -60,9 +60,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 (hand-seat h)))
 
 (define (my-make-hand cards . seat)
-  (unless (and (list? cards)
-               (every card? cards))
-    (raise-mismatch-error 'make-hand "Not a list of cards: " cards))
+  (unless (or (eq? '? cards)
+          (and (list? cards)
+               (every card? cards)))
+    (raise-mismatch-error 'make-hand "Not a list of cards, or ?: " cards))
 
   ;; TODO -- maybe ensure all the cards are distinct.
 
@@ -81,6 +82,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; symbols.
 (define-syntax mh
   (syntax-rules ()
+    ((_ seat question-mark)
+     (my-make-hand '? 'seat ))
     ((_ seat card-syms ...)
      (my-make-hand (map mc* `(card-syms ...)) 'seat ))))
 
@@ -96,7 +99,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (mh w wc ...)))))
 
 (define (copy h)
-  (make-hand (list-copy (hand-cards h)) (hand-seat h)))
+  (make-hand (if (list? (hand-cards h))
+                 (list-copy (hand-cards h))
+                (hand-cards h)) (hand-seat h)))
 
 (define (all-distinct? seq < =)
   (let loop ((seq (sort seq <)))
@@ -108,6 +113,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       #f)
      (else
       (loop (cdr seq))))))
+
 (define (remove-card! h c)
   (unless (member c (hand-cards h))
     (raise-mismatch-error 'remove-card (format "Can't remove from ~a because it's not present: "  h) c))
@@ -135,20 +141,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; ♣3 ♣6 ♣9 ♣j ♣a ♦2 ♦9 ♦t ♥7 ♥j ♥q ♠6 ♠9 => ((♣ 3 6 9 j a) (♦ 2 9 t) (♥ 7 j q) (♠ 6 9))
 
 (define (collate h)
-  (fold (lambda (card output)
-          (cond
-           ((or (null? output)
-                (not (eq? (card-suit card)
-                          (caar output))))
-            (cons (list (card-suit card)
-                        (card-rank card))
-                  output))
-           (else
-            (append! (car output)
-                     (list (card-rank card)))
-            output)))
-        '()
-        (sort (hand-cards h)  card</suit)))
+  (if (list? (hand-cards h))
+      (fold (lambda (card output)
+              (cond
+               ((or (null? output)
+                    (not (eq? (card-suit card)
+                              (caar output))))
+                (cons (list (card-suit card)
+                            (card-rank card))
+                      output))
+               (else
+                (append! (car output)
+                         (list (card-rank card)))
+                output)))
+            '()
+            (sort (hand-cards h)  card</suit))
+    '?))
 
 (define (ps hand port)
   (fprintf port "~a:~%=======================~%" (hand-seat hand))
