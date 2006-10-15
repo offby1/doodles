@@ -21,6 +21,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 
 (define (history-print history port write?)
+  (fprintf port "Opening lead: ~a " (history-opening-leader history))
   (let loop ((printed 0)
              (tricks (reverse (history-tricks history))))
     (when (not (null? tricks))

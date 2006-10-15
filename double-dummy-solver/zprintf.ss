@@ -8,9 +8,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide (all-defined))
 (require (only (lib "1.ss" "srfi") last-pair))
 
-(display "$Id$" (current-error-port))
-(newline (current-error-port))
-
 (define *recursion-level* (make-parameter 0))
 (define *really-loud* (make-parameter #f))
 (define *shaddap* (make-parameter #f))

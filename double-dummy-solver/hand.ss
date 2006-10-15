@@ -20,6 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (rename hand-seat seat)
  (rename my-make-hand make-hand)
  add-card!
+ copy
  empty?
  filter
  hand?

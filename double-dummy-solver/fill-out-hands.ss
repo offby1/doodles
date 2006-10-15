@@ -13,16 +13,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  "deck.ss"
  (only "hand.ss"
        cards
+       copy
        hand?
+       make-hand
        mh
        mhs
+       seat
        unknown?
        )
  (only "history.ss"
        history-card-set
        make-history
+       whose-turn
        )
- (only "trick.ss" *seats*)
+ (only "trick.ss"
+       *seats*
+       rotate-until
+       )
  "zprintf.ss"
  (only (lib "1.ss" "srfi")
        append-map
@@ -51,36 +58,57 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (every hand? hands))
     (raise-type-error 'fill-out-hands (format "list of ~a hands" (length *seats*) ) 0 hands))
 
-  ;; partition hands into ? and other
-  (let-values (((unks knowns)
-                (partition unknown? hands) ))
+  (let ((hands
+         (map
+          copy
+          (rotate-until
+           hands
+           (lambda (hands)
+             (eq? (seat (car hands))
+                  (whose-turn history)))))))
 
-    (let ((hidden (lset-difference
-                   cards=
-                   *deck*
-                   (append-map cards knowns)
-                   (history-card-set history))))
-      ;; somehow distribute those hidden cards among the ? hands.  Make
-      ;; sure, if the number of ? hands doesn't evenly divide the number
-      ;; of hidden cards, that the odd cards go to the hands that haven't
-      ;; yet played to the current trick.
-      (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
-      (printf "Hidden cards: ~s~%" hidden)
+    ;; partition hands into ? and other
+    (let-values (((unks knowns)
+                  (partition unknown? hands) ))
 
-      ;; rotate the hands so that the next guy to play as at the
-      ;; front, then just deal out the unknowns.
-      ;; (let ((hands
-;;              (rotate-until
-;;               (lambda (hands)
-;;                 (eq? (hand-seat (car hands))
-;;                      (whose-turn history))))))
-;;         )
-      )
+      (if (null? unks)
+          hands
+        (let ((hidden (lset-difference
+                       cards=
+                       *deck*
+                       (append-map cards knowns)
+                       (history-card-set history))))
+
+          ;; somehow distribute those hidden cards among the ? hands.  Make
+          ;; sure, if the number of ? hands doesn't evenly divide the number
+          ;; of hidden cards, that the odd cards go to the hands that haven't
+          ;; yet played to the current trick.
+          (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
+          (printf "Hidden cards: ~s~%" hidden)
+
+          ;; rotate the hands so that the next guy to play as at the
+          ;; front, then just deal out the unknowns.
+
+          (printf "Given history ~a~%" history)
+          (printf "Ya, rotated until this hand is about to play: ~s~%" (car hands))
+          (let ((unks
+                 (map (lambda (h)
+                        (if (unknown? h)
+                            (make-hand '() (seat h))
+                          h))
+                      unks)))
+            (deal! hidden
+                   unks)
+
+            ;; TODO -- find a nice way to sort (append unks knowns)
+            ;; into seat order
+            (p "After dealing 'em out: ~a~%" (append unks knowns)))
+          ))
 
 
 
-    *test-hand*
-    )
+      *test-hand*
+      ))
   )
 
 (test/text-ui
@@ -115,7 +143,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (mh s ?)
              (mh w ?)
              )
-       (make-history 'e))))))
+       (make-history 's))))))
 
   (test-exn "Requires four args"
             exn:fail:contract?
