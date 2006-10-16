@@ -12,8 +12,8 @@ import Char
 -- bag contains a "d", so you'd keep looking ... the bag also contains
 -- an "o" ... ah, but the bag contains no "g", so you'd determine that
 -- the subtraction "failed".  On the other hand, if you'd wanted to
--- make the word "ox", the subtraction would succeed, and you'd be
--- have two "d"s left over.
+-- make the word "ox", the subtraction would succeed, and you'd have
+-- two "d"s left over.
 
 -- So that's subtraction.  (Actually, despite the above example, we
 -- don't subtract a _string_ from a bag; instead we subtract another
@@ -40,7 +40,7 @@ make_bag (c:cs) = char_prime (c) * make_bag cs
 primes = sieve [2..]; sieve (x:xs) = x : sieve [y | y <- xs, y `mod` x /= 0]
 
 -- return the prime for this character.  If it's not a letter, just
--- return 1, which effectively ignores the letter.
+-- return 1, which effectively ignores the character.
 char_prime :: Char -> Integer
 char_prime c | (lc >= 'a') && (lc <= 'z') = primes !! (ord (lc) - ord('a'))
              | True = 1
