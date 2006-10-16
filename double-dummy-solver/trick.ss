@@ -29,30 +29,37 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "etc.ss") compose)
          (lib "pretty.ss"))
 
-(provide (rename my-make-trick make-trick)
-         annotated-cards
-         (rename my-trick-cards trick-cards)
-         mt
+(provide
          (rename add-card t:add-card)
-         led-suit
+         (rename my-make-trick make-trick)
+         (rename my-trick-cards trick-cards)
+         *seats*
+         *trump-suit*
+         annotated-cards
+         augmented-rank
          last-play
          leader
+         led-suit
+         mt
          partner
          rotate
          rotate-until
-         trick?
+         seat<
          trick-complete?
          trick-ref
-         *trump-suit*
+         trick?
          whose-turn
          winner
          with-seat-circle
-         augmented-rank
-         *seats*)
+         )
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
 
 (define *seats* '(n e s w))
+(define (seat< a b)
+  (> (length (memq a *seats*))
+     (length (memq b *seats*))))
+
 (define *trump-suit* (make-parameter #f))
 (define (rotate seq steps)
   (if (positive? steps)

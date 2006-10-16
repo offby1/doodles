@@ -29,6 +29,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (only "trick.ss"
        *seats*
        rotate-until
+       seat<
        )
  "zprintf.ss"
  (only (lib "1.ss" "srfi")
@@ -38,7 +39,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        lset-difference
        lset-union
        partition
-       ))
+       )
+ (only (lib "list.ss") sort))
 
 (define *test-hand*
   (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
@@ -61,6 +63,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((hands
          (map
           copy
+          ;; Rotate the hands so that the next guy to play is at the
+          ;; front.  This ensures that, if the number of ? hands
+          ;; doesn't evenly divide the number of hidden cards, that
+          ;; the odd cards go to the hands that haven't yet played to
+          ;; the current trick.
           (rotate-until
            hands
            (lambda (hands)
@@ -79,15 +86,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (append-map cards knowns)
                        (history-card-set history))))
 
-          ;; somehow distribute those hidden cards among the ? hands.  Make
-          ;; sure, if the number of ? hands doesn't evenly divide the number
-          ;; of hidden cards, that the odd cards go to the hands that haven't
-          ;; yet played to the current trick.
+          ;; distribute those hidden cards among the ? hands.
           (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
           (printf "Hidden cards: ~s~%" hidden)
-
-          ;; rotate the hands so that the next guy to play as at the
-          ;; front, then just deal out the unknowns.
 
           (printf "Given history ~a~%" history)
           (printf "Ya, rotated until this hand is about to play: ~s~%" (car hands))
@@ -100,9 +101,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (deal! hidden
                    unks)
 
-            ;; TODO -- find a nice way to sort (append unks knowns)
-            ;; into seat order
-            (p "After dealing 'em out: ~a~%" (append unks knowns)))
+            (p "After dealing 'em out: ~a~%" (sort (append unks knowns)
+                                                   (lambda (h1 h2)
+                                                     (seat< (seat h1)
+                                                            (seat h2))))))
           ))
 
 

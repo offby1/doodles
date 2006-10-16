@@ -1,14 +1,14 @@
 # -*-makefile-*-
-check: dds
+check: compile
 	./tests.ss
-	./dds --lookahead 0 --quiet
+	./test-predictions.ss --lookahead 0 --quiet
 	./fill-out-hands.ss
 
 profile:
 	./profile.ss --quiet
 
-dds: $(wildcard *.ss)
-	mzc --exe $@ test-predictions.ss
+compile:
+	for i in tests test-predictions fill-out-hands; do mzc --make $$i.ss; done
 
 ETAGS ?= etags
 
@@ -18,6 +18,6 @@ TAGS: $(wildcard *.ss)
 	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 clean:
-	rm -rf dds TAGS coverage
+	rm -rf TAGS coverage compiled
 
-.PHONY: check clean tags
+.PHONY: check clean compile tags
