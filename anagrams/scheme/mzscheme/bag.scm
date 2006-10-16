@@ -1,9 +1,9 @@
 (module bag
   mzscheme
   (require
-   (planet "test.ss"     ("schematics" "schemeunit.plt" 1 1))
-   (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 1 1))
-   (planet "util.ss" ("schematics" "schemeunit.plt" 1 1)))
+   (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
+   (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
+   (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
   (provide bag subtract-bags bag-empty? bags=?)
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
@@ -48,35 +48,35 @@ regard to order."
 ;; the length of the string being anagrammed.
 
 (test/text-ui
- (make-test-suite
+ (test-suite
   "The one and only suite"
-  (make-test-case "sam" (assert-true (bag-empty? (bag ""))))
+  (test-case "sam" (check-true (bag-empty? (bag ""))))
 
-  (make-test-case "fred" (assert-false (bag-empty? (bag "a"))))
-  (make-test-case "tim" (assert-true  (bags=? (bag "abc")
-                                              (bag "cba"))))
+  (test-case "fred" (check-false (bag-empty? (bag "a"))))
+  (test-case "tim" (check-true  (bags=? (bag "abc")
+                                         (bag "cba"))))
 
-  (make-test-case "harry" (assert-true (bags=? (bag "X")
-                                               (bag "x"))))
-  (make-test-case "mumble" (assert-true (bags=? (bag "a!")
-                                                (bag "a"))))
-  (make-test-case "frotz" (assert-false  (bags=? (bag "abc")
-                                                 (bag "bc"))))
+  (test-case "harry" (check-true (bags=? (bag "X")
+                                          (bag "x"))))
+  (test-case "mumble" (check-true (bags=? (bag "a!")
+                                           (bag "a"))))
+  (test-case "frotz" (check-false  (bags=? (bag "abc")
+                                            (bag "bc"))))
 
-  (make-test-case "zimbalist" (assert-true (bags=? (bag "a")
-                                                   (subtract-bags (bag "ab")
-                                                                  (bag "b")))))
+  (test-case "zimbalist" (check-true (bags=? (bag "a")
+                                              (subtract-bags (bag "ab")
+                                                             (bag "b")))))
 
-  (make-test-case "ethel" (assert-false  (subtract-bags (bag "a")
-                                                        (bag "b"))))
-  (make-test-case "grunt" (assert-false  (subtract-bags (bag "a")
-                                                        (bag "aa"))))
+  (test-case "ethel" (check-false  (subtract-bags (bag "a")
+                                                   (bag "b"))))
+  (test-case "grunt" (check-false  (subtract-bags (bag "a")
+                                                   (bag "aa"))))
 
   (let ((empty-bag (subtract-bags (bag "a")
                                   (bag "a"))))
     0
-    (make-test-case "snork" (assert-pred bag-empty? empty-bag))
-    (make-test-case "qquuzz" (assert-false (not empty-bag)))
+    (test-case "snork" (check-pred bag-empty? empty-bag))
+    (test-case "qquuzz" (check-false (not empty-bag)))
     )
 
   ))
