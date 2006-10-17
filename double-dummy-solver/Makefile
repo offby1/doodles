@@ -4,7 +4,7 @@ check: compile
 	./test-predictions.ss --lookahead 0 --quiet
 	./fill-out-hands.ss
 
-profile:
+profile: clean
 	./profile.ss --quiet
 
 compile:
