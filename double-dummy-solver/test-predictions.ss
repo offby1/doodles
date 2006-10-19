@@ -69,10 +69,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (for-each
   (lambda (hand-number)
 
-    (define hands (map (lambda (s) (ha:make-hand '() s)) *seats*))
-
-    (deal! (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
-            hands)
+    (define hands (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+                        (map (lambda (s) (ha:make-hand '() s)) *seats*)))
 
     (for-each
      (lambda (trump-suit)

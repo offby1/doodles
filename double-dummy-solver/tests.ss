@@ -91,7 +91,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               exn:fail:contract?
               (lambda ()
                 (define h (mh  s2))
-                (ha:add-card! h (mc s2))
+                (ha:add-card h (mc s2))
                 ))
 
     (test-exn "mt detects duplicate cards"

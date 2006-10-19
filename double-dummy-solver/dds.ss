@@ -14,8 +14,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                lset-intersection
                pair-fold
                remove
-               take
-               take-right
                )
          (only (lib "etc.ss") compose)
          (lib "pretty.ss")

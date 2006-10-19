@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (only (lib "1.ss" "srfi")
        circular-list
        iota
+       take
        ))
 (provide (all-defined))
 (define *deck*
@@ -33,12 +34,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              result))))
              result)))))
 
-(define (deal! deck hands)
+(define (deal deck hands)
   (let loop ((d deck)
-             (hs (apply circular-list hands)))
-    (unless (null? d)
-      (let ((victim (car hs)))
-        (add-card! victim (car d)))
-      (loop (cdr d)
-            (cdr hs)))))
+             (lol (map cards hands)))
+    (if (null? d)
+        (map (lambda (cards h)
+               (make-hand cards (seat h)))
+             (take lol (length hands))
+             hands)
+      (let ((this-hand (cons (car d) (car lol))))
+        (loop (cdr d)
+              (append (cdr lol)
+                      (list this-hand)))))))
 )

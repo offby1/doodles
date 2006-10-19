@@ -93,13 +93,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (printf "Given history ~a~%" history)
           (printf "Ya, rotated until this hand is about to play: ~s~%" (car hands))
           (let ((unks
-                 (map (lambda (h)
-                        (if (unknown? h)
-                            (make-hand '() (seat h))
-                          h))
-                      unks)))
-            (deal! hidden
-                   unks)
+                 (deal hidden (map (lambda (h)
+                                     (if (unknown? h)
+                                         (make-hand '() (seat h))
+                                       h))
+                                   unks))
+                 )
+                )
+
 
             (p "After dealing 'em out: ~a~%" (sort (append unks knowns)
                                                    (lambda (h1 h2)

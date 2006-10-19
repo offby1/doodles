@@ -19,7 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (rename hand-cards cards)
  (rename hand-seat seat)
  (rename my-make-hand make-hand)
- add-card!
+ add-card
  copy
  empty?
  filter
@@ -133,10 +133,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (remove-card! new c)
     new))
 
-(define (add-card! h c)
+(define (add-card h c)
   (if (member c (hand-cards h))
-      (raise-mismatch-error 'add-card! (format "Can't add to ~a because it's already present: "  h) c))
-  (set-hand-cards! h (cons c (hand-cards h)))
+      (raise-mismatch-error 'add-card (format "Can't add to ~a because it's already present: "  h) c))
+  (make-hand (cons c (hand-cards h))
+             (hand-seat h))
   h)
 
 (define (sort! h)
