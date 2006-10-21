@@ -114,51 +114,52 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ))
   )
 
-(test/text-ui
- (test-suite
-  "The one and only suite"
+(exit
+ (test/text-ui
+  (test-suite
+   "The one and only suite"
 
-  (test-equal?
-   "52 cards returned"
-   52
-   (length
-    (apply
-     lset-union
-     cards=
-     (map
-      cards
-      (fill-out-hands
-       *test-hand*
-       (make-history 'e))))))
+   (test-equal?
+    "52 cards returned"
+    52
+    (length
+     (apply
+      lset-union
+      cards=
+      (map
+       cards
+       (fill-out-hands
+        *test-hand*
+        (make-history 'e))))))
 
-  (test-equal?
-   "52, part deux"
-   52
-   (length
-    (apply
-     lset-union
-     cards=
-     (map
-      cards
-      (fill-out-hands
-       (list (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
-             (mh e ?)
-             (mh s ?)
-             (mh w ?)
-             )
-       (make-history 's))))))
+   (test-equal?
+    "52, part deux"
+    52
+    (length
+     (apply
+      lset-union
+      cards=
+      (map
+       cards
+       (fill-out-hands
+        (list (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+              (mh e ?)
+              (mh s ?)
+              (mh w ?)
+              )
+        (make-history 's))))))
 
-  (test-exn "Requires four args"
-            exn:fail:contract?
-            (lambda ()
-              (fill-out-hands
-               '(#f #f #f)
-               (make-history 'e))))
+   (test-exn "Requires four args"
+             exn:fail:contract?
+             (lambda ()
+               (fill-out-hands
+                '(#f #f #f)
+                (make-history 'e))))
 
-  (test-exn "Requires four hands"
-            exn:fail:contract?
-            (lambda ()
-              (fill-out-hands
-               '(#f #f #f 'sam)
-               (make-history 'e))))))
+   (test-exn "Requires four hands"
+             exn:fail:contract?
+             (lambda ()
+               (fill-out-hands
+                '(#f #f #f 'sam)
+                (make-history 'e)))))))
 )

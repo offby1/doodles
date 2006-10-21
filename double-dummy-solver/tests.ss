@@ -32,98 +32,99 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (check eq? (cdr first-annotated-card) 's)
 
-  (test/text-ui
-   (test-suite
-    "The one and only suite"
+  (exit
+   (test/text-ui
+    (test-suite
+     "The one and only suite"
 
-    (test-case
-     "Annotations 1"
-     (check cards= (car first-annotated-card) (mc s2)))
+     (test-case
+      "Annotations 1"
+      (check cards= (car first-annotated-card) (mc s2)))
 
-    (test-case
-     "Annotations 2"
-     (check eq? (cdr first-annotated-card) 's))
+     (test-case
+      "Annotations 2"
+      (check eq? (cdr first-annotated-card) 's))
 
-    (test-case
-     "follows suit 1"
-     (check cards=
-            (mc s3)
-            (choose-card
-             (make-history
-              (list (mt e  s2 dt ha)))
-             (list (mh n s3 d2))
-             13)))
-    (test-case
-     "follows suit 2"
-     (check eq?
-            'd
-            (card-suit
+     (test-case
+      "follows suit 1"
+      (check cards=
+             (mc s3)
              (choose-card
               (make-history
-               (list (mt w  dt s2 ha)))
-              (mhs (s2 da d8)
-                   (sa dk d7)
-                   (s3 d2 d9)
-                   (sk dq d6))
-              13))))
-    (test-exn "Notices garbage in hand"
-              exn:fail:contract?
-              (lambda ()
-                (choose-card (make-history (car *seats*))
-                             (list (list 77))
-                             13)))
-    (test-exn "Notices card in both history and hand"
-              exn:fail:contract?
-              (lambda ()
-                (choose-card
-                 (make-history
-                  (list (mt n  dt s2 ha)))
-                 (list (mh s3 ha))
-                 13)))
-    (test-exn "Can't remove non-existant card from hand"
-              exn:fail:contract?
-              (lambda ()
-                (define h (mh  s2))
-                (set! h (ha:remove-card h (mc s2)))
-                (set! h (ha:remove-card h (mc s2)))
-                ))
-    (test-exn "Can't add card twice to hand"
-              exn:fail:contract?
-              (lambda ()
-                (define h (mh  s2))
-                (ha:add-card h (mc s2))
-                ))
+               (list (mt e  s2 dt ha)))
+              (list (mh n s3 d2))
+              13)))
+     (test-case
+      "follows suit 2"
+      (check eq?
+             'd
+             (card-suit
+              (choose-card
+               (make-history
+                (list (mt w  dt s2 ha)))
+               (mhs (s2 da d8)
+                    (sa dk d7)
+                    (s3 d2 d9)
+                    (sk dq d6))
+               13))))
+     (test-exn "Notices garbage in hand"
+               exn:fail:contract?
+               (lambda ()
+                 (choose-card (make-history (car *seats*))
+                              (list (list 77))
+                              13)))
+     (test-exn "Notices card in both history and hand"
+               exn:fail:contract?
+               (lambda ()
+                 (choose-card
+                  (make-history
+                   (list (mt n  dt s2 ha)))
+                  (list (mh s3 ha))
+                  13)))
+     (test-exn "Can't remove non-existant card from hand"
+               exn:fail:contract?
+               (lambda ()
+                 (define h (mh  s2))
+                 (set! h (ha:remove-card h (mc s2)))
+                 (set! h (ha:remove-card h (mc s2)))
+                 ))
+     (test-exn "Can't add card twice to hand"
+               exn:fail:contract?
+               (lambda ()
+                 (define h (mh  s2))
+                 (ha:add-card h (mc s2))
+                 ))
 
-    (test-exn "mt detects duplicate cards"
-              exn:fail:contract?
-              (lambda ()
-                (mt n c6 c9 c3 c3)))
+     (test-exn "mt detects duplicate cards"
+               exn:fail:contract?
+               (lambda ()
+                 (mt n c6 c9 c3 c3)))
 
-    (test-equal? "Winner 1"
-                 'w
-                 (winner (mt n c3 c6 c9 cj)))
-    (test-equal? "Winner 2"
-                 's
-                 (winner (mt n c3 c6 cj c9)))
-    (test-equal? "Winner 3"
-                 'e
-                 (winner (mt n c6 c9 c3 dj)))
-    (test-equal? "Takes finesses"
-                 2
-                 (cdr
-                  (assq 'n
-                        (play-loop
-                         (make-history
-                          's)
-                         (mhs (sq sa)
-                              (s2 s3)
-                              (s4 s5)
-                              (sj sk)
+     (test-equal? "Winner 1"
+                  'w
+                  (winner (mt n c3 c6 c9 cj)))
+     (test-equal? "Winner 2"
+                  's
+                  (winner (mt n c3 c6 cj c9)))
+     (test-equal? "Winner 3"
+                  'e
+                  (winner (mt n c6 c9 c3 dj)))
+     (test-equal? "Takes finesses"
+                  2
+                  (cdr
+                   (assq 'n
+                         (play-loop
+                          (make-history
+                           's)
+                          (mhs (sq sa)
+                               (s2 s3)
+                               (s4 s5)
+                               (sj sk)
 
-                              )
-                         0
-                         (lambda args #f)
-                         (lambda (hi hands)
-                           (compute-score hi)))))))))
+                               )
+                          0
+                          (lambda args #f)
+                          (lambda (hi hands)
+                            (compute-score hi))))))))))
 
 )
