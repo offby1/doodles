@@ -44,16 +44,20 @@ sub snarf_wordlist {
   print $*ERR: "Reading $dict_file_name ...";
 
   for ($dict.readline) -> $word {
-                                 my $chopped = chomp($word);
-                                 $chopped = $chopped.lc;
+                                 my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
                                  %dict_hash{bag($chopped)}.push($chopped);
                                 };
   print $*ERR: " done\n";
-
-  say %dict_hash.perl;
+  close ($dict) or die "Closing $dict: $!";
 }
 
 snarf_wordlist();
-
+{
+  my $cache_file_name = "dict.cache";
+  my $cache = open($cache_file_name, :w)
+    or die "Can't open $cache_file_name for writing 'cuz $!; stopped";
+  $cache.print(%dict_hash.perl);
+  close ($cache) or die "Closing $cache";
+}
 1;
