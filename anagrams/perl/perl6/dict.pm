@@ -48,9 +48,9 @@ sub snarf_wordlist {
   for ($dict.readline) -> $word {
                                  my $chopped = chomp($word);
                                  warn "Read '$chopped'";
-                                 $word = $word.lc;
+                                 $chopped = $chopped.lc;
                                  next unless (acceptable($chopped));
-                                 push @{%dict_hash{&bag($chopped)}}, $chopped;
+                                 %dict_hash{bag($chopped)}.push($chopped);
                                 };
   print $*ERR: " done\n";
 }
