@@ -40,37 +40,43 @@ sub subtract_bags (Int $b1, Int $b2) returns Int {
     return $b1 / $b2;
   }
 
-  0;
-}
+  # I thought i'd be neat to say "return 1 but False" here, but that
+  # causes some self-test to die with
 
-die "bag_empty"
+  # *** Cannot cast from VBool False to Pugs.AST.Internals.VCode (VCode)
+  #   at <prelude> line 466, column 5-16
+  return 0;
+}
+
+
+die "bag_empty 1"
   unless (bag_empty(bag("")));
 
-die "bag_empty"
+die "bag_empty 2"
   if (bag_empty(bag("a")));
 
 die "didn't ignore a space"
   unless (bags_equal(bag("a "),
                      bag("a")));
 
-die "bags_equal"
+die "bags_equal 1"
   unless (bags_equal(bag("abc"),
                      bag("cba"))) ;
 
-die "bags_equal"
+die "bags_equal 2"
   if (bags_equal(bag("abc"),
                  bag("bc")));
 
-die "subtract_bags"
+die "subtract_bags 1"
   unless (bags_equal(bag("a"),
                      subtract_bags(bag("ab"),
                                    bag("b")))) ;
 
-die "subtract_bags"
+die "subtract_bags 2"
   if (subtract_bags(bag("a"),
                     bag("b")));
 
-die "subtract_bags"
+die "subtract_bags 3"
   if (subtract_bags(bag("a"),
                     bag("aa")));
 
