@@ -52,12 +52,21 @@ sub snarf_wordlist {
   close ($dict) or die "Closing $dict: $!";
 }
 
-snarf_wordlist();
-{
-  my $cache_file_name = "dict.cache";
-  my $cache = open($cache_file_name, :w)
-    or die "Can't open $cache_file_name for writing 'cuz $!; stopped";
-  $cache.print(%dict_hash.perl);
-  close ($cache) or die "Closing $cache";
+my $cache_file_name = "dict.cache";
+if (-f $cache_file_name) {
+  %dict_hash = open("dict.cache").slurp.eval;
+  say "Slurped $cache_file_name";
+} else {
+  say "Slurping word list ...";
+  snarf_wordlist();
+  {
+    my $cache = open($cache_file_name, :w)
+      or die "Can't open $cache_file_name for writing 'cuz $!; stopped";
+    $cache.print(%dict_hash.perl);
+    say "Wrote $cache";
+    close ($cache) or die "Closing $cache";
+  }
 }
+
+say "Word list hath ", %dict_hash.elems, " pairs";
 1;
