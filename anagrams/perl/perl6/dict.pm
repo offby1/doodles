@@ -10,8 +10,8 @@ our @dict;
 # error-checking, or something.
 our Any %dict_hash{Int};
 
-#my $dict_file_name = "/usr/share/dict/words";
-my $dict_file_name = "words";
+my $dict_file_name = "/usr/share/dict/words";
+#my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
   if ($word ~~ rx:perl5{[^[:alpha:]]}) {
@@ -37,6 +37,13 @@ sub acceptable (Str $word) returns Bool {
   return Bool::False;
 }
 
+# Don't read more than this many elements from the dictionary.  Useful
+# only for debugging, since reading the whole dictionary is really
+# really slow.  And note that it doesn't count lines read from the
+# file, nor does it count values stored in the hash; rather, it counts
+# the number of distinct keys in the hash.
+my $max_size = 1000;
+
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
     or die "Can't open $dict_file_name for reading 'cuz $!; stopped";
@@ -47,6 +54,10 @@ sub snarf_wordlist {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
                                  %dict_hash{bag($chopped)}.push($chopped);
+                                 if (%dict_hash.elems == $max_size) {
+                                   say "$max_size is enough elements; won't read no mo'";
+                                   last;
+                                 }
                                 };
   print $*ERR: " done\n";
   close ($dict) or die "Closing $dict: $!";
