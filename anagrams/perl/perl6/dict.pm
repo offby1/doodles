@@ -3,39 +3,37 @@
 use bag;
 
 our @dict;
-our %dict_hash;
+
+# I originally had `our %dict_hash', which works exactly the same
+# way. But this will, supposedly in a future version of pugs, limit
+# the hash keys to Ints, which might improve performance, or provide
+# error-checking, or something.
+our Any %dict_hash{Int};
+
 #my $dict_file_name = "/usr/share/dict/words";
 my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
-  print $*ERR: "Is '$word' acceptable? ... ";
-
   if ($word ~~ rx:perl5{[^[:alpha:]]}) {
-    print $*ERR: "False because it contains non-alpha\n";
     return Bool::False ;
   }
 
   if ($word ~~ "i") {
-    print $*ERR: "true because it is 'i'\n";
     return Bool::True ;
   }
 
   if ($word ~~ "a") {
-    print $*ERR: "true because it is 'a'\n";
     return Bool::True ;
   }
 
   if ($word.chars < 2) {
-    print $*ERR: "False because it is less than two letters\n";
     return Bool::False ;
   }
 
   if ($word ~~ rx:perl5{[aeiou]}) {
-    print $*ERR: "true because it contains a vowel\n";
     return Bool::True ;
   }
 
-  print $*ERR: "False just because.\n";
   return Bool::False;
 }
 
@@ -47,12 +45,13 @@ sub snarf_wordlist {
 
   for ($dict.readline) -> $word {
                                  my $chopped = chomp($word);
-                                 warn "Read '$chopped'";
                                  $chopped = $chopped.lc;
                                  next unless (acceptable($chopped));
                                  %dict_hash{bag($chopped)}.push($chopped);
                                 };
   print $*ERR: " done\n";
+
+  say %dict_hash.perl;
 }
 
 snarf_wordlist();

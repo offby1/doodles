@@ -6,3 +6,5 @@ and
 /usr/local/src/langs/pugs/docs/Perl6/Spec/
 and
 /usr/local/src/langs/perl6-doc/
+and
+http://perlcabal.org/syn/?      -- has more synopses than the above
