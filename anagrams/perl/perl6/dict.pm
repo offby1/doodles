@@ -26,7 +26,7 @@ sub acceptable (Str $word) returns Bool {
   }
 
   if ($word.chars < 2) {
-    print $*ERR: "False because it is just one letter\n";
+    print $*ERR: "False because it is less than two letters\n";
     return Bool::False ;
   }
 
