@@ -4,15 +4,6 @@
 -- other internal representations for numbers, such as
 -- single-precision float or long integers.")
 
-function my_setn (t)
-   table.setn (t, 0)
-   table.foreach (t,
-                  function (i, v)
-                     table.setn (t, v + table.getn (t))
-                  end
-               )  
-end
-
 function from_string (s)
    function is_uc_char (c)
       return ((string.byte (c) <= string.byte ("Z"))
@@ -30,7 +21,6 @@ function from_string (s)
       if (is_uc_char (c)) then bag [c] = orig + 1 end
       s = string.sub (s, 2)  
    end 
-   my_setn (bag)
    return bag
 end
 
@@ -53,9 +43,6 @@ d3 = from_string ("")
 letters = {}
 -- use upper-case to avoid collision with the magic field "n"
 for c =string.byte ("A"), string.byte ("Z") do letters[string.char (c)] = 1 end
-
-my_setn (letters)
-assert (26 == table.getn(letters))
 
 function dump (t)
    if (not (t)) then return "nil" end
@@ -82,7 +69,6 @@ function clone(t)            -- return a copy of the table t
    local i, v = next(t, nil)  -- i is an index of t, v = t[i]
    while i do
       new[i] = v
-      table.setn (new, table.getn (new) + 1)
       i, v = next(t, i)        -- get next index
    end
    return new
@@ -125,8 +111,6 @@ function sub (top, bottom)
    -- all the time.
    if (table.foreach (letters, update_diff)) then 
       diff = Nil 
-   else
-      my_setn (diff)
    end
 
    print ("diff", dump (diff), "\n")
