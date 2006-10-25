@@ -8,14 +8,12 @@ use POE qw(Component::Server::TCP);
 
 POE::Component::Server::TCP->new
   ( Port => 12345,
-    ClientInput => \&client_input,
+    ClientInput => sub {
+      my ( $heap, $input ) = @_[ HEAP, ARG0 ];
+      warn "Ooh!  He said '$input'";
+      $heap->{client}->put($input);
+    },
   );
 
 POE::Kernel->run();
 exit;
-
-sub client_input {
-  my ( $heap, $input ) = @_[ HEAP, ARG0 ];
-  warn "Ooh!  He said '$input'";
-  $heap->{client}->put($input);
-}
