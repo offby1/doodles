@@ -1,0 +1,6 @@
+The next step is to stop using Component::Client::TCP, and instead use
+the next higher-level POE thingy (POE::Session, perhaps) so that I can
+have _multiple_ callbacks for server input, instead of the single one
+that Component::Client::TCP gives me -- that way I won't have to write
+my own dispatcher to figure out what kind of message the server is
+sending me.

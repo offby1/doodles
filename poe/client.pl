@@ -9,32 +9,37 @@ use POE qw(Component::Client::TCP);
 
 # Basic usage.
 
+my %statuses;
+
 POE::Component::Client::TCP->new
   ( RemoteAddress => "127.0.0.1",
     RemotePort    => 12345,
     ServerInput   => sub {
       my $input = $_[ARG0];
       print "from server: $input\n";
+      if ($input =~ m<^STATUS (.*) (.*)$>) {
+        $statuses{$1} = $2;
+      }
     },
     InlineStates => {
-                     say_something => sub {
+                     start_remote_prog => sub {
                        my $heap = $_[HEAP];
-                       if (!defined ($heap->{count})
-                           || ($heap->{count} < 10)) {
-                         $heap->{server}->put("Something #" . $heap->{count});
-                         $heap->{count}++;
-                         POE::Kernel->yield ("say_something");
-                       } elsif ($heap->{count} == 10) {
-                         $heap->{server}->put("PROC c:\\windows\\system32\\notepad.exe");
-                       }
+                       $heap->{server}->put("RUN c:\\windows\\system32\\notepad.exe");
+                       POE::Kernel->yield ("get_status");
                      },
+                     get_status => sub {
+                       warn Data::Dumper->Dump ([\%statuses], [qw(statuses)]);
+                       unless (keys %statuses) {
+                         POE::Kernel->delay ("get_status", 1);
+                       }
+                     }
                     },
     Connected => sub {
       my $heap = $_[HEAP];
        {
         $heap->{server}->put("Hey you, Mr Server sir!!");
         $heap->{count} = 0;
-        POE::Kernel->yield ("say_something");
+        POE::Kernel->yield ("start_remote_prog");
       }
     },
   );

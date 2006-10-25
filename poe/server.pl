@@ -13,21 +13,21 @@ POE::Component::Server::TCP->new
                      wait_for_process => sub {
                        my $heap = $_[ HEAP ];
                        if ($heap->{waited}++ < 5) {
-                         warn "Waiting $heap->{waited} for process";
+                         $heap->{client}->put ("Waiting $heap->{waited} for process");
                          # TODO -- actually examine the process status
                          # here.  Don't bail out after 5 seconds, but
                          # rather whenever the process has actually
                          # exited.
                          POE::Kernel->delay (wait_for_process => 1);
                        } else {
-                         warn "Gave up; no longer waiting";
+                         $heap->{client}->put ("STATUS foo bar");
                          POE::Kernel->yield ('shutdown');
                        }
                      }
                     },
     ClientInput => sub {
       my ( $heap, $input ) = @_[ HEAP, ARG0 ];
-      if ($input =~ m<^PROC (.*)$>) {
+      if ($input =~ m<^RUN (.*)$>) {
         warn "Starting '$1'";
         my $process;
 
