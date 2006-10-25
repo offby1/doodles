@@ -26,14 +26,8 @@ POE::Component::Client::TCP->new
                          POE::Kernel->yield ("say_something");
                        } elsif ($heap->{count} == 10) {
                          $heap->{server}->put("PROC c:\\windows\\system32\\notepad.exe");
-                         POE::Kernel->yield ("wait_for_process");
                        }
                      },
-                     wait_for_process => sub {
-                       warn "Now what?";
-                       sleep (1);
-                       POE::Kernel->yield ("wait_for_process");
-                     }
                     },
     Connected => sub {
       my $heap = $_[HEAP];

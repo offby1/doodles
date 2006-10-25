@@ -9,6 +9,22 @@ use Win32::Process;
 
 POE::Component::Server::TCP->new
   ( Port => 12345,
+    InlineStates => {
+                     wait_for_process => sub {
+                       my $heap = $_[ HEAP ];
+                       if ($heap->{waited}++ < 5) {
+                         warn "Waiting $heap->{waited} for process";
+                         # TODO -- actually examine the process status
+                         # here.  Don't bail out after 5 seconds, but
+                         # rather whenever the process has actually
+                         # exited.
+                         POE::Kernel->delay (wait_for_process => 1);
+                       } else {
+                         warn "Gave up; no longer waiting";
+                         POE::Kernel->yield ('shutdown');
+                       }
+                     }
+                    },
     ClientInput => sub {
       my ( $heap, $input ) = @_[ HEAP, ARG0 ];
       if ($input =~ m<^PROC (.*)$>) {
@@ -22,10 +38,11 @@ POE::Component::Server::TCP->new
                                     NORMAL_PRIORITY_CLASS, # flags for creation (see exported vars below)
                                     "." # working dir of new process
                                    )) {
-          $heap->{client}->put("Could not launch $1: $! $^E");
-        } else {
           my $PID = Win32::Process::GetProcessID($process);
           $heap->{client}->put("Your PID is $PID");
+          POE::Kernel->delay (wait_for_process => 1);
+        } else {
+          $heap->{client}->put("Could not launch $1: $! $^E");
         }
       } else {
         my @reversed = reverse (split (//, $input));
