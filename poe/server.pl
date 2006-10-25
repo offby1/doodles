@@ -10,8 +10,8 @@ POE::Component::Server::TCP->new
   ( Port => 12345,
     ClientInput => sub {
       my ( $heap, $input ) = @_[ HEAP, ARG0 ];
-      warn "Ooh!  He said '$input'";
-      $heap->{client}->put($input);
+      my @reversed = reverse (split (//, $input));
+      $heap->{client}->put(join ('', @reversed));
     },
   );
 
