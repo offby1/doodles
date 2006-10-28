@@ -19,6 +19,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        mh
        mhs
        seat
+       sort!
        unknown?
        )
  (only "history.ss"
@@ -48,6 +49,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
        (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
        ))
+
+(define (shuffle-list l)
+  (map
+   cdr
+   (sort
+    (map (lambda (item)
+           (cons (random)
+                 item))
+         l)
+    (lambda (a b)
+      (< (car a)
+         (car b))))))
 
 ;; returns a new set of hands that is like the input set, but with
 ;; each "unknown" hand replaced by a randomly-generated hand.  The
@@ -87,32 +100,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (history-card-set history))))
 
           ;; distribute those hidden cards among the ? hands.
-          (printf "unknowns: ~s; knowns: ~s~%" unks knowns)
-          (printf "Hidden cards: ~s~%" hidden)
 
-          (printf "Given history ~a~%" history)
-          (printf "Ya, rotated until this hand is about to play: ~s~%" (car hands))
           (let ((unks
-                 (deal hidden (map (lambda (h)
-                                     (if (unknown? h)
-                                         (make-hand '() (seat h))
-                                       h))
-                                   unks))
-                 )
-                )
+                 (deal (shuffle-list hidden)
+                       (map (lambda (h)
+                              (if (unknown? h)
+                                  (make-hand '() (seat h))
+                                h))
+                            unks))))
 
+            (sort (append unks knowns)
+                  (lambda (h1 h2)
+                    (seat< (seat h1)
+                           (seat h2))))))))))
 
-            (p "After dealing 'em out: ~a~%" (sort (append unks knowns)
-                                                   (lambda (h1 h2)
-                                                     (seat< (seat h1)
-                                                            (seat h2))))))
-          ))
-
-
-
-      *test-hand*
-      ))
-  )
+(for-each
+ (lambda (d)
+   (for-each (lambda (h)
+               (sort! h))
+             d)
+   (display d)
+   (newline))
+ (let loop ((deals '()))
+   (if (= 10 (length deals))
+       deals
+     (loop (cons (fill-out-hands
+                  (list (mh n ?)
+                        (mh e ?)
+                        (mh s ?)
+                        (mh w ?)
+                        )
+                  (make-history 'n))
+                 deals)))))
 
 (exit
  (test/text-ui
