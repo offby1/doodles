@@ -114,24 +114,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (seat< (seat h1)
                            (seat h2))))))))))
 
-(for-each
- (lambda (d)
-   (for-each (lambda (h)
-               (sort! h))
-             d)
-   (display d)
-   (newline))
- (let loop ((deals '()))
-   (if (= 10 (length deals))
-       deals
-     (loop (cons (fill-out-hands
-                  (list (mh n ?)
-                        (mh e ?)
-                        (mh s ?)
-                        (mh w ?)
-                        )
-                  (make-history 'n))
-                 deals)))))
+(parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
+  (random-seed 0)
+  (for-each
+   (lambda (d)
+     (for-each (lambda (h)
+                 (sort! h))
+               d)
+     (display d)
+     (newline))
+   (let loop ((deals '()))
+     (if (= 10 (length deals))
+         deals
+       (loop (cons (fill-out-hands
+                    (list (mh n ?)
+                          (mh e ?)
+                          (mh s ?)
+                          (mh w ?)
+                          )
+                    (make-history 'n))
+                   deals))))))
+(printf "Here are some random numbers, to see that we haven't clobbered the default RNG:~%")
+(printf "~a~%" (map (lambda ignored (random)) (iota 5)))
 
 (exit
  (test/text-ui
