@@ -27,6 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; in a separate thread, calls PROC once, passing it an async-channel
 ;; to write to while it runs.  Kills the thread after SECONDS seconds.
+;; Returns a list of all value written to the async-channel.
 
 (define (call/timeout proc seconds)
   (let* ((queue (make-async-channel #f))
@@ -36,11 +37,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (->list queue)))
 
 ;; a specialization of the above: calls the thunk repeatedly,
-;; collecting the values that it returns into the channel.
-
-;;
-;;
-;;
+;; collecting the values that it returns into the channel.  Note that
+;; each _set_ of values that thunk returns gets a single list in the
+;; return value.
 
 (define (run-for-a-while thunk seconds)
   (call/timeout
