@@ -31,6 +31,9 @@ TAGS: $(wildcard *.ss)
 	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 clean:
-	rm -rf TAGS coverage compiled
+	rm -rf TAGS coverage compiled *.pdf
 
-.PHONY: check clean compile deps tags
+superclean:
+	non-versioned-files.pl -0 | xargs -0 --no-run-if-empty rm -rfv
+
+.PHONY: check clean compile deps superclean tags
