@@ -19,10 +19,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (loop))))))
     (sync/timeout seconds t)
     (kill-thread t)
-    (let loop ((stuff '()))
-      (let ((value (async-channel-try-get queue)))
-        (if value
-            (loop (cons value stuff))
-          stuff)))))
+    (unfold not
+            values
+            (lambda ignored (async-channel-try-get queue))
+            (async-channel-try-get queue)
+            (lambda ignored '()))))
+
 
 )
