@@ -134,7 +134,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           )
                     (make-history 'n))
                    deals))))))
+
 (printf "Here are some random numbers, to see that we haven't clobbered the default RNG:~%")
+(printf "These should be different every time you run this test.~%")
 (printf "~a~%" (map (lambda ignored (random)) (iota 5)))
 
 (exit
