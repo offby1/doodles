@@ -10,6 +10,19 @@ profile: clean
 compile:
 	for i in tests test-predictions fill-out-hands; do mzc --make $$i.ss; done
 
+deps: deps.pdf
+
+deps.dot: compile
+	./make-dep-graph.ss > $@
+
+.INTERMEDIATE: deps.dot
+
+%.ps : %.dot
+	dot -Tps $^ > $@
+
+%.pdf: %.ps
+	ps2pdf $^
+
 ETAGS ?= etags
 
 tags: TAGS
@@ -20,4 +33,4 @@ TAGS: $(wildcard *.ss)
 clean:
 	rm -rf TAGS coverage compiled
 
-.PHONY: check clean compile tags
+.PHONY: check clean compile deps tags

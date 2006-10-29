@@ -4,12 +4,17 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-#
+#|                                                              quack!!
 I invoke this thusly:
 
-./make-dep-graph.ss > graph-me.dot && dot -Tps graph-me.dot > yow.ps && ps2pdf yow.ps
+make deps
 
 Then I open yow.pdf in Acrobat reader.
+
+Note that this requires that you have a "compiled" subdirectory,
+with magical ".dep" files in it.  Those come from running
+the "compile" target in the makefile.
+
 |#
 
 (module make-dep-graph mzscheme
