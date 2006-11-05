@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                unfold
                )
          (lib "async-channel.ss")
+         (lib "assert.ss" "offby1")
          (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
@@ -58,7 +59,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                             (list-ref thing 1)))
                                     (not (exact? (list-ref thing 0)))
                                     (not (exact? (list-ref thing 1)))))))
-  (exit
+  (exit-if-failed
    (test/text-ui
     (test-suite
      "run-for-a-while"

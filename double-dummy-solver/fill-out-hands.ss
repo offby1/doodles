@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+ (lib "assert.ss" "offby1")
  (only "card.ss" cards=)
  "deck.ss"
  (only "hand.ss"
@@ -42,8 +43,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        partition
        )
  (only (lib "list.ss") sort))
+(provide fill-out-hands)
 
-(define *test-hand*
+(define *test-handset*
   (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
        (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
        (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
@@ -139,7 +141,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (printf "These should be different every time you run this test.~%")
 (printf "~a~%" (map (lambda ignored (random)) (iota 5)))
 
-(exit
+(exit-if-failed
  (test/text-ui
   (test-suite
    "The one and only suite"
@@ -154,7 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (map
        cards
        (fill-out-hands
-        *test-hand*
+        *test-handset*
         (make-history 'e))))))
 
    (test-equal?

@@ -38,21 +38,21 @@ the "compile" target in the makefile.
 ;; find files in the same directory as the input, upon which the input
 ;; depends.
 (define (find-deps ifn)
-  (let ((dir (directory (path->complete-path ifn))))
-    (let ((depfile (build-path dir "compiled" (path-replace-suffix ifn ".dep"))))
-      (and (file-exists? depfile)
-           (with-input-from-file
-               depfile
-             (lambda ()
-               (map name
-                    (filter (lambda (p)
-                              (paths= (directory p) dir))
-                            (map path->complete-path
-                                 (map bytes->path
-                                      (filter bytes? (read))))))))))))
+  (let* ((dir (directory (path->complete-path ifn)))
+         (depfile (build-path dir "compiled" (path-replace-suffix ifn ".dep"))))
+    (and (file-exists? depfile)
+         (with-input-from-file
+             depfile
+           (lambda ()
+             (map name
+                  (filter (lambda (p)
+                            (paths= (directory p) dir))
+                          (map path->complete-path
+                               (map bytes->path
+                                    (filter bytes? (read)))))))))))
 
 (printf "digraph deps\n{\n")
-(printf "size=\"22,11\"\n")
+(printf "size=\"7.5,10\"\n")
 (printf "page=\"8.5,11\"\n")
 
 (for-each

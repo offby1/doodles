@@ -32,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (check eq? (cdr first-annotated-card) 's)
 
-  (exit
+  (exit-if-failed
    (test/text-ui
     (test-suite
      "The one and only suite"
