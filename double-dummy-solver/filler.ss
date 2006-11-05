@@ -18,8 +18,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; conforming hand, then predict how many tricks each player will win.
 (define (predict handset history)
   (let ((random-handset (fill-out-hands handset history)))
-    (predict-score (choose-card history random-handset 0)
-                   history random-handset 0)))
+    (predict-score (choose-card history random-handset 1)
+                   history random-handset 1)))
 
 (define *test-handset*
   (list
@@ -28,7 +28,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (mh s ?)
    (mh w ?)))
 
-(printf "Hmm: ~s~%" (predict *test-handset* (make-history 'e)))
+(parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
+  (random-seed 0)
+  (printf "Hmm: ~s~%" (predict *test-handset* (make-history 'e))))
 
 ;; ok, now do the above for a while
 
