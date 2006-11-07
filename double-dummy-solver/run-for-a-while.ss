@@ -30,22 +30,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; to write to while it runs.  Kills the thread after SECONDS seconds.
 ;; Returns a list of all value written to the async-channel.
 
-(define (call/timeout proc seconds)
+(define (call/timeout proc seconds . progress-callback)
   (let* ((queue (make-async-channel #f))
          (t (thread (lambda () (proc queue))))
-         (monitor (thread
-                   (lambda ()
-                     (let ((time-of-death (+ seconds (current-seconds))))
-                       (let loop ()
-                         (fprintf
-                          (current-error-port)
-                          "~a seconds left ... ~%"
-                          (- time-of-death (current-seconds)))
-                         (sleep 1)
-                         (loop)))))))
+         (monitor (and (not (null? progress-callback))
+                       (thread
+                        (lambda ()
+                          (let ((time-of-death (+ seconds (current-seconds))))
+                            (let loop ()
+                              ((car progress-callback)
+                               (- time-of-death (current-seconds)))
+                              (sleep 1)
+                              (loop))))))))
     (sync/timeout seconds t)
     (kill-thread t)
-    (kill-thread monitor)
+    (when monitor (kill-thread monitor))
     (->list queue)))
 
 ;; a specialization of the above: calls the thunk repeatedly,
@@ -53,13 +52,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; each _set_ of values that thunk returns gets a single list in the
 ;; return value.
 
-(define (run-for-a-while thunk seconds)
-  (call/timeout
+(define (run-for-a-while thunk seconds . progress-callback)
+  (apply
+   call/timeout
    (lambda (queue)
      (let loop ()
        (async-channel-put queue (call-with-values thunk list))
        (loop)))
-   seconds))
+   seconds
+   progress-callback))
 
 (let ((lotsa-random-numbers? (lambda (thing)
                                ;; THING should be a list of random

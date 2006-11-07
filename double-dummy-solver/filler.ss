@@ -42,7 +42,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (run-for-a-while
       (lambda ()
         (choose-chard *test-handset* (make-history 'n)))
-      5))))
+      5
+      (lambda (seconds-remaining)
+        (fprintf
+         (current-error-port)
+         "~a seconds remaining...~%" seconds-remaining))))))
 
 (let ((count-choice-alist (sort (hash-table-map counts-by-choice cons)
                                 (lambda (a b)
