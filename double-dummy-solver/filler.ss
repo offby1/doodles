@@ -35,7 +35,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (parameterize ((*trump-suit* trumps))
      (define counts-by-choice (make-hash-table 'equal))
      (printf "Trump suit is ~a~%" (*trump-suit*))
-     (parameterize ((*shaddap* #f))
+     (parameterize ((*shaddap* #t))
        (for-each
         (lambda (c)
           (hash-table-put!
@@ -47,8 +47,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (run-for-a-while
            (lambda ()
              (choose-chard *test-handset* (make-history 'n)))
-           5
-           ;;(lambda (seconds-remaining) (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining))
+           20
+           (lambda (seconds-remaining) (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining))
            ))))
      ;; TODO -- as usual, replace "sort the list and then throw away its
      ;; cdr" with "use 'fold' to find the maximum value"
@@ -58,13 +58,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                            (cdr b)))))
             (num-trials (exact->inexact (apply + (map cdr count-choice-alist)))))
        ;;(printf "Counts by choice: ~s~%" count-choice-alist )
-       (printf "And the winner is: ~a, with ~a~%"
-               (car (list-ref count-choice-alist 0))
-               (/ (cdr (list-ref count-choice-alist 0)) num-trials))
-       (printf "(second place is ~a with ~a)~%"
-               (car (list-ref count-choice-alist 1))
-               (/ (cdr (list-ref count-choice-alist 1)) num-trials)))))
- (list #f 'hearts)
+       (when (not (zero? (length count-choice-alist)))
+         (printf "And the winner is: ~a, with ~a~%"
+                 (car (list-ref count-choice-alist 0))
+                 (/ (cdr (list-ref count-choice-alist 0)) num-trials))
+         (when (not (zero? (length (cdr count-choice-alist))))
+           (printf "(second place is ~a with ~a)~%"
+                   (car (list-ref count-choice-alist 1))
+                   (/ (cdr (list-ref count-choice-alist 1)) num-trials))))
+       )))
+ (list #f 'h)
  )
 
 

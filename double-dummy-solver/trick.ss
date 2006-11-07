@@ -59,7 +59,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (> (length (memq a *seats*))
      (length (memq b *seats*))))
 
-(define *trump-suit* (make-parameter #f))
+(define *trump-suit*
+  (make-parameter
+   #f
+   (let ((allowed (cons #f *suits*)))
+     (lambda (s)
+       (unless (memq s allowed)
+         (raise-mismatch-error
+          '*trump-suit*
+          (format "wanted one of ~s, not " allowed)
+          s))
+       s))))
 (define (rotate seq steps)
   (if (positive? steps)
       (rotate (append (cdr seq)

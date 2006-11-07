@@ -66,11 +66,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                ;; THING should be a list of random
                                ;; floats.  I'm too lazy to check
                                ;; carefuly.
-                               (and (< 10 (length thing))
-                                    (not (= (list-ref thing 0)
-                                            (list-ref thing 1)))
-                                    (not (exact? (list-ref thing 0)))
-                                    (not (exact? (list-ref thing 1)))))))
+                               (or (null? thing)
+                                   (and (< 10 (length thing))
+                                        (not (= (list-ref thing 0)
+                                                (list-ref thing 1)))
+                                        (not (exact? (list-ref thing 0)))
+                                        (not (exact? (list-ref thing 1))))))))
   (exit-if-failed
    (test/text-ui
     (test-suite
