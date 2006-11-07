@@ -32,9 +32,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (call/timeout proc seconds)
   (let* ((queue (make-async-channel #f))
-         (t (thread (lambda () (proc queue)))))
+         (t (thread (lambda () (proc queue))))
+         (monitor (thread
+                   (lambda ()
+                     (let ((time-of-death (+ seconds (current-seconds))))
+                       (let loop ()
+                         (fprintf
+                          (current-error-port)
+                          "~a seconds left ... ~%"
+                          (- time-of-death (current-seconds)))
+                         (sleep 1)
+                         (loop)))))))
     (sync/timeout seconds t)
     (kill-thread t)
+    (kill-thread monitor)
     (->list queue)))
 
 ;; a specialization of the above: calls the thunk repeatedly,
@@ -63,23 +74,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test/text-ui
     (test-suite
      "run-for-a-while"
-     (test-equal? "call/timeout 1" (call/timeout (lambda (q) 6) .1) '())
-     (test-equal? "call/timeout 2" (call/timeout (lambda (q) (async-channel-put q 6)) .1) '(6))
+     (test-equal? "call/timeout 1" (call/timeout (lambda (q) 6) #e.1) '())
+     (test-equal? "call/timeout 2" (call/timeout (lambda (q) (async-channel-put q 6)) #e.1) '(6))
      (test-pred   "call/timeout 3" (lambda (act)
                                      (< 10 (length act)))
-                  (call/timeout (lambda (q) (let l () (async-channel-put q 6) (l))) .1))
-     (test-equal? "call/timeout 4" (call/timeout (lambda (q) (sleep .2)) .1) '())
+                  (call/timeout (lambda (q) (let l () (async-channel-put q 6) (l))) #e.1))
+     (test-equal? "call/timeout 4" (call/timeout (lambda (q) (sleep .2)) #e.1) '())
      (test-pred   "call/timeout 5" lotsa-random-numbers?
-                  (call/timeout (lambda (q) (let l () (async-channel-put q (random)) (l))) .01))
+                  (call/timeout (lambda (q) (let l () (async-channel-put q (random)) (l))) #e.01))
      (test-pred "run-for-a-while 1" (lambda (act)
                                       (and (< 10 (length act))
                                            (every (lambda (thing)
                                                     (equal? thing '(6)))
                                                   act)))
-                (run-for-a-while (lambda ignored 6) .01))
-     (test-equal? "run-for-a-while 2" (run-for-a-while (lambda ignored (sleep .2)) .1)'() )
+                (run-for-a-while (lambda ignored 6) #e.01))
+     (test-equal? "run-for-a-while 2" (run-for-a-while (lambda ignored (sleep .2)) #e.1)'() )
      (test-pred "run-for-a-while 3" (lambda (act)
                                       (lotsa-random-numbers? (apply append act)))
-                (run-for-a-while random .1))
+                (run-for-a-while random #e.1))
      ))))
 )
