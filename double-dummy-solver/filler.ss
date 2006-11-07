@@ -10,16 +10,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "dds.ss"
          (only "hand.ss"
                mh
-               )
+               sorted)
          (only "history.ss"
                make-history))
 
 ;; given a history and partially-known hands, generate a random
-;; conforming hand, then predict how many tricks each player will win.
+;; conforming hand, then figure the best card for the first player.
 (define (predict handset history)
-  (let ((random-handset (fill-out-hands handset history)))
-    (predict-score (choose-card history random-handset 1)
-                   history random-handset 1)))
+  (let ((random-handset (map sorted (fill-out-hands handset history))))
+    (values
+     (choose-card history random-handset 1)
+     random-handset)))
 
 (define *test-handset*
   (list
@@ -30,7 +31,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
   (random-seed 0)
-  (printf "Hmm: ~s~%" (predict *test-handset* (make-history 'e))))
+  (call-with-values
+      (lambda () (predict *test-handset* (make-history 'w)))
+      (lambda (score filled-in)
+        (printf "~%Hmm: ~s => ~s~%" filled-in score))))
 
 ;; ok, now do the above for a while
 

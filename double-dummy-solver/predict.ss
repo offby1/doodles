@@ -13,7 +13,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          "card.ss"
          (prefix ha: "hand.ss")
          "trick.ss"
-         "zprintf.ss")
+         )
 (provide (all-defined))
 
 (define (assoc-backwards obj backwards-alist)

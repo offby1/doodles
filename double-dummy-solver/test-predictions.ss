@@ -65,6 +65,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*num-hands* (string->number nh)))
   ))
 
+(printf "Howdy.  'test-predictions.ss' here.~%")
 (time
  (for-each
   (lambda (hand-number)

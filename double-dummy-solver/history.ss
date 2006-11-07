@@ -9,7 +9,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only "card.ss" card-suit)
-         "zprintf.ss"
          (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
          (all-except "trick.ss" whose-turn)
          (rename "trick.ss" trick:whose-turn whose-turn)

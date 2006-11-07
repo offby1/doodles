@@ -424,6 +424,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (parameterize ((*recursion-level* rl))
              (score-from-history hypo-history hypo-hands))))))
     ))
+;;(trace predict-score)
 ;;(trace choose-card)
 
 )

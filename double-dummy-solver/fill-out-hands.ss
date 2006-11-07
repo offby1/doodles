@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+ (lib "trace.ss")
  (lib "assert.ss" "offby1")
  (only "card.ss" cards=)
  "deck.ss"
@@ -33,7 +34,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        rotate-until
        seat<
        )
- "zprintf.ss"
  (only (lib "1.ss" "srfi")
        append-map
        every
@@ -115,31 +115,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (lambda (h1 h2)
                     (seat< (seat h1)
                            (seat h2))))))))))
+;;(trace fill-out-hands)
+(when #f
+  (parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
+    (random-seed 0)
+    (for-each
+     (lambda (d)
+       (for-each (lambda (h)
+                   (sort! h))
+                 d)
+       (display d)
+       (newline))
+     (let loop ((deals '()))
+       (if (= 10 (length deals))
+           deals
+         (loop (cons (fill-out-hands
+                      (list (mh n ?)
+                            (mh e ?)
+                            (mh s ?)
+                            (mh w ?)
+                            )
+                      (make-history 'n))
+                     deals)))))))
 
-(parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
-  (random-seed 0)
-  (for-each
-   (lambda (d)
-     (for-each (lambda (h)
-                 (sort! h))
-               d)
-     (display d)
-     (newline))
-   (let loop ((deals '()))
-     (if (= 10 (length deals))
-         deals
-       (loop (cons (fill-out-hands
-                    (list (mh n ?)
-                          (mh e ?)
-                          (mh s ?)
-                          (mh w ?)
-                          )
-                    (make-history 'n))
-                   deals))))))
-
-(printf "Here are some random numbers, to see that we haven't clobbered the default RNG:~%")
-(printf "These should be different every time you run this test.~%")
-(printf "~a~%" (map (lambda ignored (random)) (iota 5)))
+;; (printf "Here are some random numbers, to see that we haven't clobbered the default RNG:~%")
+;; (printf "These should be different every time you run this test.~%")
+;; (printf "~a~%" (map (lambda ignored (random)) (iota 5)))
 
 (exit-if-failed
  (test/text-ui

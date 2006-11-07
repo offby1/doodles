@@ -24,7 +24,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                vector-map
                )
          "card.ss"
-         "zprintf.ss"
          (lib "trace.ss")
          (only (lib "etc.ss") compose)
          (lib "pretty.ss"))

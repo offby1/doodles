@@ -27,6 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  mh mhs
  remove-card
  sort!
+ sorted
  unknown?
  )
 
@@ -139,6 +140,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (make-hand (cons c (hand-cards h))
              (hand-seat h))
   h)
+
+(define (sorted h)
+  (let ((h (copy h)))
+    (sort! h)
+    h))
 
 (define (sort! h)
   (set-hand-cards! h (sort (hand-cards h) card</suit))
