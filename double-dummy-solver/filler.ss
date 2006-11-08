@@ -22,13 +22,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
 (define (choose-chard handset history)
-  (dds:choose-card history (zp "filled: ~a~%" (map sorted (fill-out-hands handset history))) 0))
+  (dds:choose-card history (zp "filled: ~a~%" (map sorted (fill-out-hands handset history))) 1))
 
 (define *test-handset*
   (list
-   (mh n c9 cj ca d2 d3 d6 d9 dt h7 hj hq s6 s9)
+   (mh n c9 cj ca d2 d3 d6 d9 dt h7 hj hq       s6 s9)
    (mh e ?)
-   (mh s ?)
+   (mh s c2 c8    d5 d7 d8 da    h4 h9 ht hk s2 s7 st)
    (mh w ?)))
 
 (for-each
@@ -48,7 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (run-for-a-while
            (lambda ()
              (choose-chard *test-handset* (make-history 'n)))
-           1                            ; five seconds seems about
+           5                            ; five seconds seems about
                                         ; right -- since there are 52
                                         ; cards in a game, 260 seconds
                                         ; is 4.3 minutes; add some
