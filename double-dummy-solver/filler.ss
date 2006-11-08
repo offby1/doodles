@@ -22,7 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
 (define (choose-chard handset history)
-  (dds:choose-card history (fill-out-hands handset history) 0))
+  (dds:choose-card history (zp "filled: ~a~%" (map sorted (fill-out-hands handset history))) 0))
 
 (define *test-handset*
   (list
