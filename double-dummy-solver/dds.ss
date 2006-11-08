@@ -341,7 +341,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                        (when (= score-delta (add1 max-lookahead))
                          (return
-                          (zp "This card's good enough:~a" choice)))
+                          (zp "This card's good enough: ~a~%" choice)))
                        (when (or (not best)
                                  (better (cons score choice) best))
                          (set! best (cons score choice)))))
