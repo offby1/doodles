@@ -155,25 +155,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (play-loop history hands max-lookahead termination-proc summarize-proc)
   (define (inner history hands max-lookahead counter)
     (let ((trick-number (add1 (quotient counter 4)))
-          (ha (car hands)))
-      (let ((rv (termination-proc history hands)))
-        (if (or rv (ha:empty? ha))
-            (summarize-proc history hands)
-          (begin
-            (when (or (history-empty? history)
-                      (hi:trick-complete? history))
-              (zprintf "~%Trick ~a:~%" trick-number))
-            (zprintf "~a thinks ..." (ha:seat ha))
-            (let-values (((new-hi new-hands)
-                          (play-card
-                           history
-                           hands
-                           (zp "plays ~a~%"
-                               (choose-card history hands max-lookahead)))))
-              (inner new-hi
-                     new-hands
-                     max-lookahead
-                     (add1 counter))))))))
+          (ha (car hands))
+          (rv (termination-proc history hands)))
+
+      (if (or rv (ha:empty? ha))
+          (summarize-proc history hands)
+        (begin
+          (when (or (history-empty? history)
+                    (hi:trick-complete? history))
+            (zprintf "~%Trick ~a:~%" trick-number))
+          (zprintf "~a thinks ..." (ha:seat ha))
+          (let-values (((new-hi new-hands)
+                        (play-card
+                         history
+                         hands
+                         (zp "plays ~a~%"
+                             (choose-card history hands max-lookahead)))))
+            (inner new-hi
+                   new-hands
+                   max-lookahead
+                   (add1 counter)))))))
 
   (check-type 'play-loop non-negative? max-lookahead)
   (inner history (rotate-until hands (lambda (hands)
