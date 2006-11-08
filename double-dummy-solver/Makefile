@@ -3,6 +3,7 @@ check: compile
 	./tests.ss
 	./test-predictions.ss --lookahead 0 --quiet
 	./fill-out-hands.ss
+	./filler.ss
 
 profile: clean
 	./profile.ss --quiet

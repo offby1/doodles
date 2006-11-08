@@ -48,7 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (run-for-a-while
            (lambda ()
              (choose-chard *test-handset* (make-history 'n)))
-           5
+           1
            (lambda (seconds-remaining)
              (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
              (flush-output (current-error-port)))
