@@ -48,7 +48,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (run-for-a-while
            (lambda ()
              (choose-chard *test-handset* (make-history 'n)))
-           1
+           1                            ; five seconds seems about
+                                        ; right -- since there are 52
+                                        ; cards in a game, 260 seconds
+                                        ; is 4.3 minutes; add some
+                                        ; time for the auction, and
+                                        ; you should be in the
+                                        ; neighborhood of seven
+                                        ; minutes, which is typical
+                                        ; for a hand in a duplicate
+                                        ; club game
            (lambda (seconds-remaining)
              (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
              (flush-output (current-error-port)))
