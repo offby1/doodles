@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (prefix dds: "dds.ss")
          "zprintf.ss"
          (only (lib "list.ss") sort)
+         (only (lib "1.ss" "srfi") fold)
          (only "hand.ss"
                mh
                sorted)
@@ -21,11 +22,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
 (define (choose-chard handset history)
-  (dds:choose-card history (fill-out-hands handset history) 1))
+  (dds:choose-card history (fill-out-hands handset history) 0))
 
 (define *test-handset*
   (list
-   (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+   (mh n c9 cj ca d2 d3 d6 d9 dt h7 hj hq s6 s9)
    (mh e ?)
    (mh s ?)
    (mh w ?)))
@@ -34,7 +35,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lambda (trumps)
    (parameterize ((*trump-suit* trumps))
      (define counts-by-choice (make-hash-table 'equal))
-     (printf "Trump suit is ~a~%" (*trump-suit*))
+     (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
      (parameterize ((*shaddap* #t))
        (for-each
         (lambda (c)
@@ -47,27 +48,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (run-for-a-while
            (lambda ()
              (choose-chard *test-handset* (make-history 'n)))
-           20
-           (lambda (seconds-remaining) (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining))
+           5
+           (lambda (seconds-remaining)
+             (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
+             (flush-output (current-error-port)))
            ))))
      ;; TODO -- as usual, replace "sort the list and then throw away its
      ;; cdr" with "use 'fold' to find the maximum value"
-     (let* ((count-choice-alist (sort (hash-table-map counts-by-choice cons)
-                                      (lambda (a b)
-                                        (> (cdr a)
-                                           (cdr b)))))
-            (num-trials (exact->inexact (apply + (map cdr count-choice-alist)))))
-       ;;(printf "Counts by choice: ~s~%" count-choice-alist )
-       (when (not (zero? (length count-choice-alist)))
-         (printf "And the winner is: ~a, with ~a~%"
-                 (car (list-ref count-choice-alist 0))
-                 (/ (cdr (list-ref count-choice-alist 0)) num-trials))
-         (when (not (zero? (length (cdr count-choice-alist))))
-           (printf "(second place is ~a with ~a)~%"
-                   (car (list-ref count-choice-alist 1))
-                   (/ (cdr (list-ref count-choice-alist 1)) num-trials))))
-       )))
- (list #f 'h)
+     (let ((alist (hash-table-map counts-by-choice cons)))
+       (if (null? alist)
+           (printf "Oops -- no results.  Not enough time.  Buy a bigger computer.~%")
+         (let ((max (fold (lambda (new so-far)
+                            (if (< (cdr so-far)
+                                   (cdr new))
+                                new
+                              so-far))
+                          (car alist)
+                          alist))
+               (num-trials (exact->inexact (apply + (map cdr alist)))))
+           (printf
+            "Counts by choice: ~s~%"
+            (sort alist
+                  (lambda (a b)
+                    (> (cdr a)
+                       (cdr b))))) (flush-output)
+           (when (not (zero? (length alist)))
+             (printf "And the winner is: ~a, with ~a~%"
+                     (caar max)
+                     (/ (cdr max) num-trials))
+             (flush-output)
+             )
+           )))))
+ (list #f 's 'h 'd 'c)
  )
 
 
