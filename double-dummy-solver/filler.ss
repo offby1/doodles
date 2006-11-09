@@ -7,6 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module filler mzscheme
 (require (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") fold)
+         (lib "cmdline.ss")
          (lib "trace.ss")
 
          (lib "assert.ss" "offby1")
@@ -135,6 +136,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (flush-output)
         (caar max)))))
 (trace choose-best-card-no-peeking)
+(command-line
+ "filler"
+ (current-command-line-arguments)
+ (once-each
+
+  ;;Seeing octal escapes in Emacs?  Try C-x RET c utf-8 RET M-x make
+  ;;And use Lucida Console, if your terminal is running on Windows; on
+  ;;*nix, '10x20' from Emacs' font menu also works
+  (("-s" "--seconds-per-card") spc
+   "How long to think about each card"
+   (*seconds-per-card* (string->number spc)))
+  (("-l" "--lookahead") ml
+   "Maximum number of tricks to look ahead when predicting"
+   (*lookahead* (string->number ml)))
+  ))
 (parameterize ((*dummy* 's))
   (let ((me 's))
     (printf "I am ~s, dummy is ~a~%" me (*dummy*))

@@ -14,7 +14,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (execute-counts-enabled #t)
 (profile-paths-enabled #t)
 
-(require "test-predictions.ss")
+(require "filler.ss")
 
 ;; for emacs
 ;; (put 'mit-clobbering 'scheme-indent-function (get 'with-output-to-file 'scheme-indent-function))
