@@ -30,8 +30,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
-(define (choose-chard history handset)
-  (dds:choose-card history (map sorted (fill-out-hands handset history)) 1))
+(define (choose-chard history handset max-lookahead)
+  (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead))
 
 (define *test-handset*
   (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
@@ -67,6 +67,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (random-seed 0)
 
+(define *seconds-per-card* (make-parameter
+                            5           ; five seconds seems about
+                                        ; right -- since there are 52
+                                        ; cards in a game, 260 seconds
+                                        ; is 4.3 minutes; add some
+                                        ; time for the auction, and
+                                        ; you should be in the
+                                        ; neighborhood of seven
+                                        ; minutes, which is typical
+                                        ; for a hand in a duplicate
+                                        ; club game
+                            ))
+(define *lookahead* (make-parameter 2))
+
 (define *dummy* (make-parameter
                  #f
                  (lambda (d)
@@ -79,7 +93,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-best-card-no-peeking history hands max-lookahead)
   (define counts-by-choice (make-hash-table 'equal))
-  (printf "choose-best-card-no-peeking: warning -- TODO -- ignoring max-lookahead ~a~%" max-lookahead)
 
   (for-each
    (lambda (c)
@@ -90,17 +103,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (run-for-a-while
     (lambda ()
       (choose-chard history
-                    (mask-out hands (seat (car hands)) (*dummy*)) ))
-    1/2                                   ; five seconds seems about
-                                        ; right -- since there are 52
-                                        ; cards in a game, 260 seconds
-                                        ; is 4.3 minutes; add some
-                                        ; time for the auction, and
-                                        ; you should be in the
-                                        ; neighborhood of seven
-                                        ; minutes, which is typical
-                                        ; for a hand in a duplicate
-                                        ; club game
+                    (mask-out hands (seat (car hands)) (*dummy*))
+                    max-lookahead))
+    (*seconds-per-card*)
     (lambda (seconds-remaining)
       (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
       (flush-output (current-error-port)))
@@ -108,6 +113,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (let ((alist (hash-table-map counts-by-choice cons)))
     (if (null? alist)
+        ;; TODO -- come up with some default card, rather than puke.
         (error 'choose-best-card-no-peeking "Oops -- no results.  Not enough time.  Buy a bigger computer.")
       (let ((max (fold (lambda (new so-far)
                          (if (< (cdr so-far)
@@ -149,7 +155,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (make-history me)
          *test-handset*
          choose-best-card-no-peeking
-         0
+         ;; TODO: find a way to adjust this value so that it's as
+         ;; large as possible while still not taking too long.  Thus
+         ;; on very fast machines we can look ahead further.
+         (*lookahead*)
          (lambda ignored #f)
          (lambda (history hands)
            (printf "We're done.~%~a~%" history))))
