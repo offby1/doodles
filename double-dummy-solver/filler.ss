@@ -32,11 +32,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (dds:choose-card history (zp "filled: ~a~%" (map sorted (fill-out-hands handset history))) 1))
 
 (define *test-handset*
-  (list
-   (mh n c9 cj ca d2 d3 d6 d9 dt h7 hj hq       s6 s9)
-   (mh e ?)
-   (mh s c2 c8    d5 d7 d8 da    h4 h9 ht hk s2 s7 st)
-   (mh w ?)))
+  (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+       (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
+       (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
+       (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
+       ))
 
 (define (mask-out handset me dummy)
   (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
@@ -66,13 +66,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (make-hand '? (seat h))))
            handset))))
 
-(let ((hs (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
-               (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
-               (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
-               (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
-               )))
-  (printf "With me n, and dummy n too: ~s~%" (mask-out hs 'n 'n))
-  (printf "With me n, and dummy e    : ~s~%" (mask-out hs 'n 'e)))
+(printf "With me n, and dummy n too: ~s~%" (mask-out *test-handset* 'n 'n))
+(printf "With me n, and dummy e    : ~s~%" (mask-out *test-handset* 'n 'e))
 
 (for-each
  (lambda (trumps)
@@ -90,7 +85,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (random-seed 0)
           (run-for-a-while
            (lambda ()
-             (choose-chard *test-handset* (make-history 'n)))
+             (choose-chard (mask-out *test-handset* 'n 's)
+                           (make-history 'n)))
            5                            ; five seconds seems about
                                         ; right -- since there are 52
                                         ; cards in a game, 260 seconds
