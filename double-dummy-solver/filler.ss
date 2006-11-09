@@ -5,19 +5,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module filler mzscheme
-(require "run-for-a-while.ss"
-         "fill-out-hands.ss"
-         (prefix dds: "dds.ss")
-         "zprintf.ss"
-         (only (lib "list.ss") sort)
+(require (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") fold)
+
+         (lib "assert.ss" "offby1")
+         (prefix dds: "dds.ss")
+         "fill-out-hands.ss"
          (only "hand.ss"
+               make-hand
                mh
+               mhs
+               seat
                sorted)
          (only "history.ss"
                make-history)
+         "run-for-a-while.ss"
          (only "trick.ss"
-               *trump-suit*))
+               rotate-until
+               *seats*
+               *trump-suit*)
+         "zprintf.ss")
 
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
@@ -30,6 +37,42 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (mh e ?)
    (mh s c2 c8    d5 d7 d8 da    h4 h9 ht hk s2 s7 st)
    (mh w ?)))
+
+(define (mask-out handset me dummy)
+  (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
+  (check-type 'mask-out (lambda (thing) (memq thing *seats*)) dummy)
+  ;; assume we're given a handset where we can see all the cards.
+
+  ;; rotate the hands so that "me" is the car.
+  (let ((handset (rotate-until handset (lambda (h)
+                                         (eq? (seat (car h))
+
+                                              me)))))
+    ;; if me and the dummy are the same, "mask off" (i.e., replace
+    ;; with ? hands) the odd-numbered elements -- namely the
+    ;; opponents.
+    (if (eq? me dummy)
+        (list (list-ref handset 0)
+              (make-hand '? (seat (list-ref handset 1)))
+              (list-ref handset 2)
+              (make-hand '? (seat (list-ref handset 3))))
+
+      ;; udderwise, mask off the two that are neither me nor the
+      ;; dummy.
+      (map (lambda (h)
+             (if (or (eq? me (seat h))
+                     (eq? dummy (seat h)))
+                 h
+               (make-hand '? (seat h))))
+           handset))))
+
+(let ((hs (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+               (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
+               (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
+               (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
+               )))
+  (printf "With me n, and dummy n too: ~s~%" (mask-out hs 'n 'n))
+  (printf "With me n, and dummy e    : ~s~%" (mask-out hs 'n 'e)))
 
 (for-each
  (lambda (trumps)
