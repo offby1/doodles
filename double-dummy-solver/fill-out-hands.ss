@@ -34,6 +34,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        rotate-until
        seat<
        )
+ "zprintf.ss"
  (only (lib "1.ss" "srfi")
        append-map
        every
@@ -111,10 +112,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 h))
                             unks))))
 
-            (sort (append unks knowns)
-                  (lambda (h1 h2)
-                    (seat< (seat h1)
-                           (seat h2))))))))))
+            (rotate-until
+             (sort (append unks knowns)
+                   (lambda (h1 h2)
+                     (seat< (seat h1)
+                            (seat h2))))
+             (lambda (hands)
+               (eq? (seat (car hands))
+                    (whose-turn history))))))))))
 ;;(trace fill-out-hands)
 (when #f
   (parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))

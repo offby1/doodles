@@ -1,4 +1,6 @@
 # -*-makefile-*-
+TESTS = tests test-predictions fill-out-hands filler
+
 check: compile
 	./tests.ss
 	./test-predictions.ss --lookahead 0 --quiet
@@ -9,7 +11,7 @@ profile: clean
 	./profile.ss --quiet
 
 compile:
-	for i in tests test-predictions fill-out-hands; do mzc --make $$i.ss; done
+	for i in $(TESTS); do mzc --make $$i.ss; done
 
 deps: deps.pdf
 

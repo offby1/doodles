@@ -25,6 +25,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  filter
  hand?
  mh mhs
+ ps
  remove-card
  sort!
  sorted
@@ -33,9 +34,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
-
-(define suit car)
-(define ranks cdr)
 
 (define (hand-print hand port write?)
   (when write? (write-string "<" port))
@@ -152,25 +150,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (empty? h)
   (null? (hand-cards h)))
+
+(define suit car)
+(define ranks cdr)
 
-;; ♣3 ♣6 ♣9 ♣j ♣a ♦2 ♦9 ♦t ♥7 ♥j ♥q ♠6 ♠9 => ((♣ 3 6 9 j a) (♦ 2 9 t) (♥ 7 j q) (♠ 6 9))
+;; c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9 => ((c a j 9 6 3) (d t 9 2) (h q j 7) (s 9 6))
 
 (define (collate h)
   (if (list? (hand-cards h))
-      (fold (lambda (card output)
-              (cond
-               ((or (null? output)
-                    (not (eq? (card-suit card)
-                              (caar output))))
-                (cons (list (card-suit card)
-                            (card-rank card))
-                      output))
-               (else
-                (append! (car output)
-                         (list (card-rank card)))
-                output)))
-            '()
-            (sort (hand-cards h)  card</suit))
+      (reverse
+       (fold (lambda (card output)
+               (cond
+                ((or (null? output)
+                     (not (eq? (card-suit card)
+                               (caar output))))
+                 (cons (list (card-suit card)
+                             (card-rank card))
+                       output))
+                (else
+                 (append! (car output)
+                          (list (card-rank card)))
+                 output)))
+             '()
+             (reverse
+              (sort (hand-cards h) card</suit))))
     '?))
 
 (define (ps hand port)
@@ -181,6 +184,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (rp r o)
                   (get-output-string o)))
               (sp (suit holding) port)
+              (display ": " port)
               (display (string-join (map r->s (ranks holding))) port)
               (newline port))
             (collate hand)))
