@@ -20,7 +20,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 
 (define (history-print history port write?)
-  (fprintf port "Opening lead: ~a " (history-opening-leader history))
+  (when (history-complete? history)
+    (fprintf port "Trump suit is ~a~%" (*trump-suit*)))
+  (when (null? (history-tricks history))
+    (fprintf port "Opening lead: ~a~%" (history-opening-leader history)))
   (let loop ((printed 0)
              (tricks (reverse (history-tricks history))))
     (when (not (null? tricks))
@@ -28,7 +31,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (when (not (null? (cdr tricks)))
         (display (if write? "; " #\newline) port))
       (loop (add1 printed)
-            (cdr tricks)))))
+            (cdr tricks))))
+  (when (history-complete? history)
+    (fprintf port "~%Score: ~a~%" (compute-score history))))
 
 (define-values (s:history make-history history? s:history-ref history-set!)
   (make-struct-type 'history #f 2 0 #f

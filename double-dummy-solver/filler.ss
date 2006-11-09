@@ -91,7 +91,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (lambda ()
       (choose-chard history
                     (mask-out hands (seat (car hands)) (*dummy*)) ))
-    1/2                                 ; five seconds seems about
+    1/2                                   ; five seconds seems about
                                         ; right -- since there are 52
                                         ; cards in a game, 260 seconds
                                         ; is 4.3 minutes; add some
@@ -128,7 +128,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (/ (cdr max) num-trials))
         (flush-output)
         (caar max)))))
-;;(trace choose-best-card-no-peeking)
+(trace choose-best-card-no-peeking)
 (parameterize ((*dummy* 's))
   (let ((me 's))
     (printf "I am ~s, dummy is ~a~%" me (*dummy*))
@@ -152,10 +152,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          0
          (lambda ignored #f)
          (lambda (history hands)
-           (printf "We're done.  History is ~a; hands are ~a~%"
-                   history
-                   hands))
-         ))
+           (printf "We're done.~%~a~%" history))))
 
       ;; TODO -- as usual, replace "sort the list and then throw away its
       ;; cdr" with "use 'fold' to find the maximum value"
