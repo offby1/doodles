@@ -99,7 +99,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; the card gone, and with the hands rotated one notch.
 (define (play-card history hands c)
   (let ((h (car hands)))
-    (assert (member c (ha:cards h)))
+    (unless (member c (ha:cards h))
+      (error 'play-card  "~a is not from the first of ~a" c  hands ))
     (let* ((new-hand    (ha:remove-card h c))
            (new-history (add-card history c))
            (new-hand-list (cons new-hand (cdr hands)))

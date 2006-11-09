@@ -30,7 +30,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
-(define (choose-chard handset history)
+(define (choose-chard history handset)
   (dds:choose-card history (map sorted (fill-out-hands handset history)) 1))
 
 (define *test-handset*
@@ -65,37 +65,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;(trace mask-out)
 
-(let ((me 's)
-      (dummy 's))
-  (printf "I am ~s, dummy is ~a~%" me dummy)
+(random-seed 0)
 
-  (printf "The hands are ")
-  (for-each (lambda (h)
-              (ps h (current-output-port))
-              (newline))
-            *test-handset*)
+(define *dummy* (make-parameter
+                 #f
+                 (lambda (d)
+                   (unless (memq d *seats*)
+                     (raise-mismatch-error
+                      '*dummy*
+                      (format "wanted one of ~d, not " *seats*)
+                      d))
+                   d)))
 
-  (newline)
+(define (choose-best-card-no-peeking history hands max-lookahead)
+  (define counts-by-choice (make-hash-table 'equal))
+  (printf "choose-best-card-no-peeking: warning -- ignoring max-lookahead ~a~%" max-lookahead)
 
   (for-each
-   (lambda (trumps)
-     (parameterize ((*trump-suit* trumps))
-       (define counts-by-choice (make-hash-table 'equal))
-       (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
-       (parameterize ((*shaddap* #t))
-         (for-each
-          (lambda (c)
-            (hash-table-put!
-             counts-by-choice
-             c
-             (add1 (hash-table-get counts-by-choice c 0))))
-          (parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
-            (random-seed 0)
-            (run-for-a-while
-             (lambda ()
-               (choose-chard (mask-out *test-handset* me dummy)
-                             (make-history me)))
-             5                          ; five seconds seems about
+   (lambda (c)
+     (hash-table-put!
+      counts-by-choice
+      c
+      (add1 (hash-table-get counts-by-choice c 0))))
+   (run-for-a-while
+    (lambda ()
+      (choose-chard history
+                    (mask-out hands (seat (car hands)) (*dummy*)) ))
+    1/2                                 ; five seconds seems about
                                         ; right -- since there are 52
                                         ; cards in a game, 260 seconds
                                         ; is 4.3 minutes; add some
@@ -105,38 +101,65 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         ; minutes, which is typical
                                         ; for a hand in a duplicate
                                         ; club game
-             (lambda (seconds-remaining)
-               (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
-               (flush-output (current-error-port)))
-             ))))
-       ;; TODO -- as usual, replace "sort the list and then throw away its
-       ;; cdr" with "use 'fold' to find the maximum value"
-       (let ((alist (hash-table-map counts-by-choice cons)))
-         (if (null? alist)
-             (printf "Oops -- no results.  Not enough time.  Buy a bigger computer.~%")
-           (let ((max (fold (lambda (new so-far)
-                              (if (< (cdr so-far)
-                                     (cdr new))
-                                  new
-                                so-far))
-                            (car alist)
-                            alist))
-                 (num-trials (exact->inexact (apply + (map cdr alist)))))
-             (printf
-              "Counts by choice: ~s~%"
-              (sort alist
-                    (lambda (a b)
-                      (> (cdr a)
-                         (cdr b))))) (flush-output)
-             (when (not (zero? (length alist)))
-               (printf "And the winner is: ~a, with ~a~%"
-                       (caar max)
-                       (/ (cdr max) num-trials))
-               (flush-output)
-               )
-             )))))
-   (list #f 's 'h 'd 'c)
-   ))
+    (lambda (seconds-remaining)
+      (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
+      (flush-output (current-error-port)))
+    ))
+
+  (let ((alist (hash-table-map counts-by-choice cons)))
+    (if (null? alist)
+        (error 'choose-best-card-no-peeking "Oops -- no results.  Not enough time.  Buy a bigger computer.")
+      (let ((max (fold (lambda (new so-far)
+                         (if (< (cdr so-far)
+                                (cdr new))
+                             new
+                           so-far))
+                       (car alist)
+                       alist))
+            (num-trials (exact->inexact (apply + (map cdr alist)))))
+        (printf
+         "Counts by choice: ~s~%"
+         (sort alist
+               (lambda (a b)
+                 (> (cdr a)
+                    (cdr b))))) (flush-output)
+        (printf "And our choice is: ~a, with ~a~%"
+                (caar max)
+                (/ (cdr max) num-trials))
+        (flush-output)
+        (caar max)))))
+;;(trace choose-best-card-no-peeking)
+(parameterize ((*dummy* 's))
+  (let ((me 's))
+    (printf "I am ~s, dummy is ~a~%" me (*dummy*))
+
+    (printf "The hands are ")
+    (for-each (lambda (h)
+                (ps h (current-output-port))
+                (newline))
+              *test-handset*)
+
+    (newline)
+
+    (parameterize ((*trump-suit* 'd))
+
+      (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
+      (parameterize ((*shaddap* #t))
+        (dds:play-loop
+         (make-history me)
+         *test-handset*
+         choose-best-card-no-peeking
+         0
+         (lambda ignored #f)
+         (lambda (history hands)
+           (printf "We're done.  History is ~a; hands are ~a~%"
+                   history
+                   hands))
+         ))
+
+      ;; TODO -- as usual, replace "sort the list and then throw away its
+      ;; cdr" with "use 'fold' to find the maximum value"
+      )))
 
 
 ;; ok, now do the above for a while
