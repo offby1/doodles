@@ -122,6 +122,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                (sj sk)
 
                                )
+                          choose-card
                           0
                           (lambda args #f)
                           (lambda (hi hands)

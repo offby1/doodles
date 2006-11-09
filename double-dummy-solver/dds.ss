@@ -151,8 +151,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; hands.
 
 ;; This function is starting to look like "unfold".  Perhaps someday I
-;; should explcitily write it to call "unfold".
-(define (play-loop history hands max-lookahead termination-proc summarize-proc)
+;; should explicitly write it to call "unfold".
+(define (play-loop history
+                   hands
+                   choose-card
+                   max-lookahead
+                   termination-proc
+                   summarize-proc
+                   )
   (define (inner history hands max-lookahead counter)
     (let ((trick-number (add1 (quotient counter 4)))
           (ha (car hands))
@@ -412,6 +418,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (play-loop
          new-hi
          new-hands
+         choose-card
          (max (sub1 max-lookahead) 0)
 
          ;; hypo-thetical, that is.

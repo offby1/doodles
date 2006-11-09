@@ -99,8 +99,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (play-loop
           (make-history (car *seats*))
           hands
+          choose-card
           max-lookahead
-
           ;; always returns false -- thus we'll stop only when the hands
           ;; have been emptied.
           (lambda args #f)
