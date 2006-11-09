@@ -79,7 +79,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-best-card-no-peeking history hands max-lookahead)
   (define counts-by-choice (make-hash-table 'equal))
-  (printf "choose-best-card-no-peeking: warning -- ignoring max-lookahead ~a~%" max-lookahead)
+  (printf "choose-best-card-no-peeking: warning -- TODO -- ignoring max-lookahead ~a~%" max-lookahead)
 
   (for-each
    (lambda (c)
@@ -141,7 +141,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (newline)
 
-    (parameterize ((*trump-suit* 'd))
+    (parameterize ((*trump-suit* 's))
 
       (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
       (parameterize ((*shaddap* #t))
