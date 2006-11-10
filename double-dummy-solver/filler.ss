@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 (module filler mzscheme
@@ -112,16 +112,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         counts-by-choice
         c
         (add1 (hash-table-get counts-by-choice c 0))))
-     (run-for-a-while
+     (map car
+             (run-for-a-while
       (lambda ()
         (choose-chard history
                       hands
                       max-lookahead))
       (*seconds-per-card*)
       (lambda (seconds-remaining)
-        (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
+        (fprintf (current-error-port) "~a" seconds-remaining)
         (flush-output (current-error-port)))
-      ))
+      )))
 
     (let ((alist (hash-table-map counts-by-choice cons)))
       (if (null? alist)
@@ -141,11 +142,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (lambda (a b)
                    (> (cdr a)
                       (cdr b))))) (flush-output)
-          (printf "And our choice is: ~a, with ~a~%"
-                  (caar max)
+          (printf "And our choice is: ~a, with ~a~%~%"
+                  (car max)
                   (/ (cdr max) num-trials))
           (flush-output)
-          (caar max))))))
+          (car max))))))
 ;(trace choose-best-card-no-peeking)
 (command-line
  "filler"
@@ -163,8 +164,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*lookahead* (string->number ml)))
   ))
 
-(parameterize ((*dummy* 's))
-  (let ((me 'n))
+(parameterize ((*dummy* 'n))
+  (let ((me 's))
     (printf "I am ~s, dummy is ~a~%" me (*dummy*))
 
     (printf "The hands are ")
@@ -180,7 +181,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
       (parameterize ((*shaddap* #t))
         (dds:play-loop
-         (make-history 'e)
+         (make-history 'w)
          *test-handset*
          choose-best-card-no-peeking
          ;; TODO: find a way to adjust this value so that it's as
