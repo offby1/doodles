@@ -7,6 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require "card.ss"
          "dds.ss"
          "deck.ss"
+         "fys.ss"
          "history.ss"
          "zprintf.ss"
          (only "trick.ss" *seats* *trump-suit*)
@@ -28,19 +29,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 (define max-lookahead 0)
 (random-seed 0)
-
-
-
-(define (fisher-yates-shuffle! v)
-  (define (swap! i1 i2)
-    (let ((tmp (vector-ref v i1)))
-      (vector-set! v i1 (vector-ref v i2))
-      (vector-set! v i2 tmp)))
-  (let ((l (vector-length v)))
-    (do ((top-index (sub1 l) (sub1 top-index)))
-        ((zero? top-index) v)
-      (let ((bottom-index (random top-index)))
-        (swap! bottom-index top-index)))))
 
 
 (define *num-hands* (make-parameter 1))

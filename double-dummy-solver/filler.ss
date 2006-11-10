@@ -12,7 +12,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
          (lib "assert.ss" "offby1")
          (prefix dds: "dds.ss")
+         "deck.ss"
          "fill-out-hands.ss"
+         "fys.ss"
          (only "hand.ss"
                make-hand
                mh
@@ -38,13 +40,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; conforming hand, then figure the best card for the first player.
 (define (choose-chard history handset max-lookahead)
   (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead))
-
-(define *test-handset*
-  (mhs (c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
-       (ct d4 dj dk h2 h6 ha s3 s4 s5 s8 sq sk)
-       (c2 c8 d5 d7 d8 da h4 h9 ht hk s2 s7 st)
-       (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
-       ))
 
 (define (mask-out handset me dummy opening-lead?)
   (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
@@ -78,8 +73,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;(trace mask-out)
 
-(random-seed 0)
-
 (define *seconds-per-card* (make-parameter
                             5           ; five seconds seems about
                                         ; right -- since there are 52
@@ -108,7 +101,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define counts-by-choice (make-hash-table 'equal))
   (define me  (seat (car hands)))
   (let ((hands (mask-out hands me (*dummy*) (history-empty? history))))
-    (printf "~a sees ~a~%" me hands)
     (for-each
      (lambda (c)
        (hash-table-put!
@@ -159,52 +151,47 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (*lookahead* (string->number ml)))
   ))
 
-(parameterize ((*dummy* 'n))
+(parameterize ((*dummy* 'n)
+               (*trump-suit* 's)
+               (*shaddap* #t))
   (let ((me 's))
-    (printf "I am ~s, dummy is ~a~%" me (*dummy*))
+    (let loop ((rounds-played 0))
+      (when (< rounds-played 5)
+        (let ((hands
+               (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+                     (map (lambda (s) (make-hand '() s)) *seats*))))
+          (printf "I am ~s, dummy is ~a~%" me (*dummy*))
 
-    (printf "The hands are ")
-    (for-each (lambda (h)
-                (ps h (current-output-port))
-                (newline))
-              *test-handset*)
+          (printf "The hands are ")
+          (for-each (lambda (h)
+                      (ps h (current-output-port))
+                      (newline))
+                    hands)
 
-    (newline)
+          (newline)
 
-    (parameterize ((*trump-suit* 's))
+          (printf "Trump suit is ~a~%" (*trump-suit*))
+          (flush-output)
+          (dds:play-loop
+           (make-history 'w)
+           hands
+           choose-best-card-no-peeking
+           ;; TODO: find a way to adjust this value so that it's as
+           ;; large as possible while still not taking too long.  Thus
+           ;; on very fast machines we can look ahead further.
+           (*lookahead*)
+           (lambda (history hands)
+             (when (and
+                    (not (history-empty? history))
+                    (hi:trick-complete? history))
+               (let ((t (history-latest-trick history)))
+                 (printf "===== ~a won trick ~a with the ~a~%"
+                         (cdr (winner/int t))
+                         (history-length history)
+                         (car (winner/int t)))))
+             #f)
 
-      (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
-      (parameterize ((*shaddap* #t))
-        (dds:play-loop
-         (make-history 'w)
-         *test-handset*
-         choose-best-card-no-peeking
-         ;; TODO: find a way to adjust this value so that it's as
-         ;; large as possible while still not taking too long.  Thus
-         ;; on very fast machines we can look ahead further.
-         (*lookahead*)
-         (lambda (history hands)
-           (when (and
-                  (not (history-empty? history))
-                  (hi:trick-complete? history))
-             (let ((t (history-latest-trick history)))
-               (printf "===== ~a won trick ~a with the ~a~%"
-                       (cdr (winner/int t))
-                       (history-length history)
-                       (car (winner/int t)))))
-           #f)
-
-         (lambda (history hands)
-           (printf "We're done.~%~a~%" history))))
-
-      ;; TODO -- as usual, replace "sort the list and then throw away its
-      ;; cdr" with "use 'fold' to find the maximum value"
-      )))
-
-
-;; ok, now do the above for a while
-
-;; ok, now take the list of results from that, and see which score
-;; comes up the most.  Return it.
-
+           (lambda (history hands)
+             (printf "We're done.~%~a~%" history)))
+          (loop (add1 rounds-played)))))))
 )
