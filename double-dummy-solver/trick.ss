@@ -49,6 +49,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          trick?
          whose-turn
          winner
+         winner/int
          with-seat-circle
          )
 (display "$Id$" (current-error-port))

@@ -44,6 +44,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
               ))
     (cond
      ((eq? '? cs)
+      ;; TODO -- figure out a way to specify the number of cards in
+      ;; the hand -- that way we can display it as a row of that many
+      ;; xs, rather than a single question mark
       (display "?" port))
      ((not (null? cs))
       (display (car cs) port)

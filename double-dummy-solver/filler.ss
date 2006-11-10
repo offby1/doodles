@@ -22,10 +22,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
                sorted)
          (only "history.ss"
                history-empty?
+               history-latest-trick
+               history-length
+               hi:trick-complete?
                make-history)
          "run-for-a-while.ss"
          (only "trick.ss"
                rotate-until
+               winner/int
                *seats*
                *trump-suit*)
          "zprintf.ss")
@@ -102,10 +106,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (choose-best-card-no-peeking history hands max-lookahead)
   (define counts-by-choice (make-hash-table 'equal))
-  (let ((hands (mask-out hands (seat (car hands)) (*dummy*) (history-empty? history))))
-    (printf "~a sees ~a~%"
-            (seat (car hands))
-            hands)
+  (define me  (seat (car hands)))
+  (let ((hands (mask-out hands me (*dummy*) (history-empty? history))))
+    (printf "~a sees ~a~%" me hands)
     (for-each
      (lambda (c)
        (hash-table-put!
@@ -113,17 +116,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
         c
         (add1 (hash-table-get counts-by-choice c 0))))
      (map car
-             (run-for-a-while
-      (lambda ()
-        (choose-chard history
-                      hands
-                      max-lookahead))
-      (*seconds-per-card*)
-      (lambda (seconds-remaining)
-        (fprintf (current-error-port) "~a" seconds-remaining)
-        (flush-output (current-error-port)))
-      )))
-
+          (run-for-a-while
+           (lambda ()
+             (choose-chard history
+                           hands
+                           max-lookahead))
+           (*seconds-per-card*)
+           (lambda (seconds-remaining)
+             (fprintf (current-error-port) "~a" seconds-remaining)
+             (flush-output (current-error-port)))
+           )))
+    (newline (current-error-port)) (flush-output (current-error-port))
     (let ((alist (hash-table-map counts-by-choice cons)))
       (if (null? alist)
           ;; TODO -- come up with some default card, rather than puke.
@@ -136,15 +139,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (car alist)
                          alist))
               (num-trials (exact->inexact (apply + (map cdr alist)))))
-          (printf
-           "Counts by choice: ~s~%"
-           (sort alist
-                 (lambda (a b)
-                   (> (cdr a)
-                      (cdr b))))) (flush-output)
-          (printf "And our choice is: ~a, with ~a~%~%"
-                  (car max)
-                  (/ (cdr max) num-trials))
+          (printf "~a plays ~a~%~%" me (car max))
           (flush-output)
           (car max))))))
 ;(trace choose-best-card-no-peeking)
@@ -188,7 +183,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
          ;; large as possible while still not taking too long.  Thus
          ;; on very fast machines we can look ahead further.
          (*lookahead*)
-         (lambda ignored #f)
+         (lambda (history hands)
+           (when (and
+                  (not (history-empty? history))
+                  (hi:trick-complete? history))
+             (let ((t (history-latest-trick history)))
+               (printf "===== ~a won trick ~a with the ~a~%"
+                       (cdr (winner/int t))
+                       (history-length history)
+                       (car (winner/int t)))))
+           #f)
+
          (lambda (history hands)
            (printf "We're done.~%~a~%" history))))
 
