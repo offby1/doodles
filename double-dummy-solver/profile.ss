@@ -14,6 +14,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (execute-counts-enabled #t)
 (profile-paths-enabled #t)
 
+;; note the profiling slows things down so much that the
+;; seconds-per-card and lookahead values that we're used to might not
+;; work.
 (require "filler.ss")
 
 ;; for emacs

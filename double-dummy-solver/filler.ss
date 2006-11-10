@@ -21,6 +21,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                seat
                sorted)
          (only "history.ss"
+               history-empty?
                make-history)
          "run-for-a-while.ss"
          (only "trick.ss"
@@ -41,7 +42,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (c4 c5 c7 cq ck d3 d6 dq h3 h5 h8 sj sa)
        ))
 
-(define (mask-out handset me dummy)
+(define (mask-out handset me dummy opening-lead?)
   (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
   (check-type 'mask-out (lambda (thing) (memq thing *seats*)) dummy)
   ;; assume we're given a handset where we can see all the cards.
@@ -49,12 +50,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; if me and the dummy are the same, "mask off" (i.e., replace
   ;; with ? hands) the odd-numbered elements -- namely the
   ;; opponents.
-  (if (eq? me dummy)
-      (list (list-ref handset 0)
-            (make-hand '? (seat (list-ref handset 1)))
-            (list-ref handset 2)
-            (make-hand '? (seat (list-ref handset 3))))
+  (cond
+   (opening-lead?
+    (list (list-ref handset 0)
+          (make-hand '? (seat (list-ref handset 1)))
+          (make-hand '? (seat (list-ref handset 2)))
+          (make-hand '? (seat (list-ref handset 3)))))
+   ((eq? me dummy)
+    (list (list-ref handset 0)
+          (make-hand '? (seat (list-ref handset 1)))
+          (list-ref handset 2)
+          (make-hand '? (seat (list-ref handset 3)))))
 
+   (else
     ;; udderwise, mask off the two that are neither me nor the
     ;; dummy.
     (map (lambda (h)
@@ -62,7 +70,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (eq? dummy (seat h)))
                h
              (make-hand '? (seat h))))
-         handset)))
+         handset))))
 
 ;(trace mask-out)
 
@@ -94,48 +102,51 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (choose-best-card-no-peeking history hands max-lookahead)
   (define counts-by-choice (make-hash-table 'equal))
+  (let ((hands (mask-out hands (seat (car hands)) (*dummy*) (history-empty? history))))
+    (printf "~a sees ~a~%"
+            (seat (car hands))
+            hands)
+    (for-each
+     (lambda (c)
+       (hash-table-put!
+        counts-by-choice
+        c
+        (add1 (hash-table-get counts-by-choice c 0))))
+     (run-for-a-while
+      (lambda ()
+        (choose-chard history
+                      hands
+                      max-lookahead))
+      (*seconds-per-card*)
+      (lambda (seconds-remaining)
+        (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
+        (flush-output (current-error-port)))
+      ))
 
-  (for-each
-   (lambda (c)
-     (hash-table-put!
-      counts-by-choice
-      c
-      (add1 (hash-table-get counts-by-choice c 0))))
-   (run-for-a-while
-    (lambda ()
-      (choose-chard history
-                    (mask-out hands (seat (car hands)) (*dummy*))
-                    max-lookahead))
-    (*seconds-per-card*)
-    (lambda (seconds-remaining)
-      (fprintf (current-error-port) "~a seconds remaining...~%" seconds-remaining)
-      (flush-output (current-error-port)))
-    ))
-
-  (let ((alist (hash-table-map counts-by-choice cons)))
-    (if (null? alist)
-        ;; TODO -- come up with some default card, rather than puke.
-        (error 'choose-best-card-no-peeking "Oops -- no results.  Not enough time.  Buy a bigger computer.")
-      (let ((max (fold (lambda (new so-far)
-                         (if (< (cdr so-far)
-                                (cdr new))
-                             new
-                           so-far))
-                       (car alist)
-                       alist))
-            (num-trials (exact->inexact (apply + (map cdr alist)))))
-        (printf
-         "Counts by choice: ~s~%"
-         (sort alist
-               (lambda (a b)
-                 (> (cdr a)
-                    (cdr b))))) (flush-output)
-        (printf "And our choice is: ~a, with ~a~%"
-                (caar max)
-                (/ (cdr max) num-trials))
-        (flush-output)
-        (caar max)))))
-(trace choose-best-card-no-peeking)
+    (let ((alist (hash-table-map counts-by-choice cons)))
+      (if (null? alist)
+          ;; TODO -- come up with some default card, rather than puke.
+          (error 'choose-best-card-no-peeking "Oops -- no results.  Not enough time.  Buy a bigger computer.")
+        (let ((max (fold (lambda (new so-far)
+                           (if (< (cdr so-far)
+                                  (cdr new))
+                               new
+                             so-far))
+                         (car alist)
+                         alist))
+              (num-trials (exact->inexact (apply + (map cdr alist)))))
+          (printf
+           "Counts by choice: ~s~%"
+           (sort alist
+                 (lambda (a b)
+                   (> (cdr a)
+                      (cdr b))))) (flush-output)
+          (printf "And our choice is: ~a, with ~a~%"
+                  (caar max)
+                  (/ (cdr max) num-trials))
+          (flush-output)
+          (caar max))))))
+;(trace choose-best-card-no-peeking)
 (command-line
  "filler"
  (current-command-line-arguments)
@@ -151,8 +162,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    "Maximum number of tricks to look ahead when predicting"
    (*lookahead* (string->number ml)))
   ))
+
 (parameterize ((*dummy* 's))
-  (let ((me 's))
+  (let ((me 'n))
     (printf "I am ~s, dummy is ~a~%" me (*dummy*))
 
     (printf "The hands are ")
@@ -168,7 +180,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (printf "Trump suit is ~a~%" (*trump-suit*))(flush-output)
       (parameterize ((*shaddap* #t))
         (dds:play-loop
-         (make-history me)
+         (make-history 'e)
          *test-handset*
          choose-best-card-no-peeking
          ;; TODO: find a way to adjust this value so that it's as
