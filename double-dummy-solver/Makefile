@@ -5,13 +5,13 @@ check: compile
 	./tests.ss
 	./test-predictions.ss --lookahead 0 --quiet
 	./fill-out-hands.ss
-	./filler.ss -l 0 -s 1/10
+	./filler.ss --lookahead 0 --seconds-per-card 1/2 --number-of-hands 1
 
 profile: clean
 	./profile.ss --quiet
 
 compile:
-	for i in $(TESTS); do mzc --make $$i.ss; done
+	for i in $(wildcard *.ss); do mzc --make $$i.ss; done
 
 deps: deps.pdf
 

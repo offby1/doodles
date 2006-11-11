@@ -86,7 +86,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                         ; club game
                             ))
 (define *lookahead* (make-parameter 2))
-
+(define *num-hands* (make-parameter 1))
 (define *dummy* (make-parameter
                  #f
                  (lambda (d)
@@ -149,14 +149,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (("-l" "--lookahead") ml
    "Maximum number of tricks to look ahead when predicting"
    (*lookahead* (string->number ml)))
+  (("-n" "--number-of-hands") h
+   "Number of hands to play"
+   (*num-hands* (string->number h)))
   ))
 
 (parameterize ((*dummy* 'n)
                (*trump-suit* 's)
                (*shaddap* #t))
   (let ((me 's))
-    (let loop ((rounds-played 0))
-      (when (< rounds-played 5)
+    (let loop ((hands-played 0))
+      (when (< hands-played (*num-hands*))
         (let ((hands
                (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
                      (map (lambda (s) (make-hand '() s)) *seats*))))
@@ -193,5 +196,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
            (lambda (history hands)
              (printf "We're done.~%~a~%" history)))
-          (loop (add1 rounds-played)))))))
+          (loop (add1 hands-played)))))))
 )
