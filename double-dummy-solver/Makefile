@@ -11,7 +11,7 @@ profile: clean
 	./profile.ss --quiet
 
 compile:
-	for i in $(wildcard *.ss); do mzc --make $$i.ss; done
+	for i in $(filter-out profile.ss,$(wildcard *.ss)); do mzc --make $$i; done
 
 deps: deps.pdf
 
