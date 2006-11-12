@@ -140,7 +140,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (case offset
               ((2 3)
                (when (not (null? suckers))
-                 (zprintf "Ha! ~a just finessed the ~a: ~a~%" winning-seat suckers t)
+                 (when (zero? (*recursion-level*))
+                   (printf "Ha! ~a just finessed the ~a: ~a~%" winning-seat suckers t))
                  ))))))
 
       (values new-history rotated))))
@@ -177,7 +178,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          history
                          hands
                          (zp "plays ~a~%"
-                             (choose-card history hands max-lookahead)))))
+                             (choose-card history hands max-lookahead #f)))))
             (inner new-hi
                    new-hands
                    max-lookahead
@@ -214,7 +215,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; if there's exactly one, play it.
 ;; otherwise, predict the score from playing each card; play the highest-scoring one.
 
-(define (choose-card history hands max-lookahead)
+(define (choose-card history hands max-lookahead quick-and-dirty?)
 
   (define ours      (car (rotate hands 0)))
   (define us        (ha:seat ours))
@@ -300,7 +301,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (hi-lo-each-suit (map car grouped) t)))
 
          (choice
-          (if (null? (cdr pruned-legal-choices))
+          (if (or quick-and-dirty?
+                 (null? (cdr pruned-legal-choices)))
               (begin
                 (if (null? (cdr legal-choices))
                     (zprintf "(duh, singleton)")

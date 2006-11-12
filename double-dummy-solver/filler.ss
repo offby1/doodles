@@ -39,7 +39,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
 (define (choose-chard history handset max-lookahead)
-  (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead))
+  (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead #f))
 
 (define (mask-out handset me dummy opening-lead?)
   (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
@@ -97,43 +97,48 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       d))
                    d)))
 
-(define (choose-best-card-no-peeking history hands max-lookahead)
+(define (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)
   (define counts-by-choice (make-hash-table 'equal))
   (define me  (seat (car hands)))
-  (let ((hands (mask-out hands me (*dummy*) (history-empty? history))))
-    (for-each
-     (lambda (c)
-       (hash-table-put!
-        counts-by-choice
-        c
-        (add1 (hash-table-get counts-by-choice c 0))))
-     (map car
-          (run-for-a-while
-           (lambda ()
-             (choose-chard history
-                           hands
-                           max-lookahead))
-           (*seconds-per-card*)
-           (lambda (seconds-remaining)
-             (fprintf (current-error-port) "~a" seconds-remaining)
-             (flush-output (current-error-port)))
-           )))
-    (newline (current-error-port)) (flush-output (current-error-port))
-    (let ((alist (hash-table-map counts-by-choice cons)))
-      (if (null? alist)
-          ;; TODO -- come up with some default card, rather than puke.
-          (error 'choose-best-card-no-peeking "Oops -- no results.  Not enough time.  Buy a bigger computer.")
-        (let ((max (fold (lambda (new so-far)
-                           (if (< (cdr so-far)
-                                  (cdr new))
-                               new
-                             so-far))
-                         (car alist)
-                         alist))
-              (num-trials (exact->inexact (apply + (map cdr alist)))))
-          (printf "~a plays ~a~%~%" me (car max))
-          (flush-output)
-          (car max))))))
+  (let* ((hands (mask-out hands me (*dummy*) (history-empty? history)))
+         (fallback (dds:choose-card history hands 0 #t)))
+    (if quick-and-dirty? fallback
+      (begin
+        (for-each
+         (lambda (c)
+           (hash-table-put!
+            counts-by-choice
+            c
+            (add1 (hash-table-get counts-by-choice c 0))))
+         (map car
+              (run-for-a-while
+               (lambda ()
+                 (choose-chard history
+                               hands
+                               max-lookahead))
+               (*seconds-per-card*)
+               (lambda (seconds-remaining)
+                 (fprintf (current-error-port) "~a" seconds-remaining)
+                 (flush-output (current-error-port)))
+               )))
+        (newline (current-error-port)) (flush-output (current-error-port))
+        (let ((alist (hash-table-map counts-by-choice cons)))
+          (if (null? alist)
+              (begin
+                (printf "Oops -- no results.  Not enough time.  Buy a bigger computer.  Falling back to ~a~%" fallback)
+                (flush-output)
+                fallback)
+            (let ((max (fold (lambda (new so-far)
+                               (if (< (cdr so-far)
+                                      (cdr new))
+                                   new
+                                 so-far))
+                             (car alist)
+                             alist))
+                  (num-trials (exact->inexact (apply + (map cdr alist)))))
+              (printf "~a plays ~a~%~%" me (car max))
+              (flush-output)
+              (car max))))))))
 ;(trace choose-best-card-no-peeking)
 (command-line
  "filler"
@@ -152,8 +157,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (("-n" "--number-of-hands") h
    "Number of hands to play"
    (*num-hands* (string->number h)))
+  (("-r" "--rng") six-ints
+   "pseudo-random-generator vector (six integers)"
+   (let ((inp (open-input-string six-ints)))
+     (let loop ((ints '()))
+       (let ((datum (read inp)))
+         (if (eof-object? datum)
+             (current-pseudo-random-generator
+              (vector->pseudo-random-generator (list->vector (reverse ints))))
+           (loop (cons datum ints))))
+       )))
   ))
-
+(printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
 (parameterize ((*dummy* 'n)
                (*trump-suit* 's)
                (*shaddap* #t))
@@ -163,9 +178,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (let ((hands
                (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
                      (map (lambda (s) (make-hand '() s)) *seats*))))
-          (printf "I am ~s, dummy is ~a~%" me (*dummy*))
+          (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*)) (flush-output)
 
-          (printf "The hands are ")
           (for-each (lambda (h)
                       (ps h (current-output-port))
                       (newline))
@@ -173,8 +187,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
           (newline)
 
-          (printf "Trump suit is ~a~%" (*trump-suit*))
-          (flush-output)
+          (printf "Trump suit is ~a~%" (*trump-suit*)) (flush-output)
           (dds:play-loop
            (make-history 'w)
            hands
@@ -191,7 +204,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  (printf "===== ~a won trick ~a with the ~a~%"
                          (cdr (winner/int t))
                          (history-length history)
-                         (car (winner/int t)))))
+                         (car (winner/int t))) (flush-output)))
              #f)
 
            (lambda (history hands)

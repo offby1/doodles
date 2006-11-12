@@ -31,10 +31,7 @@ ETAGS ?= etags
 tags: TAGS
 
 TAGS: $(wildcard *.ss)
-	$(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
-
-# On windows, you want
-#	PATH=$$(cygpath $$EMACSPATH):$$PATH $(ETAGS) ...
+	PATH=/usr/local/src/emacs-cvs.good/bin:$$PATH $(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 clean:
 	rm -rf TAGS coverage compiled *.pdf

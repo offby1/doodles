@@ -53,7 +53,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (make-history
                (list (mt e  s2 dt ha)))
               (list (mh n s3 d2))
-              13)))
+              13
+              #f)))
      (test-case
       "follows suit 2"
       (check eq?
@@ -66,13 +67,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (sa dk d7)
                     (s3 d2 d9)
                     (sk dq d6))
-               13))))
+               13
+               #f))))
      (test-exn "Notices garbage in hand"
                exn:fail:contract?
                (lambda ()
                  (choose-card (make-history (car *seats*))
                               (list (list 77))
-                              13)))
+                              13
+                              #f)))
      (test-exn "Notices card in both history and hand"
                exn:fail:contract?
                (lambda ()
@@ -80,7 +83,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (make-history
                    (list (mt n  dt s2 ha)))
                   (list (mh s3 ha))
-                  13)))
+                  13
+                  #f)))
      (test-exn "Can't remove non-existant card from hand"
                exn:fail:contract?
                (lambda ()
