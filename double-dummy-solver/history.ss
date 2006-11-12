@@ -9,7 +9,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only "card.ss" card-suit)
-         (only (lib "1.ss" "srfi" ) every append-map remove drop-right list-copy)
+         (only (lib "1.ss" "srfi" )
+               append-map
+               drop-right
+               every
+               fold
+               list-copy
+               remove
+               )
          (all-except "trick.ss" whose-turn)
          (rename "trick.ss" trick:whose-turn whose-turn)
          (lib "trace.ss"))
@@ -33,7 +40,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (loop (add1 printed)
             (cdr tricks))))
   (when (history-complete? history)
-    (fprintf port "~%Score: ~a~%" (compute-score history))))
+    (fprintf port "~%Score: ~a~%" (score-by-pairs (compute-score history)))))
 
 (define-values (s:history make-history history? s:history-ref history-set!)
   (make-struct-type 'history #f 2 0 #f
@@ -151,5 +158,21 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (map (lambda (seat)
            (cons seat
                  (hash-table-get tricks-by-seat seat 0)))
-              *seats*)))
+         *seats*)))
+
+(define (score-by-pairs score-alist)
+  (define (something offset)
+    (let* ((me (list-ref score-alist offset))
+           (partner (list-ref score-alist (+ 2 offset)))
+           (team-name (string->symbol
+                       (string-append
+                        (symbol->string (car me))
+                        (symbol->string (car partner)))))
+           (total (+ (cdr partner)
+                     (cdr me))))
+       (cons team-name total)
+      ))
+  (list (something 0)
+        (something 1))
+  )
 )
