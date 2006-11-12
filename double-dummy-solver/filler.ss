@@ -11,6 +11,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "trace.ss")
 
          (lib "assert.ss" "offby1")
+         (only "card.ss" *suits*)
          (prefix dds: "dds.ss")
          "deck.ss"
          "fill-out-hands.ss"
@@ -169,12 +170,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
        )))
   ))
 (printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
-(parameterize ((*dummy* 'n)
-               (*trump-suit* 's)
-               (*shaddap* #t))
-  (let ((me 's))
-    (let loop ((hands-played 0))
-      (when (< hands-played (*num-hands*))
+(define (random-choice seq)
+  (list-ref seq (random (length seq))))
+(trace random-choice)
+(let loop ((hands-played 0))
+  (when (< hands-played (*num-hands*))
+    (parameterize ((*dummy* (random-choice *seats*))
+                   (*trump-suit* (random-choice (cons #f *suits*)))
+                   (*shaddap* #t))
+      (let ((me (random-choice *seats*)))
+
         (let ((hands
                (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
                      (map (lambda (s) (make-hand '() s)) *seats*))))
