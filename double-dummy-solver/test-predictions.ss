@@ -94,7 +94,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (lambda args #f)
 
           (lambda (hi hands)
-            (printf "~a~%" (compute-score hi))))
+            (printf "~a~%" hi)))
          ))
      (cons #f *suits*)
      ))
