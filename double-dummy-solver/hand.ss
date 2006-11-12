@@ -21,11 +21,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (rename my-make-hand make-hand)
  add-card
  copy
+ display-hand
  empty?
  filter
  hand?
  mh mhs
- ps
  remove-card
  sort!
  sorted
@@ -179,7 +179,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (sort (hand-cards h) card</suit))))
     '?))
 
-(define (ps hand port)
+(define (display-hand hand . port)
+  (if (null? port)
+      (set! port (current-output-port))
+    (set! port (car port)))
   (fprintf port "~a:~%=======================~%" (hand-seat hand))
   (for-each (lambda (holding)
               (define (r->s r)
@@ -190,6 +193,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (display ": " port)
               (display (string-join (map r->s (ranks holding))) port)
               (newline port))
-            (collate hand)))
+            (collate hand))
+  (newline port))
 
 )

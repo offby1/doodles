@@ -6,21 +6,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module filler mzscheme
 (require (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") fold)
+         (only (lib "1.ss" "srfi")
+               every
+               fold)
          (lib "cmdline.ss")
          (lib "trace.ss")
 
          (lib "assert.ss" "offby1")
-         (only "card.ss" *suits*)
+         (only "card.ss"
+               *suits*
+               card-suit
+               )
          (prefix dds: "dds.ss")
          "deck.ss"
          "fill-out-hands.ss"
          "fys.ss"
          (only "hand.ss"
+               cards
                make-hand
                mh
                mhs
-               ps
+               display-hand
                seat
                sorted)
          (only "history.ss"
@@ -33,6 +39,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only "trick.ss"
                rotate-until
                winner/int
+               with-seat-circle
                *seats*
                *trump-suit*)
          "zprintf.ss")
@@ -172,27 +179,49 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
 (define (random-choice seq)
   (list-ref seq (random (length seq))))
-(trace random-choice)
+
+(define (plausible-trump-suit hands)
+  (define (counts-by-suit cards)
+    (fold (lambda (card counts)
+            (let ((probe (assoc card counts)))
+              (set-cdr! probe (add1 (cdr probe)))
+              counts))
+          (list
+           (cons 's  0)
+           (cons 'h  0)
+           (cons 'd  0)
+           (cons 'c  0))
+          (map card-suit cards)))
+  (define (max-count counts)
+    (fold (lambda (count max)
+            (if (> (cdr count)
+                   (cdr max))
+                count
+              max))
+          (car counts)
+          counts))
+
+  (let* ((our-max  (max-count (counts-by-suit (append (cards (list-ref hands 0))
+                                                      (cards (list-ref hands 2))))))
+         (their-max   (max-count (counts-by-suit (append (cards (list-ref hands 1))
+                                                         (cards (list-ref hands 3)))))))
+    (if (and (= 7 (cdr our-max) (cdr their-max)))
+        #f ;; both hands are square?  Then notrump.
+      (car (max-count (list our-max their-max))))))
+
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
     (parameterize ((*dummy* (random-choice *seats*))
-                   (*trump-suit* (random-choice (cons #f *suits*)))
                    (*shaddap* #t))
-      (let ((me (random-choice *seats*)))
+      (let ((me (with-seat-circle (*dummy*) (lambda (circ) (list-ref circ 3))))
+            (hands
+             (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+                   (map (lambda (s) (make-hand '() s)) *seats*))))
+        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*)) (flush-output)
 
-        (let ((hands
-               (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
-                     (map (lambda (s) (make-hand '() s)) *seats*))))
-          (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*)) (flush-output)
-
-          (for-each (lambda (h)
-                      (ps h (current-output-port))
-                      (newline))
-                    hands)
-
-          (newline)
-
-          (printf "Trump suit is ~a~%" (*trump-suit*)) (flush-output)
+        (parameterize ((*trump-suit*  (plausible-trump-suit hands)))
+          (printf "Trump suit is ~a~%" (*trump-suit*))
+          (for-each display-hand hands) (flush-output)
           (dds:play-loop
            (make-history 'w)
            hands
@@ -215,4 +244,5 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (lambda (history hands)
              (printf "We're done.~%~a~%" history)))
           (loop (add1 hands-played)))))))
+
 )

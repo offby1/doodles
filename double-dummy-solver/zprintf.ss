@@ -37,5 +37,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (car (last-pair args)))
 (define (p . args)
   (apply printf args)
+  (flush-output)
   (car (last-pair args)))
 )
