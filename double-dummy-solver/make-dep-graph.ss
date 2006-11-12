@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-#|                                                              quack!!
+#|
 I invoke this thusly:
 
 make deps
