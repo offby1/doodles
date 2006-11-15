@@ -1,14 +1,18 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module filler mzscheme
 (require (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi")
                every
-               fold)
+               first
+               fold
+               second
+               third
+               )
          (lib "cmdline.ss")
          (lib "trace.ss")
 
@@ -23,6 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          "fys.ss"
          (only "hand.ss"
                cards
+               counts-by-suit
                make-hand
                mh
                mhs
@@ -180,69 +185,95 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (random (length seq))))
 
+;; list of hands => (list seat-symbol suit-sym integer)
 (define (plausible-trump-suit hands)
-  (define (counts-by-suit cards)
-    (fold (lambda (card counts)
-            (let ((probe (assoc card counts)))
-              (set-cdr! probe (add1 (cdr probe)))
-              counts))
-          (list
-           (cons 's  0)
-           (cons 'h  0)
-           (cons 'd  0)
-           (cons 'c  0))
-          (map card-suit cards)))
-  (define (max-count counts)
-    (fold (lambda (count max)
-            (if (> (cdr count)
-                   (cdr max))
-                count
-              max))
-          (car counts)
-          counts))
 
-  (let* ((our-max  (max-count (counts-by-suit (append (cards (list-ref hands 0))
-                                                      (cards (list-ref hands 2))))))
-         (their-max   (max-count (counts-by-suit (append (cards (list-ref hands 1))
-                                                         (cards (list-ref hands 3)))))))
-    (if (and (= 7 (cdr our-max) (cdr their-max)))
-        #f ;; both hands are square?  Then notrump.
-      (car (max-count (list our-max their-max))))))
+  ;; (list hand hand) => (seat-sym suit-symbol integer)
+  (define (best-suit h1 h2)
+
+    ;; alist alist -> alist
+    (define (add-counts c1 c2)
+      (let loop ((c1 c1)
+                 (c2 c2)
+                 (result '()))
+        (if (null? c1)
+            result
+          (loop (cdr c1)
+                (cdr c2)
+                (let ((p1 (car c1))
+                      (p2 (car c2)))
+                  (cons (cons (car p1)
+                              (+ (cdr p1)
+                                 (cdr p2)))
+                        result))))))
+
+    (let* ((cbs1 (counts-by-suit h1))
+           (cbs2 (counts-by-suit h2))
+           (counts-by-suit-both-hands (add-counts cbs1 cbs2))
+           (best (fold
+                  (lambda (suit-count-pair best-so-far)
+                    (if (< (cdr suit-count-pair)
+                           (cdr best-so-far))
+                        best-so-far
+                      suit-count-pair))
+                  (car counts-by-suit-both-hands)
+                  counts-by-suit-both-hands)))
+      (cons (if (< (cdr (assoc (car best) cbs1))
+                   (cdr (assoc (car best) cbs2)))
+                (seat h2) (seat h1))
+            (list (car best)
+                  (cdr best)))))
+
+  (let ((our-max (p "our-max: ~s~%" (best-suit
+                                     (list-ref hands 0)
+                                     (list-ref hands 2))))
+        (their-max (p "their-max: ~s~%" (best-suit
+                                         (list-ref hands 1)
+                                         (list-ref hands 3))) ))
+
+    (cond
+     ((and (= 7
+              (third our-max)
+              (third their-max)))
+      #f) ;; both hands are square?  Then notrump.
+     ((< (third our-max) (third their-max))
+      their-max)
+     (else our-max))))
 
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
-    (parameterize ((*dummy* (random-choice *seats*))
-                   (*shaddap* #t))
-      (let ((me (with-seat-circle (*dummy*) (lambda (circ) (list-ref circ 3))))
-            (hands
-             (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
-                   (map (lambda (s) (make-hand '() s)) *seats*))))
-        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*)) (flush-output)
+    (let* ((hands
+            (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+                  (map (lambda (s) (make-hand '() s)) *seats*)))
+           (pts (plausible-trump-suit hands))
+           (me (with-seat-circle (first pts) (lambda (circ) (list-ref circ 1)))))
+      (parameterize ((*dummy*  (with-seat-circle me (lambda (circ) (list-ref circ 1))))
+                     (*shaddap* #t)
+                     (*trump-suit*  (second pts)))
+        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
+        (printf "Trump suit is ~a (of which declarer's side has ~a) ~%" (*trump-suit*) (third pts))
+        (for-each display-hand hands) (flush-output)
+        (dds:play-loop
+         (make-history 'w)
+         hands
+         choose-best-card-no-peeking
+         ;; TODO: find a way to adjust this value so that it's as
+         ;; large as possible while still not taking too long.  Thus
+         ;; on very fast machines we can look ahead further.
+         (*lookahead*)
+         (lambda (history hands)
+           (when (and
+                  (not (history-empty? history))
+                  (hi:trick-complete? history))
+             (let ((t (history-latest-trick history)))
+               (printf "===== ~a won trick ~a with the ~a~%"
+                       (cdr (winner/int t))
+                       (history-length history)
+                       (car (winner/int t))) (flush-output)))
+           #f)
 
-        (parameterize ((*trump-suit*  (plausible-trump-suit hands)))
-          (printf "Trump suit is ~a~%" (*trump-suit*))
-          (for-each display-hand hands) (flush-output)
-          (dds:play-loop
-           (make-history 'w)
-           hands
-           choose-best-card-no-peeking
-           ;; TODO: find a way to adjust this value so that it's as
-           ;; large as possible while still not taking too long.  Thus
-           ;; on very fast machines we can look ahead further.
-           (*lookahead*)
-           (lambda (history hands)
-             (when (and
-                    (not (history-empty? history))
-                    (hi:trick-complete? history))
-               (let ((t (history-latest-trick history)))
-                 (printf "===== ~a won trick ~a with the ~a~%"
-                         (cdr (winner/int t))
-                         (history-length history)
-                         (car (winner/int t))) (flush-output)))
-             #f)
-
-           (lambda (history hands)
-             (printf "We're done.~%~a~%" history)))
-          (loop (add1 hands-played)))))))
+         (lambda (history hands)
+           (printf "We're done.~%~a~%" history)))
+        (loop (add1 hands-played))))))
 
 )

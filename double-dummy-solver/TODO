@@ -80,9 +80,18 @@ greater than one trick, he'll try it.  We should do likewise.
 
 * factor out "distinct" code ...
 
+** sets
+
 Both tricks and hands are essentially sets: they require that they
 never have two of the same card.  Perhaps create a new type that is a
 set, and build tricks and hands on top of that.
+
+** list-max
+
+There are lots of places where I want to find the "maximum" element of
+a list, and I use "fold" to scan the list, and I pass the list's first
+element as the second argument to "fold" ... I should write a general
+max function that takes a < argument.
 
 * find dead code ...
 

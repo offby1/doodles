@@ -1,7 +1,7 @@
 # -*-makefile-*-
 TESTS = tests test-predictions fill-out-hands filler
 
-check: compile
+check:
 	./tests.ss
 	./test-predictions.ss --lookahead 0 --quiet
 	./fill-out-hands.ss

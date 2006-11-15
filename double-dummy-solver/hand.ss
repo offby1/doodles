@@ -21,10 +21,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (rename my-make-hand make-hand)
  add-card
  copy
+ counts-by-suit
  display-hand
  empty?
  filter
  hand?
+ longest-suit
  mh mhs
  remove-card
  sort!
@@ -153,6 +155,31 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (empty? h)
   (null? (hand-cards h)))
+
+;; hand => alist of (cons suit-symbol integer)
+(define (counts-by-suit h)
+  (fold (lambda (card counts)
+          (let ((probe (assoc card counts)))
+            (set-cdr! probe (add1 (cdr probe)))
+            counts))
+        (list
+         (cons 's  0)
+         (cons 'h  0)
+         (cons 'd  0)
+         (cons 'c  0))
+        (map card-suit (hand-cards h))))
+
+;; hand => (cons suit-symbol integer)
+(define (longest-suit h)
+  (let ((c (counts-by-suit h)))
+    (fold (lambda (count max)
+            (if (> (cdr count)
+                   (cdr max))
+                count
+              max))
+          (car c)
+          c)))
+
 
 (define suit car)
 (define ranks cdr)
