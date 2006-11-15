@@ -27,6 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          mc*
          rp
          sp
+         suit->string
          )
 
 (display "$Id$" (current-error-port))
@@ -47,19 +48,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (else r))
            port))
 
+(define (suit->string s)
+  (format "~a"
+          (if (*fancy-suits*)
+              (case s
+                ;; these look reasonably nice on Windows with Lucida Console.
+                ((c) #\u2663)
+                ((d) #\u2666)
+                ((h) #\u2665)
+                ((s) #\u2660))
+            s)))
+
 (define (sp s port)
-  (display
-
-   ;; these look reasonably nice on Windows with Lucida Console.
-
-   (if (*fancy-suits*)
-       (case s
-         ((c) #\u2663)
-         ((d) #\u2666)
-         ((h) #\u2665)
-         ((s) #\u2660))
-     s)
-   port))
+  (display (suit->string s) port))
 
 (define (card-print c port write?)
   (when write? (write-string "<" port))

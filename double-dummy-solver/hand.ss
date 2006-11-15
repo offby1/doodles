@@ -206,21 +206,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (sort (hand-cards h) card</suit))))
     '?))
 
+(define (->stringlist hand)
+  (cons
+   (format "~a:~%=======================~%" (hand-seat hand))
+   (map (lambda (holding)
+          (define (r->s r)
+            (let ((o (open-output-string)))
+              (rp r o)
+              (get-output-string o)))
+          (string-append
+           (suit->string (suit holding))
+           ": "
+           (string-join (map r->s (ranks holding)))))
+
+        (collate hand)))
+  )
+
 (define (display-hand hand . port)
   (if (null? port)
       (set! port (current-output-port))
     (set! port (car port)))
-  (fprintf port "~a:~%=======================~%" (hand-seat hand))
-  (for-each (lambda (holding)
-              (define (r->s r)
-                (let ((o (open-output-string)))
-                  (rp r o)
-                  (get-output-string o)))
-              (sp (suit holding) port)
-              (display ": " port)
-              (display (string-join (map r->s (ranks holding))) port)
+  (for-each (lambda (s)
+              (display s port)
               (newline port))
-            (collate hand))
-  (newline port))
+            (->stringlist hand)))
+
 
 )
