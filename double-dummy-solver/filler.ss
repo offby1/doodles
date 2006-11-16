@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                every
                first
                fold
+               fourth
                second
                third
                )
@@ -25,15 +26,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "deck.ss"
          "fill-out-hands.ss"
          "fys.ss"
-         (only "hand.ss"
-               cards
-               counts-by-suit
-               make-hand
-               mh
-               mhs
-               display-hand
-               seat
-               sorted)
+         "hand.ss"
          (only "history.ss"
                history-empty?
                history-latest-trick
@@ -185,7 +178,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (random (length seq))))
 
-;; list of hands => (list seat-symbol suit-sym integer)
+;; list of hands => (list seat-symbol suit-sym-or-#f integer)
 (define (plausible-trump-suit hands)
 
   ;; (list hand hand) => (seat-sym suit-symbol integer)
@@ -224,22 +217,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (list (car best)
                   (cdr best)))))
 
-  (let ((our-max (p "our-max: ~s~%" (best-suit
-                                     (list-ref hands 0)
-                                     (list-ref hands 2))))
-        (their-max (p "their-max: ~s~%" (best-suit
-                                         (list-ref hands 1)
-                                         (list-ref hands 3))) ))
+  (let ((our-max  (best-suit
+                   (list-ref hands 0)
+                   (list-ref hands 2)))
+        (their-max  (best-suit
+                     (list-ref hands 1)
+                     (list-ref hands 3)) ))
 
     (cond
      ((and (= 7
               (third our-max)
               (third their-max)))
-      #f) ;; both hands are square?  Then notrump.
+      (list (first our-max)
+            #f
+            7)) ;; both hands are square?  Then notrump.  TODO: pick
+                ;; the strongest hand, not just our-max
      ((< (third our-max) (third their-max))
       their-max)
      (else our-max))))
-
+
+(define (display-side-by-side l1 l2 padding port)
+  (port-count-lines! port)
+  (for-each (lambda (s1 s2)
+              (display s1 port)
+              (let-values (((line col pos) (port-next-location port)))
+                (display (make-string (- padding col) #\space) port))
+              (display s2 port)
+              (newline port))
+            l1 l2))
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
     (let* ((hands
@@ -250,9 +255,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (parameterize ((*dummy*  (with-seat-circle me (lambda (circ) (list-ref circ 1))))
                      (*shaddap* #t)
                      (*trump-suit*  (second pts)))
-        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
         (printf "Trump suit is ~a (of which declarer's side has ~a) ~%" (*trump-suit*) (third pts))
-        (for-each display-hand hands) (flush-output)
+        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
+        (let ((hands (rotate-until hands (lambda (hands)
+                                           (eq? (seat (first hands))
+                                                (*dummy*))))))
+          (for-each (lambda (s)
+                      (display (string-append (make-string 30 #\space) s) (current-output-port))
+                      (newline (current-output-port)))
+                    (->stringlist (first hands)))
+          (display-side-by-side (->stringlist (fourth hands))
+                                (->stringlist (second hands))
+                                60
+                                (current-output-port))
+          (for-each (lambda (s)
+                      (display (string-append (make-string 30 #\space) s) (current-output-port))
+                      (newline (current-output-port)))
+                    (->stringlist (third hands))))
+        (flush-output (current-output-port))
         (dds:play-loop
          (make-history 'w)
          hands

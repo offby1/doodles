@@ -19,6 +19,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (rename hand-cards cards)
  (rename hand-seat seat)
  (rename my-make-hand make-hand)
+ ->stringlist
  add-card
  copy
  counts-by-suit
@@ -188,38 +189,43 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (collate h)
   (if (list? (hand-cards h))
-      (reverse
-       (fold (lambda (card output)
-               (cond
-                ((or (null? output)
-                     (not (eq? (card-suit card)
-                               (caar output))))
-                 (cons (list (card-suit card)
-                             (card-rank card))
-                       output))
-                (else
-                 (append! (car output)
-                          (list (card-rank card)))
-                 output)))
-             '()
-             (reverse
-              (sort (hand-cards h) card</suit))))
+      (let* ((ranks-by-suit (make-hash-table))
+             (hash-table-append! (lambda (key value)
+                                   (let ((old (hash-table-get ranks-by-suit key)))
+                                     (hash-table-put! ranks-by-suit key (append old (list value)))))))
+        ;; prime the hash table with all the suits, to ensure that our
+        ;; output always consists of four lists.  This is important
+        ;; for display-side-by-side.
+        (for-each (lambda (s) (hash-table-put! ranks-by-suit s '())) *suits*)
+        (for-each (lambda (c)
+                    (hash-table-append! (card-suit c) (card-rank c)))
+                  (hand-cards h))
+        (sort (hash-table-map
+               ranks-by-suit
+               (lambda (suit-sym ranks)
+                 (cons suit-sym
+                       (sort ranks >))))
+              (lambda (seq1 seq2)
+                (string>? (symbol->string (car seq1))
+                          (symbol->string (car seq2))))))
     '?))
 
 (define (->stringlist hand)
   (cons
-   (format "~a:~%=======================~%" (hand-seat hand))
-   (map (lambda (holding)
-          (define (r->s r)
-            (let ((o (open-output-string)))
-              (rp r o)
-              (get-output-string o)))
-          (string-append
-           (suit->string (suit holding))
-           ": "
-           (string-join (map r->s (ranks holding)))))
+   (format "~a:" (hand-seat hand))
+   (cons
+    "======================="
+    (map (lambda (holding)
+           (define (r->s r)
+             (let ((o (open-output-string)))
+               (rp r o)
+               (get-output-string o)))
+           (string-append
+            (suit->string (suit holding))
+            ": "
+            (string-join (map r->s (ranks holding)))))
 
-        (collate hand)))
+         (collate hand))))
   )
 
 (define (display-hand hand . port)
