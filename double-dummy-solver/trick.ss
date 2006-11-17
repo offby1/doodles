@@ -228,6 +228,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (cdr (winner/int t)))
 
 ;; returns (cons card seat)
+
+;; TODO -- consider keeping statistics on whether the players followed
+;; the dictum "second hand low; third hand high".  It might turn out
+;; that they mostly do, which would be cool, since I never explcitily
+;; taught them to.
 (define (winner/int t)
   (assert (trick-complete? t))
   (vector-fold

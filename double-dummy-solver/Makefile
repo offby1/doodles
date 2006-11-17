@@ -3,8 +3,11 @@ TESTS = tests test-predictions fill-out-hands filler
 
 check:
 	./tests.ss
+	@echo -e '\f'
 	./test-predictions.ss --lookahead 0 --quiet
+	@echo -e '\f'
 	./fill-out-hands.ss
+	@echo -e '\f'
 	./filler.ss --lookahead 0 --seconds-per-card 1/2 --number-of-hands 1
 
 profile: clean
