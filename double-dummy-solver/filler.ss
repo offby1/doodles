@@ -32,14 +32,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                history-latest-trick
                history-length
                hi:trick-complete?
-               make-history)
+               make-history
+               whose-turn)
          "run-for-a-while.ss"
-         (only "trick.ss"
-               rotate-until
-               winner/int
-               with-seat-circle
-               *seats*
-               *trump-suit*)
+         (all-except "trick.ss" whose-turn)
          "zprintf.ss")
 
 ;; given a history and partially-known hands, generate a random
@@ -245,6 +241,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (display s2 port)
               (newline port))
             l1 l2))
+(*shaddap* #t)
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
     (let* ((hands
@@ -253,7 +250,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (pts (plausible-trump-suit hands))
            (me (with-seat-circle (first pts) (lambda (circ) (list-ref circ 1)))))
       (parameterize ((*dummy*  (with-seat-circle me (lambda (circ) (list-ref circ 1))))
-                     (*shaddap* #t)
+
                      (*trump-suit*  (second pts)))
         (printf "Trump suit is ~a (of which declarer's side has ~a) ~%" (*trump-suit*) (third pts))
         (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
@@ -276,7 +273,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (dds:play-loop
          (make-history 'w)
          hands
-         choose-best-card-no-peeking
+         (lambda (history hands max-lookahead quick-and-dirty?)
+            (parameterize ((*shaddap* (not (and (= 9 (history-length history))
+                                                (eq? 'e (whose-turn history))))))
+              (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)))
          ;; TODO: find a way to adjust this value so that it's as
          ;; large as possible while still not taking too long.  Thus
          ;; on very fast machines we can look ahead further.
