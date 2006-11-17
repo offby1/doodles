@@ -28,6 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "fys.ss"
          "hand.ss"
          (only "history.ss"
+               cs2
                history-empty?
                history-latest-trick
                history-length
@@ -126,10 +127,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (newline (current-error-port)) (flush-output (current-error-port))
         (let ((alist (hash-table-map counts-by-choice cons)))
           (if (null? alist)
-              (begin
-                (printf "Oops -- no results.  Not enough time.  Buy a bigger computer.  Falling back to ~a~%" fallback)
-                (flush-output)
-                fallback)
+              fallback
             (let ((max (fold (lambda (new so-far)
                                (if (< (cdr so-far)
                                       (cdr new))
@@ -146,10 +144,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  "filler"
  (current-command-line-arguments)
  (once-each
-
-  ;;Seeing octal escapes in Emacs?  Try C-x RET c utf-8 RET M-x make
-  ;;And use Lucida Console, if your terminal is running on Windows; on
-  ;;*nix, '10x20' from Emacs' font menu also works
   (("-s" "--seconds-per-card") spc
    "How long to think about each card"
    (*seconds-per-card* (string->number spc)))
@@ -167,9 +161,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (if (eof-object? datum)
              (current-pseudo-random-generator
               (vector->pseudo-random-generator (list->vector (reverse ints))))
-           (loop (cons datum ints))))
-       )))
-  ))
+           (loop (cons datum ints)))))))))
 (printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
 (define (random-choice seq)
   (list-ref seq (random (length seq))))
@@ -274,9 +266,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (make-history 'w)
          hands
          (lambda (history hands max-lookahead quick-and-dirty?)
-            (parameterize ((*shaddap* (not (and (= 9 (history-length history))
-                                                (eq? 'e (whose-turn history))))))
-              (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)))
+
+           ;; have it tell me what it's thinking when this hand plays
+           ;; to this trick, but shaddap otherwise.
+           (parameterize ((*shaddap* (not (and (= 2 (history-length history))
+                                               (eq? 'e (whose-turn history))))))
+
+             (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)))
          ;; TODO: find a way to adjust this value so that it's as
          ;; large as possible while still not taking too long.  Thus
          ;; on very fast machines we can look ahead further.
@@ -293,7 +289,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            #f)
 
          (lambda (history hands)
-           (printf "We're done.~%~a~%" history)))
+           (printf "We're done.~%~aSuits taken by seat: ~a~%" history (cs2 history))))
         (loop (add1 hands-played))))))
 
 )

@@ -146,6 +146,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
        rv h))
     rv))
 
+(define (cs2 h)
+  (check-type 'cs2 history? h)
+  (let ((tricks-by-suit-by-seat (make-hash-table 'equal)))
+    (define (hash-table-increment! key)
+      (let ((v (hash-table-get tricks-by-suit-by-seat key 0)))
+        (hash-table-put! tricks-by-suit-by-seat key (add1 v))))
+    (for-each (lambda (t)
+                (let* ((w (winner/int t))
+                       (c (car w))
+                       (s (cdr w))
+                       (team
+                        (case s
+                          ((n s) 'ns)
+                          (else 'ew))))
+                  (hash-table-increment! (cons team (card-suit c)))))
+              (history-tricks h))
+    ;; (((h . e) . 1) ((d . n) . 1) ...)
+    (sort (hash-table-map tricks-by-suit-by-seat cons)
+          (lambda (a b)
+            (string>? (symbol->string (caar a))
+                      (symbol->string (caar b)))))))
+
 (define (compute-score h)
   (check-type 'compute-score history? h)
   (let ((tricks-by-seat (make-hash-table)))
