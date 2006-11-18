@@ -96,20 +96,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; nondestructive.  Take CARD from (car HANDS), and move it into the
 ;; history.  Return that new history, and the new set of hands, with
-;; the card gone, and with the hands rotated one notch.
+;; the card gone, and with the hands rotated so that the next player
+;; to play is in front.
 (define (play-card history hands c)
   (let ((h (car hands)))
     (unless (member c (ha:cards h))
       (error 'play-card  "~a is not from the first of ~a" c  hands ))
-    (let* ((new-hand    (ha:remove-card h c))
-           (new-history (add-card history c))
-           (new-hand-list (cons new-hand (cdr hands)))
+    (let* ((new-history (add-card history c))
+           (hands (cons (ha:remove-card h c) (cdr hands)))
            (rotated (if (and (not (history-complete? new-history))
                              (hi:trick-complete? new-history))
-                        (rotate-until new-hand-list (lambda (h)
+                        (rotate-until hands (lambda (h)
                                                       (eq? (ha:seat (car h))
                                                            (history:whose-turn new-history))))
-                      (rotate new-hand-list 1))))
+                      (rotate hands 1))))
 
       ;; just for fun, see if the winner took a finesse.
       (when (hi:trick-complete? new-history)
@@ -129,8 +129,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (rho (with-seat-circle lho caddr))
 
                  (enemy-holding
-                  (append (ha:cards (hand-of lho new-hand-list))
-                          (ha:cards (hand-of rho new-hand-list))))
+                  (append (ha:cards (hand-of lho hands))
+                          (ha:cards (hand-of rho hands))))
                  (suckers (filter (lambda (en)
                                     (and (eq? (card-suit en)
                                               (card-suit (trick-ref t 0)))

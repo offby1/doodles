@@ -121,31 +121,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (eq? (seat (car hands))
                     (whose-turn history))))))))))
 ;;(trace fill-out-hands)
-(when #f
-  (parameterize ((current-pseudo-random-generator (make-pseudo-random-generator)))
-    (random-seed 0)
-    (for-each
-     (lambda (d)
-       (for-each (lambda (h)
-                   (sort! h))
-                 d)
-       (display d)
-       (newline))
-     (let loop ((deals '()))
-       (if (= 10 (length deals))
-           deals
-         (loop (cons (fill-out-hands
-                      (list (mh n ?)
-                            (mh e ?)
-                            (mh s ?)
-                            (mh w ?)
-                            )
-                      (make-history 'n))
-                     deals)))))))
-
-;; (printf "Here are some random numbers, to see that we haven't clobbered the default RNG:~%")
-;; (printf "These should be different every time you run this test.~%")
-;; (printf "~a~%" (map (lambda ignored (random)) (iota 5)))
 
 (exit-if-failed
  (test/text-ui

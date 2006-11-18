@@ -41,7 +41,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; given a history and partially-known hands, generate a random
 ;; conforming hand, then figure the best card for the first player.
-(define (choose-chard history handset max-lookahead)
+(define (choose-card history handset max-lookahead)
   (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead #f))
 
 (define (mask-out handset me dummy opening-lead?)
@@ -105,40 +105,43 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define me  (seat (car hands)))
   (let* ((hands (mask-out hands me (*dummy*) (history-empty? history)))
          (fallback (dds:choose-card history hands 0 #t)))
-    (p "~a plays ~a~%~%" me
-    (if quick-and-dirty? fallback
-      (begin
-        (for-each
-         (lambda (c)
-           (hash-table-put!
-            counts-by-choice
-            c
-            (add1 (hash-table-get counts-by-choice c 0))))
-         (map car
-              (run-for-a-while
-               (lambda ()
-                 (choose-chard history
-                               hands
-                               max-lookahead))
-               (*seconds-per-card*)
-               (lambda (seconds-remaining)
+    (p "~a plays ~a~%" me
+       (if quick-and-dirty? fallback
+         (begin
+           (for-each
+            (lambda (c)
+              (hash-table-put!
+               counts-by-choice
+               c
+               (add1 (hash-table-get counts-by-choice c 0))))
+            (map car
+                 (run-for-a-while
+                  (lambda ()
+                    (choose-card history
+                                 hands
+                                 max-lookahead))
+                  (*seconds-per-card*)
+                  (lambda (seconds-remaining)
                     (fprintf (current-error-port) ".")
-                 (flush-output (current-error-port)))
-               )))
-        (newline (current-error-port)) (flush-output (current-error-port))
-        (let ((alist (hash-table-map counts-by-choice cons)))
-          (if (null? alist)
-              fallback
-            (let ((max (fold (lambda (new so-far)
-                               (if (< (cdr so-far)
-                                      (cdr new))
-                                   new
-                                 so-far))
-                             (car alist)
-                             alist))
-                  (num-trials (exact->inexact (apply + (map cdr alist)))))
-              (flush-output)
-                 (car max)))))))
+                    (flush-output (current-error-port)))
+                  )))
+           (let ((alist (hash-table-map counts-by-choice cons)))
+             (if (null? alist)
+                 (begin
+                   (fprintf (current-error-port) "!") (flush-output (current-error-port))
+                   fallback)
+               (let* ((sorted (sort alist (lambda (a b)
+                                            (> (cdr a)
+                                               (cdr b)))))
+                      (best (first sorted)))
+
+                 (when (< 1 (length sorted))
+                   (let ((2nd-best (second sorted)))
+                     (printf "(Second-best choice was ~a, at ~a%) "
+                             (car 2nd-best)
+                             (round (* 100.0 (/ (cdr 2nd-best)
+                                         (cdr best)))))))
+                 (car best)))))))
     ))
 ;(trace choose-best-card-no-peeking)
 (command-line
@@ -154,15 +157,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-n" "--number-of-hands") h
    "Number of hands to play"
    (*num-hands* (string->number h)))
-  (("-r" "--rng") six-ints
-   "pseudo-random-generator vector (six integers)"
-   (let ((inp (open-input-string six-ints)))
-     (let loop ((ints '()))
-       (let ((datum (read inp)))
-         (if (eof-object? datum)
-             (current-pseudo-random-generator
-              (vector->pseudo-random-generator (list->vector (reverse ints))))
-           (loop (cons datum ints)))))))))
+  (("-r" "--rng") vec
+   "pseudo-random-generator vector like #6(1888977131 3014825601 3849035281 163056249 698545751 4293483726)"
+   (current-pseudo-random-generator
+    (vector->pseudo-random-generator (read (open-input-string vec)))))))
 (printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
 (define (random-choice seq)
   (list-ref seq (random (length seq))))
@@ -246,7 +244,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                      (*trump-suit*  (second pts)))
         (printf "Trump suit is ~a (of which declarer's side has ~a) ~%" (*trump-suit*) (third pts))
-        (printf "I am ~s, dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
+        (printf "~s makes the opening lead; dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
         (let ((hands (rotate-until hands (lambda (hands)
                                            (eq? (seat (first hands))
                                                 (*dummy*))))))
@@ -270,8 +268,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
            ;; have it tell me what it's thinking when this hand plays
            ;; to this trick, but shaddap otherwise.
-           (parameterize ((*shaddap* (not (and (= 2 (history-length history))
-                                               (eq? 'e (whose-turn history))))))
+           (parameterize ((*shaddap* (or #t
+                                         (not (and (= 2 (history-length history))
+                                                   (eq? 'e (whose-turn history)))))))
 
              (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)))
          ;; TODO: find a way to adjust this value so that it's as

@@ -71,6 +71,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (format "wanted one of ~s, not " allowed)
           s))
        s))))
+
 (define (rotate seq steps)
   (if (positive? steps)
       (rotate (append (cdr seq)
