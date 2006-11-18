@@ -105,6 +105,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define me  (seat (car hands)))
   (let* ((hands (mask-out hands me (*dummy*) (history-empty? history)))
          (fallback (dds:choose-card history hands 0 #t)))
+    (p "~a plays ~a~%~%" me
     (if quick-and-dirty? fallback
       (begin
         (for-each
@@ -121,7 +122,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                max-lookahead))
                (*seconds-per-card*)
                (lambda (seconds-remaining)
-                 (fprintf (current-error-port) "~a" seconds-remaining)
+                    (fprintf (current-error-port) ".")
                  (flush-output (current-error-port)))
                )))
         (newline (current-error-port)) (flush-output (current-error-port))
@@ -136,9 +137,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (car alist)
                              alist))
                   (num-trials (exact->inexact (apply + (map cdr alist)))))
-              (printf "~a plays ~a~%~%" me (car max))
               (flush-output)
-              (car max))))))))
+                 (car max)))))))
+    ))
 ;(trace choose-best-card-no-peeking)
 (command-line
  "filler"
@@ -263,7 +264,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (->stringlist (third hands))))
         (flush-output (current-output-port))
         (dds:play-loop
-         (make-history 'w)
+         (make-history me)
          hands
          (lambda (history hands max-lookahead quick-and-dirty?)
 
