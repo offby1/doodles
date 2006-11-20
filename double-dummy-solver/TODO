@@ -1,16 +1,5 @@
 -*- outline -*-
 
-* make more deterministic
-
-For testing, it'd be nice if the results were repeatable.  But now,
-they're not quite, since the result can depend on how long a
-particular thread runs, and that's not exactly controllable.  So it
-might be nice to replace (or amend) the --seconds-per-card parameter
-with --trials-per-card, which takes an integer; we'd always do that
-many trials ... but we'd still need a timeout to prevent it from
-running forever if max-lookahead is high ... I think that'd be not
-_quite_ deterministic, but close enough.
-
 * parallelize!
 
 Maybe termite (http://toute.ca) will let me predict scores from two
