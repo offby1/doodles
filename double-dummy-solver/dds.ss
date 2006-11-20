@@ -162,7 +162,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    summarize-proc
                    )
   (define (inner history hands max-lookahead counter)
-    (let ((trick-number (add1 (quotient counter 4)))
+    (let ((trick-number (add1 (quotient counter (length hands))))
           (ha (car hands))
           (rv (termination-proc history hands)))
 

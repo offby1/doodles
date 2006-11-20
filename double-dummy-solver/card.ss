@@ -12,6 +12,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (only (lib "misc.ss" "swindle") memoize!))
 (provide (rename my-make-card make-card)
          *num-ranks*
+         *num-suits*
          *suits*
          *fancy-suits*
          card->number
@@ -91,7 +92,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                  (integer? rank)
                  (<= 2 rank (add1 *num-ranks*)))
       (error 'make-card
-             "second slot must be a number 'twixt 2 and 14, not ~s" rank))
+             "second slot must be a number 'twixt 2 and ~a, not ~s" (add1 *num-ranks*) rank))
     (make-card rank suit)))
 
 (define (cards= a b)

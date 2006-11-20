@@ -56,6 +56,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (newline (current-error-port))
 
 (define *seats* '(n e s w))
+(assert (zero? (remainder (* *num-suits* *num-ranks*) (length *seats*))))
 (define (seat< a b)
   (> (length (memq a *seats*))
      (length (memq b *seats*))))
@@ -117,7 +118,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (list (cons prop:custom-write trick-print)) #f))
 (define (trick-card-seat-pairs t) (s:trick-ref t 0))
 (define (trick-complete?       t)
-  (= 4 (vector-length (trick-card-seat-pairs t))))
+  (= (length *seats*) (vector-length (trick-card-seat-pairs t))))
 
 (define (my-is-trick? thing)
   (and (trick? thing)

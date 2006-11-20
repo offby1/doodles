@@ -11,7 +11,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
  (lib "trace.ss")
  (lib "assert.ss" "offby1")
- (only "card.ss" cards=)
+ (only "card.ss"
+       cards=
+       *num-ranks*
+       *suits*
+       )
  "deck.ss"
  (only "hand.ss"
        cards
@@ -129,20 +133,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    (test-equal?
     "52 cards returned"
-    52
     (length
-     (apply
-      lset-union
-      cards=
-      (map
-       cards
-       (fill-out-hands
-        *test-handset*
-        (make-history 'e))))))
+        (apply
+         lset-union
+         cards=
+         (map
+          cards
+          (fill-out-hands
+           *test-handset*
+           (make-history 'e)))))
+    (*  (length *suits*)  *num-ranks*))
 
    (test-equal?
     "52, part deux"
-    52
     (length
      (apply
       lset-union
@@ -155,7 +158,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (mh s ?)
               (mh w ?)
               )
-        (make-history 's))))))
+        (make-history 's)))))
+    (* (length *suits*) *num-ranks*))
 
    (test-exn "Requires four args"
              exn:fail:contract?

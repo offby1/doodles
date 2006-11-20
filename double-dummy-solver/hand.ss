@@ -163,11 +163,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (let ((probe (assoc card counts)))
             (set-cdr! probe (add1 (cdr probe)))
             counts))
-        (list
-         (cons 's  0)
-         (cons 'h  0)
-         (cons 'd  0)
-         (cons 'c  0))
+        (map (lambda (suit-sym)
+                (cons suit-sym 0))
+              *suits*)
         (map card-suit (hand-cards h))))
 
 ;; hand => (cons suit-symbol integer)

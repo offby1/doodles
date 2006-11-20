@@ -8,7 +8,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require (lib "assert.ss" "offby1")
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
-         (only "card.ss" card-suit)
+         (only "card.ss"
+               *num-ranks*
+               *num-suits*
+               card-suit
+               )
          (only (lib "1.ss" "srfi" )
                append-map
                drop-right
@@ -101,7 +105,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (suit-led h)
   (card-suit (trick-ref (history-latest-trick h) 0)))
 (define (history-complete? h)
-  (and (= 13 (history-length h))
+  (and (= (/ (* *num-ranks* *num-suits*) (length *seats*)) (history-length h))
        (hi:trick-complete? h)))
 (define (history-card-set h)
   (append-map trick-cards (history-tricks h)))
