@@ -241,10 +241,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (pts (plausible-trump-suit hands))
            (me (with-seat-circle (first pts) (lambda (circ) (list-ref circ 1)))))
       (parameterize ((*dummy*  (with-seat-circle me (lambda (circ) (list-ref circ 1))))
-
                      (*trump-suit*  (second pts)))
         (printf "Trump suit is ~a (of which declarer's side has ~a) ~%" (*trump-suit*) (third pts))
-        (printf "~s makes the opening lead; dummy is ~a~%The hands are:~%" me (*dummy*))(flush-output)
+        (printf "~s makes the opening lead; dummy is ~a~%" me (*dummy*))(flush-output)
+        (printf "The hands are:~%~a" #\page)
         (let ((hands (rotate-until hands (lambda (hands)
                                            (eq? (seat (first hands))
                                                 (*dummy*))))))
