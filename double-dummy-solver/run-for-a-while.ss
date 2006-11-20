@@ -17,6 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  call/timeout
  run-for-a-while
+ run-until-N-values
  )
 
 (define (->list ch)
@@ -61,6 +62,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (loop)))
    seconds
    progress-callback))
+
+;; like the above, but stops after the thunk has generated N values,
+;; rather than after a particular amount of time.  More
+;; determinisitic, and hence useful for testing.  Ignores
+;; PROGRESS-CALLBACK for now, since I'm too lazy to figure out what to
+;; do with it.
+(define (run-until-N-values thunk N . progress-callback)
+  (let loop ((N N)
+             (result '()))
+    (if (positive? N)
+        (loop (sub1 N)
+              (cons (call-with-values thunk list) result))
+      (reverse result))))
 
 (let ((lotsa-random-numbers? (lambda (thing)
                                ;; THING should be a list of random
