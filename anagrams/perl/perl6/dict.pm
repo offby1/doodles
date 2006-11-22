@@ -42,7 +42,7 @@ sub acceptable (Str $word) returns Bool {
 # really slow.  And note that it doesn't count lines read from the
 # file, nor does it count values stored in the hash; rather, it counts
 # the number of distinct keys in the hash.
-my $max_size = 2000;
+my $max_size = 20;
 
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
@@ -65,7 +65,8 @@ sub snarf_wordlist {
 
 my $cache_file_name = "dict.cache";
 if (-f $cache_file_name) {
-  %dict_hash = open("dict.cache").slurp.eval;
+#  %dict_hash = open("dict.cache").slurp.eval;
+  %dict_hash = open("dict.cache").slurp.eval(:lang<yaml>);
   say "Slurped $cache_file_name";
 } else {
   say "Slurping word list ...";
@@ -73,7 +74,8 @@ if (-f $cache_file_name) {
   {
     my $cache = open($cache_file_name, :w)
       or die "Can't open $cache_file_name for writing 'cuz $!; stopped";
-    $cache.print(%dict_hash.perl);
+    $cache.print(%dict_hash.yaml);
+#    $cache.print(%dict_hash.perl);
     say "Wrote $cache";
     close ($cache) or die "Closing $cache";
   }
