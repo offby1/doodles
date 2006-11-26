@@ -1,3 +1,9 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module misc mzscheme
   (provide
    index

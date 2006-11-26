@@ -1,3 +1,9 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mred -qu "$0" ${1+"$@"}
+|#
+
 (module interactive-call mzscheme
   (require (lib "class.ss"))
   (require (lib "mred.ss" "mred"))
@@ -9,7 +15,7 @@
   (provide make-bbox-window
            reset-buttons-for-new-auction
            interactively-get-call)
-  
+
   (define *choice* #f)
   (define *sem* (make-semaphore))
 
@@ -21,7 +27,7 @@
   (define (make-bbox-window parent)
     (when *bidding-box-window*
       (error "I expected *bidding-box-window* to be #f"))
-    (set! *bidding-box-window* 
+    (set! *bidding-box-window*
           (instantiate frame% ()
             (parent parent)
             (enabled #t)
@@ -72,7 +78,7 @@
     (send (cdr (assq 'double   *call/button-alist*)) enable #f)
     (send (cdr (assq 'redouble *call/button-alist*)) enable #f)
     )
-  
+
   (define interactively-get-call #f)
 
   (define (make-choice-button label parent value enabled?)
@@ -112,7 +118,7 @@
             (send *bidding-box-window* show #t)
             (yield *sem*)
             *choice*)))
-  
+
   (when #f
     ;; a very short auction :-\
     (make-bbox-window #f)

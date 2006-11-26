@@ -1,18 +1,24 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module auction mzscheme
   (require (all-except (lib "1.ss" "srfi") reverse! member map
                        for-each assoc append!))
   (require "call.ss")
   (require "misc.ss")
 
-  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
-  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2)))
+  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
 
   (provide (rename public-make-auction make-auction)
            note-call
            contract-settled?
            last-bid
            whose-turn)
-  
+
   ;; Note that the calls are stored in reverse order -- that is,
   ;; (first calls) is the last call that was made.
   (define-struct auction (dealer calls))
@@ -27,7 +33,7 @@
 
   (define (note-call a call)
     (set-auction-calls! a (cons call (auction-calls a))))
-  
+
   (define (contract-settled? a)
     (let ((c (auction-calls a)))
       (and (< 3 (length c))
@@ -45,57 +51,57 @@
                (index (auction-dealer a)
                       *compass-directions*))))
   (test/text-ui
-   (make-test-suite
+   (test-suite
     "everything"
 
-    (make-test-case
+    (test-case
      "uh ..."
      (let ((a (public-make-auction 'south)))
-       (assert-eq? 'south (whose-turn a))
-       (assert-false (contract-settled? a))
-       (assert-false (last-bid a))
-       (assert-pred null? (auction-calls a))
+       (check-eq? 'south (whose-turn a))
+       (check-false (contract-settled? a))
+       (check-false (last-bid a))
+       (check-pred null? (auction-calls a))
        ))
 
-    (make-test-case
+    (test-case
      "err ..."
      (let ((a (public-make-auction 'south)))
        (note-call a 'pass)
-       (assert-eq? 'west (whose-turn a))
-       (assert-false (contract-settled? a))
-       (assert-false (last-bid a))
-       (assert-equal? 1  (length (auction-calls a)))
+       (check-eq? 'west (whose-turn a))
+       (check-false (contract-settled? a))
+       (check-false (last-bid a))
+       (check-equal? 1  (length (auction-calls a)))
        ))
 
 
-    (make-test-case
+    (test-case
      "em ..."
      (let ((a (public-make-auction 'south)))
        (note-call a 'pass)
        (note-call a 'pass)
        (note-call a 'pass)
        (note-call a 'pass)
-       (assert-true (contract-settled? a))
-       (assert-false (last-bid a))
-       (assert-equal? 4  (length (auction-calls a)))
+       (check-true (contract-settled? a))
+       (check-false (last-bid a))
+       (check-equal? 4  (length (auction-calls a)))
        ))
 
-    (make-test-case
+    (test-case
      "em ..."
      (let ((a (public-make-auction 'south)))
        (note-call a (make-bid 1 'spade))
        (note-call a 'pass)
        (note-call a 'pass)
        (note-call a 'pass)
-       (assert-true (contract-settled? a))
+       (check-true (contract-settled? a))
        (let ((expected (make-bid 1 'spade)))
-         (assert string=?
+         (check string=?
                  (call->string expected)
                  (call->string (last-bid a)))
-         (assert-equal? 4  (length (auction-calls a))))
+         (check-equal? 4  (length (auction-calls a))))
        ))
 
-    (make-test-case
+    (test-case
      "geez ..."
      (let ((a (public-make-auction 'south)))
        (note-call a (make-bid 1 'spade))
@@ -103,11 +109,11 @@
        (note-call a 'pass)
        (note-call a (make-bid 2 'diamonds))
        (note-call a 'pass)
-       (assert-false (contract-settled? a))
+       (check-false (contract-settled? a))
        (let ((expected (make-bid 2 'diamonds)))
-         (assert string=?
+         (check string=?
                  (call->string expected)
                  (call->string (last-bid a)))
-         (assert-equal? 5  (length (auction-calls a))))
-       (assert-eq? 'west (whose-turn a))
+         (check-equal? 5  (length (auction-calls a))))
+       (check-eq? 'west (whose-turn a))
        )))))

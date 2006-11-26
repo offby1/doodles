@@ -1,6 +1,12 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module call mzscheme
-  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 1)))
-  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1)))
+  (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2)))
+  (require (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
   (require "misc.ss")
 
   (provide call->string
@@ -24,7 +30,7 @@
     (if (bid? c)
         (bid->string c)
       (format "~A" c)))
-    
+
   (define (calls-equal? c1 c2)
     (if (bid? c1)
         (and (bid? c2)
@@ -42,11 +48,11 @@
   (define (bid> b1 b2)
     (and (not (calls-equal? b1 b2))
          (not (bid< b1 b2))))
-  
+
   (test/text-ui
-   (make-test-suite
+   (test-suite
     "Evahthang"
-    (make-test-case
+    (test-case
      "uh ..."
      (let ((b1 (make-bid 1 'notrump))
            (b2 (make-bid 1 'notrump))
@@ -54,22 +60,22 @@
            (p1 'pass)
            (p2 'pass)
            (d  'double))
-       (assert-true (calls-equal? b1 b2))
-       (assert-false (calls-equal? b2 b3))
-       (assert-false (calls-equal? b1 b3))
-       (assert-false (calls-equal? b1 p1))
-       (assert-true  (calls-equal? p1 p2)))
+       (check-true (calls-equal? b1 b2))
+       (check-false (calls-equal? b2 b3))
+       (check-false (calls-equal? b1 b3))
+       (check-false (calls-equal? b1 p1))
+       (check-true  (calls-equal? p1 p2)))
      )
-    (make-test-case
+    (test-case
      ">"
      (begin
-       (assert-true (bid< (make-bid 1 'spades)
+       (check-true (bid< (make-bid 1 'spades)
                           (make-bid 1 'notrump)))
-       (assert-false (bid< (make-bid 1 'notrump)
+       (check-false (bid< (make-bid 1 'notrump)
                            (make-bid 1 'notrump)))
-       (assert-true (bid> (make-bid 1 'notrump)
+       (check-true (bid> (make-bid 1 'notrump)
                           (make-bid 1 'spades)))
-       (assert-false (bid> (make-bid 4 'diamonds)
+       (check-false (bid> (make-bid 4 'diamonds)
                            (make-bid 4 'diamonds)))))
     ))
   )
