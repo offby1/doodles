@@ -381,13 +381,7 @@ exec mred -qu "$0" ${1+"$@"}
          (set! *menu-items* (cons mi *menu-items*))
          mi))))
 
-  (define disable-all-menu-items
-    (lambda ()
-      (for-each (lambda (mi)
-                  (send mi enable #f))
-                *menu-items*)))
-
-  (menite "&Exit" (exit))
+  (define exit-menu-item (menite "&Exit" (exit)))
 
   (define sort-menu-item
     (menite
@@ -397,12 +391,14 @@ exec mred -qu "$0" ${1+"$@"}
   (define deal-menu-item
     (menite
      "&Deal"
-     (disable-all-menu-items)
      (deal)
-     (send deal-menu-item enable #t)
-     (send sort-menu-item enable #t)
-     (send auction-menu-item enable #t)))
+     (for-each (lambda (m) (send m enable #t))
+               (list
+                deal-menu-item
+                sort-menu-item
+                auction-menu-item))))
 
+  (send exit-menu-item enable #t)
   (make-bbox-window *t*)
   (define auction-menu-item
     (menite
