@@ -10,3 +10,19 @@ How to run it:
   program will draw a table on the screen, and you're off.
 
 There's a similar-looking program at http://abridgegame.org/.
+
+--
+
+If you build it standalone with `mzc --gui-exe bridge bridge.ss', you
+may find that it fails with
+
+    collection-path: collection not found: #<path:games/cards> in any of: ()
+
+     === context ===
+    cloop
+    #f::353: loop
+
+I know of no simple fix, but the problem is described, and a rather
+complex fix is suggested, at
+
+    http://permalink.gmane.org/gmane.lisp.scheme.plt/15819
