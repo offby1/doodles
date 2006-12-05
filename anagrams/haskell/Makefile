@@ -1,7 +1,7 @@
 PROG := anagrams
 PROF_PROG := profiled-anagrams
 
-INPUT :=  Hemingway
+INPUT :=  Ernest Hemingway
 PROF_OUTPUT := $(PROG).prof
 CLEANFILES := $(PROG) $(PROF_OUTPUT) $(PROF_PROG)
 
