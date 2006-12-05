@@ -3,13 +3,22 @@
 A grab bag of ideas that are applicable to all the implementations,
 but probably appear only in some.
 
+* Don't list all anagrams -- use "delay"
+
+Rather than listing all the anagrams, instead just list the words that
+can be made from the bag, and next to each word, provide a thunk which
+will generate the remaining anagrams.  This should save a lot of time
+if you're just looking for funny anagrams -- you'll get a list of
+perhaps 100 words that can be made from the bag; you'll choose one,
+the thunk will run, and you start over.
+
 * Use a simple string of sorted letters as the bag.
 
 This isn't necessarily better than any other method for all
-implementations, but it seems the best for Perl, since it can be used
-as a hash key (convenient when reading the dictionary).  And anyway,
-subtracting two such things ought to be fast, assuming that substr is
-fast.
+implementations, but it seems the best for Perl 5, since it can be
+used as a hash key (convenient when reading the dictionary).  And
+anyway, subtracting two such things ought to be fast, assuming that
+substr is fast.
 
 And yet I tried this first when writing the C++ version.  It worked
 OK, but I then tried using bignums ... and they were twice as fast.

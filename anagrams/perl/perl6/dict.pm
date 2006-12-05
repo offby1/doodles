@@ -42,7 +42,7 @@ sub acceptable (Str $word) returns Bool {
 # really slow.  And note that it doesn't count lines read from the
 # file, nor does it count values stored in the hash; rather, it counts
 # the number of distinct keys in the hash.
-my $max_size = 20;
+my $max_size = 1000;
 
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)

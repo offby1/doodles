@@ -1,21 +1,67 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id: fill-out-hands.ss 3030 2006-10-16 03:52:36Z erich $
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+|#
+
 (module bag
   mzscheme
   (require
    (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
    (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
-   (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
-  (provide bag subtract-bags bag-empty? bags=?)
+   (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+   (lib "trace.ss")
+   (lib "misc.ss" "swindle"))
+  (provide bag subtract-bags bag-empty? bags=? ->string)
 
 (define primes #(2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61 67 71 73 79 83 89 97 101))
 
-(define char->factor
-  (let ((a-code (char->integer #\a)))
-    (lambda (c)
-      (if (char-alphabetic? c)
-          (let ((index (- (char->integer (char-downcase c))
-                          a-code)))
-            (vector-ref primes index))
-        1))))
+(define index-of
+  (let ((l (vector->list primes)))
+    (lambda
+        (item)
+      (let loop ((v l)
+                 (slots-examined 0))
+        (cond
+         ((null? v)
+          #f)
+         ((equal? item (car v))
+          slots-examined)
+         (else
+          (loop (cdr v)
+                (add1 slots-examined))))))))
+(memoize! index-of)
+(define factor->char #f)
+
+(define char->factor #f)
+
+(let ((a-code (char->integer #\a)))
+  (set! factor->char
+        (lambda (n)
+          (integer->char (+ a-code (index-of n)))))
+  (set! char->factor
+        (lambda (c)
+          (if (char-alphabetic? c)
+              (let ((index (- (char->integer (char-downcase c))
+                              a-code)))
+                (vector-ref primes index))
+            1))))
+
+(define (->string b)
+  (let loop ((b b)
+             (primes (vector->list primes))
+             (result-chars '()))
+    (if (null? primes)
+        (list->string (reverse result-chars))
+      (let* ((current-prime (car primes))
+             (r (remainder b current-prime)))
+        (if (zero? r)
+            (loop (quotient b current-prime)
+                  primes
+                  (cons (factor->char current-prime)
+                        result-chars))
+          (loop b (cdr primes)
+                result-chars))))))
 
 (define (bag s)
   "Return an object that describes all the letters in S, without

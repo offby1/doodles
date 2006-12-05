@@ -39,8 +39,8 @@
 
 (let ((*print-level* nil)
       (*print-length* nil))
-  #-clisp            (format t "Done!~%~A~&" (anagrams  "Hemingway"))
-  #+clisp (ext:times (format t "Done!~%~A~&" (anagrams  "Hemingway")))
+  #-clisp            (format t "Done!~%~A~&" (anagrams  "Ernest Hemingway"))
+  #+clisp (ext:times (format t "Done!~%~A~&" (anagrams  "Ernest Hemingway")))
   )
 #+sbcl (sb-profile:report)
 #+cmu  (profile:report-time)

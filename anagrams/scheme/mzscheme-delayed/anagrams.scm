@@ -7,18 +7,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 mzscheme
 (require "dict.scm"
          "bag.scm"
+         (lib "trace.ss")
          (only (lib "1.ss"  "srfi") filter find take)
          (only (lib "list.ss") sort))
-
-(provide all-anagrams)
-
-(define (all-anagrams string dict-file-name )
-  (let ((in-bag   (bag string)))
-    (all-anagrams-internal
-     in-bag
-     (init in-bag dict-file-name)
-     0
-     )))
 
 (define (all-anagrams-internal bag dict level)
 
@@ -38,8 +29,7 @@ mzscheme
                     (if (bag-empty? smaller-bag)
                         (map (lambda (w)
                                (cons (list w)
-                                     (lambda ()
-                                       '())))
+                                     (lambda () '())))
                              words)
                       (list
                        (cons
@@ -71,23 +61,47 @@ list of anagrams, each of which begins with one of the WORDS."
   (display x)
   (newline))
 
-(let* ((in (vector-ref
-            (current-command-line-arguments)
-            0))
-       (result (all-anagrams
-                 in
-                 (find file-exists? '("/usr/share/dict/words"
-                                      "/usr/share/dict/american-english"))
-                 ))
-       (sorted (sort
-                result
-                (lambda (e1 e2)
-                  (> (string-length (caar e1))
-                     (string-length (caar e2))))))
-       )
-  (fprintf (current-error-port)
-           "Words that can be made from ~s:~%"
-           in)
-  (for-each dn sorted)
-  (newline)))
+;; (multi-assoc "foo" '(("foo" "bar") . 'golly)) => 'golly
+(define (multi-assoc obj alist)
+  (cond
+   ((null? alist)
+    #f)
+   ((member obj (caar alist))
+    (car alist))
+   (else
+    (multi-assoc obj (cdr alist)))))
+
+(define in-bag (bag
+                (vector-ref
+                 (current-command-line-arguments)
+                 0)))
+(define dict (init in-bag (find file-exists? '("/usr/share/dict/words"
+                                               "/usr/share/dict/american-english"))))
+
+(let loop ((in-bag in-bag)
+           (result (sort
+                    (all-anagrams-internal
+                     in-bag
+                     dict
+                     0
+                     )
+                    (lambda (e1 e2)
+                      (> (string-length (caar e1))
+                         (string-length (caar e2)))))))
+
+  (when (not (null? result))
+    (begin
+      (fprintf (current-error-port)
+               "Words that can be made from ~s:~%"
+               (->string in-bag))
+      (for-each dn result)
+      (newline)
+      (let get-input ()
+        (display "Enter a word from the list: ")
+        (let ((choice (multi-assoc (read-line) result)))
+          (if choice
+              (loop (bag (caar choice))
+                    ((cdr choice)))
+            (get-input))
+          ))))))
 

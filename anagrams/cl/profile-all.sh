@@ -13,6 +13,8 @@
 
 for cmd in "lisp -load" "clisp -q -i" "sbcl --load"
   do 
-  time $cmd profile.lisp
+  echo -n $cmd " ... "
+  time $cmd profile.lisp > /dev/null
+  echo
   echo 
 done
