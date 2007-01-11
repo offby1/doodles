@@ -32,8 +32,11 @@ implementations here that got the wrong answer did so not because
 they're buggy, but only because I unknowingly tested them against a
 different version of the dictionary than the Common Lisp version.
 
-"Correct answer" basically means "did it get the same results as the
-Common Lisp version?"
+Also note that the times are meaningless if the answer isn't correct.
+For example, if the answer contains too few items, then the time will
+be notably lower than if the answer were correct.
+
+"Correct answer" basically means "did it get the same results as the Common Lisp version?"
 
 +-----------------+-------+---------------+---------------+---------------+-----------------+-----------------+--------------+--------------+
 |language         |correct|time           |time "st       |time "est      |time "Ernes      |time "Ernest     |bag           |dictionary    |
