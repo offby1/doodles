@@ -7,7 +7,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 mzscheme
 (require "dict.scm"
          "bag.scm"
-         (only (lib "1.ss"  "srfi") filter find take))
+         (only (lib "1.ss"  "srfi") filter find take)
+         (lib "etc.ss"))
 
 (provide all-anagrams)
 
@@ -74,8 +75,7 @@ list of anagrams, each of which begins with one of the WORDS."
            (length
             (all-anagrams
              in
-             (find file-exists? '("/usr/share/dict/words"
-                                  "/usr/share/dict/american-english"))
+             (build-path (this-expression-source-directory) 'up 'up "words")
              ))
            in
            )
