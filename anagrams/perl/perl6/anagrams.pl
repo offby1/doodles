@@ -10,23 +10,26 @@ sub combine (@words, @anagrams) {
     push @rv, map { [$w, @$_] }, @anagrams;
   }
 
+#   say "Combining", (words => @words.yaml);
+#   say "with ", (anagrams => @anagrams.yaml);
+#   say (yields => @rv.yaml);
   @rv;
 }
 
 #say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).yaml;
 
 sub anagrams (Int $bag, Int $l, @dict) {
-  my @rv = [];
+  my @rv = ();
 
-  loop (;
-        @dict;
-        @dict.shift) {
-    my $first = @dict[0];
-    my @rest = @dict[1..*];
+  loop (my $processed = 0;
+        $processed < @dict;
+        $processed++) {
+    my $first = @dict[$processed];
+    my @rest = @dict[$processed + 1..*];
     my Int $key   = $first[0];
     my @words = $first[1];
 
-    say (First => $first, Bag => $bag, Key => $key).yaml;
+    say (First => $first.yaml, Bag => $bag.yaml, Key => $key.yaml);
     my $smaller_bag = Bag::subtract_bags($bag, $key);
     next unless ($smaller_bag > 0);
     die "Uh oh: $smaller_bag isn't < $bag" unless $smaller_bag < $bag;
@@ -38,6 +41,9 @@ sub anagrams (Int $bag, Int $l, @dict) {
                                       $l + 1,
                                       @rest);
       next unless (@from_smaller_bag);
+      say "This is supposedly a non-empty list of anagrams from ",
+        (smaller_bag => $smaller_bag.yaml),
+          (from_smaller_bag => @from_smaller_bag.yaml);
 
       @combined = combine(@words, @from_smaller_bag);
     }
@@ -51,6 +57,8 @@ sub anagrams (Int $bag, Int $l, @dict) {
 my $cat = Bag::bag("cat");
 say (cat => $cat);
 say (finally => anagrams($cat, 0, @dict::dict));
+say "And now, dog:";
+say (dog => anagrams(Bag::bag("dog"), 0, @dict::dict).yaml);
 
 # {
 #   my $input = shift;
