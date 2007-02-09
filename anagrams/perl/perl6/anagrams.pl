@@ -1,67 +1,63 @@
-#!/usr/bin/perl
+#!/usr/local/src/langs/pugs/pugs
 
-use strict;
-use Data::Dumper;
-use Carp qw(confess);
+# use dict;
+# use bag;
 
-use dict;
-use bag;
+sub combine (@words, @anagrams) {
+  my @rv = ();
 
-sub combine {
-  my $words = shift;
-  my $anagrams = shift;
-  my $rv = [];
-
-  foreach my $w (@$words) {
-    push @$rv, (map {[($w, @$_)]} @$anagrams);
+  for (@words) -> $w {
+    push @rv, map { [$w, @$_] }, @anagrams;
   }
 
-  @$rv;
+  @rv;
 }
 
-sub anagrams {
-  my $bag = shift;
-  my $l = shift;
-  my @dict = @_;
+say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).yaml;
 
-  my $rv = [];
+# sub anagrams {
+#   my $bag = shift;
+#   my $l = shift;
+#   my @dict = @_;
 
-  foreach my $words_processed (0 .. $#dict) {
-    my $entry = $dict[$words_processed];
-    my $key   = $entry->[0];
-    my $words = $entry->[1];
+#   my $rv = [];
 
-    my $smaller_bag = subtract_bags ($bag, $key);
-    next unless (defined ($smaller_bag));
+#   foreach my $words_processed (0 .. $#dict) {
+#     my $entry = $dict[$words_processed];
+#     my $key   = $entry->[0];
+#     my $words = $entry->[1];
 
-    if (bag_empty ($smaller_bag)) {
-      my @combined = map { [$_]  } @$words;
-      print STDERR join (' ', map { "(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
-      push @$rv, @combined;
-    } else {
-      my $from_smaller_bag = anagrams ($smaller_bag,
-                                       $l + 1,
-                                       @dict[$words_processed .. $#dict]);
-      next unless (@$from_smaller_bag);
+#     my $smaller_bag = subtract_bags ($bag, $key);
+#     next unless (defined ($smaller_bag));
 
-      my @combined = combine ($words, $from_smaller_bag);
-      push @$rv, @combined;
-      print STDERR join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
-    }
-  }
+#     if (bag_empty ($smaller_bag)) {
+#       my @combined = map { [$_]  } @$words;
+#       print STDERR join (' ', map { "(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
+#       push @$rv, @combined;
+#     } else {
+#       my $from_smaller_bag = anagrams ($smaller_bag,
+#                                        $l + 1,
+#                                        @dict[$words_processed .. $#dict]);
+#       next unless (@$from_smaller_bag);
 
-  return $rv;
-}
+#       my @combined = combine ($words, $from_smaller_bag);
+#       push @$rv, @combined;
+#       print STDERR join (' ', map {"(" . join (' ', @$_) . ")"} @combined), "\n" if (!$l);
+#     }
+#   }
 
-{
-  my $input = shift;
-  die "Say something!" unless defined ($input);
-  my $input_as_bag = bag ($input);
-  init ($input_as_bag);
+#   return $rv;
+# }
 
-  my $result = anagrams ($input_as_bag, 0, @dict);
-  print STDERR scalar (@$result),
-    " anagrams of $input\n";
-  print join (' ', map { "(" . join (' ', @$_) . ")" } @$result),
-        "\n";
-}
+# {
+#   my $input = shift;
+#   die "Say something!" unless defined ($input);
+#   my $input_as_bag = bag ($input);
+#   init ($input_as_bag);
+
+#   my $result = anagrams ($input_as_bag, 0, @dict);
+#   print STDERR scalar (@$result),
+#     " anagrams of $input\n";
+#   print join (' ', map { "(" . join (' ', @$_) . ")" } @$result),
+#         "\n";
+# }
