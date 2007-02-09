@@ -26,6 +26,11 @@ sub acceptable (Str $word) returns Bool {
     return Bool::True ;
   }
 
+  # for testing only
+  if ($word ~~ "d") {
+    return Bool::True ;
+  }
+
   if ($word.chars < 2) {
     return Bool::False ;
   }
@@ -53,7 +58,7 @@ sub snarf_wordlist {
   for ($dict.readline) -> $word {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
-                                 %dict_hash{bag($chopped)}.push($chopped);
+                                 %dict_hash{Bag::bag($chopped)}.push($chopped);
                                  if (%dict_hash.elems == $max_size) {
                                    say "$max_size is enough elements; won't read no mo'";
                                    last;

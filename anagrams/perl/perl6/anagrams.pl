@@ -10,9 +10,9 @@ sub combine (@words, @anagrams) {
     push @rv, map { [$w, @$_] }, @anagrams;
   }
 
-#   say "Combining", (words => @words.yaml);
-#   say "with ", (anagrams => @anagrams.yaml);
-#   say (yields => @rv.yaml);
+  say "Combining", (words => @words.yaml);
+  say "with ", (anagrams => @anagrams.yaml);
+  say (yields => @rv.yaml);
   @rv;
 }
 
