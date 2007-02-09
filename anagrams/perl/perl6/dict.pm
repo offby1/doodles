@@ -1,5 +1,5 @@
 #!/usr/local/src/langs/pugs/pugs
-
+module Dict;
 use bag;
 
 our @dict;
@@ -10,8 +10,8 @@ our @dict;
 # error-checking, or something.
 our Any %dict_hash{Int};
 
-my $dict_file_name = "/usr/share/dict/words";
-#my $dict_file_name = "words";
+#my $dict_file_name = "/usr/share/dict/words";
+my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
   if ($word ~~ rx:perl5{[^[:alpha:]]}) {
@@ -82,4 +82,5 @@ if (-f $cache_file_name) {
 }
 
 say "Word list hath ", %dict_hash.elems, " pairs";
+say %dict_hash.yaml;
 1;
