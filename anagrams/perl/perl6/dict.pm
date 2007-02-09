@@ -85,7 +85,7 @@ say "Word list hath ", %dict_hash.elems, " pairs";
 #say %dict_hash.yaml;
 for (%dict_hash.keys) -> $bag {
                           my @words = %dict_hash{$bag};
-                               push @dict, ($bag, @words);
+                               push @dict, [$bag, @words];
                          }
 
 1;
