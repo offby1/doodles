@@ -1,6 +1,6 @@
 #!/usr/local/src/langs/pugs/pugs
 use v6;
-use dict <dict>;
+use dict;
 use bag;
 
 sub combine (@words, @anagrams) {
@@ -13,22 +13,29 @@ sub combine (@words, @anagrams) {
   @rv;
 }
 
-say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).yaml;
+#say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).yaml;
 
-sub anagrams ($bag, $l, @dict) {
+sub anagrams (Int $bag, Int $l, @dict) {
   say "anagrams:";
-  say ($bag.yaml, @dict.yaml);
   my @rv = [];
 
-  while (@dict) {
-    my $first = @dict[0];
+  loop (;
+        @dict;
+        @dict.pop) {
+    my @first = @dict[0];
     my @rest = @dict[1..*];
-    my $key   = @first[0];
+    my Int $key   = @first[0];
     my @words = @first[1];
 
-    my $smaller_bag = subtract_bags ($bag, $key);
-    next unless ($smaller_bag);
-
+    say "First:";
+    say @first.yaml;
+    say "Bag: ";
+    say $bag.yaml;
+    say "Key: ";
+    say $key.yaml;
+    my $smaller_bag = Bag::subtract_bags($bag, $key);
+    next unless ($smaller_bag > 0);
+    die "Uh oh" unless $smaller_bag < $bag;
     my @combined;
     if (bag_empty ($smaller_bag)) {
       @combined = map { [$_]  }, @words;
@@ -42,8 +49,6 @@ sub anagrams ($bag, $l, @dict) {
     }
     push @rv, @combined;
     say @combined.yaml if (!$l);
-
-    @dict.pop;
   }
 
   return @rv;
@@ -52,9 +57,7 @@ sub anagrams ($bag, $l, @dict) {
 say "Hey!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
 my $cat = Bag::bag("cat");
 say $cat;
-say @Dict::dict.yaml;
-die "Outta here";
-say anagrams($cat, 0, @Dict::dict);
+say anagrams($cat, 0, @dict::dict);
 
 # {
 #   my $input = shift;

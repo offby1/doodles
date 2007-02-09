@@ -1,5 +1,5 @@
 #!/usr/local/src/langs/pugs/pugs
-module Dict;
+module dict;
 use bag;
 
 our @dict;
@@ -82,5 +82,10 @@ if (-f $cache_file_name) {
 }
 
 say "Word list hath ", %dict_hash.elems, " pairs";
-say %dict_hash.yaml;
+#say %dict_hash.yaml;
+for (%dict_hash.keys) -> $bag {
+                          my @words = %dict_hash{$bag};
+                               push @dict, ($bag, @words);
+                         }
+
 1;
