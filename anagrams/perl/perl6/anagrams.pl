@@ -10,13 +10,16 @@ sub combine (@words, @anagrams) {
     push @rv, map { [$w, @$_] }, @anagrams;
   }
 
-  say "Combining", (words => @words.yaml);
-  say "with ", (anagrams => @anagrams.yaml);
-  say (yields => @rv.yaml);
+  say "words";
+  say @words.perl;
+  say "anagrams";
+  say @anagrams.perl;
+  say "yields";
+  say @rv.perl;
   @rv;
 }
 
-#say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).yaml;
+#say combine(["foo", "bar"], (["one", "anagram"], ["another", "gram"])).perl;
 
 sub anagrams (Int $bag, Int $l, @dict) {
   my @rv = ();
@@ -27,28 +30,31 @@ sub anagrams (Int $bag, Int $l, @dict) {
     my $first = @dict[$processed];
     my @rest = @dict[$processed + 1..*];
     my Int $key   = $first[0];
-    my @words = $first[1];
+    my $words = $first[1];
 
-    say (First => $first.yaml, Bag => $bag.yaml, Key => $key.yaml);
+    say (First => $first.perl, Bag => $bag.perl, Key => $key.perl);
     my $smaller_bag = Bag::subtract_bags($bag, $key);
     next unless ($smaller_bag > 0);
     die "Uh oh: $smaller_bag isn't < $bag" unless $smaller_bag < $bag;
     my @combined;
     if (Bag::bag_empty ($smaller_bag)) {
-      @combined = map { [$_]  }, @words;
+      @combined = map { [$_]  }, @$words;
     } else {
       my @from_smaller_bag = anagrams($smaller_bag,
                                       $l + 1,
                                       @rest);
       next unless (@from_smaller_bag);
       say "This is supposedly a non-empty list of anagrams from ",
-        (smaller_bag => $smaller_bag.yaml),
-          (from_smaller_bag => @from_smaller_bag.yaml);
+        (smaller_bag => $smaller_bag.perl),
+          (from_smaller_bag => @from_smaller_bag.perl);
 
-      @combined = combine(@words, @from_smaller_bag);
+      @combined = combine($words, @from_smaller_bag);
     }
     push @rv, @combined;
-    say (combined => @combined.yaml) if (!$l);
+    if (!$l) {
+      say "combined";
+      say @combined.perl;
+    }
   }
 
   return @rv;
@@ -58,7 +64,7 @@ my $cat = Bag::bag("cat");
 say (cat => $cat);
 say (finally => anagrams($cat, 0, @dict::dict));
 say "And now, dog:";
-say (dog => anagrams(Bag::bag("dog"), 0, @dict::dict).yaml);
+say (dog => anagrams(Bag::bag("dog"), 0, @dict::dict).perl);
 
 # {
 #   my $input = shift;

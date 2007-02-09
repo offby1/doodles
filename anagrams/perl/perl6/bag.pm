@@ -38,7 +38,7 @@ sub subtract_bags (Int $b1, Int $b2) returns Int {
 
   if (0 == ($b1 % $b2)) {
 
-    return $b1 / $b2;
+    return truncate($b1 / $b2);
   }
 
   # I thought i'd be neat to say "return 1 but False" here, but that
