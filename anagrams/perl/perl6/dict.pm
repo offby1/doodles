@@ -55,7 +55,8 @@ sub snarf_wordlist {
   for ($dict.readline) -> $word {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
-                                 %dict_hash{Bag::bag($chopped)}{$chopped}++;
+                                 %dict_hash{Bag::bag($chopped)}.push($chopped)
+                                   unless any(%dict_hash{Bag::bag($chopped)}) eq $chopped;
                                  if (%dict_hash.elems == $max_words) {
                                    say "read enough words; won't read no mo'";
                                    last;
@@ -64,10 +65,6 @@ sub snarf_wordlist {
   print $*ERR: " done\n";
   close ($dict) or die "Closing $dict: $!";
 
-  # Now turn the hashes into arrays.
-  for (keys %dict_hash) -> $bag {
-      %dict_hash{$bag} = (keys %dict_hash{$bag});
-  }
 }
 
 my $cache_file_name = "dict.cache";
