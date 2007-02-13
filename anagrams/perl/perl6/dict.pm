@@ -44,10 +44,8 @@ sub acceptable (Str $word) returns Bool {
 
 # Don't read more than this many elements from the dictionary.  Useful
 # only for debugging, since reading the whole dictionary is really
-# really slow.  And note that it doesn't count lines read from the
-# file, nor does it count values stored in the hash; rather, it counts
-# the number of distinct keys in the hash.
-my $max_size = 1000;
+# really slow.
+my $max_keys = 1000;
 
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
@@ -59,8 +57,8 @@ sub snarf_wordlist {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
                                  %dict_hash{Bag::bag($chopped)}.push($chopped);
-                                 if (%dict_hash.elems == $max_size) {
-                                   say "$max_size is enough elements; won't read no mo'";
+                                 if (%dict_hash.elems == $max_keys) {
+                                   say "$max_keys is enough elements; won't read no mo'";
                                    last;
                                  }
                                 };
@@ -70,7 +68,6 @@ sub snarf_wordlist {
 
 my $cache_file_name = "dict.cache";
 if (-f $cache_file_name) {
-#  %dict_hash = open("dict.cache").slurp.eval;
   %dict_hash = open("dict.cache").slurp.eval(:lang<yaml>);
   say "Slurped $cache_file_name";
 } else {
@@ -80,14 +77,12 @@ if (-f $cache_file_name) {
     my $cache = open($cache_file_name, :w)
       or die "Can't open $cache_file_name for writing 'cuz $!; stopped";
     $cache.print(%dict_hash.yaml);
-#    $cache.print(%dict_hash.perl);
     say "Wrote $cache";
     close ($cache) or die "Closing $cache";
   }
 }
 
 say "Word list hath ", %dict_hash.elems, " pairs";
-#say %dict_hash.yaml;
 for (%dict_hash.keys) -> $bag {
                           my @words = %dict_hash{$bag};
                                push @dict, [$bag, @words];

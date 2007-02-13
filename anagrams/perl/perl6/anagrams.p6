@@ -18,16 +18,20 @@ sub anagrams (Int $bag, Int $l, @dict) {
 
   # I originally had ``while (@dict) { ... @dict.shift} '' but that
   # modified the input.  Grr.
-  loop (my $processed = 0;
-        $processed < @dict;
-        $processed++) {
-    my $first = @dict[$processed];
-    my @rest = @dict[$processed + 1..*];
+  my @pruned = grep {
+    Bag::subtract_bags($bag, $_[0])> 0;
+  }, @dict;
+
+  loop (;
+       @pruned;
+       @pruned.shift) {
+    my $first = @pruned[0];
+    my @rest = @pruned[1..*];
     my Int $key   = $first[0];
     my $words = $first[1];
 
     my $smaller_bag = Bag::subtract_bags($bag, $key);
-    next unless ($smaller_bag > 0);
+    die "internal error" unless ($smaller_bag > 0);
     die "Uh oh: $smaller_bag isn't < $bag" unless $smaller_bag < $bag;
     my @combined;
     if (Bag::bag_empty ($smaller_bag)) {
@@ -45,5 +49,7 @@ sub anagrams (Int $bag, Int $l, @dict) {
   return @rv;
 }
 
-my $cat = Bag::bag("cat");
-say (dog => anagrams(Bag::bag("dog"), 0, @dict::dict).perl);
+sub test (Str $s) {
+  say ($s => anagrams(Bag::bag($s), 0, @dict::dict).perl);
+}
+for (<<dog noraa>>, "noraa dog", "noraa dogx") -> $s { test ($s); }
