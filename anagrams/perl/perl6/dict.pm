@@ -10,8 +10,8 @@ our @dict;
 # error-checking, or something.
 our Any %dict_hash{Int};
 
-#my $dict_file_name = "/usr/share/dict/words";
-my $dict_file_name = "words";
+my $dict_file_name = "/usr/share/dict/words";
+#my $dict_file_name = "words";
 
 sub acceptable (Str $word) returns Bool {
   if ($word ~~ rx:perl5{[^[:alpha:]]}) {
@@ -26,12 +26,12 @@ sub acceptable (Str $word) returns Bool {
     return Bool::True ;
   }
 
-  # for testing only
-  if ($word ~~ "d") {
-    return Bool::True ;
+  if ($word.chars < 2) {
+    return Bool::False ;
   }
 
-  if ($word.chars < 2) {
+  # Testing only
+  if ($word.chars > 4) {
     return Bool::False ;
   }
 
@@ -42,10 +42,9 @@ sub acceptable (Str $word) returns Bool {
   return Bool::False;
 }
 
-# Don't read more than this many elements from the dictionary.  Useful
-# only for debugging, since reading the whole dictionary is really
-# really slow.
-my $max_keys = 1000;
+# Don't put more than this many words into our hash.  Useful only for
+# debugging, since reading the whole dictionary is really really slow.
+my $max_words = 1000;
 
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
@@ -56,14 +55,19 @@ sub snarf_wordlist {
   for ($dict.readline) -> $word {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
-                                 %dict_hash{Bag::bag($chopped)}.push($chopped);
-                                 if (%dict_hash.elems == $max_keys) {
-                                   say "$max_keys is enough elements; won't read no mo'";
+                                 %dict_hash{Bag::bag($chopped)}{$chopped}++;
+                                 if (%dict_hash.elems == $max_words) {
+                                   say "read enough words; won't read no mo'";
                                    last;
                                  }
                                 };
   print $*ERR: " done\n";
   close ($dict) or die "Closing $dict: $!";
+
+  # Now turn the hashes into arrays.
+  for (keys %dict_hash) -> $bag {
+      %dict_hash{$bag} = (keys %dict_hash{$bag});
+  }
 }
 
 my $cache_file_name = "dict.cache";
