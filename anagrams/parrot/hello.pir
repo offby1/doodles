@@ -1,14 +1,12 @@
 # -*-asm-*-
 .sub 'example' :main
-    .local string dict_fn 
-    dict_fn = "/usr/share/dict/words"
-    P0 = open dict_fn, "<"
-yow:
+    P0 = open "/usr/share/dict/words", "<"
+next_line:
     readline S0, P0
     length I0, S0
-    if I0 <= 0 goto end
+    if I0 <= 0 goto cleanup
     print S0
-    goto yow
-end:
+    goto next_line
+cleanup:
     close P0
 .end
