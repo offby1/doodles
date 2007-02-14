@@ -1,3 +1,4 @@
+# -*-asm-*-
 .sub 'example' :main
     .local string dict_fn 
     dict_fn = "/usr/share/dict/words"
