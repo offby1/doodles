@@ -44,7 +44,7 @@ sub acceptable (Str $word) returns Bool {
 
 # Don't put more than this many words into our hash.  Useful only for
 # debugging, since reading the whole dictionary is really really slow.
-my $max_words = 1000;
+my $max_words is constant = 1000;
 
 sub snarf_wordlist {
   my $dict = open($dict_file_name, :r)
@@ -55,8 +55,9 @@ sub snarf_wordlist {
   for ($dict.readline) -> $word {
                                  my $chopped = lc (chomp($word));
                                  next unless (acceptable($chopped));
-                                 %dict_hash{Bag::bag($chopped)}.push($chopped)
-                                   unless any(%dict_hash{Bag::bag($chopped)}) eq $chopped;
+                                 my $entry = %dict_hash{Bag::bag($chopped)};
+                                 $entry.push($chopped);
+                                 $entry = $entry.uniq;
                                  if (%dict_hash.elems == $max_words) {
                                    say "read enough words; won't read no mo'";
                                    last;
