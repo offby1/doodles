@@ -1,3 +1,4 @@
+# -*-pir-*-
 .sub 'example' :main
         load_bytecode 'PGE.pbc'
         P0 = open "/usr/share/dict/words", "<"
@@ -10,19 +11,13 @@
         has_a_vowel_rulesub = p5regex_compile(has_a_vowel)
         long_enough = '[iaIA]|..'
         long_enough_rulesub = p5regex_compile(long_enough)
-
-                                # TODO -- remove the apostrophe from the string, since clearly we
-                                # consider it an acceptable character.
-
-        non_alpha = "[^a-zA-Z'\n]"
+        non_alpha = "[^a-zA-Z\n]"
         non_alpha_rulesub = p5regex_compile(non_alpha)
 
 next_line:
         readline S0, P0
         length I0, S0
-        if I0 <= 0 goto cleanup
-
-                                # Do some magic with the regexp
+        if I0 == 0 goto cleanup
 
         match = has_a_vowel_rulesub (S0)
         if match goto has_vowel
