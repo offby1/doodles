@@ -5,12 +5,14 @@
         load_bytecode 'dumper.pir'
         load_bytecode 'String/Utils.pbc'
         .local pmc chomp
+        .local string one_line
+        .local pmc infile_handle
         chomp = get_global ['String';'Utils'], 'chomp'
         print chomp
 
         bag_init()
-        P0 = open "words", "<"
-#        P0 = open "/usr/share/dict/words", "<"
+        infile_handle = open "words", "<"
+#        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
@@ -27,47 +29,47 @@
         .local pmc dict_hash    # used to build up the final entries
         new dict_hash, .Hash
 next_line:
-        readline S0, P0
-        length I0, S0
+        readline one_line, infile_handle
+        length I0, one_line
         if I0 == 0 goto cleanup
 
-        chomp (S0)
-        match = has_a_vowel_rulesub (S0)
+        chomp (one_line)
+        match = has_a_vowel_rulesub (one_line)
         if match goto has_vowel
-#         print S0
+#         print one_line
 #         print " doesn't have a vowel!\n"
 
 has_vowel:
-        match = long_enough_rulesub (S0)
+        match = long_enough_rulesub (one_line)
         if match goto nothing_weird
-#         print S0
+#         print one_line
 #         print " isn't long enough\n"
 
 nothing_weird:
-        match = non_alpha_rulesub (S0)
+        match = non_alpha_rulesub (one_line)
         unless match goto acceptable
-#         print S0
+#         print one_line
 #         print " contains some weird non-alpha character\n"
 
 goto next_line
 
 acceptable:
         .local pmc existing_entry
-        the_bag = make_bag (S0)
+        the_bag = make_bag (one_line)
 
         existing_entry = dict_hash[the_bag]
         unless_null existing_entry, adjoin
         .local pmc new_entry
         new new_entry, .ResizablePMCArray
         push new_entry, the_bag
-        push new_entry, S0
+        push new_entry, one_line
         dict_hash[the_bag] = new_entry
         goto next_line
 
 adjoin: 
-        push existing_entry, S0 # BUGBUG -- avoid duplicates.
+        push existing_entry, one_line # BUGBUG -- avoid duplicates.
         goto next_line
 cleanup:
         _dumper(dict_hash)
-        close P0
+        close infile_handle
 .end
