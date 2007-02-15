@@ -11,6 +11,7 @@
         print chomp
 
         bag_init()
+        test_adjoin ()
         infile_handle = open "words", "<"
 #        infile_handle = open "/usr/share/dict/words", "<"
 
@@ -23,7 +24,7 @@
         has_a_vowel_rulesub = p5regex_compile(has_a_vowel)
         long_enough = '[iaIA]|..'
         long_enough_rulesub = p5regex_compile(long_enough)
-        non_alpha = "[^a-zA-Z\n]"
+        non_alpha = "[^a-zA-Z]"
         non_alpha_rulesub = p5regex_compile(non_alpha)
 
         .local pmc dict_hash    # used to build up the final entries
@@ -34,6 +35,7 @@ next_line:
         if I0 == 0 goto cleanup
 
         chomp (one_line)
+        downcase one_line
         match = has_a_vowel_rulesub (one_line)
         if match goto has_vowel
 #         print one_line
@@ -67,9 +69,37 @@ acceptable:
         goto next_line
 
 adjoin: 
-        push existing_entry, one_line # BUGBUG -- avoid duplicates.
+        adjoin (one_line, existing_entry)
         goto next_line
 cleanup:
         _dumper(dict_hash)
         close infile_handle
+.end
+
+.sub 'adjoin'
+        .param string s
+        .param pmc list
+        .local pmc iterator
+
+        new iterator, .Iterator, list
+next:   
+        unless iterator goto push
+        .local string this_entry
+        shift this_entry, iterator
+        if this_entry == s goto done
+        goto next
+push:   push list, s
+done:
+.end
+
+.sub 'test_adjoin'
+        .local pmc list
+        .local string s
+
+        new list, .ResizableStringArray
+        adjoin("foo", list)
+        adjoin("bar", list)
+        adjoin("zip", list)
+        adjoin("foo", list)
+        _dumper (list)
 .end
