@@ -12,36 +12,20 @@
 
 .sub 'bag_dump'
         .param pmc b
-        .local pmc iterator
-        .local string char
-        .local int val
-        iter iterator, b
-        if iterator goto next_key
-        print "No iterator?\n"
-        goto cleanup
-
-next_key:
-        shift char, iterator
-        print char
-        print ": "
-
-        val = b[char]
-        print val
-        print " "
-
-        if iterator goto next_key
-cleanup:
+        print b
         print "\n"
 .end
 
 .sub 'make_bag'
         .param string arg
         .local pmc rv
-        .local int chars_examined, len
+        .local int chars_examined
+        .local int len
         .local string char
         .local int isalpha
 
-        new rv, .Hash
+        new rv, .BigInt
+        rv = 1
         chars_examined = 0
         length len, arg
 
@@ -51,15 +35,16 @@ next:
         downcase char
         is_cclass isalpha, .CCLASS_ALPHABETIC, char, 0
         unless isalpha goto skip
-        I0 = rv[char]
-        inc I0
-        rv[char] = I0
+
+                                # BUGBUG -- obviously this isn't correct.
+        rv = rv * 2
 
 skip:   
         inc chars_examined
         goto next
 
 done:   
+        
         .return(rv)
                          
 .end
