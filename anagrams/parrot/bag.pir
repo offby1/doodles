@@ -33,14 +33,32 @@
 	primes[24] = 97
 	primes[25] = 101
 
-        .local pmc silly
-        say "dog!DIG"
-        silly = make_bag ("dog!DIG")
-        say silly
+        .local pmc doggy
+        say "doggy"
+        doggy = make_bag ("doggy")
+        say doggy
 
-        say "Kansas!"
-        silly = make_bag ("Kansas!")
-        say silly
+        .local pmc god
+        say "god"
+        god = make_bag ("god")
+        say god
+
+        .local pmc diff
+        diff = subtract_bags (doggy, god)
+        .local pmc expected
+        expected = make_bag ("gy")
+        print "This: "
+        print diff
+        print " had better be the same as this: "
+        print expected
+        print "\n"
+
+        .local pmc fred
+        fred = make_bag ("fred")
+        diff = subtract_bags (doggy, fred)
+        print "This: "
+        print diff
+        print " had better be zero\n"
 .end
 
 .sub 'make_bag'
@@ -89,3 +107,20 @@ done:
 
 .end
 
+.sub 'subtract_bags'
+        .param pmc top
+        .param pmc bottom
+
+        .local pmc rv
+        .local pmc remainder
+        new rv, .BigInt
+        new remainder, .BigInt
+        mod remainder, top, bottom
+        if remainder  goto fail
+        rv = top / bottom
+        goto cleanup
+
+fail:   rv = 0
+cleanup:        
+        .return (rv)
+.end
