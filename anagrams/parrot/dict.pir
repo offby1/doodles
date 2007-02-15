@@ -2,8 +2,8 @@
 .sub 'example' :main
         load_bytecode 'PGE.pbc'
         load_bytecode 'bag.pbc'
-        P0 = open "words", "<"
-#        P0 = open "/usr/share/dict/words", "<"
+#        P0 = open "words", "<"
+        P0 = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
@@ -24,24 +24,29 @@ next_line:
 
         match = has_a_vowel_rulesub (S0)
         if match goto has_vowel
-        print S0
-        print " doesn't have a vowel!\n"
+#         print S0
+#         print " doesn't have a vowel!\n"
 
 has_vowel:
         match = long_enough_rulesub (S0)
         if match goto nothing_weird
-        print S0
-        print " isn't long enough\n"
+#         print S0
+#         print " isn't long enough\n"
 
 nothing_weird:
         match = non_alpha_rulesub (S0)
         unless match goto acceptable
-        print S0
-        print " contains some weird non-alpha character\n"
+#         print S0
+#         print " contains some weird non-alpha character\n"
+
+goto next_line
 
 acceptable:
         the_bag = make_bag (S0)
+        print S0
+        print " -> "
         bag_dump (the_bag)
+        print "\n"
         goto next_line
 cleanup:
         close P0

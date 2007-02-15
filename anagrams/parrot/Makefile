@@ -1,8 +1,8 @@
 bag-check: bag.pbc
-	./parrot $^
+	./parrot $<
 
 dict-check: dict.pbc bag.pbc
-	./parrot $^
+	./parrot $<
 
 check: bag-check dict-check
 

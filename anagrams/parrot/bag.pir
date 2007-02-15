@@ -5,6 +5,9 @@
         .local pmc silly
         silly = make_bag ("dog!DIG")
         bag_dump (silly)
+
+        silly = make_bag ("Kansas!")
+        bag_dump (silly)
 .end
 
 .sub 'bag_dump'
@@ -15,7 +18,7 @@
         iter iterator, b
         if iterator goto next_key
         print "No iterator?\n"
-        end
+        goto cleanup
 
 next_key:
         shift char, iterator
@@ -24,9 +27,11 @@ next_key:
 
         val = b[char]
         print val
-        print "\n"
+        print " "
 
         if iterator goto next_key
+cleanup:
+        print "\n"
 .end
 
 .sub 'make_bag'
