@@ -2,7 +2,8 @@
 .sub 'example' :main
         load_bytecode 'PGE.pbc'
         load_bytecode 'bag.pbc'
-        P0 = open "/usr/share/dict/words", "<"
+        P0 = open "words", "<"
+#        P0 = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
@@ -38,7 +39,10 @@ nothing_weird:
         print " contains some weird non-alpha character\n"
 
 acceptable:
+        print S0
+        print " is acceptable!\n"
         goto next_line
 cleanup:
         close P0
+        make_bag("snorfly")
 .end
