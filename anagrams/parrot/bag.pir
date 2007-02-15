@@ -59,6 +59,14 @@
         print "This: "
         print diff
         print " had better be zero\n"
+
+        .local int empty
+        empty =  bag_empty (diff)
+        if empty goto ok
+        say "Uh oh -- 0 isn't empty."
+ok:
+        say "Oh good, it's really empty"
+        test_empty()
 .end
 
 .sub 'make_bag'
@@ -123,4 +131,20 @@ done:
 fail:   rv = 0
 cleanup:        
         .return (rv)
+.end
+
+.sub 'bag_empty'
+        .param pmc b
+        if b == 0 goto yup
+        .return (0)
+yup:
+        .return(1)
+.end
+
+.sub 'test_empty'
+        .local pmc b
+        b = make_bag ("")
+        print "This had better be one:"
+        print b
+        print "\n"
 .end

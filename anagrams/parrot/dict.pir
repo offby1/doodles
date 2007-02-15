@@ -3,6 +3,7 @@
         load_bytecode 'PGE.pbc'
         load_bytecode 'bag.pbc'
 #        P0 = open "words", "<"
+        bag_init()
         P0 = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
@@ -45,7 +46,7 @@ acceptable:
         the_bag = make_bag (S0)
         print S0
         print " -> "
-        bag_dump (the_bag)
+        print the_bag
         print "\n"
         goto next_line
 cleanup:
