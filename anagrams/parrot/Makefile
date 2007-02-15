@@ -1,7 +1,7 @@
 bag-check: bag.pbc
 	./parrot $^
 
-dict-check: dict.pbc
+dict-check: dict.pbc bag.pbc
 	./parrot $^
 
 check: bag-check dict-check

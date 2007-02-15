@@ -9,6 +9,7 @@
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
         .local string has_a_vowel, long_enough, non_alpha
         .local pmc has_a_vowel_rulesub, long_enough_rulesub, non_alpha_rulesub, match
+        .local pmc the_bag
         has_a_vowel = '[aeiouyAEIOUY]'
         has_a_vowel_rulesub = p5regex_compile(has_a_vowel)
         long_enough = '[iaIA]|..'
@@ -39,11 +40,9 @@ nothing_weird:
         print " contains some weird non-alpha character\n"
 
 acceptable:
-        print S0
-        print " is acceptable!\n"
+        the_bag = make_bag (S0)
+        bag_dump (the_bag)
         goto next_line
 cleanup:
         close P0
-        P0 = make_bag("The Cat In The Hat")
-        bag_dump (P0)
 .end

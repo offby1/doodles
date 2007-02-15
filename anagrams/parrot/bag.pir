@@ -1,11 +1,9 @@
 # -*-pir-*-
-.sub 'bag_init' :main
-        .local pmc silly, other
-        new silly, .Hash
-        set silly["d"], 1
-        set silly["o"], 1
-        set silly["g"], 1
+.include  "cclass.pasm"
 
+.sub 'bag_init' :main
+        .local pmc silly
+        silly = make_bag ("dog!DIG")
         bag_dump (silly)
 .end
 
@@ -36,6 +34,7 @@ next_key:
         .local pmc rv
         .local int chars_examined, len
         .local string char
+        .local int isalpha
 
         new rv, .Hash
         chars_examined = 0
@@ -44,14 +43,14 @@ next_key:
 next:   
         if chars_examined == len goto done
         substr char, arg, chars_examined, 1
+        downcase char
+        is_cclass isalpha, .CCLASS_ALPHABETIC, char, 0
+        unless isalpha goto skip
         I0 = rv[char]
         inc I0
         rv[char] = I0
 
-        print chars_examined
-        print ": "
-        print char
-        print "\n"
+skip:   
         inc chars_examined
         goto next
 
@@ -59,3 +58,4 @@ done:
         .return(rv)
                          
 .end
+
