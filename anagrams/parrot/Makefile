@@ -6,7 +6,10 @@ dict-check: dict.pbc bag.pbc
 
 check: bag-check dict-check
 
+clean:
+	-rm -f *.pbc
+
 %.pbc: %.pir
 	./parrot -o $@ $^
 
-.PHONY: bag-check dict-check check
+.PHONY: bag-check dict-check check clean
