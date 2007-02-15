@@ -1,6 +1,7 @@
 # -*-pir-*-
 .sub 'example' :main
         load_bytecode 'PGE.pbc'
+        load_bytecode 'bag.pbc'
         P0 = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile

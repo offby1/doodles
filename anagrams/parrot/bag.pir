@@ -1,5 +1,5 @@
 # -*-pir-*-
-.sub 'bag' :main
+.sub 'bag_init' :main
         new P0, .Hash
         set P0["d"], 1
         set P0["o"], 1
@@ -26,5 +26,29 @@ next_key:
         print "\n"
 
         if P1 goto next_key
+        make_bag("zippy")
         end
+.end
+
+.sub 'make_bag'
+        .param string arg
+        new P0, .Hash
+        .local int chars_examined, len
+        .local string char
+        chars_examined = 0
+        length len, arg
+
+next:   
+        if chars_examined == len goto done
+        substr char, arg, chars_examined, 1
+        print chars_examined
+        print ": "
+        print char
+        print "\n"
+        inc chars_examined
+        goto next
+
+done:   
+        .return(0)
+                         
 .end
