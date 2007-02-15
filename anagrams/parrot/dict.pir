@@ -44,5 +44,6 @@ acceptable:
         goto next_line
 cleanup:
         close P0
-        make_bag("snorfly")
+        P0 = make_bag("The Cat In The Hat")
+        bag_dump (P0)
 .end

@@ -5,28 +5,26 @@
         set P0["o"], 1
         set P0["g"], 1
 
-        iter P1, P0
-        if P1 goto fiddle
+        bag_dump (P0)
+.end
+
+.sub 'bag_dump'
+        .param pmc b
+        iter P1, b
+        if P1 goto next_key
         print "No iterator?\n"
         end
-
-fiddle: 
-                                # Just for fun, increment a value.
-        I0 = P0["o"]
-        inc I0
-        set  P0["o"], I0
 
 next_key:
         shift P2, P1
         print P2
         print ": "
 
-        I0 = P0[P2]
+        I0 = b[P2]
         print I0
         print "\n"
 
         if P1 goto next_key
-        make_bag("zippy")
         end
 .end
 
@@ -41,6 +39,10 @@ next_key:
 next:   
         if chars_examined == len goto done
         substr char, arg, chars_examined, 1
+        I0 = P0[char]
+        inc I0
+        P0[char] = I0
+
         print chars_examined
         print ": "
         print char
@@ -49,6 +51,6 @@ next:
         goto next
 
 done:   
-        .return(0)
+        .return(P0)
                          
 .end
