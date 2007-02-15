@@ -1,47 +1,52 @@
 # -*-pir-*-
 .sub 'bag_init' :main
-        new P0, .Hash
-        set P0["d"], 1
-        set P0["o"], 1
-        set P0["g"], 1
+        .local pmc silly, other
+        new silly, .Hash
+        set silly["d"], 1
+        set silly["o"], 1
+        set silly["g"], 1
 
-        bag_dump (P0)
+        bag_dump (silly)
 .end
 
 .sub 'bag_dump'
         .param pmc b
-        iter P1, b
-        if P1 goto next_key
+        .local pmc iterator
+        .local string char
+        .local int val
+        iter iterator, b
+        if iterator goto next_key
         print "No iterator?\n"
         end
 
 next_key:
-        shift P2, P1
-        print P2
+        shift char, iterator
+        print char
         print ": "
 
-        I0 = b[P2]
-        print I0
+        val = b[char]
+        print val
         print "\n"
 
-        if P1 goto next_key
-        end
+        if iterator goto next_key
 .end
 
 .sub 'make_bag'
         .param string arg
-        new P0, .Hash
+        .local pmc rv
         .local int chars_examined, len
         .local string char
+
+        new rv, .Hash
         chars_examined = 0
         length len, arg
 
 next:   
         if chars_examined == len goto done
         substr char, arg, chars_examined, 1
-        I0 = P0[char]
+        I0 = rv[char]
         inc I0
-        P0[char] = I0
+        rv[char] = I0
 
         print chars_examined
         print ": "
@@ -51,6 +56,6 @@ next:
         goto next
 
 done:   
-        .return(P0)
+        .return(rv)
                          
 .end
