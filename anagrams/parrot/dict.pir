@@ -87,9 +87,14 @@ write_cache:
         print dict_hash
         print "; file name is "
         print cache_file
-        write_cache (dict_hash, cache_file)
+        .local pmc entries
+        entries = write_cache (dict_hash, cache_file)
+        print "; entries is "
+        _dumper (entries)
+        
 cleanup:
         close infile_handle
+        .return (entries)
 .end
 
 .sub 'adjoin'
@@ -145,9 +150,11 @@ done:
         .param string cache_file_name
         .local pmc iterator
         .local pmc cache_fd
+        .local pmc entries_as_written
         cache_fd = open cache_file_name, ">"
         print hash
         new iterator, .Iterator, hash
+        new entries_as_written, .ResizablePMCArray
 next:   
         unless iterator goto cleanup
         .local pmc this_bag
@@ -155,7 +162,10 @@ next:
         shift this_bag, iterator
         these_words = hash[this_bag]
         write_entry (cache_fd, this_bag, these_words)
+        unshift these_words, this_bag
+        push entries_as_written, these_words
         goto next
 cleanup:
         close cache_fd
+        .return (entries_as_written)
 .end
