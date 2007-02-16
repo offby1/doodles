@@ -2,7 +2,7 @@ bag-check: bag.pbc
 	./parrot $<
 
 dict-check: dict.pbc bag.pbc
-	time ./parrot --profile $<
+	time ./parrot  $<
 
 check: bag-check dict-check
 

@@ -7,12 +7,19 @@
         .local pmc chomp
         .local string one_line
         .local pmc infile_handle
+        .local string cache_file
+        .local int stat_info
+        cache_file = 'dict.cache'
+
         chomp = get_global ['String';'Utils'], 'chomp'
         print chomp
 
         bag_init()
         test_adjoin ()
-        infile_handle = open "words-10000", "<"
+        stat stat_info, cache_file, 0
+        if stat_info goto snarf_cache
+        say "Stat info must be zero"
+        infile_handle = open "words-100", "<"
 #        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
@@ -32,7 +39,7 @@
 next_line:
         readline one_line, infile_handle
         length I0, one_line
-        if I0 == 0 goto cleanup
+        if I0 == 0 goto write_cache
 
         chomp (one_line)
         downcase one_line
@@ -63,7 +70,6 @@ acceptable:
         unless_null existing_entry, adjoin
         .local pmc new_entry
         new new_entry, .ResizablePMCArray
-        push new_entry, the_bag
         push new_entry, one_line
         dict_hash[the_bag] = new_entry
         goto next_line
@@ -71,8 +77,26 @@ acceptable:
 adjoin: 
         adjoin (one_line, existing_entry)
         goto next_line
+write_cache:
+        ## dump to cache file
+        .local pmc cache_fd
+        .local pmc iterator
+        open cache_fd, cache_file, ">"
+        new iterator, .Iterator, dict_hash
+next:   
+        unless iterator goto cleanup
+        .local pmc this_bag
+        .local pmc these_words
+        shift this_bag, iterator
+        these_words = dict_hash[this_bag]
+        write_entry (cache_fd, this_bag, these_words)
+        goto next
+
+snarf_cache:
+        say "stat_info must be non-zero"
 cleanup:
-        #_dumper(dict_hash)
+        close cache_fd
+        close cache_fd
         close infile_handle
 .end
 
@@ -102,4 +126,24 @@ done:
         adjoin("zip", list)
         adjoin("foo", list)
         _dumper (list)
+.end
+
+.sub 'write_entry'
+        .param pmc cache_fd
+        .param pmc this_bag
+        .param pmc these_words
+        .local pmc iterator
+        .local pmc word
+
+        print cache_fd, this_bag
+        
+        new iterator, .Iterator, these_words
+next_word:   
+        unless iterator goto done
+        shift word, iterator
+        print cache_fd, ","
+        print cache_fd, word
+        goto next_word
+done:
+        print cache_fd, "\n"
 .end
