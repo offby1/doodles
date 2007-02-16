@@ -12,7 +12,7 @@
 
         bag_init()
         test_adjoin ()
-        infile_handle = open "words", "<"
+        infile_handle = open "words-10000", "<"
 #        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
@@ -72,7 +72,7 @@ adjoin:
         adjoin (one_line, existing_entry)
         goto next_line
 cleanup:
-        _dumper(dict_hash)
+        #_dumper(dict_hash)
         close infile_handle
 .end
 
