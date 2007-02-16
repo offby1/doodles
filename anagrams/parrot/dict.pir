@@ -19,7 +19,7 @@
         bag_init()
         test_adjoin ()
         stat stat_info, cache_file, 0
-        if stat_info goto snarf_cache
+        if stat_info goto call_snarf_cache
         say "No dict cache; reading the actual dictionary"
         infile_handle = open "words-100", "<"
 #        infile_handle = open "/usr/share/dict/words", "<"
@@ -78,8 +78,12 @@ adjoin:
         adjoin (one_line, existing_entry)
         goto next_line
 
-snarf_cache:
+call_snarf_cache:
         say "Pretend I'm snarfing the cache here"
+        .local pmc entries
+        entries = snarf_cache (cache_file)
+        say "After snarf_cache, entries:"
+        _dumper (entries)
         goto cleanup
 write_cache:
         say "about to call write_cache"
@@ -87,7 +91,6 @@ write_cache:
         print dict_hash
         print "; file name is "
         print cache_file
-        .local pmc entries
         entries = write_cache (dict_hash, cache_file)
         print "; entries is "
         _dumper (entries)
@@ -168,4 +171,35 @@ next:
 cleanup:
         close cache_fd
         .return (entries_as_written)
+.end
+
+.sub 'snarf_cache'
+        .param string cache_file_name
+        .local string one_line
+        .local pmc cache_fd
+        .local pmc rv
+        .local pmc fields
+        .local pmc chomp
+        .local pmc bag
+        new rv, .ResizablePMCArray
+        new bag, .BigInt
+        chomp = get_global ['String';'Utils'], 'chomp'
+        cache_fd = open cache_file_name, "<"
+next_line:       
+        readline one_line, cache_fd
+        unless one_line goto cleanup
+        chomp (one_line)
+        _dumper (fields)
+        split fields, ",", one_line
+
+        .local string digit_string
+        shift digit_string, fields
+        set bag, digit_string
+        unshift fields, bag
+
+        push rv, fields
+        goto next_line
+cleanup:
+        close cache_fd
+        .return (rv)
 .end
