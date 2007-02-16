@@ -10,6 +10,8 @@
         .local string cache_file
         .local int stat_info
         cache_file = 'dict.cache'
+        .local pmc dict_hash    # used to build up the final entries
+        new dict_hash, .Hash
 
         chomp = get_global ['String';'Utils'], 'chomp'
         print chomp
@@ -18,7 +20,7 @@
         test_adjoin ()
         stat stat_info, cache_file, 0
         if stat_info goto snarf_cache
-        say "Stat info must be zero"
+        say "No dict cache; reading the actual dictionary"
         infile_handle = open "words-100", "<"
 #        infile_handle = open "/usr/share/dict/words", "<"
 
@@ -34,8 +36,6 @@
         non_alpha = "[^a-zA-Z]"
         non_alpha_rulesub = p5regex_compile(non_alpha)
 
-        .local pmc dict_hash    # used to build up the final entries
-        new dict_hash, .Hash
 next_line:
         readline one_line, infile_handle
         length I0, one_line
@@ -77,26 +77,18 @@ acceptable:
 adjoin: 
         adjoin (one_line, existing_entry)
         goto next_line
-write_cache:
-        ## dump to cache file
-        .local pmc cache_fd
-        .local pmc iterator
-        open cache_fd, cache_file, ">"
-        new iterator, .Iterator, dict_hash
-next:   
-        unless iterator goto cleanup
-        .local pmc this_bag
-        .local pmc these_words
-        shift this_bag, iterator
-        these_words = dict_hash[this_bag]
-        write_entry (cache_fd, this_bag, these_words)
-        goto next
 
 snarf_cache:
-        say "stat_info must be non-zero"
+        say "Pretend I'm snarfing the cache here"
+        goto cleanup
+write_cache:
+        say "about to call write_cache"
+        print "hash is "
+        print dict_hash
+        print "; file name is "
+        print cache_file
+        write_cache (dict_hash, cache_file)
 cleanup:
-        close cache_fd
-        close cache_fd
         close infile_handle
 .end
 
@@ -146,4 +138,24 @@ next_word:
         goto next_word
 done:
         print cache_fd, "\n"
+.end
+
+.sub 'write_cache'
+        .param pmc hash
+        .param string cache_file_name
+        .local pmc iterator
+        .local pmc cache_fd
+        cache_fd = open cache_file_name, ">"
+        print hash
+        new iterator, .Iterator, hash
+next:   
+        unless iterator goto cleanup
+        .local pmc this_bag
+        .local pmc these_words
+        shift this_bag, iterator
+        these_words = hash[this_bag]
+        write_entry (cache_fd, this_bag, these_words)
+        goto next
+cleanup:
+        close cache_fd
 .end
