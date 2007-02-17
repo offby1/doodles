@@ -14,15 +14,13 @@
         new dict_hash, .Hash
 
         chomp = get_global ['String';'Utils'], 'chomp'
-        print chomp
 
         bag_init()
-        test_adjoin ()
         stat stat_info, cache_file, 0
         if stat_info goto call_snarf_cache
         say "No dict cache; reading the actual dictionary"
-#        infile_handle = open "words-100", "<"
-        infile_handle = open "/usr/share/dict/words", "<"
+        infile_handle = open "words-100", "<"
+#        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
@@ -85,7 +83,7 @@ cleanup:
         close infile_handle
         .return (entries)
 .end
-
+
 .sub 'adjoin'
         .param string s
         .param pmc list
@@ -101,19 +99,7 @@ next:
 push:   push list, s
 done:
 .end
-
-.sub 'test_adjoin'
-        .local pmc list
-        .local string s
-
-        new list, .ResizableStringArray
-        adjoin("foo", list)
-        adjoin("bar", list)
-        adjoin("zip", list)
-        adjoin("foo", list)
-        _dumper (list)
-.end
-
+
 .sub 'write_entry'
         .param pmc cache_fd
         .param pmc this_bag
@@ -133,7 +119,7 @@ next_word:
 done:
         print cache_fd, "\n"
 .end
-
+
 .sub 'write_cache'
         .param pmc hash
         .param string cache_file_name
@@ -141,24 +127,35 @@ done:
         .local pmc cache_fd
         .local pmc entries_as_written
         cache_fd = open cache_file_name, ">"
-        print hash
         new iterator, .Iterator, hash
         new entries_as_written, .ResizablePMCArray
 next:   
         unless iterator goto cleanup
+        .local string digit_string
         .local pmc this_bag
         .local pmc these_words
-        shift this_bag, iterator
-        these_words = hash[this_bag]
-        write_entry (cache_fd, this_bag, these_words)
-        unshift these_words, this_bag
-        push entries_as_written, these_words
+        .local pmc one_entry
+        new one_entry, .ResizablePMCArray
+        shift digit_string, iterator
+        new this_bag, .BigInt
+        set this_bag, digit_string
+        these_words = hash[digit_string]
+        write_entry (cache_fd, digit_string, these_words)
+        push one_entry, this_bag
+next_word:      
+        if these_words goto one_word
+        push entries_as_written, one_entry
         goto next
+one_word:       
+        .local pmc one_word
+        shift one_word, these_words
+        push one_entry, one_word
+        goto next_word
 cleanup:
         close cache_fd
         .return (entries_as_written)
 .end
-
+
 .sub 'snarf_cache'
         .param string cache_file_name
         .local string one_line
@@ -168,7 +165,6 @@ cleanup:
         .local pmc chomp
         .local pmc bag
         new rv, .ResizablePMCArray
-        new bag, .BigInt
         chomp = get_global ['String';'Utils'], 'chomp'
         cache_fd = open cache_file_name, "<"
 next_line:       
@@ -179,10 +175,22 @@ next_line:
 
         .local string digit_string
         shift digit_string, fields
+        new bag, .BigInt
         set bag, digit_string
-        unshift fields, bag
 
-        push rv, fields
+        .local pmc iterator
+        new iterator, .Iterator, fields
+        .local pmc one_entry
+        new one_entry, .ResizablePMCArray
+        push one_entry, bag
+next_word:      
+        unless iterator goto finish_entry
+        .local string one_field
+        shift one_field, iterator
+        push one_entry, one_field
+        goto next_word
+finish_entry:
+        push rv, one_entry
         goto next_line
 cleanup:
         close cache_fd

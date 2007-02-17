@@ -6,17 +6,45 @@
         .local string input
         .local BigInt ibag
         .local pmc dict
-        _dumper (args)
+
         input = shift args
-        _dumper (args)
         join input, " ", args
-        print "input is `"
-        print input
-        print "'\n"
+
+
+
         bag_init()
         ibag = make_bag(input)
-        _dumper(ibag)
+
+
         input = ibag
-        say input
-        #dict = snarf_dict ()
+        dict = snarf_dict ()
+        anagrams (ibag, dict)
+.end
+
+.sub 'anagrams'
+        .param BigInt input_bag
+        .param pmc dict
+        .local pmc iterator
+        new iterator, .Iterator, dict
+next_entry:     
+        unless iterator goto done
+        .local pmc one_entry
+        .local BigInt entry_bag
+        .local BigInt smaller_bag
+        one_entry = shift iterator
+        entry_bag = shift one_entry
+
+        smaller_bag = subtract_bags (input_bag, entry_bag)
+        unless smaller_bag goto next_entry
+
+        print "Top, bottom, diff:\n"
+        print input_bag
+        print "; "
+        print entry_bag
+        print "; "
+        print smaller_bag
+        print "\n"
+
+        goto next_entry
+done:   
 .end

@@ -33,39 +33,6 @@
 	primes[24] = 97
 	primes[25] = 101
 
-        .local pmc doggy
-        say "doggy"
-        doggy = make_bag ("doggy")
-        say doggy
-
-        .local pmc god
-        say "god"
-        god = make_bag ("god")
-        say god
-
-        .local pmc diff
-        diff = subtract_bags (doggy, god)
-        .local pmc expected
-        expected = make_bag ("gy")
-        print "This: "
-        print diff
-        print " had better be the same as this: "
-        print expected
-        print "\n"
-
-        .local pmc fred
-        fred = make_bag ("fred")
-        diff = subtract_bags (doggy, fred)
-        print "This: "
-        print diff
-        print " had better be zero\n"
-
-        .local int empty
-        empty =  bag_empty (diff)
-        if empty goto ok
-        say "Uh oh -- 0 isn't empty."
-ok:
-        say "Oh good, it's really empty"
         test_empty()
 .end
 
@@ -144,7 +111,7 @@ yup:
 .sub 'test_empty'
         .local pmc b
         b = make_bag ("")
-        print "This had better be one:"
-        print b
-        print "\n"
+#         print "This had better be one:"
+#         print b
+#         print "\n"
 .end
