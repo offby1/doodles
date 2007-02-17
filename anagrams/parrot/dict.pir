@@ -21,8 +21,8 @@
         stat stat_info, cache_file, 0
         if stat_info goto call_snarf_cache
         say "No dict cache; reading the actual dictionary"
-        infile_handle = open "words-100", "<"
-#        infile_handle = open "/usr/share/dict/words", "<"
+#        infile_handle = open "words-100", "<"
+        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
@@ -79,22 +79,14 @@ adjoin:
         goto next_line
 
 call_snarf_cache:
-        say "Pretend I'm snarfing the cache here"
+        say "Snarfing the cache"
         .local pmc entries
         entries = snarf_cache (cache_file)
-        say "After snarf_cache, entries:"
-        _dumper (entries)
+        print entries
+        print " entries\n"
         goto cleanup
 write_cache:
-        say "about to call write_cache"
-        print "hash is "
-        print dict_hash
-        print "; file name is "
-        print cache_file
         entries = write_cache (dict_hash, cache_file)
-        print "; entries is "
-        _dumper (entries)
-        
 cleanup:
         close infile_handle
         .return (entries)
@@ -189,7 +181,6 @@ next_line:
         readline one_line, cache_fd
         unless one_line goto cleanup
         chomp (one_line)
-        _dumper (fields)
         split fields, ",", one_line
 
         .local string digit_string
