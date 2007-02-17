@@ -44,21 +44,15 @@ next_line:
         chomp (one_line)
         downcase one_line
         match = has_a_vowel_rulesub (one_line)
-        if match goto has_vowel
-#         print one_line
-#         print " doesn't have a vowel!\n"
+        unless match goto next_line
 
 has_vowel:
         match = long_enough_rulesub (one_line)
-        if match goto nothing_weird
-#         print one_line
-#         print " isn't long enough\n"
+        unless match goto next_line
 
 nothing_weird:
         match = non_alpha_rulesub (one_line)
         unless match goto acceptable
-#         print one_line
-#         print " contains some weird non-alpha character\n"
 
 goto next_line
 
