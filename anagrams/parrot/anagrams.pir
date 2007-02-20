@@ -31,6 +31,9 @@
         .local pmc rv
         new rv, .ResizablePMCArray
         new dict_it, .Iterator, dict_it
+        print "input_bag is "
+        print input_bag
+        print "\n"
 next_entry:     
         unless dict_it goto done
         .local pmc one_entry
@@ -38,12 +41,25 @@ next_entry:
         .local BigInt smaller_bag
         shift one_entry, dict_it
         clone one_entry, one_entry
+        _dumper (one_entry, "one_entry")
         entry_bag = shift one_entry
         smaller_bag = subtract_bags (input_bag, entry_bag)
 
-        if smaller_bag == 0 goto next_entry
+        unless smaller_bag == 0 goto nonzero
+        print "subtracting failed -- input_bag "
+        print input_bag
+        print " doesn't contain entry_bag "
+        print entry_bag
+        print "\n"
+        goto next_entry
+nonzero:        
         unless smaller_bag == 1 goto recur
-        
+        print "subtracting yielded 1 -- input_bag "
+        print input_bag
+        print " equals entry_bag "
+        print entry_bag
+        print "\n"
+
         .local pmc words_it
         .local pmc list_of_one_word
         new words_it, .Iterator, one_entry
@@ -65,13 +81,19 @@ next_word:
         print "\n"
 
 recur:  
+        print "subtracting yielded > 1 -- input_bag "
+        print input_bag
+        print " contains entry_bag "
+        print entry_bag
+        print " with leftover of "
+        print smaller_bag
+        print "\n"
         .local pmc from_smaller_bag
         from_smaller_bag = anagrams (smaller_bag, dict_it, to_skip)
         unless from_smaller_bag goto next_entry
-        print "Pretend I'm combining this: "
-        _dumper (one_entry)
-        print " with this: "
-        _dumper (from_smaller_bag)
+        .local pmc combined
+        combined = combine (one_entry, from_smaller_bag)
+        push rv, combined
         goto next_entry
 done:
         .return (rv)
@@ -82,26 +104,22 @@ done:
         .param pmc in_anagrams
         .local pmc rv
         .local pmc anagrams
-        new rv, .ResizablePMCArray
+        print "combine: "
         _dumper (words, "words")
         _dumper (in_anagrams, "in_anagrams")
+        new rv, .ResizablePMCArray
 next_word:
         unless words goto cleanup
         clone anagrams, in_anagrams
         .local string one_word
         shift one_word, words
-        print "one_word: "
-        print one_word
-        print "\n"
         .local pmc one_anagram
 next_anagram:   
         unless anagrams goto next_word
         shift one_anagram, anagrams
         clone one_anagram, one_anagram
-        _dumper (one_anagram, "one_anagram")
         unshift one_anagram, one_word
         push rv, one_anagram
-        _dumper (one_anagram, "one_anagram after unshifting one word")
         goto next_anagram
 cleanup:
         .return (rv)

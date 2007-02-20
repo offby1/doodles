@@ -15,4 +15,7 @@ clean:
 %.pbc: %.pir
 	$(p) -o $@ $^
 
+%.pasm: %.pir
+	$(p) -o $@ $^
+
 .PHONY: bag-check dict-check check clean
