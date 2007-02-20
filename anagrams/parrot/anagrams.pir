@@ -35,7 +35,10 @@
         new dict_it, .Iterator, dict_it
         dpr ("input_bag is ")
         print input_bag
-        print "\n"
+        print "; dictionary has "
+        $I0 = dict_it
+        print $I0
+        print " entries\n"
 next_entry:     
         unless dict_it goto done
         .local pmc one_entry
