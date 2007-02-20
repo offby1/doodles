@@ -17,27 +17,29 @@
         input = ibag
         dict = snarf_dict ()
         .local pmc result
-        result = anagrams (ibag, dict)
+        result = anagrams (ibag, dict, 0, 0)
         _dumper (result)
 .end
 
 .sub 'anagrams'
         .param BigInt input_bag
         .param pmc dict
-        .local pmc iterator
+        .param int to_skip
+        .param int trace_level
         .local pmc rv
-        new iterator, .Iterator, dict
         new rv, .ResizablePMCArray
 next_entry:     
-        unless iterator goto done
+        if dict == to_skip goto done
         .local pmc one_entry
         .local BigInt entry_bag
         .local BigInt smaller_bag
-        one_entry = shift iterator
+        one_entry = dict[to_skip]
+        clone one_entry, one_entry
+        inc to_skip
         entry_bag = shift one_entry
-
         smaller_bag = subtract_bags (input_bag, entry_bag)
-        unless smaller_bag goto next_entry
+
+        if smaller_bag == 0 goto next_entry
         unless smaller_bag == 1 goto recur
         
         .local pmc words_it
@@ -61,6 +63,14 @@ next_word:
         print "\n"
 
 recur:  
+        .local pmc from_smaller_bag
+        from_smaller_bag = anagrams (smaller_bag, dict, to_skip, 5)
+        unless from_smaller_bag goto next_entry
+        print "Pretend I'm combining this: "
+        print smaller_bag
+        print " with this: "
+        print from_smaller_bag
+        print "\n"
         goto next_entry
 done:
         .return (rv)

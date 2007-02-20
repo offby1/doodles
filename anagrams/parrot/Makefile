@@ -1,15 +1,18 @@
+p=/usr/local/src/langs/parrot-svn/parrot
+
 bag-check: bag.pbc
-	./parrot $<
+	$(p) $<
 
 dict-check: dict.pbc bag.pbc
-	time ./parrot  $<
+	time $(p)  $<
 
-check: bag-check dict-check
+check: anagrams.pbc dict.pbc bag.pbc
+	time $(p)  $< aaron
 
 clean:
 	-rm -f *.pbc
 
 %.pbc: %.pir
-	./parrot -o $@ $^
+	$(p) -o $@ $^
 
 .PHONY: bag-check dict-check check clean
