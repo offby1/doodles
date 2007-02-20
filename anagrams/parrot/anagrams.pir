@@ -35,19 +35,17 @@
         new dict_it, .Iterator, dict_it
         dpr ("input_bag is ")
         print input_bag
-        print "; dictionary has "
-        $I0 = dict_it
-        print $I0
-        print " entries\n"
+        print "\n"
 next_entry:     
         unless dict_it goto done
         .local pmc one_entry
         .local BigInt entry_bag
         .local BigInt smaller_bag
         shift one_entry, dict_it
+
         clone one_entry, one_entry
         entry_bag = shift one_entry
-        dpr ("one_entry: ")
+        dpr ("front entry: ")
         print entry_bag
         print "\n"
         smaller_bag = subtract_bags (input_bag, entry_bag)
