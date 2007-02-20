@@ -19,7 +19,7 @@
         .local pmc result
         .local pmc iterator
         new iterator, .Iterator, dict
-        result = anagrams (ibag, iterator, 0)
+        result = anagrams (ibag, iterator)
         print "OK, here's the final result:"
         _dumper (result)
 .end
@@ -27,7 +27,6 @@
 .sub 'anagrams'
         .param BigInt input_bag
         .param pmc dict_it
-        .param int to_skip
         .local pmc rv
         new rv, .ResizablePMCArray
         new dict_it, .Iterator, dict_it
@@ -89,7 +88,7 @@ recur:
         print smaller_bag
         print "\n"
         .local pmc from_smaller_bag
-        from_smaller_bag = anagrams (smaller_bag, dict_it, to_skip)
+        from_smaller_bag = anagrams (smaller_bag, dict_it)
         unless from_smaller_bag goto next_entry
         .local pmc combined
         combined = combine (one_entry, from_smaller_bag)
