@@ -33,7 +33,7 @@
         .local pmc rv
         new rv, .ResizablePMCArray
         new dict_it, .Iterator, dict_it
-        print "input_bag is "
+        dpr ("input_bag is ")
         print input_bag
         print "\n"
 next_entry:     
@@ -45,24 +45,24 @@ next_entry:
         clone one_entry, one_entry
         entry_bag = shift one_entry
         dpr ("one_entry: ")
-        dpr (entry_bag)
-        dpr ("\n")
+        print entry_bag
+        print "\n"
         smaller_bag = subtract_bags (input_bag, entry_bag)
 
         unless smaller_bag == 0 goto nonzero
         dpr ("subtracting failed -- input_bag ")
-        dpr (input_bag)
-        dpr (" doesn't contain entry_bag ")
-        dpr (entry_bag)
-        dpr ("\n")
+        print input_bag
+        print " doesn't contain entry_bag "
+        print entry_bag
+        print "\n"
         goto next_entry
 nonzero:        
         unless smaller_bag == 1 goto recur
         dpr ("subtracting yielded 1 -- input_bag ")
-        dpr (input_bag)
-        dpr (" equals entry_bag ")
-        dpr (entry_bag)
-        dpr ("\n")
+        print input_bag
+        print " equals entry_bag "
+        print entry_bag
+        print "\n"
 
         .local pmc words_it
         .local pmc list_of_one_word
@@ -86,12 +86,12 @@ next_word:
 
 recur:  
         dpr ("subtracting yielded > 1 -- input_bag ")
-        dpr (input_bag)
-        dpr (" contains entry_bag ")
-        dpr (entry_bag)
-        dpr (" with leftover of ")
-        dpr (smaller_bag)
-        dpr ("\n")
+        print input_bag
+        print " contains entry_bag "
+        print entry_bag
+        print " with leftover of "
+        print smaller_bag
+        print "\n"
         .local pmc from_smaller_bag
         inc_level (1)
         from_smaller_bag = anagrams (smaller_bag, dict_it)
@@ -103,8 +103,8 @@ recur:
         goto next_entry
 done:
         dpr ("Anagrams of ")
-        dpr (input_bag)
-        dpr (" are ")
+        print input_bag
+        print " are "
         _dumper (rv)
         .return (rv)
 .end
