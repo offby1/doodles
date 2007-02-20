@@ -1,5 +1,5 @@
 ## -*-pir-*-
-.sub 'main' :main
+.sub 'main'
         .param pmc args
         load_bytecode 'dict.pir'
         load_bytecode 'bag.pir'
@@ -74,4 +74,59 @@ recur:
         goto next_entry
 done:
         .return (rv)
+.end
+
+.sub 'combine'
+        .param pmc words
+        .param pmc in_anagrams
+        .local pmc rv
+        .local pmc anagrams
+        new rv, .ResizablePMCArray
+        _dumper (words, "words")
+        _dumper (in_anagrams, "in_anagrams")
+next_word:
+        unless words goto cleanup
+        clone anagrams, in_anagrams
+        .local string one_word
+        shift one_word, words
+        print "one_word: "
+        print one_word
+        print "\n"
+        .local pmc one_anagram
+next_anagram:   
+        unless anagrams goto next_word
+        shift one_anagram, anagrams
+        clone one_anagram, one_anagram
+        _dumper (one_anagram, "one_anagram")
+        unshift one_anagram, one_word
+        push rv, one_anagram
+        _dumper (one_anagram, "one_anagram after unshifting one word")
+        goto next_anagram
+cleanup:
+        .return (rv)
+.end
+
+.sub 'test_combine' :main
+        load_bytecode 'dumper.pir'
+        .local pmc anagrams
+        new anagrams, .ResizablePMCArray
+        .local pmc temp_list
+        new temp_list, .ResizableStringArray
+        push temp_list, "foo"
+        push temp_list, "bar"
+        push temp_list, "baz"
+        push anagrams, temp_list
+        new temp_list, .ResizableStringArray
+        push temp_list, "zap"
+        .local pmc result
+        result = combine (temp_list, anagrams)
+        _dumper (result)
+        print "\n\n"
+        new temp_list, .ResizableStringArray
+        push temp_list, "zip"
+        push temp_list, "zap"
+        push temp_list, "zop"
+        result = combine (temp_list, anagrams)
+        _dumper (result)
+        print "\n\n"
 .end
