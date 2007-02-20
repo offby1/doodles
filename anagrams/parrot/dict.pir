@@ -10,6 +10,7 @@
         .local string cache_file
         .local int stat_info
         cache_file = 'dict.cache'
+#        cache_file = 'dict.cache.little'
         .local pmc dict_hash    # used to build up the final entries
         new dict_hash, .Hash
 

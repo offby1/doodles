@@ -1,5 +1,5 @@
 ## -*-pir-*-
-.sub 'main'
+.sub 'main' :main
         .param pmc args
         load_bytecode 'dict.pir'
         load_bytecode 'bag.pir'
@@ -17,25 +17,27 @@
         input = ibag
         dict = snarf_dict ()
         .local pmc result
-        result = anagrams (ibag, dict, 0, 0)
+        .local pmc iterator
+        new iterator, .Iterator, dict
+        result = anagrams (ibag, iterator, 0)
+        print "OK, here's the final result:"
         _dumper (result)
 .end
 
 .sub 'anagrams'
         .param BigInt input_bag
-        .param pmc dict
+        .param pmc dict_it
         .param int to_skip
-        .param int trace_level
         .local pmc rv
         new rv, .ResizablePMCArray
+        new dict_it, .Iterator, dict_it
 next_entry:     
-        if dict == to_skip goto done
+        unless dict_it goto done
         .local pmc one_entry
         .local BigInt entry_bag
         .local BigInt smaller_bag
-        one_entry = dict[to_skip]
+        shift one_entry, dict_it
         clone one_entry, one_entry
-        inc to_skip
         entry_bag = shift one_entry
         smaller_bag = subtract_bags (input_bag, entry_bag)
 
@@ -64,13 +66,12 @@ next_word:
 
 recur:  
         .local pmc from_smaller_bag
-        from_smaller_bag = anagrams (smaller_bag, dict, to_skip, 5)
+        from_smaller_bag = anagrams (smaller_bag, dict_it, to_skip)
         unless from_smaller_bag goto next_entry
         print "Pretend I'm combining this: "
-        print smaller_bag
+        _dumper (one_entry)
         print " with this: "
-        print from_smaller_bag
-        print "\n"
+        _dumper (from_smaller_bag)
         goto next_entry
 done:
         .return (rv)
@@ -106,7 +107,7 @@ cleanup:
         .return (rv)
 .end
 
-.sub 'test_combine' :main
+.sub 'test_combine'
         load_bytecode 'dumper.pir'
         .local pmc anagrams
         new anagrams, .ResizablePMCArray
