@@ -1,5 +1,10 @@
 p=/usr/local/src/langs/parrot-svn/parrot
 
+sources=bag dict anagrams
+pbcs=$(addsuffix, .pbc, $(sources))
+
+all: $(pbcs)
+
 bag-check: bag.pbc
 	$(p) $<
 

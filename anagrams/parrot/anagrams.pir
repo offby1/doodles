@@ -7,6 +7,9 @@
         .local string input
         .local BigInt ibag
         .local pmc dict
+        .local pmc level
+        level = new .Integer
+        global "level" = level
 
         input = shift args
         join input, " ", args
@@ -40,24 +43,26 @@ next_entry:
         .local BigInt smaller_bag
         shift one_entry, dict_it
         clone one_entry, one_entry
-        _dumper (one_entry, "one_entry")
         entry_bag = shift one_entry
+        dpr ("one_entry: ")
+        dpr (entry_bag)
+        dpr ("\n")
         smaller_bag = subtract_bags (input_bag, entry_bag)
 
         unless smaller_bag == 0 goto nonzero
-        print "subtracting failed -- input_bag "
-        print input_bag
-        print " doesn't contain entry_bag "
-        print entry_bag
-        print "\n"
+        dpr ("subtracting failed -- input_bag ")
+        dpr (input_bag)
+        dpr (" doesn't contain entry_bag ")
+        dpr (entry_bag)
+        dpr ("\n")
         goto next_entry
 nonzero:        
         unless smaller_bag == 1 goto recur
-        print "subtracting yielded 1 -- input_bag "
-        print input_bag
-        print " equals entry_bag "
-        print entry_bag
-        print "\n"
+        dpr ("subtracting yielded 1 -- input_bag ")
+        dpr (input_bag)
+        dpr (" equals entry_bag ")
+        dpr (entry_bag)
+        dpr ("\n")
 
         .local pmc words_it
         .local pmc list_of_one_word
@@ -71,30 +76,36 @@ next_word:
         push rv, list_of_one_word
         goto next_word
 
-        print "Top, bottom, diff:\n"
-        print input_bag
-        print "; "
-        print entry_bag
-        print "; "
-        print smaller_bag
-        print "\n"
+        dpr ("Top, bottom, diff:\n")
+        dpr (input_bag)
+        dpr ("; ")
+        dpr (entry_bag)
+        dpr ("; ")
+        dpr (smaller_bag)
+        dpr ("\n")
 
 recur:  
-        print "subtracting yielded > 1 -- input_bag "
-        print input_bag
-        print " contains entry_bag "
-        print entry_bag
-        print " with leftover of "
-        print smaller_bag
-        print "\n"
+        dpr ("subtracting yielded > 1 -- input_bag ")
+        dpr (input_bag)
+        dpr (" contains entry_bag ")
+        dpr (entry_bag)
+        dpr (" with leftover of ")
+        dpr (smaller_bag)
+        dpr ("\n")
         .local pmc from_smaller_bag
+        inc_level (1)
         from_smaller_bag = anagrams (smaller_bag, dict_it)
+        inc_level (-1)
         unless from_smaller_bag goto next_entry
         .local pmc combined
         combined = combine (one_entry, from_smaller_bag)
         push rv, combined
         goto next_entry
 done:
+        dpr ("Anagrams of ")
+        dpr (input_bag)
+        dpr (" are ")
+        _dumper (rv)
         .return (rv)
 .end
 
@@ -103,9 +114,9 @@ done:
         .param pmc in_anagrams
         .local pmc rv
         .local pmc anagrams
-        print "combine: "
-        _dumper (words, "words")
-        _dumper (in_anagrams, "in_anagrams")
+#         print "combine: "
+#         _dumper (words, "words")
+#         _dumper (in_anagrams, "in_anagrams")
         new rv, .ResizablePMCArray
 next_word:
         unless words goto cleanup
@@ -147,4 +158,25 @@ cleanup:
         result = combine (temp_list, anagrams)
         _dumper (result)
         print "\n\n"
+.end
+
+.sub 'dpr'
+        .param string text
+        .local pmc level
+        .local string padding
+        level = global "level"
+        $I0 = level
+        repeat padding, " ", $I0
+        printerr padding
+        printerr text
+.end
+
+.sub 'inc_level'
+        .param int howmuch
+        .local pmc level
+        level = global "level"
+        $I0 = level
+        $I0 += howmuch
+        level = $I0
+        global "level" = level
 .end
