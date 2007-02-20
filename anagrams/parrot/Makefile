@@ -7,7 +7,7 @@ dict-check: dict.pbc bag.pbc
 	time $(p)  $<
 
 check: anagrams.pbc dict.pbc bag.pbc
-	time $(p)  $< aaron
+	time $(p)  $< aola
 
 clean:
 	-rm -f *.pbc
