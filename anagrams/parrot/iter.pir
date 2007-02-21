@@ -1,4 +1,5 @@
 ## See if we can make one iterator from another, and have each keep its own state.
+## $Id$
 
 .sub 'foo'
         .local pmc array
