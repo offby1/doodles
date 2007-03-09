@@ -41,7 +41,6 @@ next_entry:
         .local BigInt entry_bag
         .local BigInt smaller_bag
         .local pmc new_iter
-        clone new_iter, dict_it
         shift one_entry, dict_it
 
         clone one_entry, one_entry
@@ -98,6 +97,7 @@ recur:
 
         .local pmc from_smaller_bag
         inc_level (1)
+        clone new_iter, dict_it
         from_smaller_bag = anagrams (smaller_bag, new_iter)
         inc_level (-1)
         unless from_smaller_bag goto next_entry
