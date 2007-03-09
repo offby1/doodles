@@ -127,6 +127,10 @@ done:
 
         clone it, input_it
         new smaller_dict, .ResizablePMCArray
+
+#         print "prune: bag is "
+#         say bag
+
 next_entry:
         unless it goto done
         .local pmc one_entry
@@ -142,9 +146,6 @@ next_entry:
         goto next_entry
 done:
         new rv, .Iterator, smaller_dict
-        print "prune: returning iterator for "
-        _dumper (smaller_dict)
-        _dumper (rv)
         .return(rv)
 .end
 

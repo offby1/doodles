@@ -11,8 +11,10 @@ bag-check: bag.pbc
 dict-check: dict.pbc bag.pbc
 	time $(p)  $<
 
+test: check
+
 check: anagrams.pbc dict.pbc bag.pbc
-	time $(p)  $< 'Ernest'
+	time $(p)  $< 'est Hemingway'
 
 clean:
 	-rm -f *.pbc
@@ -23,4 +25,4 @@ clean:
 %.pasm: %.pir
 	$(p) -o $@ $^
 
-.PHONY: bag-check dict-check check clean
+.PHONY: bag-check dict-check check clean test
