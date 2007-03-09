@@ -76,7 +76,7 @@ call_snarf_cache:
         .local pmc entries
         entries = snarf_cache (cache_file)
         print entries
-        print " entries\n"
+        print " distinct bags\n"
         goto cleanup
 write_cache:
         entries = write_cache (dict_hash, cache_file)
