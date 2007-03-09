@@ -32,38 +32,39 @@
         .param pmc dict_it
         .local pmc rv
         new rv, .ResizablePMCArray
-        new dict_it, .Iterator, dict_it
-        dpr ("input_bag is ")
-        print input_bag
-        print "\n"
+        #dpr ("input_bag is ")
+        #print input_bag
+        #print "\n"
 next_entry:     
         unless dict_it goto done
         .local pmc one_entry
         .local BigInt entry_bag
         .local BigInt smaller_bag
+        .local pmc new_iter
+        clone new_iter, dict_it
         shift one_entry, dict_it
 
         clone one_entry, one_entry
         entry_bag = shift one_entry
-        dpr ("front entry: ")
-        print entry_bag
-        print "\n"
+        #dpr ("front entry: ")
+        #print entry_bag
+        #print "\n"
         smaller_bag = subtract_bags (input_bag, entry_bag)
 
         unless smaller_bag == 0 goto nonzero
-        dpr ("subtracting failed -- input_bag ")
-        print input_bag
-        print " doesn't contain entry_bag "
-        print entry_bag
-        print "\n"
+        #dpr ("subtracting failed -- input_bag ")
+        #print input_bag
+        #print " doesn't contain entry_bag "
+        #print entry_bag
+        #print "\n"
         goto next_entry
 nonzero:        
         unless smaller_bag == 1 goto recur
-        dpr ("subtracting yielded 1 -- input_bag ")
-        print input_bag
-        print " equals entry_bag "
-        print entry_bag
-        print "\n"
+        #dpr ("subtracting yielded 1 -- input_bag ")
+        #print input_bag
+        #print " equals entry_bag "
+        #print entry_bag
+        #print "\n"
 
         .local pmc words_it
         .local pmc list_of_one_word
@@ -77,25 +78,27 @@ next_word:
         push rv, list_of_one_word
         goto next_word
 
-        dpr ("Top, bottom, diff:\n")
-        dpr (input_bag)
-        dpr ("; ")
-        dpr (entry_bag)
-        dpr ("; ")
-        dpr (smaller_bag)
-        dpr ("\n")
+        #dpr ("Top, bottom, diff:\n")
+        #dpr (input_bag)
+        #dpr ("; ")
+        #dpr (entry_bag)
+        #dpr ("; ")
+        #dpr (smaller_bag)
+        #dpr ("\n")
 
 recur:  
-        dpr ("subtracting yielded > 1 -- input_bag ")
-        print input_bag
-        print " contains entry_bag "
-        print entry_bag
-        print " with leftover of "
-        print smaller_bag
-        print "\n"
+
+        #dpr ("subtracting yielded > 1 -- input_bag ")
+        #print input_bag
+        #print " contains entry_bag "
+        #print entry_bag
+        #print " with leftover of "
+        #print smaller_bag
+        #print "\n"
+
         .local pmc from_smaller_bag
         inc_level (1)
-        from_smaller_bag = anagrams (smaller_bag, dict_it)
+        from_smaller_bag = anagrams (smaller_bag, new_iter)
         inc_level (-1)
         unless from_smaller_bag goto next_entry
         .local pmc combined
@@ -103,10 +106,12 @@ recur:
         push rv, combined
         goto next_entry
 done:
-        dpr ("Anagrams of ")
-        print input_bag
-        print " are "
+
+        #dpr ("Anagrams of ")
+        #print input_bag
+        #print " are "
         _dumper (rv)
+
         .return (rv)
 .end
 
@@ -115,9 +120,11 @@ done:
         .param pmc in_anagrams
         .local pmc rv
         .local pmc anagrams
-#         print "combine: "
-#         _dumper (words, "words")
-#         _dumper (in_anagrams, "in_anagrams")
+
+        print "combine: "
+        _dumper (words, "words")
+        _dumper (in_anagrams, "in_anagrams")
+
         new rv, .ResizablePMCArray
 next_word:
         unless words goto cleanup
@@ -159,6 +166,24 @@ cleanup:
         result = combine (temp_list, anagrams)
         _dumper (result)
         print "\n\n"
+
+        new anagrams, .ResizablePMCArray
+        new temp_list, .ResizableStringArray
+        push temp_list, "one"
+        push temp_list, "two"
+        push temp_list, "three"
+        push anagrams, temp_list
+        new temp_list, .ResizableStringArray
+        push temp_list, "1"
+        push temp_list, "2"
+        push temp_list, "3"
+        push anagrams, temp_list
+        new temp_list, .ResizableStringArray
+        push temp_list, "cow"
+        push temp_list, "horse"
+        result = combine (temp_list, anagrams)
+        _dumper (result)
+        print "\n\n"
 .end
 
 .sub 'dpr'
@@ -168,8 +193,10 @@ cleanup:
         level = global "level"
         $I0 = level
         repeat padding, " ", $I0
+
         printerr padding
         printerr text
+
 .end
 
 .sub 'inc_level'

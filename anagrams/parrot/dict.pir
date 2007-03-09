@@ -9,8 +9,8 @@
         .local pmc infile_handle
         .local string cache_file
         .local int stat_info
-#        cache_file = 'dict.cache'
-        cache_file = 'dict.cache.little'
+        cache_file = 'dict.cache'
+#        cache_file = 'dict.cache.little'
         .local pmc dict_hash    # used to build up the final entries
         new dict_hash, .Hash
 
@@ -20,8 +20,8 @@
         stat stat_info, cache_file, 0
         if stat_info goto call_snarf_cache
         say "No dict cache; reading the actual dictionary"
-        infile_handle = open "words-100", "<"
-#        infile_handle = open "/usr/share/dict/words", "<"
+#        infile_handle = open "words-100", "<"
+        infile_handle = open "/usr/share/dict/words", "<"
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler

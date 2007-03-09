@@ -1,4 +1,4 @@
-p=/usr/local/src/langs/parrot-svn/parrot
+p=/usr/local/src/langs/my-parrot-branch/parrot
 
 sources=bag dict anagrams
 pbcs=$(addsuffix, .pbc, $(sources))
@@ -12,7 +12,7 @@ dict-check: dict.pbc bag.pbc
 	time $(p)  $<
 
 check: anagrams.pbc dict.pbc bag.pbc
-	time $(p)  $< aola
+	time $(p)  $< 'Ernest'
 
 clean:
 	-rm -f *.pbc
