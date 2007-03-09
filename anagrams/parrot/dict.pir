@@ -25,15 +25,11 @@
 
         .local pmc p5regex_compile
         p5regex_compile = compreg 'PGE::P5Regex'         # get the compiler
-        .local string has_a_vowel, long_enough, non_alpha
         .local pmc has_a_vowel_rulesub, long_enough_rulesub, non_alpha_rulesub, match
         .local pmc the_bag
-        has_a_vowel = '[aeiouyAEIOUY]'
-        has_a_vowel_rulesub = p5regex_compile(has_a_vowel)
-        long_enough = '[iaIA]|..'
-        long_enough_rulesub = p5regex_compile(long_enough)
-        non_alpha = "[^a-zA-Z]"
-        non_alpha_rulesub = p5regex_compile(non_alpha)
+        has_a_vowel_rulesub = p5regex_compile('[aeiouyAEIOUY]')
+        long_enough_rulesub = p5regex_compile('[iaIA]|..')
+        non_alpha_rulesub   = p5regex_compile('[^a-zA-Z]')
 
 next_line:
         readline one_line, infile_handle
