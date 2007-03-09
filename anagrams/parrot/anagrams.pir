@@ -103,7 +103,7 @@ recur:
         unless from_smaller_bag goto next_entry
         .local pmc combined
         combined = combine (one_entry, from_smaller_bag)
-        push rv, combined
+        splice rv, combined, 0, 0
         goto next_entry
 done:
 
