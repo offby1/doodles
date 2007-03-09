@@ -115,6 +115,40 @@ done:
         .return (rv)
 .end
 
+.sub 'prune'
+        .param BigInt bag
+        .param pmc input_it
+        .local pmc smaller_dict
+        .local pmc rv
+        .local pmc it
+
+        .return (input_it)
+
+
+
+        clone it, input_it
+        new smaller_dict, .ResizablePMCArray
+next_entry:
+        unless it goto done
+        .local pmc one_entry
+        shift one_entry, it
+        .local pmc entry_it
+        new entry_it, .Iterator, one_entry
+        .local BigInt this_bag
+        .local BigInt difference
+        this_bag = shift entry_it
+        difference = subtract_bags (bag, this_bag)
+        if difference == 0 goto next_entry
+        push smaller_dict, one_entry
+        goto next_entry
+done:
+        new rv, .Iterator, smaller_dict
+        print "prune: returning iterator for "
+        _dumper (smaller_dict)
+        _dumper (rv)
+        .return(rv)
+.end
+
 .sub 'combine'
         .param pmc words
         .param pmc in_anagrams
