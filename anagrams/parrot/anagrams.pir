@@ -110,7 +110,7 @@ done:
         #dpr ("Anagrams of ")
         #print input_bag
         #print " are "
-        _dumper (rv)
+        #_dumper (rv)
 
         .return (rv)
 .end
@@ -121,9 +121,9 @@ done:
         .local pmc rv
         .local pmc anagrams
 
-        print "combine: "
-        _dumper (words, "words")
-        _dumper (in_anagrams, "in_anagrams")
+#         print "combine: "
+#         _dumper (words, "words")
+#         _dumper (in_anagrams, "in_anagrams")
 
         new rv, .ResizablePMCArray
 next_word:
