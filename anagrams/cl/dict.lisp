@@ -14,7 +14,7 @@
           
         ;; it's gotta have a vowel.
         (find-if #'(lambda (ch)
-                     (find ch "aeiou")) word)
+                     (find ch "aeiouy")) word)
 
         ;; it's gotta be two letters long, unless it's `i' or `a'.
         (or (equalp "i" word)
