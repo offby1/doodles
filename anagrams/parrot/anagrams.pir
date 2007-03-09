@@ -31,17 +31,20 @@
         .param BigInt input_bag
         .param pmc dict_it
         .local pmc rv
+        .local pmc pruned_it
         new rv, .ResizablePMCArray
         #dpr ("input_bag is ")
         #print input_bag
         #print "\n"
+
+        pruned_it = prune (input_bag, dict_it)
 next_entry:     
-        unless dict_it goto done
+        unless pruned_it goto done
         .local pmc one_entry
         .local BigInt entry_bag
         .local BigInt smaller_bag
         .local pmc new_iter
-        shift one_entry, dict_it
+        shift one_entry, pruned_it
 
         clone one_entry, one_entry
         entry_bag = shift one_entry
@@ -97,7 +100,7 @@ recur:
 
         .local pmc from_smaller_bag
         inc_level (1)
-        clone new_iter, dict_it
+        clone new_iter, pruned_it
         from_smaller_bag = anagrams (smaller_bag, new_iter)
         inc_level (-1)
         unless from_smaller_bag goto next_entry
@@ -121,10 +124,6 @@ done:
         .local pmc smaller_dict
         .local pmc rv
         .local pmc it
-
-        .return (input_it)
-
-
 
         clone it, input_it
         new smaller_dict, .ResizablePMCArray
