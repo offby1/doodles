@@ -1,8 +1,8 @@
 ## -*-pir-*-
 .sub 'main' :main
         .param pmc args
-        load_bytecode 'dict.pir'
-        load_bytecode 'bag.pir'
+        load_bytecode './dict.pbc'
+        load_bytecode './bag.pbc'
         load_bytecode 'dumper.pir'
         .local string input
         .local BigInt ibag
