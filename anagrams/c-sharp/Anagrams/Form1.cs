@@ -50,7 +50,7 @@ namespace Anagrams
         {
             textBox2.AppendText(lastline);
             textBox2.AppendText(" -> ");
-            textBox2.AppendText(aBag.toString());
+            textBox2.AppendText(aBag.AsString());
             textBox2.AppendText("\n");
         }
 
@@ -81,7 +81,7 @@ namespace Anagrams
                     (line = sr.ReadLine()) != null)
                 {
                     Bag aBag = new Bag(line);
-                    if (!stringlists_by_bag.ContainsKey(aBag.toString()))
+                    if (!stringlists_by_bag.ContainsKey(aBag.AsString()))
                     {
                         List<string> l = new List<String>();
                         l.Add(line);
@@ -89,7 +89,7 @@ namespace Anagrams
                     }
                     else
                     {
-                        List<string> l = (List<string>)stringlists_by_bag[aBag.toString()];
+                        List<string> l = (List<string>)stringlists_by_bag[aBag.AsString()];
                         l.Add(line);
                         if (l.Count > length_of_longest_list_so_far)
                         {

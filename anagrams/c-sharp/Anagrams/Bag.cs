@@ -10,7 +10,7 @@ namespace Anagrams
         {
             Bag m = new Bag(minuend);
             Bag s = new Bag(subtrahend);
-            return m.subtract(s).toString();
+            return m.subtract(s).AsString();
         }
 
         private string guts;
@@ -34,7 +34,7 @@ namespace Anagrams
             Console.WriteLine("Pretend the bag tests all passed.");
         }
 
-        public string toString()
+        public string AsString()
         {
             return guts;
         }
