@@ -25,11 +25,33 @@ namespace Anagrams
         }
         public Bag subtract(Bag subtrahend)
         {
-            return new Bag("");
+            string m = guts;
+            string s = subtrahend.guts;
+            string difference = "";
+
+            while (true)
+            {
+                if (s.Length == 0) return new Bag(difference + m);
+                if (m.Length == 0) return null;
+                {
+                    char s0 = s[0];
+                    char m0 = m[0];
+                    if (m0 > s0) return null;
+                    if (m0 < s0)
+                    {
+                        m = m.Substring(1);
+                        difference += m0;
+                        continue;
+                    }
+                    if (m0 != s0) throw new Exception("Assertion failure! internal error!  Aggggh.");
+                    m = m.Substring(1);
+                    s = s.Substring(1);
+                }
+            }
         }
         private static void test_subtraction(string minuend, string subtrahend, string expected_difference)
         {
-            string actual_difference = subtract_strings("dog", "god");
+            string actual_difference = subtract_strings(minuend, subtrahend);
             if (actual_difference != expected_difference)
                 throw new Exception("Test failure: "
                     + "Subtracting `" + subtrahend 
