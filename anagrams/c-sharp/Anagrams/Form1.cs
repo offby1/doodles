@@ -40,6 +40,20 @@ namespace Anagrams
             Bag.test();
         }
 
+        private void update_counts(int bags, int linesRead)
+        {
+            toolStripStatusLabel_bags_read.Text = bags.ToString() + " bags";
+            toolStripStatusLabel_strings_read.Text = linesRead.ToString() + " words";
+        }
+
+        private void update_last_line(string lastline, Bag aBag)
+        {
+            textBox2.AppendText(lastline);
+            textBox2.AppendText(" -> ");
+            textBox2.AppendText(aBag.toString());
+            textBox2.AppendText("\n");
+        }
+
         private void Form1_Shown(object sender, EventArgs e)
         {
             System.IO.Stream wordlist_stream;
@@ -51,8 +65,10 @@ namespace Anagrams
             {
                 throw new Exception("Uh oh, can't find word list inside myself!");
             }
+            toolStripStatusLabel1.Text = "Compiling dictionary ...";
             textBox2.Clear();
-            progressBar1.Value = 0;
+            toolStripProgressBar1.Value = 0;
+            toolStripProgressBar1.Maximum = (int)wordlist_stream.Length;
             using (StreamReader sr = new StreamReader(wordlist_stream))
             {
                 String line;
@@ -86,22 +102,18 @@ namespace Anagrams
                         }
                     }
                     linesRead++;
-                    progressBar1.PerformStep();
+                    toolStripProgressBar1.Increment(line.Length + 1); // the +1 is for the line ending character, I'd guess.
                     if (linesRead % 1000 == 0)
                     {
-                        bags_textBox.Text = stringlists_by_bag.Count.ToString();
-                        strings_textBox.Text = linesRead.ToString();
-                        textBox2.AppendText(linesRead.ToString());
-                        textBox2.AppendText(": ");
-                        textBox2.AppendText(line);
-                        textBox2.AppendText(" -> ");
-                        textBox2.AppendText(aBag.toString());
-                        textBox2.AppendText("\n");
+                        update_counts(stringlists_by_bag.Count, linesRead);
+                        update_last_line(line, aBag);
                     }
                     Application.DoEvents();
                 }
+                update_counts(stringlists_by_bag.Count, linesRead);
             }
-
+            toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
         }
+
     }
 }
