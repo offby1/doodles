@@ -27,10 +27,20 @@ namespace Anagrams
         {
             return new Bag("");
         }
+        private static void test_subtraction(string minuend, string subtrahend, string expected_difference)
+        {
+            string actual_difference = subtract_strings("dog", "god");
+            if (actual_difference != expected_difference)
+                throw new Exception("Test failure: "
+                    + "Subtracting `" + subtrahend 
+                    + "' from `" + minuend 
+                    + "' yielded `" + actual_difference
+                    + "', but should have yielded `" + expected_difference + "'.");
+        }
         public static void test()
         {
-            string diff = subtract_strings("dog", "god");
-            if (diff != "") throw new Exception("Uh oh");
+            test_subtraction("dog", "god", "");
+            test_subtraction("ddog", "god", "d");
             Console.WriteLine("Pretend the bag tests all passed.");
         }
 
