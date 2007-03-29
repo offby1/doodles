@@ -20,7 +20,6 @@ namespace Anagrams
         // exception than this, but what the hell.
 
         private bool ok_to_continue = true;
-        private string word_file_name;
 
         public Form1()
         {
@@ -29,17 +28,32 @@ namespace Anagrams
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (word_file_name == null)
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            ok_to_continue = false;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            Bag.test();
+        }
+
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            System.IO.Stream wordlist_stream;
+            System.Reflection.Assembly thisExe;
+            thisExe = System.Reflection.Assembly.GetExecutingAssembly();
+            wordlist_stream =
+                thisExe.GetManifestResourceStream("Anagrams.words");
+            if (wordlist_stream == null)
             {
-                // pulling stuff outta the environment like this seems clunky, but it seems to work.
-                openFileDialog1.InitialDirectory = Environment.GetEnvironmentVariable ("USERPROFILE") + "/doodles/anagrams";
-                openFileDialog1.ShowDialog();
-                word_file_name = openFileDialog1.FileName;
+                throw new Exception("Uh oh, can't find word list inside myself!");
             }
-            (sender as Button).Enabled = false;
             textBox2.Clear();
             progressBar1.Value = 0;
-            using (StreamReader sr = new StreamReader(word_file_name))
+            using (StreamReader sr = new StreamReader(wordlist_stream))
             {
                 String line;
                 // Read and display lines from the file until the end of 
@@ -50,7 +64,7 @@ namespace Anagrams
                 while (ok_to_continue &&
                     (line = sr.ReadLine()) != null)
                 {
-                    Bag aBag =new Bag(line);
+                    Bag aBag = new Bag(line);
                     if (!stringlists_by_bag.ContainsKey(aBag.toString()))
                     {
                         List<string> l = new List<String>();
@@ -86,20 +100,8 @@ namespace Anagrams
                     }
                     Application.DoEvents();
                 }
-                (sender as Button).Enabled = true;
             }
-        }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            ok_to_continue = false;
         }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            Bag.test();
-        }
-
-   
     }
 }
