@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -44,14 +45,28 @@ namespace Anagrams
                 // Read and display lines from the file until the end of 
                 // the file is reached.
                 int linesRead = 0;
+                Hashtable stringlists_by_bag = new Hashtable();
                 while (ok_to_continue &&
                     (line = sr.ReadLine()) != null)
                 {
                     Bag aBag =new Bag(line);
+                    if (!stringlists_by_bag.ContainsKey(aBag.toString()))
+                    {
+                        List<string> l = new List<String>();
+                        l.Add(line);
+                        stringlists_by_bag.Add(aBag, l);
+                    }
+                    else
+                    {
+                        List<string> l = (List<string>)stringlists_by_bag[aBag.toString()];
+                        l.Add(line);
+                    }
                     linesRead++;
                     progressBar1.PerformStep();
                     if (linesRead % 1000 == 0)
                     {
+                        bags_textBox.Text = stringlists_by_bag.Count.ToString();
+                        strings_textBox.Text = linesRead.ToString();
                         textBox2.AppendText(linesRead.ToString());
                         textBox2.AppendText(": ");
                         textBox2.AppendText(line);
@@ -77,6 +92,11 @@ namespace Anagrams
         private void Form1_Load(object sender, EventArgs e)
         {
             Bag.test();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

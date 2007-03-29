@@ -32,6 +32,10 @@ namespace Anagrams
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.strings_textBox = new System.Windows.Forms.TextBox();
+            this.bags_textBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button1
@@ -70,11 +74,52 @@ namespace Anagrams
             this.openFileDialog1.ReadOnlyChecked = true;
             this.openFileDialog1.Title = "Word List";
             // 
+            // strings_textBox
+            // 
+            this.strings_textBox.Location = new System.Drawing.Point(12, 71);
+            this.strings_textBox.Name = "strings_textBox";
+            this.strings_textBox.ReadOnly = true;
+            this.strings_textBox.Size = new System.Drawing.Size(100, 20);
+            this.strings_textBox.TabIndex = 4;
+            this.strings_textBox.Text = "0";
+            // 
+            // bags_textBox
+            // 
+            this.bags_textBox.Location = new System.Drawing.Point(180, 71);
+            this.bags_textBox.Name = "bags_textBox";
+            this.bags_textBox.ReadOnly = true;
+            this.bags_textBox.Size = new System.Drawing.Size(100, 20);
+            this.bags_textBox.TabIndex = 5;
+            this.bags_textBox.Text = "0";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 55);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(39, 13);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Strings";
+            this.label1.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(177, 55);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(31, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Bags";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(292, 273);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.bags_textBox);
+            this.Controls.Add(this.strings_textBox);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.button1);
@@ -93,6 +138,10 @@ namespace Anagrams
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.TextBox strings_textBox;
+        private System.Windows.Forms.TextBox bags_textBox;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
     }
 }
 

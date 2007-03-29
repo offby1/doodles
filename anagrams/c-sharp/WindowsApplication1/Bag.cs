@@ -7,12 +7,15 @@ namespace Anagrams
 
     class Bag
     {
-        public Char[] letters;
+        private string guts;
         public Bag(string s)
         {
             Char [] chars = s.ToLower(). ToCharArray();
             Array.Sort(chars);
-            letters = Array.FindAll<char>(chars, Char.IsLetter);
+            Char [] letters = Array.FindAll<char>(chars, Char.IsLetter);
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Insert(0, letters);
+            guts = sb.ToString();
         }
 
         public static void test ()
@@ -22,9 +25,15 @@ namespace Anagrams
 
         public string toString()
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.Insert(0, letters);
-            return sb.ToString();
+            return guts;
+        }
+        public override int GetHashCode()
+        {
+            return guts.GetHashCode();
+        }
+        public override bool Equals(object obj)
+        {
+            return guts.Equals(obj);
         }
     }
 }
