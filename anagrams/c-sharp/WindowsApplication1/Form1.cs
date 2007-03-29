@@ -55,6 +55,8 @@ namespace Anagrams
                         textBox2.AppendText(linesRead.ToString());
                         textBox2.AppendText(": ");
                         textBox2.AppendText(line);
+                        textBox2.AppendText(" -> ");
+                        textBox2.AppendText(aBag.toString());
                         textBox2.AppendText("\n");
                     }
                     Application.DoEvents();
