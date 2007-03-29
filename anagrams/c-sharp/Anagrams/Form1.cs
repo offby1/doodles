@@ -45,6 +45,7 @@ namespace Anagrams
                 // Read and display lines from the file until the end of 
                 // the file is reached.
                 int linesRead = 0;
+                int length_of_longest_list_so_far = 0;
                 Hashtable stringlists_by_bag = new Hashtable();
                 while (ok_to_continue &&
                     (line = sr.ReadLine()) != null)
@@ -60,6 +61,15 @@ namespace Anagrams
                     {
                         List<string> l = (List<string>)stringlists_by_bag[aBag.toString()];
                         l.Add(line);
+                        if (l.Count > length_of_longest_list_so_far)
+                        {
+                            length_of_longest_list_so_far = l.Count;
+                            textBox1.Text = "";
+                            foreach (string s in l)
+                            {
+                                textBox1.Text += s + " ";
+                            }
+                        }
                     }
                     linesRead++;
                     progressBar1.PerformStep();
