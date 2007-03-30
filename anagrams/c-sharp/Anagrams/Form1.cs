@@ -51,8 +51,6 @@ namespace Anagrams
         private void update_last_line(string lastline, Bag aBag, int this_lines_index)
         {
             string display_me = lastline + " -> " + aBag.AsString();
-            OutputArea.AppendText(display_me);
-            OutputArea.AppendText(Environment.NewLine);
             listView1.Items.Add(display_me);
             listView1.EnsureVisible(listView1.Items.Count - 1);
         }
@@ -69,7 +67,6 @@ namespace Anagrams
                 throw new Exception("Uh oh, can't find word list inside myself!");
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ...";
-            OutputArea.Clear();
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Maximum = (int)wordlist_stream.Length;
             using (StreamReader sr = new StreamReader(wordlist_stream))
@@ -78,7 +75,6 @@ namespace Anagrams
                 // Read and display lines from the file until the end of 
                 // the file is reached.
                 int linesRead = 0;
-                int length_of_longest_list_so_far = 0;
                 Hashtable stringlists_by_bag = new Hashtable();
                 while (ok_to_continue &&
                     (line = sr.ReadLine()) != null)
@@ -95,15 +91,6 @@ namespace Anagrams
                     {
                         List<string> l = (List<string>)stringlists_by_bag[aBag];
                         if (!l.Contains(line)) l.Add(line);
-                        if (l.Count > length_of_longest_list_so_far)
-                        {
-                            length_of_longest_list_so_far = l.Count;
-                            textBox1.Text = "";
-                            foreach (string s in l)
-                            {
-                                textBox1.Text += s + " ";
-                            }
-                        }
                     }
                     linesRead++;
                     toolStripProgressBar1.Increment(line.Length + 1); // the +1 is for the line ending character, I'd guess.
@@ -139,7 +126,6 @@ namespace Anagrams
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
-            OutputArea.Clear();
             listView1.Items.Clear();
             toolStripStatusLabel_bags_read.Text = "";
             toolStripStatusLabel_strings_read.Text = "";
@@ -160,8 +146,6 @@ namespace Anagrams
                     listView1.Items.Add(display_me);
                     listView1.EnsureVisible(listView1.Items.Count - 1);
 
-                    OutputArea.AppendText(display_me);
-                    OutputArea.AppendText(Environment.NewLine);
                 }
                 toolStripProgressBar1.PerformStep();
                 Application.DoEvents();
