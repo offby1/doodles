@@ -156,6 +156,14 @@ namespace Anagrams
             toolStripStatusLabel1.Text += " done.";
         }
 
+        private void input_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+                do_some_pruning.PerformClick();
+            else
+                e.Handled = false;
+        }
+
     }
     // each entry is a bag followed by words that can be made from that bag.
 

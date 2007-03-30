@@ -134,6 +134,7 @@ namespace Anagrams
             this.input.Name = "input";
             this.input.Size = new System.Drawing.Size(361, 20);
             this.input.TabIndex = 1;
+            this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
             // 
             // Form1
             // 
