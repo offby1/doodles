@@ -53,7 +53,7 @@ namespace Anagrams
             OutputArea.AppendText(lastline);
             OutputArea.AppendText(" -> ");
             OutputArea.AppendText(aBag.AsString());
-            OutputArea.AppendText("\n");
+            OutputArea.AppendText(Environment.NewLine);
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -148,7 +148,7 @@ namespace Anagrams
                         OutputArea.AppendText(" ");
                         OutputArea.AppendText(s);
                     }
-                    OutputArea.AppendText("\n");
+                    OutputArea.AppendText(Environment.NewLine);
                 }
                 toolStripProgressBar1.PerformStep();
                 Application.DoEvents();
