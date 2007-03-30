@@ -28,7 +28,7 @@ namespace Anagrams
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.OutputArea = new System.Windows.Forms.TextBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -37,18 +37,20 @@ namespace Anagrams
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel_strings_read = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel_bags_read = new System.Windows.Forms.ToolStripStatusLabel();
+            this.do_some_pruning = new System.Windows.Forms.Button();
+            this.input = new System.Windows.Forms.TextBox();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // textBox2
+            // OutputArea
             // 
-            this.textBox2.Location = new System.Drawing.Point(64, 76);
-            this.textBox2.Multiline = true;
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox2.Size = new System.Drawing.Size(340, 94);
-            this.textBox2.TabIndex = 2;
+            this.OutputArea.Location = new System.Drawing.Point(64, 76);
+            this.OutputArea.Multiline = true;
+            this.OutputArea.Name = "OutputArea";
+            this.OutputArea.ReadOnly = true;
+            this.OutputArea.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.OutputArea.Size = new System.Drawing.Size(340, 94);
+            this.OutputArea.TabIndex = 2;
             // 
             // openFileDialog1
             // 
@@ -81,7 +83,7 @@ namespace Anagrams
             this.toolStripStatusLabel1,
             this.toolStripStatusLabel_strings_read,
             this.toolStripStatusLabel_bags_read});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 188);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 304);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(463, 22);
             this.statusStrip1.TabIndex = 10;
@@ -112,15 +114,36 @@ namespace Anagrams
             this.toolStripStatusLabel_bags_read.Size = new System.Drawing.Size(13, 17);
             this.toolStripStatusLabel_bags_read.Text = "0";
             // 
+            // do_some_pruning
+            // 
+            this.do_some_pruning.Enabled = false;
+            this.do_some_pruning.Location = new System.Drawing.Point(382, 231);
+            this.do_some_pruning.Name = "do_some_pruning";
+            this.do_some_pruning.Size = new System.Drawing.Size(75, 23);
+            this.do_some_pruning.TabIndex = 11;
+            this.do_some_pruning.Text = "Prune!";
+            this.do_some_pruning.UseVisualStyleBackColor = true;
+            this.do_some_pruning.Click += new System.EventHandler(this.do_some_pruning_Click);
+            // 
+            // input
+            // 
+            this.input.Enabled = false;
+            this.input.Location = new System.Drawing.Point(15, 231);
+            this.input.Name = "input";
+            this.input.Size = new System.Drawing.Size(361, 20);
+            this.input.TabIndex = 12;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(463, 210);
+            this.ClientSize = new System.Drawing.Size(463, 326);
+            this.Controls.Add(this.input);
+            this.Controls.Add(this.do_some_pruning);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.OutputArea);
             this.Name = "Form1";
             this.Text = "Anagram Thingy";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
@@ -135,7 +158,7 @@ namespace Anagrams
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox OutputArea;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label3;
@@ -144,6 +167,8 @@ namespace Anagrams
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_strings_read;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_bags_read;
+        private System.Windows.Forms.Button do_some_pruning;
+        private System.Windows.Forms.TextBox input;
     }
 }
 
