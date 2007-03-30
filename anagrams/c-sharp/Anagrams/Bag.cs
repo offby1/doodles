@@ -9,7 +9,7 @@ namespace Anagrams
         static private string subtract_strings(string minuend, string subtrahend)
         {
             Bag m = new Bag(minuend);
-            
+
             Bag s = new Bag(subtrahend);
             Bag diff = m.subtract(s);
             if (diff == null) return null;
@@ -57,8 +57,8 @@ namespace Anagrams
             string actual_difference = subtract_strings(minuend, subtrahend);
             if (actual_difference != expected_difference)
                 throw new Exception("Test failure: "
-                    + "Subtracting `" + subtrahend 
-                    + "' from `" + minuend 
+                    + "Subtracting `" + subtrahend
+                    + "' from `" + minuend
                     + "' yielded `" + actual_difference
                     + "', but should have yielded `" + expected_difference + "'.");
         }
@@ -80,7 +80,7 @@ namespace Anagrams
         }
         public override bool Equals(object obj)
         {
-            return guts.Equals(obj);
+            return guts.Equals(((Bag)obj).guts);
         }
     }
 }

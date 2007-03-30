@@ -83,8 +83,9 @@ namespace Anagrams
                 while (ok_to_continue &&
                     (line = sr.ReadLine()) != null)
                 {
+                    line = line.ToLower();
                     Bag aBag = new Bag(line);
-                    if (!stringlists_by_bag.ContainsKey(aBag.AsString()))
+                    if (!stringlists_by_bag.ContainsKey(aBag))
                     {
                         List<string> l = new List<String>();
                         l.Add(line);
@@ -92,8 +93,8 @@ namespace Anagrams
                     }
                     else
                     {
-                        List<string> l = (List<string>)stringlists_by_bag[aBag.AsString()];
-                        l.Add(line);
+                        List<string> l = (List<string>)stringlists_by_bag[aBag];
+                        if (!l.Contains(line)) l.Add(line);
                         if (l.Count > length_of_longest_list_so_far)
                         {
                             length_of_longest_list_so_far = l.Count;
