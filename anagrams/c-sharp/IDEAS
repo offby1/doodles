@@ -1,0 +1,8 @@
+Stuff I might want to do:
+
+* See if C# has something like this nifty feature in Delphi: you can
+  write a function that enables a control based on the states of other
+  controls, and have the system call your function "in the
+  background", when nothing is happening.  Thus you can keep all the
+  code for enabling that control in one place, rather than scattered
+  throughout the program.
