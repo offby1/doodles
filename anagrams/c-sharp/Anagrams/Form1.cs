@@ -126,6 +126,7 @@ namespace Anagrams
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
+            Anagrams.anagrams(input_bag, dictionary);
             listView1.Items.Clear();
             toolStripStatusLabel_bags_read.Text = "";
             toolStripStatusLabel_strings_read.Text = "";
