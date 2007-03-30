@@ -112,8 +112,9 @@ namespace Anagrams
                         update_last_line(line, aBag, linesRead / 1000 - 1);
                     }
 
+#if DEBUG
                     if (linesRead == 10000) break;
-
+#endif
                     Application.DoEvents();
                 }
                 update_counts(stringlists_by_bag.Count, linesRead);

@@ -67,7 +67,7 @@ namespace Anagrams
             test_subtraction("dog", "god", "");
             test_subtraction("ddog", "god", "d");
             test_subtraction("a", "b", null);
-            Console.WriteLine("Pretend the bag tests all passed.");
+            Console.WriteLine("Bag tests all passed.");
         }
 
         public string AsString()
