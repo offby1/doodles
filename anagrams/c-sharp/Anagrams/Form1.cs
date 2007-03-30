@@ -138,6 +138,8 @@ namespace Anagrams
             input.Enabled = true;
             input.Focus();
         }
+        private delegate void zero_arg_del();
+        private delegate void one_arg_del(List<string> words);
 
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
@@ -149,25 +151,42 @@ namespace Anagrams
             toolStripStatusLabel1.Text = "Pruning for '" + input.Text + "' ...";
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Maximum = dictionary.Count;
-            foreach (bag_and_anagrams pair in dictionary)
+            zero_arg_del usual_callback = delegate()
             {
-                Bag this_bag = pair.b;
-                if (input_bag.subtract(this_bag) != null)
-                {
+                toolStripProgressBar1.PerformStep();
+                Application.DoEvents();
+            };
+            one_arg_del sucess_callback = delegate(List<string> words)
+            {
                     string display_me = "";
-                    foreach (string s in pair.words)
+                    foreach (string s in words)
                     {
                         if (display_me.Length > 0) display_me += " ";
                         display_me += s;
                     }
                     listView1.Items.Add(display_me);
                     listView1.EnsureVisible(listView1.Items.Count - 1);
-
-                }
-                toolStripProgressBar1.PerformStep();
-                Application.DoEvents();
-            }
+            };
+            prune(input_bag, dictionary, usual_callback, sucess_callback);
             toolStripStatusLabel1.Text += " done.";
+        }
+        
+        private List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d,
+            zero_arg_del usual_callback,
+            one_arg_del success_callback)
+        {
+            List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
+            foreach (bag_and_anagrams pair in d)
+            {
+                Bag this_bag = pair.b;
+                if (b.subtract(this_bag) != null)
+                {
+                    rv.Add(pair);
+                    success_callback(pair.words);
+                }
+                usual_callback();
+            }
+            return rv;
         }
 
         private void input_KeyPress(object sender, KeyPressEventArgs e)
