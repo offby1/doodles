@@ -158,19 +158,19 @@ namespace Anagrams
             };
             one_arg_del sucess_callback = delegate(List<string> words)
             {
-                    string display_me = "";
-                    foreach (string s in words)
-                    {
-                        if (display_me.Length > 0) display_me += " ";
-                        display_me += s;
-                    }
-                    listView1.Items.Add(display_me);
-                    listView1.EnsureVisible(listView1.Items.Count - 1);
+                string display_me = "";
+                foreach (string s in words)
+                {
+                    if (display_me.Length > 0) display_me += " ";
+                    display_me += s;
+                }
+                listView1.Items.Add(display_me);
+                listView1.EnsureVisible(listView1.Items.Count - 1);
             };
             prune(input_bag, dictionary, usual_callback, sucess_callback);
             toolStripStatusLabel1.Text += " done.";
         }
-        
+
         private List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d,
             zero_arg_del usual_callback,
             one_arg_del success_callback)
