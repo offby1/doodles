@@ -55,6 +55,21 @@ namespace Anagrams
             listView1.EnsureVisible(listView1.Items.Count - 1);
         }
 
+        // this is a filter for entires in the original word list.  It rejects words that have no vowels, and those that are too short.
+        private bool acceptable(string s)
+        {
+            if (s.Length < 2)
+            {
+                if (s == "i" || s == "a")
+                    return true;
+                return false;
+            }
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'y' };
+            if (s.IndexOfAny(vowels, 0) > -1)
+                return true;
+            return false;
+        }
+
         private void Form1_Shown(object sender, EventArgs e)
         {
             System.IO.Stream wordlist_stream;
@@ -80,6 +95,7 @@ namespace Anagrams
                     (line = sr.ReadLine()) != null)
                 {
                     line = line.ToLower();
+                    if (!acceptable(line)) continue;
                     Bag aBag = new Bag(line);
                     if (!stringlists_by_bag.ContainsKey(aBag))
                     {
