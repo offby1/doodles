@@ -39,17 +39,19 @@ namespace Anagrams
             this.toolStripStatusLabel_bags_read = new System.Windows.Forms.ToolStripStatusLabel();
             this.do_some_pruning = new System.Windows.Forms.Button();
             this.input = new System.Windows.Forms.TextBox();
+            this.listView1 = new System.Windows.Forms.ListView();
+            this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // OutputArea
             // 
-            this.OutputArea.Location = new System.Drawing.Point(64, 76);
+            this.OutputArea.Location = new System.Drawing.Point(15, 79);
             this.OutputArea.Multiline = true;
             this.OutputArea.Name = "OutputArea";
             this.OutputArea.ReadOnly = true;
             this.OutputArea.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.OutputArea.Size = new System.Drawing.Size(340, 94);
+            this.OutputArea.Size = new System.Drawing.Size(122, 94);
             this.OutputArea.TabIndex = 2;
             this.OutputArea.TabStop = false;
             // 
@@ -136,11 +138,28 @@ namespace Anagrams
             this.input.TabIndex = 1;
             this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
             // 
+            // listView1
+            // 
+            this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+            this.listView1.Location = new System.Drawing.Point(143, 80);
+            this.listView1.Name = "listView1";
+            this.listView1.Size = new System.Drawing.Size(308, 94);
+            this.listView1.TabIndex = 11;
+            this.listView1.UseCompatibleStateImageBehavior = false;
+            this.listView1.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "Stuff";
+            this.columnHeader1.Width = 300;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(463, 326);
+            this.Controls.Add(this.listView1);
             this.Controls.Add(this.input);
             this.Controls.Add(this.do_some_pruning);
             this.Controls.Add(this.statusStrip1);
@@ -172,6 +191,8 @@ namespace Anagrams
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_bags_read;
         private System.Windows.Forms.Button do_some_pruning;
         private System.Windows.Forms.TextBox input;
+        private System.Windows.Forms.ListView listView1;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
     }
 }
 

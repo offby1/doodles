@@ -48,12 +48,13 @@ namespace Anagrams
             toolStripStatusLabel_strings_read.Text = linesRead.ToString() + " words";
         }
 
-        private void update_last_line(string lastline, Bag aBag)
+        private void update_last_line(string lastline, Bag aBag, int this_lines_index)
         {
-            OutputArea.AppendText(lastline);
-            OutputArea.AppendText(" -> ");
-            OutputArea.AppendText(aBag.AsString());
+            string display_me = lastline + " -> " + aBag.AsString();
+            OutputArea.AppendText(display_me);
             OutputArea.AppendText(Environment.NewLine);
+            listView1.Items.Add(display_me);
+            listView1.EnsureVisible(listView1.Items.Count - 1);
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -108,8 +109,11 @@ namespace Anagrams
                     if (linesRead % 1000 == 0)
                     {
                         update_counts(stringlists_by_bag.Count, linesRead);
-                        update_last_line(line, aBag);
+                        update_last_line(line, aBag, linesRead / 1000 - 1);
                     }
+
+                    if (linesRead == 10000) break;
+
                     Application.DoEvents();
                 }
                 update_counts(stringlists_by_bag.Count, linesRead);
@@ -127,12 +131,14 @@ namespace Anagrams
 
             do_some_pruning.Enabled = true;
             input.Enabled = true;
+            input.Focus();
         }
 
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
             OutputArea.Clear();
+            listView1.Items.Clear();
             toolStripStatusLabel_bags_read.Text = "";
             toolStripStatusLabel_strings_read.Text = "";
             toolStripStatusLabel1.Text = "Pruning for '" + input.Text + "' ...";
@@ -143,11 +149,16 @@ namespace Anagrams
                 Bag this_bag = pair.b;
                 if (input_bag.subtract(this_bag) != null)
                 {
+                    string display_me = "";
                     foreach (string s in pair.words)
                     {
-                        OutputArea.AppendText(" ");
-                        OutputArea.AppendText(s);
+                        if (display_me.Length > 0) display_me += " ";
+                        display_me += s;
                     }
+                    listView1.Items.Add(display_me);
+                    listView1.EnsureVisible(listView1.Items.Count - 1);
+
+                    OutputArea.AppendText(display_me);
                     OutputArea.AppendText(Environment.NewLine);
                 }
                 toolStripProgressBar1.PerformStep();
@@ -160,8 +171,6 @@ namespace Anagrams
         {
             if (e.KeyChar == (char)Keys.Enter)
                 do_some_pruning.PerformClick();
-            else
-                e.Handled = false;
         }
 
     }
