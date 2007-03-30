@@ -10,21 +10,6 @@ using System.Windows.Forms;
 
 namespace Anagrams
 {
-    // each entry is a bag followed by words that can be made from that bag.
-
-    class bag_and_anagrams
-    {
-        public Bag b;
-        public List<string> words;
-
-        // *sigh* this is tediously verbose
-        public bag_and_anagrams(Bag b, List<string> words)
-        {
-            this.b = b;
-            this.words = words;
-        }
-    }
-
     public partial class Form1 : Form
     {
         List<bag_and_anagrams> dictionary;
@@ -128,20 +113,13 @@ namespace Anagrams
                     Application.DoEvents();
                 }
                 update_counts(stringlists_by_bag.Count, linesRead);
-                
+
                 // Now convert the hash table, which isn't useful for
                 // actually generating anagrams, into a list, which is.
-                
+
                 dictionary = new List<bag_and_anagrams>();
                 foreach (DictionaryEntry de in stringlists_by_bag)
                 {
-                    ArrayList seq = new ArrayList();
-                    seq.Add(de.Key);
-                    foreach (string word in (List<string>)de.Value)
-                    {
-                        seq.Add(word);
-                    }
-
                     dictionary.Add(new bag_and_anagrams((Bag)de.Key, (List<string>)de.Value));
                 }
             }
@@ -155,6 +133,11 @@ namespace Anagrams
         {
             Bag input_bag = new Bag(input.Text);
             OutputArea.Clear();
+            toolStripStatusLabel_bags_read.Text = "";
+            toolStripStatusLabel_strings_read.Text = "";
+            toolStripStatusLabel1.Text = "Pruning for '" + input.Text + "' ...";
+            toolStripProgressBar1.Value = 0;
+            toolStripProgressBar1.Maximum = dictionary.Count;
             foreach (bag_and_anagrams pair in dictionary)
             {
                 Bag this_bag = pair.b;
@@ -167,9 +150,26 @@ namespace Anagrams
                     }
                     OutputArea.AppendText("\n");
                 }
+                toolStripProgressBar1.PerformStep();
                 Application.DoEvents();
             }
+            toolStripStatusLabel1.Text += " done.";
         }
 
     }
+    // each entry is a bag followed by words that can be made from that bag.
+
+    class bag_and_anagrams
+    {
+        public Bag b;
+        public List<string> words;
+
+        // *sigh* this is tediously verbose
+        public bag_and_anagrams(Bag b, List<string> words)
+        {
+            this.b = b;
+            this.words = words;
+        }
+    }
+
 }
