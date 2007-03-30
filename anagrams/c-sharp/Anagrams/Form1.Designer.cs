@@ -51,6 +51,7 @@ namespace Anagrams
             this.OutputArea.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.OutputArea.Size = new System.Drawing.Size(340, 94);
             this.OutputArea.TabIndex = 2;
+            this.OutputArea.TabStop = false;
             // 
             // openFileDialog1
             // 
@@ -66,6 +67,7 @@ namespace Anagrams
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBox1.Size = new System.Drawing.Size(439, 20);
             this.textBox1.TabIndex = 8;
+            this.textBox1.TabStop = false;
             // 
             // label3
             // 
@@ -120,7 +122,7 @@ namespace Anagrams
             this.do_some_pruning.Location = new System.Drawing.Point(382, 231);
             this.do_some_pruning.Name = "do_some_pruning";
             this.do_some_pruning.Size = new System.Drawing.Size(75, 23);
-            this.do_some_pruning.TabIndex = 11;
+            this.do_some_pruning.TabIndex = 0;
             this.do_some_pruning.Text = "Prune!";
             this.do_some_pruning.UseVisualStyleBackColor = true;
             this.do_some_pruning.Click += new System.EventHandler(this.do_some_pruning_Click);
@@ -131,7 +133,7 @@ namespace Anagrams
             this.input.Location = new System.Drawing.Point(15, 231);
             this.input.Name = "input";
             this.input.Size = new System.Drawing.Size(361, 20);
-            this.input.TabIndex = 12;
+            this.input.TabIndex = 1;
             // 
             // Form1
             // 
