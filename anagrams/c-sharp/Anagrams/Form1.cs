@@ -174,8 +174,15 @@ namespace Anagrams
         {
             if (e.KeyChar == (char)Keys.Enter)
                 do_some_pruning.PerformClick();
-        }
 
+            // This smells.  I want to trap Control-A, so that I can
+            // select all the text in the input box (control-A does
+            // just that in other contexts, but not here, for some
+            // reason).  But I don't know the politically-correct way
+            // to spell Control-A, so I just use 1.
+            if (e.KeyChar == (char)1)
+                input.SelectAll();
+        }
     }
     // each entry is a bag followed by words that can be made from that bag.
 
@@ -191,5 +198,4 @@ namespace Anagrams
             this.words = words;
         }
     }
-
 }
