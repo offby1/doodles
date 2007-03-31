@@ -113,43 +113,48 @@ namespace Anagrams
             input.Enabled = true;
             input.Focus();
         }
-        public delegate void zero_arg_del();
-        public delegate void one_arg_del(List<string> words);
+        public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
+        public delegate void pruned_one();
+        public delegate void found_anagram(List<string> words);
 
         private void anagrams_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
-            toolStripStatusLabel_counter.Text = "";
-            toolStripStatusLabel1.Text = "Pruning for '" + input.Text + "' ...";
-            toolStripProgressBar1.Value = 0;
-            toolStripProgressBar1.Maximum = dictionary.Count;
-            zero_arg_del usual_callback = delegate()
-            {
-                toolStripProgressBar1.PerformStep();
-                Application.DoEvents();
-            };
-            one_arg_del success_callback = delegate(List<string> words)
-            {
-                string display_me = "";
-                foreach (string s in words)
+
+            Anagrams.anagrams(input_bag, dictionary, 0,
+                delegate(Bag filter, List<bag_and_anagrams> dict)
                 {
-                    if (display_me.Length > 0) display_me += " ";
-                    display_me += s;
-                }
-                listView1.Items.Add(display_me);
-                listView1.EnsureVisible(listView1.Items.Count - 1);
-                toolStripStatusLabel_counter.Text = listView1.Items.Count.ToString();
-                Application.DoEvents();
-            };
-            Anagrams.anagrams(input_bag, dictionary, 0, usual_callback, success_callback);
+                    toolStripStatusLabel_counter.Text = "";
+                    toolStripStatusLabel1.Text = "Pruning for '" + filter.AsString() + "' ...";
+                    toolStripProgressBar1.Value = 0;
+                    toolStripProgressBar1.Maximum = dict.Count;
+                },
+                delegate()
+                {
+                    toolStripProgressBar1.PerformStep();
+                    Application.DoEvents();
+                },
+                delegate(List<string> words)
+                {
+                    string display_me = "";
+                    foreach (string s in words)
+                    {
+                        if (display_me.Length > 0) display_me += " ";
+                        display_me += s;
+                    }
+                    listView1.Items.Add(display_me);
+                    listView1.EnsureVisible(listView1.Items.Count - 1);
+                    toolStripStatusLabel_counter.Text = listView1.Items.Count.ToString();
+                    Application.DoEvents();
+                });
             toolStripStatusLabel1.Text += " done.";
         }
 
         // This method doesn't really belong on this form, but what the hell.
         public static List<bag_and_anagrams> prune(Bag b,
             List<bag_and_anagrams> d,
-            Form1.zero_arg_del prune_callback,
+            Form1.pruned_one prune_callback,
             uint recursion_level)
         {
             List<bag_and_anagrams> rv = new List<bag_and_anagrams>();

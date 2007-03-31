@@ -32,13 +32,15 @@ namespace Anagrams
         public static List<List<string>> anagrams(Bag bag,
             List<bag_and_anagrams> dictionary,
             uint recursion_level,
-            Form1.zero_arg_del prune_callback,
-            Form1.one_arg_del success_callback)
+            Form1.started_pruning started_pruning_callback,
+            Form1.pruned_one pruned_one_callback,
+            Form1.found_anagram success_callback)
         {
+            started_pruning_callback(bag, dictionary);
             List<List<string>> rv = new List<List<string>>();
             List<bag_and_anagrams> pruned = Form1.prune(bag,
                 dictionary,
-                prune_callback,
+                pruned_one_callback,
                 recursion_level);
             while (pruned.Count > 0)
             {
@@ -59,7 +61,8 @@ namespace Anagrams
                     else
                     {
                         List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1,
-                            prune_callback, success_callback);
+                            started_pruning_callback,
+                            pruned_one_callback, success_callback);
                         if (from_smaller.Count > 0)
                         {
                             rv.AddRange(combine(entry.words, from_smaller));
