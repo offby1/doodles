@@ -32,8 +32,7 @@ namespace Anagrams
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel_strings_read = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel_bags_read = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel_counter = new System.Windows.Forms.ToolStripStatusLabel();
             this.do_anagrams = new System.Windows.Forms.Button();
             this.input = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
@@ -52,8 +51,7 @@ namespace Anagrams
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripProgressBar1,
             this.toolStripStatusLabel1,
-            this.toolStripStatusLabel_strings_read,
-            this.toolStripStatusLabel_bags_read});
+            this.toolStripStatusLabel_counter});
             this.statusStrip1.Location = new System.Drawing.Point(0, 202);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(463, 22);
@@ -73,17 +71,11 @@ namespace Anagrams
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(109, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // toolStripStatusLabel_strings_read
+            // toolStripStatusLabel_counter
             // 
-            this.toolStripStatusLabel_strings_read.Name = "toolStripStatusLabel_strings_read";
-            this.toolStripStatusLabel_strings_read.Size = new System.Drawing.Size(13, 17);
-            this.toolStripStatusLabel_strings_read.Text = "0";
-            // 
-            // toolStripStatusLabel_bags_read
-            // 
-            this.toolStripStatusLabel_bags_read.Name = "toolStripStatusLabel_bags_read";
-            this.toolStripStatusLabel_bags_read.Size = new System.Drawing.Size(13, 17);
-            this.toolStripStatusLabel_bags_read.Text = "0";
+            this.toolStripStatusLabel_counter.Name = "toolStripStatusLabel_counter";
+            this.toolStripStatusLabel_counter.Size = new System.Drawing.Size(13, 17);
+            this.toolStripStatusLabel_counter.Text = "0";
             // 
             // do_anagrams
             // 
@@ -149,8 +141,7 @@ namespace Anagrams
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_strings_read;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_bags_read;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_counter;
         private System.Windows.Forms.Button do_anagrams;
         private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.ListView listView1;

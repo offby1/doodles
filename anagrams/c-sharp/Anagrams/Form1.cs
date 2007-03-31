@@ -120,8 +120,7 @@ namespace Anagrams
         {
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
-            toolStripStatusLabel_bags_read.Text = "";
-            toolStripStatusLabel_strings_read.Text = "";
+            toolStripStatusLabel_counter.Text = "";
             toolStripStatusLabel1.Text = "Pruning for '" + input.Text + "' ...";
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Maximum = dictionary.Count;
@@ -140,6 +139,7 @@ namespace Anagrams
                 }
                 listView1.Items.Add(display_me);
                 listView1.EnsureVisible(listView1.Items.Count - 1);
+                toolStripStatusLabel_counter.Text = listView1.Items.Count.ToString();
                 Application.DoEvents();
             };
             Anagrams.anagrams(input_bag, dictionary, 0, usual_callback, success_callback);
