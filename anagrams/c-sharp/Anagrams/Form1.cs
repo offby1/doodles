@@ -124,17 +124,16 @@ namespace Anagrams
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
 
-            do_some_pruning.Enabled = true;
+            do_anagrams.Enabled = true;
             input.Enabled = true;
             input.Focus();
         }
         public delegate void zero_arg_del();
         public delegate void one_arg_del(List<string> words);
 
-        private void do_some_pruning_Click(object sender, EventArgs e)
+        private void anagrams_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
-            Anagrams.anagrams(input_bag, dictionary, 0);
             listView1.Items.Clear();
             toolStripStatusLabel_bags_read.Text = "";
             toolStripStatusLabel_strings_read.Text = "";
@@ -146,7 +145,7 @@ namespace Anagrams
                 toolStripProgressBar1.PerformStep();
                 Application.DoEvents();
             };
-            one_arg_del sucess_callback = delegate(List<string> words)
+            one_arg_del success_callback = delegate(List<string> words)
             {
                 string display_me = "";
                 foreach (string s in words)
@@ -156,8 +155,9 @@ namespace Anagrams
                 }
                 listView1.Items.Add(display_me);
                 listView1.EnsureVisible(listView1.Items.Count - 1);
+                Application.DoEvents();
             };
-            prune(input_bag, dictionary);
+            Anagrams.anagrams(input_bag, dictionary, 0, usual_callback, success_callback);
             toolStripStatusLabel1.Text += " done.";
         }
 
@@ -179,7 +179,7 @@ namespace Anagrams
         private void input_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
-                do_some_pruning.PerformClick();
+                do_anagrams.PerformClick();
 
             // This smells.  I want to trap Control-A, so that I can
             // select all the text in the input box (control-A does

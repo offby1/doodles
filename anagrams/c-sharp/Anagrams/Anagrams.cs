@@ -26,7 +26,11 @@ namespace Anagrams
             }
             return rv;
         }
-        public static List<List<string>> anagrams(Bag bag, List<bag_and_anagrams> dictionary, int recursion_level)
+        public static List<List<string>> anagrams(Bag bag,
+            List<bag_and_anagrams> dictionary,
+            int recursion_level,
+            Form1.zero_arg_del usual_callback,
+            Form1.one_arg_del success_callback)
         {
             List<List<string>> rv = new List<List<string>>();
             List<bag_and_anagrams> pruned = Form1.prune(bag, dictionary);
@@ -43,7 +47,8 @@ namespace Anagrams
                     }
                     else
                     {
-                        List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1);
+                        List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1,
+                            usual_callback, success_callback);
                         if (from_smaller.Count > 0)
                         {
                             rv.AddRange(combine(entry.words, from_smaller));
@@ -55,14 +60,10 @@ namespace Anagrams
             }
             if (recursion_level == 0)
             {
-                Console.Write("Pretend I'm generating some anagrams for {0}: ", bag.AsString());
+                usual_callback();
                 foreach (List<string> anagram in rv)
                 {
-                    foreach (string word in anagram)
-                    {
-                        Console.Write(" " + word);
-                    }
-                    Console.WriteLine("");
+                    success_callback(anagram);
                 }
             }
             return rv;

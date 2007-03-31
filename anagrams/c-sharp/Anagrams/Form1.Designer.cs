@@ -34,7 +34,7 @@ namespace Anagrams
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel_strings_read = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel_bags_read = new System.Windows.Forms.ToolStripStatusLabel();
-            this.do_some_pruning = new System.Windows.Forms.Button();
+            this.do_anagrams = new System.Windows.Forms.Button();
             this.input = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
@@ -85,16 +85,16 @@ namespace Anagrams
             this.toolStripStatusLabel_bags_read.Size = new System.Drawing.Size(13, 17);
             this.toolStripStatusLabel_bags_read.Text = "0";
             // 
-            // do_some_pruning
+            // do_anagrams
             // 
-            this.do_some_pruning.Enabled = false;
-            this.do_some_pruning.Location = new System.Drawing.Point(379, 164);
-            this.do_some_pruning.Name = "do_some_pruning";
-            this.do_some_pruning.Size = new System.Drawing.Size(75, 23);
-            this.do_some_pruning.TabIndex = 0;
-            this.do_some_pruning.Text = "Prune!";
-            this.do_some_pruning.UseVisualStyleBackColor = true;
-            this.do_some_pruning.Click += new System.EventHandler(this.do_some_pruning_Click);
+            this.do_anagrams.Enabled = false;
+            this.do_anagrams.Location = new System.Drawing.Point(379, 164);
+            this.do_anagrams.Name = "do_anagrams";
+            this.do_anagrams.Size = new System.Drawing.Size(75, 23);
+            this.do_anagrams.TabIndex = 0;
+            this.do_anagrams.Text = "Go!";
+            this.do_anagrams.UseVisualStyleBackColor = true;
+            this.do_anagrams.Click += new System.EventHandler(this.anagrams_Click);
             // 
             // input
             // 
@@ -128,7 +128,7 @@ namespace Anagrams
             this.ClientSize = new System.Drawing.Size(463, 224);
             this.Controls.Add(this.listView1);
             this.Controls.Add(this.input);
-            this.Controls.Add(this.do_some_pruning);
+            this.Controls.Add(this.do_anagrams);
             this.Controls.Add(this.statusStrip1);
             this.Name = "Form1";
             this.Text = "Anagram Thingy";
@@ -150,7 +150,7 @@ namespace Anagrams
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_strings_read;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_bags_read;
-        private System.Windows.Forms.Button do_some_pruning;
+        private System.Windows.Forms.Button do_anagrams;
         private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader1;
