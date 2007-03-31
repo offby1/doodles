@@ -14,15 +14,6 @@ namespace Anagrams
     {
         List<bag_and_anagrams> dictionary;
 
-        // this is a kludge.  Without this variable, if I click the
-        // "close" button (the little X in the upper-right of the
-        // window), I get an exception to the effect that textBox2 has
-        // been "disposed", and thus I shouldn't be appending text to
-        // it.  I suspect there's a cleaner way to avoid that
-        // exception than this, but what the hell.
-
-        private bool ok_to_continue = true;
-
         public Form1()
         {
             InitializeComponent();
@@ -34,7 +25,7 @@ namespace Anagrams
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            ok_to_continue = false;
+            Environment.Exit(0);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -91,8 +82,7 @@ namespace Anagrams
                 // the file is reached.
                 int linesRead = 0;
                 Hashtable stringlists_by_bag = new Hashtable();
-                while (ok_to_continue &&
-                    (line = sr.ReadLine()) != null)
+                while ((line = sr.ReadLine()) != null)
                 {
                     line = line.ToLower();
                     if (!acceptable(line)) continue;
@@ -117,7 +107,7 @@ namespace Anagrams
                     }
 
 #if DEBUG
-                    if (linesRead == 10000) break;
+                    //if (linesRead == 10000) break;
 #endif
                     Application.DoEvents();
                 }
@@ -144,7 +134,7 @@ namespace Anagrams
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
             Bag input_bag = new Bag(input.Text);
-            Anagrams.anagrams(input_bag, dictionary);
+            Anagrams.anagrams(input_bag, dictionary, 0);
             listView1.Items.Clear();
             toolStripStatusLabel_bags_read.Text = "";
             toolStripStatusLabel_strings_read.Text = "";
@@ -167,14 +157,12 @@ namespace Anagrams
                 listView1.Items.Add(display_me);
                 listView1.EnsureVisible(listView1.Items.Count - 1);
             };
-            prune(input_bag, dictionary, usual_callback, sucess_callback);
+            prune(input_bag, dictionary);
             toolStripStatusLabel1.Text += " done.";
         }
 
         // This method doesn't really belong on this form, but what the hell.
-        public static List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d,
-            zero_arg_del usual_callback,
-            one_arg_del success_callback)
+        public static List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d)
         {
             List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
             foreach (bag_and_anagrams pair in d)
@@ -183,9 +171,7 @@ namespace Anagrams
                 if (b.subtract(this_bag) != null)
                 {
                     rv.Add(pair);
-                    success_callback(pair.words);
                 }
-                usual_callback();
             }
             return rv;
         }

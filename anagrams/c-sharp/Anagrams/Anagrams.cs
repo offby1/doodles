@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
 
 namespace Anagrams
 {
@@ -25,16 +26,10 @@ namespace Anagrams
             }
             return rv;
         }
-        public static List<List<string>> anagrams(Bag bag, List<bag_and_anagrams> dictionary)
+        public static List<List<string>> anagrams(Bag bag, List<bag_and_anagrams> dictionary, int recursion_level)
         {
-            Form1.zero_arg_del usual = delegate()
-            {
-            };
-            Form1.one_arg_del success = delegate(List<string> words)
-            {
-            };
             List<List<string>> rv = new List<List<string>>();
-            List<bag_and_anagrams> pruned = Form1.prune(bag, dictionary, usual, success);
+            List<bag_and_anagrams> pruned = Form1.prune(bag, dictionary);
             while (pruned.Count > 0)
             {
                 bag_and_anagrams entry = pruned[0];
@@ -48,7 +43,7 @@ namespace Anagrams
                     }
                     else
                     {
-                        List<List<string>> from_smaller = anagrams(diff, pruned);
+                        List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1);
                         if (from_smaller.Count > 0)
                         {
                             rv.AddRange(combine(entry.words, from_smaller));
@@ -56,15 +51,19 @@ namespace Anagrams
                     }
                 }
                 pruned.RemoveAt(0);
+                Application.DoEvents();
             }
-            Console.WriteLine("Pretend I'm generating some anagrams for {0}", bag.AsString());
-            foreach (List<string> anagram in rv)
+            if (recursion_level == 0)
             {
-                foreach (string word in anagram)
+                Console.Write("Pretend I'm generating some anagrams for {0}: ", bag.AsString());
+                foreach (List<string> anagram in rv)
                 {
-                    Console.Write(" " + word);
+                    foreach (string word in anagram)
+                    {
+                        Console.Write(" " + word);
+                    }
+                    Console.WriteLine("");
                 }
-                Console.WriteLine("");
             }
             return rv;
         }
