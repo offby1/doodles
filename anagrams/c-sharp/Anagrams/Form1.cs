@@ -124,7 +124,7 @@ namespace Anagrams
             input.Enabled = false;
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
-
+            DateTime start = DateTime.Now;
             Anagrams.anagrams(input_bag, dictionary, 0,
                 delegate(Bag filter, List<bag_and_anagrams> dict)
                 {
@@ -153,8 +153,10 @@ namespace Anagrams
                     listView1.EnsureVisible(listView1.Items.Count - 1);
                     Application.DoEvents();
                 });
-            toolStripStatusLabel1.Text += String.Format(" done.  {0} anagrams.",
-                listView1.Items.Count);
+            DateTime stop = DateTime.Now;
+            toolStripStatusLabel1.Text += String.Format(" done.  {0} anagrams; took {1}.",
+                listView1.Items.Count,
+                stop.Subtract(start));
             do_anagrams.Enabled = true;
             input.Enabled = true;
         }
