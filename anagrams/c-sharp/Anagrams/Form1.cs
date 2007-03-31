@@ -149,14 +149,17 @@ namespace Anagrams
                     }
                     listView1.Items.Add(display_me);
                     listView1.EnsureVisible(listView1.Items.Count - 1);
+                    toolStripStatusLabel1.Text = listView1.Items.Count.ToString() + " anagrams so far";
                     Application.DoEvents();
                 });
             DateTime stop = DateTime.Now;
-            toolStripStatusLabel1.Text += String.Format(" done.  {0} anagrams; took {1}.",
+            toolStripStatusLabel1.Text = String.Format("Done.  {0} anagrams; took {1}.",
                 listView1.Items.Count,
                 stop.Subtract(start));
+            
             do_anagrams.Enabled = true;
             input.Enabled = true;
+            input.Focus();
         }
 
         // This method doesn't really belong on this form, but what the hell.

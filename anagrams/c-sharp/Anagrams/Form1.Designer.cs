@@ -103,6 +103,7 @@ namespace Anagrams
             this.listView1.Name = "listView1";
             this.listView1.Size = new System.Drawing.Size(405, 209);
             this.listView1.TabIndex = 11;
+            this.listView1.TabStop = false;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
             // 
