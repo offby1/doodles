@@ -111,10 +111,6 @@ namespace Anagrams
             input.Enabled = true;
             input.Focus();
         }
-        public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
-        public delegate void pruned_one();
-        public delegate void done_pruning_callback();
-        public delegate void found_anagram(List<string> words);
 
         private void anagrams_Click(object sender, EventArgs e)
         {
@@ -156,7 +152,7 @@ namespace Anagrams
             toolStripStatusLabel1.Text = String.Format("Done.  {0} anagrams; took {1}.",
                 listView1.Items.Count,
                 stop.Subtract(start));
-            
+
             do_anagrams.Enabled = true;
             input.Enabled = true;
             input.Focus();
@@ -165,7 +161,7 @@ namespace Anagrams
         // This method doesn't really belong on this form, but what the hell.
         public static List<bag_and_anagrams> prune(Bag b,
             List<bag_and_anagrams> d,
-            Form1.pruned_one pruned_one_callback,
+            pruned_one pruned_one_callback,
             done_pruning_callback done,
             uint recursion_level)
         {
