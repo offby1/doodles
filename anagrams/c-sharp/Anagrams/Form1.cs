@@ -119,6 +119,8 @@ namespace Anagrams
 
         private void anagrams_Click(object sender, EventArgs e)
         {
+            do_anagrams.Enabled = false;
+            input.Enabled = false;
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
 
@@ -149,6 +151,8 @@ namespace Anagrams
                     Application.DoEvents();
                 });
             toolStripStatusLabel1.Text += " done.";
+            do_anagrams.Enabled = true;
+            input.Enabled = true;
         }
 
         // This method doesn't really belong on this form, but what the hell.
