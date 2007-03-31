@@ -5,10 +5,10 @@ using System.Windows.Forms;
 
 namespace Anagrams
 {
-        public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
-        public delegate void pruned_one();
-        public delegate void done_pruning_callback();
-        public delegate void found_anagram(List<string> words);
+    public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
+    public delegate void pruned_one();
+    public delegate void done_pruning_callback();
+    public delegate void found_anagram(List<string> words);
 
     class Anagrams
     {
@@ -36,6 +36,27 @@ namespace Anagrams
             }
             return rv;
         }
+        public static List<bag_and_anagrams> prune(Bag b,
+            List<bag_and_anagrams> d,
+            pruned_one pruned_one_callback,
+            done_pruning_callback done,
+            uint recursion_level)
+        {
+            List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
+            foreach (bag_and_anagrams pair in d)
+            {
+                Bag this_bag = pair.b;
+                if (b.subtract(this_bag) != null)
+                {
+                    rv.Add(pair);
+                }
+                pruned_one_callback();
+            }
+            done();
+            return rv;
+        }
+
+
         public static List<List<string>> anagrams(Bag bag,
             List<bag_and_anagrams> dictionary,
             uint recursion_level,
@@ -46,7 +67,7 @@ namespace Anagrams
         {
             started_pruning_callback(bag, dictionary);
             List<List<string>> rv = new List<List<string>>();
-            List<bag_and_anagrams> pruned = Form1.prune(bag,
+            List<bag_and_anagrams> pruned = prune(bag,
                 dictionary,
                 pruned_one_callback,
                 done_pruning_callback,

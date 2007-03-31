@@ -158,27 +158,6 @@ namespace Anagrams
             input.Focus();
         }
 
-        // This method doesn't really belong on this form, but what the hell.
-        public static List<bag_and_anagrams> prune(Bag b,
-            List<bag_and_anagrams> d,
-            pruned_one pruned_one_callback,
-            done_pruning_callback done,
-            uint recursion_level)
-        {
-            List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
-            foreach (bag_and_anagrams pair in d)
-            {
-                Bag this_bag = pair.b;
-                if (b.subtract(this_bag) != null)
-                {
-                    rv.Add(pair);
-                }
-                pruned_one_callback();
-            }
-            done();
-            return rv;
-        }
-
         private void input_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
