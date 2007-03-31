@@ -138,8 +138,8 @@ namespace Anagrams
             input.Enabled = true;
             input.Focus();
         }
-        private delegate void zero_arg_del();
-        private delegate void one_arg_del(List<string> words);
+        public delegate void zero_arg_del();
+        public delegate void one_arg_del(List<string> words);
 
         private void do_some_pruning_Click(object sender, EventArgs e)
         {
@@ -171,7 +171,8 @@ namespace Anagrams
             toolStripStatusLabel1.Text += " done.";
         }
 
-        private List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d,
+        // This method doesn't really belong on this form, but what the hell.
+        public static List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d,
             zero_arg_del usual_callback,
             one_arg_del success_callback)
         {
@@ -205,7 +206,7 @@ namespace Anagrams
     }
     // each entry is a bag followed by words that can be made from that bag.
 
-    class bag_and_anagrams
+    public class bag_and_anagrams
     {
         public Bag b;
         public List<string> words;

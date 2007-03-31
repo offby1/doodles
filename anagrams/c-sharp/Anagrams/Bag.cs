@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Anagrams
 {
-    class Bag
+    public class Bag
     {
         static private string subtract_strings(string minuend, string subtrahend)
         {
@@ -25,6 +25,10 @@ namespace Anagrams
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             sb.Insert(0, letters);
             guts = sb.ToString();
+        }
+        public bool empty()
+        {
+            return (guts.Length == 0);
         }
         public Bag subtract(Bag subtrahend)
         {
