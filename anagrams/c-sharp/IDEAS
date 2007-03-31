@@ -14,3 +14,5 @@ Stuff I might want to do:
 * Make the controls resize as the top-level window resizes.  As it
   stands now, if you maximize the window, they don't get bigger, which
   looks silly.
+
+* Somehow sort something so that bigger words come first.

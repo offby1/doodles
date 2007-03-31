@@ -115,6 +115,7 @@ namespace Anagrams
         }
         public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
         public delegate void pruned_one();
+        public delegate void done_pruning_callback();
         public delegate void found_anagram(List<string> words);
 
         private void anagrams_Click(object sender, EventArgs e)
@@ -127,7 +128,6 @@ namespace Anagrams
             Anagrams.anagrams(input_bag, dictionary, 0,
                 delegate(Bag filter, List<bag_and_anagrams> dict)
                 {
-                    toolStripStatusLabel_counter.Text = "";
                     toolStripStatusLabel1.Text = "Pruning for '" + filter.AsString() + "' ...";
                     toolStripProgressBar1.Value = 0;
                     toolStripProgressBar1.Maximum = dict.Count;
@@ -136,6 +136,10 @@ namespace Anagrams
                 {
                     toolStripProgressBar1.PerformStep();
                     Application.DoEvents();
+                },
+                delegate()
+                {
+                    toolStripStatusLabel1.Text = "";
                 },
                 delegate(List<string> words)
                 {
@@ -147,10 +151,10 @@ namespace Anagrams
                     }
                     listView1.Items.Add(display_me);
                     listView1.EnsureVisible(listView1.Items.Count - 1);
-                    toolStripStatusLabel_counter.Text = listView1.Items.Count.ToString();
                     Application.DoEvents();
                 });
-            toolStripStatusLabel1.Text += " done.";
+            toolStripStatusLabel1.Text += String.Format(" done.  {0} anagrams.",
+                listView1.Items.Count);
             do_anagrams.Enabled = true;
             input.Enabled = true;
         }
@@ -158,7 +162,8 @@ namespace Anagrams
         // This method doesn't really belong on this form, but what the hell.
         public static List<bag_and_anagrams> prune(Bag b,
             List<bag_and_anagrams> d,
-            Form1.pruned_one prune_callback,
+            Form1.pruned_one pruned_one_callback,
+            done_pruning_callback done,
             uint recursion_level)
         {
             List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
@@ -169,8 +174,9 @@ namespace Anagrams
                 {
                     rv.Add(pair);
                 }
-                if (recursion_level == 0) prune_callback();
+                pruned_one_callback();
             }
+            done();
             return rv;
         }
 

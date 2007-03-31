@@ -34,6 +34,7 @@ namespace Anagrams
             uint recursion_level,
             Form1.started_pruning started_pruning_callback,
             Form1.pruned_one pruned_one_callback,
+            Form1.done_pruning_callback done_pruning_callback,
             Form1.found_anagram success_callback)
         {
             started_pruning_callback(bag, dictionary);
@@ -41,6 +42,7 @@ namespace Anagrams
             List<bag_and_anagrams> pruned = Form1.prune(bag,
                 dictionary,
                 pruned_one_callback,
+                done_pruning_callback,
                 recursion_level);
             while (pruned.Count > 0)
             {
@@ -62,7 +64,9 @@ namespace Anagrams
                     {
                         List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1,
                             started_pruning_callback,
-                            pruned_one_callback, success_callback);
+                            pruned_one_callback, 
+                            done_pruning_callback,
+                            success_callback);
                         if (from_smaller.Count > 0)
                         {
                             rv.AddRange(combine(entry.words, from_smaller));
