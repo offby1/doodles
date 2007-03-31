@@ -11,8 +11,4 @@ Stuff I might want to do:
 * Move the stuff that is in Form1.cs, but doesn't really pertain to
   Windows GUI stuff, into anagrams.cs
 
-* Make the controls resize as the top-level window resizes.  As it
-  stands now, if you maximize the window, they don't get bigger, which
-  looks silly.
-
 * Somehow sort something so that bigger words come first.
