@@ -12,3 +12,6 @@ Stuff I might want to do:
   Windows GUI stuff, into anagrams.cs
 
 * Somehow sort something so that bigger words come first.
+
+* Make Control-A do its thing no matter where the focus is in the form
+  -- currently it works only if the input box has the focus.

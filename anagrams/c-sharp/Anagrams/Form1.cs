@@ -55,10 +55,8 @@ namespace Anagrams
             thisExe = System.Reflection.Assembly.GetExecutingAssembly();
             wordlist_stream =
                 thisExe.GetManifestResourceStream("Anagrams.words");
-            if (wordlist_stream == null)
-            {
-                throw new Exception("Uh oh, can't find word list inside myself!");
-            }
+            System.Diagnostics.Trace.Assert(wordlist_stream != null,
+                "Uh oh, can't find word list inside myself!");
             toolStripStatusLabel1.Text = "Compiling dictionary ...";
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Maximum = (int)wordlist_stream.Length;

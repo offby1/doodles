@@ -50,7 +50,8 @@ namespace Anagrams
                         difference += m0;
                         continue;
                     }
-                    if (m0 != s0) throw new Exception("Assertion failure! internal error!  Aggggh.");
+                    System.Diagnostics.Trace.Assert(m0 == s0,
+                        "internal error!  Aggggh");
                     m = m.Substring(1);
                     s = s.Substring(1);
                 }
@@ -59,12 +60,12 @@ namespace Anagrams
         private static void test_subtraction(string minuend, string subtrahend, string expected_difference)
         {
             string actual_difference = subtract_strings(minuend, subtrahend);
-            if (actual_difference != expected_difference)
-                throw new Exception("Test failure: "
-                    + "Subtracting `" + subtrahend
-                    + "' from `" + minuend
-                    + "' yielded `" + actual_difference
-                    + "', but should have yielded `" + expected_difference + "'.");
+            System.Diagnostics.Trace.Assert (actual_difference == expected_difference,
+                                             "Test failure: "
+                                             + "Subtracting `" + subtrahend
+                                             + "' from `" + minuend
+                                             + "' yielded `" + actual_difference
+                                             + "', but should have yielded `" + expected_difference + "'.");
         }
         public static void test()
         {

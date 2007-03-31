@@ -23,7 +23,8 @@ namespace Anagrams
             {
                 int expected = ws.Count * ans.Count;
 
-                if (rv.Count != expected) throw new Exception(String.Format(
+                System.Diagnostics.Trace.Assert(rv.Count == expected,
+                    String.Format(
                     "Expected {0} anagrams, but got {1}",
                     expected, rv.Count));
             }
@@ -64,7 +65,7 @@ namespace Anagrams
                     {
                         List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1,
                             started_pruning_callback,
-                            pruned_one_callback, 
+                            pruned_one_callback,
                             done_pruning_callback,
                             success_callback);
                         if (from_smaller.Count > 0)
