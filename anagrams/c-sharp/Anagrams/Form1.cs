@@ -162,7 +162,10 @@ namespace Anagrams
         }
 
         // This method doesn't really belong on this form, but what the hell.
-        public static List<bag_and_anagrams> prune(Bag b, List<bag_and_anagrams> d)
+        public static List<bag_and_anagrams> prune(Bag b, 
+            List<bag_and_anagrams> d,
+            Form1.zero_arg_del prune_callback,
+            uint recursion_level)
         {
             List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
             foreach (bag_and_anagrams pair in d)
@@ -172,6 +175,7 @@ namespace Anagrams
                 {
                     rv.Add(pair);
                 }
+                if (recursion_level == 0) prune_callback();
             }
             return rv;
         }
