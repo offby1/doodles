@@ -109,6 +109,7 @@ namespace Anagrams
             // 
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
+            this.listView1.Enabled = false;
             this.listView1.Location = new System.Drawing.Point(12, 13);
             this.listView1.Name = "listView1";
             this.listView1.Size = new System.Drawing.Size(436, 145);
@@ -118,8 +119,8 @@ namespace Anagrams
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "Stuff";
-            this.columnHeader1.Width = 300;
+            this.columnHeader1.Text = "";
+            this.columnHeader1.Width = 400;
             // 
             // Form1
             // 

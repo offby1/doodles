@@ -1,3 +1,4 @@
+-*-text-*-
 Stuff I might want to do:
 
 * See if C# has something like this nifty feature in Delphi: you can
@@ -6,3 +7,10 @@ Stuff I might want to do:
   background", when nothing is happening.  Thus you can keep all the
   code for enabling that control in one place, rather than scattered
   throughout the program.
+
+* Move the stuff that is in Form1.cs, but doesn't really pertain to
+  Windows GUI stuff, into anagrams.cs
+
+* Make the controls resize as the top-level window resizes.  As it
+  stands now, if you maximize the window, they don't get bigger, which
+  looks silly.

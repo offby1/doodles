@@ -84,6 +84,10 @@ namespace Anagrams
                 Hashtable stringlists_by_bag = new Hashtable();
                 while ((line = sr.ReadLine()) != null)
                 {
+                    // TODO -- filter out nonletters.  Thus "god's"
+                    // should become "gods".  And since both of those
+                    // are likely to appear, we need to ensure that we
+                    // only store one.
                     line = line.ToLower();
                     if (!acceptable(line)) continue;
                     Bag aBag = new Bag(line);
@@ -100,11 +104,6 @@ namespace Anagrams
                     }
                     linesRead++;
                     toolStripProgressBar1.Increment(line.Length + 1); // the +1 is for the line ending character, I'd guess.
-                    if (linesRead % 1000 == 0)
-                    {
-                        update_counts(stringlists_by_bag.Count, linesRead);
-                        update_last_line(line, aBag, linesRead / 1000 - 1);
-                    }
 
 #if DEBUG
                     //if (linesRead == 10000) break;
@@ -123,7 +122,7 @@ namespace Anagrams
                 }
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
-
+            listView1.Enabled = true;
             do_anagrams.Enabled = true;
             input.Enabled = true;
             input.Focus();
@@ -162,7 +161,7 @@ namespace Anagrams
         }
 
         // This method doesn't really belong on this form, but what the hell.
-        public static List<bag_and_anagrams> prune(Bag b, 
+        public static List<bag_and_anagrams> prune(Bag b,
             List<bag_and_anagrams> d,
             Form1.zero_arg_del prune_callback,
             uint recursion_level)
