@@ -36,7 +36,9 @@ namespace Anagrams
             this.input = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.statusStrip1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog1
@@ -50,9 +52,9 @@ namespace Anagrams
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripProgressBar1,
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 202);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 315);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(463, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(702, 22);
             this.statusStrip1.TabIndex = 10;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -72,7 +74,7 @@ namespace Anagrams
             // do_anagrams
             // 
             this.do_anagrams.Enabled = false;
-            this.do_anagrams.Location = new System.Drawing.Point(379, 164);
+            this.do_anagrams.Location = new System.Drawing.Point(342, 151);
             this.do_anagrams.Name = "do_anagrams";
             this.do_anagrams.Size = new System.Drawing.Size(75, 23);
             this.do_anagrams.TabIndex = 0;
@@ -82,10 +84,12 @@ namespace Anagrams
             // 
             // input
             // 
+            this.input.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.input.Enabled = false;
-            this.input.Location = new System.Drawing.Point(12, 164);
+            this.input.Location = new System.Drawing.Point(3, 151);
             this.input.Name = "input";
-            this.input.Size = new System.Drawing.Size(361, 20);
+            this.input.Size = new System.Drawing.Size(333, 20);
             this.input.TabIndex = 1;
             this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
             // 
@@ -93,10 +97,11 @@ namespace Anagrams
             // 
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
+            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView1.Enabled = false;
-            this.listView1.Location = new System.Drawing.Point(12, 13);
+            this.listView1.Location = new System.Drawing.Point(3, 3);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(436, 145);
+            this.listView1.Size = new System.Drawing.Size(333, 142);
             this.listView1.TabIndex = 11;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -106,14 +111,31 @@ namespace Anagrams
             this.columnHeader1.Text = "";
             this.columnHeader1.Width = 400;
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Controls.Add(this.input, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.do_anagrams, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.listView1, 0, 0);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(678, 297);
+            this.tableLayoutPanel1.TabIndex = 12;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(463, 224);
-            this.Controls.Add(this.listView1);
-            this.Controls.Add(this.input);
-            this.Controls.Add(this.do_anagrams);
+            this.ClientSize = new System.Drawing.Size(702, 337);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.statusStrip1);
             this.Name = "Form1";
             this.Text = "Anagram Thingy";
@@ -122,6 +144,8 @@ namespace Anagrams
             this.Load += new System.EventHandler(this.Form1_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -137,6 +161,7 @@ namespace Anagrams
         private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
     }
 }
 
