@@ -33,19 +33,6 @@ namespace Anagrams
             Bag.test();
         }
 
-        private void update_counts(int bags, int linesRead)
-        {
-            toolStripStatusLabel_bags_read.Text = bags.ToString() + " bags";
-            toolStripStatusLabel_strings_read.Text = linesRead.ToString() + " words";
-        }
-
-        private void update_last_line(string lastline, Bag aBag, int this_lines_index)
-        {
-            string display_me = lastline + " -> " + aBag.AsString();
-            listView1.Items.Add(display_me);
-            listView1.EnsureVisible(listView1.Items.Count - 1);
-        }
-
         // this is a filter for entires in the original word list.  It rejects words that have no vowels, and those that are too short.
         private bool acceptable(string s)
         {
@@ -110,7 +97,6 @@ namespace Anagrams
 #endif
                     Application.DoEvents();
                 }
-                update_counts(stringlists_by_bag.Count, linesRead);
 
                 // Now convert the hash table, which isn't useful for
                 // actually generating anagrams, into a list, which is.
