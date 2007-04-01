@@ -183,6 +183,7 @@ namespace Anagrams
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
             Clipboard.Clear();
+
             string selected_text = "";
             ListView me = (ListView)sender;
             foreach (ListViewItem it in me.SelectedItems)
@@ -191,7 +192,12 @@ namespace Anagrams
                     selected_text += Environment.NewLine;
                 selected_text += it.Text;
             }
-            Clipboard.SetText(selected_text);
+            // Under some circumstances -- probably a bug in my code somewhere --
+            // we can get blank lines in the listview.  And if you click on one, since it
+            // has no text, selected_text will be blank; _and_, apparantly, calling
+            // Clipboard.set_text with an empty string provokes an access violation ...
+            // so avoid that AV.
+            if (selected_text.Length > 0) Clipboard.SetText(selected_text);
         }
     }
     // each entry is a bag followed by words that can be made from that bag.
