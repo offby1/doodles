@@ -179,6 +179,20 @@ namespace Anagrams
             // listview in order to avoid a scrollbar.
             listView1.Columns[0].Width = listView1.Width - 4;
         }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Clipboard.Clear();
+            string selected_text = "";
+            ListView me = (ListView)sender;
+            foreach (ListViewItem it in me.SelectedItems)
+            {
+                if (selected_text.Length > 0)
+                    selected_text += Environment.NewLine;
+                selected_text += it.Text;
+            }
+            Clipboard.SetText(selected_text);
+        }
     }
     // each entry is a bag followed by words that can be made from that bag.
 
