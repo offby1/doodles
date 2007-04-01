@@ -171,6 +171,14 @@ namespace Anagrams
             if (e.KeyChar == (char)1)
                 input.SelectAll();
         }
+
+        private void listView1_Resize(object sender, EventArgs e)
+        {
+            // trial and error shows that we must make the column
+            // header four pixels narrower than the containing
+            // listview in order to avoid a scrollbar.
+            listView1.Columns[0].Width = listView1.Width - 4;
+        }
     }
     // each entry is a bag followed by words that can be made from that bag.
 
