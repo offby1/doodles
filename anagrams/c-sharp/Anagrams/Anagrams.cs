@@ -5,14 +5,17 @@ using System.Windows.Forms;
 
 namespace Anagrams
 {
+    // callback functions to indicate progress.
     public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
     public delegate void pruned_one();
-    public delegate void done_pruning_callback();
+    public delegate void done_pruning();
     public delegate void found_anagram(List<string> words);
 
     class Anagrams
     {
 
+        // given a list of words and a list of anagrams, make more
+        // anagrams by combining the two.
         private static List<List<string>> combine(List<string> ws, List<List<string>> ans)
         {
             List<List<string>> rv = new List<List<string>>();
@@ -26,33 +29,25 @@ namespace Anagrams
                     rv.Add(bigger_anagram);
                 }
             }
-            {
-                int expected = ws.Count * ans.Count;
 
-                System.Diagnostics.Trace.Assert(rv.Count == expected,
-                    String.Format(
-                    "Expected {0} anagrams, but got {1}",
-                    expected, rv.Count));
-            }
             return rv;
         }
-        public static List<bag_and_anagrams> prune(Bag b,
-            List<bag_and_anagrams> d,
-            pruned_one pruned_one_callback,
-            done_pruning_callback done,
-            uint recursion_level)
+
+        // return a list that is like d, but which contains only those items which can be made from the letters in b.
+        private static List<bag_and_anagrams> prune(Bag bag, List<bag_and_anagrams> dictionary, started_pruning started_pruning_callback, pruned_one pruned_one_callback, done_pruning done_pruning_callback, uint recursion_level)
         {
+            started_pruning_callback(bag, dictionary);
             List<bag_and_anagrams> rv = new List<bag_and_anagrams>();
-            foreach (bag_and_anagrams pair in d)
+            foreach (bag_and_anagrams pair in dictionary)
             {
                 Bag this_bag = pair.b;
-                if (b.subtract(this_bag) != null)
+                if (bag.subtract(this_bag) != null)
                 {
                     rv.Add(pair);
                 }
                 pruned_one_callback();
             }
-            done();
+            done_pruning_callback();
             return rv;
         }
 
@@ -62,13 +57,13 @@ namespace Anagrams
             uint recursion_level,
             started_pruning started_pruning_callback,
             pruned_one pruned_one_callback,
-            done_pruning_callback done_pruning_callback,
+            done_pruning done_pruning_callback,
             found_anagram success_callback)
         {
-            started_pruning_callback(bag, dictionary);
             List<List<string>> rv = new List<List<string>>();
             List<bag_and_anagrams> pruned = prune(bag,
                 dictionary,
+                started_pruning_callback,
                 pruned_one_callback,
                 done_pruning_callback,
                 recursion_level);
@@ -114,5 +109,6 @@ namespace Anagrams
             }
             return rv;
         }
+
     }
 }
