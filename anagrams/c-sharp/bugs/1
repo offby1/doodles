@@ -1,4 +1,5 @@
-r3495
+found   : r3495
+status  : fixed in r3509
 
 * Shrink the window so that it's too small to hold the anagrams of
   some string.  I used "dogfood".
