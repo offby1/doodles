@@ -11,6 +11,21 @@ namespace Anagrams
     public delegate void done_pruning();
     public delegate void found_anagram(List<string> words);
 
+    // each entry is a bag followed by words that can be made from that bag.
+
+    public class bag_and_anagrams
+    {
+        public Bag b;
+        public List<string> words;
+
+        // *sigh* this is tediously verbose
+        public bag_and_anagrams(Bag b, List<string> words)
+        {
+            this.b = b;
+            this.words = words;
+        }
+    }
+
     class Anagrams
     {
 
