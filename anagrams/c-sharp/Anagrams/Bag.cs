@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Anagrams
 {
-    public class Bag
+    public class Bag : IComparable
     {
         static private string subtract_strings(string minuend, string subtrahend)
         {
@@ -87,5 +87,20 @@ namespace Anagrams
         {
             return guts.Equals(((Bag)obj).guts);
         }
+
+        #region IComparable Members
+
+        public int CompareTo(object obj)
+        {
+            Bag other = (Bag)obj;
+            if (this.guts.Length > other.guts.Length)
+                return -1;
+            else if (this.guts.Length < other.guts.Length)
+                return 1;
+            else
+                return 0;
+        }
+
+        #endregion
     }
 }

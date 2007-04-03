@@ -103,6 +103,14 @@ namespace Anagrams
                 {
                     dictionary.Add(new bag_and_anagrams((Bag)de.Key, (strings)de.Value));
                 }
+
+                // Now just for amusement, sort the list so that the biggest bags 
+                // come first.  This might make more interesting anagrams appear first.
+                bag_and_anagrams[] sort_me = new bag_and_anagrams[dictionary.Count];
+                dictionary.CopyTo(sort_me);
+                Array.Sort(sort_me);
+                dictionary.Clear();
+                dictionary.InsertRange(0, sort_me);
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
             listView1.Enabled = true;
@@ -134,7 +142,7 @@ namespace Anagrams
                 },
                 delegate()
                 {
-                  //toolStripStatusLabel1.Text = "";
+                    //toolStripStatusLabel1.Text = "";
                 },
                 delegate(strings words)
                 {
@@ -159,7 +167,7 @@ namespace Anagrams
             toolStripStatusLabel1.Text = String.Format("Done.  {0} anagrams; took {1}.",
                 listView1.Items.Count,
                 stop.Subtract(start));
-
+            listView1.EnsureVisible(0);
             input.Enabled = true;
             input.Focus();
         }

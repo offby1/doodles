@@ -20,7 +20,7 @@ namespace Anagrams
 
     // each entry is a bag followed by words that can be made from that bag.
 
-    public class bag_and_anagrams
+    public class bag_and_anagrams : IComparable
     {
         public Bag b;
         public strings words;
@@ -31,6 +31,15 @@ namespace Anagrams
             this.b = b;
             this.words = words;
         }
+
+        #region IComparable Members
+
+        public int CompareTo(object obj)
+        {
+            return this.b.CompareTo(((bag_and_anagrams)obj).b);
+        }
+
+        #endregion
     }
 
     class Anagrams
