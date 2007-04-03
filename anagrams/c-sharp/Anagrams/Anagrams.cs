@@ -5,21 +5,28 @@ using System.Windows.Forms;
 
 namespace Anagrams
 {
+    public class strings : List<string>
+    {
+    }
+    public class anagrams : List<strings>
+    {
+    }
+
     // callback functions to indicate progress.
     public delegate void started_pruning(Bag filter, List<bag_and_anagrams> dict);
     public delegate void pruned_one();
     public delegate void done_pruning();
-    public delegate void found_anagram(List<string> words);
+    public delegate void found_anagram(strings words);
 
     // each entry is a bag followed by words that can be made from that bag.
 
     public class bag_and_anagrams
     {
         public Bag b;
-        public List<string> words;
+        public strings words;
 
         // *sigh* this is tediously verbose
-        public bag_and_anagrams(Bag b, List<string> words)
+        public bag_and_anagrams(Bag b, strings words)
         {
             this.b = b;
             this.words = words;
@@ -31,14 +38,14 @@ namespace Anagrams
 
         // given a list of words and a list of anagrams, make more
         // anagrams by combining the two.
-        private static List<List<string>> combine(List<string> ws, List<List<string>> ans)
+        private static anagrams combine(strings ws, anagrams ans)
         {
-            List<List<string>> rv = new List<List<string>>();
-            foreach (List<string> a in ans)
+            anagrams rv = new anagrams();
+            foreach (strings a in ans)
             {
                 foreach (string word in ws)
                 {
-                    List<string> bigger_anagram = new List<string>();
+                    strings bigger_anagram = new strings();
                     bigger_anagram.InsertRange(0, a);
                     bigger_anagram.Add(word);
                     rv.Add(bigger_anagram);
@@ -67,7 +74,7 @@ namespace Anagrams
         }
 
 
-        public static List<List<string>> anagrams(Bag bag,
+        public static anagrams anagrams(Bag bag,
             List<bag_and_anagrams> dictionary,
             uint recursion_level,
             started_pruning started_pruning_callback,
@@ -75,7 +82,7 @@ namespace Anagrams
             done_pruning done_pruning_callback,
             found_anagram success_callback)
         {
-            List<List<string>> rv = new List<List<string>>();
+            anagrams rv = new anagrams();
             List<bag_and_anagrams> pruned = prune(bag,
                 dictionary,
                 started_pruning_callback,
@@ -93,14 +100,14 @@ namespace Anagrams
                     {
                         foreach (string w in entry.words)
                         {
-                            List<string> loner = new List<string>();
+                            strings loner = new strings();
                             loner.Add(w);
                             rv.Add(loner);
                         }
                     }
                     else
                     {
-                        List<List<string>> from_smaller = anagrams(diff, pruned, recursion_level + 1,
+                        anagrams from_smaller = anagrams(diff, pruned, recursion_level + 1,
                             started_pruning_callback,
                             pruned_one_callback,
                             done_pruning_callback,
@@ -117,7 +124,7 @@ namespace Anagrams
             if (recursion_level == 0)
             {
 
-                foreach (List<string> anagram in rv)
+                foreach (strings anagram in rv)
                 {
                     success_callback(anagram);
                 }

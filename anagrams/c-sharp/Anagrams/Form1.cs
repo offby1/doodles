@@ -78,13 +78,13 @@ namespace Anagrams
                     Bag aBag = new Bag(line);
                     if (!stringlists_by_bag.ContainsKey(aBag))
                     {
-                        List<string> l = new List<String>();
+                        strings l = new strings();
                         l.Add(line);
                         stringlists_by_bag.Add(aBag, l);
                     }
                     else
                     {
-                        List<string> l = (List<string>)stringlists_by_bag[aBag];
+                        strings l = (strings)stringlists_by_bag[aBag];
                         if (!l.Contains(line)) l.Add(line);
                     }
                     linesRead++;
@@ -102,7 +102,7 @@ namespace Anagrams
                 dictionary = new List<bag_and_anagrams>();
                 foreach (DictionaryEntry de in stringlists_by_bag)
                 {
-                    dictionary.Add(new bag_and_anagrams((Bag)de.Key, (List<string>)de.Value));
+                    dictionary.Add(new bag_and_anagrams((Bag)de.Key, (strings)de.Value));
                 }
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
@@ -135,7 +135,7 @@ namespace Anagrams
                 {
                     toolStripStatusLabel1.Text = "";
                 },
-                delegate(List<string> words)
+                delegate(strings words)
                 {
                     string display_me = "";
                     foreach (string s in words)
