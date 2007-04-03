@@ -189,9 +189,10 @@ namespace Anagrams
             // the first item is at the top.  This works around behavior (which I assume is 
             // a bug in C# or .NET or something) whereby 
             // some blank lines appear before the first item
+
             if (listView1.Items.Count > 0
                 &&
-                listView1.Size.Height >= listView1.Items.Count * listView1.TileSize.Height)
+                listView1.TopItem.Index == 0)
                 listView1.EnsureVisible(0);
 
         }
