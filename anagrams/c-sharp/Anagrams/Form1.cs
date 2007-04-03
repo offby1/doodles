@@ -19,10 +19,6 @@ namespace Anagrams
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-        }
-
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             Environment.Exit(0);
@@ -74,7 +70,8 @@ namespace Anagrams
                     // are likely to appear, we need to ensure that we
                     // only store one.
                     line = line.ToLower();
-                    if (!acceptable(line)) continue;
+                    if (!acceptable(line))
+                        continue;
                     Bag aBag = new Bag(line);
                     if (!stringlists_by_bag.ContainsKey(aBag))
                     {
@@ -85,7 +82,8 @@ namespace Anagrams
                     else
                     {
                         strings l = (strings)stringlists_by_bag[aBag];
-                        if (!l.Contains(line)) l.Add(line);
+                        if (!l.Contains(line))
+                            l.Add(line);
                     }
                     linesRead++;
                     toolStripProgressBar1.Increment(line.Length + 1); // the +1 is for the line ending character, I'd guess.
@@ -119,34 +117,44 @@ namespace Anagrams
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
             DateTime start = DateTime.Now;
+            uint prune_passes_started = 0;
             Anagrams.anagrams(input_bag, dictionary, 0,
                 delegate(Bag filter, List<bag_and_anagrams> dict)
                 {
-                    toolStripStatusLabel1.Text = "Pruning for '" + filter.AsString() + "' ...";
+                    if (++prune_passes_started % 1000 == 0)
+                    {
+                        toolStripStatusLabel1.Text = "Pruning for '" + filter.AsString() + "' ...";
+                        Application.DoEvents();
+                    }
                     toolStripProgressBar1.Value = 0;
                     toolStripProgressBar1.Maximum = dict.Count;
                 },
                 delegate()
                 {
-                    toolStripProgressBar1.PerformStep();
-                    Application.DoEvents();
+                    //toolStripProgressBar1.PerformStep();
                 },
                 delegate()
                 {
-                    toolStripStatusLabel1.Text = "";
+                  //toolStripStatusLabel1.Text = "";
                 },
                 delegate(strings words)
                 {
                     string display_me = "";
                     foreach (string s in words)
                     {
-                        if (display_me.Length > 0) display_me += " ";
+                        if (display_me.Length > 0)
+                            display_me += " ";
                         display_me += s;
                     }
+
                     listView1.Items.Add(display_me);
                     listView1.EnsureVisible(listView1.Items.Count - 1);
                     toolStripStatusLabel1.Text = listView1.Items.Count.ToString() + " anagrams so far";
-                    Application.DoEvents();
+                    if (listView1.Items.Count % 1000 == 0)
+                    {
+                        Application.DoEvents();
+                    }
+
                 });
             DateTime stop = DateTime.Now;
             toolStripStatusLabel1.Text = String.Format("Done.  {0} anagrams; took {1}.",
@@ -187,7 +195,7 @@ namespace Anagrams
                 &&
                 listView1.Size.Height >= listView1.Items.Count * listView1.TileSize.Height)
                 listView1.EnsureVisible(0);
-            
+
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
@@ -207,7 +215,8 @@ namespace Anagrams
             // has no text, selected_text will be blank; _and_, apparantly, calling
             // Clipboard.set_text with an empty string provokes an access violation ...
             // so avoid that AV.
-            if (selected_text.Length > 0) Clipboard.SetText(selected_text);
+            if (selected_text.Length > 0)
+                Clipboard.SetText(selected_text);
         }
     }
 }
