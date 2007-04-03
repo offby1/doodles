@@ -56,6 +56,7 @@ namespace Anagrams
             toolStripStatusLabel1.Text = "Compiling dictionary ...";
             toolStripProgressBar1.Value = 0;
             toolStripProgressBar1.Maximum = (int)wordlist_stream.Length;
+            listView1_Resize(sender, e);
             using (StreamReader sr = new StreamReader(wordlist_stream))
             {
                 String line;
@@ -105,14 +106,12 @@ namespace Anagrams
             }
             toolStripStatusLabel1.Text = "Compiling dictionary ... done.";
             listView1.Enabled = true;
-            do_anagrams.Enabled = true;
             input.Enabled = true;
             input.Focus();
         }
 
         private void anagrams_Click(object sender, EventArgs e)
         {
-            do_anagrams.Enabled = false;
             input.Enabled = false;
             Bag input_bag = new Bag(input.Text);
             listView1.Items.Clear();
@@ -161,7 +160,6 @@ namespace Anagrams
                 listView1.Items.Count,
                 stop.Subtract(start));
 
-            do_anagrams.Enabled = true;
             input.Enabled = true;
             input.Focus();
         }
@@ -169,7 +167,7 @@ namespace Anagrams
         private void input_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
-                do_anagrams.PerformClick();
+                anagrams_Click(sender, e);
 
             // This smells.  I want to trap Control-A, so that I can
             // select all the text in the input box (control-A does

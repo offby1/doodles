@@ -32,7 +32,6 @@ namespace Anagrams
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.do_anagrams = new System.Windows.Forms.Button();
             this.input = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
@@ -70,17 +69,6 @@ namespace Anagrams
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(109, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // do_anagrams
-            // 
-            this.do_anagrams.Enabled = false;
-            this.do_anagrams.Location = new System.Drawing.Point(414, 218);
-            this.do_anagrams.Name = "do_anagrams";
-            this.do_anagrams.Size = new System.Drawing.Size(65, 21);
-            this.do_anagrams.TabIndex = 0;
-            this.do_anagrams.Text = "Go!";
-            this.do_anagrams.UseVisualStyleBackColor = true;
-            this.do_anagrams.Click += new System.EventHandler(this.anagrams_Click);
-            // 
             // input
             // 
             this.input.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -88,7 +76,7 @@ namespace Anagrams
             this.input.Enabled = false;
             this.input.Location = new System.Drawing.Point(3, 218);
             this.input.Name = "input";
-            this.input.Size = new System.Drawing.Size(405, 20);
+            this.input.Size = new System.Drawing.Size(464, 20);
             this.input.TabIndex = 1;
             this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
             // 
@@ -100,8 +88,7 @@ namespace Anagrams
             this.listView1.Enabled = false;
             this.listView1.Location = new System.Drawing.Point(3, 3);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(405, 209);
-            //this.listView1.Sorting = System.Windows.Forms.SortOrder.Ascending;
+            this.listView1.Size = new System.Drawing.Size(464, 209);
             this.listView1.TabIndex = 11;
             this.listView1.TabStop = false;
             this.listView1.UseCompatibleStateImageBehavior = false;
@@ -119,18 +106,17 @@ namespace Anagrams
             this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 85.4054F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 14.59459F));
+            this.tableLayoutPanel1.ColumnCount = 1;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 74.89626F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25.10373F));
             this.tableLayoutPanel1.Controls.Add(this.input, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.do_anagrams, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.listView1, 0, 0);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 89.22559F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10.77441F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(482, 242);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(470, 242);
             this.tableLayoutPanel1.TabIndex = 12;
             // 
             // Form1
@@ -160,7 +146,6 @@ namespace Anagrams
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.Button do_anagrams;
         private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader1;
