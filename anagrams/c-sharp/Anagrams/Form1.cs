@@ -200,6 +200,8 @@ namespace Anagrams
 
             if (listView1.Items.Count > 0
                 &&
+                listView1.TopItem != null
+                &&
                 listView1.TopItem.Index == 0)
                 listView1.EnsureVisible(0);
 
