@@ -217,5 +217,10 @@ namespace Anagrams
             if (selected_text.Length > 0)
                 Clipboard.SetText(selected_text);
         }
+
+        private void sort_em_checkBox_CheckedChanged(object sender, EventArgs e)
+        {
+            listView1.Sorting = ((CheckBox)sender).Checked ? SortOrder.Ascending : SortOrder.None;
+        }
     }
 }

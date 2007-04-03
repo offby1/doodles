@@ -32,10 +32,11 @@ namespace Anagrams
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.input = new System.Windows.Forms.TextBox();
             this.listView1 = new System.Windows.Forms.ListView();
             this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.input = new System.Windows.Forms.TextBox();
+            this.sort_em_checkBox = new System.Windows.Forms.CheckBox();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -69,17 +70,6 @@ namespace Anagrams
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(109, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
-            // input
-            // 
-            this.input.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.input.Enabled = false;
-            this.input.Location = new System.Drawing.Point(3, 218);
-            this.input.Name = "input";
-            this.input.Size = new System.Drawing.Size(464, 20);
-            this.input.TabIndex = 1;
-            this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
-            // 
             // listView1
             // 
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -88,7 +78,7 @@ namespace Anagrams
             this.listView1.Enabled = false;
             this.listView1.Location = new System.Drawing.Point(3, 3);
             this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(464, 209);
+            this.listView1.Size = new System.Drawing.Size(464, 193);
             this.listView1.TabIndex = 11;
             this.listView1.TabStop = false;
             this.listView1.UseCompatibleStateImageBehavior = false;
@@ -109,15 +99,39 @@ namespace Anagrams
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 74.89626F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25.10373F));
-            this.tableLayoutPanel1.Controls.Add(this.input, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.input, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.listView1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.sort_em_checkBox, 0, 1);
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 12);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 89.22559F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10.77441F));
+            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90.04525F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 9.954751F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(470, 242);
             this.tableLayoutPanel1.TabIndex = 12;
+            // 
+            // input
+            // 
+            this.input.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.input.Enabled = false;
+            this.input.Location = new System.Drawing.Point(3, 224);
+            this.input.Name = "input";
+            this.input.Size = new System.Drawing.Size(464, 20);
+            this.input.TabIndex = 12;
+            this.input.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.input_KeyPress);
+            // 
+            // sort_em_checkBox
+            // 
+            this.sort_em_checkBox.AutoSize = true;
+            this.sort_em_checkBox.Location = new System.Drawing.Point(3, 202);
+            this.sort_em_checkBox.Name = "sort_em_checkBox";
+            this.sort_em_checkBox.Size = new System.Drawing.Size(102, 16);
+            this.sort_em_checkBox.TabIndex = 13;
+            this.sort_em_checkBox.Text = "Keep \'em sorted";
+            this.sort_em_checkBox.UseVisualStyleBackColor = true;
+            this.sort_em_checkBox.CheckedChanged += new System.EventHandler(this.sort_em_checkBox_CheckedChanged);
             // 
             // Form1
             // 
@@ -146,10 +160,11 @@ namespace Anagrams
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.TextBox input;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ColumnHeader columnHeader1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TextBox input;
+        private System.Windows.Forms.CheckBox sort_em_checkBox;
     }
 }
 
