@@ -20,7 +20,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         s
       (string-append s "s"))))
 
-(define (phase1 s)
+(define (template->strings t)
   (fold (lambda (thing seq)
           (if (string? thing)
               (cons thing seq)
@@ -32,10 +32,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         " "
                         (maybe-pluralize (car thing)
                                          n)))))))
-        '()
-        s)
-  )
 
-(display (phase1 a-sentence))
+
+        '()
+        t))
+
+;; consider memoizing this.  Alas, it modifies "counts".
+(define (survey s counts)
+  (let loop ((chars-examined 0))
+    (if (= chars-examined (string-length s))
+        counts
+      (let ((c (string-ref s chars-examined)))
+        (when (char-alphabetic? c)
+          (set! c (char-downcase c))
+          (let ((probe (assq c (unbox counts))))
+            (when (not probe)
+              (set! probe (cons c 0))
+              (set-box! counts (cons probe (unbox counts)))
+              (for-each display (list "Counts is " (unbox counts) #\newline)))
+            (set-cdr! probe (add1 (cdr probe)))))
+
+        (loop (add1 chars-examined))))))
+
+(let ((counts (box '())))
+  (write (map (lambda (s)
+                (unbox (survey s counts)))
+              (template->strings a-sentence))))
 
 )
