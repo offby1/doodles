@@ -47,18 +47,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           counts
         (let ((c (string-ref s chars-examined)))
           (when (char-alphabetic? c)
-            (set! c (char-downcase c))
-            (inc-count! c counts))
+            (inc-count! (char-downcase c) counts))
 
           (loop (add1 chars-examined)))))))
 
-(write
+(printf
+ "~a~%"
  (char-counts->string
-  (fold combine-counts
-        (make-count)
-        (map survey
-             (template->strings a-sentence)))))
-
-(newline)
+  (fold
+   combine-counts
+   (make-count)
+   (map survey
+        (template->strings a-sentence)))))
 
 )
