@@ -5,27 +5,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module s3 mzscheme
+
+(require
+ (only (lib "1.ss" "srfi") fold))
+
 (define a-sentence (list "This sentence contains " (cons #\a 0)))
+
 (define (n->string n)
   "one")
+
 (define (maybe-pluralize c n)
   (let ((s (make-string 1 c)))
     (if (= n 1)
         s
       (string-append s "s"))))
+
 (define (phase1 s)
-  (let loop ((s s)
-             (result '()))
-    (if (null? s)
-        (reverse result)
-      (loop (cdr s)
-            (cons (if (string? (car s))
-                      (car s)
-                    (let ((n (cdr (car s))))
-                      (string-append (n->string n)
-                                     " "
-                                     (maybe-pluralize (car (car s))
-                                                      n))))
-                  result)))))
+  (fold (lambda (thing seq)
+          (if (string? thing)
+              (cons thing seq)
+            (let ((n (cdr thing)))
+              (append seq
+                      (list
+                       (string-append
+                        (n->string n)
+                        " "
+                        (maybe-pluralize (car thing)
+                                         n)))))))
+        '()
+        s)
+  )
+
 (display (phase1 a-sentence))
+
 )
