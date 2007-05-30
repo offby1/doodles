@@ -30,7 +30,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (char-counts-ht c1)
      (lambda (left-key left-value)
        (inc-count! left-key rv left-value)))
-
     rv
     ))
 )

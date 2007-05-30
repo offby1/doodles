@@ -22,6 +22,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         s
       (string-append s "s"))))
 
+(define (template->counts t)
+  (fold
+   combine-counts
+   (make-count)
+   (map survey
+        (template->strings t)))
+  )
+
 (define (template->strings t)
   (fold (lambda (thing seq)
           (if (string? thing)
@@ -54,10 +62,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (printf
  "~a~%"
  (char-counts->string
-  (fold
-   combine-counts
-   (make-count)
-   (map survey
-        (template->strings a-sentence)))))
+  (template->counts a-sentence)))
 
 )
