@@ -4,6 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+
 (module s3 mzscheme
 
 (require
@@ -41,33 +42,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (get-count char counter)
   (hash-table-get (char-counts-ht counter) char 0))
 (define (inc-count! char counter)
-  (hash-table-put! (char-counts-ht counter) char (get-count char counter)))
+  (hash-table-put! (char-counts-ht counter) char (add1 (get-count char counter))))
+(define (char-counts->string cc)
+  (format "~a" (hash-table-map (char-counts-ht cc) cons)))
 
 ;; consider memoizing this.
 (define (survey s)
-  (let ((counts '()))
+  (let ((counts (make-char-counts (make-hash-table))))
     (let loop ((chars-examined 0))
       (if (= chars-examined (string-length s))
           counts
         (let ((c (string-ref s chars-examined)))
           (when (char-alphabetic? c)
             (set! c (char-downcase c))
-            (let ((probe (assq c counts)))
-              (when (not probe)
-                (set! probe (cons c 0))
-                (set! counts (cons probe counts))
-                (for-each display (list "Counts is " counts #\newline)))
-              (set-cdr! probe (add1 (cdr probe)))))
+            (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
 
 (define (combine-counts alists)
   alists)
 
-(write
- (let ((all-counts (map (lambda (s)
-                          (survey s))
-                        (template->strings a-sentence))))
-   (combine-counts all-counts)))
+(for-each (lambda (s)
+            (write (char-counts->string (survey s)))
+            )
+     (template->strings a-sentence))
+
+(newline)
 
 )
