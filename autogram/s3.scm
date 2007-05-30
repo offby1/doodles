@@ -52,9 +52,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
           (loop (add1 chars-examined)))))))
 
-(define (combine-counts alists)
-  alists)
-
 (for-each (lambda (s)
             (write (char-counts->string (survey s)))
             )
