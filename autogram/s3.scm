@@ -8,7 +8,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module s3 mzscheme
 
 (require
- (only (lib "1.ss" "srfi") fold))
+ (only (lib "1.ss" "srfi") fold)
+ "counter.ss")
 
 (define a-sentence (list "This sentence contains " (cons #\a 0)))
 
@@ -38,17 +39,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         '()
         t))
 
-(define-struct char-counts (ht) #f)
-(define (get-count char counter)
-  (hash-table-get (char-counts-ht counter) char 0))
-(define (inc-count! char counter)
-  (hash-table-put! (char-counts-ht counter) char (add1 (get-count char counter))))
-(define (char-counts->string cc)
-  (format "~a" (hash-table-map (char-counts-ht cc) cons)))
-
 ;; consider memoizing this.
 (define (survey s)
-  (let ((counts (make-char-counts (make-hash-table))))
+  (let ((counts (make-count)))
     (let loop ((chars-examined 0))
       (if (= chars-examined (string-length s))
           counts
