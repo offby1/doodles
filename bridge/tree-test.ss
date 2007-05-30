@@ -13,7 +13,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            "tree.ss")
 
   (define deck (shuffled-deck))
-  (when (not
+  (when (positive?
          (test/text-ui
           (test-suite
            "Tree"

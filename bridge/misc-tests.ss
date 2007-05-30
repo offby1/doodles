@@ -35,11 +35,12 @@ exec mzscheme -qr "$0" ${1+"$@"}
          "at most one short group"
          (check-true (< (length (remove (lambda (l) (= l N)) lengths)) 2) )))))))
 (when
-    (test/text-ui
-     (test-suite "I dunno"
-      (make-one-test 4 '(a b c d e f g h i))
-      (make-one-test 3 '(a b c d e f g h i))
-      (make-one-test 4 '(a b c d)))
-     )
+    (zero?
+     (test/text-ui
+      (test-suite "I dunno"
+                  (make-one-test 4 '(a b c d e f g h i))
+                  (make-one-test 3 '(a b c d e f g h i))
+                  (make-one-test 4 '(a b c d)))
+      ))
   (exit 0)
   (exit 1))

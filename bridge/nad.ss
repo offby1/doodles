@@ -26,19 +26,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   result))))))
 
   (when
-      (not (test/text-ui
-            (test-suite
-             "aargh"
-             (test-case
-              "simple cases"
-              (check-equal? '() (non-adjacent-duplicates '()))
-              (check-equal? '() (non-adjacent-duplicates '(foo)))
-              (check-equal? '() (non-adjacent-duplicates '(foo bar)))
-              (check-equal? '() (non-adjacent-duplicates '(foo foo bar)))
-              )
-             (test-case "foo bar foo"     (check-equal? '(foo) (non-adjacent-duplicates '(foo bar foo))))
-             (test-case "bar foo foo bar" (check-equal? '(bar) (non-adjacent-duplicates '(bar foo foo bar))))
-             (test-case "yow!  yadda! ouch!" (check-equal? '(foo bar) (non-adjacent-duplicates '(bar foo foo bar foo))))
-             )))
-    
+      (positive?
+       (test/text-ui
+        (test-suite
+         "aargh"
+         (test-case
+          "simple cases"
+          (check-equal? '() (non-adjacent-duplicates '()))
+          (check-equal? '() (non-adjacent-duplicates '(foo)))
+          (check-equal? '() (non-adjacent-duplicates '(foo bar)))
+          (check-equal? '() (non-adjacent-duplicates '(foo foo bar)))
+          )
+         (test-case "foo bar foo"     (check-equal? '(foo) (non-adjacent-duplicates '(foo bar foo))))
+         (test-case "bar foo foo bar" (check-equal? '(bar) (non-adjacent-duplicates '(bar foo foo bar))))
+         (test-case "yow!  yadda! ouch!" (check-equal? '(foo bar) (non-adjacent-duplicates '(bar foo foo bar foo))))
+         )))
+
     (exit 1)))
