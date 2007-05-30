@@ -37,26 +37,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         '()
         t))
 
-;; consider memoizing this.  Alas, it modifies "counts".
-(define (survey s counts)
-  (let loop ((chars-examined 0))
-    (if (= chars-examined (string-length s))
-        counts
-      (let ((c (string-ref s chars-examined)))
-        (when (char-alphabetic? c)
-          (set! c (char-downcase c))
-          (let ((probe (assq c (unbox counts))))
-            (when (not probe)
-              (set! probe (cons c 0))
-              (set-box! counts (cons probe (unbox counts)))
-              (for-each display (list "Counts is " (unbox counts) #\newline)))
-            (set-cdr! probe (add1 (cdr probe)))))
+(define-struct char-counts (ht) #f)
+(define (get-count char counter)
+  (hash-table-get (char-counts-ht counter) char 0))
+(define (inc-count! char counter)
+  (hash-table-put! (char-counts-ht counter) char (get-count char counter)))
 
-        (loop (add1 chars-examined))))))
+;; consider memoizing this.
+(define (survey s)
+  (let ((counts '()))
+    (let loop ((chars-examined 0))
+      (if (= chars-examined (string-length s))
+          counts
+        (let ((c (string-ref s chars-examined)))
+          (when (char-alphabetic? c)
+            (set! c (char-downcase c))
+            (let ((probe (assq c counts)))
+              (when (not probe)
+                (set! probe (cons c 0))
+                (set! counts (cons probe counts))
+                (for-each display (list "Counts is " counts #\newline)))
+              (set-cdr! probe (add1 (cdr probe)))))
 
-(let ((counts (box '())))
-  (write (map (lambda (s)
-                (unbox (survey s counts)))
-              (template->strings a-sentence))))
+          (loop (add1 chars-examined)))))))
+
+(define (combine-counts alists)
+  alists)
+
+(write
+ (let ((all-counts (map (lambda (s)
+                          (survey s))
+                        (template->strings a-sentence))))
+   (combine-counts all-counts)))
 
 )
