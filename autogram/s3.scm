@@ -52,22 +52,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
           (loop (add1 chars-examined)))))))
 
-(let ((c1 (make-count))
-      (c2 (make-count)))
-  (for-each (lambda (c) (write (char-counts->string c)) (newline) )(list c1 c2))
-  (inc-count! #\a c1)
-  (for-each (lambda (c) (write (char-counts->string c)) (newline) )(list c1 c2))
-  (inc-count! #\a c2)
-  (for-each (lambda (c) (write (char-counts->string c)) (newline) )(list c1 c2))
-  (inc-count! #\x c2)
-  (for-each (lambda (c) (write (char-counts->string c)) (newline) )(list c1 c2))
-  (write (char-counts->string (combine-counts c1 c2))))
-
-;; (write
-;;  (fold combine-counts
-;;   (make-count)
-;;   (map survey
-;;        (template->strings a-sentence))))
+(write
+ (char-counts->string
+  (fold combine-counts
+        (make-count)
+        (map survey
+             (template->strings a-sentence)))))
 
 (newline)
 
