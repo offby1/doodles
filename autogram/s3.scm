@@ -126,6 +126,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (is-power-of-two? invocation-count)
           (thunk)))))
 
+(thread (lambda ()
+          (let ((alarm-seconds 2))
+            (sleep alarm-seconds)
+            (fprintf (current-error-port)
+                     "~a seconds have elapsed; exiting~%"
+                     alarm-seconds)
+
+            (exit))
+          ) )
+
 (let* ((seen (make-hash-table 'equal))
        (hash-table-grew-feedback
         (make-calm-notifier
