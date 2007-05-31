@@ -133,14 +133,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (fprintf
             (current-error-port)
             "We've examined ~a variations.~%"
-            (hash-table-count seen)))))
-       (looped-feedback
-        (make-calm-notifier
-         (lambda ()
-           (fprintf
-            (current-error-port)
-            "We looped.~%"))))
-       (loops-per-seed 10000))
+            (number->english (hash-table-count seen)))))))
   (let loop ((t a-template))
     (let ((next (update-template t (template->counts t))))
       ;; this assumes that templates will always have keys in the
@@ -149,9 +142,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
         (let ((key (just-the-conses t)))
           (if (hash-table-get seen key #f)
-              (begin
-                (looped-feedback)
-                (loop (randomly-seed a-template)))
+              (loop (randomly-seed a-template))
             (begin
               (hash-table-put! seen key #t)
               (hash-table-grew-feedback)
