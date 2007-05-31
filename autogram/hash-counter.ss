@@ -5,6 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module hash-counter mzscheme
+(require (lib "trace.ss")
+         (only (lib "list.ss") sort))
 (provide
  get-count
  inc-count!
@@ -34,7 +36,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (hash-table-put! (char-counts-ht counter) char (random-inclusively-between (get-count char counter) target)))
 
 (define (char-counts->string cc)
-  (format "~a" (hash-table-map (char-counts-ht cc) cons)))
+  (format "~a" (sort (hash-table-map (char-counts-ht cc) cons) (lambda (a b)
+                                                                 (char<? (car a)
+                                                                         (car b))))))
 
 (define (my-make-char-counts)
   (make-char-counts (make-hash-table)))
@@ -45,13 +49,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-progress c1 c2)
   (combine c1 c2 randomly-move-count-towards!))
 
-(define (counts-equal? c1 c2)
+(define (counts-equal? c1 c2 keys)
+  ;; (printf (string-append
+;;            "Counts-Equal?: ~a~%"
+;;            "versus         ~a~%")
+;;           (char-counts->string c1)
+;;           (char-counts->string c2))
   (call/ec
    (lambda (return)
      (hash-table-for-each
       (char-counts-ht c1)
       (lambda (left-key left-value)
-        (when (not (= left-value (hash-table-get (char-counts-ht c2) left-key 0)))
+        (when (and (member left-key keys)
+                   (not (= left-value (hash-table-get (char-counts-ht c2) left-key 0))))
+          ;; (printf "Count for ~a: ~a differs from ~a~%"
+          ;;                   left-key
+          ;;                   left-value
+          ;;                   (hash-table-get (char-counts-ht c2) left-key 0))
           (return #f))))
      #t))
   )
