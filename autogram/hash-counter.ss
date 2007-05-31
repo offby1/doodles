@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module counter mzscheme
+(module hash-counter mzscheme
 (provide
  get-count
  inc-count!
