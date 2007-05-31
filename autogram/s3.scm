@@ -10,20 +10,47 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require
  (only (lib "1.ss" "srfi") fold)
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
+ (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  "counter.ss")
 
-(define a-sentence (list
+(define a-template (list
                     "This sentence contains "
-                    (cons #\e 0)
+                    (cons #\a 0)
                     " as well as "
-                    (cons #\x 0)))
+                    (cons #\b 0)
+
+                    ", " (cons #\c 0)
+                    ", " (cons #\d 0)
+                    ", " (cons #\e 0)
+                    ", " (cons #\f 0)
+                    ", " (cons #\g 0)
+                    ", " (cons #\h 0)
+                    ", " (cons #\i 0)
+                    ", " (cons #\j 0)
+                    ", " (cons #\k 0)
+                    ", " (cons #\l 0)
+                    ", " (cons #\m 0)
+                    ", " (cons #\n 0)
+                    ", " (cons #\o 0)
+                    ", " (cons #\p 0)
+                    ", " (cons #\q 0)
+                    ", " (cons #\r 0)
+                    ", " (cons #\s 0)
+                    ", " (cons #\t 0)
+                    ", " (cons #\u 0)
+                    ", " (cons #\v 0)
+                    ", " (cons #\w 0)
+                    ", " (cons #\x 0)
+                    ", " (cons #\y 0)
+                    ", and " (cons #\z 0)
+                    "."
+                    ))
 
 (define (maybe-pluralize s n)
   (if (= n 1)
       s
     (string-append s "s")))
 
-;; general idea: template -> counts -> updated template
 (define (update-template t counts)
   (reverse
    (fold (lambda (thing so-far)
@@ -35,13 +62,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          t)))
 
 
+;; consider memoizing this.
 (define (template->counts t)
+  (define (survey s)
+    (let ((counts (make-count)))
+      (let loop ((chars-examined 0))
+        (if (= chars-examined (string-length s))
+            counts
+          (let ((c (string-ref s chars-examined)))
+            (when (char-alphabetic? c)
+              (inc-count! (char-downcase c) counts))
+
+            (loop (add1 chars-examined)))))))
   (fold
    combine-counts
    (make-count)
    (map survey
-        (template->strings t)))
-  )
+        (template->strings t))))
 
 (define (template->strings t)
   (reverse
@@ -63,31 +100,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          '()
          t)))
 
-;; consider memoizing this.
-(define (survey s)
-  (let ((counts (make-count)))
-    (let loop ((chars-examined 0))
-      (if (= chars-examined (string-length s))
-          counts
-        (let ((c (string-ref s chars-examined)))
-          (when (char-alphabetic? c)
-            (inc-count! (char-downcase c) counts))
-
-          (loop (add1 chars-examined)))))))
-
-(let ((counts (template->counts a-sentence)))
-  (printf
-   "~a:~%~a -> ~a~%"
-   (apply string-append (template->strings a-sentence))
-   (char-counts->string counts)
-   (apply string-append (template->strings (update-template a-sentence counts)))))
-
 (let loop ((x 20)
-           (t a-sentence))
+           (t a-template))
   (when (positive? x)
-    (printf
-     "~a~%"
-     (apply string-append (template->strings t)))
+    ;;(printf "~a~%" (apply string-append (template->strings t)))
     (loop (sub1 x)
           (update-template t (template->counts t)))))
 )
