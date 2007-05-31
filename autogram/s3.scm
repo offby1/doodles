@@ -73,19 +73,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          '()
          t)))
 
-;; memoization seems pointless, since if we're searching for truths,
-;; we should never call this twice on the same template.
-(define (template->counts t)
-  (define (survey s)
-    (let ((counts (make-count)))
-      (let loop ((chars-examined 0))
-        (if (= chars-examined (string-length s))
-            counts
-          (let ((c (string-ref s chars-examined)))
-            (when (char-alphabetic? c)
-              (inc-count! (char-downcase c) counts))
+(define/memo* (survey s)
+  (let ((counts (make-count)))
+    (let loop ((chars-examined 0))
+      (if (= chars-examined (string-length s))
+          counts
+        (let ((c (string-ref s chars-examined)))
+          (when (char-alphabetic? c)
+            (inc-count! (char-downcase c) counts))
 
-            (loop (add1 chars-examined)))))))
+          (loop (add1 chars-examined)))))))
+
+;; memoization seems pointless here, since if we're searching for
+;; truths, we should never call this twice on the same template.
+(define (template->counts t)
   (fold
    combine-counts
    (make-count)
@@ -152,7 +153,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ) )
        ))
 
-  (let ((alarm-seconds 4))
+  (let ((alarm-seconds 10))
     (sleep alarm-seconds)
     (fprintf (current-error-port)
              "~a seconds have elapsed; processed ~a variants; quitting~%"
