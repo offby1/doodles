@@ -22,7 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (cons #\b 0)
 
                     ", " (cons #\e 0)
-;;                     ", " (cons #\o 0)
+                     ", " (cons #\o 0)
                      ", " (cons #\t 0)
                     ", and " (cons #\z 0)
                     "."
@@ -122,12 +122,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
                          (loop  (update-template t (random-progress t-counts n-counts)))))))))))
 
-  (let ((seconds-to-run 600))
-    (sleep seconds-to-run)
-    (fprintf (current-error-port)
-             "~a seconds have elapsed; quitting~%"
-             seconds-to-run)
-
-    (kill-thread worker)))
-
+  (let ((seconds-to-run 10))
+    (when (not (sync/timeout seconds-to-run worker))
+      (fprintf (current-error-port)
+               "~a seconds have elapsed; quitting~%"
+               seconds-to-run)
+      (kill-thread worker))))
 )
+
