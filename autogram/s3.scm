@@ -23,7 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;                     ", " (cons #\c 0)
 ;;                     ", " (cons #\d 0)
-;;                    ", " (cons #\e 0)
+                    ", " (cons #\e 0)
 ;;                     ", " (cons #\f 0)
 ;;                     ", " (cons #\g 0)
 ;;                     ", " (cons #\h 0)
@@ -33,12 +33,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;                     ", " (cons #\l 0)
 ;;                     ", " (cons #\m 0)
 ;;                     ", " (cons #\n 0)
-;;                     ", " (cons #\o 0)
+                     ", " (cons #\o 0)
 ;;                     ", " (cons #\p 0)
 ;;                     ", " (cons #\q 0)
 ;;                     ", " (cons #\r 0)
 ;;                     ", " (cons #\s 0)
-;;                     ", " (cons #\t 0)
+                     ", " (cons #\t 0)
 ;;                     ", " (cons #\u 0)
 ;;                     ", " (cons #\v 0)
 ;;                     ", " (cons #\w 0)
@@ -138,9 +138,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              "We've examined ~a variations.~%"
                              (number->english (hash-table-count seen)))))))
                    (let loop ((t a-template))
-                     (let* ((counts (template->counts t))
-                            (next (update-template t counts)))
-                       (printf "~a~%" (char-counts->string counts))
+                     (let ((next (update-template t (template->counts t))))
                        ;; this assumes that templates will always have keys in the
                        ;; same order.
                        (if (equal? next t)
@@ -155,7 +153,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ) )
        ))
 
-  (let ((alarm-seconds 2))
+  (let ((alarm-seconds 10))
     (sleep alarm-seconds)
     (fprintf (current-error-port)
              "~a seconds have elapsed; processed ~a variants; quitting~%"
