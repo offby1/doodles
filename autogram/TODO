@@ -1,0 +1,2 @@
+* r3663: if the worker thread finishes before the alarm, have the
+  alarm exit immmediately.
