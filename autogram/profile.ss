@@ -12,7 +12,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (execute-counts-enabled #t)
 (profile-paths-enabled #t)
 
-(require "s3.scm")
+(require "autogram.ss")
 (printf "Hey Emacs, -*- coding:utf-8 -*- rocks!~%")
 (for-each (lambda (datum)
             ;; datum contains, in order:

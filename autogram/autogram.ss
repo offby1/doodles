@@ -5,7 +5,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 
-(module s3 mzscheme
+(module autogram mzscheme
 
 (require
  (only (lib "1.ss" "srfi")
