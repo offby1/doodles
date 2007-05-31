@@ -126,34 +126,39 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (is-power-of-two? invocation-count)
           (thunk)))))
 
-(thread (lambda ()
-          (let ((alarm-seconds 2))
-            (sleep alarm-seconds)
-            (fprintf (current-error-port)
-                     "~a seconds have elapsed; exiting~%"
-                     alarm-seconds)
-
-            (exit))
-          ) )
-
 (let* ((seen (make-hash-table 'equal))
-       (hash-table-grew-feedback
-        (make-calm-notifier
-         (lambda ()
-           (fprintf
-            (current-error-port)
-            "We've examined ~a variations.~%"
-            (number->english (hash-table-count seen)))))))
-  (let loop ((t a-template))
-    (let ((next (update-template t (template->counts t))))
-      ;; this assumes that templates will always have keys in the
-      ;; same order.
-      (if (equal? next t)
-          (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
-        (let ((key (just-the-conses t)))
-          (if (hash-table-get seen key #f)
-              (loop (randomly-seed a-template))
-            (begin
-              (hash-table-put! seen key #t)
-              (hash-table-grew-feedback)
-              (loop next)))))))))
+       (worker
+       (thread (lambda ()
+                 (let ((hash-table-grew-feedback
+                         (make-calm-notifier
+                          (lambda ()
+                            (fprintf
+                             (current-error-port)
+                             "We've examined ~a variations.~%"
+                             (number->english (hash-table-count seen)))))))
+                   (let loop ((t a-template))
+                     (let ((next (update-template t (template->counts t))))
+                       ;; this assumes that templates will always have keys in the
+                       ;; same order.
+                       (if (equal? next t)
+                           (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
+                         (let ((key (just-the-conses t)))
+                           (if (hash-table-get seen key #f)
+                               (loop (randomly-seed a-template))
+                             (begin
+                               (hash-table-put! seen key #t)
+                               (hash-table-grew-feedback)
+                               (loop next))))))))
+                 ) )
+       ))
+
+  (let ((alarm-seconds 4))
+    (sleep alarm-seconds)
+    (fprintf (current-error-port)
+             "~a seconds have elapsed; processed ~a variants; quitting~%"
+             alarm-seconds
+             (hash-table-count seen))
+
+    (kill-thread worker)))
+
+)
