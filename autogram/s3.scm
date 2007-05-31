@@ -61,9 +61,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          '()
          t)))
 
-
-;; consider memoizing this.
-(define (template->counts t)
+;; yes, memoizing really does make it faster.
+(define/memo* (template->counts t)
   (define (survey s)
     (let ((counts (make-count)))
       (let loop ((chars-examined 0))
@@ -100,7 +99,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          '()
          t)))
 
-(let loop ((x 20)
+(let loop ((x 10000)
            (t a-template))
   (when (positive? x)
     ;;(printf "~a~%" (apply string-append (template->strings t)))
