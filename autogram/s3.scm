@@ -11,6 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (only (lib "1.ss" "srfi")
        filter
        fold)
+ (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "counter.ss")
 
@@ -20,9 +21,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     " as well as "
                     (cons #\b 0)
 
-                    ", " (cons #\c 0)
+;;                     ", " (cons #\c 0)
 ;;                     ", " (cons #\d 0)
-                     ", " (cons #\e 0)
+                    ", " (cons #\e 0)
 ;;                     ", " (cons #\f 0)
 ;;                     ", " (cons #\g 0)
 ;;                     ", " (cons #\h 0)
@@ -32,12 +33,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;                     ", " (cons #\l 0)
 ;;                     ", " (cons #\m 0)
 ;;                     ", " (cons #\n 0)
-;;                     ", " (cons #\o 0)
+                     ", " (cons #\o 0)
 ;;                     ", " (cons #\p 0)
 ;;                     ", " (cons #\q 0)
 ;;                     ", " (cons #\r 0)
 ;;                     ", " (cons #\s 0)
-;;                     ", " (cons #\t 0)
+                     ", " (cons #\t 0)
 ;;                     ", " (cons #\u 0)
 ;;                     ", " (cons #\v 0)
 ;;                     ", " (cons #\w 0)
@@ -58,6 +59,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (if (string? thing)
                (cons thing so-far)
              (cons (cons  (car thing) (get-count (car thing) counts))
+                   so-far)))
+         '()
+         t)))
+(define (randomly-seed t)
+  (reverse
+   (fold (lambda (thing so-far)
+           (if (string? thing)
+               (cons thing so-far)
+             (cons (cons (car thing)
+                         (random 100))
                    so-far)))
          '()
          t)))
@@ -116,26 +127,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (thunk)))))
 
 (let* ((seen (make-hash-table 'equal))
-       (fb (make-calm-notifier
-            (lambda ()
-              (fprintf
-               (current-error-port)
-               "Hash table has ~a entries.~%"
-               (hash-table-count seen))))))
-  (let loop ((x 10)
-             (t a-template))
-    (if (zero? x)
-        (printf "I give up.~%")
-      (let ((next (update-template t (template->counts t))))
-        ;; this assumes that templates will always have keys in the
-        ;; same order.
-        (if (equal? next t)
-            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
-          (let ((key (just-the-conses t)))
-            (if (hash-table-get seen key #f)
-                (printf "Oh hell, we looped.~%")
+       (hash-table-grew-feedback
+        (make-calm-notifier
+         (lambda ()
+           (fprintf
+            (current-error-port)
+            "We've examined ~a variations.~%"
+            (hash-table-count seen)))))
+       (looped-feedback
+        (make-calm-notifier
+         (lambda ()
+           (fprintf
+            (current-error-port)
+            "We looped.~%"))))
+       (loops-per-seed 10000))
+  (let loop ((t a-template))
+    (let ((next (update-template t (template->counts t))))
+      ;; this assumes that templates will always have keys in the
+      ;; same order.
+      (if (equal? next t)
+          (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
+        (let ((key (just-the-conses t)))
+          (if (hash-table-get seen key #f)
               (begin
-                (hash-table-put! seen key #t)
-                (fb)
-                (loop (sub1 x)
-                      next))))))))))
+                (looped-feedback)
+                (loop (randomly-seed a-template)))
+            (begin
+              (hash-table-put! seen key #t)
+              (hash-table-grew-feedback)
+              (loop next)))))))))
