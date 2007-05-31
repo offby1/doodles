@@ -50,22 +50,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (combine c1 c2 randomly-move-count-towards!))
 
 (define (counts-equal? c1 c2 keys)
-  ;; (printf (string-append
-;;            "Counts-Equal?: ~a~%"
-;;            "versus         ~a~%")
-;;           (char-counts->string c1)
-;;           (char-counts->string c2))
   (call/ec
    (lambda (return)
      (hash-table-for-each
       (char-counts-ht c1)
       (lambda (left-key left-value)
-        (when (and (member left-key keys)
-                   (not (= left-value (hash-table-get (char-counts-ht c2) left-key 0))))
-          ;; (printf "Count for ~a: ~a differs from ~a~%"
-          ;;                   left-key
-          ;;                   left-value
-          ;;                   (hash-table-get (char-counts-ht c2) left-key 0))
+        (when (and
+
+               ;; this clause is here to make the whole program go
+               ;; faster, but I honestly don't know if it does.
+               (member left-key keys)
+
+               (not (= left-value (hash-table-get (char-counts-ht c2) left-key 0))))
           (return #f))))
      #t))
   )

@@ -11,6 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (only (lib "1.ss" "srfi")
        filter
        fold)
+ (lib "date.ss")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "hash-counter.ss")
@@ -112,7 +113,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (thread (lambda ()
                  (let ((announce-progress
                         (make-calm-notifier
-                         (lambda (t) (fprintf (current-error-port) "~s~%" t)))))
+                         (lambda (t)
+                           (fprintf
+                            (current-error-port)
+                            "~a ~s~%"
+                            (parameterize ((date-display-format 'iso-8601))
+                                          (date->string (seconds->date (current-seconds)) #t))
+                                          t)))))
                    (let loop ((t a-template))
                      (announce-progress t)
                      (let* ((t-counts (template->counts t))
@@ -122,7 +129,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
                          (loop  (update-template t (random-progress t-counts n-counts)))))))))))
 
-  (let ((seconds-to-run 10))
+  (let ((seconds-to-run 600))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
