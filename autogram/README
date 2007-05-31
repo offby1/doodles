@@ -1,14 +1,14 @@
 http://en.wikipedia.org/wiki/Autogram
 
-;; http://rec-puzzles.org/sol.pl/language/english/self.ref/self.ref.letters
-;; describes the inspiration
+http://brainyplanet.com/index.php/SRL%20Solution describes the
+inspiration -- from Doug Hofstadter's "Metamagical Themas"
 
-;; http://www.cs.indiana.edu/~tanaka/GEB/pangram.txt has some example
-;; programs in Perl and C
+http://www.cs.indiana.edu/~tanaka/GEB/pangram.txt has some example
+programs in Perl and C
 
-;; http://info.lboro.ac.uk/departments/ma/gallery/selfref/
-;;
-;; Even though that site describes almost exactly this, I wrote this
-;; long before I saw that site.
+http://info.lboro.ac.uk/departments/ma/gallery/selfref/
 
-;; http://home.att.net/~rhhardin/decimalv2.html
+Even though that site describes almost exactly this, I wrote this long
+before I saw that site.
+
+http://home.att.net/~rhhardin/decimalv2.html
