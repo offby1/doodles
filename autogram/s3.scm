@@ -14,15 +14,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define a-sentence (list
                     "This sentence contains "
-                    (cons #\a 0)
+                    (cons #\e 0)
                     " as well as "
                     (cons #\x 0)))
 
-(define (maybe-pluralize c n)
-  (let ((s (make-string 1 c)))
-    (if (= n 1)
-        s
-      (string-append s "s"))))
+(define (maybe-pluralize s n)
+  (if (= n 1)
+      s
+    (string-append s "s")))
 
 ;; general idea: template -> counts -> updated template
 (define (update-template t counts)
@@ -53,8 +52,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (cons (string-append
                       (number->english n)
                       " "
-                      (maybe-pluralize (car thing)
-                                       n))
+                      (maybe-pluralize
+                       (string-append "'"
+                                      (make-string 1 (car thing))
+                                      "'")
+                       n))
                      so-far))))
 
 
@@ -80,4 +82,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (char-counts->string counts)
    (apply string-append (template->strings (update-template a-sentence counts)))))
 
+(let loop ((x 20)
+           (t a-sentence))
+  (when (positive? x)
+    (printf
+     "~a~%"
+     (apply string-append (template->strings t)))
+    (loop (sub1 x)
+          (update-template t (template->counts t)))))
 )
