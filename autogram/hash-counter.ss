@@ -52,7 +52,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (add-counts c1 c2)
   (combine c1 c2 inc-count!))
-
+;(trace add-counts)
 (define (random-progress c1 c2 char-to-fiddle)
   (let ((rv (make-count (hash-table-copy (count-ref c2 0)))))
     (randomly-move-count-towards! char-to-fiddle rv (get-count char-to-fiddle c2))

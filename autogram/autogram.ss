@@ -45,16 +45,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 t))))
     rv))
 ;(trace update-template)
-(define (randomly-seed t)
-  (reverse
-   (fold (lambda (thing so-far)
-           (if (string? thing)
-               (cons thing so-far)
-             (cons (cons (car thing)
-                         (random 100))
-                   so-far)))
-         '()
-         t)))
 
 (define/memo* (survey s)
   (let ((counts (make-count)))
@@ -67,7 +57,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
-
+;(trace survey)
 ;; memoization seems pointless here, since if we're searching for
 ;; truths, we should never call this twice on the same template.
 (define (template->counts t)
@@ -76,7 +66,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (make-count)
    (map survey
         (template->strings t))))
-
+;(trace template->counts)
 (define (template->strings t)
   (reverse
    (fold (lambda (thing so-far)
@@ -112,7 +102,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (apply proc args)))))
 
 ;; this will be written to by the worker thread, and read from by the
-;; main thread.  It may not be thread-safe, but nothing awful will
+;; main thread.  That may not be thread-safe, but nothing awful will
 ;; happen if it gets corrupted (its value is only used for progress
 ;; messages), and anyway I can't figure out the right thread-safe way
 ;; to manipulate it.
@@ -177,7 +167,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 10))
+  (let ((seconds-to-run 31))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
