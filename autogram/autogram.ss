@@ -35,14 +35,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (string-append s "s")))
 
 (define (update-template t counts)
-  (reverse
-   (fold (lambda (thing so-far)
-           (if (string? thing)
-               (cons thing so-far)
-             (cons (cons  (car thing) (get-count (car thing) counts))
-                   so-far)))
-         '()
-         t)))
+  (let ((rv
+         (reverse
+          (fold (lambda (thing so-far)
+                  (if (string? thing)
+                      (cons thing so-far)
+                    (cons (cons  (car thing) (get-count (car thing) counts))
+                          so-far)))
+                '()
+                t))))
+    rv))
 
 (define (randomly-seed t)
   (reverse
@@ -126,20 +128,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
                             "~a ~s~%"
                             (parameterize ((date-display-format 'iso-8601))
                                           (date->string (seconds->date (current-seconds)) #t))
-                                          t)))))
-                   (let loop ((t a-template))
+                                          (apply string-append (template->strings t)))))))
+                   (let loop ((t a-template)
+                              (index-of-char-to-fiddle 0))
                      (announce-progress t)
                      (let* ((t-counts (template->counts t))
                             (next (update-template t t-counts))
-                            (n-counts (template->counts next)))
-                       (if (counts-equal? t-counts n-counts (map car (just-the-conses t)))
+                            (n-counts (template->counts next))
+                            (the-conses (just-the-conses t)))
+                       (if (counts-equal? t-counts n-counts (map car the-conses))
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
-                         (begin
+                         (let ((char-to-fiddle (car
+                                                (list-ref
+                                                 the-conses
+                                                 index-of-char-to-fiddle))))
                            (set! *tries* (add1 *tries*))
-                           ;; hmm.  Rather than updating _every_ cons
-                           ;; randomly, I suspect I should just update
-                           ;; one of them.
-                           (loop  (update-template t (random-progress t-counts n-counts)))))))))))
+                           (loop  (update-template
+                                   t
+                                   (random-progress
+                                    t-counts
+                                    n-counts
+                                    char-to-fiddle))
+                                  (remainder (add1 index-of-char-to-fiddle) (length the-conses)))))))))))
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
@@ -167,7 +177,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 3600))
+  (let ((seconds-to-run 120))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
