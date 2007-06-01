@@ -19,12 +19,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define a-template (list
                     "This sentence contains "
                     (cons #\a 0)
-                    " as well as "
+                    ", "
                     (cons #\b 0)
 
                     ", " (cons #\e 0)
-                     ", " (cons #\o 0)
-                     ", " (cons #\t 0)
+                    ", " (cons #\i 0)
+                    ", " (cons #\o 0)
+                    ", " (cons #\n 0)
+                    ", " (cons #\s 0)
+                    ", " (cons #\t 0)
                     ", and " (cons #\z 0)
                     "."
                     ))
@@ -118,6 +121,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; to manipulate it.
 
 (define *tries* 0)
+(define *log-port* (open-output-file "numbers" 'truncate/replace))
 (let ((worker
        (thread (lambda ()
                  (let ((announce-progress
@@ -136,6 +140,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                             (next (update-template t t-counts))
                             (n-counts (template->counts next))
                             (the-conses (just-the-conses t)))
+                       (write the-conses *log-port*) (newline *log-port*)
                        (if (counts-equal? t-counts n-counts (map car the-conses))
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
                          (let ((char-to-fiddle (car
@@ -183,6 +188,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                "~a seconds have elapsed; quitting~%"
                seconds-to-run)
       (kill-thread worker))
-    (kill-thread monitor)))
+    (kill-thread monitor)
+    (close-output-port *log-port*)))
 )
-
