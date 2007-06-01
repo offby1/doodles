@@ -12,23 +12,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
        filter
        fold)
  (lib "date.ss")
+ (lib "trace.ss")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "hash-counter.ss")
 
 (define a-template (list
                     "This sentence contains "
-                    (cons #\a 0)
-                    ", "
-                    (cons #\b 0)
-
-                    ", " (cons #\e 0)
-                    ", " (cons #\i 0)
-                    ", " (cons #\o 0)
-                    ", " (cons #\n 0)
-                    ", " (cons #\s 0)
-                    ", " (cons #\t 0)
-                    ", and " (cons #\z 0)
+                    (cons #\e 0)
                     "."
                     ))
 
@@ -48,7 +39,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 '()
                 t))))
     rv))
-
+(trace update-template)
 (define (randomly-seed t)
   (reverse
    (fold (lambda (thing so-far)
@@ -142,7 +133,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                             (the-conses (just-the-conses t)))
                        (write the-conses *log-port*) (newline *log-port*)
                        (if (counts-equal? t-counts n-counts (map car the-conses))
-                           (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
+                           (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
                          (let ((char-to-fiddle (car
                                                 (list-ref
                                                  the-conses

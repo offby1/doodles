@@ -89,7 +89,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (return #f)))))
      #t))
   )
-;(trace counts-equal?)
+(trace counts-equal?)
 (define (combine c1 c2 proc!)
   (let ((rv (make-count (hash-table-copy (count-ref c2 0)))))
     (hash-table-for-each
