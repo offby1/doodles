@@ -18,9 +18,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "hash-counter.ss")
 
 (define a-template (list
-                    "This sentence contains "
-                    (cons #\e 0)
-                    "."
+                    "This sentence contains nothing of interest ... except for "
+                    '(#\a . 0) ", "
+                    '(#\e . 0) ", "
+                    " and "
+                    '(#\o . 0) "."
                     ))
 
 (define (maybe-pluralize s n)
@@ -39,7 +41,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 '()
                 t))))
     rv))
-(trace update-template)
+;(trace update-template)
 (define (randomly-seed t)
   (reverse
    (fold (lambda (thing so-far)
@@ -58,7 +60,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
           counts
         (let ((c (string-ref s chars-examined)))
           (when (char-alphabetic? c)
-            (inc-count! (char-downcase c) counts))
+            (set! c (char-downcase c))
+            (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
 
@@ -112,7 +115,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; to manipulate it.
 
 (define *tries* 0)
-(define *log-port* (open-output-file "numbers" 'truncate/replace))
 (let ((worker
        (thread (lambda ()
                  (let ((announce-progress
@@ -131,7 +133,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                             (next (update-template t t-counts))
                             (n-counts (template->counts next))
                             (the-conses (just-the-conses t)))
-                       (write the-conses *log-port*) (newline *log-port*)
                        (if (counts-equal? t-counts n-counts (map car the-conses))
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
                          (let ((char-to-fiddle (car
@@ -140,7 +141,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                                  index-of-char-to-fiddle))))
                            (set! *tries* (add1 *tries*))
                            (loop  (update-template
-                                   t
+                                   next
                                    (random-progress
                                     t-counts
                                     n-counts
@@ -173,12 +174,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 120))
+  (let ((seconds-to-run 10))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
                seconds-to-run)
       (kill-thread worker))
-    (kill-thread monitor)
-    (close-output-port *log-port*)))
+    (kill-thread monitor)))
 )

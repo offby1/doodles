@@ -69,27 +69,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     rv))
 
 (define (counts-equal? c1 c2 keys)
-  (call/ec
-   (lambda (return)
-     (hash-table-for-each
-      (count-ref c1 0)
-      (lambda (left-key left-value)
-        (let ((right-value  (hash-table-get (count-ref c2 0) left-key 0)))
-          (when (and
+  (let loop ((keys keys)
+             (rv #t))
 
-                 ;; this clause is here to make the whole program go
-                 ;; faster, but I honestly don't know if it does.
-                 (member left-key keys)
+    ;; honey, did you see where I left my car keys?
+    (if  (null? keys)
+        #t
+      (if (not (= (hash-table-get (count-ref c1 0) (car keys) 0)
+                  (hash-table-get (count-ref c2 0) (car keys) 0)))
+          #f
+        (loop (cdr keys)
+              rv)))))
 
-                 (not (= left-value right-value)))
-            (when #f (printf "Counts differ for character ~s: ~a versus ~a~%"
-                    left-key
-                    left-value
-                    right-value))
-            (return #f)))))
-     #t))
-  )
-(trace counts-equal?)
+;(trace counts-equal?)
 (define (combine c1 c2 proc!)
   (let ((rv (make-count (hash-table-copy (count-ref c2 0)))))
     (hash-table-for-each
