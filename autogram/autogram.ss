@@ -136,6 +136,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
                          (begin
                            (set! *tries* (add1 *tries*))
+                           ;; hmm.  Rather than updating _every_ cons
+                           ;; randomly, I suspect I should just update
+                           ;; one of them.
                            (loop  (update-template t (random-progress t-counts n-counts)))))))))))
       (monitor (thread
                 ;; this seems overly complex.
