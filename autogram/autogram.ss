@@ -156,7 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (max 1 (- now last-sample-time)))))
                        ""))
 
-                    (sleep 10)
+                    (sleep 30)
                     (loop
                      tries
                      *tries*
@@ -164,7 +164,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 600))
+  (let ((seconds-to-run 3600))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
