@@ -18,15 +18,30 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "hash-counter.ss")
 
 (define a-template (list
-                    "This sentence contains "
-                    (cons #\a 5)
-                    " as well as " (cons #\b 1)
-                    ", " (cons #\e 10)
-                    ", " (cons #\o 5)
-                    ", " (cons #\t 4)
+                    "Brad Srebnik wants you to know that this sentence contains "
+                    (cons #\b 2)
+                    ", " (cons #\c 3)
+                    ", " (cons #\d 3)
+                    ", " (cons #\f 1)
+                    ", " (cons #\g 3)
+                    ", " (cons #\h 10)
+                    ", " (cons #\i 7)
+                    ", " (cons #\j 1)
+                    ", " (cons #\k 3)
+                    ", " (cons #\l 1)
+                    ", " (cons #\m 1)
+                    ", " (cons #\n 23)
+                    ", " (cons #\o 16)
+                    ", " (cons #\p 1)
+                    ", " (cons #\q 1)
+                    ", " (cons #\r 8)
+                    ", " (cons #\s 22)
+                    ", " (cons #\t 28)
+                    ", " (cons #\u 2)
+                    ", " (cons #\v 2)
+                    ", " (cons #\w 10)
                     ", and " (cons #\z 1)
-                    "."
-                    ))
+                    "."))
 
 (define (maybe-pluralize s n)
   (if (= n 1)
@@ -53,11 +68,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
           counts
         (let ((c (string-ref s chars-examined)))
           (when (char-alphabetic? c)
-            (set! c (char-downcase c))
+            ;;(set! c (char-downcase c))
             (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
 ;(trace survey)
+
 ;; memoization seems pointless here, since if we're searching for
 ;; truths, we should never call this twice on the same template.
 (define (template->counts t)
@@ -67,6 +83,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (map survey
         (template->strings t))))
 ;(trace template->counts)
+
 (define (template->strings t)
   (reverse
    (fold (lambda (thing so-far)
@@ -82,8 +99,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                       "'")
                        n))
                      so-far))))
-
-
          '()
          t)))
 
@@ -101,6 +116,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (if (is-power-of-two? invocation-count)
           (apply proc args)))))
 
+(define announce-progress
+  (make-calm-notifier
+   (lambda (t)
+     (fprintf
+      (current-error-port)
+      "~a ~s~%"
+      (parameterize ((date-display-format 'iso-8601))
+                    (date->string (seconds->date (current-seconds)) #t))
+      (apply string-append (template->strings t))))))
+
 ;; this will be written to by the worker thread, and read from by the
 ;; main thread.  That may not be thread-safe, but nothing awful will
 ;; happen if it gets corrupted (its value is only used for progress
@@ -108,38 +133,31 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; to manipulate it.
 
 (define *tries* 0)
+
 (let ((worker
        (thread (lambda ()
-                 (let ((announce-progress
-                        (make-calm-notifier
-                         (lambda (t)
-                           (fprintf
-                            (current-error-port)
-                            "~a ~s~%"
-                            (parameterize ((date-display-format 'iso-8601))
-                                          (date->string (seconds->date (current-seconds)) #t))
-                                          (apply string-append (template->strings t)))))))
-                   (let loop ((t a-template)
-                              (index-of-char-to-fiddle 0))
-                     (announce-progress t)
-                     (let* ((t-counts (template->counts t))
-                            (next (update-template t t-counts))
-                            (n-counts (template->counts next))
-                            (the-conses (just-the-conses t)))
-                       (if (counts-equal? t-counts n-counts (map car the-conses))
-                           (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
-                         (let ((char-to-fiddle (car
-                                                (list-ref
-                                                 the-conses
-                                                 index-of-char-to-fiddle))))
-                           (set! *tries* (add1 *tries*))
-                           (loop  (update-template
-                                   next
-                                   (random-progress
-                                    t-counts
-                                    n-counts
-                                    char-to-fiddle))
-                                  (remainder (add1 index-of-char-to-fiddle) (length the-conses)))))))))))
+                 (let loop ((t a-template)
+                            (index-of-char-to-fiddle 0))
+                   (announce-progress t)
+                   (let* ((the-conses (just-the-conses t))
+                          (t-counts (template->counts t))
+                          (next (update-template t t-counts))
+                          (n-counts (template->counts next)))
+                     (if (counts-equal? t-counts n-counts (map car the-conses))
+                         (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
+                       (let ((char-to-fiddle (car
+                                              (list-ref
+                                               the-conses
+                                               index-of-char-to-fiddle))))
+                         (set! *tries* (add1 *tries*))
+                         (loop  (update-template
+                                 next
+                                 (random-progress
+                                  t-counts
+                                  n-counts
+                                  char-to-fiddle))
+
+                                (remainder (add1 index-of-char-to-fiddle) (length the-conses))))))))))
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
@@ -167,7 +185,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 31))
+  (let ((seconds-to-run 900))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
