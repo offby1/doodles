@@ -109,6 +109,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (is-power-of-two? invocation-count)
           (apply proc args)))))
 
+;; this will be written to by the worker thread, and read from by the
+;; main thread.  It may not be thread-safe, but nothing awful will
+;; happen if it gets corrupted (its value is only used for progress
+;; messages), and anyway I can't figure out the right thread-safe way
+;; to manipulate it.
+
+(define *tries* 0)
 (let ((worker
        (thread (lambda ()
                  (let ((announce-progress
@@ -127,13 +134,42 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (n-counts (template->counts next)))
                        (if (counts-equal? t-counts n-counts (map car (just-the-conses t)))
                            (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
-                         (loop  (update-template t (random-progress t-counts n-counts)))))))))))
+                         (begin
+                           (set! *tries* (add1 *tries*))
+                           (loop  (update-template t (random-progress t-counts n-counts)))))))))))
+      (monitor (thread
+                ;; this seems overly complex.
+                (lambda ()
+                  (let loop ((previous-tries #f)
+                             (tries *tries*)
+                             (last-sample-time #f)
+                             (now (current-process-milliseconds)))
+                    (fprintf
+                     (current-error-port)
+                     "~a tries~a~%"
+                     tries
+                     (if previous-tries
+                         (format
+                          " (~a tries per second)"
+                          (exact->inexact
+                           (/ (* 1000 (- tries previous-tries))
+                              (max 1 (- now last-sample-time)))))
+                       ""))
+
+                    (sleep 10)
+                    (loop
+                     tries
+                     *tries*
+                     now
+                     (current-process-milliseconds))))
+                )))
 
   (let ((seconds-to-run 600))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"
                seconds-to-run)
-      (kill-thread worker))))
+      (kill-thread worker))
+    (kill-thread monitor)))
 )
 
