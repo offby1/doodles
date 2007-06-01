@@ -18,11 +18,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "hash-counter.ss")
 
 (define a-template (list
-                    "This sentence contains nothing of interest ... except for "
-                    '(#\a . 0) ", "
-                    '(#\e . 0) ", "
-                    " and "
-                    '(#\o . 0) "."
+                    "This sentence contains "
+                    (cons #\a 5)
+                    " as well as " (cons #\b 1)
+                    ", " (cons #\e 10)
+                    ", " (cons #\o 5)
+                    ", " (cons #\t 4)
+                    ", and " (cons #\z 1)
+                    "."
                     ))
 
 (define (maybe-pluralize s n)
