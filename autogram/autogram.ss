@@ -15,7 +15,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "trace.ss")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "byte-vector-counter.ss")
+ "hash-counter.ss")
 
 (define a-template (list
                     "Brad Srebnik wants you to know that this sentence contains "
@@ -232,7 +232,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 10))
+  (let ((seconds-to-run 1))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting after ~a tries~%"

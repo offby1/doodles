@@ -34,9 +34,12 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
             (apply
              (lambda (called milliseconds name source paths)
-               ;;(error (syntax-property-symbol-keys source))
-               (printf "~s (~a) : time = ~a : no. = ~a : µs per call = ~a~%"
-                       source
+               (printf "~a:~a:note: (~a) : time = ~a : no. = ~a : µs per call = ~a~%"
+                       (let ((s (syntax-source source)))
+                         (if (path? s)
+                             (path->string s)
+                           "?"))
+                       (syntax-line source)
                        name
                        milliseconds
                        called
