@@ -29,15 +29,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (get-count char counter)
   (hash-table-get (count-ref counter 0) (char-downcase char) 0))
 
-(define (inc-count! char counter . amount)
+(define (inc-count-internal! char counter delta)
   (when (char-alphabetic? char)
-    (if (null? amount)
-        (set! amount 1)
-      (set! amount (car amount)))
     (hash-table-put!
      (count-ref counter 0)
      (char-downcase char)
-     (+ amount (get-count char counter)))))
+     (+ delta (get-count char counter)))))
+
+(define (inc-count! char counter)
+  (inc-count-internal! char counter 1))
 
 (define (char-counts->string cc)
   (format "~a" (sort (hash-table-map (count-ref cc 0) cons) (lambda (a b)
@@ -57,8 +57,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (hash-table-for-each
    (count-ref increments 0)
    (lambda (char number)
-     (inc-count! char victim number))))
-
+     (inc-count-internal! char victim number)))
+  victim)
+;(trace add-counts!)
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)
              (rv #t))
@@ -78,7 +79,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (hash-table-for-each
      (count-ref c1 0)
      (lambda (left-key left-value)
-       (proc! left-key rv left-value)))
+       (proc! left-key rv)))
     rv
     ))
 )
