@@ -18,7 +18,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-struct char-counts (bv) #f)
 
 (define (char->index c)
-  (- (char->integer c)
+  (- (char->integer (char-downcase c))
      (char->integer #\a)))
 
 (define (get-count char counter)
@@ -48,17 +48,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)
-             (slots-examined 0)
              (rv #t))
 
-    (if (or
-         (null? keys)
-         (= slots-examined (u8vector-length c1)))
+    (if (null? keys)
         #t
-      (if (not (= (u8vector-ref (count-ref c1 0) (car keys) 0)
-                  (u8vector-ref (count-ref c2 0) (car keys) 0)))
+      (if (not (= (u8vector-ref  (char-counts-bv c1) (char->index (car keys)))
+                  (u8vector-ref  (char-counts-bv c2) (char->index (car keys)))))
           #f
         (loop (cdr keys)
-              (add1 slots-examined)
               rv)))))
 )

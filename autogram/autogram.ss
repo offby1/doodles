@@ -15,7 +15,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "trace.ss")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "hash-counter.ss")
+ "byte-vector-counter.ss")
 
 (define a-template (list
                     "Brad Srebnik wants you to know that this sentence contains "
