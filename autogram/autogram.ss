@@ -232,11 +232,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 1))
+  (let ((seconds-to-run 10))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
-               "~a seconds have elapsed; quitting~%"
-               seconds-to-run)
+               "~a seconds have elapsed; quitting after ~a tries~%"
+               seconds-to-run
+               *tries*)
       (kill-thread worker))
     (kill-thread monitor)))
 )
