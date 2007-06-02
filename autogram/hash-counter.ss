@@ -13,7 +13,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (rename my-make-char-counts make-count)
  char-counts->string
  add-counts
- random-progress
  counts-equal?
 )
 
@@ -53,20 +52,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (add-counts c1 c2)
   (combine c1 c2 inc-count!))
 ;(trace add-counts)
-(define (random-progress c1 c2 char-to-fiddle)
-  (let ((rv (make-count (hash-table-copy (count-ref c2 0)))))
-    (randomly-move-count-towards! char-to-fiddle rv (get-count char-to-fiddle c2))
-    (when #f
-      (printf (string-append
-               "random-progress: ~a~%"
-               ",                ~a~%"
-               " fiddling ~s       ~%"
-               "  ------>>>>>    ~a~%")
-              c1
-              c2
-              char-to-fiddle
-              rv))
-    rv))
+
 
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)

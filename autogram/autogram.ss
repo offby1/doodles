@@ -40,6 +40,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     ", " (cons #\u 2)
                     ", " (cons #\v 2)
                     ", " (cons #\w 10)
+                    ", " (cons #\x 0)
+                    ", " (cons #\y 0)
                     ", and " (cons #\z 1)
                     "."))
 
@@ -48,18 +50,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
       s
     (string-append s "s")))
 
-(define (update-template t counts)
+(define (modify-template t proc)
   (let ((rv
          (reverse
           (fold (lambda (thing so-far)
                   (if (string? thing)
                       (cons thing so-far)
-                    (cons (cons  (car thing) (get-count (car thing) counts))
+                    (cons (cons  (car thing) (proc thing))
                           so-far)))
                 '()
                 t))))
     rv))
-;(trace update-template)
+
+(define (randomize-template t)
+  (modify-template t (lambda (pair) (random 100))))
+;(trace randomize-template)
+
+(define (update-template-from-counts t counts)
+  (modify-template t (lambda (pair) (get-count (car pair) counts))))
+
+;(trace update-template-from-counts)
 
 (define/memo* (survey s)
   (let ((counts (make-count)))
@@ -133,31 +143,67 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; to manipulate it.
 
 (define *tries* 0)
+(define *distinct-variants-seen* 0)
 
 (let ((worker
        (thread (lambda ()
                  (let loop ((t a-template)
-                            (index-of-char-to-fiddle 0))
+
+                            (paths-started 0)
+
+                            ;; if we keep calling update-template,
+                            ;; eventually we'll loop: imagine we go
+                            ;; from node A to B, C, D, E, F, and then
+                            ;; C.  This keeps track of the length of
+                            ;; the _entire_ path, including the
+                            ;; initial tail -- in our example it'd be
+                            ;; 6.
+                            (current-path-length 0)
+
+                            (seen (make-hash-table 'equal)))
                    (announce-progress t)
                    (let* ((the-conses (just-the-conses t))
                           (t-counts (template->counts t))
-                          (next (update-template t t-counts))
+                          (next (update-template-from-counts t t-counts))
                           (n-counts (template->counts next)))
+                     (set! *tries* (add1 *tries*))
                      (if (counts-equal? t-counts n-counts (map car the-conses))
                          (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
-                       (let ((char-to-fiddle (car
-                                              (list-ref
-                                               the-conses
-                                               index-of-char-to-fiddle))))
-                         (set! *tries* (add1 *tries*))
-                         (loop  (update-template
-                                 next
-                                 (random-progress
-                                  t-counts
-                                  n-counts
-                                  char-to-fiddle))
+                       (let ((encountered-previously (hash-table-get seen n-counts #f)))
+                         (if encountered-previously
+                             (begin
+                               (if (= paths-started (car encountered-previously))
+                                   (printf "Oops: a loop of length ~a~%"
+                                           (- current-path-length (cdr
+                                                                   encountered-previously)))
+                                 (begin
+                                   (printf ".")
+                                   (flush-output)))
+                               (loop  (randomize-template next)
+                                      (add1 paths-started)
+                                      0
 
-                                (remainder (add1 index-of-char-to-fiddle) (length the-conses))))))))))
+                                      ;; starting with a new hash
+                                      ;; table keeps us from consuming
+                                      ;; too much memory ... but we
+                                      ;; tend to hit the same loops
+                                      ;; over and over ...
+                                      seen
+                                      ;;(make-hash-table 'equal)
+                                      ))
+                           (begin
+                             (set! *distinct-variants-seen* (add1 *distinct-variants-seen*))
+                             (hash-table-put!
+                              seen
+                              n-counts
+                              (cons
+                               paths-started
+                               current-path-length))
+                             (loop
+                              next
+                              paths-started
+                              (add1 current-path-length)
+                              seen))))))))))
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
@@ -167,8 +213,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                              (now (current-process-milliseconds)))
                     (fprintf
                      (current-error-port)
-                     "~a tries~a~%"
+                     "~a tries (~a distinct variants seen) ~a~%"
                      tries
+                     *distinct-variants-seen*
                      (if previous-tries
                          (format
                           " (~a tries per second)"
@@ -185,7 +232,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 900))
+  (let ((seconds-to-run 1))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting~%"

@@ -34,7 +34,10 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
             (apply
              (lambda (called milliseconds name source paths)
-               (printf "time = ~a : no. = ~a : µs per call = ~a : ~a ~a~%"
+               ;;(error (syntax-property-symbol-keys source))
+               (printf "~s (~a) : time = ~a : no. = ~a : µs per call = ~a~%"
+                       source
+                       name
                        milliseconds
                        called
                        (if (or (zero? called))
@@ -43,8 +46,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                           (/ (truncate (* 10000
                                           (/ milliseconds called)))
                              10)))
-                       name
-                       source)
+                       )
                (for-each (lambda (path)
                            (printf "   ~a~%" (car path))
                            (for-each (lambda (location)
