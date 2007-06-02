@@ -13,6 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (rename my-make-char-counts make-count)
  char-counts->string
  add-counts
+ add-counts!
  counts-equal?
 )
 
@@ -30,16 +31,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (list (cons prop:custom-write count-print)) #f))
 
 (define (get-count char counter)
-  (hash-table-get (count-ref counter 0) char 0))
+  (hash-table-get (count-ref counter 0) (char-downcase char) 0))
 
 (define (inc-count! char counter . amount)
-  (if (null? amount)
-      (set! amount 1)
-    (set! amount (car amount)))
-  (hash-table-put! (count-ref counter 0) char (+ amount (get-count char counter))))
+  (when (char-alphabetic? char)
+    (if (null? amount)
+        (set! amount 1)
+      (set! amount (car amount)))
+    (hash-table-put!
+     (count-ref counter 0)
+     (char-downcase char)
+     (+ amount (get-count char counter)))))
 
 (define (randomly-move-count-towards! char counter target)
-  (hash-table-put! (count-ref counter 0) char (random-inclusively-between (get-count char counter) target)))
+  (let ((char (char-downcase char)))
+    (hash-table-put!
+     (count-ref counter 0)
+     char
+     (random-inclusively-between (get-count char counter) target))))
 
 (define (char-counts->string cc)
   (format "~a" (sort (hash-table-map (count-ref cc 0) cons) (lambda (a b)
@@ -53,6 +62,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (combine c1 c2 inc-count!))
 ;(trace add-counts)
 
+;; modifies the first argument.  Hopefully it's faster than the
+;; non-modifying version.
+(define (add-counts! victim increments)
+  (hash-table-for-each
+   (count-ref increments 0)
+   (lambda (char number)
+     (inc-count! char victim number))))
 
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)

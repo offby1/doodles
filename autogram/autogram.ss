@@ -87,11 +87,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; memoization seems pointless here, since if we're searching for
 ;; truths, we should never call this twice on the same template.
 (define (template->counts t)
-  (fold
-   add-counts
-   (make-count)
-   (map survey
-        (template->strings t))))
+  (let ((rv (make-count)))
+    (for-each
+     (lambda (thing)
+       (add-counts! rv (survey thing)))
+     (template->strings t))
+    rv))
 ;(trace template->counts)
 
 (define (template->strings t)
