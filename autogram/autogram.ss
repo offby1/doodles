@@ -130,6 +130,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define announce-progress
   (make-calm-notifier
    (lambda (t)
+     (nl (current-error-port))
      (fprintf
       (current-error-port)
       "~a ~s~%"
@@ -145,6 +146,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define *tries* 0)
 (define *distinct-variants-seen* 0)
+(port-count-lines! (current-error-port))
+
+(define (nl p)
+  (let-values (((line col pos)
+                (port-next-location p)))
+    (unless (zero? col)
+      (newline p))))
 
 (let ((worker
        (thread (lambda ()
@@ -178,8 +186,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                            (- current-path-length (cdr
                                                                    encountered-previously)))
                                  (begin
-                                   (printf ".")
-                                   (flush-output)))
+                                   (fprintf (current-error-port) ".")
+                                   (flush-output (current-error-port))))
                                (loop  (randomize-template next)
                                       (add1 paths-started)
                                       0
@@ -233,7 +241,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 1))
+  (let ((seconds-to-run 600))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting after ~a tries~%"
