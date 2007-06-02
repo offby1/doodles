@@ -17,10 +17,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  counts-equal?
 )
 
-(define (random-inclusively-between a b)
-  (let ((min (min a b)))
-    (+ min (random (- (max a b) min -1)))))
-
 (define (count-print c port write?)
   (when write? (write-string "<" port))
   (write-string (char-counts->string c) port)
@@ -42,13 +38,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (count-ref counter 0)
      (char-downcase char)
      (+ amount (get-count char counter)))))
-
-(define (randomly-move-count-towards! char counter target)
-  (let ((char (char-downcase char)))
-    (hash-table-put!
-     (count-ref counter 0)
-     char
-     (random-inclusively-between (get-count char counter) target))))
 
 (define (char-counts->string cc)
   (format "~a" (sort (hash-table-map (count-ref cc 0) cons) (lambda (a b)
