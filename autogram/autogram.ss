@@ -144,7 +144,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; messages), and anyway I can't figure out the right thread-safe way
 ;; to manipulate it.
 
-(define *tries* 0)
+(define *tries* (make-parameter 0))
 (define *distinct-variants-seen* 0)
 (port-count-lines! (current-error-port))
 
@@ -175,7 +175,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                           (t-counts (template->counts t))
                           (next (update-template-from-counts t t-counts))
                           (n-counts (template->counts next)))
-                     (set! *tries* (add1 *tries*))
+                     (*tries* (add1 (*tries*)))
                      (if (counts-equal? t-counts n-counts (map car the-conses))
                          (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
                        (let ((encountered-previously (hash-table-get seen n-counts #f)))
@@ -217,36 +217,36 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 ;; this seems overly complex.
                 (lambda ()
                   (let loop ((previous-tries #f)
-                             (tries *tries*)
                              (last-sample-time #f)
                              (now (current-process-milliseconds)))
+                    (nl (current-error-port))
                     (fprintf
                      (current-error-port)
                      "~a tries (~a distinct variants seen) ~a~%"
-                     tries
+                     (*tries*)
                      *distinct-variants-seen*
                      (if previous-tries
                          (format
                           " (~a tries per second)"
                           (exact->inexact
-                           (/ (* 1000 (- tries previous-tries))
+                           (/ (* 1000 (- (*tries*) previous-tries))
                               (max 1 (- now last-sample-time)))))
                        ""))
 
-                    (sleep 30)
+                    (sleep 1
+                           )
                     (loop
-                     tries
-                     *tries*
+                     (*tries*)
                      now
                      (current-process-milliseconds))))
                 )))
 
-  (let ((seconds-to-run 600))
+  (let ((seconds-to-run 18000))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting after ~a tries~%"
                seconds-to-run
-               *tries*)
+               (*tries*))
       (kill-thread worker))
     (kill-thread monitor)))
 )
