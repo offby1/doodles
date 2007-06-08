@@ -1,3 +1,16 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
+(module round mzscheme
+(provide my-round)
+(require
+ (lib "assert.ss" "offby1")
+ (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
+ (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
+ (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
 ;; returns the closest number to X that has exactly DIGITS significant
 ;; figures.
 (define (my-round x digits)
@@ -10,7 +23,7 @@
   (define (scientific x)
     (if (zero? x)
         (cons 0 0)
-      
+
       (let loop ((mantissa x)
                  (exponent 0))
         (if (and (>= (abs mantissa) 1)
@@ -26,7 +39,7 @@
     (if (exact? x)
         x
       (inexact->exact x)))
-  
+
   (if (not (and
             (integer? digits)
             (positive? digits)))
@@ -47,10 +60,14 @@
        ;; `inexact->exact' on that value would yield zero instead of
        ;; 1/100.
        (expt 10 (+ exponent 1 (- digits)))
-                                          
+
        )))
+(exit-if-failed
+ (test/text-ui
+  (test-equal?
+   "yow"
+   (my-round 1.234 2)
+   #e1.2)
 
-(provide 'round)
-
-
- 
+  ))
+)
