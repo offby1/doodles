@@ -15,17 +15,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (increment numbers min max)
 
   (define (new-value x min max)
+    (assert (<= min x max))
     (+ min (modulo (add1 (- x min)) (- max min -1))))
 
-  ;(trace new-value)
-  (if (null? numbers)
-      '()
-    (let ((new (new-value (car numbers) min max)))
-      (cons new
-            (if (= min new)
-                (increment (cdr numbers) min max)
-              (cdr numbers))))
-    ))
+                                        ;(trace new-value)
+
+  (cond
+   ((null? numbers)
+    '())
+   ((and
+     (null? (cdr numbers))
+     (= min (new-value (car numbers) min max)))
+    #f)
+   ((= min (new-value (car numbers) min max))
+    (let ((from-recursive-call (increment (cdr numbers) min max)))
+      (and from-recursive-call
+           (cons(new-value (car numbers) min max) from-recursive-call))))
+   (#t
+    (cons (new-value (car numbers) min max)
+          (cdr numbers)))
+
+   ))
 ;(trace increment)
 (exit-if-failed
  (test/text-ui
@@ -48,10 +58,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (increment '(99 3) 0 99)
     '(0 4))
    (test-equal?
-    "cascading rollover 1"
-    (increment '(9 9 9) 0 9)
-    '(0 0 0))
-   (test-equal?
     "cascading rollover 2"
     (increment '(9 9 9 0) 0 9)
     '(0 0 0 1))
@@ -63,5 +69,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "non-zero minimum w/rollover"
     (increment '(9 3) 1 9)
     '(1 4))
-   )))
+   (test-false
+    "maxed out"
+    (increment '(5) 1 5))
+    )
+  ))
 )

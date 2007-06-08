@@ -20,30 +20,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define a-template (list
                     "Brad Srebnik wants you to know that this sentence contains "
-                         (cons #\b  0)
-                    ", " (cons #\c  0)
-                    ", " (cons #\d  0)
-                    ", " (cons #\f  0)
-                    ", " (cons #\g  0)
-                    ", " (cons #\h  0)
-                    ", " (cons #\i  0)
-                    ", " (cons #\j  0)
-                    ", " (cons #\k  0)
-                    ", " (cons #\l  0)
-                    ", " (cons #\m  0)
-                    ", " (cons #\n  0)
-                    ", " (cons #\o  0)
-                    ", " (cons #\p  0)
-                    ", " (cons #\q  0)
-                    ", " (cons #\r  0)
-                    ", " (cons #\s  0)
-                    ", " (cons #\t  0)
-                    ", " (cons #\u  0)
-                    ", " (cons #\v  0)
-                    ", " (cons #\w  0)
-                    ", " (cons #\x  0)
-                    ", " (cons #\y  0)
-                    ", and " (cons #\z 0)
+                    (cons #\a 1)
+                    ", " (cons #\b 1)
+                    ", " (cons #\e 1)
+                    ", " (cons #\o 1)
+                    ", " (cons #\i 1)
+                    " and " (cons #\t 1)
                     "."))
 
 (define (maybe-pluralize s n)
@@ -109,7 +91,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      so-far))))
          '()
          t)))
-
+;(trace template->strings)
 (define (just-the-conses seq)
   (filter pair? seq))
 
@@ -152,10 +134,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (newline p))))
 
 (define (increment-template t)
-  (let ((new-nums (increment (map cdr (just-the-conses t)) 4 1)))
+  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 8)))
+    (when (not new-nums)
+      (printf "Uh oh, maxed out.")
+      (kill-thread (current-thread)))
     (let loop ((conses (map (lambda (old-pair new-num)
                               (cons (car old-pair)
-                                    new-num)) (just-the-conses t) new-nums))
+                                    new-num))
+                            (just-the-conses t) new-nums))
                (t t)
                (new '()))
       (if (null? t)
@@ -166,35 +152,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;(trace increment-template)
 (let ((worker
        (thread (lambda ()
-                 (let loop ((t a-template)
-
-                            (paths-started 0)
-
-                            ;; if we keep calling update-template,
-                            ;; eventually we'll loop: imagine we go
-                            ;; from node A to B, C, D, E, F, and then
-                            ;; C.  This keeps track of the length of
-                            ;; the _entire_ path, including the
-                            ;; initial tail -- in our example it'd be
-                            ;; 6.
-                            (current-path-length 0)
-
-                            )
+                 (let loop ((t a-template))
                    (announce-progress t)
                    (let* ((the-conses (just-the-conses t))
                           (t-counts (template->counts t))
                           (next (update-template-from-counts t t-counts))
                           (n-counts (template->counts next)))
+                     ;;(printf "'next' is ~s~%" next)
                      (set! *tries* (add1 *tries*))
-                     (if (counts-equal? t-counts (template->counts next) (map car the-conses))
-                         (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
+                     (if (counts-equal? t-counts n-counts (map car the-conses))
+                         (printf "We got a winner: ~s -> ~s~%"
+                                 next
+                                 (apply string-append (template->strings next)))
                        (begin
                          (set! *distinct-variants-seen* (add1 *distinct-variants-seen*))
                          (loop
-                          (increment-template t)
-                          paths-started
-                          (add1 current-path-length)
-                          ))))))))
+                          (increment-template t)))))))))
+
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
@@ -227,9 +201,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (let ((seconds-to-run 600))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
-               "~a seconds have elapsed; quitting after ~a tries~%"
+               "~a seconds have elapsed; quitting "
                seconds-to-run
-               *tries*)
+               )
       (kill-thread worker))
+    (fprintf (current-error-port) "after ~a tries~%" *tries*)
     (kill-thread monitor)))
 )
