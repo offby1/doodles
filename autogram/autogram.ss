@@ -20,12 +20,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define a-template (list
                     "Brad Srebnik wants you to know that this sentence contains "
-                    (cons #\a 1)
-                    ", " (cons #\b 1)
-                    ", " (cons #\e 1)
-                    ", " (cons #\o 1)
-                    ", " (cons #\i 1)
-                    " and " (cons #\t 1)
+                    (cons #\a 11)
+                    ", " (cons #\b 11)
+                    ", " (cons #\e 11)
+                    ", " (cons #\o 11)
+                    ", " (cons #\i 11)
+                    " and " (cons #\t 11)
                     "."))
 
 (define (maybe-pluralize s n)
@@ -134,7 +134,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (newline p))))
 
 (define (increment-template t)
-  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 10)))
+  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 14)))
     (when (not new-nums)
       (printf "Uh oh, maxed out.")
       (kill-thread (current-thread)))
