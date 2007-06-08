@@ -15,34 +15,35 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "trace.ss")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "hash-counter.ss")
+ "hash-counter.ss"
+ "odometer.ss")
 
 (define a-template (list
                     "Brad Srebnik wants you to know that this sentence contains "
-                    (cons #\b 2)
-                    ", " (cons #\c 3)
-                    ", " (cons #\d 3)
-                    ", " (cons #\f 1)
-                    ", " (cons #\g 3)
-                    ", " (cons #\h 10)
-                    ", " (cons #\i 7)
-                    ", " (cons #\j 1)
-                    ", " (cons #\k 3)
-                    ", " (cons #\l 1)
-                    ", " (cons #\m 1)
-                    ", " (cons #\n 23)
-                    ", " (cons #\o 16)
-                    ", " (cons #\p 1)
-                    ", " (cons #\q 1)
-                    ", " (cons #\r 8)
-                    ", " (cons #\s 22)
-                    ", " (cons #\t 28)
-                    ", " (cons #\u 2)
-                    ", " (cons #\v 2)
-                    ", " (cons #\w 10)
-                    ", " (cons #\x 0)
-                    ", " (cons #\y 0)
-                    ", and " (cons #\z 1)
+                         (cons #\b  0)
+                    ", " (cons #\c  0)
+                    ", " (cons #\d  0)
+                    ", " (cons #\f  0)
+                    ", " (cons #\g  0)
+                    ", " (cons #\h  0)
+                    ", " (cons #\i  0)
+                    ", " (cons #\j  0)
+                    ", " (cons #\k  0)
+                    ", " (cons #\l  0)
+                    ", " (cons #\m  0)
+                    ", " (cons #\n  0)
+                    ", " (cons #\o  0)
+                    ", " (cons #\p  0)
+                    ", " (cons #\q  0)
+                    ", " (cons #\r  0)
+                    ", " (cons #\s  0)
+                    ", " (cons #\t  0)
+                    ", " (cons #\u  0)
+                    ", " (cons #\v  0)
+                    ", " (cons #\w  0)
+                    ", " (cons #\x  0)
+                    ", " (cons #\y  0)
+                    ", and " (cons #\z 0)
                     "."))
 
 (define (maybe-pluralize s n)
@@ -61,10 +62,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 '()
                 t))))
     rv))
-
-(define (randomize-template t)
-  (modify-template t (lambda (pair) (random 100))))
-;(trace randomize-template)
 
 (define (update-template-from-counts t counts)
   (modify-template t (lambda (pair) (get-count (car pair) counts))))
@@ -154,6 +151,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (unless (zero? col)
       (newline p))))
 
+(define (increment-template t)
+  (let ((new-nums (increment (map cdr (just-the-conses t)) 4 1)))
+    (let loop ((conses (map (lambda (old-pair new-num)
+                              (cons (car old-pair)
+                                    new-num)) (just-the-conses t) new-nums))
+               (t t)
+               (new '()))
+      (if (null? t)
+          (reverse new)
+        (loop (if (pair? (car t)) (cdr conses) conses)
+              (cdr t)
+              (cons (if (pair? (car t)) (car conses) (car t)) new))))))
+;(trace increment-template)
 (let ((worker
        (thread (lambda ()
                  (let loop ((t a-template)
@@ -169,50 +179,22 @@ exec mzscheme -qu "$0" ${1+"$@"}
                             ;; 6.
                             (current-path-length 0)
 
-                            (seen (make-hash-table 'equal)))
+                            )
                    (announce-progress t)
                    (let* ((the-conses (just-the-conses t))
                           (t-counts (template->counts t))
                           (next (update-template-from-counts t t-counts))
                           (n-counts (template->counts next)))
                      (set! *tries* (add1 *tries*))
-                     (if (counts-equal? t-counts n-counts (map car the-conses))
-                         (printf "We got a winner: ~s~%" (apply string-append (template->strings next)))
-                       (let ((encountered-previously (hash-table-get seen n-counts #f)))
-                         (if encountered-previously
-                             (begin
-                               (if (= paths-started (car encountered-previously))
-                                   (printf "Oops: a loop of length ~a~%"
-                                           (- current-path-length (cdr
-                                                                   encountered-previously)))
-                                 (begin
-                                   (fprintf (current-error-port) ".")
-                                   (flush-output (current-error-port))))
-                               (loop  (randomize-template next)
-                                      (add1 paths-started)
-                                      0
-
-                                      ;; starting with a new hash
-                                      ;; table keeps us from consuming
-                                      ;; too much memory ... but we
-                                      ;; tend to hit the same loops
-                                      ;; over and over ...
-                                      seen
-                                      ;;(make-hash-table 'equal)
-                                      ))
-                           (begin
-                             (set! *distinct-variants-seen* (add1 *distinct-variants-seen*))
-                             (hash-table-put!
-                              seen
-                              n-counts
-                              (cons
-                               paths-started
-                               current-path-length))
-                             (loop
-                              next
-                              paths-started
-                              (add1 current-path-length)
-                              seen))))))))))
+                     (if (counts-equal? t-counts (template->counts next) (map car the-conses))
+                         (printf "We got a winner: ~s~%" (apply string-append (template->strings t)))
+                       (begin
+                         (set! *distinct-variants-seen* (add1 *distinct-variants-seen*))
+                         (loop
+                          (increment-template t)
+                          paths-started
+                          (add1 current-path-length)
+                          ))))))))
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
