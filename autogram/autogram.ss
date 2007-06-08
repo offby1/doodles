@@ -23,15 +23,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *max* 14)
 
 
-(define *a-template* '(
-                       "Brad Srebnik wants you to know that this sentence contains "
-                       (#\a .  1) ", "
-                       (#\b .  1) ", "
-                       (#\e .  1) ", "
-                       (#\o .  1) ", "
-                       (#\i .  1) " and "
-                       (#\t .  1) "."
-                       ))
+(define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
+                       (#\a . 1) ", "
+                       (#\b . 1) ", "
+                       (#\e . 1) ", "
+                       (#\o . 1) ", "
+                       (#\i . 1) " and "
+                       (#\t . 1) "."))
 
 (define (maybe-pluralize s n)
   (if (= n 1)
@@ -55,9 +53,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;(trace update-template-from-counts)
 
-;; I'd have thought that define/memo would work even better, since
-;; iirc it compares with eq? instead of equal?, and afaik I only ever
-;; pass the same few strings ...
 (define/memo* (survey s)
   (let ((counts (make-count)))
     (let loop ((chars-examined 0))
@@ -71,45 +66,50 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (loop (add1 chars-examined)))))))
 ;(trace survey)
 
-;; memoization seems pointless here, since if we're searching for
-;; truths, we should never call this twice on the same template.
-(define (template->counts t)
-  (let ((rv (make-count)))
-    (for-each
-     (lambda (thing)
-       (add-counts! rv (survey thing)))
-     (template->strings t))
-    rv))
-;(trace template->counts)
+(define/memo* (pair->string p)
+  (let ((n (cdr p)))
+    (string-append
+     (number->english n)
+     " "
+     (maybe-pluralize
+      (string-append "'"
+                     (make-string 1 (car p))
+                     "'")
+      n))))
 
 (define (template->strings t)
   (reverse
    (fold (lambda (thing so-far)
            (if (string? thing)
                (cons thing so-far)
-             (let ((n (cdr thing)))
-               (cons (string-append
-                      (number->english n)
-                      " "
-                      (maybe-pluralize
-                       (string-append "'"
-                                      (make-string 1 (car thing))
-                                      "'")
-                       n))
-                     so-far))))
+             (cons (pair->string thing) so-far)))
          '()
          t)))
 ;(trace template->strings)
+
 (define (just-the-conses seq)
   (filter pair? seq))
 
 (define (true? t)
+
+  ;; memoization seems pointless here, since if we're searching for
+  ;; truths, we should never call this twice on the same template.
+  (define (template->counts t)
+    (let ((rv (make-count)))
+      (for-each
+       (lambda (thing)
+         (add-counts! rv (survey thing)))
+       (template->strings t))
+      rv))
+  ;;(trace template->counts)
+
   (let ((actual-counts (template->counts t)))
     (every (lambda (pair)
              (= (cdr pair)
                 (get-count (car pair) actual-counts)))
            (just-the-conses t))))
 ;(trace true?)
+
 (define (make-calm-notifier proc)
   (define (is-power-of-two? x)
     (or (= 1 x)
@@ -198,7 +198,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                (max 1 (- now last-sample-time)))))
                         ""))
 
-                     (sleep 5)
+                     (sleep 1)
                      (loop
                       tries
                       *tries*
