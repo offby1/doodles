@@ -134,7 +134,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (newline p))))
 
 (define (increment-template t)
-  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 8)))
+  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 10)))
     (when (not new-nums)
       (printf "Uh oh, maxed out.")
       (kill-thread (current-thread)))
