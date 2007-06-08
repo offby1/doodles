@@ -14,10 +14,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
        fold)
  (lib "date.ss")
  (lib "trace.ss")
+ (lib "round.scm" "offby1")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "hash-counter.ss"
- "odometer.ss")
+ "odometer.ss"
+ "num-string-commas.ss")
 
 (define *min* 1)
 (define *max* 14)
@@ -27,8 +29,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (#\a . 1) ", "
                        (#\b . 1) ", "
                        (#\e . 1) ", "
+                       (#\i . 1) ", "
+                       (#\n . 1) ", "
                        (#\o . 1) ", "
-                       (#\i . 1) " and "
+                       (#\s . 1) " and "
                        (#\t . 1) "."))
 
 (define (maybe-pluralize s n)
@@ -181,7 +185,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (parameterize
                    ((current-output-port (current-error-port)))
                    (printf "Will bail after ~a tries.~%"
-                           (expt (- *max* *min*) (length (just-the-conses *a-template*))))
+                           (num-string-commas (expt (- *max* *min*) (length (just-the-conses *a-template*)))))
                    (let loop ((previous-tries #f)
                               (tries *tries*)
                               (last-sample-time #f)
@@ -189,16 +193,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
                      (nl)
                      (printf
                       "~a tries ~a~%"
-                      tries
+                      (num-string-commas (my-round tries 2))
                       (if previous-tries
                           (format
                            " (~a tries per second)"
-                           (exact->inexact
-                            (/ (* 1000 (- tries previous-tries))
-                               (max 1 (- now last-sample-time)))))
+                           (num-string-commas (my-round
+                                               (/ (* 1000 (- tries previous-tries))
+                                                  (max 1 (- now last-sample-time)))
+                                               2)))
                         ""))
 
-                     (sleep 1)
+                     (sleep 2)
                      (loop
                       tries
                       *tries*
