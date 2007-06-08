@@ -9,6 +9,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (require
  (only (lib "1.ss" "srfi")
+       every
        filter
        fold)
  (lib "date.ss")
@@ -97,6 +98,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (just-the-conses seq)
   (filter pair? seq))
 
+(define (true? t)
+  (let ((actual-counts (template->counts t)))
+    (every (lambda (pair)
+             (= (cdr pair)
+                (get-count (car pair) actual-counts)))
+           (just-the-conses t))))
+;(trace true?)
 (define (make-calm-notifier proc)
   (define (is-power-of-two? x)
     (or (= 1 x)
@@ -155,18 +163,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (thread (lambda ()
                  (let loop ((t *a-template*))
                    (announce-progress t)
-                   (let* ((the-conses (just-the-conses t))
-                          (t-counts (template->counts t))
-                          (next (update-template-from-counts t t-counts))
-                          (n-counts (template->counts next)))
-                     ;;(printf "'next' is ~s~%" next)
-                     (set! *tries* (add1 *tries*))
-                     (if (counts-equal? t-counts n-counts (map car the-conses))
-                         (printf "We got a winner: ~s -> ~s~%"
-                                 next
-                                 (apply string-append (template->strings next)))
-                       (loop
-                        (increment-template t))))))))
+                   (set! *tries* (add1 *tries*))
+                   (if (true? t)
+                       (printf "We got a winner: ~s~%"
+                               (apply string-append (template->strings t)))
+                     (loop
+                      (increment-template t)))))))
 
       (monitor (thread
                 ;; this seems overly complex.
@@ -191,7 +193,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                (max 1 (- now last-sample-time)))))
                         ""))
 
-                     (sleep 30)
+                     (sleep 5)
                      (loop
                       tries
                       *tries*
