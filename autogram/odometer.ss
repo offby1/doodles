@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require
  (lib "assert.ss" "offby1")
  (lib "trace.ss")
+ (only (lib "1.ss" "srfi") every)
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
@@ -37,6 +38,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    ))
 ;(trace increment)
+
+;; just for testing
+(define (seq numbers min max)
+  (if (every (lambda (n) (= n max)) numbers)
+      (list numbers)
+    (cons numbers (seq (increment numbers min max) min max))))
+
 (exit-if-failed
  (test/text-ui
   (test-suite
@@ -72,6 +80,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test-false
     "maxed out"
     (increment '(5) 1 5))
-    )
+
+
+   (test-equal?
+    "complete sequence"
+    (seq '(0 0) 0 1)
+    '((0 0)
+      (1 0)
+      (0 1)
+      (1 1)))
+   )
+
   ))
 )
