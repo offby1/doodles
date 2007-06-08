@@ -21,15 +21,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define *min* 1)
 (define *max* 14)
-(define *a-template* (list
-                    "Brad Srebnik wants you to know that this sentence contains "
-                    (cons #\a 1)
-                    ", " (cons #\b 1)
-                    ", " (cons #\e 1)
-                    ", " (cons #\o 1)
-                    ", " (cons #\i 1)
-                    " and " (cons #\t 1)
-                    "."))
+
+
+(define *a-template* '(
+                       "Brad Srebnik wants you to know that this sentence contains "
+                       (#\a .  1) ", "
+                       (#\b .  1) ", "
+                       (#\e .  1) ", "
+                       (#\o .  1) ", "
+                       (#\i .  1) " and "
+                       (#\t .  1) "."
+                       ))
 
 (define (maybe-pluralize s n)
   (if (= n 1)
@@ -53,6 +55,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;(trace update-template-from-counts)
 
+;; I'd have thought that define/memo would work even better, since
+;; iirc it compares with eq? instead of equal?, and afaik I only ever
+;; pass the same few strings ...
 (define/memo* (survey s)
   (let ((counts (make-count)))
     (let loop ((chars-examined 0))
@@ -201,7 +206,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       (current-process-milliseconds)))))
                 )))
 
-  (let ((seconds-to-run 600))
+  (let ((seconds-to-run 900))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting "
