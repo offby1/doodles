@@ -18,14 +18,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "hash-counter.ss"
  "odometer.ss")
 
-(define a-template (list
+(define *min* 1)
+(define *max* 14)
+(define *a-template* (list
                     "Brad Srebnik wants you to know that this sentence contains "
-                    (cons #\a 11)
-                    ", " (cons #\b 11)
-                    ", " (cons #\e 11)
-                    ", " (cons #\o 11)
-                    ", " (cons #\i 11)
-                    " and " (cons #\t 11)
+                    (cons #\a 1)
+                    ", " (cons #\b 1)
+                    ", " (cons #\e 1)
+                    ", " (cons #\o 1)
+                    ", " (cons #\i 1)
+                    " and " (cons #\t 1)
                     "."))
 
 (define (maybe-pluralize s n)
@@ -109,9 +111,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define announce-progress
   (make-calm-notifier
    (lambda (t)
-     (nl (current-error-port))
-     (fprintf
-      (current-error-port)
+     (nl)
+     (printf
       "~a ~s~%"
       (parameterize ((date-display-format 'iso-8601))
                     (date->string (seconds->date (current-seconds)) #t))
@@ -124,17 +125,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; to manipulate it.
 
 (define *tries* 0)
-(define *distinct-variants-seen* 0)
 (port-count-lines! (current-error-port))
+(port-count-lines! (current-output-port))
 
-(define (nl p)
+(define (nl)
   (let-values (((line col pos)
-                (port-next-location p)))
+                (port-next-location (current-output-port))))
     (unless (zero? col)
-      (newline p))))
+      (newline))))
 
 (define (increment-template t)
-  (let ((new-nums (increment (map cdr (just-the-conses t)) 1 14)))
+  (let ((new-nums (increment (map cdr (just-the-conses t)) *min* *max*)))
     (when (not new-nums)
       (printf "Uh oh, maxed out.")
       (kill-thread (current-thread)))
@@ -152,7 +153,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;(trace increment-template)
 (let ((worker
        (thread (lambda ()
-                 (let loop ((t a-template))
+                 (let loop ((t *a-template*))
                    (announce-progress t)
                    (let* ((the-conses (just-the-conses t))
                           (t-counts (template->counts t))
@@ -164,38 +165,38 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (printf "We got a winner: ~s -> ~s~%"
                                  next
                                  (apply string-append (template->strings next)))
-                       (begin
-                         (set! *distinct-variants-seen* (add1 *distinct-variants-seen*))
-                         (loop
-                          (increment-template t)))))))))
+                       (loop
+                        (increment-template t))))))))
 
       (monitor (thread
                 ;; this seems overly complex.
                 (lambda ()
-                  (let loop ((previous-tries #f)
-                             (tries *tries*)
-                             (last-sample-time #f)
-                             (now (current-process-milliseconds)))
-                    (nl (current-error-port))
-                    (fprintf
-                     (current-error-port)
-                     "~a tries (~a distinct variants seen) ~a~%"
-                     tries
-                     *distinct-variants-seen*
-                     (if previous-tries
-                         (format
-                          " (~a tries per second)"
-                          (exact->inexact
-                           (/ (* 1000 (- tries previous-tries))
-                              (max 1 (- now last-sample-time)))))
-                       ""))
+                  (parameterize
+                   ((current-output-port (current-error-port)))
+                   (printf "Will bail after ~a tries.~%"
+                           (expt (- *max* *min*) (length (just-the-conses *a-template*))))
+                   (let loop ((previous-tries #f)
+                              (tries *tries*)
+                              (last-sample-time #f)
+                              (now (current-process-milliseconds)))
+                     (nl)
+                     (printf
+                      "~a tries ~a~%"
+                      tries
+                      (if previous-tries
+                          (format
+                           " (~a tries per second)"
+                           (exact->inexact
+                            (/ (* 1000 (- tries previous-tries))
+                               (max 1 (- now last-sample-time)))))
+                        ""))
 
-                    (sleep 30)
-                    (loop
-                     tries
-                     *tries*
-                     now
-                     (current-process-milliseconds))))
+                     (sleep 30)
+                     (loop
+                      tries
+                      *tries*
+                      now
+                      (current-process-milliseconds)))))
                 )))
 
   (let ((seconds-to-run 600))
