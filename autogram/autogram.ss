@@ -21,19 +21,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "odometer.ss"
  "num-string-commas.ss")
 
+(define *timeout-seconds* 3600)
 (define *min* 1)
 (define *max* 14)
-
-
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
-                       (#\e . 1) ", "
                        (#\i . 1) ", "
-                       (#\n . 1) ", "
-                       (#\o . 1) ", "
                        (#\s . 1) " and "
-                       (#\t . 1) "."))
+                       (#\t . 1) "."
+                       ))
 
 (define (maybe-pluralize s n)
   (if (= n 1)
@@ -184,8 +181,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 (lambda ()
                   (parameterize
                    ((current-output-port (current-error-port)))
-                   (printf "Will bail after ~a tries.~%"
-                           (num-string-commas (expt (- *max* *min*) (length (just-the-conses *a-template*)))))
+                   (printf "Will bail after ~a tries, or ~a seconds, whichever comes first.~%"
+                           (num-string-commas (expt (- *max* *min*) (length (just-the-conses *a-template*))))
+                           *timeout-seconds*)
                    (let loop ((previous-tries #f)
                               (tries *tries*)
                               (last-sample-time #f)
@@ -203,7 +201,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                                2)))
                         ""))
 
-                     (sleep 2)
+                     (sleep 30)
                      (loop
                       tries
                       *tries*
@@ -211,13 +209,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       (current-process-milliseconds)))))
                 )))
 
-  (let ((seconds-to-run 900))
+  (let ((seconds-to-run *timeout-seconds*))
     (when (not (sync/timeout seconds-to-run worker))
       (fprintf (current-error-port)
                "~a seconds have elapsed; quitting "
                seconds-to-run
                )
       (kill-thread worker))
-    (fprintf (current-error-port) "after ~a tries~%" *tries*)
-    (kill-thread monitor)))
+    (fprintf (current-error-port) "after ~a tries~%" (num-string-commas *tries*))
+    ))
 )
