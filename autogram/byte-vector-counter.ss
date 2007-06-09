@@ -55,6 +55,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (loop (cdr chars-of-interest)
             (add1 slots-set))))
 
+  ;; this isn't necessary, but it shows my intent: now that we've
+  ;; filled in this vector, we will never modify it.
+  (set! *char-indices* (vector->immutable-vector *char-indices*))
+
   (make-char-counts (make-u8vector (length chars-of-interest) 0))
   )
 (define (add-counts! c1 c2)
