@@ -204,7 +204,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                                2)))
                         ""))
 
-                     (sleep 1)
+                     (sleep 30)
                      (loop
                       tries
                       *tries*
