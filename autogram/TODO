@@ -1,3 +1,5 @@
+-*-text-*-
+
 * Vector-trie
 
   We need to keep track of which sentences we've already seen, yes?
@@ -21,3 +23,21 @@
   lot of memory, but perhaps it's doable.
 
 * set the monitor's "sleep" delay on the command line
+
+* ambitious: GUI it
+
+  It'd be fun to watch the progress graphically.  Imagine that the
+  conses in the template are represented by what looks like an
+  odometer -- little wheels.  Each would have a label under it to tell
+  what letter it corresponds with.  So if the template were currently
+
+        ("Yo: " (#\a . 10) ", " (#\s . 4) " and " (#\t . 8) ".")
+
+  the thing would look like
+
+                ____  ____  ____
+                |10|  | 4|  | 8|
+                ----  ----  ----
+                  a     s     t
+
+  and they'd whirl by.

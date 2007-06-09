@@ -28,7 +28,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
+                       (#\e . 1) ", "
                        (#\i . 1) ", "
+                       (#\o . 1) ", "
                        (#\s . 1) " and "
                        (#\t . 1) "."
                        ))
