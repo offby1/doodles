@@ -17,13 +17,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "round.scm" "offby1")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "hash-counter.ss"
+ "byte-vector-counter.ss"
  "odometer.ss"
  "num-string-commas.ss")
 
 (define *timeout-seconds* 3600)
 (define *min* 1)
 (define *max* 14)
+
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
@@ -32,6 +33,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (#\t . 1) "."
                        ))
 
+(define (just-the-conses seq) (filter pair? seq))
+(define *chars-of-interest* (map car (just-the-conses *a-template*)))
 (define (maybe-pluralize s n)
   (if (= n 1)
       s
@@ -55,12 +58,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;(trace update-template-from-counts)
 
 (define/memo* (survey s)
-  (let ((counts (make-count)))
+  (let ((counts (make-count *chars-of-interest*)))
     (let loop ((chars-examined 0))
       (if (= chars-examined (string-length s))
           counts
-        (let ((c (string-ref s chars-examined)))
-          (when (char-alphabetic? c)
+        (let ((c (char-downcase (string-ref s chars-examined))))
+          (when (and (member c *chars-of-interest*)
+                     (char-alphabetic? c))
             ;;(set! c (char-downcase c))
             (inc-count! c counts))
 
@@ -88,18 +92,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
          t)))
 ;(trace template->strings)
 
-(define (just-the-conses seq)
-  (filter pair? seq))
-
 (define (true? t)
 
   ;; memoization seems pointless here, since if we're searching for
   ;; truths, we should never call this twice on the same template.
   (define (template->counts t)
-    (let ((rv (make-count)))
+    (let ((rv (make-count *chars-of-interest*)))
       (for-each
-       (lambda (thing)
-         (add-counts! rv (survey thing)))
+       (lambda (str)
+         (add-counts! rv (survey str)))
        (template->strings t))
       rv))
   ;;(trace template->counts)
@@ -194,7 +195,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       (num-string-commas (my-round tries 2))
                       (if previous-tries
                           (format
-                           " (~a tries per second)"
+                           " (~a tries per CPU second)"
                            (num-string-commas (my-round
                                                (/ (* 1000 (- tries previous-tries))
                                                   (max 1 (- now last-sample-time)))

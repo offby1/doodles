@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  inc-count!
  (rename my-make-char-counts make-count)
  char-counts->string
- add-counts
+ add-counts!
  counts-equal?
 )
 
@@ -40,7 +40,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (set! amount (car amount)))
   (u8vector-set! (char-counts-bv counter)
                  (char->index char)
-                 (+ amount (get-count char counter))))
+                 (+ amount (get-count char counter)))
+  counter)
+;(trace inc-count!)
 (define (char-counts->string cc)
   (format "~s"  (char-counts-bv cc)))
 (define (my-make-char-counts chars-of-interest)
@@ -55,17 +57,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (make-char-counts (make-u8vector (length chars-of-interest) 0))
   )
+(define (add-counts! c1 c2)
+  (let loop ((slots-processed 0))
+    (if (< slots-processed (u8vector-length (char-counts-bv c1)))
+        (begin
+          (u8vector-set! (char-counts-bv c1)
+                         slots-processed
+                         (+ (u8vector-ref (char-counts-bv c1) slots-processed)
+                            (u8vector-ref (char-counts-bv c2) slots-processed)))
+          (loop (add1 slots-processed)))))
+  c1)
+;(trace add-counts!)
 (define (add-counts c1 c2)
-  (let ((rv (my-make-char-counts)))
-    (let loop ((slots-processed 0))
-      (if (< slots-processed (u8vector-length (char-counts-bv c1)))
-          (begin
-            (u8vector-set! (char-counts-bv rv)
-                           slots-processed
-                           (+ (u8vector-ref (char-counts-bv c1) slots-processed)
-                              (u8vector-ref (char-counts-bv c2) slots-processed)))
-            (loop (add1 slots-processed)))))
-    rv))
+  (error "Unimplemented"))
 
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)
@@ -104,6 +108,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (inc-count! c thing)
         (printf "~a~%" (char-counts->string thing))
         (get-count c thing)))
+
+     (test-case
+      "add counts"
+      (let ((c1 (my-make-char-counts chars-of-interest))
+            (c2 (my-make-char-counts chars-of-interest)))
+        (check-true (counts-equal? c1 c2 chars-of-interest))
+        (inc-count! #\a c1)
+        (inc-count! #\b c2)
+        (add-counts! c1 c2)
+        (check-equal? (get-count #\a c1) 1)
+        (check-equal? (get-count #\b c1) 1)
+        (check-equal? (get-count #\a c2) 0)
+        (check-equal? (get-count #\b c2) 1)
+        ))
 
      (test-exn
       "Rejects illegal characters"
