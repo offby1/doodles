@@ -44,7 +44,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                                  (char<? (car a)
                                                                          (car b))))))
 
-(define (my-make-char-counts)
+(define (my-make-char-counts chars-of-interest)
   (make-count (make-hash-table)))
 
 (define (add-counts c1 c2)

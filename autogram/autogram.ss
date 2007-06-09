@@ -17,7 +17,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (lib "round.scm" "offby1")
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "byte-vector-counter.ss"
+ "hash-counter.ss"
  "odometer.ss"
  "num-string-commas.ss")
 
@@ -202,7 +202,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                                2)))
                         ""))
 
-                     (sleep 30)
+                     (sleep 1)
                      (loop
                       tries
                       *tries*

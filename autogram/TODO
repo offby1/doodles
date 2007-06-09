@@ -1,19 +1,23 @@
-We need to keep track of which sentences we've already seen, yes?  So
-try this: reduce a template like
+* Vector-trie
 
-( "foo" (#\a . 0) "bar" (#\q . 3) "zap" (#\z . 9))
+  We need to keep track of which sentences we've already seen, yes?
+  So try this: reduce a template like
 
-to a list like (0 3 9) -- then note that list by using a sort of
-vector-trie -- one vector that represents the counts for the first
-letter, whose 0th element we'll set to a vector that represents the
-counts for the second letter, whose 3rd element gets set to a vector
-that represents the third letter, whose 9th element we'll set to #t.
+  ( "foo" (#\a . 0) "bar" (#\q . 3) "zap" (#\z . 9))
 
-The amount of storage used per try will be one vector per cons in the
-template -- in our example above, there are three conses, so we'd need
-three vectors per try.  And each vector's length will be determined by
-the maximum count we're willing to store.  Say that's 30; so our
-example above will use 3 vectors of length 30.  We'd like to be able
-to store a million tries easily, which would be 90 million slots, each
-of which is presumably a 4-byte word.  That's a lot of memory, but
-perhaps it's doable.
+  to a list like (0 3 9) -- then note that list by using a sort of
+  vector-trie -- one vector that represents the counts for the first
+  letter, whose 0th element we'll set to a vector that represents the
+  counts for the second letter, whose 3rd element gets set to a vector
+  that represents the third letter, whose 9th element we'll set to #t.
+
+  The amount of storage used per try will be one vector per cons in
+  the template -- in our example above, there are three conses, so
+  we'd need three vectors per try.  And each vector's length will be
+  determined by the maximum count we're willing to store.  Say that's
+  30; so our example above will use 3 vectors of length 30.  We'd like
+  to be able to store a million tries easily, which would be 90
+  million slots, each of which is presumably a 4-byte word.  That's a
+  lot of memory, but perhaps it's doable.
+
+* set the monitor's "sleep" delay on the command line
