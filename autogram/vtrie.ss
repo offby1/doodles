@@ -10,7 +10,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lib "trace.ss")
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
- (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
+ (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+ "byte-vector-counter.ss")
 (define (make-vtrie)
   (box '()))
 
@@ -20,34 +21,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (add! vt thing)
   (set-box! vt (cons thing (unbox vt))))
 
+(define *chars-of-interest* (string->list "boxiest"))
 (exit-if-failed
- (test/text-ui
-  (test-suite
-   "The one and only suite"
+ (let ((c1 (make-count *chars-of-interest*))
+       (c2 (make-count *chars-of-interest*)))
+   (test/text-ui
+    (test-suite
+     "The one and only suite"
 
-   (test-false
-    "empty"
-    (let ((thing (make-vtrie)))
-      (is-present? thing '(a))))
-   (test-case
-    "adding"
-    (let ((thing (make-vtrie)))
-    (add! thing '(a))
-    (check-not-false
-     (is-present? thing '(a)))
+     #:before
+     (lambda ()
+       (inc-count! #\b c1 2)
+       (inc-count! #\x c2 3))
 
-    (add! thing '(b))
-    (check-not-false
-     (and
-      (is-present? thing '(a))
-      (is-present? thing '(b))))
+     (test-false
+      "empty"
+      (let ((thing (make-vtrie)))
+        (is-present? thing c1)))
+     (test-case
+      "adding"
+      (let ((thing (make-vtrie)))
+        (add! thing c1)
+        (check-not-false
+         (is-present? thing c1))
 
-    (add! thing '(a b))
-    (check-not-false
-     (and
-      (is-present? thing '(a))
-      (is-present? thing '(b))
-      (is-present? thing '(a b))))
-    )))))
+        (add! thing c2)
+        (check-not-false
+         (and
+          (is-present? thing c1)
+          (is-present? thing c2)))))))))
 
 )
