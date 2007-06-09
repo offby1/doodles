@@ -183,7 +183,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                   (parameterize
                    ((current-output-port (current-error-port)))
                    (printf "Will bail after ~a tries, or ~a seconds, whichever comes first.~%"
-                           (num-string-commas (expt (- *max* *min*) (length (just-the-conses *a-template*))))
+                           (num-string-commas (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))
                            *timeout-seconds*)
                    (let loop ((previous-tries #f)
                               (tries *tries*)
