@@ -61,13 +61,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (add! vt count chars-of-interest)
   (when (not (null? chars-of-interest))
-    (let* ((index (get-count (car chars-of-interest) count))
-           (found (vector-ref (get-vec vt) index)))
-      (if found
-          (add! found count (cdr chars-of-interest))
-        (let ((new (public-make-vtrie (vector-length (get-vec vt)) chars-of-interest)))
-          (vector-set! (get-vec new) index #t)
-          (get-vec new))))))
+    (let ((index (get-count (car chars-of-interest) count)))
+      (if (null? (cdr chars-of-interest))
+          (vector-set! (get-vec vt) index #t)
+        (let ((found (vector-ref (get-vec vt) index)))
+          (if (vector? found)
+              (add! found count (cdr chars-of-interest))
+            (let ((new (public-make-vtrie (vector-length (get-vec vt)) chars-of-interest)))
+              (add! new count (cdr chars-of-interest))
+              (vector-set! (get-vec vt) index new)
+              ))))))
+  (get-vec vt))
 (trace public-add!)
 
 (exit-if-failed
