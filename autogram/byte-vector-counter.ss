@@ -110,7 +110,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (thing (my-make-char-counts chars-of-interest)))
         (inc-count! c thing 3)
         (inc-count! c thing)
-        (printf "~a~%" (char-counts->string thing))
         (get-count c thing)))
 
      (test-case
