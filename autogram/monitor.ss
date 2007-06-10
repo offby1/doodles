@@ -10,6 +10,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "round.scm" "offby1")
          "globals.ss"
          "num-string-commas.ss")
+(define (seconds->string s)
+  (let* ((s (inexact->exact (round s)))
+         (minutes (quotient s 60))
+         (hour    (quotient minutes 60))
+         (day     (quotient hour 24)))
+    (format "~a days, ~a hours, ~a minutes, ~a seconds"
+            day
+            (remainder hour 24)
+            (remainder minutes 60)
+            (remainder s 60))))
 (define (monitor max-tries)
   (parameterize
    ((current-output-port (current-error-port)))
@@ -49,11 +59,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
 
          (when tries-per-wallclock-second
-           (printf " Estimated remaining time: ~a seconds"
-                   (my-round (/ remaining-tries tries-per-wallclock-second) 2)))
+           (printf " Estimated remaining time: ~a"
+                   (seconds->string (/ remaining-tries tries-per-wallclock-second))))
          )
        (printf "~%")
-       (sleep 5)
+       (sleep 30)
        (loop
         (*tries*)
         current-tries
