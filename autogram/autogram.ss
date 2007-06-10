@@ -19,10 +19,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "byte-vector-counter.ss"
  "odometer.ss"
- "num-string-commas.ss")
-
-(define *min* 1)
-(define *max* 14)
+ "num-string-commas.ss"
+ "monitor.ss"
+ "globals.ss")
 
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
@@ -140,16 +139,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; messages), and anyway I can't figure out the right thread-safe way
 ;; to manipulate it.
 
-(define *tries* 0)
-(port-count-lines! (current-error-port))
-(port-count-lines! (current-output-port))
-
-(define (nl)
-  (let-values (((line col pos)
-                (port-next-location (current-output-port))))
-    (unless (zero? col)
-      (newline))))
-
 (define (increment-template t)
   (let ((new-nums (increment (map cdr (just-the-conses t)) *min* *max*)))
     (when (not new-nums)
@@ -171,67 +160,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (thread (lambda ()
                  (let loop ((t *a-template*))
                    (announce-progress t)
-                   (set! *tries* (add1 *tries*))
+                   (*tries* 1)
                    (if (true? t)
                        (printf "We got a winner: ~s~%"
                                (apply string-append (template->strings t)))
                      (loop
                       (increment-template t)))))))
 
-      (monitor (thread
-                ;; this seems overly complex.
-                (lambda ()
-                  (parameterize
-                   ((current-output-port (current-error-port)))
-                   (let ((max-tries  (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))
-                     (printf "Will bail after ~a tries.~%"
-                             (num-string-commas max-tries))
-                     (let loop ((current-tries *tries*)
-                                (previous-tries #f)
-                                (last-cpu #f)
-                                (last-wall #f))
-
-                       (let ((now-cpu (current-process-milliseconds))
-                             (now-wall (current-inexact-milliseconds))
-                             (remaining-tries (- max-tries current-tries)))
-                         (nl)
-                         (printf "~a tries" (num-string-commas (my-round current-tries 2)))
-
-                         (let ((tries-per-wallclock-second
-                                (and previous-tries
-                                     (/  (* 1000 (- current-tries previous-tries))
-                                         (max 1 (- now-wall last-wall))))
-                                ))
-                           (when tries-per-wallclock-second
-                             (printf " (~a tries per CPU second;"
-                                     (num-string-commas
-                                      (my-round
-                                       (/ (* 1000 (- current-tries previous-tries))
-                                          (max 1 (- now-cpu last-cpu)))
-                                       2)))
-
-                             (printf " ~a per wallclock second)"
-                                     (num-string-commas
-                                      (round (my-round tries-per-wallclock-second 2)))))
-
-                           (printf
-                            " (~a% done)"
-                            (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
-
-                           (when tries-per-wallclock-second
-                           (printf " Estimated remaining time: ~a seconds"
-                                   (my-round (/ remaining-tries tries-per-wallclock-second) 2)))
-                           )
-                         (printf "~%")
-                         (sleep 5)
-                         (loop
-                          *tries*
-                          current-tries
-                          now-cpu
-                          now-wall))))))
-                )))
+      (monitor-thread (thread (lambda ()
+                                (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))))
   (printf "Well, here we go.~%")
   (sync worker)
-  (fprintf (current-error-port) "after ~a tries~%" (num-string-commas *tries*))
+  (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
   )
 )
