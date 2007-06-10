@@ -188,29 +188,40 @@ exec mzscheme -qu "$0" ${1+"$@"}
                              (num-string-commas max-tries))
                      (let loop ((current-tries *tries*)
                                 (previous-tries #f)
-                                (last-cpu-sample #f))
+                                (last-cpu #f)
+                                (last-wall #f))
 
                        (let ((now-cpu (current-process-milliseconds))
                              (now-wall (current-inexact-milliseconds)))
                          (nl)
-                         (printf
-                          "~a tries~a (~a% done) ~%"
-                          (num-string-commas (my-round current-tries 2))
-                          (if previous-tries
-                              (format
-                               " (~a tries per CPU second)"
-                               (num-string-commas (my-round
-                                                   (/ (* 1000 (- current-tries previous-tries))
-                                                      (max 1 (- now-cpu last-cpu-sample)))
-                                                   2)))
-                            "")
-                          (my-round (/ (* 100 current-tries) max-tries) 2))
+                         (printf "~a tries" (num-string-commas (my-round current-tries 2)))
+
+                         (when previous-tries
+                           (printf " (~a tries per CPU second)"
+                                   (num-string-commas
+                                    (my-round
+                                     (/ (* 1000 (- current-tries previous-tries))
+                                        (max 1 (- now-cpu last-cpu)))
+                                     2)))
+                           (let ((tries-per-wallclock-second
+                                  (/  (* 1000 (- current-tries previous-tries))
+                                      (max 1 (- now-wall last-wall)))
+                                  ))
+                             (printf " (~a tries per wallclock second)"
+                                     (num-string-commas
+                                      (round (my-round tries-per-wallclock-second 2)))))
+                           )
+
+                          (printf
+                           " (~a% done) ~%"
+                           (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
 
                          (sleep 1)
                          (loop
                           *tries*
                           current-tries
-                          now-cpu))))))
+                          now-cpu
+                          now-wall))))))
                 )))
   (printf "Well, here we go.~%")
   (sync worker)
