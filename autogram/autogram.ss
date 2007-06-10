@@ -21,7 +21,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "odometer.ss"
  "num-string-commas.ss")
 
-(define *timeout-seconds* 3600)
 (define *min* 1)
 (define *max* 14)
 
@@ -29,8 +28,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (#\a . 1) ", "
                        (#\b . 1) ", "
                        (#\e . 1) ", "
-                       (#\i . 1) ", "
-                       (#\o . 1) ", "
+;;                        (#\i . 1) ", "
+;;                        (#\o . 1) ", "
                        (#\s . 1) " and "
                        (#\t . 1) "."
                        ))
@@ -184,41 +183,36 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 (lambda ()
                   (parameterize
                    ((current-output-port (current-error-port)))
-                   (printf "Will bail after ~a tries, or ~a seconds, whichever comes first.~%"
-                           (num-string-commas (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))
-                           *timeout-seconds*)
-                   (let loop ((previous-tries #f)
-                              (tries *tries*)
-                              (last-sample-time #f)
-                              (now (current-process-milliseconds)))
-                     (nl)
-                     (printf
-                      "~a tries ~a~%"
-                      (num-string-commas (my-round tries 2))
-                      (if previous-tries
-                          (format
-                           " (~a tries per CPU second)"
-                           (num-string-commas (my-round
-                                               (/ (* 1000 (- tries previous-tries))
-                                                  (max 1 (- now last-sample-time)))
-                                               2)))
-                        ""))
+                   (let ((max-tries  (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))
+                     (printf "Will bail after ~a tries.~%"
+                             (num-string-commas max-tries))
+                     (let loop ((previous-tries #f)
+                                (tries *tries*)
+                                (last-sample-time #f)
+                                (now (current-process-milliseconds)))
+                       (nl)
+                       (printf
+                        "~a tries~a (~a% done) ~%"
+                        (num-string-commas (my-round tries 2))
+                        (if previous-tries
+                            (format
+                             " (~a tries per CPU second)"
+                             (num-string-commas (my-round
+                                                 (/ (* 1000 (- tries previous-tries))
+                                                    (max 1 (- now last-sample-time)))
+                                                 2)))
+                          "")
+                        (my-round (/ (* 100 tries) max-tries) 2))
 
-                     (sleep 30)
-                     (loop
-                      tries
-                      *tries*
-                      now
-                      (current-process-milliseconds)))))
+                       (sleep 3)
+                       (loop
+                        tries
+                        *tries*
+                        now
+                        (current-process-milliseconds))))))
                 )))
-
-  (let ((seconds-to-run *timeout-seconds*))
-    (when (not (sync/timeout seconds-to-run worker))
-      (fprintf (current-error-port)
-               "~a seconds have elapsed; quitting "
-               seconds-to-run
-               )
-      (kill-thread worker))
-    (fprintf (current-error-port) "after ~a tries~%" (num-string-commas *tries*))
-    ))
+  (printf "Well, here we go.~%")
+  (sync worker)
+  (fprintf (current-error-port) "after ~a tries~%" (num-string-commas *tries*))
+  )
 )

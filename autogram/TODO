@@ -24,9 +24,7 @@
 
 * set the monitor's "sleep" delay on the command line
 
-* Get rid of the timeout, and replace it with a progress meter that
-  shows the percentage work we've done, and estimated time of
-  completion.
+* Show estimated time of completion.
 
 * ambitious: GUI it
 
