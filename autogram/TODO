@@ -43,3 +43,14 @@
                   a     s     t
 
   and they'd whirl by.
+
+* Count backwards
+
+  Let's say I've set *min* to 1 and *max* to 14.  Since finished
+  sentences might well have closer to 14 of a particular letter than
+  1, we'd find the truth faster by counting backwards.
+
+* Give each letter its own min and max
+
+  ... instead of having them be global.  Thus e's max might be 20
+  whereas q's would be 1.
