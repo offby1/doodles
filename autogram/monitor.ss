@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; this seems overly complex.
 (provide monitor)
 (require (lib "round.scm" "offby1")
+         (lib "date.ss")
          "globals.ss"
          "num-string-commas.ss")
 (define (seconds->string s)
@@ -32,7 +33,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (last-wall #f))
 
      (let ((now-cpu (current-process-milliseconds))
-           (now-wall (current-inexact-milliseconds))
+           (now-wall-ms (current-inexact-milliseconds))
            (remaining-tries (- max-tries current-tries)))
        (nl)
        (printf "~a tries" (num-string-commas (my-round current-tries 2)))
@@ -40,7 +41,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (let ((tries-per-wallclock-second
               (and previous-tries
                    (/  (* 1000 (- current-tries previous-tries))
-                       (max 1 (- now-wall last-wall))))
+                       (max 1 (- now-wall-ms last-wall))))
               ))
          (when tries-per-wallclock-second
            (printf " (~a tries per CPU second;"
@@ -59,8 +60,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
 
          (when tries-per-wallclock-second
-           (printf " Estimated remaining time: ~a"
-                   (seconds->string (/ remaining-tries tries-per-wallclock-second))))
+           (let* ((remaining-seconds  (/ remaining-tries tries-per-wallclock-second))
+                  (ETA (+ (/ now-wall-ms 1000) remaining-seconds)))
+             (printf " ETA ~a"
+                     (date->string (seconds->date (inexact->exact (round ETA)))  #t))))
          )
        (printf "~%")
        (sleep 30)
@@ -68,4 +71,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (*tries*)
         current-tries
         now-cpu
-        now-wall))))))
+        now-wall-ms))))))
