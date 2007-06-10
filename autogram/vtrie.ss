@@ -12,7 +12,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
  "byte-vector-counter.ss")
-
+(provide (rename public-note! note!)
+         (rename public-make-vtrie make-vtrie)
+         (rename public-is-present? is-present?))
 (define (vtrie-print vt port write?)
   (when write? (write-string "<" port))
   (write (get-vec vt) port)
@@ -55,24 +57,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (trace public-is-present?)
 
-(define (public-add! vt count)
-  (set-vec! vt (add! vt count (get-coi vt)))
+(define (public-note! vt count)
+  (set-vec! vt (note! vt count (get-coi vt)))
   vt)
 
-(define (add! vt count chars-of-interest)
+(define (note! vt count chars-of-interest)
   (when (not (null? chars-of-interest))
     (let ((index (get-count (car chars-of-interest) count)))
       (if (null? (cdr chars-of-interest))
           (vector-set! (get-vec vt) index #t)
         (let ((found (vector-ref (get-vec vt) index)))
           (if (vector? found)
-              (add! found count (cdr chars-of-interest))
+              (note! found count (cdr chars-of-interest))
             (let ((new (public-make-vtrie (vector-length (get-vec vt)) chars-of-interest)))
-              (add! new count (cdr chars-of-interest))
+              (note! new count (cdr chars-of-interest))
               (vector-set! (get-vec vt) index new)
               ))))))
   (get-vec vt))
-(trace public-add!)
+(trace public-note!)
 
 (exit-if-failed
  (let ((c1 (make-count *chars-of-interest*))
@@ -88,19 +90,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (inc-count! #\b c1 2)
        (inc-count! #\x c2 3))
 
-;;      (test-false
-;;       "empty"
-;;       (let ((vt (public-make-vtrie max  *chars-of-interest*)))
-;;         (public-is-present? vt c1)))
+     (test-false
+      "empty"
+      (let ((vt (public-make-vtrie max  *chars-of-interest*)))
+        (public-is-present? vt c1)))
 
      (test-case
       "adding"
       (let ((vt (public-make-vtrie max *chars-of-interest*)))
-        (public-add! vt c1)
+        (public-note! vt c1)
         (check-not-false
          (public-is-present? vt c1))
 
-        (public-add! vt c2)
+        (public-note! vt c2)
         (check-not-false
          (and
           (public-is-present? vt c1)
