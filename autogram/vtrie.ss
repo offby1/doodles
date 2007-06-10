@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide (rename public-note! note!)
          (rename public-make-vtrie make-vtrie)
          (rename public-is-present? is-present?))
+
 (define (vtrie-print vt port write?)
   (when write? (write-string "<" port))
   (write (get-vec vt) port)
@@ -37,50 +38,66 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (make-vtrie
    (make-vector num-slots #f)
    chars-of-interest))
-(trace public-make-vtrie)
+;(trace public-make-vtrie)
 (define *chars-of-interest* (string->list "boxiest"))
 
 (define (public-is-present? vt count)
-  (is-present? vt count (get-coi vt)))
+  (is-present? (get-vec vt) count (get-coi vt)))
 
-(define (is-present? vt count chars-of-interest)
+(define (is-present? vec count chars-of-interest)
   (if (null? chars-of-interest)
       #t
     (let ((index (get-count (car chars-of-interest) count)))
       (if (null? (cdr chars-of-interest))
-          (vector-ref vt index)
-        (let ((found (vector-ref (get-vec vt) index)))
+          (vector-ref vec index)
+        (let ((found (vector-ref vec index)))
           (if (vector? found)
               (is-present? found count (cdr chars-of-interest))
             found)
           )))))
 
-(trace public-is-present?)
+;(trace public-is-present?)
+
+;; for debugging
+(define (how-full vec)
+  (let loop ((slots-examined 0)
+             (rv 0))
+    (if (< slots-examined (vector-length vec))
+        (loop (add1 slots-examined)
+              (let ((this (vector-ref vec slots-examined)))
+                (+ rv
+                   (cond
+                    ((vector? this)
+                     (how-full this))
+                    (this 1)
+                    (else 0)))))
+      rv)))
+;(trace how-full)
 
 (define (public-note! vt count)
-  (set-vec! vt (note! vt count (get-coi vt)))
-  vt)
+  (note! (get-vec vt) count (get-coi vt)))
 
-(define (note! vt count chars-of-interest)
+(define (note! vec count chars-of-interest)
   (when (not (null? chars-of-interest))
     (let ((index (get-count (car chars-of-interest) count)))
       (if (null? (cdr chars-of-interest))
-          (vector-set! (get-vec vt) index #t)
-        (let ((found (vector-ref (get-vec vt) index)))
+          (vector-set!  vec index #t)
+        (let ((found (vector-ref vec index)))
           (if (vector? found)
               (note! found count (cdr chars-of-interest))
-            (let ((new (public-make-vtrie (vector-length (get-vec vt)) chars-of-interest)))
+            (let ((new (make-vector (vector-length vec) #f)))
               (note! new count (cdr chars-of-interest))
-              (vector-set! (get-vec vt) index new)
+              (vector-set!  vec index  new)
               ))))))
-  (get-vec vt))
-(trace public-note!)
+  ;;(printf "~a slots filled~%" (how-full vec))
+  vec)
+;(trace public-note!)
 
-(exit-if-failed
- (let ((c1 (make-count *chars-of-interest*))
-       (c2 (make-count *chars-of-interest*))
-       (min 1)
-       (max 14))
+(let ((c1 (make-count *chars-of-interest*))
+      (c2 (make-count *chars-of-interest*))
+      (min 1)
+      (max 14))
+  (exit-if-failed
    (test/text-ui
     (test-suite
      "The one and only suite"
