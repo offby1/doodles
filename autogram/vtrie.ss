@@ -107,6 +107,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (and
           (public-is-present? vt c1)
           (public-is-present? vt c2)))))
+     (test-case
+      "common prefix"
+      (let ((vt (public-make-vtrie max *chars-of-interest*))
+            (c1 (make-count *chars-of-interest*))
+            (c2 (make-count *chars-of-interest*)))
+        ;; c1: 1 2 3 0
+        ;; c2: 1 2 3 4
+        (inc-count! #\b c1 1)
+        (inc-count! #\b c2 1)
+        (inc-count! #\b c1 2)
+        (inc-count! #\b c2 2)
+        (inc-count! #\b c1 3)
+        (inc-count! #\b c2 3)
+        (inc-count! #\b c2 4)
+        (public-note! vt c1)
+        (check-not-false (public-is-present? vt c1))
+        (check-false     (public-is-present? vt c2))
+        (public-note! vt c2)
+        (check-not-false (public-is-present? vt c1))
+        (check-not-false (public-is-present? vt c2))
+        ))
      ))))
 
 )
