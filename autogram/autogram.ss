@@ -186,30 +186,31 @@ exec mzscheme -qu "$0" ${1+"$@"}
                    (let ((max-tries  (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))
                      (printf "Will bail after ~a tries.~%"
                              (num-string-commas max-tries))
-                     (let loop ((previous-tries #f)
-                                (tries *tries*)
-                                (last-sample-time #f)
-                                (now (current-process-milliseconds)))
-                       (nl)
-                       (printf
-                        "~a tries~a (~a% done) ~%"
-                        (num-string-commas (my-round tries 2))
-                        (if previous-tries
-                            (format
-                             " (~a tries per CPU second)"
-                             (num-string-commas (my-round
-                                                 (/ (* 1000 (- tries previous-tries))
-                                                    (max 1 (- now last-sample-time)))
-                                                 2)))
-                          "")
-                        (my-round (/ (* 100 tries) max-tries) 2))
+                     (let loop ((current-tries *tries*)
+                                (previous-tries #f)
+                                (last-cpu-sample #f))
 
-                       (sleep 3)
-                       (loop
-                        tries
-                        *tries*
-                        now
-                        (current-process-milliseconds))))))
+                       (let ((now-cpu (current-process-milliseconds))
+                             (now-wall (current-inexact-milliseconds)))
+                         (nl)
+                         (printf
+                          "~a tries~a (~a% done) ~%"
+                          (num-string-commas (my-round current-tries 2))
+                          (if previous-tries
+                              (format
+                               " (~a tries per CPU second)"
+                               (num-string-commas (my-round
+                                                   (/ (* 1000 (- current-tries previous-tries))
+                                                      (max 1 (- now-cpu last-cpu-sample)))
+                                                   2)))
+                            "")
+                          (my-round (/ (* 100 current-tries) max-tries) 2))
+
+                         (sleep 1)
+                         (loop
+                          *tries*
+                          current-tries
+                          now-cpu))))))
                 )))
   (printf "Well, here we go.~%")
   (sync worker)
