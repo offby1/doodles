@@ -23,11 +23,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "monitor.ss"
  "globals.ss")
 
-(define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
+(define *a-template* '("Yo.  "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
                        (#\e . 1) ", "
                        (#\i . 1) ", "
+                       (#\n . 1) ", "
                        (#\o . 1) ", "
                        (#\s . 1) " and "
                        (#\t . 1) "."
