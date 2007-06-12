@@ -137,7 +137,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (date->string (seconds->date (current-seconds)) #t))
       (apply string-append (template->strings t))))))
 
-(define *seen* (make-vtrie (add1 *max*) *chars-of-interest*))
+(define *seen* (make-trie (add1 *max*) *chars-of-interest*))
 (define (already-seen? counts)
   (is-present? *seen* counts ))
                                         ;(trace already-seen?)

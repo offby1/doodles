@@ -10,7 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lib "assert.ss" "offby1")
  "byte-vector-counter.ss")
 (provide (rename public-note! note!)
-         (rename public-make-vtrie make-vtrie)
+         (rename public-make-trie make-trie)
          (rename public-is-present? is-present?)
          (rename public-how-full how-full))
 
@@ -21,7 +21,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (write (get-coi vt) port)
   (when write? (write-string ">" port)))
 
-(define-values (s:vtrie make-vtrie vtrie? vtrie-ref vtrie-set!)
+(define-values (s:vtrie make-trie vtrie? vtrie-ref vtrie-set!)
   (make-struct-type 'vtrie #f 2 0 #f
                     (list (cons prop:custom-write vtrie-print)) #f))
 
@@ -32,11 +32,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (set-coi! vtrie c) (check-type 'set-coi! list? c)
                            (vtrie-set! vtrie 1 c))
 
-(define (public-make-vtrie num-slots chars-of-interest)
-  (make-vtrie
+(define (public-make-trie num-slots chars-of-interest)
+  (make-trie
    (make-vector num-slots #f)
    chars-of-interest))
-;(trace public-make-vtrie)
+;(trace public-make-trie)
 
 (define (public-is-present? vt count)
   (is-present? (get-vec vt) count (get-coi vt)))
