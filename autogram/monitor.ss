@@ -69,7 +69,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (printf "a long, long time from now"))))
          )
        (printf "~%")
-       (sleep 1)
+       (sleep 30)
        (loop
         (*tries*)
         current-tries
