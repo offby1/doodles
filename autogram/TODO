@@ -54,3 +54,11 @@
 
   ... instead of having them be global.  Thus e's max might be 20
   whereas q's would be 1.
+
+* For the case when we're following loops through the multidimensional
+  space, arrange a break handler so that when I hit Control-C, before
+  quitting, it gives me statistics about how full the count->boolean
+  map is.
+
+* Consider replacing the vtrie count->boolean map with an alist
+  version -- who knows, maybe it'd be faster.

@@ -24,7 +24,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "globals.ss"
  "vtrie.ss")
 
-(define *a-template* '("Brad Srebnik wants you to know that this sentence contains " (#\a . 1) ", " (#\b . 1) ", " (#\e . 1) ", " (#\o . 1) ", " (#\i . 1) " and " (#\t . 1) "."))
+(define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
+                       (#\a . 1) ", "
+                       (#\b . 1) ", "
+                       (#\e . 1) ", "
+                       (#\h . 1) ", "
+                       (#\n . 1) ", "
+                       (#\o . 1) ", "
+                       (#\i . 1) "."
+                       (#\s . 1) " and "
+                       (#\t . 1) "."
+                       ))
 
 (define (just-the-conses seq) (filter pair? seq))
 (define *chars-of-interest* (map car (just-the-conses *a-template*)))
