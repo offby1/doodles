@@ -60,19 +60,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; for debugging
 (define (how-full vec)
-  (let loop ((slots-examined 0)
-             (rv 0))
-    (if (< slots-examined (vector-length vec))
-        (loop (add1 slots-examined)
-              (let ((this (vector-ref vec slots-examined)))
-                (+ rv
-                   (cond
-                    ((vector? this)
-                     (how-full this))
-                    (this 1)
-                    (else 0)))))
-      rv)))
-;(trace how-full)
+  (let loop ((index 0)
+             (total-slots 0)
+             (true-slots 0))
+    (if (< index (vector-length vec))
+        (let ((this (vector-ref vec index)))
+          (cond
+           ((vector? this)
+            (let-values (((tru tot)
+                          (how-full this)))
+              (loop (add1 index)
+                    (+ 1 total-slots tot)
+                    (+ true-slots tru))
+              ))
+           (this (loop (add1 index)
+                       (add1 total-slots)
+                       (add1 true-slots)))
+           (else (loop (add1 index)
+                       (add1 total-slots)
+                       true-slots)))
+          )
+
+      (values true-slots total-slots))))
+(trace how-full)
 
 (define (public-note! vt count)
   (note! (get-vec vt) count (get-coi vt)))
@@ -91,7 +101,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ))))))
   ;;(printf "~a slots filled~%" (how-full vec))
   vec)
+(trace note!)
 ;(trace public-note!)
+
+(define-check (check-fullness vtrie expected-true expected-examined)
+  (let-values (((actual-true actual-examined)
+                (how-full (get-vec vtrie))))
+    (with-check-info
+     (('actual (list actual-true actual-examined))
+      ('expected (list expected-true expected-examined)))
+    (or
+     (and (equal? actual-true expected-true)
+          (equal? actual-examined expected-examined))
+     (fail-check)))))
 
 (let ((c1 (make-count *chars-of-interest*))
       (c2 (make-count *chars-of-interest*))
@@ -107,10 +129,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (inc-count! #\b c1 2)
        (inc-count! #\x c2 3))
 
-     (test-false
-      "empty"
-      (let ((vt (public-make-vtrie max  *chars-of-interest*)))
-        (public-is-present? vt c1)))
+     ;; (test-case
+;;       "empty"
+;;       (let ((vt (public-make-vtrie max  *chars-of-interest*)))
+;;         (check-false (public-is-present? vt c1))
+;;         (check-fullness vt 0 max)))
 
      (test-case
       "adding"
@@ -118,33 +141,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (public-note! vt c1)
         (check-not-false
          (public-is-present? vt c1))
-
+        (check-fullness vt 1 max)
         (public-note! vt c2)
         (check-not-false
          (and
           (public-is-present? vt c1)
           (public-is-present? vt c2)))))
-     (test-case
-      "common prefix"
-      (let ((vt (public-make-vtrie max *chars-of-interest*))
-            (c1 (make-count *chars-of-interest*))
-            (c2 (make-count *chars-of-interest*)))
-        ;; c1: 1 2 3 0
-        ;; c2: 1 2 3 4
-        (inc-count! #\b c1 1)
-        (inc-count! #\b c2 1)
-        (inc-count! #\b c1 2)
-        (inc-count! #\b c2 2)
-        (inc-count! #\b c1 3)
-        (inc-count! #\b c2 3)
-        (inc-count! #\b c2 4)
-        (public-note! vt c1)
-        (check-not-false (public-is-present? vt c1))
-        (check-false     (public-is-present? vt c2))
-        (public-note! vt c2)
-        (check-not-false (public-is-present? vt c1))
-        (check-not-false (public-is-present? vt c2))
-        ))
+;;      (test-case
+;;       "common prefix"
+;;       (let ((vt (public-make-vtrie max *chars-of-interest*))
+;;             (c1 (make-count *chars-of-interest*))
+;;             (c2 (make-count *chars-of-interest*)))
+;;         ;; c1: 1 2 3 0
+;;         ;; c2: 1 2 3 4
+;;         (inc-count! #\b c1 1)
+;;         (inc-count! #\b c2 1)
+;;         (inc-count! #\b c1 2)
+;;         (inc-count! #\b c2 2)
+;;         (inc-count! #\b c1 3)
+;;         (inc-count! #\b c2 3)
+;;         (inc-count! #\b c2 4)
+;;         (public-note! vt c1)
+;;         (check-not-false (public-is-present? vt c1))
+;;         (check-false     (public-is-present? vt c2))
+;;         (public-note! vt c2)
+;;         (check-not-false (public-is-present? vt c1))
+;;         (check-not-false (public-is-present? vt c2))
+;;         ))
      ))))
 
 )
