@@ -21,18 +21,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "odometer.ss"
  "num-string-commas.ss"
  "monitor.ss"
- "globals.ss")
+ "globals.ss"
+ "vtrie.ss")
 
-(define *a-template* '("Yo.  "
-                       (#\a . 1) ", "
-                       (#\b . 1) ", "
-                       (#\e . 1) ", "
-                       (#\i . 1) ", "
-                       (#\n . 1) ", "
-                       (#\o . 1) ", "
-                       (#\s . 1) " and "
-                       (#\t . 1) "."
-                       ))
+(define *a-template* '("Brad Srebnik wants you to know that this sentence contains " (#\a . 1) ", " (#\b . 1) ", " (#\e . 1) ", " (#\o . 1) ", " (#\i . 1) " and " (#\t . 1) "."))
 
 (define (just-the-conses seq) (filter pair? seq))
 (define *chars-of-interest* (map car (just-the-conses *a-template*)))
@@ -93,24 +85,23 @@ exec mzscheme -qu "$0" ${1+"$@"}
          t)))
 ;(trace template->strings)
 
-(define (true? t)
+;; memoization seems pointless here, since if we're searching for
+;; truths, we should never call this twice on the same template.
+(define (template->counts t)
+  (let ((rv (make-count *chars-of-interest*)))
+    (for-each
+     (lambda (str)
+       (add-counts! rv (survey str)))
+     (template->strings t))
+    rv))
+;(trace template->counts)
 
-  ;; memoization seems pointless here, since if we're searching for
-  ;; truths, we should never call this twice on the same template.
-  (define (template->counts t)
-    (let ((rv (make-count *chars-of-interest*)))
-      (for-each
-       (lambda (str)
-         (add-counts! rv (survey str)))
-       (template->strings t))
-      rv))
-  ;;(trace template->counts)
+(define (true? t actual-counts)
 
-  (let ((actual-counts (template->counts t)))
-    (every (lambda (pair)
-             (= (cdr pair)
-                (get-count (car pair) actual-counts)))
-           (just-the-conses t))))
+  (every (lambda (pair)
+           (= (cdr pair)
+              (get-count (car pair) actual-counts)))
+         (just-the-conses t)))
 ;(trace true?)
 
 (define (make-calm-notifier proc)
@@ -124,7 +115,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (if (is-power-of-two? invocation-count)
           (apply proc args)))))
 
-(define announce-progress
+(define testing-truth-progress
   (make-calm-notifier
    (lambda (t)
      (nl)
@@ -134,42 +125,48 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (date->string (seconds->date (current-seconds)) #t))
       (apply string-append (template->strings t))))))
 
-;; this will be written to by the worker thread, and read from by the
-;; main thread.  That may not be thread-safe, but nothing awful will
-;; happen if it gets corrupted (its value is only used for progress
-;; messages), and anyway I can't figure out the right thread-safe way
-;; to manipulate it.
-
-(define (increment-template t)
-  (let ((new-nums (increment (map cdr (just-the-conses t)) *min* *max*)))
-    (when (not new-nums)
-      (printf "Uh oh, maxed out.")
-      (kill-thread (current-thread)))
-    (let loop ((conses (map (lambda (old-pair new-num)
-                              (cons (car old-pair)
-                                    new-num))
-                            (just-the-conses t) new-nums))
-               (t t)
-               (new '()))
-      (if (null? t)
-          (reverse new)
-        (loop (if (pair? (car t)) (cdr conses) conses)
-              (cdr t)
-              (cons (if (pair? (car t)) (car conses) (car t)) new))))))
-;(trace increment-template)
+(define *seen* (make-vtrie (add1 *max*) *chars-of-interest*))
+(define (already-seen? counts)
+  (is-present? *seen* counts ))
+;(trace already-seen?)
+(define note-seen!
+  (let ((number-seen 0))
+    (define progress
+      (make-calm-notifier
+       (lambda ()
+         (nl)
+         (printf "~a distinct counts seen~%" number-seen))))
+    (lambda ( counts)
+      (set! number-seen (add1 number-seen))
+      (progress)
+      (note! *seen* counts))))
+;(trace note-seen!)
+(define (randomize-template t)
+  (modify-template t (lambda (ignored)
+                       (+ *min* (random (- *max* *min* -1))))))
+;(trace randomize-template)
 (let ((worker
        (thread (lambda ()
+                 (*tries* 1)
                  (let loop ((t *a-template*))
-                   (announce-progress t)
-                   (*tries* 1)
-                   (if (true? t)
-                       (printf "We got a winner: ~s~%"
-                               (apply string-append (template->strings t)))
-                     (loop
-                      (increment-template t)))))))
+                   (let ((actual-counts (template->counts t))
+                         (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
+                     ;(printf "~s ~a; counts: ~a~%" (apply string-append (template->strings t)) t actual-counts)
+                     (if (already-seen? claimed-counts)
+                         (loop (randomize-template t))
+                       (begin
+                         (*tries* (add1 (*tries*)))
+                         (testing-truth-progress t)
+                         (note-seen! claimed-counts)
+                         (if (true? t actual-counts)
+                             (printf "We got a winner: ~s~%"
+                                     (apply string-append (template->strings t)))
+                           (loop
+                            (update-template-from-counts t actual-counts))))))))))
 
-      (monitor-thread (thread (lambda ()
-                                (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))))
+      )
+  (thread (lambda ()
+            (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
   (printf "Well, here we go.~%")
   (sync worker)
   (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))

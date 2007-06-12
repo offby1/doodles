@@ -25,8 +25,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize
    ((current-output-port (current-error-port)))
 
-   (printf "Will bail after ~a tries.~%"
-           (num-string-commas max-tries))
    (let loop ((current-tries (*tries*))
               (previous-tries #f)
               (last-cpu #f)
@@ -46,10 +44,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (when tries-per-wallclock-second
            (printf " (~a tries per CPU second;"
                    (num-string-commas
-                    (my-round
-                     (/ (* 1000 (- current-tries previous-tries))
-                        (max 1 (- now-cpu last-cpu)))
-                     2)))
+                    (round
+                     (my-round
+                      (/ (* 1000 (- current-tries previous-tries))
+                         (max 1 (- now-cpu last-cpu)))
+                      2))))
 
            (printf " ~a per wallclock second)"
                    (num-string-commas
@@ -59,14 +58,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           " (~a% done)"
           (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
 
-         (when tries-per-wallclock-second
+         (when (and (number? tries-per-wallclock-second)
+                    (positive? tries-per-wallclock-second))
            (let* ((remaining-seconds  (/ remaining-tries tries-per-wallclock-second))
                   (ETA (+ (/ now-wall-ms 1000) remaining-seconds)))
              (printf " ETA ~a"
                      (date->string (seconds->date (inexact->exact (round ETA)))  #t))))
          )
        (printf "~%")
-       (sleep 30)
+       (sleep 1)
        (loop
         (*tries*)
         current-tries

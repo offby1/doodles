@@ -7,14 +7,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module globals mzscheme
 (provide (all-defined))
 (define *min* 1)
-(define *max* 14)
+(define *max* 24)
 
 (define *tries*
   (let ((value 0))
     (lambda args
       (if (not (null? args))
-          (set! value (+ (car args)
-                         value)))
+          (set! value (car args)))
       value)))
 
 (port-count-lines! (current-error-port))

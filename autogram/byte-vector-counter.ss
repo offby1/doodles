@@ -45,7 +45,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;(trace inc-count!)
 (define (char-counts->string cc)
   (format "~s"  (char-counts-bv cc)))
-(define (my-make-char-counts chars-of-interest)
+(define (my-make-char-counts chars-of-interest . initial-values)
   (let loop ((chars-of-interest chars-of-interest)
              (slots-set 0))
     (when (not (null? chars-of-interest))
@@ -59,7 +59,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; filled in this vector, we will never modify it.
   (set! *char-indices* (vector->immutable-vector *char-indices*))
 
-  (make-char-counts (make-u8vector (length chars-of-interest) 0))
+  (if (not (null? initial-values))
+      (begin
+        (assert (= (length initial-values)
+                   (length chars-of-interest)))
+        (make-char-counts (apply u8vector initial-values)))
+    (make-char-counts (make-u8vector (length chars-of-interest) 0)))
   )
 (define (add-counts! c1 c2)
   (let loop ((slots-processed 0))
@@ -114,11 +119,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
      (test-case
       "add counts"
-      (let ((c1 (my-make-char-counts chars-of-interest))
-            (c2 (my-make-char-counts chars-of-interest)))
-        (check-true (counts-equal? c1 c2 chars-of-interest))
-        (inc-count! #\a c1)
-        (inc-count! #\b c2)
+      (let ((c1 (my-make-char-counts chars-of-interest 1 0 0 0))
+            (c2 (my-make-char-counts chars-of-interest 0 1 0 0)))
         (add-counts! c1 c2)
         (check-equal? (get-count #\a c1) 1)
         (check-equal? (get-count #\b c1) 1)
