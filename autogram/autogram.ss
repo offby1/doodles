@@ -154,30 +154,35 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
 ;(trace randomize-template)
-(let ((worker
-       (thread (lambda ()
-                 (*tries* 1)
-                 (let loop ((t *a-template*))
-                   (let ((actual-counts (template->counts t))
-                         (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
-                     ;(printf "~s ~a; counts: ~a~%" (apply string-append (template->strings t)) t actual-counts)
-                     (if (already-seen? claimed-counts)
-                         (loop (randomize-template t))
-                       (begin
-                         (*tries* (add1 (*tries*)))
-                         (testing-truth-progress t)
-                         (note-seen! claimed-counts)
-                         (if (true? t actual-counts)
-                             (printf "We got a winner: ~s~%"
-                                     (apply string-append (template->strings t)))
-                           (loop
-                            (update-template-from-counts t actual-counts))))))))))
+(parameterize-break
+ #t
+ (with-handlers ([exn:break? (lambda (x) (printf "Ooh, break~%"))])
 
-      )
-  (thread (lambda ()
-            (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
-  (printf "Well, here we go.~%")
-  (sync worker)
-  (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
-  )
+   (let ((worker
+          (thread (lambda ()
+                    (*tries* 1)
+                    (let loop ((t *a-template*))
+                      (let ((actual-counts (template->counts t))
+                            (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
+                                        ;(printf "~s ~a; counts: ~a~%" (apply string-append (template->strings t)) t actual-counts)
+                        (if (already-seen? claimed-counts)
+                            (loop (randomize-template t))
+                          (begin
+                            (*tries* (add1 (*tries*)))
+                            (testing-truth-progress t)
+                            (note-seen! claimed-counts)
+                            (if (true? t actual-counts)
+                                (printf "We got a winner: ~s~%"
+                                        (apply string-append (template->strings t)))
+                              (loop
+                               (update-template-from-counts t actual-counts)))))))
+                    )))
+
+         )
+     (thread (lambda ()
+               (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
+     (printf "Well, here we go.~%")
+     (sync worker)
+     (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
+     )                    ))
 )
