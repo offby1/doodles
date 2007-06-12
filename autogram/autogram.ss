@@ -24,8 +24,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "globals.ss"
 
  ;; pick one or the other
- "alist-trie.ss"
- ;;"vtrie.ss"
+ ;;"alist-trie.ss"
+ "vtrie.ss"
 
  )
 
@@ -35,6 +35,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (#\d . 1) ", "
                        (#\e . 1) ", "
                        (#\h . 1) ", "
+                       (#\i . 1) ", "
                        (#\l . 1) ", "
                        (#\n . 1) ", "
                        (#\o . 1) ", "

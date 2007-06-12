@@ -14,3 +14,16 @@ Current memory use -- before GC: 36017800; after gc:17974896
 after 58,043 tries
 Current memory use -- before GC: 85203052; after gc:66213828
 vtrie stats: 58042 used, 13205059 total => 0.44% full
+
+* r3770
+
+** alist
+
+370,000 tries (3,600 tries per CPU second; 3,500 per wallclock second)
+Current memory use -- before GC: 192219704; after gc:163355732
+
+** vtrie
+
+370,000 tries (3,600 tries per CPU second; 3,600 per wallclock second)
+Current memory use -- before GC: 438349524; after gc:416549432
+vtrie stats: 377239 used, 93314130 total => 0.4% full
