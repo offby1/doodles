@@ -6,11 +6,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module vtrie mzscheme
 (require
- (lib "assert.ss" "offby1")
  (lib "trace.ss")
- (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
- (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
- (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+ (lib "assert.ss" "offby1")
  "byte-vector-counter.ss")
 (provide (rename public-note! note!)
          (rename public-make-vtrie make-vtrie)
@@ -40,7 +37,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (make-vector num-slots #f)
    chars-of-interest))
 ;(trace public-make-vtrie)
-(define *chars-of-interest* (string->list "boxiest"))
 
 (define (public-is-present? vt count)
   (is-present? (get-vec vt) count (get-coi vt)))
@@ -108,75 +104,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   vec)
 ;(trace note!)
 ;(trace public-note!)
-
-(define-check (check-fullness vtrie expected-true expected-examined)
-  (let-values (((actual-true actual-examined)
-                (how-full (get-vec vtrie))))
-    (with-check-info
-     (('actual (list actual-true actual-examined))
-      ('expected (list expected-true expected-examined)))
-    (or
-     (and (equal? actual-true expected-true)
-          (equal? actual-examined expected-examined))
-     (fail-check)))))
-
-(let ((c1 (make-count *chars-of-interest*))
-      (c2 (make-count *chars-of-interest*))
-      (min 1)
-      (max 14))
-  (exit-if-failed
-   (test/text-ui
-    (test-suite
-     "The one and only suite"
-
-     #:before
-     (lambda ()
-       (inc-count! #\b c1 2)
-       (inc-count! #\x c2 3))
-
-     (test-case
-      "empty"
-      (let ((vt (public-make-vtrie max  *chars-of-interest*)))
-        (check-false (public-is-present? vt c1))
-        (check-fullness vt 0 max)))
-
-     (test-case
-      "adding"
-      (let ((vt (public-make-vtrie max *chars-of-interest*)))
-        (public-note! vt c1)
-        (check-not-false
-         (public-is-present? vt c1))
-        (check-fullness vt 1 (* max (length *chars-of-interest*)))
-        (public-note! vt c2)
-        (check-not-false
-         (and
-          (public-is-present? vt c1)
-          (public-is-present? vt c2)))))
-
-     (test-case
-      "common prefix"
-      (let ((vt (public-make-vtrie max *chars-of-interest*))
-            (c1 (make-count *chars-of-interest*))
-            (c2 (make-count *chars-of-interest*)))
-        ;; c1: 1 2 3 0
-        ;; c2: 1 2 3 4
-        (inc-count! #\b c1 1)
-        (inc-count! #\b c2 1)
-
-        (inc-count! #\o c1 2)
-        (inc-count! #\o c2 2)
-
-        (inc-count! #\x c1 3)
-        (inc-count! #\x c2 3)
-
-        (inc-count! #\i c2 4)
-        (public-note! vt c1)
-        (check-not-false (public-is-present? vt c1))
-        (check-false     (public-is-present? vt c2))
-        (public-note! vt c2)
-        (check-not-false (public-is-present? vt c1))
-        (check-not-false (public-is-present? vt c2))
-        ))
-     ))))
-
 )
