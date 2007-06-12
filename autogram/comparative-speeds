@@ -1,0 +1,16 @@
+-*-outline-*-
+
+* r3769
+
+** alist trie
+
+5100 and 4000 tries per CPU second
+after 20,980 tries
+Current memory use -- before GC: 36017800; after gc:17974896
+
+** vtrie
+
+5300 tries per CPU second
+after 58,043 tries
+Current memory use -- before GC: 85203052; after gc:66213828
+vtrie stats: 58042 used, 13205059 total => 0.44% full

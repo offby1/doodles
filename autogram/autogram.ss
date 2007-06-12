@@ -22,7 +22,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "num-string-commas.ss"
  "monitor.ss"
  "globals.ss"
- "vtrie.ss")
+
+ ;; pick one or the other
+ "alist-trie.ss"
+ ;;"vtrie.ss"
+
+ )
 
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
@@ -189,6 +194,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (let-values (((used total)
               (how-full *seen*)))
+  (printf "Current memory use -- before GC: ~a; after gc:" (current-memory-use))
+  (collect-garbage)
+  (printf "~a~%" (current-memory-use))
   (printf
    "vtrie stats: ~a used, ~a total => ~a% full~%"
    used total
