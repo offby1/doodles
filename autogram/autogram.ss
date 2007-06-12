@@ -27,10 +27,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
-                       (#\c . 1) ", "
                        (#\d . 1) ", "
-                       (#\f . 1) ", "
-                       (#\g . 1) ", "
                        (#\e . 1) ", "
                        (#\h . 1) ", "
                        (#\l . 1) ", "
@@ -65,7 +62,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (update-template-from-counts t counts)
   (modify-template t (lambda (pair) (get-count (car pair) counts))))
 
-;(trace update-template-from-counts)
+                                        ;(trace update-template-from-counts)
 
 (define/memo* (survey s)
   (let ((counts (make-count *chars-of-interest*)))
@@ -79,7 +76,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
-;(trace survey)
+                                        ;(trace survey)
 
 (define/memo* (pair->string p)
   (let ((n (cdr p)))
@@ -98,7 +95,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (cons (pair->string thing) so-far)))
          '()
          t)))
-;(trace template->strings)
+                                        ;(trace template->strings)
 
 ;; memoization seems pointless here, since if we're searching for
 ;; truths, we should never call this twice on the same template.
@@ -109,7 +106,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (add-counts! rv (survey str)))
      (template->strings t))
     rv))
-;(trace template->counts)
+                                        ;(trace template->counts)
 
 (define (true? t actual-counts)
 
@@ -117,7 +114,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (= (cdr pair)
               (get-count (car pair) actual-counts)))
          (just-the-conses t)))
-;(trace true?)
+                                        ;(trace true?)
 
 (define (make-calm-notifier proc)
   (define (is-power-of-two? x)
@@ -143,46 +140,57 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *seen* (make-vtrie (add1 *max*) *chars-of-interest*))
 (define (already-seen? counts)
   (is-present? *seen* counts ))
-;(trace already-seen?)
+                                        ;(trace already-seen?)
 (define note-seen!
   (let ((number-seen 0))
     (lambda ( counts)
       (set! number-seen (add1 number-seen))
       (note! *seen* counts))))
-;(trace note-seen!)
+                                        ;(trace note-seen!)
 (define (randomize-template t)
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
-;(trace randomize-template)
-(parameterize-break
- #t
- (with-handlers ([exn:break? (lambda (x) (printf "Ooh, break~%"))])
+                                        ;(trace randomize-template)
+(call/ec
+ (lambda (return)
 
-   (let ((worker
-          (thread (lambda ()
-                    (*tries* 1)
-                    (let loop ((t *a-template*))
-                      (let ((actual-counts (template->counts t))
-                            (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
+   (parameterize-break
+    #t
+    (with-handlers ([exn:break? (lambda (x) (return))])
+
+      (let ((worker
+             (thread (lambda ()
+                       (*tries* 1)
+                       (let loop ((t *a-template*))
+                         (let ((actual-counts (template->counts t))
+                               (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
                                         ;(printf "~s ~a; counts: ~a~%" (apply string-append (template->strings t)) t actual-counts)
-                        (if (already-seen? claimed-counts)
-                            (loop (randomize-template t))
-                          (begin
-                            (*tries* (add1 (*tries*)))
-                            (testing-truth-progress t)
-                            (note-seen! claimed-counts)
-                            (if (true? t actual-counts)
-                                (printf "We got a winner: ~s~%"
-                                        (apply string-append (template->strings t)))
-                              (loop
-                               (update-template-from-counts t actual-counts)))))))
-                    )))
+                           (if (already-seen? claimed-counts)
+                               (loop (randomize-template t))
+                             (begin
+                               (*tries* (add1 (*tries*)))
+                               (testing-truth-progress t)
+                               (note-seen! claimed-counts)
+                               (if (true? t actual-counts)
+                                   (printf "We got a winner: ~s~%"
+                                           (apply string-append (template->strings t)))
+                                 (loop
+                                  (update-template-from-counts t actual-counts)))))))
+                       )))
 
-         )
-     (thread (lambda ()
-               (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
-     (printf "Well, here we go.~%")
-     (sync worker)
-     (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
-     )                    ))
+            )
+        (thread (lambda ()
+                  (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
+        (printf "Well, here we go.~%")
+        (sync worker)
+        (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
+        )      ))
+   ))
+
+(let-values (((used total)
+              (how-full *seen*)))
+  (printf
+   "vtrie stats: ~a used, ~a total => ~a% full~%"
+   used total
+   (exact->inexact (my-round (* 100 (/ used total)) 2))))
 )
