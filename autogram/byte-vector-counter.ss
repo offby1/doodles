@@ -21,7 +21,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 )
 
 (define-struct char-counts (bv) #f)
+
+;; eww.  This is global; thus you can't have two counts that refer to
+;; different sets of characters.
 (define *char-indices* (make-vector 26 #f))
+
 (define (internal-offset c)
   (- (char->integer (char-downcase c))
      (char->integer #\a)))
@@ -43,7 +47,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   counter)
 ;(trace inc-count!)
 (define (char-counts->string cc)
-  (format "~s"  (char-counts-bv cc)))
+  (char-counts-bv cc))
 (define (my-make-char-counts chars-of-interest . initial-values)
   (let loop ((chars-of-interest chars-of-interest)
              (slots-set 0))
