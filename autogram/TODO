@@ -62,3 +62,6 @@
 
 * Consider replacing the vtrie count->boolean map with an alist
   version -- who knows, maybe it'd be faster.
+
+* Trap the runtime error ``vector-ref: index blah out of range'', and
+  automatically bump *max* and restart.

@@ -27,12 +27,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
                        (#\a . 1) ", "
                        (#\b . 1) ", "
+                       (#\d . 1) ", "
                        (#\e . 1) ", "
                        (#\h . 1) ", "
                        (#\n . 1) ", "
                        (#\o . 1) ", "
-                       (#\i . 1) "."
-                       (#\s . 1) " and "
+                       (#\r . 1) ", "
+                       (#\i . 1) ", "
+                       (#\s . 1) ", and "
                        (#\t . 1) "."
                        ))
 
@@ -80,9 +82,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (number->english n)
      " "
      (maybe-pluralize
-      (string-append "'"
-                     (make-string 1 (car p))
-                     "'")
+      (string-append (make-string 1 (car p)) "'")
       n))))
 
 (define (template->strings t)

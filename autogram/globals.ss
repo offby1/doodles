@@ -7,7 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module globals mzscheme
 (provide (all-defined))
 (define *min* 1)
-(define *max* 31)
+(define *max* 38)
 
 (define *tries*
   (let ((value 0))

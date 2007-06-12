@@ -60,10 +60,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
          (when (and (number? tries-per-wallclock-second)
                     (positive? tries-per-wallclock-second))
-           (let* ((remaining-seconds  (/ remaining-tries tries-per-wallclock-second))
-                  (ETA (+ (/ now-wall-ms 1000) remaining-seconds)))
-             (printf " ETA ~a"
-                     (date->string (seconds->date (inexact->exact (round ETA)))  #t))))
+           (let ((remaining-seconds  (/ remaining-tries tries-per-wallclock-second)))
+             (printf " ETA ")
+             (if (< remaining-seconds (* 365 24 3600))
+                 (let ((ETA (+ (/ now-wall-ms 1000) remaining-seconds)))
+                   (printf "~a"
+                           (date->string (seconds->date (inexact->exact (round ETA)))  #t)))
+               (printf "a long, long time from now"))))
          )
        (printf "~%")
        (sleep 1)
