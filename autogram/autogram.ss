@@ -30,12 +30,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (#\d . 1) ", "
                        (#\e . 1) ", "
                        (#\h . 1) ", "
+                       (#\l . 1) ", "
                        (#\n . 1) ", "
                        (#\o . 1) ", "
                        (#\r . 1) ", "
                        (#\i . 1) ", "
-                       (#\s . 1) ", and "
-                       (#\t . 1) "."
+                       (#\s . 1) ", "
+                       (#\t . 1) ", and "
+                       (#\u . 1) "."
                        ))
 
 (define (just-the-conses seq) (filter pair? seq))
@@ -141,14 +143,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;(trace already-seen?)
 (define note-seen!
   (let ((number-seen 0))
-    (define progress
-      (make-calm-notifier
-       (lambda ()
-         (nl)
-         (printf "~a distinct counts seen~%" number-seen))))
     (lambda ( counts)
       (set! number-seen (add1 number-seen))
-      (progress)
       (note! *seen* counts))))
 ;(trace note-seen!)
 (define (randomize-template t)
