@@ -60,8 +60,13 @@
   quitting, it gives me statistics about how full the count->boolean
   map is.
 
-* Consider replacing the vtrie count->boolean map with an alist
-  version -- who knows, maybe it'd be faster.
-
 * Trap the runtime error ``vector-ref: index blah out of range'', and
   automatically bump *max* and restart.
+
+* limit the memory the process can use, to prevent it from bringing
+  the computer to its knees.  (ulimit -d 100000; mzscheme -qu
+  ./autogram.ss) is a crude way to do it.
+
+* Find a way to tell the monitor thread to wake up and do its thing
+  _now_.  That way when we're shutting down we can get one last report
+  out of it.
