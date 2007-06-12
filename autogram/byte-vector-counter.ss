@@ -8,7 +8,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require
  (lib "assert.ss" "offby1")
  (lib "trace.ss")
- (lib "4.ss" "srfi")
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
  (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
@@ -33,12 +32,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((index (char->index char)))
     (when (not index)
       (error "Hey!  You're not allowed to ask about" char))
-    (u8vector-ref (char-counts-bv counter) index)))
+    (bytes-ref (char-counts-bv counter) index)))
 (define (inc-count! char counter . amount)
   (if (null? amount)
       (set! amount 1)
     (set! amount (car amount)))
-  (u8vector-set! (char-counts-bv counter)
+  (bytes-set! (char-counts-bv counter)
                  (char->index char)
                  (+ amount (get-count char counter)))
   counter)
@@ -63,17 +62,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (begin
         (assert (= (length initial-values)
                    (length chars-of-interest)))
-        (make-char-counts (apply u8vector initial-values)))
-    (make-char-counts (make-u8vector (length chars-of-interest) 0)))
+        (make-char-counts (apply bytes initial-values)))
+    (make-char-counts (make-bytes (length chars-of-interest) 0)))
   )
 (define (add-counts! c1 c2)
   (let loop ((slots-processed 0))
-    (if (< slots-processed (u8vector-length (char-counts-bv c1)))
+    (if (< slots-processed (bytes-length (char-counts-bv c1)))
         (begin
-          (u8vector-set! (char-counts-bv c1)
+          (bytes-set! (char-counts-bv c1)
                          slots-processed
-                         (+ (u8vector-ref (char-counts-bv c1) slots-processed)
-                            (u8vector-ref (char-counts-bv c2) slots-processed)))
+                         (+ (bytes-ref (char-counts-bv c1) slots-processed)
+                            (bytes-ref (char-counts-bv c2) slots-processed)))
           (loop (add1 slots-processed)))))
   c1)
 ;(trace add-counts!)
@@ -86,8 +85,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (if (null? keys)
         #t
-      (if (not (= (u8vector-ref  (char-counts-bv c1) (char->index (car keys)))
-                  (u8vector-ref  (char-counts-bv c2) (char->index (car keys)))))
+      (if (not (= (bytes-ref  (char-counts-bv c1) (char->index (car keys)))
+                  (bytes-ref  (char-counts-bv c2) (char->index (car keys)))))
           #f
         (loop (cdr keys)
               rv)))))
