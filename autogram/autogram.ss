@@ -1,6 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
+ulimit -d 400000
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
@@ -25,10 +26,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
  )
 
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
-                       (#\a . 1) ", "
+;;                        (#\a . 1) ", "
                        (#\b . 1) ", "
                        (#\d . 1) ", "
-                       (#\e . 1) ", "
+;;                        (#\e . 1) ", "
                        (#\h . 1) ", "
                        (#\i . 1) ", "
                        (#\l . 1) ", "
@@ -161,28 +162,29 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
    (parameterize-break
     #t
-    (with-handlers ([exn:break?
-                     (lambda (x)
-                       (printf "I finally got a break!~%")
-                       (return))])
+    (with-handlers
+        ([exn:break?
+          (lambda (x)
+            (printf "I finally got a break!~%")
+            (return))])
 
       (let ((worker
-             (thread (lambda ()
-                       (*tries* 1)
-                       (let loop ((t *a-template*))
-                         (let ((actual-counts (template->counts t))
-                               (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
-                           (if (already-seen? claimed-counts)
-                               (loop (randomize-template t))
-                             (begin
-                               (*tries* (add1 (*tries*)))
-                               (testing-truth-progress t)
-                               (note-seen! claimed-counts)
-                               (if (true? t actual-counts)
-                                   (printf "We got a winner: ~s~%"
-                                           (apply string-append (template->strings t)))
-                                 (loop
-                                  (update-template-from-counts t actual-counts)))))))))))
+             (thread
+              (lambda ()
+                (let loop ((t *a-template*))
+                  (let ((actual-counts (template->counts t))
+                        (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
+                    (if (already-seen? claimed-counts)
+                        (loop (randomize-template t))
+                      (begin
+                        (*tries* (add1 (*tries*)))
+                        (testing-truth-progress t)
+                        (note-seen! claimed-counts)
+                        (when (true? t actual-counts)
+                          (printf "We got a winner: ~s~%"
+                                  (apply string-append (template->strings t))))
+                        (loop
+                         (update-template-from-counts t actual-counts))))))))))
 
 
         (printf "Well, here we go.~%")
