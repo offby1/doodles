@@ -153,6 +153,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
 ;;(trace randomize-template)
+(define monitor-thread
+  (thread (lambda ()
+            (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))))
 (call/ec
  (lambda (return)
 
@@ -181,16 +184,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                  (loop
                                   (update-template-from-counts t actual-counts)))))))))))
 
-        (thread (lambda ()
-                  (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
+
         (printf "Well, here we go.~%")
         (sync worker)
         (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
-
-(printf "Current memory use -- before GC: ~a bytes; after gc: " (num-string-commas (my-round (current-memory-use) 2)))
-(collect-garbage)
-(printf "~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
-(printf
- "~a items in hash table~%"
- (hash-table-count *seen*))
+(once-more-and-then-quit)
+(sync monitor-thread)
 )

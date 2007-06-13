@@ -6,7 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module monitor mzscheme
 ;; this seems overly complex.
-(provide monitor)
+(provide monitor once-more-and-then-quit)
 (require (lib "round.scm" "offby1")
          (lib "date.ss")
          "globals.ss"
@@ -21,6 +21,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (remainder hour 24)
             (remainder minutes 60)
             (remainder s 60))))
+(define *trigger-o-death* (make-semaphore 0))
+(define (once-more-and-then-quit)
+  (semaphore-post *trigger-o-death*))
 (define (monitor max-tries)
   (parameterize
    ((current-output-port (current-error-port)))
@@ -28,7 +31,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (let loop ((current-tries (*tries*))
               (previous-tries #f)
               (last-cpu #f)
-              (last-wall #f))
+              (last-wall #f)
+              (last-time #f))
+     (printf "Current memory use -- before GC: ~a bytes; after gc: " (num-string-commas (my-round (current-memory-use) 2)))
+     (collect-garbage)
+     (printf "~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
 
      (let ((now-cpu (current-process-milliseconds))
            (now-wall-ms (current-inexact-milliseconds))
@@ -69,9 +76,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (printf "a long, long time from now"))))
          )
        (printf "~%")
-       (sleep 30)
-       (loop
-        (*tries*)
-        current-tries
-        now-cpu
-        now-wall-ms))))))
+       (unless last-time
+         (loop
+          (*tries*)
+          current-tries
+          now-cpu
+          now-wall-ms
+          (sync/timeout 30 *trigger-o-death*)))
+       )))))
