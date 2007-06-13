@@ -67,6 +67,11 @@
   the computer to its knees.  (ulimit -d 100000; mzscheme -qu
   ./autogram.ss) is a crude way to do it.
 
+* Have the monitor constantly report memory usage, the way that
+  autogram now does once at the end.
+
 * Find a way to tell the monitor thread to wake up and do its thing
   _now_.  That way when we're shutting down we can get one last report
-  out of it.
+  out of it.  Apparently once the main thread exits, all the children
+  die too, so the main thread will have to wait until the monitor has
+  finished printing stuff.

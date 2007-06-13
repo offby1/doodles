@@ -18,14 +18,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "byte-vector-counter.ss"
- "odometer.ss"
  "num-string-commas.ss"
  "monitor.ss"
  "globals.ss"
 
  ;; pick one or the other
- ;;"alist-trie.ss"
- "vtrie.ss"
+ "alist-trie.ss"
+ ;;"vtrie.ss"
 
  )
 
@@ -53,13 +52,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
       s
     (string-append s "s")))
 
-(define (modify-template t proc)
+(define (modify-template t number-proc)
   (let ((rv
          (reverse
           (fold (lambda (thing so-far)
                   (if (string? thing)
                       (cons thing so-far)
-                    (cons (cons  (car thing) (proc thing))
+                    (cons (cons  (car thing) (number-proc thing))
                           so-far)))
                 '()
                 t))))
@@ -68,7 +67,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (update-template-from-counts t counts)
   (modify-template t (lambda (pair) (get-count (car pair) counts))))
 
-                                        ;(trace update-template-from-counts)
+;;(trace update-template-from-counts)
 
 (define/memo* (survey s)
   (let ((counts (make-count *chars-of-interest*)))
@@ -82,7 +81,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
-                                        ;(trace survey)
+;;(trace survey)
 
 (define/memo* (pair->string p)
   (let ((n (cdr p)))
@@ -93,6 +92,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (string-append (make-string 1 (car p)) "'")
       n))))
 
+;; memoization seems pointless here, since if we're searching for
+;; truths, we should never call this twice on the same template.
 (define (template->strings t)
   (reverse
    (fold (lambda (thing so-far)
@@ -101,10 +102,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (cons (pair->string thing) so-far)))
          '()
          t)))
-                                        ;(trace template->strings)
+;;(trace template->strings)
 
-;; memoization seems pointless here, since if we're searching for
-;; truths, we should never call this twice on the same template.
+;; ditto about the pointlessness of memoization
 (define (template->counts t)
   (let ((rv (make-count *chars-of-interest*)))
     (for-each
@@ -112,7 +112,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (add-counts! rv (survey str)))
      (template->strings t))
     rv))
-                                        ;(trace template->counts)
+;;(trace template->counts)
 
 (define (true? t actual-counts)
 
@@ -120,7 +120,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (= (cdr pair)
               (get-count (car pair) actual-counts)))
          (just-the-conses t)))
-                                        ;(trace true?)
+;;(trace true?)
 
 (define (make-calm-notifier proc)
   (define (is-power-of-two? x)
@@ -146,23 +146,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *seen* (make-trie (add1 *max*) *chars-of-interest*))
 (define (already-seen? counts)
   (is-present? *seen* counts ))
-                                        ;(trace already-seen?)
+;;(trace already-seen?)
 (define note-seen!
   (let ((number-seen 0))
     (lambda ( counts)
       (set! number-seen (add1 number-seen))
       (note! *seen* counts))))
-                                        ;(trace note-seen!)
+;;(trace note-seen!)
 (define (randomize-template t)
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
-                                        ;(trace randomize-template)
+;;(trace randomize-template)
 (call/ec
  (lambda (return)
 
    (parameterize-break
     #t
-    (with-handlers ([exn:break? (lambda (x) (return))])
+    (with-handlers ([exn:break?
+                     (lambda (x)
+                       (printf "I finally got a break!~%")
+                       (return))])
 
       (let ((worker
              (thread (lambda ()
@@ -170,7 +173,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                        (let loop ((t *a-template*))
                          (let ((actual-counts (template->counts t))
                                (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
-                                        ;(printf "~s ~a; counts: ~a~%" (apply string-append (template->strings t)) t actual-counts)
                            (if (already-seen? claimed-counts)
                                (loop (randomize-template t))
                              (begin
@@ -181,23 +183,19 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                    (printf "We got a winner: ~s~%"
                                            (apply string-append (template->strings t)))
                                  (loop
-                                  (update-template-from-counts t actual-counts)))))))
-                       )))
+                                  (update-template-from-counts t actual-counts)))))))))))
 
-            )
         (thread (lambda ()
                   (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*))))))
         (printf "Well, here we go.~%")
         (sync worker)
-        (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*)))
-        )      ))
-   ))
+        (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
 
 (let-values (((used total)
               (how-full *seen*)))
-  (printf "Current memory use -- before GC: ~a; after gc:" (current-memory-use))
+  (printf "Current memory use -- before GC: ~a bytes; after gc: " (num-string-commas (my-round (current-memory-use) 2)))
   (collect-garbage)
-  (printf "~a~%" (current-memory-use))
+  (printf "~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
   (printf
    "vtrie stats: ~a used, ~a total => ~a% full~%"
    used total
