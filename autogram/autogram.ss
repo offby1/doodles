@@ -22,10 +22,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
  "monitor.ss"
  "globals.ss"
 
- ;; pick one or the other
- "alist-trie.ss"
- ;;"vtrie.ss"
-
  )
 
 (define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
@@ -143,15 +139,15 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (date->string (seconds->date (current-seconds)) #t))
       (apply string-append (template->strings t))))))
 
-(define *seen* (make-trie (add1 *max*) *chars-of-interest*))
+(define *seen* (make-hash-table 'equal))
 (define (already-seen? counts)
-  (is-present? *seen* counts ))
+  (hash-table-get *seen* counts #f))
 ;;(trace already-seen?)
 (define note-seen!
   (let ((number-seen 0))
     (lambda ( counts)
       (set! number-seen (add1 number-seen))
-      (note! *seen* counts))))
+      (hash-table-put! *seen* counts #t))))
 ;;(trace note-seen!)
 (define (randomize-template t)
   (modify-template t (lambda (ignored)
@@ -191,13 +187,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (sync worker)
         (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
 
-(let-values (((used total)
-              (how-full *seen*)))
-  (printf "Current memory use -- before GC: ~a bytes; after gc: " (num-string-commas (my-round (current-memory-use) 2)))
-  (collect-garbage)
-  (printf "~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
-  (printf
-   "vtrie stats: ~a used, ~a total => ~a% full~%"
-   used total
-   (exact->inexact (my-round (* 100 (/ used total)) 2))))
+(printf "Current memory use -- before GC: ~a bytes; after gc: " (num-string-commas (my-round (current-memory-use) 2)))
+(collect-garbage)
+(printf "~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
+(printf
+ "~a items in hash table~%"
+ (hash-table-count *seen*))
 )

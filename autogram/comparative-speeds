@@ -25,5 +25,13 @@ Current memory use -- before GC: 192219704; after gc:163355732
 ** vtrie
 
 370,000 tries (3,600 tries per CPU second; 3,600 per wallclock second)
-Current memory use -- before GC: 438349524; after gc:416549432
+Current memory use -- before GC: 438349524; after gc:416 549 432
 vtrie stats: 377239 used, 93314130 total => 0.4% full
+
+* r3773
+
+** plain ol' built-in equal? hash table
+
+820,000 tries (6,700 tries per CPU second; 6,200 per wallclock second)
+Current memory use -- before GC: 85,000,000 bytes; after gc: 70,000,000 bytes
+819537 items in hash table
