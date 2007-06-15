@@ -44,3 +44,8 @@
 * limit the memory the process can use, to prevent it from bringing
   the computer to its knees.  (ulimit -d 100000; mzscheme -qu
   ./autogram.ss) is a crude way to do it.
+
+* The byte-vector-counter is pretty complex.  Try using a straight
+  byte array, perhaps 26 slots long, always.  That will surely use
+  more memory but might not slow things down much ... and will be
+  vastly simpler.

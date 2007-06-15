@@ -12,7 +12,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
  (only (lib "1.ss" "srfi")
        every
        filter
-       fold)
+       fold
+       iota)
  (lib "date.ss")
  (lib "trace.ss")
  (lib "round.scm" "offby1")
@@ -25,29 +26,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
  )
 
-(define *a-template* '("Brad Srebnik wants you to know that this sentence contains "
-;;                        (#\a . 1) ", "
-                       (#\b . 1) ", "
-                       (#\d . 1) ", "
-;;                        (#\e . 1) ", "
-                       (#\h . 1) ", "
-                       (#\i . 1) ", "
-                       (#\l . 1) ", "
-                       (#\n . 1) ", "
-                       (#\o . 1) ", "
-                       (#\r . 1) ", "
-                       (#\i . 1) ", "
-                       (#\s . 1) ", "
-                       (#\t . 1) ", and "
-                       (#\u . 1) "."
-                       ))
+(define *a-template* (cons "Now that I'm working at Amazon, I have "
+                      (fold (lambda (pair seq)
+                             (if (not (null? seq))
+                                 (cons pair (cons
+                                             (if (null? (cdr seq))
+                                                 ", and "
+                                               ", ")
+                                             seq))
+                               (cons pair seq)))
+                           '()
+                           (map (lambda (i)
+                                  (cons ( integer->char i) 1))
+                                (reverse
+                                 (iota (add1 (- (char->integer #\z) (char->integer #\a)))
+                                       (char->integer #\a)))))))
 
 (define (just-the-conses seq) (filter pair? seq))
 (define *chars-of-interest* (map car (just-the-conses *a-template*)))
 (define (maybe-pluralize s n)
   (if (= n 1)
       s
-    (string-append s "s")))
+    (string-append s "'s")))
 
 (define (modify-template t number-proc)
   (let ((rv
@@ -86,7 +86,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (number->english n)
      " "
      (maybe-pluralize
-      (string-append (make-string 1 (car p)) "'")
+      (string-append (make-string 1 (car p)) )
       n))))
 
 ;; memoization seems pointless here, since if we're searching for

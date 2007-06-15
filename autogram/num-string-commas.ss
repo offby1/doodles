@@ -4,6 +4,10 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; http://synthcode.com/scheme/fmt-0.3.tgz does what this does (and
+;; tons more) but it had a bug.  Supposedly foof has fixed the bug but
+;; I haven't yet checked.
+
 (module num-string-commas mzscheme
 (require
  (lib "assert.ss" "offby1")
