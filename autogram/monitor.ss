@@ -33,7 +33,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (last-cpu #f)
               (last-wall #f)
               (last-time #f))
-     (printf "Current memory use: ~a bytes~%" (num-string-commas (my-round (current-memory-use) 2)))
+     (let ((cmu  (current-memory-use)))
+       (printf "Current memory use: ~a bytes (~a bytes per try) ~%"
+               (num-string-commas (my-round cmu 2))
+               (num-string-commas (my-round (/ cmu (*tries*)) 2))))
 
      (let ((now-cpu (current-process-milliseconds))
            (now-wall-ms (current-inexact-milliseconds))
