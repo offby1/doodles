@@ -1,7 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-ulimit -d 600000
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
@@ -169,23 +168,26 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (return))])
 
       (let ((worker
-             (thread
-              (lambda ()
-                (let loop ((t *a-template*))
-                  (*loop-passes* (add1 (*loop-passes*)))
-                  (let ((actual-counts (template->counts t))
-                        (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
-                    (if (already-seen? claimed-counts)
-                        (loop (randomize-template t))
-                      (begin
-                        (*tries* (add1 (*tries*)))
-                        (testing-truth-progress t)
-                        (note-seen! claimed-counts)
-                        (when (true? t actual-counts)
-                          (printf "We got a winner: ~s~%"
-                                  (apply string-append (template->strings t))))
-                        (loop
-                         (update-template-from-counts t actual-counts))))))))))
+             (parameterize
+              ((current-custodian
+                *worker-custodian*))
+              (thread
+               (lambda ()
+                 (let loop ((t *a-template*))
+                   (*loop-passes* (add1 (*loop-passes*)))
+                   (let ((actual-counts (template->counts t))
+                         (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
+                     (if (already-seen? claimed-counts)
+                         (loop (randomize-template t))
+                       (begin
+                         (*tries* (add1 (*tries*)))
+                         (testing-truth-progress t)
+                         (note-seen! claimed-counts)
+                         (when (true? t actual-counts)
+                           (printf "We got a winner: ~s~%"
+                                   (apply string-append (template->strings t))))
+                         (loop
+                          (update-template-from-counts t actual-counts)))))))))))
 
 
         (printf "Well, here we go.~%")

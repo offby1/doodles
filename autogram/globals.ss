@@ -7,6 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module globals mzscheme
 (provide *min* *max*
          *tries* *loop-passes*
+         *worker-custodian*
          nl)
 (define *min* 1)
 (define *max* 48)
@@ -21,6 +22,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       value
       )))
 
+(define *worker-custodian* (make-custodian))
+(custodian-limit-memory *worker-custodian* (* 200 (expt 10 6)))
 (define *tries* (make-modifiable-global))
 (define *loop-passes* (make-modifiable-global))
 

@@ -40,7 +40,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (let ((this-sample (make-sample
                          (current-inexact-milliseconds)
                          (current-process-milliseconds)
-                         (current-memory-use)
+                         (current-memory-use *worker-custodian*)
                          (*tries*)
                          (*loop-passes*))))
        (set! *the-samples* (cons this-sample *the-samples*))
