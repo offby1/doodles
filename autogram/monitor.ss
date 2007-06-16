@@ -11,6 +11,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "date.ss")
          "globals.ss"
          "num-string-commas.ss")
+(define-struct sample (wall-ms
+                       cpu-ms
+                       bytes-used
+                       unique-tries
+                       loop-passes) #f)
+(define *the-samples* '())
+
 (define (seconds->string s)
   (let* ((s (inexact->exact (round s)))
          (minutes (quotient s 60))
@@ -28,60 +35,54 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize
    ((current-output-port (current-error-port)))
 
-   (let loop ((current-tries (*tries*))
-              (previous-tries #f)
-              (last-cpu #f)
-              (last-wall #f)
-              (last-time #f))
-     (let ((cmu  (current-memory-use)))
-       (printf "Current memory use: ~a bytes (~a bytes per try) ~%"
-               (num-string-commas (my-round cmu 2))
-               (num-string-commas (my-round (/ cmu (*tries*)) 2))))
+   (let loop ((last-time #f))
+     (collect-garbage)
+     (let ((this-sample  (make-sample
+                          (current-inexact-milliseconds)
+                          (current-process-milliseconds)
+                          (current-memory-use)
+                          (*tries*)
+                          (*loop-passes*))))
+       (printf "~a~%" this-sample)
+       (set! *the-samples* (cons this-sample *the-samples*))
+       (let* ((this-cpu-ms     (sample-cpu-ms       this-sample))
+              (current-tries   (sample-unique-tries this-sample))
+              (this-wall-ms    (sample-wall-ms      this-sample))
+              (this-bytes      (sample-bytes-used   this-sample))
+              (remaining-tries (- max-tries current-tries)))
+         (nl)
+         (printf "Current memory use: ~a bytes~%"
+                 (num-string-commas (round (my-round this-cpu-ms 2))))
+         (nl)
+         (printf "~a tries" (num-string-commas (my-round current-tries 2)))
 
-     (let ((now-cpu (current-process-milliseconds))
-           (now-wall-ms (current-inexact-milliseconds))
-           (remaining-tries (- max-tries current-tries)))
-       (nl)
-       (printf "~a tries" (num-string-commas (my-round current-tries 2)))
+         (when (not (null? (cdr *the-samples*)))
+           (let* ((last-sample (cadr *the-samples*))
+                  (delta-cpu-ms  (max 1 (- this-cpu-ms   (sample-cpu-ms       last-sample))))
+                  (delta-wall-ms (max 1 (- this-wall-ms  (sample-wall-ms      last-sample))))
+                  (delta-tries   (max 1 (- current-tries (sample-unique-tries last-sample))))
+                  (tries-per-cpu-second       (/  (* 1000 delta-tries) delta-cpu-ms ))
+                  (tries-per-wallclock-second (/  (* 1000 delta-tries) delta-wall-ms))
+                  (remaining-seconds  (/ remaining-tries tries-per-wallclock-second))
+                  (delta-bytes   (max 1 (- this-bytes    (sample-bytes-used   last-sample)))))
+             (printf " (~a tries per CPU second; ~a per wallclock second) (~a% done)"
+                     (num-string-commas (round (my-round tries-per-cpu-second 2)))
+                     (num-string-commas (round (my-round tries-per-wallclock-second 2)))
+                     (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
 
-       (let ((tries-per-wallclock-second
-              (and previous-tries
-                   (/  (* 1000 (- current-tries previous-tries))
-                       (max 1 (- now-wall-ms last-wall))))
-              ))
-         (when tries-per-wallclock-second
-           (printf " (~a tries per CPU second;"
-                   (num-string-commas
-                    (round
-                     (my-round
-                      (/ (* 1000 (- current-tries previous-tries))
-                         (max 1 (- now-cpu last-cpu)))
-                      2))))
+             (printf " ~a bytes per try"
+                     (num-string-commas (round (my-round (/ delta-bytes delta-tries) 2))))
 
-           (printf " ~a per wallclock second)"
-                   (num-string-commas
-                    (round (my-round tries-per-wallclock-second 2)))))
+             ;; (printf " ETA ")
+;;              (if (< remaining-seconds (* 365 24 3600))
+;;                  (let ((ETA (+ (/ this-wall-ms 1000) remaining-seconds)))
+;;                    (printf "~a"
+;;                            (date->string (seconds->date (inexact->exact (round ETA)))  #t)))
+;;                (printf "a long, long time from now"))
+             ))
+         (printf "~%")
+         (unless last-time
+           (loop
+            (sync/timeout 30 *trigger-o-death*)))))
 
-         (printf
-          " (~a% done)"
-          (exact->inexact (my-round (/ (* 100 current-tries) max-tries) 2)))
-
-         (when (and (number? tries-per-wallclock-second)
-                    (positive? tries-per-wallclock-second))
-           (let ((remaining-seconds  (/ remaining-tries tries-per-wallclock-second)))
-             (printf " ETA ")
-             (if (< remaining-seconds (* 365 24 3600))
-                 (let ((ETA (+ (/ now-wall-ms 1000) remaining-seconds)))
-                   (printf "~a"
-                           (date->string (seconds->date (inexact->exact (round ETA)))  #t)))
-               (printf "a long, long time from now"))))
-         )
-       (printf "~%")
-       (unless last-time
-         (loop
-          (*tries*)
-          current-tries
-          now-cpu
-          now-wall-ms
-          (sync/timeout 30 *trigger-o-death*)))
-       )))))
+     ))))

@@ -170,6 +170,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (thread
               (lambda ()
                 (let loop ((t *a-template*))
+                  (*loop-passes* (add1 (*loop-passes*)))
                   (let ((actual-counts (template->counts t))
                         (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
                     (if (already-seen? claimed-counts)

@@ -40,7 +40,3 @@
 
 * Trap the runtime error ``vector-ref: index blah out of range'', and
   automatically bump *max* and restart.
-
-* limit the memory the process can use, to prevent it from bringing
-  the computer to its knees.  (ulimit -d 100000; mzscheme -qu
-  ./autogram.ss) is a crude way to do it.
