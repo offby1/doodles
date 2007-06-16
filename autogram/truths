@@ -1,14 +1,60 @@
 ;; after about three-quarters of a million tries
-"This sentence contains exactly seven A's, one B, six C's, two D's, forty-five E's, eight F's, three G's, thirteen H's, nineteen I's, one J, one K, five L's, three M's, thirty N's, seventeen O's, six P's, one Q, eleven R's, thirty-nine S's, twenty-nine T's, four U's, eight V's, four W's, six X's, ten Y's, one Z, sixty-seven spaces, one full stop, thirty commas, five hyphens, and twenty-one apostrophes."
+"This sentence contains exactly seven A's, one B, six C's, two D's,
+forty-five E's, eight F's, three G's, thirteen H's, nineteen I's, one
+J, one K, five L's, three M's, thirty N's, seventeen O's, six P's, one
+Q, eleven R's, thirty-nine S's, twenty-nine T's, four U's, eight V's,
+four W's, six X's, ten Y's, one Z, sixty-seven spaces, one full stop,
+thirty commas, five hyphens, and twenty-one apostrophes."
 
-"This delightful, self-describing sentence, created 16 February 2005 in honor of Katie Drake, has seven As, three Bs, four Cs, six Ds, forty-five Es, fifteen Fs, five Gs, thirteen Hs, eighteen Is, one J, three Ks, four Ls, one M, twenty-three Ns, sixteen Os, one P, one Q, nineteen Rs, thirty-one Ss, twenty-four Ts, eight Us, four Vs, three Ws, four Xs, six Ys, and one Z."
+"This delightful, self-describing sentence, created 16 February 2005
+in honor of Katie Drake, has seven As, three Bs, four Cs, six Ds,
+forty-five Es, fifteen Fs, five Gs, thirteen Hs, eighteen Is, one J,
+three Ks, four Ls, one M, twenty-three Ns, sixteen Os, one P, one Q,
+nineteen Rs, thirty-one Ss, twenty-four Ts, eight Us, four Vs, three
+Ws, four Xs, six Ys, and one Z."
 
-"This rather nifty sentence contains four As, one B, three Cs, two Ds, thirty-one Es, six Fs, two Gs, seven Hs, thirteen Is, one J, one K, one L, one M, twenty-six Ns, seventeen Os, one P, one Q, nine Rs, twenty-eight Ss, twenty-one Ts, four Us, four Vs, six Ws, five Xs, six Ys and one Z."
+"This rather nifty sentence contains four As, one B, three Cs, two Ds,
+thirty-one Es, six Fs, two Gs, seven Hs, thirteen Is, one J, one K,
+one L, one M, twenty-six Ns, seventeen Os, one P, one Q, nine Rs,
+twenty-eight Ss, twenty-one Ts, four Us, four Vs, six Ws, five Xs, six
+Ys and one Z."
 
- "It seems that, the longer a sentence like this one is, the harder it becomes for it to truthfully claim (as this one does) that it contains exactly fifteen A's, two B's, eight C's, four D's, sixty-six E's, seventeen F's, six G's, twenty-two H's, thirty-two I's, one J, two K's, eleven L's, six M's, thirty-five N's, twenty-six O's, eight P's, one Q, seventeen R's, fifty-five S's, fifty-five T's, seven U's, ten V's, eight W's, seven X's, fourteen Y's, one Z, ninety-seven spaces, one left parenthesis, one right parenthesis, one full stop, thirty-four commas, ten hyphens, and twenty-three apostrophes."
+"It seems that, the longer a sentence like this one is, the harder it
+becomes for it to truthfully claim (as this one does) that it contains
+exactly fifteen A's, two B's, eight C's, four D's, sixty-six E's,
+seventeen F's, six G's, twenty-two H's, thirty-two I's, one J, two
+K's, eleven L's, six M's, thirty-five N's, twenty-six O's, eight P's,
+one Q, seventeen R's, fifty-five S's, fifty-five T's, seven U's, ten
+V's, eight W's, seven X's, fourteen Y's, one Z, ninety-seven spaces,
+one left parenthesis, one right parenthesis, one full stop,
+thirty-four commas, ten hyphens, and twenty-three apostrophes."
 
 ;; 23 million tries!
-"It's about time that Eric Hanchrow encoded his name into one of these sentences that contains exactly twelve a's, two b's, nine c's, six d's, seventy-one e's, eighteen f's, five g's, fifteen h's, twenty-five i's, one j, one k, six l's, five m's, fifty-four n's, fifty-one o's, six p's, one q, ten r's, forty-seven s's, forty t's, six u's, eight v's, ten w's, eight x's, twelve y's, one z, one A, one B, one C, one D, two E's, one F, one G, two H's, two I's, one J, one K, one L, one M, one N, one O, one P, one Q, one R, one S, one T, one U, one V, one W, one X, one Y, one Z, one hundred thirty-four spaces, one full stop, fifty-six commas, eight hyphens, and twenty-six apostrophes."
+"It's about time that Eric Hanchrow encoded his name into one of these
+sentences that contains exactly twelve a's, two b's, nine c's, six
+d's, seventy-one e's, eighteen f's, five g's, fifteen h's, twenty-five
+i's, one j, one k, six l's, five m's, fifty-four n's, fifty-one o's,
+six p's, one q, ten r's, forty-seven s's, forty t's, six u's, eight
+v's, ten w's, eight x's, twelve y's, one z, one A, one B, one C, one
+D, two E's, one F, one G, two H's, two I's, one J, one K, one L, one
+M, one N, one O, one P, one Q, one R, one S, one T, one U, one V, one
+W, one X, one Y, one Z, one hundred thirty-four spaces, one full stop,
+fifty-six commas, eight hyphens, and twenty-six apostrophes."
 
-"Now that I'm working at Amazon, I have seven a's, one b, one c, two d's, thirty-two e's, five f's, four g's, nine h's, ten i's, one j, two k's, two l's, three m's, twenty-one n's, eighteen o's, one p, one q, eight r's, twenty-three s's, twenty-four t's, three u's, seven v's, twelve w's, one x, five y's, and two z's"
-"Now that I'm working at Amazon, I have seven a's, one b, one c, two d's, thirty-five e's, five f's, two g's, seven h's, eleven i's, one j, two k's, three l's, three m's, twenty-one n's, sixteen o's, one p, one q, six r's, twenty-five s's, twenty-two t's, one u, ten v's, eleven w's, three x's, five y's, and two z's"
+"Now that I'm working at Amazon, I have seven a's, one b, one c, two
+d's, thirty-two e's, five f's, four g's, nine h's, ten i's, one j, two
+k's, two l's, three m's, twenty-one n's, eighteen o's, one p, one q,
+eight r's, twenty-three s's, twenty-four t's, three u's, seven v's,
+twelve w's, one x, five y's, and two z's"
+
+"Now that I'm working at Amazon, I have seven a's, one b, one c, two
+d's, thirty-five e's, five f's, two g's, seven h's, eleven i's, one j,
+two k's, three l's, three m's, twenty-one n's, sixteen o's, one p, one
+q, six r's, twenty-five s's, twenty-two t's, one u, ten v's, eleven
+w's, three x's, five y's, and two z's"
+
+"Namby pamby, sufferin' succotash five a's, three b's, three c's, two
+d's, thirty-eight e's, five f's, three g's, twelve h's, eleven i's,
+one j, one k, three l's, three m's, eighteen n's, nine o's, two p's,
+one q, ten r's, twenty-nine s's, twenty-two t's, three u's, six v's,
+seven w's, three x's, six y's, and one z"
