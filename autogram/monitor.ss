@@ -48,8 +48,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (this-bytes      (sample-bytes-used   this-sample))
               (remaining-tries (- max-tries current-tries)))
          (nl)
-         (printf "~a tries; ~a/~a bytes used (~a% done)"
+         (printf "~a/~a tries/loops; ~a/~a bytes used (~a% done)"
                  (num-string-commas (my-round current-tries 2))
+                 (num-string-commas (my-round (sample-loop-passes this-sample) 2))
                  (num-string-commas (round (my-round this-bytes 2)))
                  (num-string-commas *max-worker-mem*)
 
