@@ -2,8 +2,6 @@
 
 * set the monitor's "sleep" delay on the command line
 
-* Show estimated time of completion.
-
 * ambitious: GUI it
 
   It'd be fun to watch the progress graphically.  Imagine that the
@@ -33,15 +31,5 @@
   ... instead of having them be global.  Thus e's max might be 20
   whereas q's would be 1.
 
-* For the case when we're following loops through the multidimensional
-  space, arrange a break handler so that when I hit Control-C, before
-  quitting, it gives me statistics about how full the count->boolean
-  map is.
-
 * Trap the runtime error ``vector-ref: index blah out of range'', and
   automatically bump *max* and restart.
-
-* Perhaps we can monitor the memory usage of the hash table more
-  precisely by using "custodians" and memory accounting -- create a
-  new custodian, in which we create the hash table -- but do nothing
-  else.
