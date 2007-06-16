@@ -26,7 +26,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
  )
 
-(define *a-template* (cons "Now that I'm working at Amazon, I have "
+(define *a-template* (cons "I'd gladly pay you Tuesday for a hamburger today, along with "
                       (fold (lambda (pair seq)
                              (if (not (null? seq))
                                  (cons pair (cons
@@ -43,7 +43,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                        (char->integer #\a)))))))
 
 (define (just-the-conses seq) (filter pair? seq))
-(define *chars-of-interest* (map car (just-the-conses *a-template*)))
 (define (maybe-pluralize s n)
   (if (= n 1)
       s
@@ -67,13 +66,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;(trace update-template-from-counts)
 
 (define/memo* (survey s)
-  (let ((counts (make-count *chars-of-interest*)))
+  (let ((counts (make-count)))
     (let loop ((chars-examined 0))
       (if (= chars-examined (string-length s))
           counts
         (let ((c (char-downcase (string-ref s chars-examined))))
-          (when (and (member c *chars-of-interest*)
-                     (char-alphabetic? c))
+          (when (char-alphabetic? c)
             ;;(set! c (char-downcase c))
             (inc-count! c counts))
 
@@ -103,7 +101,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;; ditto about the pointlessness of memoization
 (define (template->counts t)
-  (let ((rv (make-count *chars-of-interest*)))
+  (let ((rv (make-count)))
     (for-each
      (lambda (str)
        (add-counts! rv (survey str)))
@@ -173,7 +171,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (lambda ()
                 (let loop ((t *a-template*))
                   (let ((actual-counts (template->counts t))
-                        (claimed-counts (apply make-count (cons *chars-of-interest* (map cdr (just-the-conses t))) )))
+                        (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
                     (if (already-seen? claimed-counts)
                         (loop (randomize-template t))
                       (begin

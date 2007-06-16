@@ -22,15 +22,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define-struct char-counts (bv) #f)
 
-;; eww.  This is global; thus you can't have two counts that refer to
-;; different sets of characters.
-(define *char-indices* (make-vector 26 #f))
-
-(define (internal-offset c)
+(define *alphabet-length* (add1
+                           (- (char->integer #\z)
+                              (char->integer #\a))))
+(define (char->index c)
   (- (char->integer (char-downcase c))
      (char->integer #\a)))
-(define (char->index c)
-  (vector-ref *char-indices* (internal-offset c)))
 
 (define (get-count char counter)
   (let ((index (char->index char)))
@@ -48,26 +45,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;(trace inc-count!)
 (define (char-counts->string cc)
   (char-counts-bv cc))
-(define (my-make-char-counts chars-of-interest . initial-values)
-  (let loop ((chars-of-interest chars-of-interest)
-             (slots-set 0))
-    (when (not (null? chars-of-interest))
-      (vector-set! *char-indices*
-                   (internal-offset (car chars-of-interest))
-                   slots-set)
-      (loop (cdr chars-of-interest)
-            (add1 slots-set))))
-
-  ;; this isn't necessary, but it shows my intent: now that we've
-  ;; filled in this vector, we will never modify it.
-  (set! *char-indices* (vector->immutable-vector *char-indices*))
-
+(define (my-make-char-counts . initial-values)
   (if (not (null? initial-values))
-      (begin
-        (assert (= (length initial-values)
-                   (length chars-of-interest)))
-        (make-char-counts (apply bytes initial-values)))
-    (make-char-counts (make-bytes (length chars-of-interest) 0)))
+      (make-char-counts (apply bytes initial-values))
+    (make-char-counts (make-bytes *alphabet-length* 0)))
   )
 (define (add-counts! c1 c2)
   (let loop ((slots-processed 0))
@@ -94,50 +75,39 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           #f
         (loop (cdr keys)
               rv)))))
-(let ((chars-of-interest '(#\a #\b #\m #\x)))
-  (exit-if-failed
-   (test/text-ui
-    (test-suite
-     "The one and only suite"
+(exit-if-failed
+ (test/text-ui
+  (test-suite
+   "The one and only suite"
 
-     (test-not-false
-      "duh"
-      (let ((thing (my-make-char-counts chars-of-interest)))
-        thing))
+   (test-not-false
+    "duh"
+    (let ((thing (my-make-char-counts )))
+      thing))
 
-     (test-equal?
-      "initially zero"
-      0
-      (let ((thing (my-make-char-counts chars-of-interest)))
-        (get-count (car chars-of-interest) thing)))
+   (test-equal?
+    "initially zero"
+    0
+    (let ((thing (my-make-char-counts )))
+      (get-count #\x thing)))
 
-     (test-equal?
-      "counts as expected"
-      4
-      (let ((c (car chars-of-interest))
-            (thing (my-make-char-counts chars-of-interest)))
-        (inc-count! c thing 3)
-        (inc-count! c thing)
-        (get-count c thing)))
+   (test-equal?
+    "counts as expected"
+    4
+    (let ((c #\z)
+          (thing (my-make-char-counts)))
+      (inc-count! c thing 3)
+      (inc-count! c thing)
+      (get-count c thing)))
 
-     (test-case
-      "add counts"
-      (let ((c1 (my-make-char-counts chars-of-interest 1 0 0 0))
-            (c2 (my-make-char-counts chars-of-interest 0 1 0 0)))
-        (add-counts! c1 c2)
-        (check-equal? (get-count #\a c1) 1)
-        (check-equal? (get-count #\b c1) 1)
-        (check-equal? (get-count #\a c2) 0)
-        (check-equal? (get-count #\b c2) 1)
-        ))
+   (test-case
+    "add counts"
+    (let ((c1 (my-make-char-counts  1 0 0 0))
+          (c2 (my-make-char-counts  0 1 0 0)))
+      (add-counts! c1 c2)
+      (check-equal? (get-count #\a c1) 1)
+      (check-equal? (get-count #\b c1) 1)
+      (check-equal? (get-count #\a c2) 0)
+      (check-equal? (get-count #\b c2) 1))))))
 
-     (test-exn
-      "Rejects illegal characters"
-      exn?
-      (lambda ()
-        (let ((thing (my-make-char-counts chars-of-interest)))
-          (get-count #\r thing))))
-     )
-
-    )))
 )

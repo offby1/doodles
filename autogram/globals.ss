@@ -11,10 +11,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *tries*
   (let ((value 0))
+    ;; you could wrap this in a call-with-semaphore if you wanted, but
+    ;; I don't think there's any need
     (lambda args
       (if (not (null? args))
           (set! value (car args)))
-      value)))
+      value
+      )))
 
 (port-count-lines! (current-error-port))
 (port-count-lines! (current-output-port))
