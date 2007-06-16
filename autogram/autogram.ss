@@ -26,22 +26,24 @@ exec mzscheme -qu "$0" ${1+"$@"}
  )
 
 (define *a-template* (cons
-                      ;;"Four score and seven years ago, our forefathers wrangled "
-                      "Bacon, eggs, toast, orange juice, and "
-                      (fold (lambda (pair seq)
-                              (if (not (null? seq))
-                                  (cons pair (cons
-                                              (if (null? (cdr seq))
-                                                  ", and "
-                                                ", ")
-                                              seq))
-                                (cons pair seq)))
-                            '()
-                            (map (lambda (i)
-                                   (cons ( integer->char i) 1))
-                                 (reverse
-                                  (iota (add1 (- (char->integer #\z) (char->integer #\a)))
-                                        (char->integer #\a)))))))
+                      "What part of '"
+                      (append
+                       (fold (lambda (pair seq)
+                               (if (not (null? seq))
+                                   (cons pair (cons
+                                               (if (null? (cdr seq))
+                                                   ", and "
+                                                 ", ")
+                                               seq))
+                                 (cons pair seq)))
+                             '()
+                             (map (lambda (i)
+                                    (cons ( integer->char i) 1))
+                                  (reverse
+                                   (iota (add1 (- (char->integer #\z) (char->integer #\a)))
+                                         (char->integer #\a)))))
+                       (list "' don't you understand?"))
+                      ))
 
 (define (just-the-conses seq) (filter pair? seq))
 (define (maybe-pluralize s n)
