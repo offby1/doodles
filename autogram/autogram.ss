@@ -184,7 +184,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                          (testing-truth-progress t)
                          (note-seen! claimed-counts)
                          (when (true? t actual-counts)
-                           (printf "We got a winner: ~s~%"
+                           (printf "~%We got a winner: ~s~%~%"
                                    (apply string-append (template->strings t))))
                          (loop
                           (update-template-from-counts t actual-counts)))))))))))
