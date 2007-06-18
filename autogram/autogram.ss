@@ -29,16 +29,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
                       "What part of '"
                       (append
                        (fold (lambda (pair seq)
-                               (if (not (null? seq))
-                                   (cons pair (cons
-                                               (if (null? (cdr seq))
-                                                   ", and "
-                                                 ", ")
-                                               seq))
-                                 (cons pair seq)))
+                               (cons pair
+                                     (if (null? seq)
+                                         seq
+                                       (cons
+                                        (if (null? (cdr seq))
+                                            ", and "
+                                          ", ")
+                                        seq))))
                              '()
                              (map (lambda (i)
-                                    (cons ( integer->char i) 1))
+                                    (cons (integer->char i) 1))
                                   (reverse
                                    (iota (add1 (- (char->integer #\z) (char->integer #\a)))
                                          (char->integer #\a)))))
@@ -145,19 +146,20 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (already-seen? counts)
   (hash-table-get *seen* counts #f))
 ;;(trace already-seen?)
-(define note-seen!
-  (let ((number-seen 0))
-    (lambda ( counts)
-      (set! number-seen (add1 number-seen))
-      (hash-table-put! *seen* counts #t))))
+
+(define (note-seen! counts)
+  (hash-table-put! *seen* counts #t))
 ;;(trace note-seen!)
+
 (define (randomize-template t)
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
 ;;(trace randomize-template)
+
 (define monitor-thread
   (thread (lambda ()
             (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))))
+
 (call/ec
  (lambda (return)
 
