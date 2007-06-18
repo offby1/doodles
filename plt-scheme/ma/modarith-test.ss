@@ -53,8 +53,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
           (check-equal? (expt 2 1) 2)
           (check-equal? (expt 2 4) 1)
           (check-equal? (expt 2 3) 3))
-        (with-arithmetic-modulo 23
-          (check-equal? (expt 47 17) 1))
+        (with-arithmetic-modulo 47
+          (check-equal? (expt 17 23) 1))
         )
        )))
   (exit 1)))
