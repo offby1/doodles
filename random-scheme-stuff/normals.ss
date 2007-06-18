@@ -18,6 +18,11 @@
 ;; TODO -- find a nifty way to write this, without using assignment,
 ;; and without just throwing away one of the two return values from
 ;; pair-of-unit-normals
+
+;; see http://schemewiki.org/view/Cookbook/NumberRecipeBiasedRands for
+;; inspiration.  Executive summary: return a thunk, not a number; the
+;; thunk itself returns your random number, and keeps its own little
+;; cache.
 (define one-unit-normal
   (let ((buffer '()))
     (lambda ()
@@ -26,4 +31,6 @@
       (begin0
         (car buffer)
         (set! buffer (cdr buffer))))))
+
+
 )
