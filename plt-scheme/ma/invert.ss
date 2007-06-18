@@ -1,7 +1,13 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu "$0" ${1+"$@"}
+|#
+
 (module invert mzscheme
   (provide invert)
-  (require  (planet "test.ss" ("schematics" "schemeunit.plt" 1))
-            (planet "text-ui.ss" ("schematics" "schemeunit.plt" 1))
+  (require  (planet "test.ss" ("schematics" "schemeunit.plt" 2))
+            (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
             (lib "match.ss"))
 
   ;; stolen from Aubrey Jaffer's slib
@@ -39,7 +45,7 @@
                (if (<= s (- m))
                    s
                  (- s pm)))))))
-  
+
   ;;@args modulus n2
   ;;Returns an integer n such that 1 = (n * @var{n2}) mod @var{modulus}.  If
   ;;@var{n2} has no inverse mod @var{modulus} an error is signaled.
@@ -56,39 +62,39 @@
               (else (error 'invert "can't invert" m a)))))))
 
   (define (one-euclid-test-case  a b)
-    (make-test-case
+    (test-case
      "just one case, ma'am"
      (match-let (((r p s) (extended-euclid a b)))
-       (assert-equal? r (+ (* p a) (* s b)))
+       (check-equal? r (+ (* p a) (* s b)))
        )))
   (when
       (not
        (test/text-ui
-        (make-test-suite
+        (test-suite
          "Tests for modular invert."
-         (make-test-case
+         (test-case
           "modulus->integer"
-          (assert = 3 (modulus->integer 3))
-          (assert = 7 (modulus->integer -3))
-          (assert-false (modulus->integer 0)))
+          (check = 3 (modulus->integer 3))
+          (check = 7 (modulus->integer -3))
+          (check-false (modulus->integer 0)))
 
          (one-euclid-test-case 81 57)
          (one-euclid-test-case 20 -19)
 
-         (make-test-case
+         (test-case
           "normalize"
-          (assert = 3 (normalize 7 10))
-          (assert = 3 (normalize 7 24))
-          (assert = 3 (normalize 7 -4))
+          (check = 3 (normalize 7 10))
+          (check = 3 (normalize 7 24))
+          (check = 3 (normalize 7 -4))
           )
 
-         (make-test-case
+         (test-case
           "invert"
-          (assert = 1 (invert 11 5))
-          (assert = 1 (invert 1 5))
-          (assert = 3 (invert 2 5))
-          (assert = 2 (invert 3 5))
-          (assert = 4 (invert 4 5))
+          (check = 1 (invert 11 5))
+          (check = 1 (invert 1 5))
+          (check = 3 (invert 2 5))
+          (check = 2 (invert 3 5))
+          (check = 4 (invert 4 5))
           )
          )))
     (exit 1))
