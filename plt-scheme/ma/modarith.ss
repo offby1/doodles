@@ -2,6 +2,7 @@
 (require "invert.ss"
          (only (lib "1.ss" "srfi") fold))
 
+
 (provide with-arithmetic-modulo
          (rename m+ +)
          (rename m- -)
@@ -72,12 +73,22 @@
 ;; (b ^ (e/2)) ^ 2 mod m
 
 ;; otherwise, compute (b ^ (e - 1) mod m), and multiply that by b.
-(define (mexpt base exp)
-  (cond
-   ((zero? exp)
-    1)
-   ((even? exp)
-    (maybe-modulo (expt (mexpt base (quotient exp 2)) 2)))
-   (else
-    (m* base (mexpt base (sub1 exp))))))
+(define (mexpt base exponent )
+  (if (zero? exponent)
+      1
+    (let loop ((exponent exponent)
+               (accumulator 1)
+               (current-factor base))
+      (define (*cf x) (maybe-modulo (* current-factor x)))
+      (cond
+       ((= 1 exponent)
+        (*cf accumulator))
+       ((odd? exponent)
+        (loop (- exponent 1)
+              (*cf accumulator )
+              current-factor))
+       (#t
+        (loop (/ exponent 2)
+              accumulator
+              (*cf current-factor)))))))
 )
