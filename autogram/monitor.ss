@@ -34,7 +34,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize
    ((current-output-port (current-error-port)))
 
-   (let loop ((last-time #f))
+   (let loop ((last-time? #f))
      (collect-garbage)
      (let ((this-sample (make-sample
                          (current-process-milliseconds)
@@ -75,6 +75,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
              ))
          (printf "~%")
-         (unless last-time
+         (unless last-time?
            (loop
             (sync/timeout 3 *trigger-o-death*)))))))))
