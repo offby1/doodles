@@ -8,5 +8,5 @@ binmode STDOUT, ":utf8";
 
 foreach (0 .. 0x110000) {
   next if (0xd800 <= $_) && ($_ <= 0xdfff);
-  print chr($_);
+  print chr($_), "\n";
 }
