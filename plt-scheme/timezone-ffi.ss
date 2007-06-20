@@ -12,7 +12,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (provide timezone-string)
 (require (lib "foreign.ss"))
 
-(define libc (ffi-lib "libc" "6"))
+(define libc (and
+              (not (eq? (system-type 'os) 'windows))
+              (ffi-lib "libc" "6")))
 (unsafe!)
 
 (define-cstruct _tm
@@ -31,15 +33,16 @@ exec mzscheme -qu "$0" ${1+"$@"}
    ))
 
 (define localtime
-  (get-ffi-obj
-   "localtime"
-   libc (_fun
-         (_ptr i _long) ;;well, time_t, but
-         ;;in the GNU C
-         ;;library, that's a
-         ;;long.
-         -> (_ptr o _tm))
-   (lambda () #f)))
+  (and libc
+       (get-ffi-obj
+        "localtime"
+        libc (_fun
+              (_ptr i _long) ;;well, time_t, but
+              ;;in the GNU C
+              ;;library, that's a
+              ;;long.
+              -> (_ptr o _tm))
+        (lambda () #f))))
 
 (define (timezone-string seconds)
   (if localtime
