@@ -159,9 +159,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (for-each (lambda (t)
                 (let* ((w (winner/int t))
                        (c (car w))
-                       (s (cdr w))
                        (team
-                        (case s
+                        (case (cdr w)
                           ((n s) 'ns)
                           (else 'ew))))
                   (hash-table-increment! (cons team (card-suit c)))))
