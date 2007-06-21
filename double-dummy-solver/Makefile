@@ -38,7 +38,7 @@ ETAGS ?= etags
 tags: TAGS
 
 TAGS: $(wildcard *.ss)
-	PATH=/usr/local/src/emacs-cvs.good/bin:$$PATH:$(dir $(EMACS))../lib-src $(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
+	PATH=/usr/local/src/emacs-cvs/lib-src:$$PATH:$(dir $(EMACS))../lib-src  $(ETAGS) --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 clean:
 	rm -rf TAGS coverage compiled *.pdf
