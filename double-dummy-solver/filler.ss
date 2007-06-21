@@ -28,7 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "fys.ss"
          "hand.ss"
          (only "history.ss"
-               cs2
+               trick-summaries
                history-empty?
                history-latest-trick
                history-length
@@ -294,7 +294,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            #f)
 
          (lambda (history hands)
-           (printf "We're done.~%~aSuits taken by seat: ~a~%" history (cs2 history))))
+           (printf "We're done.~%~aSuits taken by seat: ~a~%" history (trick-summaries history))))
         (loop (add1 hands-played))))))
 
 )

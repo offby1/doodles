@@ -150,12 +150,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
        rv h))
     rv))
 
-(define (cs2 h)
-  (check-type 'cs2 history? h)
-  (let ((tricks-by-suit-by-seat (make-hash-table 'equal)))
-    (define (hash-table-increment! key)
-      (let ((v (hash-table-get tricks-by-suit-by-seat key 0)))
-        (hash-table-put! tricks-by-suit-by-seat key (add1 v))))
+(define (trick-summaries h)
+  (define (by-char a b)
+    (string>? (symbol->string (car a))
+              (symbol->string (car b))))
+  (check-type 'trick-summaries history? h)
+  (let ((ns-tricks-by-suit (make-hash-table))
+        (ew-tricks-by-suit (make-hash-table)))
     (for-each (lambda (t)
                 (let* ((w (winner/int t))
                        (c (car w))
@@ -163,13 +164,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
                         (case (cdr w)
                           ((n s) 'ns)
                           (else 'ew))))
-                  (hash-table-increment! (cons team (card-suit c)))))
+                  (let ((ht  (if (eq? team 'ns) ns-tricks-by-suit ew-tricks-by-suit)))
+                    (hash-table-put!
+                     ht
+                     (card-suit c)
+                     (add1 (hash-table-get ht (card-suit c) 0))))
+                  ))
               (history-tricks h))
-    ;; (((h . e) . 1) ((d . n) . 1) ...)
-    (sort (hash-table-map tricks-by-suit-by-seat cons)
-          (lambda (a b)
-            (string>? (symbol->string (caar a))
-                      (symbol->string (caar b)))))))
+     (list 'ns
+           (sort (hash-table-map ns-tricks-by-suit cons) by-char)
+           'ew
+           (sort (hash-table-map ew-tricks-by-suit cons) by-char))))
 
 (define (compute-score h)
   (check-type 'compute-score history? h)
