@@ -44,7 +44,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
       (loop (add1 printed)
             (cdr tricks))))
   (when (history-complete? history)
-    (fprintf port "~%Score: ~a~%" (score-by-pairs (compute-score history)))))
+    (let* ((sbp (score-by-pairs (compute-score history)))
+           (ns (cdr (assoc 'ns sbp)))
+           (ew (cdr (assoc 'ew sbp))))
+      (fprintf port
+               "~%~a took the most tricks~%"
+               (if (> ns ew) "ns" "ew"))
+      (fprintf port "Score: ~a~%" sbp))))
 
 (define-values (s:history make-history history? s:history-ref history-set!)
   (make-struct-type 'history #f 2 0 #f
