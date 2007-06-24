@@ -103,6 +103,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)
   (define counts-by-choice (make-hash-table 'equal))
   (define me  (seat (car hands)))
+
+  ;; just for fun -- make e/w always play stupidly.  That way, if we
+  ;; find that n/w aren't regularly beating them, we'll know that
+  ;; something is terribly wrong.
+
+;;   (when (member me '(e w))
+;;     (printf "I'm ~a, so I'm gonna play stupidly~%" me)
+;;     (set! quick-and-dirty? #t))
+
   (let* ((hands (mask-out hands me (*dummy*) (history-empty? history)))
          (fallback (dds:choose-card history hands 0 #t)))
     (p "~a plays ~a~%" me
@@ -140,7 +149,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (printf "(Second-best choice was ~a, at ~a%) "
                              (car 2nd-best)
                              (round (* 100.0 (/ (cdr 2nd-best)
-                                         (cdr best)))))))
+                                                (cdr best)))))))
                  (car best)))))))
     ))
 ;(trace choose-best-card-no-peeking)
@@ -162,8 +171,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (current-pseudo-random-generator
     (vector->pseudo-random-generator (read (open-input-string vec)))))))
 (printf "rng state: ~s~%" (pseudo-random-generator->vector (current-pseudo-random-generator)))
-(define (random-choice seq)
-  (list-ref seq (random (length seq))))
 
 ;; list of hands => (list seat-symbol suit-sym-or-#f integer)
 (define (plausible-trump-suit hands)
@@ -221,6 +228,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ;; the strongest hand, not just our-max
      ((< (third our-max) (third their-max))
       their-max)
+     ((= (third our-max) (third their-max))
+      ;; flip a coin, for fairness
+      (if (zero? (random 2))
+          our-max
+        their-max))
      (else our-max))))
 
 (define (display-side-by-side l1 l2 padding port)
