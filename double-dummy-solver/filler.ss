@@ -218,22 +218,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (list-ref hands 1)
                      (list-ref hands 3)) ))
 
-    (cond
-     ((and (= 7
-              (third our-max)
-              (third their-max)))
-      (list (first our-max)
-            #f
-            7)) ;; both hands are square?  Then notrump.  TODO: pick
-                ;; the strongest hand, not just our-max
-     ((< (third our-max) (third their-max))
-      their-max)
-     ((= (third our-max) (third their-max))
-      ;; flip a coin, for fairness
-      (if (zero? (random 2))
-          our-max
-        their-max))
-     (else our-max))))
+    (let ((random-choice (if (zero? (random 2))
+                             our-max
+                           their-max)))
+      (cond
+       ((and (= 7
+                (third our-max)
+                (third their-max)))
+        (list (first random-choice)
+              #f
+              7)) ;; both hands are square?  Then notrump.  TODO: pick
+       ;; the strongest hand, not just our-max
+       ((< (third our-max) (third their-max))
+        their-max)
+       ((= (third our-max) (third their-max))
+        random-choice)
+       (else our-max)))))
 
 (define (display-side-by-side l1 l2 padding port)
   (port-count-lines! port)
