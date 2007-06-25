@@ -104,19 +104,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (define counts-by-choice (make-hash-table 'equal))
   (define me  (seat (car hands)))
 
-  ;; just for fun -- make e/w always play stupidly.  That way, if we
-  ;; find that n/w aren't regularly beating them, we'll know that
-  ;; something is terribly wrong.  Conversely, if n/w regularly beat
-  ;; them, I haven't been wasting me time :-)
+  (let* (
+         ;; just for fun -- make e/w always play stupidly.  That way,
+         ;; if we find that n/w aren't regularly beating them, we'll
+         ;; know that something is terribly wrong.  Conversely, if n/w
+         ;; regularly beat them, I haven't been wasting my time :-)
+         (stupid? (member me '(e w)))
 
-  (when (member me '(e w))
-    (printf "I'm ~a, so I'm gonna play stupidly~%" me)
-    (set! quick-and-dirty? #t))
-
-  (let* ((hands (mask-out hands me (*dummy*) (history-empty? history)))
+         (hands (mask-out hands me (*dummy*) (history-empty? history)))
          (fallback (dds:choose-card history hands 0 #t)))
-    (p "~a plays ~a~%" me
-       (if quick-and-dirty? fallback
+    (p "~a ~aplays ~a~%" me
+       (if stupid? "stupidly " "")
+       (if (or stupid? quick-and-dirty?) fallback
          (begin
            (for-each
             (lambda (c)
