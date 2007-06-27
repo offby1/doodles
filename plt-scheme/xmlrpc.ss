@@ -53,7 +53,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;(pretty-display cat-photos-sxml)
 
 (define fp-id ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml))
-
 (define first-photo-info
   (flickr.photos.getInfo
    (->ht
@@ -63,12 +62,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define fpi (ssax:xml->sxml (open-input-string first-photo-info)
                             '()))
 
-;(pretty-display ((sxpath '(photo urls)) fpi))
+(printf "First photo info:~%" )
+(pretty-display fpi)
+
+;; create the URL for the image itself, as opposed to the fancy flickr
+;; page that showcases that image.
+(define server-id ((sxpath '(photo @ server)) fpi))
+(define farm-id   ((sxpath '(photo @ farm))   fpi))
+(define secret    ((sxpath '(photo @ secret)) fpi))
+(define hacked-up-url (format "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+                              (list-ref (car farm-id) 1)
+                              (list-ref (car server-id) 1)
+                              (list-ref (car fp-id) 1)
+                              (list-ref (car secret) 1)
+                              ))
+(printf "Hacked-up URL: ~s~%" hacked-up-url)
 (define url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
                       2))
 
 (if (eq? (system-type 'os) 'windows)
-    (shell-execute #f url  "" (current-directory) 'sw_shownormal)
-  (printf "Look!  A URL for a cat picture: ~a~%" url)
+    (shell-execute #f hacked-up-url  "" (current-directory) 'sw_shownormal)
+  (printf "Look!  A URL for a cat picture: ~a~%" hacked-up-url)
   )
 )
