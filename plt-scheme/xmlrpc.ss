@@ -52,49 +52,54 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (flickr.photos.search
     (->ht
      'api_key *flickr-API-key*
-     'tags    "orange cat"
+     'tags    "fat,lazy,orange,cat"
+     'tag_mode "all"
+     'sort "interestingness-desc"
      ))))
 
-;;(pretty-display cat-photos-sxml)
+(define *num-photos-returned* (list-ref (car ((sxpath '(photos @ total)) cat-photos-sxml)) 1))
 
-(define (attribute-getter-from-sxml sxml path)
-  (lambda (attname)
-    (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
+(if (string=? "0" *num-photos-returned*)
+    (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
+  (let ()
+    (define (attribute-getter-from-sxml sxml path)
+      (lambda (attname)
+        (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
 
-(define @ (attribute-getter-from-sxml cat-photos-sxml '(photos photo)))
+    (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos photo)))
 
-(define fp-id (@ 'id))
+    (define fp-id (@ 'id))
 
-(define first-photo-info
-  (flickr.photos.getInfo
-   (->ht
-    'api_key *flickr-API-key*
-    'photo_id fp-id)))
+    (define first-photo-info
+      (flickr.photos.getInfo
+       (->ht
+        'api_key *flickr-API-key*
+        'photo_id fp-id)))
 
-(define fpi (parse-xml first-photo-info))
+    (define fpi (parse-xml first-photo-info))
 
-(printf "First photo info:~%" )
-(pretty-display fpi)
+    (printf "First photo info:~%" )
+    (pretty-display fpi)
 
-(set! @ (attribute-getter-from-sxml fpi '(photo)))
+    (let (( @ (attribute-getter-from-sxml fpi '(photo)))
+          (url-for-bare-image
+           (url->string
+            (combine-url/relative
+             (string->url
+              (format "http://farm~a.static.flickr.com/" (@ 'farm)))
+             (format "~a/~a_~a.jpg" (@ 'server) fp-id (@ 'secret))
 
-;; create the URL for the image itself, as opposed to the fancy flickr
-;; page that showcases that image.
+             )))
+          (url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
+                         2)))
+      ;; create the URL for the image itself, as opposed to the fancy flickr
+      ;; page that showcases that image.
 
-(define hacked-up-url
-  (url->string
-   (combine-url/relative
-    (string->url
-     (format "http://farm~a.static.flickr.com/" (@ 'farm)))
-    (format "~a/~a_~a.jpg" (@ 'server) fp-id (@ 'secret))
+      (printf "Hacked-up URL: ~s~%" url-for-bare-image)
 
-    )))
-(printf "Hacked-up URL: ~s~%" hacked-up-url)
-(define url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
-                      2))
-
-(if (eq? (system-type 'os) 'windows)
-    (shell-execute #f hacked-up-url  "" (current-directory) 'sw_shownormal)
-  (printf "Look!  A URL for a cat picture: ~a~%" hacked-up-url)
-  )
+      (if (eq? (system-type 'os) 'windows)
+          (shell-execute #f url  "" (current-directory) 'sw_shownormal)
+        (printf "Look!  A URL for a cat picture: ~a~%" url)
+        ))
+    ))
 )
