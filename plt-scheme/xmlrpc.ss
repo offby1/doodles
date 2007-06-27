@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
          (lib "pretty.ss")
          (lib "trace.ss")
+         (lib "sendurl.ss" "net")
          (only (lib "url.ss" "net")
                combine-url/relative
                string->url
@@ -82,6 +83,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (pretty-display fpi)
 
     (let (( @ (attribute-getter-from-sxml fpi '(photo)))
+
+
+          (url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
+                         2))
+
+          ;; the URL for the image itself, as opposed to the fancy
+          ;; flickr page that showcases that image.
           (url-for-bare-image
            (url->string
             (combine-url/relative
@@ -89,17 +97,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (format "http://farm~a.static.flickr.com/" (@ 'farm)))
              (format "~a/~a_~a.jpg" (@ 'server) fp-id (@ 'secret))
 
-             )))
-          (url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
-                         2)))
-      ;; create the URL for the image itself, as opposed to the fancy flickr
-      ;; page that showcases that image.
+             ))))
 
-      (printf "Hacked-up URL: ~s~%" url-for-bare-image)
+      (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
 
       (if (eq? (system-type 'os) 'windows)
           (shell-execute #f url  "" (current-directory) 'sw_shownormal)
-        (printf "Look!  A URL for a cat picture: ~a~%" url)
+        (send-url url)
         ))
     ))
 )
