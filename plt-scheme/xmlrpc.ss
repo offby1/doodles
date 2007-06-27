@@ -63,9 +63,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define fpi (ssax:xml->sxml (open-input-string first-photo-info)
                             '()))
 
-(pretty-display ((sxpath '(photo urls)) fpi))
-(define first-url ((sxpath '(photo urls (url 1))) fpi))
+;(pretty-display ((sxpath '(photo urls)) fpi))
+(define url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
+                      2))
 
-(printf "Look!  A URL for a cat picture: ~a~%"
-         (list-ref (car first-url) 2))
+(if (eq? (system-type 'os) 'windows)
+    (shell-execute #f url  "" (current-directory) 'sw_shownormal)
+  (printf "Look!  A URL for a cat picture: ~a~%" url)
+  )
 )
