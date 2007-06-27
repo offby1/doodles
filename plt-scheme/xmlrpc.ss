@@ -44,16 +44,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       conses))))
       )))
 
+(define (parse-xml string)
+  (ssax:xml->sxml (open-input-string string) '()))
+
 (define cat-photos-sxml
-  (ssax:xml->sxml
-   (open-input-string
-    (flickr.photos.search
-     (->ht
-      'api_key *flickr-API-key*
-      'tags    "orange cat"
-      )))
-   '()
-   ))
+  (parse-xml
+   (flickr.photos.search
+    (->ht
+     'api_key *flickr-API-key*
+     'tags    "orange cat"
+     ))))
 
 ;;(pretty-display cat-photos-sxml)
 
@@ -71,8 +71,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     'api_key *flickr-API-key*
     'photo_id fp-id)))
 
-(define fpi (ssax:xml->sxml (open-input-string first-photo-info)
-                            '()))
+(define fpi (parse-xml first-photo-info))
 
 (printf "First photo info:~%" )
 (pretty-display fpi)
