@@ -9,6 +9,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "ssax.ss" ("lizorkin" "ssax.plt"))
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
          (lib "pretty.ss")
+         (lib "trace.ss")
+         (only (lib "url.ss" "net")
+               combine-url/relative
+               string->url
+               url->string)
          "flickr.ss")
 
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
@@ -52,12 +57,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(pretty-display cat-photos-sxml)
 
-(define fp-id ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml))
+(define fp-id (cadar ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml)))
 (define first-photo-info
   (flickr.photos.getInfo
    (->ht
     'api_key *flickr-API-key*
-    'photo_id  (cadar fp-id))))
+    'photo_id fp-id)))
 
 (define fpi (ssax:xml->sxml (open-input-string first-photo-info)
                             '()))
@@ -65,17 +70,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (printf "First photo info:~%" )
 (pretty-display fpi)
 
+(define (@  attname)
+  (list-ref (car ((sxpath `(photo @ ,attname)) fpi)) 1))
+(trace @)
 ;; create the URL for the image itself, as opposed to the fancy flickr
 ;; page that showcases that image.
-(define server-id ((sxpath '(photo @ server)) fpi))
-(define farm-id   ((sxpath '(photo @ farm))   fpi))
-(define secret    ((sxpath '(photo @ secret)) fpi))
-(define hacked-up-url (format "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
-                              (list-ref (car farm-id) 1)
-                              (list-ref (car server-id) 1)
-                              (list-ref (car fp-id) 1)
-                              (list-ref (car secret) 1)
-                              ))
+
+(define hacked-up-url
+  (url->string
+   (combine-url/relative
+    (string->url
+     (format "http://farm~a.static.flickr.com/" (@ 'farm)))
+    (format "~a/~a_~a.jpg" (@ 'server) fp-id (@ 'secret))
+
+    )))
 (printf "Hacked-up URL: ~s~%" hacked-up-url)
 (define url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
                       2))
