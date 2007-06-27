@@ -12,7 +12,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
-(define flickr.photos.search (flickr "flickr.photos.search"))
+(define flickr.photos.search  (flickr "flickr.photos.search" ))
+(define flickr.photos.getInfo (flickr "flickr.photos.getInfo"))
 
 ;; convert a list of alternating symbols and otherthings into a hash
 ;; table, with the symbols as the keys.
@@ -50,5 +51,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   ))
 (define first-photo
   (list-ref (list-ref cat-photos-sxml 1) 2))
-(pretty-display first-photo)
+
+(define first-photo-info
+  (flickr.photos.getInfo
+   (->ht
+    'api_key *flickr-API-key*
+    'photo_id  (cadr (assoc 'id (cdr (list-ref first-photo 1)))))))
+
+(printf "Look!  A URL for a cat picture: ~a~%"
+        (list-ref
+         (list-ref
+          (assoc 'urls
+                 (cdr
+                  (list-ref
+                   (ssax:xml->sxml (open-input-string first-photo-info)
+                                   '())
+                   1)))
+          1)
+         2))
 )
