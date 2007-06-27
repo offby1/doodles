@@ -7,6 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module xmlrpc mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (planet "ssax.ss" ("lizorkin" "ssax.plt"))
+         (planet "sxml.ss" ("lizorkin" "sxml.plt"))
          (lib "pretty.ss"))
 
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
@@ -42,31 +43,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (flickr.photos.search
    (->ht
     'api_key *flickr-API-key*
-    'tags    "cats"
+    'tags    "orange cat"
     )))
 
 (define cat-photos-sxml
   (ssax:xml->sxml (open-input-string cat-photos-string)
                   '()
                   ))
-(define first-photo
-  (list-ref (list-ref cat-photos-sxml 1) 2))
+;;(pretty-display cat-photos-sxml)
+
+(define fp ((sxpath '(photos (photo 1))) cat-photos-sxml))
+
+(define fp-id ((sxpath '(@ id)) fp))
 
 (define first-photo-info
   (flickr.photos.getInfo
    (->ht
     'api_key *flickr-API-key*
-    'photo_id  (cadr (assoc 'id (cdr (list-ref first-photo 1)))))))
+    'photo_id  (cadar fp-id))))
+
+(define fpi (ssax:xml->sxml (open-input-string first-photo-info)
+                            '()))
+
+(define first-url ((sxpath '(photo urls (url 1))) fpi))
 
 (printf "Look!  A URL for a cat picture: ~a~%"
-        (list-ref
-         (list-ref
-          (assoc 'urls
-                 (cdr
-                  (list-ref
-                   (ssax:xml->sxml (open-input-string first-photo-info)
-                                   '())
-                   1)))
-          1)
-         2))
+         (list-ref (car first-url) 2))
 )
