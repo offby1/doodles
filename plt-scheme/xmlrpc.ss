@@ -17,13 +17,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define flickr.photos.search (flickr "flickr.photos.search"))
 (define ht (make-hash-table))
 (hash-table-put! ht 'api_key *flickr-API-key*)
+(hash-table-put! ht 'tags "cats")
 (define cat-photos (flickr.photos.search
-                    ht
+                    ht))
 
-                    ;; eventually I should include a tag argument
-                    ;; here, but first I want to understand why it's
-                    ;; failing
-
-                    ))
 (printf "Cat photos: ~s~%" cat-photos)
 )
