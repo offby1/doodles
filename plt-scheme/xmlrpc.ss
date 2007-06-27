@@ -17,7 +17,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define flickr.photos.getInfo (flickr "flickr.photos.getInfo"))
 
 ;; convert a list of alternating symbols and otherthings into a hash
-;; table, with the symbols as the keys.
+;; table, with the symbols as the keys and the otherthings as the
+;; values.  This hash table is what the various xmlrpc functions want.
 (define (->ht . args)
   (let loop ((args args)
              (conses '()))
@@ -39,22 +40,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       conses))))
       )))
 
-(define cat-photos-string
-  (flickr.photos.search
-   (->ht
-    'api_key *flickr-API-key*
-    'tags    "orange cat"
-    )))
-
 (define cat-photos-sxml
-  (ssax:xml->sxml (open-input-string cat-photos-string)
-                  '()
-                  ))
+  (ssax:xml->sxml
+   (open-input-string
+    (flickr.photos.search
+     (->ht
+      'api_key *flickr-API-key*
+      'tags    "orange cat"
+      )))
+   '()
+   ))
+
 ;;(pretty-display cat-photos-sxml)
 
-(define fp ((sxpath '(photos (photo 1))) cat-photos-sxml))
+(define fp-id ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml))
 
-(define fp-id ((sxpath '(@ id)) fp))
+(pretty-display fp-id)
 
 (define first-photo-info
   (flickr.photos.getInfo
