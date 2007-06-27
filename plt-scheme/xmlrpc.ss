@@ -8,9 +8,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (planet "ssax.ss" ("lizorkin" "ssax.plt"))
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
-         (lib "pretty.ss"))
-
-(define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
+         (lib "pretty.ss")
+         "flickr.ss")
 
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 (define flickr.photos.search  (flickr "flickr.photos.search" ))
@@ -55,8 +54,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define fp-id ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml))
 
-(pretty-display fp-id)
-
 (define first-photo-info
   (flickr.photos.getInfo
    (->ht
@@ -66,6 +63,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define fpi (ssax:xml->sxml (open-input-string first-photo-info)
                             '()))
 
+(pretty-display ((sxpath '(photo urls)) fpi))
 (define first-url ((sxpath '(photo urls (url 1))) fpi))
 
 (printf "Look!  A URL for a cat picture: ~a~%"
