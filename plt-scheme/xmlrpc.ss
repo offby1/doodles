@@ -103,7 +103,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (if (eq? (system-type 'os) 'windows)
           (shell-execute #f url  "" (current-directory) 'sw_shownormal)
-        (send-url url)
+        (parameterize ((external-browser '("remote-browse.sh " . "")))
+                      (send-url url))
         ))
     ))
 )
