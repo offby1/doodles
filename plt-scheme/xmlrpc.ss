@@ -57,7 +57,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(pretty-display cat-photos-sxml)
 
-(define fp-id (cadar ((sxpath '(photos (photo 1) @ id)) cat-photos-sxml)))
+(define (attribute-getter-from-sxml sxml path)
+  (lambda (attname)
+    (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
+
+(define @ (attribute-getter-from-sxml cat-photos-sxml '(photos photo)))
+
+(define fp-id (@ 'id))
+
 (define first-photo-info
   (flickr.photos.getInfo
    (->ht
@@ -70,9 +77,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (printf "First photo info:~%" )
 (pretty-display fpi)
 
-(define (@  attname)
-  (list-ref (car ((sxpath `(photo @ ,attname)) fpi)) 1))
-(trace @)
+(set! @ (attribute-getter-from-sxml fpi '(photo)))
+
 ;; create the URL for the image itself, as opposed to the fancy flickr
 ;; page that showcases that image.
 
