@@ -13,11 +13,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 
-(define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc/"))
+(define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 (define flickr.photos.search (flickr "flickr.photos.search"))
+(define ht (make-hash-table))
+(hash-table-put! ht 'api_key *flickr-API-key*)
 (define cat-photos (flickr.photos.search
-                    "api_key"
-                    *flickr-API-key*
+                    ht
 
                     ;; eventually I should include a tag argument
                     ;; here, but first I want to understand why it's
