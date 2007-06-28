@@ -11,6 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
+         (only (lib "os.ss") gethostname)
          (only (lib "url.ss" "net")
                combine-url/relative
                string->url
@@ -101,10 +102,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
 
-      (if (eq? (system-type 'os) 'windows)
-          (shell-execute #f url  "" (current-directory) 'sw_shownormal)
-        (parameterize ((external-browser '("remote-browse.sh " . "")))
-                      (send-url url))
-        ))
-    ))
+      (parameterize ((external-browser
+                      (if (string=? (gethostname) "debian")
+                          '("remote-browse.sh " . "")
+                        (external-browser))))
+                    (send-url url #f)))))
 )
