@@ -11,9 +11,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
+         (lib "file.ss")
          (only (lib "os.ss") gethostname)
          (only (lib "url.ss" "net")
                combine-url/relative
+               get-pure-port
                string->url
                url->string)
          "flickr.ss")
@@ -54,14 +56,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (flickr.photos.search
     (->ht
      'api_key *flickr-API-key*
-     'tags    "fat,lazy,orange,cat"
+     'tags    "snowball,cat"
      'tag_mode "all"
      'sort "interestingness-desc"
      ))))
 
-(define *num-photos-returned* (list-ref (car ((sxpath '(photos @ total)) cat-photos-sxml)) 1))
+(define *num-photos-returned* (string->number (list-ref (car ((sxpath '(photos @ total)) cat-photos-sxml)) 1)))
 
-(if (string=? "0" *num-photos-returned*)
+(if (zero? *num-photos-returned*)
     (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
   (let ()
     (define (attribute-getter-from-sxml sxml path)
@@ -81,7 +83,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (define fpi (parse-xml first-photo-info))
 
     (printf "First photo info:~%" )
-    (pretty-display fpi)
+    ;;(pretty-display fpi)
 
     (let (( @ (attribute-getter-from-sxml fpi '(photo)))
 
@@ -102,9 +104,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
 
-      (parameterize ((external-browser
-                      (if (string=? (gethostname) "debian")
-                          '("remote-browse.sh " . "")
-                        (external-browser))))
-                    (send-url url #f)))))
+      (let ((jpeg-data
+             (let ((ip (get-pure-port (string->url url-for-bare-image))))
+               (let loop ((result (make-bytes 0)))
+                 (let ((chunk (read-bytes 10000 ip)))
+                   (if (eof-object? chunk)
+                       result
+                     (begin (fprintf (current-error-port)
+                                     "~a bytes ... " (+ (bytes-length chunk)
+                                                       (bytes-length result)))
+                     (loop (bytes-append result chunk)))))))))
+
+        (let ((tfn (make-temporary-file)))
+          (call-with-output-file*
+           tfn
+           (lambda (op) (write-bytes jpeg-data op))
+           'truncate)
+          (printf "Wrote ~a bytes to ~a~%"
+                  (bytes-length jpeg-data)
+                  tfn)
+          )))))
 )
