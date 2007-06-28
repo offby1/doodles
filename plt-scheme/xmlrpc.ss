@@ -49,10 +49,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;     (pretty-display first-photo-info)
 
     (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
-          (url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
-          ;; the URL for the image itself, as opposed to the fancy
-          ;; flickr page that showcases that image.
-          (url-for-bare-image
+          (fancy-photo-page-url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
+          (bare-image-url
            (url->string
             (combine-url/relative
              (string->url
@@ -61,10 +59,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
              ))))
 
-      (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
+      (printf "URL for the unadorned image: ~s~%" bare-image-url)
 
       (let ((jpeg-data
-             (let ((ip (get-pure-port (string->url url-for-bare-image))))
+             (let ((ip (get-pure-port (string->url bare-image-url))))
                (let loop ((result (make-bytes 0)))
                  (let ((chunk (read-bytes 10000 ip)))
                    (if (eof-object? chunk)
@@ -81,7 +79,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            'truncate)
           (printf "Wrote ~a bytes to ~a~%"
                   (bytes-length jpeg-data)
-                  tfn)
-          ))      )
-))
+                  tfn))))))
 )
