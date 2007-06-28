@@ -4,10 +4,14 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; Try out playing with the flickr API, via XML RPC.  (The API is
+;; available in lots of other flavors too, like REST and SOAP, but
+;; only XML RPC has a handy PLaneT package.)
+
 (module xmlrpc mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
-         (planet "ssax.ss" ("lizorkin" "ssax.plt"))
-         (planet "sxml.ss" ("lizorkin" "sxml.plt"))
+         (planet "ssax.ss"   ("lizorkin"   "ssax.plt"))
+         (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
          (lib "pretty.ss")
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
@@ -55,52 +59,60 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parse-xml
    (flickr.photos.search
     (->ht
-     'api_key *flickr-API-key*
-     'tags    "snowball,cat"
+     'api_key  *flickr-API-key*
+     'tags     "snowball,cat"
      'tag_mode "all"
-     'sort "interestingness-desc"
+     'sort     "interestingness-desc"
      ))))
 
-(define *num-photos-returned* (string->number (list-ref (car ((sxpath '(photos @ total)) cat-photos-sxml)) 1)))
+(define (attribute-getter-from-sxml sxml path)
+  (lambda (attname)
+    (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
+
+(define (body-getter-from-sxml sxml path)
+  (let ((rv
+         (lambda (eltname)
+           (let* ((stuff (car ((sxpath `(,@path ,eltname)) sxml)))
+                  (second (list-ref stuff 1)))
+             (if (and (pair? second  )
+                      (eq? (car second) '@))
+                 (list-ref stuff 2)
+               second)
+             ))))
+    ;;(trace rv)
+    rv))
+;;(trace body-getter-from-sxml)
+
+(define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
+(define *num-photos-returned* (string->number (@ 'total)))
 
 (if (zero? *num-photos-returned*)
     (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
-  (let ()
-    (define (attribute-getter-from-sxml sxml path)
-      (lambda (attname)
-        (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
+  (let ((@ (attribute-getter-from-sxml cat-photos-sxml '(photos (photo 1)))))
 
-    (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos photo)))
+    (define photo-id (@ 'id))
 
-    (define fp-id (@ 'id))
+    (define first-photo-info (parse-xml (flickr.photos.getInfo
+                                         (->ht
+                                          'api_key    *flickr-API-key*
+                                          'photo_id   photo-id))))
 
-    (define first-photo-info
-      (flickr.photos.getInfo
-       (->ht
-        'api_key *flickr-API-key*
-        'photo_id fp-id)))
+    ;;(printf "First photo info:~%" )
+    ;;(pretty-display first-photo-info)
 
-    (define fpi (parse-xml first-photo-info))
+    (let* ((e (body-getter-from-sxml first-photo-info '(photo urls)))
+           (@ (attribute-getter-from-sxml first-photo-info '(photo)))
+           (url (e '(url 1)))
+           ;; the URL for the image itself, as opposed to the fancy
+           ;; flickr page that showcases that image.
+           (url-for-bare-image
+            (url->string
+             (combine-url/relative
+              (string->url
+               (format "http://farm~a.static.flickr.com/" (@ 'farm)))
+              (format "~a/~a_~a.jpg" (@ 'server) photo-id (@ 'secret))
 
-    (printf "First photo info:~%" )
-    ;;(pretty-display fpi)
-
-    (let (( @ (attribute-getter-from-sxml fpi '(photo)))
-
-
-          (url (list-ref (car ((sxpath '(photo urls (url 1))) fpi))
-                         2))
-
-          ;; the URL for the image itself, as opposed to the fancy
-          ;; flickr page that showcases that image.
-          (url-for-bare-image
-           (url->string
-            (combine-url/relative
-             (string->url
-              (format "http://farm~a.static.flickr.com/" (@ 'farm)))
-             (format "~a/~a_~a.jpg" (@ 'server) fp-id (@ 'secret))
-
-             ))))
+              ))))
 
       (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
 
@@ -112,8 +124,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        result
                      (begin (fprintf (current-error-port)
                                      "~a bytes ... " (+ (bytes-length chunk)
-                                                       (bytes-length result)))
-                     (loop (bytes-append result chunk)))))))))
+                                                        (bytes-length result)))
+                            (loop (bytes-append result chunk)))))))))
 
         (let ((tfn (make-temporary-file)))
           (call-with-output-file*
@@ -123,5 +135,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (printf "Wrote ~a bytes to ~a~%"
                   (bytes-length jpeg-data)
                   tfn)
-          )))))
+          ))      )
+))
 )
