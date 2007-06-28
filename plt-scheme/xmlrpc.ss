@@ -29,6 +29,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    'sort     "interestingness-desc"
    ))
 
+;; It's hard to explain what this does, other than save typing.  Just
+;; see how I use it, and it should become obvious
 (define (attribute-getter-from-sxml sxml path)
   (lambda (attname)
     (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
@@ -51,13 +53,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
           (fancy-photo-page-url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
           (bare-image-url
-           (url->string
-            (combine-url/relative
-             (string->url
-              (format "http://farm~a.static.flickr.com/" (@ 'farm)))
-             (format "~a/~a_~a.jpg" (@ 'server) photo-id (@ 'secret))
-
-             ))))
+           (format "http://farm~a.static.flickr.com/~a/~a_~a.jpg" (@ 'farm) (@ 'server) photo-id (@ 'secret))))
 
       (printf "URL for the unadorned image: ~s~%" bare-image-url)
 
