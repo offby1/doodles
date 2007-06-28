@@ -22,8 +22,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                url->string)
          "flickr.ss")
 
-
-
 (define cat-photos-sxml
   (flickr.photos.search
    'tags     "snowball,cat"
@@ -34,20 +32,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (attribute-getter-from-sxml sxml path)
   (lambda (attname)
     (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
-
-(define (body-getter-from-sxml sxml path)
-  (let ((rv
-         (lambda (eltname)
-           (let* ((stuff (car ((sxpath `(,@path ,eltname)) sxml)))
-                  (second (list-ref stuff 1)))
-             (if (and (pair? second  )
-                      (eq? (car second) '@))
-                 (list-ref stuff 2)
-               second)
-             ))))
-    ;;(trace rv)
-    rv))
-;;(trace body-getter-from-sxml)
 
 (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
 (define *num-photos-returned* (string->number (@ 'total)))
@@ -61,22 +45,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (define first-photo-info (flickr.photos.getInfo
                               'photo_id   photo-id))
 
-    ;;(printf "First photo info:~%" )
-    ;;(pretty-display first-photo-info)
+;;     (printf "First photo info:~%" )
+;;     (pretty-display first-photo-info)
 
-    (let* ((e (body-getter-from-sxml first-photo-info '(photo urls)))
-           (@ (attribute-getter-from-sxml first-photo-info '(photo)))
-           (url (e '(url 1)))
-           ;; the URL for the image itself, as opposed to the fancy
-           ;; flickr page that showcases that image.
-           (url-for-bare-image
-            (url->string
-             (combine-url/relative
-              (string->url
-               (format "http://farm~a.static.flickr.com/" (@ 'farm)))
-              (format "~a/~a_~a.jpg" (@ 'server) photo-id (@ 'secret))
+    (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
+          (url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
+          ;; the URL for the image itself, as opposed to the fancy
+          ;; flickr page that showcases that image.
+          (url-for-bare-image
+           (url->string
+            (combine-url/relative
+             (string->url
+              (format "http://farm~a.static.flickr.com/" (@ 'farm)))
+             (format "~a/~a_~a.jpg" (@ 'server) photo-id (@ 'secret))
 
-              ))))
+             ))))
 
       (printf "URL for the unadorned image: ~s~%" url-for-bare-image)
 
