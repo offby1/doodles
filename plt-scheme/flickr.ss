@@ -10,7 +10,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
          )
 (provide
- *flickr-API-key*
  flickr.photos.search
  flickr.photos.getInfo
  )
