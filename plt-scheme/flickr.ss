@@ -6,9 +6,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module flickr mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
-         (planet "ssax.ss"   ("lizorkin"   "ssax.plt"))
-         (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
-         )
+         (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert)
+         (lib "assert.ss" "offby1"))
 (provide
  flickr.photos.search
  flickr.photos.getInfo
@@ -18,24 +17,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 
 (define flickr.photos.search (lambda keys-n-values
+                               (assert (not (memq 'api_key keys-n-values)))
                                (parse-xml
                                 ((flickr "flickr.photos.search" )
-
-                                 ;; this is Bad.  If keys-n-values
-                                 ;; _already_ contains 'api_key, then
-                                 ;; it's not clear which value will
-                                 ;; ultimately get used -- the one in
-                                 ;; keys-n-values, or the
-                                 ;; *flickr-API-key* that I'm
-                                 ;; providing here.  I should first
-                                 ;; ensure that api_key doesn't appear
-                                 ;; in keys-n-values, and croak if it
-                                 ;; does.
                                  (apply ->ht
                                    'api_key  *flickr-API-key*  keys-n-values)))
                                ))
 
 (define flickr.photos.getInfo (lambda keys-n-values
+                                (assert (not (memq 'api_key keys-n-values)))
                                 (parse-xml
                                  ((flickr "flickr.photos.getInfo")
                                   (apply ->ht
