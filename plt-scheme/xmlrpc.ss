@@ -38,6 +38,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
 (define *num-photos-returned* (string->number (@ 'total)))
 
+;; Hard to believe this isn't already defined somewhere.
+(define (port->bytes ip)
+  (let loop ((result (make-bytes 0)))
+    (let ((chunk (read-bytes 10000 ip)))
+      (if (eof-object? chunk)
+          result
+        (begin (fprintf (current-error-port)
+                        "~a bytes ... " (+ (bytes-length chunk)
+                                           (bytes-length result)))
+               (loop (bytes-append result chunk)))))))
+
 (if (zero? *num-photos-returned*)
     (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
   (let ((@ (attribute-getter-from-sxml cat-photos-sxml '(photos (photo 1)))))
@@ -52,28 +63,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
           (fancy-photo-page-url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
+
+          ;; believe it or not, kludging up a URL out of pieces like
+          ;; this is officially sanctioned.
           (bare-image-url
            (format "http://farm~a.static.flickr.com/~a/~a_~a.jpg" (@ 'farm) (@ 'server) photo-id (@ 'secret))))
 
       (printf "URL for the unadorned image: ~s~%" bare-image-url)
 
       (let ((jpeg-data
-             (let ((ip (get-pure-port (string->url bare-image-url))))
-               (let loop ((result (make-bytes 0)))
-                 (let ((chunk (read-bytes 10000 ip)))
-                   (if (eof-object? chunk)
-                       result
-                     (begin (fprintf (current-error-port)
-                                     "~a bytes ... " (+ (bytes-length chunk)
-                                                        (bytes-length result)))
-                            (loop (bytes-append result chunk)))))))))
+             (port->bytes (get-pure-port (string->url bare-image-url))))
+            (tfn (make-temporary-file)))
 
-        (let ((tfn (make-temporary-file)))
-          (call-with-output-file*
-           tfn
-           (lambda (op) (write-bytes jpeg-data op))
-           'truncate)
-          (printf "Wrote ~a bytes to ~a~%"
-                  (bytes-length jpeg-data)
-                  tfn))))))
+        (call-with-output-file*
+         tfn
+         (lambda (op) (write-bytes jpeg-data op))
+         'truncate)
+        (printf "Wrote ~a bytes to ~a~%"
+                (bytes-length jpeg-data)
+                tfn)))))
 )
