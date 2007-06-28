@@ -9,9 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; only XML RPC has a handy PLaneT package.)
 
 (module xmlrpc mzscheme
-(require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
-         (planet "ssax.ss"   ("lizorkin"   "ssax.plt"))
-         (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+(require (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
          (lib "pretty.ss")
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
@@ -24,46 +22,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                url->string)
          "flickr.ss")
 
-(define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
-(define flickr.photos.search  (flickr "flickr.photos.search" ))
-(define flickr.photos.getInfo (flickr "flickr.photos.getInfo"))
 
-;; convert a list of alternating symbols and otherthings into a hash
-;; table, with the symbols as the keys and the otherthings as the
-;; values.  This hash table is what the various xmlrpc functions want.
-(define (->ht . args)
-  (let loop ((args args)
-             (conses '()))
-    (if (null? args)
-        (let ((rv (make-hash-table)))
-          (for-each (lambda (p)
-                      (hash-table-put!
-                       rv
-                       (car p)
-                       (cdr p)))
-                    conses)
-          rv)
-      (if (null? (cdr args))
-          (error "->ht called with an odd number of arguments")
-        (let ((key (car args))
-              (value (cadr args)))
-          (loop (cddr args)
-                (cons (cons key value)
-                      conses))))
-      )))
-
-(define (parse-xml string)
-  (ssax:xml->sxml (open-input-string string) '()))
 
 (define cat-photos-sxml
-  (parse-xml
-   (flickr.photos.search
-    (->ht
-     'api_key  *flickr-API-key*
-     'tags     "snowball,cat"
-     'tag_mode "all"
-     'sort     "interestingness-desc"
-     ))))
+  (flickr.photos.search
+   'tags     "snowball,cat"
+   'tag_mode "all"
+   'sort     "interestingness-desc"
+   ))
 
 (define (attribute-getter-from-sxml sxml path)
   (lambda (attname)
@@ -92,10 +58,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (define photo-id (@ 'id))
 
-    (define first-photo-info (parse-xml (flickr.photos.getInfo
-                                         (->ht
-                                          'api_key    *flickr-API-key*
-                                          'photo_id   photo-id))))
+    (define first-photo-info (flickr.photos.getInfo
+                              'photo_id   photo-id))
 
     ;;(printf "First photo info:~%" )
     ;;(pretty-display first-photo-info)
