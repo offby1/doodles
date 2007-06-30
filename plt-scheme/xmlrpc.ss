@@ -16,10 +16,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "file.ss")
          (only (lib "os.ss") gethostname)
          (only (lib "url.ss" "net")
-               combine-url/relative
                get-pure-port
                string->url
-               url->string)
+               )
          "flickr.ss")
 
 (define cat-photos-sxml
