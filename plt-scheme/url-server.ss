@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (loop)))))
 
 (run-server
- 7655
+ 7654
  (lambda (ip op)
    (process-lines
     ip
@@ -34,11 +34,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             ;; ooh, I know how to handle this.
             (begin
               (printf "~a~%" line)
-              (send-url u #f))
+              (send-url (url->string u) #f)
+              (close-input-port ip))
           (printf "Ain't gonna open that 'cuz it doesn't look like an http URL~%")
           ))))
 
    )
  #f ;; conn-timeout
+ raise 
+
  )
 )
