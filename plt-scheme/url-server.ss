@@ -7,7 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module url-server mzscheme
 (require  (lib "url.ss" "net")
           (lib "thread.ss")
-          (lib "date.ss"))
+          (lib "date.ss")
+          (lib "sendurl.ss" "net"))
 (define (process-lines ip func)
   (let loop ()
     (let ((line (read-line ip)))
@@ -31,10 +32,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (string=? scheme
                             "https")))
             ;; ooh, I know how to handle this.
-            (printf
-             "Point yo' web browser at ~a~%"
-
-             line)
+            (begin
+              (printf "~a~%" line)
+              (send-url u #f))
           (printf "Ain't gonna open that 'cuz it doesn't look like an http URL~%")
           ))))
 
