@@ -35,9 +35,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (begin
               (printf "~a~%" line)
               (send-url (url->string u) #f)
-              (close-input-port ip))
+              )
           (printf "Ain't gonna open that 'cuz it doesn't look like an http URL~%")
-          ))))
+          )
+        (flush-output))))
 
    )
  #f ;; conn-timeout
