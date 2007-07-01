@@ -7,8 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module url-server mzscheme
 (require  (lib "url.ss" "net")
           (lib "thread.ss")
-          (lib "date.ss")
-          (lib "sendurl.ss" "net"))
+          (lib "sendurl.ss" "net")
+          (only (lib "19.ss" "srfi") date->string current-date))
 (define (process-lines ip func)
   (let loop ()
     (let ((line (read-line ip)))
@@ -24,7 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (lambda (line)
       (let* ((u (string->url line))
              (scheme (url-scheme u)))
-        (printf "~a: " (date->string (seconds->date (current-seconds)) #t))
+        (printf "~a: " (date->string (current-date) "~Y-~m-~dT~X~z"))
         (if (and scheme
                  (or
                   (string=? scheme
@@ -42,7 +42,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    )
  #f ;; conn-timeout
- raise 
+ raise
 
  )
 )
