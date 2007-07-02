@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module post-test mzscheme
+(module get-test mzscheme
 (require (lib "url.ss" "net"))
 (define ip (get-pure-port (string->url "http://localhost/")))
 (write
