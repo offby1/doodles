@@ -6,7 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module post-test mzscheme
 (require (lib "url.ss" "net"))
-(define ip (post-pure-port (string->url "http://localhost") #"what you say!!"))
+(define ip (get-pure-port (string->url "http://localhost/")))
 (write
  (let loop ((accum '()))
    (let ((stuff (read-line ip)))
