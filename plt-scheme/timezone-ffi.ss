@@ -4,6 +4,13 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
+;; My original motivation for writing this was: mzscheme doesn't have
+;; any built-in way to display the timezone, other than as an integer
+;; representing seconds East of Greenwich.  That's not very
+;; human-friendly; I wanted it to display, say, "PDT" instead.  This
+;; is a kludge to do that.  It turns out, however, that SRFI-19 does
+;; this and more.  So in practice that's what I use.
+
 ;; in guile,
 ;; (localtime (current-time)) =>
 ;; #(38 18 12 10 7 106 4 221 1 25200 "PDT")
