@@ -8,9 +8,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://docs.amazonwebservices.com/AmazonS3/2006-03-01/RESTAuthentication.html
 ;; for the gritty details of authentication
 
-;; http://developer.amazonwebservices.com/connect/servlet/KbServlet/download/133-102-1292/s3-example-perl-library.zip
-;; might be an illuminating example
-
 (module amazon-s3 mzscheme
 (require (lib "kw.ss")
          (lib "url.ss" "net")
@@ -56,12 +53,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (string-append
      (if bucket-name (string-append "/" bucket-name) "")
-     (string-append (url->string truncated))
-     (or sub-resource ""))
-
-    ))
-;;(trace CanonicalizedResource)
-
+     (url->string truncated)
+     (or sub-resource ""))))
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
@@ -73,11 +66,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (call verb content type url)
 
   (let ((date (rfc-2822-date)))
-    (define (make-auth-header verb content Content-Type)
+    (define (make-auth-header)
       (let ((stringtosign  (format "~a\n~a\n~a\n~a\n~a"
                                    (symbol->string verb)
                                    (if (eq? verb 'GET) "" (md5 content))
-                                   (if (eq? verb 'GET) "" Content-Type)
+                                   (if (eq? verb 'GET) "" type)
                                    date
                                    (CanonicalizedResource #:request-URI url))))
         (format "Authorization: AWS ~a:~a"
@@ -85,7 +78,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
 
     (let ((args (list url
-                      (list (make-auth-header verb content type)
+                      (list (make-auth-header)
                             (format "Date: ~a" date)))))
       (let* ((ip (apply get-pure-port args))
              (response-html-string (port->string ip)))
