@@ -31,8 +31,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *last-thing-signed* #f)         ;for debugging
 (define (sign bytes)
   (set! *last-thing-signed* bytes)
-  (HMAC-SHA1 SecretAccessKey bytes))
-;;(trace sign)
+  (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
+(trace sign)
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
@@ -106,13 +106,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (list (make-path/param url-path-string '()))
                           '() #f))
            (date (rfc-2822-date))
-           (sig (base64-encode (sign (string->bytes/utf-8
-                                      (format "~a\n~a\n~a\n~a\n~a"
-                                              (symbol->string verb)
-                                              (if (eq? verb 'GET) "" (md5-b64 content))
-                                              (if (eq? verb 'GET) "" type)
-                                              date
-                                              (just-the-path url))))))
+           (sig (sign (string->bytes/utf-8
+                       (format "~a\n~a\n~a\n~a\n~a"
+                               (symbol->string verb)
+                               (if (eq? verb 'GET) "" (md5-b64 content))
+                               (if (eq? verb 'GET) "" type)
+                               date
+                               (just-the-path url)))))
            (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
       (html->shtml
@@ -146,7 +146,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "Putting something into it: ")
   (pretty-print (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
   (printf "Seeing what's in it: ")
-  (pretty-print (GET "squankulous"))
+  (pretty-print ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
 
