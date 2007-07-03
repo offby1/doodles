@@ -92,8 +92,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (printf "=> ~a => ~a~%" buckets names)
 
-  (let ((something-else
-         (call 'GET (car names) "" "")))
-    (printf "=> ~a~%"  ((sxpath '(listbucketresult )) something-else))))
-
+  (pretty-display
+   (map
+    (lambda (name)
+      (let ((something-else
+             (call 'GET name "" "")))
+        ((sxpath '(listbucketresult )) something-else)))
+    names)))
 )
