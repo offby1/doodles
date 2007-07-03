@@ -75,12 +75,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (message (car ((sxpath '(error message *text*)) sxml))))
       (when (string=?  code "SignatureDoesNotMatch")
         (let ((what-they-claim-we-signed
-               (car ((sxpath '(error stringtosign *text*))  sxml))))
-            (fprintf (current-error-port)
-                 "Last thing we signed was ~s~%" *last-thing-signed*)
-            (when (string=? *last-thing-signed* what-they-claim-we-signed)
-              (fprintf (current-error-port)
-                       "And yet that's exactly what we _did_ sign!  Bozos.~%"))))
+               (apply string-append ((sxpath '(error stringtosign *text*))  sxml))))
+          (fprintf (current-error-port)
+                   "Last thing we signed was ~s~%" *last-thing-signed*)
+
+          (apply
+           fprintf (current-error-port)
+           (if (bytes=? *last-thing-signed* (string->bytes/utf-8 what-they-claim-we-signed))
+               (list "And yet that's exactly what we _did_ sign!  Bozos.~%")
+             (list "Oops, they caught us; they claim we signed ~s~%" what-they-claim-we-signed)))
+          ))
       (raise (make-exn:fail:s3
               (format  "~a: ~a ~s"
                        code
