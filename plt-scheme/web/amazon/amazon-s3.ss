@@ -28,7 +28,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   )
 
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
+(define *last-thing-signed* #f)         ;for debugging
 (define (sign bytes)
+  (set! *last-thing-signed* bytes)
   (HMAC-SHA1 SecretAccessKey bytes))
 ;;(trace sign)
 
@@ -65,6 +67,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
+(define (gack-on-error sxml)
+  (when (not (null? ((sxpath '(error)) sxml)))
+    (let ((code    ((sxpath '(error code    *text*)) sxml))
+          (message ((sxpath '(error message *text*)) sxml)))
+      (when (string=? (car code) "SignatureDoesNotMatch")
+        (let ((what-they-claim-we-signed
+               (car ((sxpath '(error stringtosign *text*) sxml)))))
+            (fprintf (current-error-port)
+                 "Last thing we signed was ~s~%" *last-thing-signed*)
+            (when (string=? *last-thing-signed* what-they-claim-we-signed)
+              (fprintf (current-error-port)
+                       "And yet that's exactly what we _did_ sign!  Bozos.~%"))))
+      (error 's3 "~a: ~a ~s"
+             code
+             message
+             sxml)))
+  sxml)
+
 (define GET #f)
 (define PUT #f)
 (let ()
@@ -97,8 +117,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (error "You know ... I just don't know how to deal with" verb)))
         )))
     )
-  (set! GET (lambda (thing) (call 'GET thing "" "")))
-  (set! PUT (lambda (thing content type) (call 'PUT thing content type))))
+  (set! GET (lambda (thing)              (gack-on-error (call 'GET thing "" ""))))
+  (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type)))))
 
 ;;(trace call)
 
@@ -113,14 +133,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (pretty-print (PUT "squankulous" #"" "text/schmext"))
   (printf "Putting something into it: ")
   (pretty-print (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
-
-  (printf "Putting something into a bucket what don't exist: ")
-  (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
-
   (printf "Seeing what's in it: ")
   (pretty-print (GET "squankulous"))
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
+
+  (printf "Putting something into a bucket what don't exist: ")
+  (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
   )
 
 )
