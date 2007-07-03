@@ -36,7 +36,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (printf "~a~%" line)
               (send-url (url->string u) #f)
               )
-          (printf "Ain't gonna open that 'cuz it doesn't look like an http URL~%")
+          (printf "Ain't gonna open ~s 'cuz it doesn't look like an http URL~%"
+                  line)
           )
         (flush-output))))
 
