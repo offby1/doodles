@@ -1,0 +1,1 @@
+* add proper exceptions, so that we can recover from errors.
