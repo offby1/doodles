@@ -4,6 +4,9 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; see http://docs.amazonwebservices.com/AmazonS3/2006-03-01/ for the
+;; gritty details of authentication
+
 (module get-test mzscheme
 (require (lib "url.ss" "net")
          (lib "date.ss")
