@@ -66,7 +66,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define call
   (let ((host "s3.amazonaws.com"))
     (lambda (verb url-path-string content type)
-
+      (when (not (eq? 'GET verb))
+        (error "You know ... I just don't know how to deal with" verb))
       (let* ((url (make-url "http" #f host #f #t
                             (list (make-path/param url-path-string '()))
                             '() #f))
