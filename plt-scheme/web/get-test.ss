@@ -91,18 +91,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (format "Authorization: AWS ~a:~a"
               AWSAccessKeyId
               (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
-  (define auth-header
-    (make-auth-header 'GET "" "text/schmext" url))
 
-  (printf "URL: ~s; auth-header: ~s~%"
-          (url->string url)
-          auth-header)
-  (let* ((ip (get-pure-port url (list auth-header (format "Date: ~a" date))))
-         (response-html-string (port->string ip))
-         (response-shtml (html->shtml response-html-string))
-         (buckets ((sxpath '(listallmybucketsresult buckets)) response-shtml))
-         (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
-    (printf "~a => ~a => ~a~%" response-shtml buckets names)
+  (let ((args (list url
+                     (list (make-auth-header  'GET "" "text/schmext" url)
+                           (format "Date: ~a" date)))))
+    (printf "URL: ~s; auth-header: ~s~%"
+            (car args)
+            (cadr args))
+    (let* ((ip (apply get-pure-port args))
+           (response-html-string (port->string ip))
+           (response-shtml (html->shtml response-html-string))
+           (buckets ((sxpath '(listallmybucketsresult buckets)) response-shtml))
+           (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
+      (printf "~a => ~a => ~a~%" response-shtml buckets names))
     )
   )
 )
