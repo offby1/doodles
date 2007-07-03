@@ -63,39 +63,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
-(define (call verb content type url)
+(define call
+  (let ((host "s3.amazonaws.com"))
+    (lambda (verb url-path-string content type)
 
-  (let* ((date (rfc-2822-date))
-         (sig (base64-encode (sign (string->bytes/utf-8
-                                    (format "~a\n~a\n~a\n~a\n~a"
-                                            (symbol->string verb)
-                                            (if (eq? verb 'GET) "" (md5 content))
-                                            (if (eq? verb 'GET) "" type)
-                                            date
-                                            (CanonicalizedResource #:request-URI url))))))
-         (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig))
-         (ip (get-pure-port url (list auth (format "Date: ~a" date))))
-         (response-html-string (port->string ip)))
+      (let* ((url (make-url "http" #f host #f #t
+                            (list (make-path/param url-path-string '()))
+                            '() #f))
+             (date (rfc-2822-date))
+             (sig (base64-encode (sign (string->bytes/utf-8
+                                        (format "~a\n~a\n~a\n~a\n~a"
+                                                (symbol->string verb)
+                                                (if (eq? verb 'GET) "" (md5 content))
+                                                (if (eq? verb 'GET) "" type)
+                                                date
+                                                (CanonicalizedResource #:request-URI url))))))
+             (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig))
+             (ip (get-pure-port url (list auth (format "Date: ~a" date))))
+             (response-html-string (port->string ip)))
 
-    (html->shtml response-html-string)))
+        (html->shtml response-html-string)))))
 
-(trace call)
+;;(trace call)
 
-(let ((host "s3.amazonaws.com"))
-  (define (simple-url path)
-    (make-url "http" #f host #f #t
-              (list (make-path/param path '()))
-              '() #f))
+(let* ((buckets ((sxpath '(listallmybucketsresult buckets))
+                 (call 'GET "" "text/schmext" "")))
+       (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
 
-  (let* ((root (simple-url ""))
-         (buckets ((sxpath '(listallmybucketsresult buckets))
-                   (call 'GET "" "text/schmext" root)))
-         (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
+  (printf "=> ~a => ~a~%" buckets names)
 
-    (printf "=> ~a => ~a~%" buckets names)
-
-    (let ((something-else
-           (call 'GET "" "" (simple-url  (car names)))))
-      (printf "~a => ~a~%" (url->string root) ((sxpath '(listbucketresult )) something-else)))))
+  (let ((something-else
+         (call 'GET (car names) "" "")))
+    (printf "=> ~a~%"  ((sxpath '(listbucketresult )) something-else))))
 
 )
