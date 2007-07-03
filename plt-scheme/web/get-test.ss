@@ -68,9 +68,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (get-output-string sop)))
 
 (let ((url (string->url "http://s3.amazonaws.com/"))
-      (date (rfc-2822-date)))
+      (date (rfc-2822-date))
+      (Content-MD5 "")
+      (Content-Type ""))
   (define auth-header
-    (let ((stringtosign  (format "GET\n\n\n~a\n~a"
+    (let ((stringtosign  (format "GET\n~a\n~a\n~a\n~a"
+                                 Content-MD5
+                                 Content-Type
                                  date
                                  (CanonicalizedResource #:request-URI url))))
       (printf "stringtosignbytes: ~s~%"
