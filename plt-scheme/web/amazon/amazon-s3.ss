@@ -31,10 +31,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *last-thing-signed* #f)         ;for debugging
 (define (sign bytes)
   (set! *last-thing-signed* bytes)
-  (let* ((sigbytes (HMAC-SHA1 SecretAccessKey bytes))
-         (length (bytes-length sigbytes)))
-    (when (< length 20)
-      (fprintf (current-error-port) "Sig is ~a bytes long; expect a failure!~%" length))
+  (let ((sigbytes (HMAC-SHA1 SecretAccessKey bytes)))
+    (let* ((length (bytes-length sigbytes))
+           (diff (- 20 length)))
+      (when (positive? diff)
+        (fprintf (current-error-port)
+                 "Signature is ~a bytes short!  Expect chaos.~%"
+                 diff)))
+
     (base64-encode sigbytes)))
 ;;(trace sign)
 
@@ -154,10 +158,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
 
-  (with-handlers ((exn:fail:s3?
+  (with-handlers (((lambda (e)
+                     (and (exn:fail:s3? e)
+                          (string=? "NoSuchBucket" (exn:fail:s3-code e))))
                    (lambda (e)
-                     (printf "Just as we expected -- an error (namely: ~a).~%"
-                             (exn:fail:s3-code e)))))
+                     (printf "Just as we expected -- a NoSuchBucket error.~%")
+                     )))
     (printf "Putting something into a bucket what don't exist: ")
     (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
   )
