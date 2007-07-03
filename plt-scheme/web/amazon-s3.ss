@@ -25,7 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         "secret-signing-data.ss")
+         (only "secret-signing-data.ss" SecretAccessKey))
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
                 (date->string (seconds->date(current-seconds)) #t))
