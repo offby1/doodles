@@ -11,7 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://developer.amazonwebservices.com/connect/servlet/KbServlet/download/133-102-1292/s3-example-perl-library.zip
 ;; might be an illuminating example
 
-(module get-test mzscheme
+(module amazon-s3 mzscheme
 (require (lib "kw.ss")
          (lib "url.ss" "net")
          (lib "date.ss")
