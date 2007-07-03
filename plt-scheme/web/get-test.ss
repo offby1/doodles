@@ -8,9 +8,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "url.ss" "net")
          (lib "pretty.ss")
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
-         (planet "htmlprag.ss" ("neil" "htmlprag.plt" )))
+         (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
+         "secret-signing-data.ss")
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
-(define Signature (HMAC-SHA1 #"This is clearly a bogus key." #"This is in fact bogus data."))
+(define Signature (HMAC-SHA1 SecretAccessKey #"This is in fact bogus data."))
+(printf "Signature is ~s~%" Signature)
 (define auth-header (format "Authorization: AWS ~a:~a" AWSAccessKeyId Signature))
 (define ip (get-pure-port (string->url "http://s3.amazonaws.com/")))
 (define response-html-string
