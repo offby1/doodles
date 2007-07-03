@@ -57,14 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     ))
 ;;(trace CanonicalizedResource)
-(CanonicalizedResource #:request-URI "http://johnsmith.s3.amazonaws.com/photos/puppy.jpg"
-                       #:bucket-name "johnsmith")
-(CanonicalizedResource #:request-URI "http://Geller/Uri" )
-(CanonicalizedResource #:request-URI "ftp://Geller" #:bucket-name "Richard Leakey")
-(CanonicalizedResource #:bucket-name "leaky" #:request-URI "svn+ssh://Uri Geller/")
-(CanonicalizedResource #:bucket-name "leaky"
-                       #:request-URI "telnet://Uri/Geller/"
-                       #:sub-resource "?Polaris")
+
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return newline.
@@ -81,7 +74,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "URL: ~s; auth-header: ~s~%"
           (url->string url)
           auth-header)
-  (let ((ip (get-pure-port url (list auth-header))))
+  (let ((ip (get-pure-port url (list auth-header (format "Date: ~a" (rfc-2822-date))))))
     (define response-html-string
       (let loop ((accum '()))
         (let ((stuff (read-line ip)))
