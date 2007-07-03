@@ -102,7 +102,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (let* ((buckets ((sxpath '(listallmybucketsresult buckets))
                  (call 'GET "" "" "text/schmext")))
-       (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
+       (names ((sxpath '((bucket) name *text*)) buckets)))
 
   (printf "=> ~a => ~a~%" buckets names)
 
@@ -115,6 +115,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     names)))
 
 ;;let's create a bucket!!
-(let ((stuff (call 'PUT "foo" #"" "text/schmext")))
+(let ((stuff (call 'PUT "squankulous" #"" "text/schmext")))
   (pretty-display stuff))
 )
