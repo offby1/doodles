@@ -66,24 +66,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (call verb content type url)
 
   (let ((date (rfc-2822-date)))
-    (define (make-auth-header)
-      (let ((stringtosign  (format "~a\n~a\n~a\n~a\n~a"
-                                   (symbol->string verb)
-                                   (if (eq? verb 'GET) "" (md5 content))
-                                   (if (eq? verb 'GET) "" type)
-                                   date
-                                   (CanonicalizedResource #:request-URI url))))
-        (format "Authorization: AWS ~a:~a"
-                AWSAccessKeyId
-                (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
 
-    (let ((args (list url
-                      (list (make-auth-header)
-                            (format "Date: ~a" date)))))
-      (let* ((ip (apply get-pure-port args))
+    (let* ((sig (base64-encode (sign (string->bytes/utf-8
+                                      (format "~a\n~a\n~a\n~a\n~a"
+                                              (symbol->string verb)
+                                              (if (eq? verb 'GET) "" (md5 content))
+                                              (if (eq? verb 'GET) "" type)
+                                              date
+                                              (CanonicalizedResource #:request-URI url))))))
+           (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
+
+      (let* ((ip (get-pure-port url (list auth (format "Date: ~a" date))))
              (response-html-string (port->string ip)))
         (html->shtml response-html-string)))))
-
 
 (let* ((host "s3.amazonaws.com")
        (root (make-url "http" #f host #f #t (list (make-path/param "" '())) '() #f)))
