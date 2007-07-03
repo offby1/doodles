@@ -67,13 +67,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
-(define-struct (exn:fail:s3 exn:fail) ())
+(define-struct (exn:fail:s3 exn:fail) (code message whole-damned-response))
 
 (define (gack-on-error sxml)
   (when (not (null? ((sxpath '(error)) sxml)))
-    (let ((code    ((sxpath '(error code    *text*)) sxml))
-          (message ((sxpath '(error message *text*)) sxml)))
-      (when (string=? (car code) "SignatureDoesNotMatch")
+    (let ((code    (car ((sxpath '(error code    *text*)) sxml)))
+          (message (car ((sxpath '(error message *text*)) sxml))))
+      (when (string=?  code "SignatureDoesNotMatch")
         (let ((what-they-claim-we-signed
                (car ((sxpath '(error stringtosign *text*))  sxml))))
             (fprintf (current-error-port)
@@ -86,7 +86,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        code
                        message
                        sxml)
-              (current-continuation-marks))
+              (current-continuation-marks)
+              code
+              message
+              sxml)
              )))
   sxml)
 
@@ -143,7 +146,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
 
-  (with-handlers ((exn:fail:s3? (lambda (e) (printf "Just as we expected -- an error.~%"))))
+  (with-handlers ((exn:fail:s3?
+                   (lambda (e)
+                     (printf "Just as we expected -- an error (namely: ~a).~%"
+                             (exn:fail:s3-code e)))))
     (printf "Putting something into a bucket what don't exist: ")
     (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
   )
