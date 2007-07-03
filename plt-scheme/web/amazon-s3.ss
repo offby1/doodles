@@ -128,7 +128,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (printf "=> ~a => ~a~%" buckets names)
 
-  (pretty-display
+  (pretty-print
    (map
     (lambda (name)
       (let ((something-else
@@ -139,10 +139,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;let's create a bucket!!
 (let ()
   (printf "Creating a bucket: ")
-  (pretty-display  (PUT "squankulous" #"" "text/schmext"))
+  (pretty-print  (PUT "squankulous" #"" "text/schmext"))
   (printf "Putting something into it: ")
-  (pretty-display  (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  (pretty-print  (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
   (printf "Seeing what's in it: ")
-  (pretty-display (GET "squankulous"))
+  (pretty-print (GET "squankulous"))
+  (printf "Seeing what's in the object what's in the bucket: ")
+  (pretty-print (GET "squankulous/mankulous"))
   )
 )
