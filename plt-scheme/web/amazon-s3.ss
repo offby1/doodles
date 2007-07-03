@@ -31,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
 (define (sign bytes)
   (HMAC-SHA1 SecretAccessKey bytes))
-(trace sign)
+;;(trace sign)
 (define/kw (CanonicalizedResource #:key request-URI
                                   (bucket-name #f)
                                   (sub-resource #f)
@@ -70,13 +70,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define call
   (let ((host "s3.amazonaws.com"))
     (lambda (verb url-path-string content type)
-      (define port-func
-        (case verb
-          ((GET) gpp)
-          ((PUT)put-pure-port)
-          (else
-           (error "You know ... I just don't know how to deal with" verb))))
-
       (let* ((url (make-url "http" #f host #f #t
                             (list (make-path/param url-path-string '()))
                             '() #f))
@@ -92,7 +85,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
         (html->shtml
          (port->string
-          (port-func url (list auth (format "Date: ~a" date))))))
+          (case verb
+            ((GET) (gpp url
+                        (list auth (format "Date: ~a" date))))
+            ((PUT) (put-pure-port url content
+                                  (list auth
+                                        (format "Date: ~a" date)
+                                        (format "Content-Type: ~a" type)
+                                        (format "Content-MD5: ~a" (md5 content)))))
+            (else
+             (error "You know ... I just don't know how to deal with" verb)))
+          )))
       )))
 
 ;;(trace call)
@@ -111,7 +114,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ((sxpath '(listbucketresult )) something-else)))
     names)))
 
-;; let's create a bucket!!
-;; (let ((stuff (call 'PUT "/foo" #"" "text/schmext")))
-;;   (pretty-display stuff))
+;;let's create a bucket!!
+(let ((stuff (call 'PUT "foo" #"" "text/schmext")))
+  (pretty-display stuff))
 )
