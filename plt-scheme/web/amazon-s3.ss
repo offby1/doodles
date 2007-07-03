@@ -31,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
 (define (sign bytes)
   (HMAC-SHA1 SecretAccessKey bytes))
-
+(trace sign)
 (define/kw (CanonicalizedResource #:key request-URI
                                   (bucket-name #f)
                                   (sub-resource #f)
@@ -63,11 +63,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
+(define (gpp url strings)
+  (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) strings)
+  (get-pure-port url strings))
+
 (define call
   (let ((host "s3.amazonaws.com"))
     (lambda (verb url-path-string content type)
-      (when (not (eq? 'GET verb))
-        (error "You know ... I just don't know how to deal with" verb))
+      (define port-func
+        (case verb
+          ((GET) gpp)
+          ((PUT)put-pure-port)
+          (else
+           (error "You know ... I just don't know how to deal with" verb))))
+
       (let* ((url (make-url "http" #f host #f #t
                             (list (make-path/param url-path-string '()))
                             '() #f))
@@ -79,16 +88,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                 (if (eq? verb 'GET) "" type)
                                                 date
                                                 (CanonicalizedResource #:request-URI url))))))
-             (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig))
-             (ip (get-pure-port url (list auth (format "Date: ~a" date))))
-             (response-html-string (port->string ip)))
+             (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
-        (html->shtml response-html-string)))))
+        (html->shtml
+         (port->string
+          (port-func url (list auth (format "Date: ~a" date))))))
+      )))
 
 ;;(trace call)
 
 (let* ((buckets ((sxpath '(listallmybucketsresult buckets))
-                 (call 'GET "" "text/schmext" "")))
+                 (call 'GET "" "" "text/schmext")))
        (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
 
   (printf "=> ~a => ~a~%" buckets names)
@@ -100,4 +110,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (call 'GET name "" "")))
         ((sxpath '(listbucketresult )) something-else)))
     names)))
+
+;; let's create a bucket!!
+;; (let ((stuff (call 'PUT "/foo" #"" "text/schmext")))
+;;   (pretty-display stuff))
 )
