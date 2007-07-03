@@ -31,8 +31,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *last-thing-signed* #f)         ;for debugging
 (define (sign bytes)
   (set! *last-thing-signed* bytes)
-  (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
-(trace sign)
+  (let* ((sigbytes (HMAC-SHA1 SecretAccessKey bytes))
+         (length (bytes-length sigbytes)))
+    (when (< length 20)
+      (fprintf (current-error-port) "Sig is ~a bytes long; expect a failure!~%" length))
+    (base64-encode sigbytes)))
+;;(trace sign)
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
