@@ -8,10 +8,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://docs.amazonwebservices.com/AmazonS3/2006-03-01/RESTAuthentication.html
 ;; for the gritty details of authentication
 
+;; http://developer.amazonwebservices.com/connect/servlet/KbServlet/download/133-102-1292/s3-example-perl-library.zip
+;; might be an illuminating example
+
 (module get-test mzscheme
-(require (lib "url.ss" "net")
+(require (lib "kw.ss")
+         (lib "url.ss" "net")
          (lib "date.ss")
          (lib "pretty.ss")
+         (lib "trace.ss")
+         (only (lib "13.ss" "srfi") string-join)
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
          "secret-signing-data.ss")
@@ -24,20 +30,55 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (sign bytes)
    (HMAC-SHA1 SecretAccessKey bytes))
 
+(define/kw (CanonicalizedResource #:key request-URI
+                                  (bucket-name #f)
+                                  (sub-resource #f)
+                                  )
+  (let* ((url (if (string? request-URI)
+                  (string->url request-URI)
+                request-URI))
+         (truncated (make-url
+
+                     #f
+                     #f
+                     #f
+                     #f
+                     #t
+                     (url-path url)
+                     '()
+                     #f
+                     )))
+
+    (string-append
+     (if bucket-name (string-append "/" bucket-name) "")
+     (string-append (url->string truncated))
+     (or sub-resource ""))
+
+    ))
+(trace CanonicalizedResource)
+(CanonicalizedResource #:request-URI "http://johnsmith.s3.amazonaws.com/photos/puppy.jpg"
+                       #:bucket-name "johnsmith")
+(CanonicalizedResource #:request-URI "http://Geller/Uri" )
+(CanonicalizedResource #:request-URI "ftp://Geller" #:bucket-name "Richard Leakey")
+(CanonicalizedResource #:bucket-name "leaky" #:request-URI "svn+ssh://Uri Geller/")
+(CanonicalizedResource #:bucket-name "leaky"
+                       #:request-URI "telnet://Uri/Geller/"
+                       #:sub-resource "?Polaris")
+
 (let ((bogus-data (string->bytes/utf-8 (rfc-2822-date))))
   (printf "Signature of ~s is ~s~%" bogus-data (sign bogus-data)))
 
-(define auth-header (format "Authorization: AWS ~a:~a" AWSAccessKeyId (sign #"yeah, whatever")))
-(define ip (get-pure-port (string->url "http://s3.amazonaws.com/")))
-(define response-html-string
-  (let loop ((accum '()))
-    (let ((stuff (read-line ip)))
-      (if  (eof-object? stuff)
-          (apply string-append (reverse accum))
-        (loop (cons stuff accum)))
-      )))
-(display response-html-string)
-(newline)
-(pretty-display (html->shtml response-html-string))
+;; (define auth-header (format "Authorization: AWS ~a:~a" AWSAccessKeyId (sign #"yeah, whatever")))
+;; (define ip (get-pure-port (string->url "http://s3.amazonaws.com/")))
+;; (define response-html-string
+;;   (let loop ((accum '()))
+;;     (let ((stuff (read-line ip)))
+;;       (if  (eof-object? stuff)
+;;           (apply string-append (reverse accum))
+;;         (loop (cons stuff accum)))
+;;       )))
+;; (display response-html-string)
+;; (newline)
+;; (pretty-display (html->shtml response-html-string))
 
 )
