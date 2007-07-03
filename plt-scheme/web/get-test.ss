@@ -17,6 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "date.ss")
          (lib "pretty.ss")
          (lib "trace.ss")
+         (lib "md5.ss")
          (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join)
          (planet "port.ss"      ("schematics"  "port.plt" ))
@@ -63,7 +64,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 ;; just like the one in the library, except it doesn't append a
-;; carriage-return newline.
+;; carriage-return/newline.
 (define (base64-encode bytes)
   (let ((sop (open-output-string)))
     (base64-encode-stream (open-input-bytes bytes) sop "")
@@ -73,10 +74,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (date (rfc-2822-date))
       (Content-MD5 "")
       (Content-Type ""))
-  (define auth-header
-    (let ((stringtosign  (format "GET\n~a\n~a\n~a\n~a"
-                                 Content-MD5
-                                 Content-Type
+
+  (define (make-auth-header verb content Content-Type url)
+    (let ((stringtosign  (format "~a\n~a\n~a\n~a\n~a"
+                                 (if (eq? verb 'GET) "GET" "???")
+                                 (if (eq? verb 'GET) "" (md5 content))
+                                 (if (eq? verb 'GET) "" Content-Type)
                                  date
                                  (CanonicalizedResource #:request-URI url))))
       (printf "stringtosignbytes: ~s~%"
@@ -88,6 +91,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (format "Authorization: AWS ~a:~a"
               AWSAccessKeyId
               (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
+  (define auth-header
+    (make-auth-header 'GET "" "text/schmext" url))
+
   (printf "URL: ~s; auth-header: ~s~%"
           (url->string url)
           auth-header)
