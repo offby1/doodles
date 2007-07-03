@@ -68,17 +68,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let ((bogus-data (string->bytes/utf-8 (rfc-2822-date))))
   (printf "Signature of ~s is ~s~%" bogus-data (sign bogus-data)))
 
-;; (define auth-header (format "Authorization: AWS ~a:~a" AWSAccessKeyId (sign #"yeah, whatever")))
-;; (define ip (get-pure-port (string->url "http://s3.amazonaws.com/")))
-;; (define response-html-string
-;;   (let loop ((accum '()))
-;;     (let ((stuff (read-line ip)))
-;;       (if  (eof-object? stuff)
-;;           (apply string-append (reverse accum))
-;;         (loop (cons stuff accum)))
-;;       )))
-;; (display response-html-string)
-;; (newline)
-;; (pretty-display (html->shtml response-html-string))
-
+(let ((url (string->url "http://s3.amazonaws.com/")))
+  (define auth-header
+    (format "Authorization: AWS ~a:~a"
+            AWSAccessKeyId
+            (sign (string->bytes/utf-8 (CanonicalizedResource #:request-URI url)))))
+  (printf "URL: ~s; auth-header: ~s~%"
+          (url->string url)
+          auth-header)
+  (let ((ip (get-pure-port url (list auth-header))))
+    (define response-html-string
+      (let loop ((accum '()))
+        (let ((stuff (read-line ip)))
+          (if  (eof-object? stuff)
+              (apply string-append (reverse accum))
+            (loop (cons stuff accum)))
+          )))
+    (display response-html-string)
+    (newline)
+    (pretty-display (html->shtml response-html-string)))
+  )
 )
