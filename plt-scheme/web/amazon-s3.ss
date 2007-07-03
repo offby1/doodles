@@ -133,6 +133,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (pretty-print (PUT "squankulous" #"" "text/schmext"))
   (printf "Putting something into it: ")
   (pretty-print (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+
+  (printf "Putting something into a bucket what don't exist: ")
+  (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
+
   (printf "Seeing what's in it: ")
   (pretty-print (GET "squankulous"))
   (printf "Seeing what's in the object what's in the bucket: ")
