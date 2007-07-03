@@ -16,7 +16,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "trace.ss")
          (lib "md5.ss")
          (only (lib "base64.ss" "net") base64-encode-stream)
-         (only (lib "13.ss" "srfi") string-join)
+         (only (lib "13.ss" "srfi") string-join substring/shared)
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
@@ -63,9 +63,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
-(define (gpp url strings)
-  (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) strings)
-  (get-pure-port url strings))
+(define (gpp url headers)
+  (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) headers)
+  (get-pure-port url headers))
+
+(define (ppp url content headers)
+  (fprintf (current-error-port) "put-pure-port ~s ~s ~s~%" (url->string url) headers content)
+  (put-pure-port url content headers))
+
+(define (hexdecode abc)
+  (let loop  ((s (bytes->string/utf-8 abc))
+              (result '()))
+    (if (zero? (string-length s))
+        (apply bytes (reverse result))
+      (let* ((two-digits (substring/shared s 0 2))
+             (number (read (open-input-string (string-append "#x" two-digits)))))
+        (loop (substring/shared s 2)
+              (cons number result))))))
+
+(define (md5-b64 bytes)
+  (base64-encode (hexdecode (md5 bytes))))
 
 (define call
   (let ((host "s3.amazonaws.com"))
@@ -77,7 +94,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (sig (base64-encode (sign (string->bytes/utf-8
                                         (format "~a\n~a\n~a\n~a\n~a"
                                                 (symbol->string verb)
-                                                (if (eq? verb 'GET) "" (md5 content))
+                                                (if (eq? verb 'GET) "" (md5-b64 content))
                                                 (if (eq? verb 'GET) "" type)
                                                 date
                                                 (CanonicalizedResource #:request-URI url))))))
@@ -88,11 +105,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (case verb
             ((GET) (gpp url
                         (list auth (format "Date: ~a" date))))
-            ((PUT) (put-pure-port url content
-                                  (list auth
-                                        (format "Date: ~a" date)
-                                        (format "Content-Type: ~a" type)
-                                        (format "Content-MD5: ~a" (md5 content)))))
+            ((PUT) (ppp url content
+                        (list auth
+                              (format "Date: ~a" date)
+                              (format "Content-Type: ~a" type)
+                              (format "Content-MD5: ~a" (md5-b64 content)))))
             (else
              (error "You know ... I just don't know how to deal with" verb)))
           )))
@@ -115,6 +132,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     names)))
 
 ;;let's create a bucket!!
-(let ((stuff (call 'PUT "squankulous" #"" "text/schmext")))
-  (pretty-display stuff))
+(let ()
+  (printf "Creating a bucket: ")
+  (pretty-display  (call 'PUT "squankulous" #"" "text/schmext"))
+  (printf "Putting something into it: ")
+  (pretty-display  (call 'PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  )
 )
