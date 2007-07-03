@@ -21,6 +21,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi") string-join)
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
+         (planet "fmt.ss" ("ashinn" "fmt.plt"))
          "secret-signing-data.ss")
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
@@ -66,15 +67,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
-(let ((url (string->url "http://s3.amazonaws.com/")))
+(let ((url (string->url "http://s3.amazonaws.com/"))
+      (date (rfc-2822-date)))
   (define auth-header
-    (format "Authorization: AWS ~a:~a"
-            AWSAccessKeyId
-            (base64-encode (sign (string->bytes/utf-8 (CanonicalizedResource #:request-URI url))))))
+    (let ((stringtosign  (format "GET\n\n\n~a\n~a"
+                                 date
+                                 (CanonicalizedResource #:request-URI url))))
+      (printf "stringtosignbytes: ~s~%"
+              (string-join
+               (map (lambda (i)
+                      (string-downcase (fmt #f (pad-char #\0 (pad 2 (num i 16))))))
+                    (bytes->list (string->bytes/utf-8 stringtosign)))))
+      (format "Authorization: AWS ~a:~a"
+              AWSAccessKeyId
+              (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
   (printf "URL: ~s; auth-header: ~s~%"
           (url->string url)
           auth-header)
-  (let ((ip (get-pure-port url (list auth-header (format "Date: ~a" (rfc-2822-date))))))
+  (let ((ip (get-pure-port url (list auth-header (format "Date: ~a" date)))))
     (define response-html-string
       (let loop ((accum '()))
         (let ((stuff (read-line ip)))
@@ -82,6 +92,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (apply string-append (reverse accum))
             (loop (cons stuff accum)))
           )))
-    (pretty-display (html->shtml response-html-string)))
+    (pretty-print (html->shtml response-html-string)))
   )
 )
