@@ -79,8 +79,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (html->shtml response-html-string)))
 
+(trace call)
+
 (let ((host "s3.amazonaws.com"))
-  (let* ((root (make-url "http" #f host #f #t (list (make-path/param "" '())) '() #f))
+  (define (simple-url path)
+    (make-url "http" #f host #f #t
+              (list (make-path/param path '()))
+              '() #f))
+
+  (let* ((root (simple-url ""))
          (buckets ((sxpath '(listallmybucketsresult buckets))
                    (call 'GET "" "text/schmext" root)))
          (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
@@ -88,9 +95,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (printf "=> ~a => ~a~%" buckets names)
 
     (let ((something-else
-           (call 'GET "" "" (make-url "http" #f host #f #t
-                                      (list (make-path/param (car names) '()))
-                                      '() #f))))
+           (call 'GET "" "" (simple-url  (car names)))))
       (printf "~a => ~a~%" (url->string root) ((sxpath '(listbucketresult )) something-else)))))
 
 )
