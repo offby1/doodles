@@ -17,6 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "date.ss")
          (lib "pretty.ss")
          (lib "trace.ss")
+         (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join)
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
@@ -55,7 +56,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (or sub-resource ""))
 
     ))
-(trace CanonicalizedResource)
+;;(trace CanonicalizedResource)
 (CanonicalizedResource #:request-URI "http://johnsmith.s3.amazonaws.com/photos/puppy.jpg"
                        #:bucket-name "johnsmith")
 (CanonicalizedResource #:request-URI "http://Geller/Uri" )
@@ -65,14 +66,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        #:request-URI "telnet://Uri/Geller/"
                        #:sub-resource "?Polaris")
 
-(let ((bogus-data (string->bytes/utf-8 (rfc-2822-date))))
-  (printf "Signature of ~s is ~s~%" bogus-data (sign bogus-data)))
+;; just like the one in the library, except it doesn't append a
+;; carriage-return newline.
+(define (base64-encode bytes)
+  (let ((sop (open-output-string)))
+    (base64-encode-stream (open-input-bytes bytes) sop "")
+    (get-output-string sop)))
 
 (let ((url (string->url "http://s3.amazonaws.com/")))
   (define auth-header
     (format "Authorization: AWS ~a:~a"
             AWSAccessKeyId
-            (sign (string->bytes/utf-8 (CanonicalizedResource #:request-URI url)))))
+            (base64-encode (sign (string->bytes/utf-8 (CanonicalizedResource #:request-URI url))))))
   (printf "URL: ~s; auth-header: ~s~%"
           (url->string url)
           auth-header)
@@ -84,8 +89,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (apply string-append (reverse accum))
             (loop (cons stuff accum)))
           )))
-    (display response-html-string)
-    (newline)
     (pretty-display (html->shtml response-html-string)))
   )
 )
