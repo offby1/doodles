@@ -78,6 +78,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (map (lambda (i)
                       (string-downcase (fmt #f (pad-char #\0 (pad 2 (num i 16))))))
                     (bytes->list (string->bytes/utf-8 stringtosign)))))
+      (printf "stringtosign: ~a~%" stringtosign)
       (format "Authorization: AWS ~a:~a"
               AWSAccessKeyId
               (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
