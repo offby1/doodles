@@ -67,22 +67,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
+(define-struct (exn:fail:s3 exn:fail) ())
+
 (define (gack-on-error sxml)
   (when (not (null? ((sxpath '(error)) sxml)))
     (let ((code    ((sxpath '(error code    *text*)) sxml))
           (message ((sxpath '(error message *text*)) sxml)))
       (when (string=? (car code) "SignatureDoesNotMatch")
         (let ((what-they-claim-we-signed
-               (car ((sxpath '(error stringtosign *text*) sxml)))))
+               (car ((sxpath '(error stringtosign *text*))  sxml))))
             (fprintf (current-error-port)
                  "Last thing we signed was ~s~%" *last-thing-signed*)
             (when (string=? *last-thing-signed* what-they-claim-we-signed)
               (fprintf (current-error-port)
                        "And yet that's exactly what we _did_ sign!  Bozos.~%"))))
-      (error 's3 "~a: ~a ~s"
-             code
-             message
-             sxml)))
+      (raise (make-exn:fail:s3
+              (format  "~a: ~a ~s"
+                       code
+                       message
+                       sxml)
+              (current-continuation-marks))
+             )))
   sxml)
 
 (define GET #f)
@@ -138,8 +143,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
 
-  (printf "Putting something into a bucket what don't exist: ")
-  (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
+  (with-handlers ((exn:fail:s3? (lambda (e) (printf "Just as we expected -- an error.~%"))))
+    (printf "Putting something into a bucket what don't exist: ")
+    (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
   )
 
 )
