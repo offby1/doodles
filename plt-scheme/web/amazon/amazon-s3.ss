@@ -9,8 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; for the gritty details of authentication
 
 (module amazon-s3 mzscheme
-(require (lib "kw.ss")
-         (lib "url.ss" "net")
+(require (lib "url.ss" "net")
          (lib "date.ss")
          (lib "pretty.ss")
          (lib "trace.ss")
@@ -32,29 +31,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (sign bytes)
   (HMAC-SHA1 SecretAccessKey bytes))
 ;;(trace sign)
-(define/kw (CanonicalizedResource #:key request-URI
-                                  (bucket-name #f)
-                                  (sub-resource #f)
-                                  )
-  (let* ((url (if (string? request-URI)
-                  (string->url request-URI)
-                request-URI))
-         (truncated (make-url
 
-                     #f
-                     #f
-                     #f
-                     #f
-                     #t
-                     (url-path url)
-                     '()
-                     #f
-                     )))
-
-    (string-append
-     (if bucket-name (string-append "/" bucket-name) "")
-     (url->string truncated)
-     (or sub-resource ""))))
+(define (just-the-path request-URI)
+  (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
+;;(trace just-the-path)
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
@@ -100,7 +80,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                               (if (eq? verb 'GET) "" (md5-b64 content))
                                               (if (eq? verb 'GET) "" type)
                                               date
-                                              (CanonicalizedResource #:request-URI url))))))
+                                              (just-the-path url))))))
            (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
       (html->shtml
