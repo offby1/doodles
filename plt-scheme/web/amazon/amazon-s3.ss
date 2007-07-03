@@ -32,6 +32,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (sign bytes)
   (set! *last-thing-signed* bytes)
   (let ((sigbytes (HMAC-SHA1 SecretAccessKey bytes)))
+
+    ;; Warn about some flakiness in HMAC-SHA1
     (let* ((length (bytes-length sigbytes))
            (diff (- 20 length)))
       (when (positive? diff)
@@ -44,7 +46,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
-;;(trace just-the-path)
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
@@ -75,39 +76,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
-(define-struct (exn:fail:s3 exn:fail) (code message whole-damned-response))
-
-(define (gack-on-error sxml)
-  (when (not (null? ((sxpath '(error)) sxml)))
-    (let ((code    (car ((sxpath '(error code    *text*)) sxml)))
-          (message (car ((sxpath '(error message *text*)) sxml))))
-      (when (string=?  code "SignatureDoesNotMatch")
-        (let ((what-they-claim-we-signed
-               (apply string-append ((sxpath '(error stringtosign *text*))  sxml))))
-          (fprintf (current-error-port)
-                   "Last thing we signed was ~s~%" *last-thing-signed*)
-
-          (apply
-           fprintf (current-error-port)
-           (if (bytes=? *last-thing-signed* (string->bytes/utf-8 what-they-claim-we-signed))
-               (list "And yet that's exactly what we _did_ sign!  Bozos.~%")
-             (list "Oops, they caught us; they claim we signed ~s~%" what-they-claim-we-signed)))
-          ))
-      (raise (make-exn:fail:s3
-              (format  "~a: ~a ~s"
-                       code
-                       message
-                       sxml)
-              (current-continuation-marks)
-              code
-              message
-              sxml)
-             )))
-  sxml)
+(define-struct (exn:fail:s3 exn:fail) (code message))
 
 (define GET #f)
 (define PUT #f)
 (let ()
+  (define (gack-on-error sxml)
+    (when (not (null? ((sxpath '(error)) sxml)))
+      (let ((code    (car ((sxpath '(error code    *text*)) sxml)))
+            (message (car ((sxpath '(error message *text*)) sxml))))
+        (raise (make-exn:fail:s3
+                (format  "~a: ~a ~s"
+                         code
+                         message
+                         sxml)
+                (current-continuation-marks)
+                code
+                message)
+               )))
+    sxml)
   (define host "s3.amazonaws.com")
   (define (call verb url-path-string content type)
     (let* ((url (make-url "http" #f host #f #t
