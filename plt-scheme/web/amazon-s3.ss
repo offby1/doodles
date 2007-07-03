@@ -84,41 +84,46 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
-(define call
-  (let ((host "s3.amazonaws.com"))
-    (lambda (verb url-path-string content type)
-      (let* ((url (make-url "http" #f host #f #t
-                            (list (make-path/param url-path-string '()))
-                            '() #f))
-             (date (rfc-2822-date))
-             (sig (base64-encode (sign (string->bytes/utf-8
-                                        (format "~a\n~a\n~a\n~a\n~a"
-                                                (symbol->string verb)
-                                                (if (eq? verb 'GET) "" (md5-b64 content))
-                                                (if (eq? verb 'GET) "" type)
-                                                date
-                                                (CanonicalizedResource #:request-URI url))))))
-             (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
+(define GET #f)
+(define PUT #f)
+(let ()
+  (define call
+    (let ((host "s3.amazonaws.com"))
+      (lambda (verb url-path-string content type)
+        (let* ((url (make-url "http" #f host #f #t
+                              (list (make-path/param url-path-string '()))
+                              '() #f))
+               (date (rfc-2822-date))
+               (sig (base64-encode (sign (string->bytes/utf-8
+                                          (format "~a\n~a\n~a\n~a\n~a"
+                                                  (symbol->string verb)
+                                                  (if (eq? verb 'GET) "" (md5-b64 content))
+                                                  (if (eq? verb 'GET) "" type)
+                                                  date
+                                                  (CanonicalizedResource #:request-URI url))))))
+               (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
-        (html->shtml
-         (port->string
-          (case verb
-            ((GET) (gpp url
-                        (list auth (format "Date: ~a" date))))
-            ((PUT) (ppp url content
-                        (list auth
-                              (format "Date: ~a" date)
-                              (format "Content-Type: ~a" type)
-                              (format "Content-MD5: ~a" (md5-b64 content)))))
-            (else
-             (error "You know ... I just don't know how to deal with" verb)))
-          )))
-      )))
+          (html->shtml
+           (port->string
+            (case verb
+              ((GET) (gpp url
+                          (list auth (format "Date: ~a" date))))
+              ((PUT) (ppp url content
+                          (list auth
+                                (format "Date: ~a" date)
+                                (format "Content-Type: ~a" type)
+                                (format "Content-MD5: ~a" (md5-b64 content)))))
+              (else
+               (error "You know ... I just don't know how to deal with" verb)))
+            )))
+        )))
+  (set! GET (lambda (thing) (call 'GET thing "" "")))
+  (set! PUT (lambda (thing content type) (call 'PUT thing content type))))
 
 ;;(trace call)
 
 (let* ((buckets ((sxpath '(listallmybucketsresult buckets))
-                 (call 'GET "" "" "text/schmext")))
+                 (GET "")))
        (names ((sxpath '((bucket) name *text*)) buckets)))
 
   (printf "=> ~a => ~a~%" buckets names)
@@ -127,15 +132,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (map
     (lambda (name)
       (let ((something-else
-             (call 'GET name "" "")))
+             (GET name)))
         ((sxpath '(listbucketresult )) something-else)))
     names)))
 
 ;;let's create a bucket!!
 (let ()
   (printf "Creating a bucket: ")
-  (pretty-display  (call 'PUT "squankulous" #"" "text/schmext"))
+  (pretty-display  (PUT "squankulous" #"" "text/schmext"))
   (printf "Putting something into it: ")
-  (pretty-display  (call 'PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  (pretty-display  (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  (printf "Seeing what's in it: ")
+  (pretty-display (GET "squankulous"))
   )
 )
