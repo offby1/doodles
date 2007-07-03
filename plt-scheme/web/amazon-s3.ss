@@ -63,12 +63,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
+(define *verbose* (make-parameter #f))
 (define (gpp url headers)
-  (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) headers)
+  (when (*verbose*) (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) headers))
   (get-pure-port url headers))
 
 (define (ppp url content headers)
-  (fprintf (current-error-port) "put-pure-port ~s ~s ~s~%" (url->string url) headers content)
+  (when (*verbose*) (fprintf (current-error-port) "put-pure-port ~s ~s ~s~%" (url->string url) headers content))
   (put-pure-port url content headers))
 
 (define (hexdecode abc)
@@ -87,64 +88,55 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define GET #f)
 (define PUT #f)
 (let ()
-  (define call
-    (let ((host "s3.amazonaws.com"))
-      (lambda (verb url-path-string content type)
-        (let* ((url (make-url "http" #f host #f #t
-                              (list (make-path/param url-path-string '()))
-                              '() #f))
-               (date (rfc-2822-date))
-               (sig (base64-encode (sign (string->bytes/utf-8
-                                          (format "~a\n~a\n~a\n~a\n~a"
-                                                  (symbol->string verb)
-                                                  (if (eq? verb 'GET) "" (md5-b64 content))
-                                                  (if (eq? verb 'GET) "" type)
-                                                  date
-                                                  (CanonicalizedResource #:request-URI url))))))
-               (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
+  (define host "s3.amazonaws.com")
+  (define (call verb url-path-string content type)
+    (let* ((url (make-url "http" #f host #f #t
+                          (list (make-path/param url-path-string '()))
+                          '() #f))
+           (date (rfc-2822-date))
+           (sig (base64-encode (sign (string->bytes/utf-8
+                                      (format "~a\n~a\n~a\n~a\n~a"
+                                              (symbol->string verb)
+                                              (if (eq? verb 'GET) "" (md5-b64 content))
+                                              (if (eq? verb 'GET) "" type)
+                                              date
+                                              (CanonicalizedResource #:request-URI url))))))
+           (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
-          (html->shtml
-           (port->string
-            (case verb
-              ((GET) (gpp url
-                          (list auth (format "Date: ~a" date))))
-              ((PUT) (ppp url content
-                          (list auth
-                                (format "Date: ~a" date)
-                                (format "Content-Type: ~a" type)
-                                (format "Content-MD5: ~a" (md5-b64 content)))))
-              (else
-               (error "You know ... I just don't know how to deal with" verb)))
-            )))
+      (html->shtml
+       (port->string
+        (case verb
+          ((GET) (gpp url
+                      (list auth (format "Date: ~a" date))))
+          ((PUT) (ppp url content
+                      (list auth
+                            (format "Date: ~a" date)
+                            (format "Content-Type: ~a" type)
+                            (format "Content-MD5: ~a" (md5-b64 content)))))
+          (else
+           (error "You know ... I just don't know how to deal with" verb)))
         )))
+    )
   (set! GET (lambda (thing) (call 'GET thing "" "")))
   (set! PUT (lambda (thing content type) (call 'PUT thing content type))))
 
 ;;(trace call)
 
-(let* ((buckets ((sxpath '(listallmybucketsresult buckets))
-                 (GET "")))
-       (names ((sxpath '((bucket) name *text*)) buckets)))
+(let* ((response (GET ""))
+       (names ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) response)))
 
-  (printf "=> ~a => ~a~%" buckets names)
+  (when (null? names)
+    (error response))
 
-  (pretty-print
-   (map
-    (lambda (name)
-      (let ((something-else
-             (GET name)))
-        ((sxpath '(listbucketresult )) something-else)))
-    names)))
-
-;;let's create a bucket!!
-(let ()
+  (printf "Known buckets: ~s ~%" names)
   (printf "Creating a bucket: ")
-  (pretty-print  (PUT "squankulous" #"" "text/schmext"))
+  (pretty-print (PUT "squankulous" #"" "text/schmext"))
   (printf "Putting something into it: ")
-  (pretty-print  (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  (pretty-print (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
   (printf "Seeing what's in it: ")
   (pretty-print (GET "squankulous"))
   (printf "Seeing what's in the object what's in the bucket: ")
   (pretty-print (GET "squankulous/mankulous"))
   )
+
 )
