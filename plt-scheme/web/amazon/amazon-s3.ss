@@ -86,10 +86,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (let ((code    (car ((sxpath '(error code    *text*)) sxml)))
             (message (car ((sxpath '(error message *text*)) sxml))))
         (raise (make-exn:fail:s3
-                (format  "~a: ~a ~s"
+                (format  "~a: ~a"
                          code
-                         message
-                         sxml)
+                         message)
                 (current-continuation-marks)
                 code
                 message)
