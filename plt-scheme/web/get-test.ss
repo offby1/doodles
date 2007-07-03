@@ -75,17 +75,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((date (rfc-2822-date)))
     (define (make-auth-header verb content Content-Type)
       (let ((stringtosign  (format "~a\n~a\n~a\n~a\n~a"
-                                   (if (eq? verb 'GET) "GET" "???")
+                                   (symbol->string verb)
                                    (if (eq? verb 'GET) "" (md5 content))
                                    (if (eq? verb 'GET) "" Content-Type)
                                    date
                                    (CanonicalizedResource #:request-URI url))))
-        (printf "stringtosignbytes: ~s~%"
-                (string-join
-                 (map (lambda (i)
-                        (string-downcase (fmt #f (pad-char #\0 (pad 2 (num i 16))))))
-                      (bytes->list (string->bytes/utf-8 stringtosign)))))
-        (printf "stringtosign: ~a~%" stringtosign)
         (format "Authorization: AWS ~a:~a"
                 AWSAccessKeyId
                 (base64-encode (sign (string->bytes/utf-8 stringtosign))))))
@@ -93,16 +87,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((args (list url
                       (list (make-auth-header verb content type)
                             (format "Date: ~a" date)))))
-      (printf "URL: ~s; auth-header: ~s~%"
-              (car args)
-              (cadr args))
       (let* ((ip (apply get-pure-port args))
              (response-html-string (port->string ip)))
         (html->shtml response-html-string)))))
 
-(let* ((buckets ((sxpath '(listallmybucketsresult buckets))
-                 (call 'GET "" "text/schmext"
-                       (string->url "http://s3.amazonaws.com/"))))
-       (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
-  (printf "=> ~a => ~a~%" buckets names))
+
+(let* ((host "s3.amazonaws.com")
+       (root (make-url "http" #f host #f #t (list (make-path/param "" '())) '() #f)))
+  (let* ((buckets ((sxpath '(listallmybucketsresult buckets))
+                   (call 'GET "" "text/schmext" root)))
+         (names (map (lambda (b) (cadar ((sxpath '(bucket name))  b))) buckets)))
+    (printf "=> ~a => ~a~%" buckets names)
+    (let ((something-else
+           (call 'GET "" "" (make-url "http" #f host #f #t
+                                      (list (make-path/param (car names) '()))
+                                      '() #f))))
+      (printf "~a => ~a~%" (url->string root) ((sxpath '(listbucketresult )) something-else))))
+  )
 )
