@@ -18,9 +18,18 @@
                  (_fun -> _fpointer)))
 
   (define (HMAC-SHA1 key data)
-    (bytes-copy (make-sized-byte-string
-                 (hmac-sha1-internal key data)
-                 20)))
+    ;; we need to call bytes-copy because hmac-sha1-internal always
+    ;; returns the same pointer (to static storage).
+    (bytes-copy
+
+     ;; we need to call make-sized-byte-string because otherwise our
+     ;; return value would get truncated at the first 0 byte.  This is
+     ;; an insidious problem, since most return values don't _have_ a
+     ;; 0 byte, and thus omitting this call will _appear_ to work,
+     ;; most of the time.
+     (make-sized-byte-string
+      (hmac-sha1-internal key data)
+      20)))
 
   (define hmac-sha1-internal
     (get-ffi-obj 'HMAC openssl-crypto
