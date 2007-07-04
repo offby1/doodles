@@ -17,11 +17,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join substring/shared)
          (planet "port.ss"      ("schematics"  "port.plt" ))
-         (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         (only "secret-signing-data.ss" SecretAccessKey))
+         (only "secret-signing-data.ss" SecretAccessKey)
+
+         ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
+         ;; but I fear that version is buggy; this version has the fixes.
+         "hmac-sha1.ss"
+         )
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
                 (date->string (seconds->date(current-seconds)) #t))
