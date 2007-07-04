@@ -18,7 +18,9 @@
                  (_fun -> _fpointer)))
 
   (define (HMAC-SHA1 key data)
-    (bytes-copy (hmac-sha1-internal key data)))
+    (bytes-copy (make-sized-byte-string
+                 (hmac-sha1-internal key data)
+                 20)))
 
   (define hmac-sha1-internal
     (get-ffi-obj 'HMAC openssl-crypto
