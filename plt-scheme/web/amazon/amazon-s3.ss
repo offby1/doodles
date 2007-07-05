@@ -9,7 +9,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; for the gritty details of authentication
 
 (module amazon-s3 mzscheme
-(require (lib "url.ss" "net")
+(require (lib "uri-codec.ss" "net")
+         (lib "url.ss" "net")
          (lib "date.ss")
          (lib "trace.ss")
          (lib "md5.ss")
@@ -121,34 +122,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;(trace call)
 
 (define (alexa-call query)
-  (let* ((date (iso-8601-date))
-         (url (make-url "http"
-                        #f                        ;user
-                        "wsearch.amazonaws.com"   ;host
-                        #f                        ;port
-                        #t                        ;path-absolute?
-                        (list (make-path/param "" '())) ;path
-                        `(
-                          (AWSAccessKeyId . ,AWSAccessKeyId)
-                          (Timestamp . ,date)
-                          (Signature
-                           .
-                           ,(sign (string->bytes/utf-8
-                                   (format "something")))
-                           )
-                          (Version . "2007-03-15")
-                          (Action . "Search")
-                          (ResponseGroup . "Context")
-                          (Query . ,query)
-                          )             ;query
-                        #f              ;fragment
-                        )))
+  (parameterize ((current-alist-separator-mode 'amp))
+                (let* ((version "2007-03-15")
+                       (date (iso-8601-date))
+                       (url (make-url "http"
+                                      #f          ;user
+                                      "wsearch.amazonaws.com" ;host
+                                      #f                      ;port
+                                      #t ;path-absolute?
+                                      (list (make-path/param "" '())) ;path
+                                      `(
+                                        (AWSAccessKeyId . ,AWSAccessKeyId)
+                                        (Timestamp . ,date)
+                                        (Signature
+                                         .
+                                         ,(sign (string->bytes/utf-8
+                                                 (format "something")))
+                                         )
+                                        (Version . ,version)
+                                        (Action . "Search")
+                                        (ResponseGroup . "Context")
+                                        (Query . ,query)
+                                        ) ;query
+                                      #f  ;fragment
+                                      )))
 
-    (printf "Here's an alexa call (date is ~s) : ~s~%" date (url->string url))
-    (html->shtml (port->string (get-pure-port url   (list  (format "Date: ~a" date)))))
-    ))
+                  (printf "Here's an alexa call (date is ~s) : ~s~%" date (url->string url))
+                  (html->shtml (port->string (get-pure-port url
+                                                            (list
+                                                             (format "Date: ~a" date))))))))
 
-(printf "An Alexa call, which to be honest has nothing to do with s3: ~a~%"
+(printf "An Alexa call, which to be honest has nothing to do with s3: ~s~%"
         (alexa-call "kitty cats"))
 
 (when #f
