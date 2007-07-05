@@ -107,6 +107,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (error "You know ... I just don't know how to deal with" verb)))
         )))
     )
+
   (set! GET (lambda (thing)              (gack-on-error (call 'GET thing "" ""))))
   (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type)))))
 
@@ -131,4 +132,36 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    )))
   (printf "Putting something into a bucket what don't exist: ")
   (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
+
+
+(define (alexa-call query)
+  (let* ((date (rfc-2822-date))
+         (url (make-url "http"
+                        #f                        ;user
+                        "wsearch.amazonaws.com"   ;host
+                        #f                        ;port
+                        #t                        ;path-absolute?
+                        (list (make-path/param "" '())) ;path
+                        `(
+                          (AWSAccessKeyId . ,AWSAccessKeyId)
+                          (Timestamp . ,date)
+                          (Signature
+                           .
+                           ,(sign (string->bytes/utf-8
+                                   (format "something")))
+                           )
+                          (Version . "2007-03-15")
+                          (Action . "Search")
+                          (ResponseGroup . "Context")
+                          (Query . ,query)
+                          )             ;query
+                        #f              ;fragment
+                        )))
+
+    (printf "Here's an alexa call: ~s~%" (url->string url))
+    (html->shtml (port->string (get-pure-port url '())))
+    ))
+
+(printf "An Alexa call, which to be honest has nothing to do with s3: ~a~%"
+        (alexa-call "kitty cats"))
 )
