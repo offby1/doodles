@@ -11,7 +11,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module amazon-s3 mzscheme
 (require (lib "url.ss" "net")
          (lib "date.ss")
-         (lib "pretty.ss")
          (lib "trace.ss")
          (lib "md5.ss")
          (only (lib "base64.ss" "net") base64-encode-stream)
@@ -32,21 +31,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   )
 
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
-(define *last-thing-signed* #f)         ;for debugging
-(define (sign bytes)
-  (set! *last-thing-signed* bytes)
-  (let ((sigbytes (HMAC-SHA1 SecretAccessKey bytes)))
 
-    ;; Warn about some flakiness in HMAC-SHA1
-    (let* ((length (bytes-length sigbytes))
-           (diff (- 20 length)))
-      (when (positive? diff)
-        (fprintf (current-error-port)
-                 "Signature is ~a bytes short!  Expect chaos.~%"
-                 diff)))
-
-    (base64-encode sigbytes)))
-;;(trace sign)
+(define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
@@ -57,15 +43,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let ((sop (open-output-string)))
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
-
-(define *verbose* (make-parameter #f))
-(define (gpp url headers)
-  (when (*verbose*) (fprintf (current-error-port) "get-pure-port ~s ~s~%" (url->string url) headers))
-  (get-pure-port url headers))
-
-(define (ppp url content headers)
-  (when (*verbose*) (fprintf (current-error-port) "put-pure-port ~s ~s ~s~%" (url->string url) headers content))
-  (put-pure-port url content headers))
 
 (define (hexdecode abc)
   (let loop  ((s (bytes->string/utf-8 abc))
@@ -80,7 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
-(define-struct (exn:fail:s3 exn:fail) (code message))
+(define-struct (exn:fail:s3 exn:fail) (code message complete-response))
 
 (define GET #f)
 (define PUT #f)
@@ -95,7 +72,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          message)
                 (current-continuation-marks)
                 code
-                message)
+                message
+                sxml)
                )))
     sxml)
   (define host "s3.amazonaws.com")
@@ -116,13 +94,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (html->shtml
        (port->string
         (case verb
-          ((GET) (gpp url
-                      (list auth (format "Date: ~a" date))))
-          ((PUT) (ppp url content
-                      (list auth
-                            (format "Date: ~a" date)
-                            (format "Content-Type: ~a" type)
-                            (format "Content-MD5: ~a" (md5-b64 content)))))
+          ((GET) (get-pure-port
+                  url
+                  (list auth (format "Date: ~a" date))))
+          ((PUT) (put-pure-port
+                  url content
+                  (list auth
+                        (format "Date: ~a" date)
+                        (format "Content-Type: ~a" type)
+                        (format "Content-MD5: ~a" (md5-b64 content)))))
           (else
            (error "You know ... I just don't know how to deal with" verb)))
         )))
@@ -132,30 +112,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(trace call)
 
-(let* ((response (GET ""))
-       (names ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) response)))
+(printf "Known buckets: ~a ~%"
+        ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
+(printf "Creating a bucket: ~a~%"
+        (PUT "squankulous" #"" "text/schmext"))
+(printf "Putting something into it: ~a~%"
+        (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+(printf "Seeing what's in it: ~a~%"
+        ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
+(printf "Seeing what's in the object what's in the bucket: ~a~%"
+        ((sxpath '(*text*)) (GET "squankulous/mankulous")))
 
-  (when (null? names)
-    (error response))
-
-  (printf "Known buckets: ~s ~%" names)
-  (printf "Creating a bucket: ")
-  (pretty-print (PUT "squankulous" #"" "text/schmext"))
-  (printf "Putting something into it: ")
-  (pretty-print (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
-  (printf "Seeing what's in it: ")
-  (pretty-print ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
-  (printf "Seeing what's in the object what's in the bucket: ")
-  (pretty-print (GET "squankulous/mankulous"))
-
-  (with-handlers (((lambda (e)
-                     (and (exn:fail:s3? e)
-                          (string=? "NoSuchBucket" (exn:fail:s3-code e))))
-                   (lambda (e)
-                     (printf "Just as we expected -- a NoSuchBucket error.~%")
-                     )))
-    (printf "Putting something into a bucket what don't exist: ")
-    (pretty-print (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
-  )
-
+(with-handlers (((lambda (e)
+                   (and (exn:fail:s3? e)
+                        (string=? "NoSuchBucket" (exn:fail:s3-code e))))
+                 (lambda (e)
+                   (printf "Just as we expected -- a NoSuchBucket error~%")
+                   )))
+  (printf "Putting something into a bucket what don't exist: ")
+  (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
 )
