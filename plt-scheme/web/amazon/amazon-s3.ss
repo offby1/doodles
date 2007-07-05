@@ -9,21 +9,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; for the gritty details of authentication
 
 (module amazon-s3 mzscheme
-(require (lib "uri-codec.ss" "net")
+(require
          (lib "url.ss" "net")
          (lib "date.ss")
          (lib "trace.ss")
          (lib "md5.ss")
          (lib "pretty.ss")
-         (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join substring/shared)
-         (prefix 19- (lib "19.ss" "srfi"))
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          (only "secret-signing-data.ss" SecretAccessKey)
-
+         "aws-common.ss"
+         "secret-signing-data.ss"
          ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          ;; but I fear that version is buggy; this version has the fixes.
          "hmac-sha1.ss"
@@ -33,25 +32,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (date->string (seconds->date(current-seconds)) #t))
   )
 
-;; the date->string procedure from date.ss _claims_ to support
-;; iso-8601, but alexa complains it's the wrong format, so I'm rolling
-;; my own here.
-(define (iso-8601-date)
-  (19-date->string (19-current-date) "~Y-~m-~dT~X~z"))
-
-(define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
-
-(define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
-
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
 
-;; just like the one in the library, except it doesn't append a
-;; carriage-return/newline.
-(define (base64-encode bytes)
-  (let ((sop (open-output-string)))
-    (base64-encode-stream (open-input-bytes bytes) sop "")
-    (get-output-string sop)))
+
 
 (define (hexdecode abc)
   (let loop  ((s (bytes->string/utf-8 abc))
@@ -122,39 +106,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(trace call)
 
-(define (alexa-call query)
-  (parameterize ((current-alist-separator-mode 'amp))
-                (let* ((version "2007-03-15")
-                       (action "Search")
-                       (date (iso-8601-date))
-                       (url (make-url "http"
-                                      #f          ;user
-                                      "wsearch.amazonaws.com" ;host
-                                      #f                      ;port
-                                      #t ;path-absolute?
-                                      (list (make-path/param "" '())) ;path
-                                      `(
-                                        (AWSAccessKeyId . ,AWSAccessKeyId)
-                                        (Timestamp . ,date)
-                                        (Signature
-                                         .
-                                         ,(sign (string->bytes/utf-8
-                                                 (format "~a~a" action date)))
-                                         )
-                                        (Version . ,version)
-                                        (Action . ,action)
-                                        (ResponseGroup . "Context")
-                                        (Query . ,query)
-                                        ) ;query
-                                      #f  ;fragment
-                                      )))
-
-                  (html->shtml (port->string (get-pure-port url
-                                                            (list
-                                                             (format "Date: ~a" date))))))))
-
-(printf "An Alexa call, which to be honest has nothing to do with s3:")
-(pretty-print (alexa-call "kitty cats"))
 
 (printf "Known buckets: ~a ~%"
         ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
