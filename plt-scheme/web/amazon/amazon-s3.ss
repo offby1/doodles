@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "md5.ss")
          (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join substring/shared)
+         (prefix 19- (lib "19.ss" "srfi"))
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
@@ -29,6 +30,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize ((date-display-format 'rfc2822))
                 (date->string (seconds->date(current-seconds)) #t))
   )
+
+;; the date->string procedure from date.ss _claims_ to support
+;; iso-8601, but alexa complains it's the wrong format, so I'm rolling
+;; my own here.
+(define (iso-8601-date)
+  (19-date->string (19-current-date) "~Y-~m-~dT~X~z"))
 
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
 
@@ -113,29 +120,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(trace call)
 
-(printf "Known buckets: ~a ~%"
-        ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
-(printf "Creating a bucket: ~a~%"
-        (PUT "squankulous" #"" "text/schmext"))
-(printf "Putting something into it: ~a~%"
-        (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
-(printf "Seeing what's in it: ~a~%"
-        ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
-(printf "Seeing what's in the object what's in the bucket: ~a~%"
-        ((sxpath '(*text*)) (GET "squankulous/mankulous")))
-
-(with-handlers (((lambda (e)
-                   (and (exn:fail:s3? e)
-                        (string=? "NoSuchBucket" (exn:fail:s3-code e))))
-                 (lambda (e)
-                   (printf "Just as we expected -- a NoSuchBucket error~%")
-                   )))
-  (printf "Putting something into a bucket what don't exist: ")
-  (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
-
-
 (define (alexa-call query)
-  (let* ((date (rfc-2822-date))
+  (let* ((date (iso-8601-date))
          (url (make-url "http"
                         #f                        ;user
                         "wsearch.amazonaws.com"   ;host
@@ -158,10 +144,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         #f              ;fragment
                         )))
 
-    (printf "Here's an alexa call: ~s~%" (url->string url))
-    (html->shtml (port->string (get-pure-port url '())))
+    (printf "Here's an alexa call (date is ~s) : ~s~%" date (url->string url))
+    (html->shtml (port->string (get-pure-port url   (list  (format "Date: ~a" date)))))
     ))
 
 (printf "An Alexa call, which to be honest has nothing to do with s3: ~a~%"
         (alexa-call "kitty cats"))
+
+(when #f
+  (printf "Known buckets: ~a ~%"
+          ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
+  (printf "Creating a bucket: ~a~%"
+          (PUT "squankulous" #"" "text/schmext"))
+  (printf "Putting something into it: ~a~%"
+          (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+  (printf "Seeing what's in it: ~a~%"
+          ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
+  (printf "Seeing what's in the object what's in the bucket: ~a~%"
+          ((sxpath '(*text*)) (GET "squankulous/mankulous")))
+
+  (with-handlers (((lambda (e)
+                     (and (exn:fail:s3? e)
+                          (string=? "NoSuchBucket" (exn:fail:s3-code e))))
+                   (lambda (e)
+                     (printf "Just as we expected -- a NoSuchBucket error~%")
+                     )))
+    (printf "Putting something into a bucket what don't exist: ")
+    (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
+
+
+
 )
