@@ -20,7 +20,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         (only "secret-signing-data.ss" SecretAccessKey)
          "aws-common.ss"
          "secret-signing-data.ss"
          ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
