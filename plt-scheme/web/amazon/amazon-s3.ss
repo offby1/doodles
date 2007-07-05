@@ -14,6 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "date.ss")
          (lib "trace.ss")
          (lib "md5.ss")
+         (lib "pretty.ss")
          (only (lib "base64.ss" "net") base64-encode-stream)
          (only (lib "13.ss" "srfi") string-join substring/shared)
          (prefix 19- (lib "19.ss" "srfi"))
@@ -148,34 +149,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       #f  ;fragment
                                       )))
 
-                  (printf "Here's an alexa call (date is ~s) : ~s~%" date (url->string url))
                   (html->shtml (port->string (get-pure-port url
                                                             (list
                                                              (format "Date: ~a" date))))))))
 
-(printf "An Alexa call, which to be honest has nothing to do with s3: ~s~%"
-        (alexa-call "kitty cats"))
+(printf "An Alexa call, which to be honest has nothing to do with s3:")
+(pretty-print (alexa-call "kitty cats"))
 
-(when #f
-  (printf "Known buckets: ~a ~%"
-          ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
-  (printf "Creating a bucket: ~a~%"
-          (PUT "squankulous" #"" "text/schmext"))
-  (printf "Putting something into it: ~a~%"
-          (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
-  (printf "Seeing what's in it: ~a~%"
-          ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
-  (printf "Seeing what's in the object what's in the bucket: ~a~%"
-          ((sxpath '(*text*)) (GET "squankulous/mankulous")))
+(printf "Known buckets: ~a ~%"
+        ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
+(printf "Creating a bucket: ~a~%"
+        (PUT "squankulous" #"" "text/schmext"))
+(printf "Putting something into it: ~a~%"
+        (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+(printf "Seeing what's in it: ~a~%"
+        ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
+(printf "Seeing what's in the object what's in the bucket: ~a~%"
+        ((sxpath '(*text*)) (GET "squankulous/mankulous")))
 
-  (with-handlers (((lambda (e)
-                     (and (exn:fail:s3? e)
-                          (string=? "NoSuchBucket" (exn:fail:s3-code e))))
-                   (lambda (e)
-                     (printf "Just as we expected -- a NoSuchBucket error~%")
-                     )))
-    (printf "Putting something into a bucket what don't exist: ")
-    (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
+(with-handlers (((lambda (e)
+                   (and (exn:fail:s3? e)
+                        (string=? "NoSuchBucket" (exn:fail:s3-code e))))
+                 (lambda (e)
+                   (printf "Just as we expected -- a NoSuchBucket error~%")
+                   )))
+  (printf "Putting something into a bucket what don't exist: ")
+  (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
 
 
 
