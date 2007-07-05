@@ -99,8 +99,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ((sxpath '(*text*)) (GET "squankulous/mankulous")))
 
 (with-handlers (((lambda (e)
-                   (and (exn:fail:s3? e)
-                        (string=? "NoSuchBucket" (exn:fail:s3-code e))))
+                   (and (exn:fail:aws? e)
+                        (string=? "NoSuchBucket" (exn:fail:aws-code e))))
                  (lambda (e)
                    (printf "Just as we expected -- a NoSuchBucket error~%")
                    )))

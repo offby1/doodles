@@ -25,13 +25,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
 
-(define-struct (exn:fail:s3 exn:fail) (code message complete-response))
+(define-struct (exn:fail:aws exn:fail) (code message complete-response))
 (define (gack-on-error sxml error-path)
   (let ((sxml ((sxpath error-path) sxml)))
     (when (not (null? sxml))
       (let ((code    (car ((sxpath '(code    *text*)) sxml)))
             (message (car ((sxpath '(message *text*)) sxml))))
-        (raise (make-exn:fail:s3
+        (raise (make-exn:fail:aws
                 (format  "~a: ~a"
                          code
                          message)
