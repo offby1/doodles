@@ -81,8 +81,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (else
            (error "You know ... I just don't know how to deal with" verb)))))))
 
-  (set! GET (lambda (thing)              (gack-on-error (call 'GET thing "" ""))))
-  (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type)))))
+  (set! GET (lambda (thing)              (gack-on-error (call 'GET thing "" ""       ) '(error))))
+  (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type) '(error)))))
 
 ;;(trace call)
 

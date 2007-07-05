@@ -49,9 +49,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       #f  ;fragment
                                       )))
 
-                  (html->shtml (port->string (get-pure-port url
-                                                            (list
-                                                             (format "Date: ~a" date))))))))
+                  (gack-on-error
+                   (html->shtml (port->string (get-pure-port url
+                                                             (list
+                                                              (format "Date: ~a" date)))))
+                   '(errorresponse error)))))
 
 (printf "An Alexa call, which to be honest has nothing to do with s3:")
 (pretty-print (alexa-call "kitty cats"))
