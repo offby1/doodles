@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://docs.amazonwebservices.com/AmazonS3/2006-03-01/RESTAuthentication.html
 ;; for the gritty details of authentication
 
-(module amazon-s3 mzscheme
+(module s3 mzscheme
 (require
          (lib "url.ss" "net")
          (lib "date.ss")
