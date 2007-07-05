@@ -21,10 +21,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          "aws-common.ss"
-         "secret-signing-data.ss"
-         ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
-         ;; but I fear that version is buggy; this version has the fixes.
-         "hmac-sha1.ss"
          )
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))

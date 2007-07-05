@@ -12,6 +12,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "hmac-sha1.ss"
          )
 (provide (all-defined))
+(define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
+
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
 (define (base64-encode bytes)
