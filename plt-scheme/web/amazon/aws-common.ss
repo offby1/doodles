@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module aws-common mzscheme
-(require "secret-signing-data.ss"
+(require (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+         "secret-signing-data.ss"
          (only (lib "base64.ss" "net") base64-encode-stream)
          ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
          ;; but I fear that version is buggy; this version has the fixes.
@@ -22,4 +23,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (get-output-string sop)))
 
 (define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
+
+(define-struct (exn:fail:s3 exn:fail) (code message complete-response))
+(define (gack-on-error sxml)
+  (when (not (null? ((sxpath '(error)) sxml)))
+    (let ((code    (car ((sxpath '(error code    *text*)) sxml)))
+          (message (car ((sxpath '(error message *text*)) sxml))))
+      (raise (make-exn:fail:s3
+              (format  "~a: ~a"
+                       code
+                       message)
+              (current-continuation-marks)
+              code
+              message
+              sxml)
+             )))
+  sxml)
 )

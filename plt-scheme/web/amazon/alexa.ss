@@ -20,6 +20,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (date->string (current-date) "~Y-~m-~dT~X~z"))
 
 (define (alexa-call query)
+  ;; without this, alexa complains "The requested version ( ) is not
+  ;; valid."  So I guess that means it only recognizes ampersands as
+  ;; separators.
   (parameterize ((current-alist-separator-mode 'amp))
                 (let* ((version "2007-03-15")
                        (action "Search")
