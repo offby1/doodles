@@ -1,6 +1,10 @@
 plt-file := foof-loop.plt
 owner := offby1
-$(plt-file): $(wildcard *.ss *.scm) doc.txt foof-loop syn-param
+
+sources := foof-loop syn-param
+tests   := test test-foof-loop test-parameters
+
+$(plt-file): $(wildcard *.ss) doc.txt $(sources) $(tests)
 	planet --create-archive . 
 
 clean:
