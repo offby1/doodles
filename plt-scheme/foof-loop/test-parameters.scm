@@ -8,10 +8,10 @@
 (define (NILADIC-TEST) 'bupkus)
 (define (MONADIC-TEST thunk) (thunk))
 (define (POLYADIC-TEST thunks) (for-each (lambda (t) (t)) thunks))
-(define (COMPONENT-TEST thunk) (thunk))
 (define (TEST-FAILURE args) (apply error args))
 (define (TEST-FAILURE:PREDICATE-DATUM args) (apply error args))
 (define (TEST-FAILURE:COMPARE-DATUM args) (apply error args))
+(define (identity-procedure . args) args)
 ;;<Riastradh> WITH-TEST-CASE-RUN and WITH-TEST-SUITE-RUN can just print `Running test <name>,
 ;;            <description>...'; (NILADIC-TEST) can do nothing; (MONADIC-TEST <thunk>) can call
 ;;            <thunk> with zero arguments; (POLYADIC-TEST <thunks>) can call each element of

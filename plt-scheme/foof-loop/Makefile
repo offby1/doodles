@@ -18,6 +18,6 @@ install-test: check install
 	./test-install.ss
 
 check test: 
-	mzscheme -qmv --require foof-loop.ss --case-insens -L 9.ss srfi -L 8.ss srfi -f test.scm  -f test-foof-loop.scm -f test-parameters.scm -e "(run-test-suite loop-tests)" 
+	mzscheme -M errortrace -qu run-tests.ss
 
 .PHONY: clean install uninstall check test install-test
