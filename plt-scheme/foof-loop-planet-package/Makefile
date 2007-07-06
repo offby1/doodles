@@ -14,7 +14,7 @@ install: $(plt-file)
 uninstall:
 	planet  --erase $(owner) $(plt-file) 1 0
 
-check test:
+check test: install
 	./test.ss
 
 .PHONY: clean install uninstall check test
