@@ -1,4 +1,4 @@
-plt-file := foof-loop-planet-plt-file.plt
+plt-file := foof-loop-planet-package.plt
 owner := offby1
 $(plt-file): info.ss doc.txt foof-loop syn-param test.ss wrapper.ss
 	planet --create-archive . 
@@ -6,9 +6,15 @@ $(plt-file): info.ss doc.txt foof-loop syn-param test.ss wrapper.ss
 clean:
 	-rm $(plt-file)
 
+# planet --file gacks if it's already installed, so we uninstall first.
 install: $(plt-file)
-	planet --file $@ $(owner) 1 0
+	-$(MAKE) uninstall
+	planet --file $^ $(owner) 1 0
 
 uninstall:
 	planet  --erase $(owner) $(plt-file) 1 0
-.PHONY: clean install
+
+check test:
+	./test.ss
+
+.PHONY: clean install uninstall check test
