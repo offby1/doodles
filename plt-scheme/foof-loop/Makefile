@@ -1,5 +1,6 @@
 plt-file := foof-loop.plt
 owner := offby1
+version := 1 0
 
 sources := foof-loop syn-param
 tests   := test test-foof-loop test-parameters
@@ -13,15 +14,15 @@ clean:
 # planet --file gacks if it's already installed, so we uninstall first.
 install: $(plt-file)
 	-$(MAKE) uninstall
-	planet --file $^ $(owner) 1 0
+	planet --file $^ $(owner) $(version)
 
 uninstall:
-	planet  --erase $(owner) $(plt-file) 1 0
+	planet  --erase $(owner) $(plt-file) $(version)
 
-install-test: check install
+installcheck: check install
 	./test-install.ss
 
 check test: 
 	mzscheme -qu run-tests.ss
 
-.PHONY: clean install uninstall check test install-test
+.PHONY: clean install uninstall check test installcheck

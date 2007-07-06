@@ -20,4 +20,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 (run-test-suite loop-tests)
+(printf "All tests passed!!~%")
 )
