@@ -10,12 +10,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "8.ss" "srfi")
          (lib "9.ss" "srfi")
          "foof-loop.ss")
-(include/reader "test.scm" (lambda args (read-case-sensitive #f)
+(include/reader "test" (lambda args (read-case-sensitive #f)
                                    (apply read-syntax args)))
 
-(include/reader "test-foof-loop.scm" (lambda args (read-case-sensitive #f)
+(include/reader "test-foof-loop" (lambda args (read-case-sensitive #f)
                                              (apply read-syntax args)))
-(include/reader "test-parameters.scm" (lambda args (read-case-sensitive #f)
+(include/reader "test-parameters" (lambda args (read-case-sensitive #f)
                                                (apply read-syntax args)))
 
 

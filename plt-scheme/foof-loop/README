@@ -1,5 +1,6 @@
 -*-text-*-
-It's a shame that the main source files -- foof-loop and syn-param --
-have names that don't end with ".scm" or ".ss".  But if they were to
-be named that way, the "planet" tool tries to load them, and barfs
-because they're not proper mzscheme modules.
+
+It's a shame that various source files have names that don't end with
+".scm" or ".ss".  But if they were to be named that way, the "planet"
+tool tries to load them, and barfs because they're not proper mzscheme
+modules.
