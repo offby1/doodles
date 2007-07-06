@@ -37,7 +37,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
 (define *num-photos-returned* (string->number (@ 'total)))
 
-;; Hard to believe this isn't already defined somewhere.
+;; This will soon (as of 5 July 2007) be available in mzscheme.
 (define (port->bytes ip)
   (let loop ((result (make-bytes 0)))
     (let ((chunk (read-bytes 10000 ip)))
