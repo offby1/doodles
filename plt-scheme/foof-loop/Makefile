@@ -18,6 +18,6 @@ install-test: check install
 	./test-install.ss
 
 check test: 
-	mzscheme -M errortrace -qu run-tests.ss
+	mzscheme -qu run-tests.ss
 
 .PHONY: clean install uninstall check test install-test

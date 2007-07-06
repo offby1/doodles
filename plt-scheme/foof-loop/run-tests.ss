@@ -19,5 +19,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                (apply read-syntax args)))
 
 
-;(run-test-suite loop-tests)
+(run-test-suite loop-tests)
 )
