@@ -4,4 +4,5 @@
         (list "A Simple, Extensible Scheme Looping Facility"))
   (define primary-file "wrapper.ss")
   (define doc.txt "doc.txt")
+  (define release-notes '(p "First release.  Woo hoo."))
   (define categories '(devtools)))
