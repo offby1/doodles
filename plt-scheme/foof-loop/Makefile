@@ -1,6 +1,6 @@
 plt-file := foof-loop.plt
 owner := offby1
-$(plt-file): info.ss doc.txt foof-loop syn-param test.ss wrapper.ss
+$(plt-file): info.ss doc.txt foof-loop syn-param test.ss foof-loop.ss
 	planet --create-archive . 
 
 clean:

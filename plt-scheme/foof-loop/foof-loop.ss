@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace --case-insens -qu "$0" ${1+"$@"}
 |#
 
-(module wrapper mzscheme
+(module foof-loop mzscheme
 (require (lib "include.ss"))
 (provide (all-defined))
 (include/reader "syn-param" (lambda args (read-case-sensitive #f)
