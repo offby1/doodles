@@ -36,6 +36,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (printf "~a~%" line)
               (send-url (url->string u) #f)
               )
+          ;; hmm.  Perhaps, if the scheme is #f, we should just glue
+          ;; "http:" to the front and try again.
           (printf "Ain't gonna open ~s 'cuz it doesn't look like an http URL~%"
                   line)
           )
