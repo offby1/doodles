@@ -1,6 +1,6 @@
 plt-file := foof-loop.plt
 owner := offby1
-$(plt-file): info.ss doc.txt foof-loop syn-param test.ss foof-loop.ss
+$(plt-file): $(wildcard *.ss *.scm) doc.txt foof-loop syn-param
 	planet --create-archive . 
 
 clean:
@@ -14,7 +14,10 @@ install: $(plt-file)
 uninstall:
 	planet  --erase $(owner) $(plt-file) 1 0
 
-check test: install
-	./test.ss
+install-test: check install
+	./test-install.ss
 
-.PHONY: clean install uninstall check test
+check test: 
+	mzscheme -qmv --require foof-loop.ss --case-insens -L 9.ss srfi -L 8.ss srfi -f test.scm  -f test-foof-loop.scm -f test-parameters.scm -e "(run-test-suite loop-tests)" 
+
+.PHONY: clean install uninstall check test install-test
