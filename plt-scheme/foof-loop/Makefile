@@ -1,4 +1,4 @@
-plt-file := foof-loop-planet-package.plt
+plt-file := foof-loop.plt
 owner := offby1
 $(plt-file): info.ss doc.txt foof-loop syn-param test.ss wrapper.ss
 	planet --create-archive . 
