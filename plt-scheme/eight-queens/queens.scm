@@ -54,8 +54,8 @@
                 ;; solutions, but of course it takes longer.
 
                 (q6 (cons 6 (amb 1 2 3 4 5 6 7 8)))
-                ;;                 (q7 (cons 7 (amb 1 2 3 4 5 6 7 8)))
-                ;;                 (q8 (cons 8 (amb 1 2 3 4 5 6 7 8)))
+                (q7 (cons 7 (amb 1 2 3 4 5 6 7 8)))
+                (q8 (cons 8 (amb 1 2 3 4 5 6 7 8)))
                 )
 
             (let ((all-queens (list
