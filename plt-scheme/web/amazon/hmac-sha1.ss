@@ -11,7 +11,7 @@
       [(windows)
        (ffi-lib "libeay32")]
       [else
-       (ffi-lib "libcrypto")]))
+       (ffi-lib "libcrypto" (list "" "0.9.7" "0.9.8"))]))
 
   (define EVP_SHA1
     (get-ffi-obj 'EVP_sha1 openssl-crypto
