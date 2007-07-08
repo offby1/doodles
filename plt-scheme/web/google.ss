@@ -20,6 +20,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi")
                string-join))
 
+(define (just-the-strings thing)
+  (cond
+   ((null? thing) '())
+   ((string? thing) (list thing))
+   ((list? thing)
+    (apply append (just-the-strings (car thing))
+            (map just-the-strings (cdr thing))))
+   (else '())))
+
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
                       "www.google.com"          ;host
@@ -37,8 +46,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 url
                                 (list)))))
 
-       (links  ((sxpath '("//div[@class=\"g\"]" h2 a @ href)) result)))
+       (anchors ((sxpath
 
-  (pretty-print links)
+                  ;; in English: get all the "div"s that have class
+                  ;; "g", and then from each, return all the anchors.
+
+                  ;; there's no guarantee that this will continue to
+                  ;; work; Google may well reformat their results any
+                  ;; time they feel like it.  I'd use a search API
+                  ;; (instead of "scraping" the html as I'm doing here)
+                  ;; if they offered one.
+                  '("//div[@class=\"g\"]" h2 a)) result))
+       (hrefs    ((sxpath '(@ href *text*)) anchors))
+       (captions (map (lambda (a)
+                        (apply string-append (just-the-strings (cddr a))))
+                      anchors))
+       )
+
+  (for-each (lambda (caption link)
+              (printf "~s ~s~%" caption link))
+            captions
+            hrefs)
   )
 )
