@@ -19,14 +19,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define-syntax (define-flickr-api stx)
   (syntax-case stx ()
-    ((_ n)
+    ((_ api-name)
      (syntax
-      (define n
+      (define api-name
         (lambda keys-n-values
           (assert (not (memq 'api_key keys-n-values)))
           (parse-xml
-           (
-            (flickr (symbol->string (syntax-object->datum (syntax n))))
+           ((flickr (symbol->string (syntax-object->datum (syntax api-name))))
             (apply ->ht
                    'api_key *flickr-API-key*  keys-n-values)))))))))
 
