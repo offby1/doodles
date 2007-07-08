@@ -20,14 +20,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                pretty-print)
          "flickr.ss")
 (define *username* "Thallium")
-(define user-id (flickr.people.findByUsername
-                 'username     *username*
-                 ))
+(define user_id (car ((sxpath '(user @ nsid *text*))
+                      (flickr.people.findByUsername
+                       'username     *username*
+                       ))))
 (let ((url
-       (string->url (format "http://www.flickr.com/people/~a" (car ((sxpath '(user @ nsid *text*)) user-id))))
+       (string->url (format "http://www.flickr.com/people/~a" user_id))
        ))
   (printf "profile of ~a can be found at ~s~%" *username* (url->string url))
   (let* ((profile-page  (html->shtml (get-pure-port url)))
          (strongs ((sxpath '(// strong *text*)) profile-page)))
-    (pretty-print strongs)))
+    (pretty-print strongs))
+
+  (let ((contacts (flickr.contacts.getPublicList 'user_id user_id)))
+    (printf "His/her contacts: ~s~%" contacts))
+  )
 )
