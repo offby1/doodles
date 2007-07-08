@@ -5,12 +5,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module google mzscheme
-(require (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
-         (planet "port.ss"      ("schematics"  "port.plt" ))
-         (lib "pretty.ss")
-         (lib "url.ss" "net")
-         (only (lib "13.ss" "srfi") string-join))
+(require (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+               sxpath)
+         (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
+               html->shtml)
+         (only (planet "port.ss"      ("schematics"  "port.plt" ))
+               port->string)
+         (only (lib "pretty.ss")
+               pretty-print)
+         (only (lib "url.ss" "net")
+               make-url
+               make-path/param
+               get-pure-port)
+         (only (lib "13.ss" "srfi")
+               string-join))
 
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
