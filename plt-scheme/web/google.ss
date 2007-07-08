@@ -11,18 +11,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (lib "url.ss" "net"))
 
-(define (grab-as thing)
-  (cond
-   ((and (pair? thing)
-         (eq? 'a (car thing)))
-    (list thing))
-   ((pair? thing)
-    (append (grab-as (car thing))
-            (grab-as (cdr thing))))
-   (else
-    '())
-   ))
-
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
                       "www.google.com"          ;host
@@ -37,8 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 url
                                 (list)))))
 
-       (links  ((sxpath '("//div[@class=\"g\"]" h2 a @ href)) result))
-       )
+       (links  ((sxpath '("//div[@class=\"g\"]" h2 a @ href)) result)))
 
   (pretty-print links)
   )
