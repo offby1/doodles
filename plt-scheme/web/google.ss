@@ -22,18 +22,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (else
     '())
    ))
-(for-each
- (lambda (input)
-   (printf "~s => ~s~%" input (grab-as input)))
- (list '()
-       "just a string"
-       '(a "A single a")
-       '((a "First of a list of as")
-         (a "Second of a list"))
-       '((a "First of a list of as with intervening cruft")
-         'intervening
-         "cruft"
-         (a "Second of a list with intervening cruft"))))
 
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
@@ -47,9 +35,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (result  (html->shtml
                  (port->string (get-pure-port
                                 url
-                                (list))))))
+                                (list)))))
 
-  ;; display all the "a" elements in the result, along with their "path"s.
-  (pretty-display (grab-as result))
+       (class-g  ((sxpath "//div[@class=\"g\"]") result)))
+
+  (pretty-print class-g)
   )
 )
