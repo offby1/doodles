@@ -33,6 +33,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (pretty-print strongs))
 
   (let ((contacts (flickr.contacts.getPublicList 'user_id user_id)))
-    (printf "His/her contacts: ~s~%" contacts))
+    (pretty-print ((sxpath '(// (contact))) contacts)))
   )
 )
