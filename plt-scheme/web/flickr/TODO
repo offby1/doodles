@@ -1,0 +1,11 @@
+-*-outline-*-
+
+* Decent error handling
+
+For example, if you run "profile.ss", and the user named by *username*
+isn't found, you get a big ugly stack trace.
+
+* Learn more about sxpath
+
+so that, e.g., I can collapse the three sequential sxpath calls in
+profile.ss@3993 to just one
