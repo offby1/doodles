@@ -29,7 +29,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       #f                        ;port
                       #t                        ;path-absolute?
                       (list (make-path/param "search" '())) ;path
-                      (list'(q . "money"))                  ;query
+                      (list '(q . "kitty cats"))            ;query
                       #f                                    ;fragment
                       ))
        (result  (html->shtml
@@ -37,8 +37,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 url
                                 (list)))))
 
-       (class-g  ((sxpath "//div[@class=\"g\"]") result)))
+       (class-g  ((sxpath "//div[@class=\"g\"]") result))
+       (h2 ((sxpath '((h2))) class-g))
+       (a  ((sxpath '((a))) h2))
+       (links ((sxpath '(@ href)) a)))
 
-  (pretty-print class-g)
+  (pretty-print links)
   )
 )
