@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; available in lots of other flavors too, like REST and SOAP, but
 ;; only XML RPC has a handy PLaneT package.)
 
-(module xmlrpc mzscheme
+(module get-cat-pictures mzscheme
 (require (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
          (lib "pretty.ss")
          (lib "trace.ss")
