@@ -11,25 +11,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  flickr.photos.search
  flickr.photos.getInfo
+ flickr.people.findByUsername
  )
 
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 
-(define flickr.photos.search (lambda keys-n-values
-                               (assert (not (memq 'api_key keys-n-values)))
-                               (parse-xml
-                                ((flickr "flickr.photos.search" )
-                                 (apply ->ht
-                                   'api_key  *flickr-API-key*  keys-n-values)))
-                               ))
+;; one of these days I'm gonna need a macro to write these definitions for me.
+(define flickr.photos.search
+  (lambda keys-n-values
+    (assert (not (memq 'api_key keys-n-values)))
+    (parse-xml
+     ((flickr "flickr.photos.search" )
+      (apply ->ht
+             'api_key  *flickr-API-key*  keys-n-values)))
+    ))
 
-(define flickr.photos.getInfo (lambda keys-n-values
-                                (assert (not (memq 'api_key keys-n-values)))
-                                (parse-xml
-                                 ((flickr "flickr.photos.getInfo")
-                                  (apply ->ht
-                                   'api_key *flickr-API-key*  keys-n-values)))))
+(define flickr.photos.getInfo
+  (lambda keys-n-values
+    (assert (not (memq 'api_key keys-n-values)))
+    (parse-xml
+     ((flickr "flickr.photos.getInfo")
+      (apply ->ht
+             'api_key *flickr-API-key*  keys-n-values)))))
+
+(define flickr.people.findByUsername
+  (lambda keys-n-values
+    (assert (not (memq 'api_key keys-n-values)))
+    (parse-xml
+     ((flickr "flickr.people.findByUsername")
+      (apply ->ht
+             'api_key *flickr-API-key*  keys-n-values)))))
 
 ;; convert a list of alternating symbols and otherthings into a hash
 ;; table, with the symbols as the keys and the otherthings as the
