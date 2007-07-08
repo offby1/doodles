@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert)
          (lib "trace.ss")
-         (lib "assert.ss" "offby1"))
+         (planet "assert.ss" ("offby1" "offby1.plt")))
 (provide
  flickr.photos.search
  flickr.photos.getInfo

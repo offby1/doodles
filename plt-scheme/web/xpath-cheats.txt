@@ -1,0 +1,2 @@
+http://trac.callcc.org/browser/sxml-tools/sxml-tools/tests/vsxpathlib.scm
+might be illuminating, in the absence of a decent XPATH tutorial.
