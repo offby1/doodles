@@ -7,7 +7,7 @@
 (require (lib "defmacro.ss")
          (lib "list.ss")
          (lib "pretty.ss")
-         (lib "extra.ss" "swindle"))
+         (only (lib "extra.ss" "swindle") amb amb-collect))
 
 (display (amb-collect (amb 1 2 3)))
 (newline)
