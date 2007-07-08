@@ -37,10 +37,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 url
                                 (list)))))
 
-       (class-g  ((sxpath "//div[@class=\"g\"]") result))
-       (h2 ((sxpath '((h2))) class-g))
-       (a  ((sxpath '((a))) h2))
-       (links ((sxpath '(@ href)) a)))
+       (links  ((sxpath '("//div[@class=\"g\"]" h2 a @ href)) result))
+       )
 
   (pretty-print links)
   )
