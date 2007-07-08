@@ -56,7 +56,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   ;; time they feel like it.  I'd use a search API
                   ;; (instead of "scraping" the html as I'm doing here)
                   ;; if they offered one.
-                  '("//div[@class=\"g\"]" h2 a)) result))
+                  '(// (div (@ (equal? (class "g")))) h2 a)) result))
        (hrefs    ((sxpath '(@ href *text*)) anchors))
        (captions (map (lambda (a)
                         (apply string-append (just-the-strings (cddr a))))
