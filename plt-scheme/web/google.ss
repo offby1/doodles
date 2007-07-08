@@ -9,7 +9,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (lib "pretty.ss")
-         (lib "url.ss" "net"))
+         (lib "url.ss" "net")
+         (only (lib "13.ss" "srfi") string-join))
 
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
@@ -17,7 +18,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       #f                        ;port
                       #t                        ;path-absolute?
                       (list (make-path/param "search" '())) ;path
-                      (list '(q . "kitty cats"))            ;query
+                      (list
+                       `(q .
+                           ,(string-join (vector->list (current-command-line-arguments)) " ")
+                           ))                               ;query
                       #f                                    ;fragment
                       ))
        (result  (html->shtml
