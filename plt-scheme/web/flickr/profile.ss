@@ -32,7 +32,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (strongs ((sxpath '(// strong *text*)) profile-page)))
     (pretty-print strongs))
 
-  (let ((contacts (flickr.contacts.getPublicList 'user_id user_id)))
-    (pretty-print ((sxpath '(// (contact))) contacts)))
+  (let* ((contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
+         (usernames ((sxpath '(@ username *text*)) contacts))
+         (nsids     ((sxpath '(@ nsid     *text*)) contacts)))
+    (pretty-print  contacts)
+    (pretty-print (map cons nsids usernames)))
   )
 )
