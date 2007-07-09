@@ -9,8 +9,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          "secret-signing-data.ss"
          (only (lib "base64.ss" "net") base64-encode-stream)
-         ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt" ))
-         ;; but I fear that version is buggy; this version has the fixes.
+         ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy"
+         ;; "hmac-sha1.plt" )) but version 1 0 is buggy; this version
+         ;; has the fixes.
          "hmac-sha1.ss"
          )
 (provide (all-defined))

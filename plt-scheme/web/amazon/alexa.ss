@@ -32,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (action "Search")
                        (date (iso-8601-date))
                        (url (make-url "http"
-                                      #f          ;user
+                                      #f                      ;user
                                       "wsearch.amazonaws.com" ;host
                                       #f                      ;port
                                       #t ;path-absolute?

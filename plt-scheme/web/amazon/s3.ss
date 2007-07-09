@@ -24,7 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          )
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
-                (date->string (seconds->date(current-seconds)) #t)))
+                (date->string (seconds->date (current-seconds)) #t)))
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
