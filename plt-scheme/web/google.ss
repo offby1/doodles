@@ -20,15 +20,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi")
                string-join))
 
-(define (just-the-strings thing)
-  (cond
-   ((null? thing) '())
-   ((string? thing) (list thing))
-   ((list? thing)
-    (apply append (just-the-strings (car thing))
-            (map just-the-strings (cdr thing))))
-   (else '())))
-
 (let* ((url (make-url "http"                    ;scheme
                       #f                        ;user
                       "www.google.com"          ;host
@@ -59,13 +50,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   '(// (div (@ (equal? (class "g")))) h2 a)) result))
        (hrefs    ((sxpath '(@ href *text*)) anchors))
        (captions (map (lambda (a)
-                        (apply string-append (just-the-strings (cddr a))))
-                      anchors))
+                        (apply string-append ((sxpath '(// *text*)) a))) anchors))
        )
 
   (for-each (lambda (caption link)
               (printf "~s ~s~%" caption link))
             captions
-            hrefs)
-  )
+            hrefs))
 )
