@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module profile mzscheme
+(module six-degrees mzscheme
 (require (lib "trace.ss")
          (only (lib "url.ss" "net")
                make-url
