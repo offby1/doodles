@@ -9,3 +9,25 @@ isn't found, you get a big ugly stack trace.
 
 so that, e.g., I can collapse the three sequential sxpath calls in
 profile.ss@3993 to just one
+
+* Handle failures better
+
+If the web server disconnects or returns an error, the whole client
+program stops.  It'd be nice if there were a way to retry.
+
+* Persistent memoization?
+
+Let's say I run the thing, and it cranks away for ten minutes, finding
+lots of contacts of lots of people.  Then it falls over.  The next
+time I run it, it'll have to do all that work over again -- even
+though the (now lost) data that it got last time is probably still
+accurate.  I'd like the second run to be able to reuse that data, so
+it can pick up where the first run left off.
+
+Surely I can write complex tedious code to load and restore the data
+myself.  But I wonder if something like that already exists ...
+
+Maybe
+http://planet.plt-scheme.org/display.ss?package=sqlite.plt&owner=jaymccarthy
+or
+http://planet.plt-scheme.org/display.ss?package=sqld-sqlite.plt&owner=oesterholt

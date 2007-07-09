@@ -21,23 +21,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "pretty.ss")
                pretty-display
                pretty-print)
-         (only (planet "bfs.ss" ("offby1" "offby1.plt") ) bfs)
+         (only (planet "bfs.ss" ("offby1" "offby1.plt") ) bfs bfs-distance)
          "flickr.ss")
 (define (nsid->username nsid)
   (car ((sxpath '(person username *text*)) (flickr.people.getInfo 'user_id nsid))))
-(define *username*
-  ;"George V. Reilly"
-  "ohnoimdead"
+(define *initial-username*
+  ;"George V. Reilly"                    ;easy
+  "ohnoimdead"                         ;hard
   )
-(define user_id (car ((sxpath '(user @ nsid *text*))
+(define *initial-nsid* (car ((sxpath '(user @ nsid *text*))
                       (flickr.people.findByUsername
-                       'username     *username*
+                       'username     *initial-username*
                        ))))
 (define (bfs-compare . args)
   (apply string=? args))
 ;;(trace bfs-compare)
 (let ((trail
-       (bfs user_id
+       (bfs *initial-nsid*
             "20825469@N00"              ; yours truly
             bfs-compare
             (lambda (user_id)
@@ -46,25 +46,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (strongs ((sxpath '(// strong *text*)) profile-page))
                      (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
                      (usernames ((sxpath '(@ username *text*)) contacts)))
-                (printf "~a is ~a~%" (nsid->username user_id)
-
-                        ;; this is meant to pick up their sex and
-                        ;; marital status, but is very loose;
-                        ;; sometimes is picks up other stuff, and
-                        ;; sometimes it doesn't pick up anything at
-                        ;; all.  Ah the joys of scraping HTML
-
-                        (take strongs (min 2 (length strongs)))
-                        )
+                (printf "Finding contacts of ~a (~a), distance ~a from ~a~%"
+                        (nsid->username user_id)
+                        user_id
+                        (bfs-distance)
+                        *initial-username*)
                 (flush-output)
                 ((sxpath '(@ nsid     *text*)) contacts))
               )
 
             3)))
   (if trail
-      (display
+      (printf "~a~%"
        (string-join
-        trail
+        (map nsid->username trail)
         " => "))
     (printf "Bummer -- no path~%")))
 )
