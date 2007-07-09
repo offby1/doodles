@@ -46,12 +46,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (strongs ((sxpath '(// strong *text*)) profile-page))
                      (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
                      (usernames ((sxpath '(@ username *text*)) contacts)))
-                (printf "~a is ~a~%" (nsid->username user_id) (take strongs (min 2 (length strongs))))
+                (printf "~a is ~a~%" (nsid->username user_id)
+
+                        ;; this is meant to pick up their sex and
+                        ;; marital status, but is very loose;
+                        ;; sometimes is picks up other stuff, and
+                        ;; sometimes it doesn't pick up anything at
+                        ;; all.  Ah the joys of scraping HTML
+
+                        (take strongs (min 2 (length strongs)))
+                        )
                 (flush-output)
                 ((sxpath '(@ nsid     *text*)) contacts))
               )
 
-            2)))
+            3)))
   (if trail
       (display
        (string-join
