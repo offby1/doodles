@@ -41,17 +41,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             "20825469@N00"              ; yours truly
             bfs-compare
             (lambda (user_id)
-              (let ((url
-                     (string->url (format "http://www.flickr.com/people/~a" user_id))
-                     ))
-                (printf "profile of ~a can be found at ~s~%" (nsid->username user_id) (url->string url))
-                (let* ((profile-page  (html->shtml (get-pure-port url)))
-                       (strongs ((sxpath '(// strong *text*)) profile-page)))
-                  (pretty-print (take strongs (min 2 (length strongs)))))
-
-                (let* ((contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
-                       (usernames ((sxpath '(@ username *text*)) contacts)))
-                  ((sxpath '(@ nsid     *text*)) contacts))))
+              (let* ((url (string->url (format "http://www.flickr.com/people/~a" user_id)))
+                     (profile-page  (html->shtml (get-pure-port url)))
+                     (strongs ((sxpath '(// strong *text*)) profile-page))
+                     (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
+                     (usernames ((sxpath '(@ username *text*)) contacts)))
+                (printf "~a is ~a~%" (nsid->username user_id) (take strongs (min 2 (length strongs))))
+                (flush-output)
+                ((sxpath '(@ nsid     *text*)) contacts))
+              )
 
             2)))
   (if trail
