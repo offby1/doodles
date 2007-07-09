@@ -10,7 +10,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "port.ss"      ("schematics"  "port.plt" ))
+         (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+               sxpath)
          (only (lib "19.ss" "srfi") date->string current-date)
+         (only (lib "13.ss" "srfi")
+               string-join)
          "aws-common.ss"
          "secret-signing-data.ss")
 ;; the date->string procedure from date.ss _claims_ to support
@@ -54,7 +58,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                              (list
                                                               (format "Date: ~a" date)))))
                    '(errorresponse error)))))
+(let* ((result (alexa-call (string-join (vector->list (current-command-line-arguments)) " ")))
+       (urls   ((sxpath '(// document url   *text*)) result))
+       (titles ((sxpath '(// document title *text*)) result)))
 
-(printf "An Alexa call, which to be honest has nothing to do with s3:")
-(pretty-print (alexa-call "kitty cats"))
+  (for-each (lambda (caption link)
+              (printf "~s ~s~%" caption link))
+            titles
+            urls))
+
 )
