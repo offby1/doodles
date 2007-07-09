@@ -31,12 +31,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (apply ->ht
                    'api_key *flickr-API-key*  keys-n-values)))))))))
 
-(define-flickr-api flickr.photos.search)
-(define-flickr-api flickr.photos.getInfo)
-(define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.contacts.getPublicList)
+(define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.people.getInfo)
-;(trace flickr.contacts.getPublicList)
+(define-flickr-api flickr.photos.getInfo)
+(define-flickr-api flickr.photos.search)
 
 ;; convert a list of alternating symbols and otherthings into a hash
 ;; table, with the symbols as the keys and the otherthings as the
@@ -44,23 +43,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (->ht . args)
   (let loop ((args args)
              (conses '()))
-    (if (null? args)
-        (let ((rv (make-hash-table)))
-          (for-each (lambda (p)
-                      (hash-table-put!
-                       rv
-                       (car p)
-                       (cdr p)))
-                    conses)
-          rv)
-      (if (null? (cdr args))
-          (error "->ht called with an odd number of arguments")
-        (let ((key (car args))
-              (value (cadr args)))
-          (loop (cddr args)
-                (cons (cons key value)
-                      conses))))
-      )))
+    (cond
+     ((null? args)
+      (let ((rv (make-hash-table)))
+        (for-each (lambda (p)
+                    (hash-table-put!
+                     rv
+                     (car p)
+                     (cdr p)))
+                  conses)
+        rv))
+     ((null? (cdr args))
+      (error "->ht called with an odd number of arguments"))
+     (else
+      (let ((key (car args))
+            (value (cadr args)))
+        (loop (cddr args)
+              (cons (cons key value)
+                    conses)))))))
 
 (define (parse-xml string)
   (ssax:xml->sxml (open-input-string string) '()))

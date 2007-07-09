@@ -32,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; see how I use it, and it should become obvious
 (define (attribute-getter-from-sxml sxml path)
   (lambda (attname)
-    (list-ref (car ((sxpath `(,@path @ ,attname)) sxml)) 1)))
+    (car ((sxpath `(,@path @ ,attname *text*)) sxml))))
 
 (define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
 (define *num-photos-returned* (string->number (@ 'total)))
@@ -57,11 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (define first-photo-info (flickr.photos.getInfo
                               'photo_id   photo-id))
 
-;;     (printf "First photo info:~%" )
-;;     (pretty-display first-photo-info)
-
     (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
-          (fancy-photo-page-url (cadar ((sxpath '(photo urls (url 1))) first-photo-info)))
 
           ;; believe it or not, kludging up a URL out of pieces like
           ;; this is officially sanctioned.
