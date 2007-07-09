@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                get-pure-port
                string->url
                url->string)
+         (only (lib "1.ss" "srfi") take)
          (only (lib "13.ss" "srfi") string-join)
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
@@ -22,9 +23,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                pretty-print)
          (only (planet "bfs.ss" ("offby1" "offby1.plt") ) bfs)
          "flickr.ss")
+(define (nsid->username nsid)
+  (car ((sxpath '(person username *text*)) (flickr.people.getInfo 'user_id nsid))))
 (define *username*
-  "George V. Reilly"
-  ;"ohnoimdead"
+  ;"George V. Reilly"
+  "ohnoimdead"
   )
 (define user_id (car ((sxpath '(user @ nsid *text*))
                       (flickr.people.findByUsername
@@ -41,16 +44,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (let ((url
                      (string->url (format "http://www.flickr.com/people/~a" user_id))
                      ))
-                (printf "profile of ~a can be found at ~s~%" user_id (url->string url))
+                (printf "profile of ~a can be found at ~s~%" (nsid->username user_id) (url->string url))
                 (let* ((profile-page  (html->shtml (get-pure-port url)))
                        (strongs ((sxpath '(// strong *text*)) profile-page)))
-                  (pretty-print strongs))
+                  (pretty-print (take strongs (min 2 (length strongs)))))
 
                 (let* ((contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
                        (usernames ((sxpath '(@ username *text*)) contacts)))
                   ((sxpath '(@ nsid     *text*)) contacts))))
 
-            1)))
+            2)))
   (if trail
       (display
        (string-join

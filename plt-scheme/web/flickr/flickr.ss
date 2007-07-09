@@ -13,7 +13,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  flickr.photos.search
  flickr.photos.getInfo
  flickr.people.findByUsername
- flickr.contacts.getPublicList)
+ flickr.contacts.getPublicList
+ flickr.people.getInfo)
 
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
@@ -34,6 +35,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-flickr-api flickr.photos.getInfo)
 (define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.contacts.getPublicList)
+(define-flickr-api flickr.people.getInfo)
 ;(trace flickr.contacts.getPublicList)
 
 ;; convert a list of alternating symbols and otherthings into a hash
