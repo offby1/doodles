@@ -44,7 +44,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (with-handlers
         ([exn:break?
           (lambda (x)
-            (printf "I finally got a break!~%")
             (return))])
       (let ((trail
              (bfs *initial-nsid*
@@ -56,8 +55,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            (strongs ((sxpath '(// strong *text*)) profile-page))
                            (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
                            (usernames ((sxpath '(@ username *text*)) contacts)))
-                      (printf "Finding contacts of ~a (~a), distance ~a from ~a~%"
-                              (nsid->username user_id)
+                      (printf "Finding contacts of ~a, distance ~a from ~a~%"
                               user_id
                               (bfs-distance)
                               *initial-username*)
@@ -72,5 +70,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (map nsid->username trail)
                      " => "))
           (printf "Bummer -- no path~%")))))))
+(newline)
 (pretty-print (get-timings))
 )
