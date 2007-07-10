@@ -50,31 +50,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (if (zero? *num-photos-returned*)
     (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
-  (let ((@ (attribute-getter-from-sxml cat-photos-sxml '(photos (photo 1)))))
+  (let* ((@ (attribute-getter-from-sxml cat-photos-sxml '(photos (photo 1))))
+         ;; believe it or not, kludging up a URL out of pieces like
+         ;; this is officially sanctioned.
+         (bare-image-url
+          (format
+           "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+           (@ 'farm)
+           (@ 'server)
+           (@ 'id)
+           (@ 'secret))))
 
-    (define photo-id (@ 'id))
+    (printf "URL for the unadorned image: ~s~%" bare-image-url)
 
-    (define first-photo-info (flickr.photos.getInfo
-                              'photo_id   photo-id))
+    (let ((jpeg-data
+           (port->bytes (get-pure-port (string->url bare-image-url))))
+          (tfn (make-temporary-file)))
 
-    (let ((@ (attribute-getter-from-sxml first-photo-info '(photo)))
-
-          ;; believe it or not, kludging up a URL out of pieces like
-          ;; this is officially sanctioned.
-          (bare-image-url
-           (format "http://farm~a.static.flickr.com/~a/~a_~a.jpg" (@ 'farm) (@ 'server) photo-id (@ 'secret))))
-
-      (printf "URL for the unadorned image: ~s~%" bare-image-url)
-
-      (let ((jpeg-data
-             (port->bytes (get-pure-port (string->url bare-image-url))))
-            (tfn (make-temporary-file)))
-
-        (call-with-output-file*
-         tfn
-         (lambda (op) (write-bytes jpeg-data op))
-         'truncate)
-        (printf "Wrote ~a bytes to ~a~%"
-                (bytes-length jpeg-data)
-                tfn)))))
+      (call-with-output-file*
+       tfn
+       (lambda (op) (write-bytes jpeg-data op))
+       'truncate)
+      (printf "Wrote ~a bytes to ~a~%"
+              (bytes-length jpeg-data)
+              tfn))))
 )
