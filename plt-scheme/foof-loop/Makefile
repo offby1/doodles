@@ -7,7 +7,7 @@ planet   := planet
 
 plt-file := foof-loop.plt
 owner := offby1
-version := 1 0
+version := 1 1
 
 sources := foof-loop syn-param
 tests   := test test-foof-loop test-parameters
