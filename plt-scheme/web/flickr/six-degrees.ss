@@ -36,30 +36,41 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (bfs-compare . args)
   (apply string=? args))
 ;;(trace bfs-compare)
-(let ((trail
-       (bfs *initial-nsid*
-            "20825469@N00"              ; yours truly
-            bfs-compare
-            (lambda (user_id)
-              (let* ((url (string->url (format "http://www.flickr.com/people/~a" user_id)))
-                     (profile-page  (html->shtml (get-pure-port url)))
-                     (strongs ((sxpath '(// strong *text*)) profile-page))
-                     (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
-                     (usernames ((sxpath '(@ username *text*)) contacts)))
-                (printf "Finding contacts of ~a (~a), distance ~a from ~a~%"
-                        (nsid->username user_id)
-                        user_id
-                        (bfs-distance)
-                        *initial-username*)
-                (flush-output)
-                ((sxpath '(@ nsid     *text*)) contacts))
-              )
 
-            3)))
-  (if trail
-      (printf "~a~%"
-       (string-join
-        (map nsid->username trail)
-        " => "))
-    (printf "Bummer -- no path~%")))
+(call/ec
+ (lambda (return)
+   (parameterize-break
+    #t
+    (with-handlers
+        ([exn:break?
+          (lambda (x)
+            (printf "I finally got a break!~%")
+            (return))])
+      (let ((trail
+             (bfs *initial-nsid*
+                  "20825469@N00"        ; yours truly
+                  bfs-compare
+                  (lambda (user_id)
+                    (let* ((url (string->url (format "http://www.flickr.com/people/~a" user_id)))
+                           (profile-page  (html->shtml (get-pure-port url)))
+                           (strongs ((sxpath '(// strong *text*)) profile-page))
+                           (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
+                           (usernames ((sxpath '(@ username *text*)) contacts)))
+                      (printf "Finding contacts of ~a (~a), distance ~a from ~a~%"
+                              (nsid->username user_id)
+                              user_id
+                              (bfs-distance)
+                              *initial-username*)
+                      (flush-output)
+                      ((sxpath '(@ nsid     *text*)) contacts))
+                    )
+
+                  3)))
+        (if trail
+            (printf "~a~%"
+                    (string-join
+                     (map nsid->username trail)
+                     " => "))
+          (printf "Bummer -- no path~%")))))))
+(pretty-print (get-timings))
 )

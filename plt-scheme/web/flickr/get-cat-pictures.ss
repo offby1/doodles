@@ -27,6 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    'tag_mode "all"
    'sort     "interestingness-desc"
    ))
+(pretty-print (get-timings))
 
 ;; It's hard to explain what this does, other than save typing.  Just
 ;; see how I use it, and it should become obvious

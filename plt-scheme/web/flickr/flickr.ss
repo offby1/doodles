@@ -14,10 +14,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  flickr.photos.getInfo
  flickr.people.findByUsername
  flickr.contacts.getPublicList
- flickr.people.getInfo)
+ flickr.people.getInfo
+ get-timings)
 
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
+
+(define *timings* (make-hash-table 'equal))
+
+(define (get-timings)
+  (let ((alist '()))
+    (hash-table-for-each
+     *timings*
+     (lambda (k v)
+       (set! alist (cons (cons k v) alist))))
+  alist))
+
+(define (hash-table-increment! ht key val)
+  (hash-table-put! ht key (+ val (hash-table-get ht key 0))))
 
 (define-syntax (define-flickr-api stx)
   (syntax-case stx ()
@@ -27,9 +41,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (lambda keys-n-values
           (assert (not (memq 'api_key keys-n-values)))
           (parse-xml
-           ((flickr (symbol->string 'api-name))
-            (apply ->ht
-                   'api_key *flickr-API-key*  keys-n-values)))))))))
+           (let* ((function-name (symbol->string 'api-name))
+                  (the-function (flickr function-name)))
+             (let-values (((results cpu-ms wall-ms gc-cpu-ms)
+                           (time-apply the-function
+                                       (list
+                                        (apply ->ht
+                                               'api_key *flickr-API-key*  keys-n-values)))))
+               (hash-table-increment! *timings* function-name wall-ms)
+               (apply values results)
+               )))))))))
 
 (define-flickr-api flickr.contacts.getPublicList)
 (define-flickr-api flickr.people.findByUsername)
