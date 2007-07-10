@@ -1,0 +1,3 @@
+Grab some cat pictures from flickr, find geotags on them, then draw a
+Google map with one of those little pointer thingies for each picture.
+"Cats in your neighborhood".
