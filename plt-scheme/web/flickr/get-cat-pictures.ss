@@ -23,11 +23,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define cat-photos-sxml
   (flickr.photos.search
-   'tags     "snowball,cat"
+   'tags     "cat"
    'tag_mode "all"
    'sort     "interestingness-desc"
+   'bbox     "-122,47,-121,48"          ;includes my house
    ))
-(pretty-print (get-timings))
 
 ;; It's hard to explain what this does, other than save typing.  Just
 ;; see how I use it, and it should become obvious
@@ -62,6 +62,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (@ 'id)
            (@ 'secret))))
 
+    (printf "We found ~a photos.~%" *num-photos-returned*)
+    (pretty-display ((sxpath '(photo location)) (flickr.photos.getInfo
+                     'photo_id (@ 'id)
+                     'secret (@ 'secret))))
     (printf "URL for the unadorned image: ~s~%" bare-image-url)
 
     (let ((jpeg-data
@@ -75,4 +79,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (printf "Wrote ~a bytes to ~a~%"
               (bytes-length jpeg-data)
               tfn))))
-)
+(pretty-print (get-timings)))
