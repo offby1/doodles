@@ -26,16 +26,48 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (nsid->username nsid)
   (car ((sxpath '(person username *text*)) (flickr.people.getInfo 'user_id nsid))))
 (define *initial-username*
-  ;"George V. Reilly"                    ;easy
-  "ohnoimdead"                         ;hard
+                                        ;"George V. Reilly"                    ;easy
+  "ohnoimdead"                          ;hard
   )
 (define *initial-nsid* (car ((sxpath '(user @ nsid *text*))
-                      (flickr.people.findByUsername
-                       'username     *initial-username*
-                       ))))
+                             (flickr.people.findByUsername
+                              'username     *initial-username*
+                              ))))
 (define (bfs-compare . args)
   (apply string=? args))
 ;;(trace bfs-compare)
+
+(define *cache-file-name* "cache")
+(define *cached-contacts* (make-hash-table 'equal))
+
+(when (file-exists? *cache-file-name*)
+  (with-input-from-file *cache-file-name*
+    (lambda ()
+      (let loop ()
+        (let ((datum (read)))
+          (when (not (eof-object? datum))
+            (hash-table-put!
+             *cached-contacts*
+             (car datum)
+             (cdr datum))
+            (loop))))))
+  (printf "Read ~a contacts from ~a~%"
+          (hash-table-count *cached-contacts*)
+          *cache-file-name*)
+  (flush-output))
+
+(define (get-for-real user_id)
+  (let* ((url (string->url (format "http://www.flickr.com/people/~a" user_id)))
+         (profile-page  (html->shtml (get-pure-port url)))
+         (strongs ((sxpath '(// strong *text*)) profile-page))
+         (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
+         (usernames ((sxpath '(@ username *text*)) contacts)))
+    (printf "Finding contacts of ~a, distance ~a from ~a~%"
+            user_id
+            (bfs-distance)
+            *initial-username*)
+    (flush-output)
+    ((sxpath '(@ nsid     *text*)) contacts)))
 
 (call/ec
  (lambda (return)
@@ -50,20 +82,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   "20825469@N00"        ; yours truly
                   bfs-compare
                   (lambda (user_id)
-                    (let* ((url (string->url (format "http://www.flickr.com/people/~a" user_id)))
-                           (profile-page  (html->shtml (get-pure-port url)))
-                           (strongs ((sxpath '(// strong *text*)) profile-page))
-                           (contacts  ((sxpath '(// (contact (@ username)))) (flickr.contacts.getPublicList 'user_id user_id)))
-                           (usernames ((sxpath '(@ username *text*)) contacts)))
-                      (printf "Finding contacts of ~a, distance ~a from ~a~%"
-                              user_id
-                              (bfs-distance)
-                              *initial-username*)
-                      (flush-output)
-                      ((sxpath '(@ nsid     *text*)) contacts))
-                    )
+                    (let ((probe (hash-table-get *cached-contacts* user_id #f)))
+                      (when probe
+                        (fprintf
+                         (current-error-port)
+                         "Woo hoo! Found ~a in cache~%"
+                         user_id)
+                        (flush-output (current-error-port)))
+                      (when (not probe)
+                        (set! probe  (get-for-real user_id))
+                        (parameterize-break #f
+                          (let ((op (open-output-file *cache-file-name* 'append)))
+                            (write (cons user_id probe) op)
+                            (newline op)
+                            (close-output-port op)
+                            )))
+                      probe))
 
                   3)))
+
         (if trail
             (printf "~a~%"
                     (string-join
