@@ -1,3 +1,6 @@
 Grab some cat pictures from flickr, find geotags on them, then draw a
 Google map with one of those little pointer thingies for each picture.
 "Cats in your neighborhood".
+
+For extra credit, give each pointer thingy the behavior that, when you
+hover your mouse over it, it displays a thumbnail of the picture.
