@@ -1,0 +1,24 @@
+-*-outline-*-
+
+* Password server?
+
+I wouldn't embed my Amazon secret key in a file -- it would be too
+easy to accidentally disclose -- e.g., if someone asked to see all my
+nifty web-service code, and I happily send 'em all my files,
+forgetting to omit the one with the password in it.
+
+Right now I'm passing the secret on the command line, but that doesn't
+thrill me either, since I fear my shell history will wind up with
+copies of it.
+
+I suppose I could put it in Emacs' environment, and invoke the
+programs from Emacs ...
+
+But another idea is to build a tiny server whose sole purpose in life
+is to store the key, and yield it on demand.  It would be like an
+ssh-agent.  The benefit there is that you only need utter the secret
+on the command line once, when you start it; thenceforth it could
+serve lots of requests.
+
+Dunno if it's worth the trouble.
+
