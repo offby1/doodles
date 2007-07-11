@@ -75,7 +75,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                titles
                urls))   )
  '("query"))
-
-
-
 )
