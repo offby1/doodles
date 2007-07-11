@@ -24,7 +24,7 @@ though the (now lost) data that it got last time is probably still
 accurate.  I'd like the second run to be able to reuse that data, so
 it can pick up where the first run left off.
 
-Surely I can write complex tedious code to load and restore the data
+I have written complex tedious code to load and restore the data
 myself.  But I wonder if something like that already exists ...
 
 Maybe
