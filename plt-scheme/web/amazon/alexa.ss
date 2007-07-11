@@ -64,7 +64,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (current-command-line-arguments)
  (once-each
   (("-s" "--secret-access-key") sac
-   "How long to think about each card"
+   "You should have gotten this from Amazon."
    (SecretAccessKey (string->bytes/utf-8 sac))))
  (args the-query
   (when (not (SecretAccessKey))
