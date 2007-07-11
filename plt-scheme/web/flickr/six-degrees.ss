@@ -23,8 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                pretty-print)
          (only (planet "bfs.ss" ("offby1" "offby1.plt") ) bfs bfs-distance)
          "flickr.ss")
-(define (nsid->username nsid)
-  (car ((sxpath '(person username *text*)) (flickr.people.getInfo 'user_id nsid))))
+
 (define *initial-username*
                                         ;"George V. Reilly"                    ;easy
   "ohnoimdead"                          ;hard
@@ -33,9 +32,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (flickr.people.findByUsername
                               'username     *initial-username*
                               ))))
-(define (bfs-compare . args)
-  (apply string=? args))
-;;(trace bfs-compare)
 
 (define *cache-file-name* "cache")
 (define *cached-contacts* (make-hash-table 'equal))
@@ -80,7 +76,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (let ((trail
              (bfs *initial-nsid*
                   "20825469@N00"        ; yours truly
-                  bfs-compare
+                  string=?
                   (lambda (user_id)
                     (let ((probe (hash-table-get *cached-contacts* user_id #f)))
                       (when probe
@@ -92,11 +88,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (when (not probe)
                         (set! probe  (get-for-real user_id))
                         (parameterize-break #f
-                          (let ((op (open-output-file *cache-file-name* 'append)))
-                            (write (cons user_id probe) op)
-                            (newline op)
-                            (close-output-port op)
-                            )))
+                                            (let ((op (open-output-file *cache-file-name* 'append)))
+                                              (write (cons user_id probe) op)
+                                              (newline op)
+                                              (close-output-port op)
+                                              )))
                       probe))
 
                   3)))
@@ -104,9 +100,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (if trail
             (printf "~a~%"
                     (string-join
-                     (map nsid->username trail)
+                     (map (lambda (nsid)
+                            (car ((sxpath '(person username *text*)) (flickr.people.getInfo 'user_id nsid))))
+                          trail)
+
                      " => "))
-          (printf "Bummer -- no path~%")))))))
+          (printf "Bummer -- no path~%"))
+        )))))
+
 (newline)
 (pretty-print (get-timings))
 )
