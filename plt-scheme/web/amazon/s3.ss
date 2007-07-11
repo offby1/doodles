@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module s3 mzscheme
 (require
+         (lib "cmdline.ss")
          (lib "url.ss" "net")
          (lib "date.ss")
          (lib "trace.ss")
@@ -86,6 +87,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(trace call)
 
+(command-line
+ "s3"
+ (current-command-line-arguments)
+ (once-each
+  (("-s" "--secret-access-key") sac
+   "You should have gotten this from Amazon."
+   (SecretAccessKey (string->bytes/utf-8 sac)))))
 
 (printf "Known buckets: ~a ~%"
         ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))

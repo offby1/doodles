@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module alexa mzscheme
-(require (lib "uri-codec.ss" "net")
+(require (lib "cmdline.ss")
+         (lib "uri-codec.ss" "net")
          (lib "url.ss" "net")
          (lib "pretty.ss")
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
@@ -16,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi")
                string-join)
          "aws-common.ss"
-         "secret-signing-data.ss")
+         )
 ;; the date->string procedure from date.ss _claims_ to support
 ;; iso-8601, but alexa complains it's the wrong format, so I'm rolling
 ;; my own here.
@@ -58,13 +59,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                              (list
                                                               (format "Date: ~a" date)))))
                    '(errorresponse error)))))
-(let* ((result (alexa-call (string-join (vector->list (current-command-line-arguments)) " ")))
-       (urls   ((sxpath '(// document url   *text*)) result))
-       (titles ((sxpath '(// document title *text*)) result)))
+(command-line
+ "alexa"
+ (current-command-line-arguments)
+ (once-each
+  (("-s" "--secret-access-key") sac
+   "How long to think about each card"
+   (SecretAccessKey (string->bytes/utf-8 sac))))
+ (args the-query
+  (when (not (SecretAccessKey))
+    (error "You must supply a secret access key with the -s option"))
+  (let* ((result (alexa-call (string-join the-query " ")))
+         (urls   ((sxpath '(// document url   *text*)) result))
+         (titles ((sxpath '(// document title *text*)) result)))
 
-  (for-each (lambda (caption link)
-              (printf "~s ~s~%" caption link))
-            titles
-            urls))
+    (for-each (lambda (caption link)
+                (printf "~s ~s~%" caption link))
+              titles
+              urls))))
 
 )

@@ -7,7 +7,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module aws-common mzscheme
 (require (lib "trace.ss")
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         "secret-signing-data.ss"
          (only (lib "base64.ss" "net") base64-encode-stream)
          ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy"
          ;; "hmac-sha1.plt" )) but version 1 0 is buggy; this version
@@ -16,6 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          )
 (provide (all-defined))
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
+(define SecretAccessKey (make-parameter #f))
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
@@ -24,7 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
-(define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
+(define (sign bytes) (base64-encode (HMAC-SHA1 (SecretAccessKey) bytes)))
 
 (define-struct (exn:fail:aws exn:fail) (code message complete-response))
 (define (gack-on-error sxml error-path)
