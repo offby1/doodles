@@ -59,23 +59,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                              (list
                                                               (format "Date: ~a" date)))))
                    '(errorresponse error)))))
-(command-line
- "alexa"
- (current-command-line-arguments)
- (once-each
-  (("-s" "--secret-access-key") sac
-   "You should have gotten this from Amazon."
-   (SecretAccessKey (string->bytes/utf-8 sac))))
- (args the-query
-  (when (not (SecretAccessKey))
-    (error "You must supply a secret access key with the -s option"))
-  (let* ((result (alexa-call (string-join the-query " ")))
-         (urls   ((sxpath '(// document url   *text*)) result))
-         (titles ((sxpath '(// document title *text*)) result)))
+(parse-command-line
+ "alexa" (current-command-line-arguments)
+ *amazon-command-line-parsing-table*
+ (lambda (flag-accum . the-query)
+   (when (not (SecretAccessKey))
+     (error "You must supply a secret access key with the -s option"))
 
-    (for-each (lambda (caption link)
-                (printf "~s ~s~%" caption link))
-              titles
-              urls))))
+   (let* ((result (alexa-call (string-join the-query " ")))
+          (urls   ((sxpath '(// document url   *text*)) result))
+          (titles ((sxpath '(// document title *text*)) result)))
+
+     (for-each (lambda (caption link)
+                 (printf "~s ~s~%" caption link))
+               titles
+               urls))   )
+ '("query"))
+
+
 
 )

@@ -43,4 +43,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ))))
   sxml)
 ;;(trace gack-on-error)
+
+(define *amazon-command-line-parsing-table*
+  `(
+    (once-each
+     (("-s" "--secret-access-key")
+      ,(lambda (flag sac) (SecretAccessKey (string->bytes/utf-8 sac)))
+      ("You should have gotten this from Amazon." "sekrit")))
+    ))
 )

@@ -87,34 +87,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;;(trace call)
 
-(command-line
- "s3"
+(parse-command-line "s3"
  (current-command-line-arguments)
- (once-each
-  (("-s" "--secret-access-key") sac
-   "You should have gotten this from Amazon."
-   (SecretAccessKey (string->bytes/utf-8 sac)))))
+ *amazon-command-line-parsing-table*
+ (lambda (flag-accum)
 
-(printf "Known buckets: ~a ~%"
-        ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
-(printf "Creating a bucket: ~a~%"
-        (PUT "squankulous" #"" "text/schmext"))
-(printf "Putting something into it: ~a~%"
-        (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
-(printf "Seeing what's in it: ~a~%"
-        ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
-(printf "Seeing what's in the object what's in the bucket: ~a~%"
-        ((sxpath '(*text*)) (GET "squankulous/mankulous")))
+   (printf "Known buckets: ~a ~%"
+           ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
+   (printf "Creating a bucket: ~a~%"
+           (PUT "squankulous" #"" "text/schmext"))
+   (printf "Putting something into it: ~a~%"
+           (PUT "squankulous/mankulous" #"So this is the stuff." "text/plain"))
+   (printf "Seeing what's in it: ~a~%"
+           ((sxpath '(listbucketresult contents key *text*)) (GET "squankulous")))
+   (printf "Seeing what's in the object what's in the bucket: ~a~%"
+           ((sxpath '(*text*)) (GET "squankulous/mankulous")))
 
-(with-handlers (((lambda (e)
-                   (and (exn:fail:aws? e)
-                        (string=? "NoSuchBucket" (exn:fail:aws-code e))))
-                 (lambda (e)
-                   (printf "Just as we expected -- a NoSuchBucket error~%")
-                   )))
-  (printf "Putting something into a bucket what don't exist: ")
-  (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))
-
-
+   (with-handlers (((lambda (e)
+                      (and (exn:fail:aws? e)
+                           (string=? "NoSuchBucket" (exn:fail:aws-code e))))
+                    (lambda (e)
+                      (printf "Just as we expected -- a NoSuchBucket error~%")
+                      )))
+     (printf "Putting something into a bucket what don't exist: ")
+     (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain"))   )
+ '())
 
 )
