@@ -21,12 +21,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define timeout +inf.0)
 
 (define *adjectives* (list
+                      "angry"
                       "annoyed"
+                      "cold"
                       "electric"
                       "fierce"
+                      "frozen"
+                      "hungry"
                       "insane"
                       "lethargic"
                       "loyal"
+                      "mad"
                       "old"
                       "scary"
                       "sexy"
@@ -45,26 +50,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let* ((adjective (list-ref *adjectives* (random (length *adjectives*))))
          (pix (all-interesting-cat-photos adjective))
          (howmany (min (string->number (car ((sxpath '(photos @ total   *text*)) pix)))
-                       (string->number (car ((sxpath '(photos @ perpage *text*)) pix)))))
-         (chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix))
-         (id ((sxpath '(@ id *text*)) chosen-photo))
-         (sizes (flickr.photos.getSizes 'photo_id (car id)))
-         (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
-         (width  (car ((sxpath '(@ width  *text*)) medium)))
-         (height (car ((sxpath '(@ height *text*)) medium)))
-         ;; '(// (div (@ (equal? (class "g")))))
-         )
+                       (string->number (car ((sxpath '(photos @ perpage *text*)) pix))))))
 
-    `((tr
-       (td (img ((src ,(url-for-photo chosen-photo))
-                 (height ,height)
-                 (width  ,width)))))
-      (tr (td (p ,(format
-                   "That's ~a ~s cat ~a.  Cute, huh?"
-                   (article adjective)
-                   adjective
-                   ((sxpath '(@ title *text*)) chosen-photo)
-                   )))))))
+
+    (if (positive? howmany)
+        (let* ((chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix))
+               (id ((sxpath '(@ id *text*)) chosen-photo))
+               (sizes (flickr.photos.getSizes 'photo_id (car id)))
+               (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
+               (width  (car ((sxpath '(@ width  *text*)) medium)))
+               (height (car ((sxpath '(@ height *text*)) medium)))
+               ;; '(// (div (@ (equal? (class "g"))))))
+               )
+          `((tr
+             (td (img ((src ,(url-for-photo chosen-photo))
+                       (height ,height)
+                       (width  ,width)))))
+            (tr (td (p ,(format
+                         "That's ~a ~s cat ~a.  Cute, huh?"
+                         (article adjective)
+                         adjective
+                         ((sxpath '(@ title *text*)) chosen-photo)
+                         ))))))
+      `((tr (td (p ,(format "Uh oh, I couldn't find any pictures for ~s" adjective))))))))
 
 (define (start initial-request)
 
