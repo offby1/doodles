@@ -29,23 +29,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (lambda (attname)
     (car ((sxpath `(,@path @ ,attname *text*)) sxml))))
 
+(define (all-interesting-cat-photos query-string)
+  (flickr.photos.search
+   'tags     (string-join (list "cat" query-string) ",")
+   'tag_mode "all"
+   ))
+
 ;; TODO -- an empty QUERY-STRING, or one that consists entirely of
 ;; whitespace, causes us to get no results back.
+
 (define (url-for-one-interesting-cat-photo query-string)
-  (let* ((results (flickr.photos.search
-                   'tags     (string-join (list "cat" query-string) ",")
-                   'tag_mode "all"
-                   ))
-         (@ (attribute-getter-from-sxml results '(photos (photo 1)))))
+  (let ((results (all-interesting-cat-photos query-string)))
+    (when (*verbose*)
+      (pretty-print results))
+    (let* ((howmany (min (string->number (car ((sxpath '(photos @ total   *text*)) results)))
+                         (string->number (car ((sxpath '(photos @ perpage *text*)) results)))))
+           (@ (attribute-getter-from-sxml results `(photos (photo ,(add1 (random (sub1 howmany))))))))
 
-    ;; believe it or not, kludging up a URL out of pieces like this is
-    ;; officially sanctioned.
+      (when (*verbose*) (fprintf (current-error-port)
+                                 "We have ~a pix to select from~%" howmany))
+      ;; believe it or not, kludging up a URL out of pieces like this is
+      ;; officially sanctioned.
 
-    (format
-     "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
-     (@ 'farm)
-     (@ 'server)
-     (@ 'id)
-     (@ 'secret))))
+      (format
+       "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+       (@ 'farm)
+       (@ 'server)
+       (@ 'id)
+       (@ 'secret)))))
 
 )
