@@ -9,6 +9,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 string->url
                 url->string
                 set-url-query!)
+         (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+               sxpath)
          (lib "servlet.ss" "web-server")
          (file "/home/erich/doodles/plt-scheme/web/flickr/get-cat-pictures.ss"))
 
@@ -39,14 +41,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       "a")))
 
 (define (random-rows)
-  (let ((choice (list-ref *adjectives* (random (length *adjectives*)))))
+  (let* ((adjective (list-ref *adjectives* (random (length *adjectives*))))
+         (pix (all-interesting-cat-photos adjective))
+         (howmany (min (string->number (car ((sxpath '(photos @ total   *text*)) pix)))
+                       (string->number (car ((sxpath '(photos @ perpage *text*)) pix)))))
+         (chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix)))
 
     `((tr
-       (td (img ((src ,(url-for-one-interesting-cat-photo choice))))))
+       (td (img ((src ,(url-for-one-interesting-cat-photo adjective))))))
       (tr (td (p ,(format
-                   "That's ~a ~s cat.  Cute, huh?"
-                   (article choice)
-                   choice)))))))
+                   "That's ~a ~s cat ~a.  Cute, huh?"
+                   (article adjective)
+                   adjective
+                   ((sxpath '(@ title *text*)) chosen-photo))))))))
 
 (define (start initial-request)
 

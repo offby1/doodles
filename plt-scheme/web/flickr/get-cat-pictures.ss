@@ -21,7 +21,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string->url
                )
          "flickr.ss")
-(provide url-for-one-interesting-cat-photo)
+(provide
+ all-interesting-cat-photos
+ attribute-getter-from-sxml
+ url-for-one-interesting-cat-photo
+ )
 
 ;; It's hard to explain what this does, other than save typing.  Just
 ;; see how I use it, and it should become obvious
