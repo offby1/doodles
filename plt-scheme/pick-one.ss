@@ -13,7 +13,7 @@
          (lib "servlet.ss" "web-server")
          (only (lib "list.ss")
                remove))
-(provide (all-defined))
+(provide interface-version timeout start)
 
 (define interface-version 'v1)
 (define timeout +inf.0)
