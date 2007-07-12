@@ -4,6 +4,10 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; simple command-line thing that does a Google search.  Since Google
+;; doesn't seem to have a search API, we gotta "scrape" the returned
+;; HTML.
+
 (module google mzscheme
 (require (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
@@ -37,7 +41,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 url
                                 (list)))))
 
-       (anchors ((sxpath
+       (class-g-anchors ((sxpath
 
                   ;; in English: get all the "div"s that have class
                   ;; "g", and then from each, return all the anchors.
@@ -48,9 +52,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   ;; (instead of "scraping" the html as I'm doing here)
                   ;; if they offered one.
                   '(// (div (@ (equal? (class "g")))) h2 a)) result))
-       (hrefs    ((sxpath '(@ href *text*)) anchors))
+       (hrefs    ((sxpath '(@ href *text*)) class-g-anchors))
        (captions (map (lambda (a)
-                        (apply string-append ((sxpath '(// *text*)) a))) anchors))
+                        (apply string-append ((sxpath '(// *text*)) a)))
+                      class-g-anchors))
        )
 
   (for-each (lambda (caption link)
