@@ -20,14 +20,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string->url
                )
          "flickr.ss")
-
-(define cat-photos-sxml
-  (flickr.photos.search
-   'tags     "cat"
-   'tag_mode "all"
-   'sort     "interestingness-desc"
-   'bbox     "-122,47,-121,48"          ;includes my house
-   ))
+(provide url-for-one-interesting-cat-photo)
 
 ;; It's hard to explain what this does, other than save typing.  Just
 ;; see how I use it, and it should become obvious
@@ -35,48 +28,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (lambda (attname)
     (car ((sxpath `(,@path @ ,attname *text*)) sxml))))
 
-(define @ (attribute-getter-from-sxml cat-photos-sxml '(photos)))
-(define *num-photos-returned* (string->number (@ 'total)))
+(define (url-for-one-interesting-cat-photo)
+  (let* ((results (flickr.photos.search
+                   'tags     "cat"
+                   'tag_mode "all"
+                   'sort     "interestingness-desc"
+                   'bbox     "-122,47,-121,48" ;includes my house
+                   ))
+         (@ (attribute-getter-from-sxml results '(photos (photo 1)))))
 
-;; This will soon (as of 5 July 2007) be available in mzscheme.
-(define (port->bytes ip)
-  (let loop ((result (make-bytes 0)))
-    (let ((chunk (read-bytes 10000 ip)))
-      (if (eof-object? chunk)
-          result
-        (begin (fprintf (current-error-port)
-                        "~a bytes ... " (+ (bytes-length chunk)
-                                           (bytes-length result)))
-               (loop (bytes-append result chunk)))))))
+    ;; believe it or not, kludging up a URL out of pieces like this is
+    ;; officially sanctioned.
 
-(if (zero? *num-photos-returned*)
-    (printf "Uh oh, no photos returned: ~a~%" cat-photos-sxml)
-  (let* ((@ (attribute-getter-from-sxml cat-photos-sxml '(photos (photo 1))))
-         ;; believe it or not, kludging up a URL out of pieces like
-         ;; this is officially sanctioned.
-         (bare-image-url
-          (format
-           "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
-           (@ 'farm)
-           (@ 'server)
-           (@ 'id)
-           (@ 'secret))))
+    (format
+     "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+     (@ 'farm)
+     (@ 'server)
+     (@ 'id)
+     (@ 'secret))))
 
-    (printf "We found ~a photos.~%" *num-photos-returned*)
-    (pretty-display ((sxpath '(photo location)) (flickr.photos.getInfo
-                     'photo_id (@ 'id)
-                     'secret (@ 'secret))))
-    (printf "URL for the unadorned image: ~s~%" bare-image-url)
-
-    (let ((jpeg-data
-           (port->bytes (get-pure-port (string->url bare-image-url))))
-          (tfn (make-temporary-file)))
-
-      (call-with-output-file*
-       tfn
-       (lambda (op) (write-bytes jpeg-data op))
-       'truncate)
-      (printf "Wrote ~a bytes to ~a~%"
-              (bytes-length jpeg-data)
-              tfn))))
-(pretty-print (get-timings)))
+)
