@@ -14,6 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
          (lib "file.ss")
+         (only (lib "13.ss" "srfi") string-join )
          (only (lib "os.ss") gethostname)
          (only (lib "url.ss" "net")
                get-pure-port
@@ -28,12 +29,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (lambda (attname)
     (car ((sxpath `(,@path @ ,attname *text*)) sxml))))
 
-(define (url-for-one-interesting-cat-photo)
+;; TODO -- an empty QUERY-STRING, or one that consists entirely of
+;; whitespace, causes us to get no results back.
+(define (url-for-one-interesting-cat-photo query-string)
   (let* ((results (flickr.photos.search
-                   'tags     "cat"
+                   'tags     (string-join (list "cat" query-string) ",")
                    'tag_mode "all"
-                   'sort     "interestingness-desc"
-                   'bbox     "-122,47,-121,48" ;includes my house
                    ))
          (@ (attribute-getter-from-sxml results '(photos (photo 1)))))
 

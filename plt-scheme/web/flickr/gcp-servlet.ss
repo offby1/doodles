@@ -16,8 +16,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define interface-version 'v1)
 (define timeout +inf.0)
+
+(define *adjectives* (list "ugly" "old" "scary" "insane"))
+
+(define (random-rows)
+  (let ((choice (list-ref *adjectives* (random (length *adjectives*)))))
+
+    `((tr
+       (td (img ((src ,(url-for-one-interesting-cat-photo choice))))))
+      (tr (td (p ,(format "That's a ~s cat.  Cute, huh?" choice)))))))
+
 (define (start initial-request)
-  `(html (body (p "Not much yet.")
-               (a ((href "http://photo.net")) "a link")
-               (img ((src ,(url-for-one-interesting-cat-photo)))))))
+
+  (with-errors-to-browser
+   send/finish
+   (lambda ()
+     `(html (body (table
+                   ,@(random-rows)
+                   )))))
+  )
 )

@@ -15,8 +15,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  flickr.people.findByUsername
  flickr.contacts.getPublicList
  flickr.people.getInfo
- get-timings)
+ get-timings
+ *verbose*)
 
+(define *verbose* (make-parameter #f))
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 
@@ -42,12 +44,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (assert (not (memq 'api_key keys-n-values)))
           (parse-xml
            (let* ((function-name (symbol->string 'api-name))
-                  (the-function (flickr function-name)))
+                  (the-function (flickr function-name))
+                  (the-args (list
+                             (apply ->ht
+                                    'api_key *flickr-API-key*  keys-n-values))))
+             (when (*verbose*)
+               (parameterize ((print-hash-table #t))
+                             (fprintf (current-error-port)
+                                      "Calling ~a with ~s~%" function-name the-args)))
              (let-values (((results cpu-ms wall-ms gc-cpu-ms)
                            (time-apply the-function
-                                       (list
-                                        (apply ->ht
-                                               'api_key *flickr-API-key*  keys-n-values)))))
+                                       the-args)))
                (hash-table-increment! *timings* function-name wall-ms)
                (apply values results)
                )))))))))
