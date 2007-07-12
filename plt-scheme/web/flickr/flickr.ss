@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  flickr.photos.search
  flickr.photos.getInfo
+ flickr.photos.getSizes
  flickr.people.findByUsername
  flickr.contacts.getPublicList
  flickr.people.getInfo
@@ -63,6 +64,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.people.getInfo)
 (define-flickr-api flickr.photos.getInfo)
+(define-flickr-api flickr.photos.getSizes)
 (define-flickr-api flickr.photos.search)
 
 ;; convert a list of alternating symbols and otherthings into a hash

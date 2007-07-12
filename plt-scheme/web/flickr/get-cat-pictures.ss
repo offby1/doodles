@@ -52,9 +52,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (when (*verbose*) (fprintf (current-error-port)
                                  "We have ~a pix to select from~%" howmany))
-      ;; believe it or not, kludging up a URL out of pieces like this is
-      ;; officially sanctioned.
+      ;; believe it or not, kludging up a URL out of pieces like this
+      ;; is officially sanctioned.  See
+      ;; http://www.flickr.com/services/api/misc.urls.html
 
+      ;; note that photos can come in different sizes; this URL is for
+      ;; the "medium" size.
       (format
        "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
        (@ 'farm)

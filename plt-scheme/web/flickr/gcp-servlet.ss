@@ -12,7 +12,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
          (lib "servlet.ss" "web-server")
-         (file "/home/erich/doodles/plt-scheme/web/flickr/get-cat-pictures.ss"))
+         (file "/home/erich/doodles/plt-scheme/web/flickr/get-cat-pictures.ss")
+         (file "/home/erich/doodles/plt-scheme/web/flickr/flickr.ss"))
 
 (provide interface-version timeout start)
 
@@ -45,15 +46,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (pix (all-interesting-cat-photos adjective))
          (howmany (min (string->number (car ((sxpath '(photos @ total   *text*)) pix)))
                        (string->number (car ((sxpath '(photos @ perpage *text*)) pix)))))
-         (chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix)))
+         (chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix))
+         (id ((sxpath '(@ id *text*)) chosen-photo))
+         (sizes (flickr.photos.getSizes 'photo_id (car id)))
+         (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
+         (width  (car ((sxpath '(@ width  *text*)) medium)))
+         (height (car ((sxpath '(@ height *text*)) medium)))
+         ;; '(// (div (@ (equal? (class "g")))))
+         )
 
     `((tr
-       (td (img ((src ,(url-for-one-interesting-cat-photo adjective))))))
+       (td (img ((src ,(url-for-one-interesting-cat-photo adjective))
+                 (height ,height)
+                 (width  ,width)))))
       (tr (td (p ,(format
                    "That's ~a ~s cat ~a.  Cute, huh?"
                    (article adjective)
                    adjective
-                   ((sxpath '(@ title *text*)) chosen-photo))))))))
+                   ((sxpath '(@ title *text*)) chosen-photo)
+                   )))))))
 
 (define (start initial-request)
 
