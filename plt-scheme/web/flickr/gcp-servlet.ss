@@ -56,7 +56,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          )
 
     `((tr
-       (td (img ((src ,(url-for-one-interesting-cat-photo adjective))
+       (td (img ((src ,(url-for-photo chosen-photo))
                  (height ,height)
                  (width  ,width)))))
       (tr (td (p ,(format

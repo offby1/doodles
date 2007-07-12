@@ -24,7 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  all-interesting-cat-photos
  attribute-getter-from-sxml
- url-for-one-interesting-cat-photo
+ url-for-photo
  )
 
 ;; It's hard to explain what this does, other than save typing.  Just
@@ -42,27 +42,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; TODO -- an empty QUERY-STRING, or one that consists entirely of
 ;; whitespace, causes us to get no results back.
 
-(define (url-for-one-interesting-cat-photo query-string)
-  (let ((results (all-interesting-cat-photos query-string)))
-    (when (*verbose*)
-      (pretty-print results))
-    (let* ((howmany (min (string->number (car ((sxpath '(photos @ total   *text*)) results)))
-                         (string->number (car ((sxpath '(photos @ perpage *text*)) results)))))
-           (@ (attribute-getter-from-sxml results `(photos (photo ,(add1 (random (sub1 howmany))))))))
+(define (url-for-photo photo)
+  (let* ((@ (attribute-getter-from-sxml photo '())))
 
-      (when (*verbose*) (fprintf (current-error-port)
-                                 "We have ~a pix to select from~%" howmany))
-      ;; believe it or not, kludging up a URL out of pieces like this
-      ;; is officially sanctioned.  See
-      ;; http://www.flickr.com/services/api/misc.urls.html
+    ;; believe it or not, kludging up a URL out of pieces like this
+    ;; is officially sanctioned.  See
+    ;; http://www.flickr.com/services/api/misc.urls.html
 
-      ;; note that photos can come in different sizes; this URL is for
-      ;; the "medium" size.
-      (format
-       "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
-       (@ 'farm)
-       (@ 'server)
-       (@ 'id)
-       (@ 'secret)))))
-
+    ;; note that photos can come in different sizes; this URL is for
+    ;; the "medium" size.
+    (format
+     "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+     (@ 'farm)
+     (@ 'server)
+     (@ 'id)
+     (@ 'secret))))
 )
