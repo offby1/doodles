@@ -11,6 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 set-url-query!)
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
+         (lib "pretty.ss")
          (lib "servlet.ss" "web-server")
          (file "/home/erich/doodles/plt-scheme/web/flickr/get-cat-pictures.ss")
          (file "/home/erich/doodles/plt-scheme/web/flickr/flickr.ss"))
@@ -30,6 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       "hungry"
                       "insane"
                       "lethargic"
+                      "literate" "literary" "well-read" "bookish"
                       "loyal"
                       "mad"
                       "old"
@@ -55,23 +57,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (if (positive? howmany)
         (let* ((chosen-photo ((sxpath `(photos (photo ,(add1 (random (sub1 howmany)))))) pix))
-               (id ((sxpath '(@ id *text*)) chosen-photo))
-               (sizes (flickr.photos.getSizes 'photo_id (car id)))
+               (id       (car ((sxpath '(@ id *text*)) chosen-photo)))
+               (photo-info (flickr.photos.getInfo
+                            'photo_id id))
+               (urls      ((sxpath '(photo urls)) photo-info))
+               (photopage-url (car ((sxpath '(// (url (@ (equal? (type "photopage")))) *text*)) urls)))
+               (sizes (flickr.photos.getSizes 'photo_id id))
                (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
-               (width  (car ((sxpath '(@ width  *text*)) medium)))
-               (height (car ((sxpath '(@ height *text*)) medium)))
+               (width    (car ((sxpath '(@ width    *text*)) medium)))
+               (height   (car ((sxpath '(@ height   *text*)) medium)))
+               (title    (car ((sxpath '(@ title    *text*)) chosen-photo)))
+               (nsid     (car ((sxpath '(@ owner    *text*)) chosen-photo)))
+               (person   (flickr.people.getInfo 'user_id nsid))
+               (username (car ((sxpath '(person username *text*)) person)))
                ;; '(// (div (@ (equal? (class "g"))))))
                )
+
           `((tr
              (td (img ((src ,(url-for-photo chosen-photo))
                        (height ,height)
                        (width  ,width)))))
+
             (tr (td (p ,(format
-                         "That's ~a ~s cat ~a.  Cute, huh?"
+                         "That's ~a ~s cat (~s, from ~s).  Cute, huh?"
                          (article adjective)
                          adjective
-                         ((sxpath '(@ title *text*)) chosen-photo)
-                         ))))))
+                         title
+                         username
+                         ))))
+            (tr (td (p (a ((href ,photopage-url)) "This picture's page"))))
+            ))
+
       `((tr (td (p ,(format "Uh oh, I couldn't find any pictures for ~s" adjective))))))))
 
 (define (start initial-request)
