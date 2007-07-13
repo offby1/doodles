@@ -11,7 +11,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 set-url-query!)
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
-         (lib "pretty.ss")
+         (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
+               html->shtml)
          (lib "servlet.ss" "web-server")
          (file "/home/erich/doodles/plt-scheme/web/flickr/get-cat-pictures.ss")
          (file "/home/erich/doodles/plt-scheme/web/flickr/flickr.ss"))
@@ -31,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       "hungry"
                       "insane"
                       "lethargic"
-                      "literate" "literary" "well-read" "bookish"
+                      "literate" "literary"
                       "loyal"
                       "mad"
                       "old"
@@ -47,6 +48,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (if (member first-letter '(#\a #\e #\i #\o #\u))
         "an"
       "a")))
+
+;; alas, sxml and shtml have subtly different ways of encoding
+;; attributes.
+
+;; (nuke-the-@s '(foo (@ (href "hey") (id "88"))))
+;;  =>
+;;               (foo ((href "hey") (id "88")))
+(define (nuke-the-@s sxml)
+  (if (pair? sxml)
+      (if (eq? '@ (car sxml))
+          (nuke-the-@s (cdr sxml))
+        (cons (nuke-the-@s (car sxml))
+              (nuke-the-@s (cdr sxml))))
+    sxml
+    ))
 
 (define (random-rows)
   (let* ((adjective (list-ref *adjectives* (random (length *adjectives*))))
@@ -85,7 +101,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
             (tf (td (p ,(if (null? descr)
                             "no description"
-                          (list 'i (car descr))))))
+                          ;; by parsing any HTML contained in the
+                          ;; description, and inserting it into my
+                          ;; page, I'm probably opening myself up to
+                          ;; all kinds of security problems :-(
+                          (cons 'i (cdr (nuke-the-@s (html->shtml (car descr)))))))))
             (tr (td (p ,(format
                          "That's ~a ~s cat (~s, from ~s).  Cute, huh?"
                          (article adjective)

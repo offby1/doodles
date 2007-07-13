@@ -10,7 +10,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module get-cat-pictures mzscheme
 (require (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
-         (lib "pretty.ss")
          (lib "trace.ss")
          (lib "sendurl.ss" "net")
          (lib "file.ss")
