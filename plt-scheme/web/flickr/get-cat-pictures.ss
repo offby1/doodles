@@ -42,7 +42,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; TODO -- an empty QUERY-STRING, or one that consists entirely of
 ;; whitespace, causes us to get no results back.
 
-(define (url-for-photo photo)
+(define (url-for-photo photo size)
   (let* ((@ (attribute-getter-from-sxml photo '())))
 
     ;; believe it or not, kludging up a URL out of pieces like this
@@ -51,10 +51,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     ;; note that photos can come in different sizes; this URL is for
     ;; the "medium" size.
+
     (format
-     "http://farm~a.static.flickr.com/~a/~a_~a.jpg"
+     "http://farm~a.static.flickr.com/~a/~a_~a~a.jpg"
      (@ 'farm)
      (@ 'server)
      (@ 'id)
-     (@ 'secret))))
+     (@ 'secret)
+     (case size
+       ((smallsquare) "_s")
+       ((thumbnail)   "_t")
+       ((small)       "_m")
+       ((medium)      "" )
+       ((large)       "_b")
+       (else "t")
+       ))))
 )

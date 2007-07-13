@@ -63,10 +63,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (descr     ((sxpath '(photo description *text*)) photo-info))
                (urls      ((sxpath '(photo urls)) photo-info))
                (photopage-url (car ((sxpath '(// (url (@ (equal? (type "photopage")))) *text*)) urls)))
-               (sizes (flickr.photos.getSizes 'photo_id id))
-               (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
-               (width    (car ((sxpath '(@ width       *text*)) medium)))
-               (height   (car ((sxpath '(@ height      *text*)) medium)))
+               (photo-info (flickr.photos.getSizes 'photo_id id))
+               (small ((sxpath '(// (size (@ (equal? (label "Small")))))) photo-info))
+               (width    (car ((sxpath '(@ width       *text*)) small)))
+               (height   (car ((sxpath '(@ height      *text*)) small)))
                (title    (car ((sxpath '(@ title       *text*)) chosen-photo)))
                (nsid     (car ((sxpath '(@ owner       *text*)) chosen-photo)))
                (person   (flickr.people.getInfo 'user_id nsid))
@@ -76,7 +76,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
           `((tr
              (td (a ((href ,photopage-url))
-                    (img ((src ,(url-for-photo chosen-photo))
+                    (img ((src ,(url-for-photo chosen-photo 'small))
                           (height ,height)
                           (width  ,width))))))
 
