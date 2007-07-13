@@ -60,14 +60,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (id       (car ((sxpath '(@ id *text*)) chosen-photo)))
                (photo-info (flickr.photos.getInfo
                             'photo_id id))
+               (descr     ((sxpath '(photo description *text*)) photo-info))
                (urls      ((sxpath '(photo urls)) photo-info))
                (photopage-url (car ((sxpath '(// (url (@ (equal? (type "photopage")))) *text*)) urls)))
                (sizes (flickr.photos.getSizes 'photo_id id))
                (medium ((sxpath '(// (size (@ (equal? (label "Medium")))))) sizes))
-               (width    (car ((sxpath '(@ width    *text*)) medium)))
-               (height   (car ((sxpath '(@ height   *text*)) medium)))
-               (title    (car ((sxpath '(@ title    *text*)) chosen-photo)))
-               (nsid     (car ((sxpath '(@ owner    *text*)) chosen-photo)))
+               (width    (car ((sxpath '(@ width       *text*)) medium)))
+               (height   (car ((sxpath '(@ height      *text*)) medium)))
+               (title    (car ((sxpath '(@ title       *text*)) chosen-photo)))
+               (nsid     (car ((sxpath '(@ owner       *text*)) chosen-photo)))
                (person   (flickr.people.getInfo 'user_id nsid))
                (username (car ((sxpath '(person username *text*)) person)))
                ;; '(// (div (@ (equal? (class "g"))))))
@@ -79,6 +80,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (height ,height)
                           (width  ,width))))))
 
+            (tf (td (p ,(if (null? descr)
+                            "no description"
+                          (list 'i (car descr))))))
             (tr (td (p ,(format
                          "That's ~a ~s cat (~s, from ~s).  Cute, huh?"
                          (article adjective)
