@@ -74,9 +74,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
 
           `((tr
-             (td (img ((src ,(url-for-photo chosen-photo))
-                       (height ,height)
-                       (width  ,width)))))
+             (td (a ((href ,photopage-url))
+                    (img ((src ,(url-for-photo chosen-photo))
+                          (height ,height)
+                          (width  ,width))))))
 
             (tr (td (p ,(format
                          "That's ~a ~s cat (~s, from ~s).  Cute, huh?"
@@ -85,7 +86,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          title
                          username
                          ))))
-            (tr (td (p (a ((href ,photopage-url)) "This picture's page"))))
             ))
 
       `((tr (td (p ,(format "Uh oh, I couldn't find any pictures for ~s" adjective))))))))
