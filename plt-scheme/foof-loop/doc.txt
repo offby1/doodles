@@ -1,6 +1,6 @@
 * foof-loop: A Simple, Extensible Scheme Looping Facility -*-outline-*-
 
-This is the reference manual for foof-loop version 7.  This file was
+This is the reference manual for foof-loop version 8.  This file was
 written by Taylor R. Campbell and is placed in the Public Domain.  All
 warranties are disclaimed.
 
@@ -671,6 +671,47 @@ The loop iteration is controlled by the loop clauses:
     of the iterator-supplied termination conditions are guaranteed to
     have failed.
 
+*** Lazy Loops
+
+(LAZY-LOOP <loop-name> (<loop-clause> ...)
+  => <final-expression>
+  <body>)
+
+  Lazily evaluated variant of LOOP, dependent upon SRFI 45 (Primitives
+  for Expressing Iterative Lazy Algoritms).  This is equivalent to a
+  LOOP form wrapped in a LAZY form with all calls to the <loop-name>
+  also wrapped in LAZY forms.  (See the SRFI 45 for details on LAZY.)
+  The loop's body and final expression both must yield promises in the
+  sense of DELAY or LAZY.
+
+    ;;; Assume SRFI-40-style streams (see SRFI 40, A Library of
+    ;;; Streams, for details, particularly on even versus odd streams).
+    ;;; Also assume an IN-STREAM iterator.
+
+    (define (stream-filter predicate stream)
+      (lazy-loop filter ((for element (in-stream stream)))
+        => stream-nil
+        (if (predicate element)
+            (stream-cons element (filter))
+            (filter))))
+
+    ;;; The above definition of STREAM-FILTER is equivalent to the
+    ;;; following:
+
+    (define (stream-filter predicate stream)
+      (lazy
+       (loop filter ((for element (in-stream stream)))
+         => stream-nil
+         (if (predicate element)
+             (stream-cons element (lazy (filter)))
+             (lazy (filter))))))
+
+  The laziness annotations are added around the whole loop and calls to
+  the loop, rather than the loop body, in order to delay any outer
+  bindings of the loop (for example, all expressions supplied as
+  arguments to loop iterators) and any loop variable updates when
+  recursively invoking the loop.
+
 *** Loop Expansion
 
 When a LOOP form is fully processed and expanded, the result resembles
@@ -891,13 +932,15 @@ efficiency of arithmetic, and it would require minimal changes to LOOP
              (with knil knil (kons pair knil)))
         => knil))
 
-(FOR <elements> [<pairs>] (IN-LISTS <lists>))
+(FOR <elements> [<pairs>] (IN-LISTS <lists> [<tail>]))
 
   Iterates for each successive pair in each parallel element of <lists>,
   binding the variable <pairs>, if supplied, to be a list of those
   pairs, and the variable <elements> to a list of the cars of those
-  pairs.  The successor of each pair is taken by CDR.  The iteration
-  runs out when any successor is no longer a pair.
+  pairs, prepended to the value of <tail> evaluated at each iteration.
+  If no <tail> is supplied, its default value is the empty list.  The
+  successor of each pair is taken by CDR.  The iteration runs out when
+  any successor is no longer a pair.
 
   <Lists> must be a non-empty list; it is an error if otherwise.  It is
   evaluated once before the loop begins.
@@ -927,6 +970,17 @@ efficiency of arithmetic, and it would require minimal changes to LOOP
       (loop proceed ((for elts (in-lists (cons list lists))))
         (or (apply predicate elts)
             (proceed))))
+
+    ;;; SRFI 1's signature for FOLD.  Notice that KNIL is the *last*
+    ;;; argument to the FOLD procedure, so we have to tack it on to the
+    ;;; end of the argument list.
+
+    (define (fold kons knil list . lists)
+      (loop ((with knil knil (apply kons arguments))
+             (for arguments 
+                  (in-lists (cons list lists)
+                            (cons knil '()))))
+        => knil))
 
 *** Iterating across Vectors and Strings
 

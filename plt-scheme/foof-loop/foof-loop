@@ -1,6 +1,6 @@
 ;;; -*- Mode: Scheme -*-
 
-;;;; Extensible Looping Macros, version 7
+;;;; Extensible Looping Macros, version 8
 
 ;;; This code is written by Taylor R. Campbell and placed in the Public
 ;;; Domain.  All warranties are disclaimed.
@@ -27,6 +27,24 @@
 
     ((LOOP name ((loop-clause0 loop-clause1 ...) ...) body ...)
      (%LOOP START name ((loop-clause0 loop-clause1 ...) ...) (body ...)))))
+
+;;; We must be very careful about where to add laziness annotations.
+;;; In particular, we don't want to wrap only the loop's body, because
+;;; if we did that, the outer bindings produced by the iterators would
+;;; be evaluate eagerly, which is too soon.  So instead, we wrap the
+;;; whole thing in a LAZY, and then wrap every call to the loop as
+;;; well.
+
+(define-syntax lazy-loop
+  (syntax-rules (=>)
+    ((LAZY-LOOP name (iterator ...) => result body0 body1 ...)
+     (LAZY (LOOP EAGER-LOOP (iterator ...)
+             => result
+             (LET-SYNTAX ((name
+                           (SYNTAX-RULES ()
+                             ((name . arguments)
+                              (LAZY (EAGER-LOOP . arguments))))))
+               body0 body1 ...))))))
 
 ;;; Use this definition of SYNTACTIC-ERROR if your favourite Scheme
 ;;; doesn't have one already.  Note that this is distinct from a
@@ -641,31 +659,40 @@
     ((IN-LIST variables arguments next . rest)
      (LOOP-CLAUSE-ERROR (IN-LIST variables arguments
                                  "Malformed IN-LIST clause in LOOP:")))))
+
+;;;;; Parallel List Iteration
 
 (define-syntax in-lists
   (syntax-rules ()
-    ((IN-LISTS (elements-variable pairs-variable) (lists-expression)
+    ((IN-LISTS (elements-variable pairs-variable)
+               (lists-expression tail-expression)
                next . rest)
      (next (((LISTS) lists-expression))   ;Outer bindings
            ((pairs-variable LISTS CDRS))  ;Loop variables
            (((LOSE? CARS CDRS)            ;Entry bindings
-             (%CARS&CDRS pairs-variable)))
+             (%CARS&CDRS pairs-variable tail-expression '())))
            (LOSE?)                        ;Termination conditions
            (((elements-variable) CARS))   ;Body bindings
            ()                             ;Final bindings
            . rest))
 
+    ((IN-LISTS (elements-variable pairs-variable) (lists) next . rest)
+     (IN-LISTS (elements-variable pairs-variable) (lists '()) next . rest))
+
+    ((IN-LISTS (elements-variable) (lists tail) next . rest)
+     (IN-LISTS (elements-variable PAIRS) (lists tail) next . rest))
+
     ((IN-LISTS (elements-variable) (lists) next . rest)
-     (IN-LISTS (elements-variable PAIRS) (lists) next . rest))
+     (IN-LISTS (elements-variable PAIRS) (lists '()) next . rest))
 
     ((IN-LISTS variables arguments next . rest)
      (LOOP-CLAUSE-ERROR (IN-LISTS variables arguments
                                   "Malformed IN-LISTS clause in LOOP:")))))
 
-(define (%cars&cdrs lists)
+(define (%cars&cdrs lists cars-tail cdrs-tail)
   (loop proceed ((for list (in-list lists))
-                 (for cars (listing (car list)))
-                 (for cdrs (listing (cdr list))))
+                 (for cars (listing (initial cars-tail) (car list)))
+                 (for cdrs (listing (initial cdrs-tail) (cdr list))))
     => (values #f cars cdrs)
     (if (pair? list)
         (proceed)
