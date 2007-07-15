@@ -26,6 +26,7 @@ exec mzscheme -M errortrace --case-insens -qu "$0" ${1+"$@"}
  in-string-reverse
  in-vector
  in-vector-reverse
+ lazy-loop
  listing
  listing!
  listing-into!
