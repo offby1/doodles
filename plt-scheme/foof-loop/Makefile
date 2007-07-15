@@ -7,13 +7,27 @@ planet   := planet
 
 plt-file := foof-loop.plt
 owner := offby1
-version := 1 1
+version := 8 0
 
 sources := foof-loop syn-param
 tests   := test test-foof-loop test-parameters
 
-$(plt-file): $(wildcard *.ss) doc.txt $(sources) $(tests)
-	$(planet) --create-archive . 
+# planet --create-archive rather stupidly adds every file it finds,
+# rather than letting me specify the files I want to add.  So to keep
+# crap outta the archive, I create a fresh copy, create the archive
+# from that copy, then nuke the copy.
+
+# Oh, and it doesn't work to make x/foof-loop a prerequisite of
+# .INTERMEDIATE, at least in GNU Make 3.81, because it tries to remove
+# the thing with "rm" instead of "rm -r".  Daft punter.
+
+$(plt-file): x/foof-loop
+	$(planet) --create-archive $^
+	rm -rf x
+
+x/foof-loop:
+	mkdir -vp $$(dirname $@)
+	svn export . $@
 
 clean:
 	-rm $(plt-file)
