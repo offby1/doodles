@@ -36,6 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (flickr.photos.search
    'tags     (string-join (list "cat" query-string) ",")
    'tag_mode "all"
+   'sort     "date-taken-asc"
    ))
 
 ;; TODO -- an empty QUERY-STRING, or one that consists entirely of
