@@ -6,7 +6,8 @@ exec mzscheme -M errortrace --case-insens -qu "$0" ${1+"$@"}
 
 (module foof-loop mzscheme
 (require (lib "include.ss")
-         (lib "8.ss" "srfi"))
+         (lib "8.ss" "srfi")
+         (only (lib "45.ss" "srfi") lazy))
 
 (include/reader "syn-param" (lambda args (read-case-sensitive #f)
                                              (apply read-syntax args)))
