@@ -4,6 +4,8 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; I've already forgotten what this entire file does.
+
 (module google-rss mzscheme
 (require (only (lib "uri-codec.ss" "net")
                current-alist-separator-mode)
