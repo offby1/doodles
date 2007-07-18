@@ -77,6 +77,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (bfs *initial-nsid*
                   "20825469@N00"        ; yours truly
                   string=?
+
+                  ;; an idea: rather than tracking down contacts, we
+                  ;; could instead track down favorite photos, and
+                  ;; extract the authors from those.
                   (lambda (user_id)
                     (let ((probe (hash-table-get *cached-contacts* user_id #f)))
                       (when probe
