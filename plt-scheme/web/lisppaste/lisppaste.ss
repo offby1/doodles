@@ -10,12 +10,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (display
  ;; the API is documented at http://common-lisp.net/project/lisppaste/xml-rpc.html
- (let* ((result (((xmlrpc-server "common-lisp.net" 8185 "RPC2") "pasteheaders") 3)))
-   (map
-    (lambda (args)
-      (apply format  "Paste #~a at ~a from ~a on channel ~a, titled ~s, ~a annotations~%" args))
-
-    result)))
+ (map
+  (lambda (args)
+    (apply format  "Paste #~a at ~a from ~a on channel ~a, titled ~s, ~a annotations~%" args))
+  (((xmlrpc-server "common-lisp.net" 8185 "RPC2") "pasteheaders") 3)))
 (newline)
 
 ;; debug me with something like
