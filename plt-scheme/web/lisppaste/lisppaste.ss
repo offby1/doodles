@@ -7,9 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module lisppaste mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (planet "ssax.ss"   ("lizorkin"   "ssax.plt"))
-         (planet "zdate.ss"  ("offby1" "offby1.plt"))
+         (only (planet "zdate.ss"  ("offby1" "offby1.plt")) zdate)
          (lib "trace.ss")
-         (lib "date.ss")
          (only
           (lib "1.ss" "srfi")
           first second third fourth fifth sixth seventh))
