@@ -8,10 +8,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (only (planet "zdate.ss"  ("offby1" "offby1.plt")) zdate))
 
-(define pasteheaders ((xmlrpc-server "common-lisp.net" 8185 "RPC2") "pasteheaders"))
-
 (display
- (let* ((result (pasteheaders 3)))
+ (let* ((result (((xmlrpc-server "common-lisp.net" 8185 "RPC2") "pasteheaders") 3)))
    (map
     (lambda (paste)
       (let-values (((number time username channel title num-annotations) (apply values paste)))
