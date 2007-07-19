@@ -6,9 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module lisppaste mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
-         (planet "ssax.ss"   ("lizorkin"   "ssax.plt"))
          (only (planet "zdate.ss"  ("offby1" "offby1.plt")) zdate)
-         (lib "trace.ss")
          (only
           (lib "1.ss" "srfi")
           first second third fourth fifth sixth seventh))
@@ -19,17 +17,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (let* ((result (pasteheaders 3)))
    (map
     (lambda (paste)
-      (let ((number (first paste))
-            (time (second paste))
-            (username (third paste))
-            (channel (fourth paste))
-            (title (fifth paste))
-            (num-annotations (sixth paste)))
+      (let-values (((number time username channel title num-annotations) (apply values paste)))
         (format "Paste #~a at ~a from ~a on channel ~a, titled ~s, ~a annotations~%"
-                number (zdate time) username channel title num-annotations))
-      )
-    result)
-   ))
+                number  time username channel title num-annotations)))
+
+    result)))
+
 
 (newline)
 
