@@ -10,7 +10,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
-  (define the-channel (make-async-channel))
+  (define callback
+    (let ((state 'init))
+      (lambda (line)
+        (printf "<= ~s~%" line)
+        (case state
+          ((init)
+           (put "NICK carter")
+           (put "USER erich debian irc.freenode.org :Eric Hanchrow")
+           (set! state 'something-else)
+           )
+          (else
+           (fprintf (current-error-port)
+                    "Uh oh, I don't know what to do now.~%"))
+          ))))
 
   (define reader
     (thread
@@ -20,8 +33,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (if (eof-object? line)
                (printf "eof on server~%")
              (begin
-               (async-channel-put the-channel line)
-               (printf "<= ~s~%" line)
+               (callback line)
                (loop))))))))
 
   (define (put str)
@@ -31,11 +43,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (newline op)
     (flush-output op))
 
-  (put "NICK carter")
-  (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-  (let loop ()
-    (let ((datum (async-channel-get the-channel)))
-      (write datum)
-      (newline)
-      (loop))))
+  (sync reader))
+
 )
