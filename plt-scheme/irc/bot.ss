@@ -6,7 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; http://tools.ietf.org/html/rfc1459
 
-(module irc mzscheme
+(module bot mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
          (only (lib "13.ss" "srfi") string-tokenize)
@@ -14,9 +14,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set
                char-set-complement)
          "parse-message.ss")
+
 (define *echo-server-lines* #f)
-(define *my-nick* "carter")
+(define *my-nick* "fartbot")
 (define *irc-server-name* "localhost" )
+(define *initial-channel-name* "#fart")
+
 (let-values (((ip op)
               (tcp-connect *irc-server-name* 6667)))
 
@@ -44,7 +47,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((001)
                (set! state 'logged-in)
                (printf "Ah, I see we logged in OK.~%")
-               (put "JOIN #fart"))
+               (put (format "JOIN ~a" *initial-channel-name*)))
               ((311 312 317)
                (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
                        command-number
