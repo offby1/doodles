@@ -16,6 +16,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (cond
        ((or (eof-object? ch)
             (char=? #\space ch))
+
+        ;;  consume any remaining spaces
+        (let loop ((ch (peek-char ip)))
+          (when (and (not (eof-object? ch))
+                     (char=? #\space ch))
+            (read-char ip)))
+
         (apply string (reverse chars)))
        (else
         (loop (cons ch chars)))))))
@@ -38,9 +45,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (test-suite
    "Evahthang"
    (test-equal?
-    "grab-word"
+    "grab-word, just one word"
     (grab-word (open-input-string "hey"))
     "hey")
+   (test-equal?
+    "grab-word,  one word, trailing space"
+    (grab-word (open-input-string "hey "))
+    "hey")
+   (test-case
+    "grab-word, two words"
+    (let* ((ip (open-input-string "hey  you"))
+           (hey (grab-word ip))
+           (you (grab-word ip)))
+      (check-equal? hey "hey")
+      (check-equal? you "you")))
    (test-case
     "parse-message with prefix"
     (let ((str ":localhost. 255 carter :I have 2 clients and 0 servers")
