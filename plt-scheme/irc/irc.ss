@@ -28,7 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
           (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
                                      (string->number command)))
-                (command-string (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
+                (command-symbol (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
                                      (string->symbol command))))
             (case command-number
               ((250)
@@ -37,15 +37,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
                        command-number
                        params)))
-            (case command-string
-             ((PRIVMSG)
-              (printf "Ooh -- a message for someone -- ~s~%" params))))))))
+            (case command-symbol
+             ((PRIVMSG NOTICE)
+              (printf "Ooh -- a message for me from ~a -- ~s~%" prefix params))
+             ((PING)
+              (printf "I got a Ping from ~a.  I guess I should pong.~%"  params)
+              (put (format "PONG ~a" params)))))))))
 
   (define reader
     (thread
      (lambda ()
        (let loop ()
-         (let ((line (read-line ip)))
+         (let ((line (read-line ip 'return-linefeed)))
            (if (eof-object? line)
                (printf "eof on server~%")
              (begin
