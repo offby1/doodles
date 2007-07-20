@@ -20,20 +20,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (printf "eof on server~%")
              (begin
                (async-channel-put the-channel line)
+               (printf "<= ~s~%" line)
                (loop))))))))
 
   (define (put str)
-    (printf "=> ~s~%" str)
+    (printf "=> ~a~%" (string-append str (make-string 1 #\return)))
     (display str op)
     (display #\return op)
-    (newline op))
+    (newline op)
+    (flush-output op))
 
-  (define (gotsync)
-    (printf "<= ~s~%" (sync the-channel)))
   (put "NICK carter")
-  (gotsync)
   (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-  (gotsync)
-  (put "JOIN #frobotzle")
-  (gotsync))
+  (sync reader))
+
 )
