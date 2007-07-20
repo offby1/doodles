@@ -37,12 +37,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (loop))))))))
 
   (define (put str)
-    (printf "=> ~a~%" (string-append str (make-string 1 #\return)))
+    (printf "=> ~s~%" str)
     (display str op)
-    (display #\return op)
     (newline op)
     (flush-output op))
 
-  (sync reader))
+  (sync/timeout 5 reader)
+  (display "OK, I'm bored.")
+  (newline))
 
 )
