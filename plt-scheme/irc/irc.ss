@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module irc mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
+         (only (lib "13.ss" "srfi") string-tokenize)
          "parse-message.ss")
 (define *echo-server-lines* #f)
 (define *my-nick* "carter")
@@ -43,15 +44,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (case command-symbol
               ((PRIVMSG NOTICE)
                (printf "Ooh -- a message " )
-               (let ((destination (and prefix
-                                  (cadr (regexp-match (pregexp "^([^[:space:]]+)(?: .*)?$") params)))))
+               (let* ((tokens (string-tokenize params))
+                      (destination (and prefix (car tokens))))
                  (cond
                   ((equal? *my-nick* destination)
-                   (printf "for me"))
+                   (printf "for me only"))
                   ((not destination)
                    (printf "for noone in particular"))
                   ((regexp-match #rx"^#" destination)
-                   (printf "for the channel ~a" destination))
+                   (printf "for the channel ~a" destination)
+                   (if (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
+                       (printf " (hey, it's for me!)"))
+                   )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
                (printf " ~s~%" params))
