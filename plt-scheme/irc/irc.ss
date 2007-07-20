@@ -10,9 +10,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "async-channel.ss")
          (lib "trace.ss")
          (only (lib "13.ss" "srfi") string-tokenize)
+         (only (lib "14.ss" "srfi")
+               char-set
+               char-set-complement)
          "parse-message.ss")
 (define *echo-server-lines* #f)
 (define *my-nick* "carter")
+
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
@@ -45,7 +49,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((PRIVMSG NOTICE)
                (printf "Ooh -- a message " )
                (let* ((tokens (string-tokenize params))
-                      (destination (and prefix (car tokens))))
+                      (destination (and prefix (car tokens)))
+                      (source (and prefix (car (string-tokenize prefix (char-set-complement (char-set #\! #\@)))))))
                  (cond
                   ((equal? *my-nick* destination)
                    (printf "for me only"))
@@ -53,8 +58,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (printf "for noone in particular"))
                   ((regexp-match #rx"^#" destination)
                    (printf "for the channel ~a" destination)
-                   (if (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
-                       (printf " (hey, it's for me!)"))
+                   (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
+                     (printf " (hey, it's for me!)")
+                     (do-something-clever (cddr tokens) source))
                    )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
@@ -79,6 +85,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (display str op)
     (newline op)
     (flush-output op))
+
+  (define (do-something-clever tokens requestor)
+    (put (format "PRIVMSG ~a :Well, ~a; I think ~a too.~%"
+                 requestor
+                 requestor
+                 tokens)))
 
   (set! *echo-server-lines* #t)
   (sync/timeout (* 5 60) reader)
