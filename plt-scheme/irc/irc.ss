@@ -60,7 +60,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (printf "for the channel ~a" destination)
                    (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
                      (printf " (hey, it's for me!)")
-                     (do-something-clever (cddr tokens) source))
+                     (do-something-clever (cddr tokens) source destination))
                    )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
@@ -86,9 +86,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (newline op)
     (flush-output op))
 
-  (define (do-something-clever tokens requestor)
+  (define (do-something-clever tokens requestor channel-name)
     (put (format "PRIVMSG ~a :Well, ~a; I think ~a too.~%"
-                 requestor
+                 channel-name
                  requestor
                  tokens)))
 
