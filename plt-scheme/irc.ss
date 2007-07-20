@@ -4,6 +4,8 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; http://tools.ietf.org/html/rfc1459
+
 (module irc mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss"))
@@ -36,6 +38,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (callback line)
                (loop))))))))
 
+  ;; TODO -- gack if str is > 510 characters long
   (define (put str)
     (printf "=> ~s~%" str)
     (display str op)
