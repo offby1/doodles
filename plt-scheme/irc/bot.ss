@@ -37,7 +37,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           "unknown-host"
                           *irc-server-name*
                           "Eric Hanchrow's bot, $Rev$"))
-             (set! state 'something-other-than-init)))
+             (set! state 'waiting-for-login-confirmation)))
 
           (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
                                      (string->number command)))
@@ -60,14 +60,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (source (and prefix (car (string-tokenize prefix (char-set-complement (char-set #\! #\@)))))))
                  (cond
                   ((equal? *my-nick* destination)
-                   (printf "for me only"))
+                   (printf "for me only")
+                   (do-something-clever tokens source destination #t))
                   ((not destination)
                    (printf "for noone in particular"))
                   ((regexp-match #rx"^#" destination)
                    (printf "for the channel ~a" destination)
                    (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
                      (printf " (hey, it's for me!)")
-                     (do-something-clever (cddr tokens) source destination))
+                     (do-something-clever (cdr tokens) source destination #f))
                    )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
@@ -93,14 +94,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (newline op)
     (flush-output op))
 
-  (define (do-something-clever tokens requestor channel-name)
-    (put (format "PRIVMSG ~a :Well, ~a; I think ~a too.~%"
-                 channel-name
-                 requestor
-                 tokens)))
+  (define (do-something-clever tokens requestor channel-name was-private?)
+    (printf "Tokens: ~s~%" tokens)
+    (let ((response-body (format "Well, ~a; I think ~a too."
+                                 requestor
+                                 (cdr tokens))))
+      (put (format "PRIVMSG ~a :~a~%"
+                   (if was-private? requestor channel-name)
+                   response-body))))
 
   (set! *echo-server-lines* #t)
-  (sync/timeout (* 5 60) reader)
+  (sync reader)
   (display "OK, I'm bored.")
   (newline))
 
