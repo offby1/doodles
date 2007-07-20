@@ -22,14 +22,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (case state
             ((init)
              (put "NICK carter")
-             (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-             (set! state 'something-else)
-             )
+             (put "USER erich debian irc.freenode.org :Eric Hanchrow"))
+            ((ready-for-action)
+             (put "WHOIS carter"))
             (else
              (fprintf (current-error-port)
-                      "Uh oh, I don't know what to do with ~s ~s ~s.~%"
-                      prefix command params))
-            )))))
+                      "Uh oh, I don't know what to do in state ~s.~%"
+                      state ))
+            )
+          ;; transition to next state.
+          (cond
+           ((string=? command "NOTICE")
+            ;; no change.
+            )
+           ((regexp-match (pregexp "^[[:digit:]]{3}$") command )
+            (set! state (string->number command))))
+          ))))
 
   (define reader
     (thread
