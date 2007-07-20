@@ -10,41 +10,36 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "async-channel.ss")
          (lib "trace.ss")
          "parse-message.ss")
-(define *echo-server-lines* (make-parameter #f))
+(define *echo-server-lines* #f)
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
   (define callback
     (let ((state 'init))
       (lambda (line)
-        (when (*echo-server-lines*) (printf "<= ~s~%" line))
+        (when *echo-server-lines* (printf "<= ~s~%" line))
         (let-values (((prefix command params)
                       (parse-message line)))
           (case state
             ((init)
              (put "NICK carter")
-             (put "USER erich debian irc.freenode.org :Eric Hanchrow"))
-            ((250)
-             (put "WHOIS carter"))
-            ((311 312 317)
-             (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
-                     state
-                     params))
-            (else
-             (fprintf (current-error-port)
-                      "Uh oh, I don't know what to do in state ~s.~%"
-                      state ))
-            )
-          ;; transition to next state.
-          (cond
-           ((eq? state 'init)
-            (set! state 'unknown))
-           ((string=? command "NOTICE")
-            ;; no change.
-            )
-           ((regexp-match (pregexp "^[[:digit:]]{3}$") command )
-            (set! state (string->number command))))
-          ))))
+             (put "USER erich debian irc.freenode.org :Eric Hanchrow")
+             (set! state 'something-other-than-init)))
+
+          (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
+                                     (string->number command)))
+                (command-string (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
+                                     (string->symbol command))))
+            (case command-number
+              ((250)
+               (put "WHOIS carter"))
+              ((311 312 317)
+               (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
+                       command-number
+                       params)))
+            (case command-string
+             ((PRIVMSG)
+              (printf "Ooh -- a message for someone -- ~s~%" params))))))))
 
   (define reader
     (thread
@@ -64,7 +59,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (newline op)
     (flush-output op))
 
-  (sync/timeout 5 reader)
+  (set! *echo-server-lines* #t)
+  (sync/timeout (* 5 60) reader)
   (display "OK, I'm bored.")
   (newline))
 
