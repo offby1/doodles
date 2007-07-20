@@ -8,7 +8,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module irc mzscheme
 (require (lib "async-channel.ss")
-         (lib "trace.ss"))
+         (lib "trace.ss")
+         "parse-message.ss")
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
@@ -16,16 +17,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((state 'init))
       (lambda (line)
         (printf "<= ~s~%" line)
-        (case state
-          ((init)
-           (put "NICK carter")
-           (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-           (set! state 'something-else)
-           )
-          (else
-           (fprintf (current-error-port)
-                    "Uh oh, I don't know what to do now.~%"))
-          ))))
+        (let-values (((prefix command params)
+                      (parse-message line)))
+          (case state
+            ((init)
+             (put "NICK carter")
+             (put "USER erich debian irc.freenode.org :Eric Hanchrow")
+             (set! state 'something-else)
+             )
+            (else
+             (fprintf (current-error-port)
+                      "Uh oh, I don't know what to do with ~s ~s ~s.~%"
+                      prefix command params))
+            )))))
 
   (define reader
     (thread

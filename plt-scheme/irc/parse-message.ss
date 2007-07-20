@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet  "assert.ss"  ("offby1"     "offby1.plt")) exit-if-failed)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string))
 
+(provide parse-message)
 (define (grab-word ip)
   (let loop ((chars '()))
     (let ((ch (read-char ip)))
