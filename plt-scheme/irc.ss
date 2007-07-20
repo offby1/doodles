@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module irc mzscheme
-(require (lib "async-channel.ss"))
+(require (lib "async-channel.ss")
+         (lib "trace.ss"))
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
@@ -32,6 +33,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (put "NICK carter")
   (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-  (sync reader))
-
+  (let loop ()
+    (let ((datum (async-channel-get the-channel)))
+      (write datum)
+      (newline)
+      (loop))))
 )
