@@ -11,18 +11,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "trace.ss")
          "parse-message.ss")
 (define *echo-server-lines* #f)
+(define *my-nick* "carter")
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
   (define callback
-    (let ((state 'init))
+    (let ((state 'initial))
       (lambda (line)
         (when *echo-server-lines* (printf "<= ~s~%" line))
         (let-values (((prefix command params)
                       (parse-message line)))
           (case state
-            ((init)
-             (put "NICK carter")
+            ((initial)
+             (put (format "NICK ~a" *my-nick*))
              (put "USER erich debian irc.freenode.org :Eric Hanchrow")
              (set! state 'something-other-than-init)))
 
@@ -31,18 +32,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (command-symbol (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
                                      (string->symbol command))))
             (case command-number
-              ((250)
-               (put "WHOIS carter"))
+              ((001)
+               (set! state 'logged-in)
+               (printf "Ah, I see we logged in OK.~%")
+               (put "JOIN #fart"))
               ((311 312 317)
                (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
                        command-number
                        params)))
             (case command-symbol
-             ((PRIVMSG NOTICE)
-              (printf "Ooh -- a message for me from ~a -- ~s~%" prefix params))
-             ((PING)
-              (printf "I got a Ping from ~a.  I guess I should pong.~%"  params)
-              (put (format "PONG ~a" params)))))))))
+              ((PRIVMSG NOTICE)
+               (printf "Ooh -- a message " )
+               (let ((destination (and prefix
+                                  (cadr (regexp-match (pregexp "^([^[:space:]]+)(?: .*)?$") params)))))
+                 (cond
+                  ((equal? *my-nick* destination)
+                   (printf "for me"))
+                  ((not destination)
+                   (printf "for noone in particular"))
+                  ((regexp-match #rx"^#" destination)
+                   (printf "for the channel ~a" destination))
+                  (else
+                   (printf "for ... I dunno: ~s" destination))))
+               (printf " ~s~%" params))
+              ((PING)
+               (put (format "PONG ~a" params)))))))))
 
   (define reader
     (thread
