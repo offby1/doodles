@@ -42,9 +42,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                 (write (url->string url))
                 (newline)
-                (pretty-print ((sxpath '(// item title *text*)) (html->shtml
-                                 (port->string (get-pure-port
-                                                url
-                                                (list))))))
-                ))
+                (pretty-print
+                 ((sxpath '(// item title *text*))
+                  (html->shtml
+                   (port->string (get-pure-port
+                                  url
+                                  (list))))))))
 )
