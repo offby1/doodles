@@ -11,18 +11,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "port.ss"      ("schematics"  "port.plt" ))
+         (planet "zdate.ss"     ("offby1"      "offby1.plt"))
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
-         (only (lib "19.ss" "srfi") date->string current-date)
          (only (lib "13.ss" "srfi")
                string-join)
          "aws-common.ss"
          )
-;; the date->string procedure from date.ss _claims_ to support
-;; iso-8601, but alexa complains it's the wrong format, so I'm rolling
-;; my own here.
-(define (iso-8601-date)
-  (date->string (current-date) "~Y-~m-~dT~X~z"))
 
 (define (alexa-call query)
   ;; without this, alexa complains "The requested version ( ) is not
@@ -31,7 +26,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize ((current-alist-separator-mode 'amp))
                 (let* ((version "2007-03-15")
                        (action "Search")
-                       (date (iso-8601-date))
+                       (date (zdate (seconds->date (current-seconds))))
                        (url (make-url "http"
                                       #f                      ;user
                                       "wsearch.amazonaws.com" ;host
