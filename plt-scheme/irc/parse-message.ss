@@ -7,16 +7,42 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module parse-message mzscheme
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
-         (only (planet  "assert.ss"  ("offby1"     "offby1.plt")) exit-if-failed))
+         (only (planet  "assert.ss"  ("offby1"     "offby1.plt")) exit-if-failed)
+         (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string))
+
+(define (grab-word ip)
+  (let loop ((chars '()))
+    (let ((ch (read-char ip)))
+      (cond
+       ((or (eof-object? ch)
+            (char=? #\space ch))
+        (apply string (reverse chars)))
+       (else
+        (loop (cons ch chars)))))))
 
 (define (parse-message str)
-  (values "localhost." "255" "carter :I have 2 clients and 0 servers"))
+  (let ((prefix #f)
+        (command #f)
+        (params #f))
+    (let ((ip (open-input-string str)))
+      (when (char=? #\: (peek-char ip))
+        (read-char ip)
+        (set! prefix (grab-word ip)))
+      (set! command (grab-word ip))
+      (set! params (port->string ip))
+      (values prefix command params)))
+  )
+
 (exit-if-failed
  (test/text-ui
   (test-suite
    "Evahthang"
+   (test-equal?
+    "grab-word"
+    (grab-word (open-input-string "hey"))
+    "hey")
    (test-case
-    "uh ..."
+    "parse-message with prefix"
     (let ((str ":localhost. 255 carter :I have 2 clients and 0 servers")
           (expected-prefix "localhost.")
           (expected-command "255")
@@ -28,7 +54,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (check-equal? actual-params expected-params)))
     )
    (test-case
-    "er ..."
+    "parse-message without prefix"
     (let ((str "NOTICE AUTH :*** No identd (auth) response")
           (expected-prefix #f)
           (expected-command "NOTICE")
