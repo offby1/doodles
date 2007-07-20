@@ -5,12 +5,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module irc mzscheme
-
+(require (lib "async-channel.ss"))
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
-  (define (dl str)
-    (printf "<= ~s~%" str))
+  (define the-channel (make-async-channel))
+
+  (define reader
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((line (read-line ip)))
+           (if (eof-object? line)
+               (printf "eof on server~%")
+             (begin
+               (async-channel-put the-channel line)
+               (loop))))))))
 
   (define (put str)
     (printf "=> ~s~%" str)
@@ -18,20 +28,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (display #\return op)
     (newline op))
 
-  (define (drain)
-    (sync ip)
-    (let loop ((result '()))
-      (let ((line (read-line ip)))
-        (if (or (not (char-ready? ip))
-                (eof-object? line))
-            (reverse result)
-          (loop (cons line result))))))
-
-  (define (drain-all)
-    (for-each dl (drain)))
-
+  (define (gotsync)
+    (printf "<= ~s~%" (sync the-channel)))
   (put "NICK carter")
-  (drain-all)
+  (gotsync)
   (put "USER erich debian irc.freenode.org :Eric Hanchrow")
-  (drain-all))
+  (gotsync)
+  (put "JOIN #frobotzle")
+  (gotsync))
 )
