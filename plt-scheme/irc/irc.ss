@@ -10,21 +10,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "async-channel.ss")
          (lib "trace.ss")
          "parse-message.ss")
+(define *echo-server-lines* (make-parameter #f))
 (let-values (((ip op)
               (tcp-connect "localhost" 6667)))
 
   (define callback
     (let ((state 'init))
       (lambda (line)
-        (printf "<= ~s~%" line)
+        (when (*echo-server-lines*) (printf "<= ~s~%" line))
         (let-values (((prefix command params)
                       (parse-message line)))
           (case state
             ((init)
              (put "NICK carter")
              (put "USER erich debian irc.freenode.org :Eric Hanchrow"))
-            ((ready-for-action)
+            ((250)
              (put "WHOIS carter"))
+            ((311 312 317)
+             (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
+                     state
+                     params))
             (else
              (fprintf (current-error-port)
                       "Uh oh, I don't know what to do in state ~s.~%"
@@ -32,6 +37,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             )
           ;; transition to next state.
           (cond
+           ((eq? state 'init)
+            (set! state 'unknown))
            ((string=? command "NOTICE")
             ;; no change.
             )
