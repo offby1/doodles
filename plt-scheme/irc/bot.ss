@@ -9,7 +9,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module bot mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
-         (only (lib "13.ss" "srfi") string-tokenize)
+         (only (lib "13.ss" "srfi")
+               string-join
+               string-tokenize
+               )
          (only (lib "14.ss" "srfi")
                char-set
                char-set-complement)
@@ -99,6 +102,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let ((response-body (format "Well, ~a; I think ~a too."
                                  requestor
                                  (cdr tokens))))
+      (if (string=? (cadr tokens) "eval")
+          (set! response-body (format  "~s" (eval (read (open-input-string (string-join (cddr tokens))))))))
       (put (format "PRIVMSG ~a :~a~%"
                    (if was-private? requestor channel-name)
                    response-body))))
