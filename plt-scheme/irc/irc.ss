@@ -16,9 +16,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss")
 (define *echo-server-lines* #f)
 (define *my-nick* "carter")
-
+(define *irc-server-name* "localhost" )
 (let-values (((ip op)
-              (tcp-connect "localhost" 6667)))
+              (tcp-connect *irc-server-name* 6667)))
 
   (define callback
     (let ((state 'initial))
@@ -29,7 +29,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (case state
             ((initial)
              (put (format "NICK ~a" *my-nick*))
-             (put "USER erich debian irc.freenode.org :Eric Hanchrow")
+             (put (format "USER ~a ~a ~a :~a"
+                          (getenv "USER")
+                          "unknown-host"
+                          *irc-server-name*
+                          "Eric Hanchrow's bot, $Rev$"))
              (set! state 'something-other-than-init)))
 
           (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
