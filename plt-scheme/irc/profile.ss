@@ -13,5 +13,5 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (require "bot.ss")
 
 (printf "Coverage counts: ~s~%Execute counts: ~s~%"
-        (car (get-coverage-counts))
-        (car (get-execute-counts)))
+        (get-coverage-counts)
+        (get-execute-counts))

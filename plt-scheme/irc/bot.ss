@@ -25,6 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss"
          "jordan.ss")
 
+(define test-mode? #f)
 (define *timeout-seconds* #f)
 (define *client-name* "Eric Hanchrow's bot")
 (define *client-version* "$Rev$")
@@ -65,6 +66,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           result
         (loop (cons #f result))))))
 
+;; An IRC server that doesn't do very much at all.  It's for testing the client.
+(define (test-irc-server)
+  (let-values (((readme writeme)
+                (make-pipe)))
+    (thread
+     (lambda ()
+       (define (PRIVMSG str)
+         (fprintf  writeme (format "PRIVMSG ~a :~a~a~%" *my-nick* str #\return))
+         (flush-output writeme))
+       (PRIVMSG "what up")
+       (PRIVMSG "\u0001VERSION\u0001")
+       (PRIVMSG "OK, that's all.")
+       (close-output-port writeme)
+       ))
+    (values readme (current-output-port))))
+
 (command-line
  "bot"
  (current-command-line-arguments)
@@ -74,7 +91,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (set! *irc-server-name* host))
 
   (("-t" "--timeout") timeout "Wait this many seconds before exiting; infinite by default"
-   (set! *timeout-seconds* (string->number timeout))))
+   (set! *timeout-seconds* (string->number timeout)))
+  (("--test-mode") "Don't connect to a real IRC server; instead, use a simple built-in stub"
+   (set! test-mode? #t)))
  (multi
   (("-c" "--channel") channel "A channel to join when starting"
    (set! *initial-channel-names* (cons channel *initial-channel-names*)))
@@ -82,7 +101,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  )
 
 (let-values (((ip op)
-              (tcp-connect *irc-server-name* 6667)))
+              (if test-mode?
+                  (test-irc-server)
+                (tcp-connect *irc-server-name* 6667))))
 
   (define denizens-by-channel (make-hash-table 'equal))
 
