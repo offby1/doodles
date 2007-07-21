@@ -26,7 +26,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;;"localhost"
   "irc.freenode.net"
   )
-(define *initial-channel-name* "##cinema")
+(define *initial-channel-names* '("#emacs"
+                                  "##cinema"))
 
 (define (strip-leading-colon str)
   (if (char=? #\: (string-ref str 0))
@@ -81,7 +82,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ((001)
                  (set! state 'logged-in)
                  (printf "Ah, I see we logged in OK.~%")
-                 (put (format "JOIN ~a" *initial-channel-name*)))
+                 (for-each (lambda (ch)
+                             (put (format "JOIN ~a" ch)))
+                           *initial-channel-names*))
                 ((311 312 317)
                  (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
                          command-number
