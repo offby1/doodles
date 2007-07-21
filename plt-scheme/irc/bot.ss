@@ -23,7 +23,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set
                char-set-complement)
          "parse-message.ss"
-         "jordan.ss")
+         "globals.ss"
+         "jordan.ss"
+         "test-irc-server.ss")
 
 (define test-mode? #f)
 (define *timeout-seconds* #f)
@@ -41,7 +43,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (system-type 'os)))
 
 (define *echo-server-lines* #f)
-(define *my-nick* "rudybot")
 (define *irc-server-name*
   "localhost"
   ;;"irc.freenode.net"
@@ -65,22 +66,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (<= (length result ) 3)
           result
         (loop (cons #f result))))))
-
-;; An IRC server that doesn't do very much at all.  It's for testing the client.
-(define (test-irc-server)
-  (let-values (((readme writeme)
-                (make-pipe)))
-    (thread
-     (lambda ()
-       (define (PRIVMSG str)
-         (fprintf  writeme (format "PRIVMSG ~a :~a~a~%" *my-nick* str #\return))
-         (flush-output writeme))
-       (PRIVMSG "what up")
-       (PRIVMSG "\u0001VERSION\u0001")
-       (PRIVMSG "OK, that's all.")
-       (close-output-port writeme)
-       ))
-    (values readme (current-output-port))))
 
 (command-line
  "bot"
