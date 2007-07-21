@@ -149,8 +149,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                    (hash-table-put! denizens-by-channel
                                     (third tokens)
-                                    fellows)
-                   (printf "hmm, some names ... ~s => ~s~%" params denizens-by-channel))))
+                                    fellows))))
               (case command-symbol
                 ((PRIVMSG)
                  (unless (*passive?*)
