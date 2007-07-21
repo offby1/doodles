@@ -1,0 +1,9 @@
+-*-outline-*-
+
+* maybe periodically see what channels _I'm_ in, and join them if it's
+  not already in them.  Like a little puppy dog.
+
+* allow it to be accessed by a REPL while it's running
+  I don't really know what I mean by this, but: I often think of
+  improvements to make to it, and hate having to stop it and restart
+  it in order to incorporate those improvements.
