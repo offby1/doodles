@@ -47,6 +47,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          *my-nick*))
        (private-message "what up")
        (private-message "\u0001VERSION\u0001")
+       (channel-message "\u0001ACTION glances around nervously.\u0001")
        (channel-message "Hey, everybody!  Let's put on a show.")
        (channel-message (format "~a: You are dumb." *my-nick*))
        (fprintf

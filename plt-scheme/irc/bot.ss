@@ -152,10 +152,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (destination (car tokens))
                         (source (car prefix)))
 
+                   (printf "Tokens ~s; destination ~s source ~s~%"
+                           tokens destination source)
                    (cond
                     ((equal? *my-nick* destination)
                      (unless (eq? command-symbol 'NOTICE)
                        (do-something-clever  (cdr tokens) source destination #t)))
+                    ((string=? ":\u0001ACTION" (second tokens))
+                     (put (format "PRIVMSG ~a : Cool, ~a did ~s"
+                                  destination
+                                  source
+                                  (regexp-replace*
+                                   #rx"\u0001+"
+                                   (string-join (cddr tokens))
+                                   ""))))
                     ((regexp-match #rx"^#" destination)
                      (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
                        (unless (eq? command-symbol 'NOTICE)
@@ -191,6 +201,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (printf "message ~s requestor ~s channel-name ~s was-private? ~s~%"
             message-tokens requestor channel-name was-private?)
     (cond
+     ;; TODO -- proper CTCP decoding.  See
+     ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
      ((string=? ":\u001VERSION\u001" (first message-tokens))
       (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
                    requestor
@@ -202,7 +214,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (else
       (let ((response-body
              (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                 (one-jordanb-quote)
+                 (one-jordanb-quote test-mode?)
                (format "Well, ~a; I think ~a too."
                        requestor
                        (string-join message-tokens)))))
