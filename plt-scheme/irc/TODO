@@ -10,7 +10,3 @@
   I don't really know what I mean by this, but: I often think of
   improvements to make to it, and hate having to stop it and restart
   it in order to incorporate those improvements.
-
-* proper command-line arguments
-  Seems every program I write starts out without 'em and eventually I
-  put 'em in, after resisting ...

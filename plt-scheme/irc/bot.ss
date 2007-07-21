@@ -7,7 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://tools.ietf.org/html/rfc1459
 
 (module bot mzscheme
-(require (lib "async-channel.ss")
+(require (lib "cmdline.ss")
+         (lib "async-channel.ss")
          (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                first
@@ -24,6 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss"
          "jordan.ss")
 
+(define *timeout-seconds* #f)
 (define *client-name* "Eric Hanchrow's bot")
 (define *client-version* "$Rev$")
 
@@ -43,8 +45,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   "localhost"
   ;;"irc.freenode.net"
   )
-(define *initial-channel-names* '("#emacs"
-                                  "##cinema"))
+(define *initial-channel-names* '())
 
 (define (split str)
   (string-tokenize str (char-set-complement (char-set #\space))))
@@ -63,6 +64,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (<= (length result ) 3)
           result
         (loop (cons #f result))))))
+
+(command-line
+ "bot"
+ (current-command-line-arguments)
+ (once-each
+
+  (("-s" "--host") host "Name of the IRC server to connect to"
+   (set! *irc-server-name* host))
+
+  (("-t" "--timeout") timeout "Wait this many seconds before exiting; infinite by default"
+   (set! *timeout-seconds* (string->number timeout))))
+ (multi
+  (("-c" "--channel") channel "A channel to join when starting"
+   (set! *initial-channel-names* (cons channel *initial-channel-names*)))
+  )
+ )
 
 (let-values (((ip op)
               (tcp-connect *irc-server-name* 6667)))
@@ -189,7 +206,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      response-body))))))
 
   (set! *echo-server-lines* #t)
-  (sync reader)
+  (sync/timeout *timeout-seconds* reader)
   (display "OK, I'm bored.")
   (newline))
 
