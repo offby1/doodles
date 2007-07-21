@@ -1,9 +1,16 @@
 -*-outline-*-
 
 * maybe periodically see what channels _I'm_ in, and join them if it's
-  not already in them.  Like a little puppy dog.
+  not already in them.  Like a little puppy dog.  This is harder than
+  it sounds, since it's not blindingly clear who "I" am -- sometimes
+  my nick changes.  It would probably be best to find me by host name,
+  not nick.
 
 * allow it to be accessed by a REPL while it's running
   I don't really know what I mean by this, but: I often think of
   improvements to make to it, and hate having to stop it and restart
   it in order to incorporate those improvements.
+
+* proper command-line arguments
+  Seems every program I write starts out without 'em and eventually I
+  put 'em in, after resisting ...
