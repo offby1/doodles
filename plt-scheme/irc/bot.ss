@@ -23,6 +23,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *irc-server-name* "localhost" )
 (define *initial-channel-name* "#fart")
 
+(define (tokens->string tokens)
+  (let ((str (string-join tokens)))
+    (if (char=? #\: (string-ref str 0))
+        (substring str 1)
+      str)))
+
 (let-values (((ip op)
               (tcp-connect *irc-server-name* 6667)))
 
@@ -61,17 +67,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (let* ((tokens (string-tokenize params))
                       (destination (and prefix (car tokens)))
                       (source (and prefix (car (string-tokenize prefix (char-set-complement (char-set #\! #\@)))))))
+
                  (cond
                   ((equal? *my-nick* destination)
                    (printf "for me only")
-                   (do-something-clever tokens source destination #t))
+                   (do-something-clever (tokens->string (cdr tokens)) source destination #t))
                   ((not destination)
                    (printf "for noone in particular"))
                   ((regexp-match #rx"^#" destination)
                    (printf "for the channel ~a" destination)
                    (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
                      (printf " (hey, it's for me!)")
-                     (do-something-clever (cdr tokens) source destination #f))
+                     (do-something-clever (tokens->string (cddr tokens)) source destination #f))
                    )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
@@ -97,13 +104,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (newline op)
     (flush-output op))
 
-  (define (do-something-clever tokens requestor channel-name was-private?)
-    (printf "Tokens: ~s~%" tokens)
+  (define (do-something-clever
+           message                       ;what they said
+           requestor                    ;who said it
+           channel-name                 ;where they said it
+           was-private?                 ;how they said it
+           )
+    (printf "Message: ~s~%" message)
     (let ((response-body (format "Well, ~a; I think ~a too."
                                  requestor
-                                 (cdr tokens))))
-      (if (string=? (cadr tokens) "eval")
-          (set! response-body (format  "~s" (eval (read (open-input-string (string-join (cddr tokens))))))))
+                                 message)))
+
       (put (format "PRIVMSG ~a :~a~%"
                    (if was-private? requestor channel-name)
                    response-body))))
