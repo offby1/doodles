@@ -16,6 +16,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; #emacs, and grab quotes from it.  The advantage is that anyone,not
 ;; just me, would then be able to run this code.
 
+;; BUGBUG -- if the quote extends across multiple lines, this only
+;; picks up the first, which looks bad.
 (define (grep pattern ip)
   (let loop ((results '()))
     (let ((line (read-line ip)))

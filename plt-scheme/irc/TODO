@@ -10,3 +10,10 @@
   I don't really know what I mean by this, but: I often think of
   improvements to make to it, and hate having to stop it and restart
   it in order to incorporate those improvements.
+
+* Cure the infinite loop introduced in r4135
+  Maybe there's some general-purpose thing I could do: if the bot
+  speaks more than five times in a second, "throttle" it back so that
+  it waits a second before every utterance or something.  Or maybe
+  just have it not respond _to a particular nick_ too often.  Hmm hmm
+  hmm.

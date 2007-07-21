@@ -147,7 +147,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     fellows)
                    (printf "hmm, some names ... ~s => ~s~%" params denizens-by-channel))))
               (case command-symbol
-                ((PRIVMSG NOTICE)
+                ((PRIVMSG)
                  (let* ((tokens (split params))
                         (destination (car tokens))
                         (source (car prefix)))
@@ -156,8 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            tokens destination source)
                    (cond
                     ((equal? *my-nick* destination)
-                     (unless (eq? command-symbol 'NOTICE)
-                       (do-something-clever  (cdr tokens) source destination #t)))
+                     (do-something-clever  (cdr tokens) source destination #t))
                     ((string=? ":\u0001ACTION" (second tokens))
                      (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
                                   destination
@@ -168,8 +167,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    ""))))
                     ((regexp-match #rx"^#" destination)
                      (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
-                       (unless (eq? command-symbol 'NOTICE)
-                         (do-something-clever  (cddr tokens) source destination #f)))))))
+                       (do-something-clever  (cddr tokens) source destination #f))))))
+                ((NOTICE)
+                 (printf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
+                         prefix
+                         command
+                         params))
                 ((PING)
                  (put (format "PONG ~a" params))))))))))
 
