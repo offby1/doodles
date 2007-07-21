@@ -17,7 +17,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "14.ss" "srfi")
                char-set
                char-set-complement)
-         "parse-message.ss")
+         "parse-message.ss"
+         "jordan.ss")
 
 (define *echo-server-lines* #f)
 (define *my-nick* "fartbot")
@@ -130,21 +131,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (flush-output op))
 
   (define (do-something-clever
-           message                       ;what they said
+           message                      ;what they said
            requestor                    ;who said it
            channel-name                 ;where they said it
            was-private?                 ;how they said it
            )
     (printf "Message: ~s~%" message)
-    (let ((response-body (format "Well, ~a; I think ~a too."
-                                 requestor
-                                 message)))
+    (cond
+       ((regexp-match #rx"(?i:^census)( .*$)?" message)
+        (put (format "NAMES ~a" channel-name)))
+       ((regexp-match #rx"(?i:^quote)( .*$)?" message)
+        (put (format "PRIVMSG ~a :~a" channel-name
+                     (one-jordanb-quote))))
+       (else
+        (let ((response-body (format "Well, ~a; I think ~a too."
+                                     requestor
+                                     message)))
 
-      (if (regexp-match #rx"(?i:^census)( .*$)?" message)
-          (put (format "NAMES ~a" channel-name))
-        (put (format "PRIVMSG ~a :~a"
-                     (if was-private? requestor channel-name)
-                     response-body)))))
+
+          (put (format "PRIVMSG ~a :~a"
+                       (if was-private? requestor channel-name)
+                       response-body))))))
 
   (set! *echo-server-lines* #t)
   (sync reader)
