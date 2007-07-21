@@ -24,6 +24,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (else (loop results))
        ))))
 
+;; it takes about half a minute to snarf up the files and grep them,
+;; so we memoize this -- so that the second and subsequent calls are
+;; fast.
 (define/memo (all-jordanb-quotes)
   (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
          (files  (directory-list log-dir))
