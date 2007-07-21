@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module bot mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
+         (only (lib "1.ss" "srfi") third)
          (only (lib "13.ss" "srfi")
                string-join
                string-tokenize
@@ -20,17 +21,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *echo-server-lines* #f)
 (define *my-nick* "fartbot")
-(define *irc-server-name* "localhost" )
-(define *initial-channel-name* "#fart")
+(define *irc-server-name* "irc.freenode.net" )
+(define *initial-channel-name* "##cinema")
+
+(define (strip-leading-colon str)
+  (if (char=? #\: (string-ref str 0))
+        (substring str 1)
+      str))
 
 (define (tokens->string tokens)
-  (let ((str (string-join tokens)))
-    (if (char=? #\: (string-ref str 0))
-        (substring str 1)
-      str)))
+  (strip-leading-colon  (string-join tokens)))
+
+(print-hash-table #t)
 
 (let-values (((ip op)
               (tcp-connect *irc-server-name* 6667)))
+
+  (define denizens-by-channel (make-hash-table 'equal))
 
   (define callback
     (let ((state 'initial))
@@ -60,7 +67,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((311 312 317)
                (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
                        command-number
-                       params)))
+                       params))
+              ((353)
+               ;; response to "NAMES"
+               (let* ((tokens (string-tokenize params))
+                      (match-tokens (cdddr tokens))
+                      (fellows (cons (strip-leading-colon (car match-tokens))
+                                     (cdr match-tokens))))
+
+                 ;; the first three tokens appear to be our nick, an
+                 ;; =, then the channel name.  of the remaining
+                 ;; tokens, the first begins with a colon, and any of
+                 ;; them might also have a + or a @ in front.
+
+                 (hash-table-put! denizens-by-channel
+                                  (third tokens)
+                                  fellows)
+                 (printf "hmm, some names ... ~s => ~s~%" params denizens-by-channel))))
             (case command-symbol
               ((PRIVMSG NOTICE)
                (printf "Ooh -- a message " )
@@ -117,9 +140,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  requestor
                                  message)))
 
-      (put (format "PRIVMSG ~a :~a~%"
-                   (if was-private? requestor channel-name)
-                   response-body))))
+      (if (regexp-match #rx"(?i:^census)( .*$)?" message)
+          (put (format "NAMES ~a" channel-name))
+        (put (format "PRIVMSG ~a :~a"
+                     (if was-private? requestor channel-name)
+                     response-body)))))
 
   (set! *echo-server-lines* #t)
   (sync reader)
