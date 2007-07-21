@@ -159,7 +159,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (unless (eq? command-symbol 'NOTICE)
                        (do-something-clever  (cdr tokens) source destination #t)))
                     ((string=? ":\u0001ACTION" (second tokens))
-                     (put (format "PRIVMSG ~a : Cool, ~a did ~s"
+                     (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
                                   destination
                                   source
                                   (regexp-replace*
