@@ -26,7 +26,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define/memo (all-jordanb-quotes)
   (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
-         (files (directory-list log-dir) )
+         (files  (directory-list log-dir))
          (quotes (append-map
                   (lambda (fn)
                     (let ((fn (build-path log-dir fn)))
@@ -46,10 +46,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (r (random l)))
     (list-ref all r))
   )
-(display (one-jordanb-quote))
-(newline)
-(display (one-jordanb-quote))
-(newline)
-(display (one-jordanb-quote))
-(newline)
+
 )
