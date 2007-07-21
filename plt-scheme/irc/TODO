@@ -17,3 +17,8 @@
   it waits a second before every utterance or something.  Or maybe
   just have it not respond _to a particular nick_ too often.  Hmm hmm
   hmm.
+
+* Figure out how to spew silliness at random intervals.
+  Possibly a separate "silly-spew" thread: it sleeps, then does a
+  single PRIVMSG.  Maybe for extra fun, have it grab text to spew from
+  some web service.

@@ -27,7 +27,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "jordan.ss"
          "a-stub-IRC-server.ss")
 
-(define test-mode? #f)
+(define *passive?* (make-parameter #f))
+(define *test-mode?* #f)
 (define *timeout-seconds* #f)
 (define *client-name* "Eric Hanchrow's bot")
 (define *client-version* "$Rev$")
@@ -78,7 +79,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-t" "--timeout") timeout "Wait this many seconds before exiting; infinite by default"
    (set! *timeout-seconds* (string->number timeout)))
   (("--test-mode") "Don't connect to a real IRC server; instead, use a simple built-in stub"
-   (set! test-mode? #t)))
+   (set! *test-mode?* #t))
+  (("--passive") "Never say anything more than necessary -- in effect just log traffic to stdout"
+   (*passive?* #t))
+  )
+
  (multi
   (("-c" "--channel") channel "A channel to join when starting"
    (set! *initial-channel-names* (cons channel *initial-channel-names*)))
@@ -86,7 +91,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  )
 
 (let-values (((ip op)
-              (if test-mode?
+              (if *test-mode?*
                   (stub-irc-server)
                 (tcp-connect *irc-server-name* 6667))))
 
@@ -148,26 +153,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (printf "hmm, some names ... ~s => ~s~%" params denizens-by-channel))))
               (case command-symbol
                 ((PRIVMSG)
-                 (let* ((tokens (split params))
-                        (destination (car tokens))
-                        (source (car prefix)))
+                 (unless (*passive?*)
+                   (let* ((tokens (split params))
+                          (destination (car tokens))
+                          (source (car prefix)))
 
-                   (printf "Tokens ~s; destination ~s source ~s~%"
-                           tokens destination source)
-                   (cond
-                    ((equal? *my-nick* destination)
-                     (do-something-clever  (cdr tokens) source destination #t))
-                    ((string=? ":\u0001ACTION" (second tokens))
-                     (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
-                                  destination
-                                  source
-                                  (regexp-replace*
-                                   #rx"\u0001+"
-                                   (string-join (cddr tokens))
-                                   ""))))
-                    ((regexp-match #rx"^#" destination)
-                     (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
-                       (do-something-clever  (cddr tokens) source destination #f))))))
+                     (printf "Tokens ~s; destination ~s source ~s~%"
+                             tokens destination source)
+                     (cond
+                      ((equal? *my-nick* destination)
+                       (do-something-clever  (cdr tokens) source destination #t))
+                      ((string=? ":\u0001ACTION" (second tokens))
+                       (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
+                                    destination
+                                    source
+                                    (regexp-replace*
+                                     #rx"\u0001+"
+                                     (string-join (cddr tokens))
+                                     ""))))
+                      ((regexp-match #rx"^#" destination)
+                       (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
+                         (do-something-clever  (cddr tokens) source destination #f)))))))
                 ((NOTICE)
                  (printf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
                          prefix
@@ -217,7 +223,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (else
       (let ((response-body
              (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                 (one-jordanb-quote test-mode?)
+                 (one-jordanb-quote *test-mode?*)
                (format "Well, ~a; I think ~a too."
                        requestor
                        (string-join message-tokens)))))

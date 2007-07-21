@@ -1,3 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
-./coverage.ss --test-mode --channel '#snorkulous' --channel '#bot-testing-party'
+./coverage.ss --test-mode --channel '#snorkulous' --channel '#bot-testing-party' "$@"
+
