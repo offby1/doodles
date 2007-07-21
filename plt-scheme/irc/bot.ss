@@ -21,7 +21,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "jordan.ss")
 
 (define *echo-server-lines* #f)
-(define *my-nick* "fartbot")
+(define *my-nick* "rudybot")
 (define *irc-server-name*
   ;;"localhost"
   "irc.freenode.net"
