@@ -25,7 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
-         "test-irc-server.ss")
+         "a-stub-IRC-server.ss")
 
 (define test-mode? #f)
 (define *timeout-seconds* #f)
@@ -87,7 +87,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (let-values (((ip op)
               (if test-mode?
-                  (test-irc-server)
+                  (stub-irc-server)
                 (tcp-connect *irc-server-name* 6667))))
 
   (define denizens-by-channel (make-hash-table 'equal))

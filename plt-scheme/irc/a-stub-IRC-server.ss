@@ -4,12 +4,12 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module test-irc-server mzscheme
+(module a-stub-IRC-server mzscheme
 (require "globals.ss")
-(define *server-name* "stub-test-server.")
+(define *server-name* "stub-IRC-server.")
 ;; An IRC server that doesn't do very much at all.  It's for testing
 ;; the client.
-(define (test-irc-server)
+(define (stub-irc-server)
   (let-values (((readme writeme)
                 (make-pipe)))
     (thread
@@ -66,5 +66,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (close-output-port writeme)
        ))
     (values readme (current-output-port))))
-(provide test-irc-server)
+(provide stub-irc-server)
 )
