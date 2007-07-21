@@ -5,7 +5,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module history mzscheme
 (print-struct #t)
-(require (lib "assert.ss" "offby1")
+(require (planet "assert.ss"   ("offby1" "offby1.plt"))
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only "card.ss"

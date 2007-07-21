@@ -6,7 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (module card mzscheme
 
 (print-struct #t)
-(require (lib "assert.ss" "offby1")
+(require (planet "assert.ss"   ("offby1" "offby1.plt"))
          (lib "trace.ss")
          (only (lib "1.ss" "srfi") iota)
          (only (lib "misc.ss" "swindle") memoize!))

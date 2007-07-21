@@ -6,7 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module trick mzscheme
 (print-struct #t)
-(require (lib "assert.ss" "offby1")
+(require (planet "assert.ss"   ("offby1" "offby1.plt"))
          (only (lib "1.ss" "srfi" )
                alist-copy
                circular-list

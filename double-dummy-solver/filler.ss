@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "cmdline.ss")
          (lib "trace.ss")
 
-         (lib "assert.ss" "offby1")
+         (planet "assert.ss"   ("offby1" "offby1.plt"))
          (only "card.ss"
                *suits*
                card-suit

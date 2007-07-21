@@ -12,7 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                filter
                lset-intersection
                append-map)
-         (lib "assert.ss" "offby1")
+         (planet "assert.ss"   ("offby1" "offby1.plt"))
          "dds.ss"
          "card.ss"
          "trick.ss"

@@ -19,23 +19,17 @@ exec mzscheme -qr "$0" ${1+"$@"}
 ;; work.
 (require "filler.ss")
 
-;; for emacs
-;; (put 'mit-clobbering 'scheme-indent-function (get 'with-output-to-file 'scheme-indent-function))
-(define (mit-clobbering string thunk)
-  (when (file-exists? string)
-    (delete-file string))
-  (with-output-to-file string
-    thunk))
-
 (let* ((here (this-expression-source-directory))
        (od (simplify-path (build-path here "coverage"))))
   (unless (directory-exists? od)
     (make-directory od))
   (for-each (lambda (fn)
               (let ((ofn  (build-path od fn)))
-                (mit-clobbering ofn
+                (with-output-to-file ofn
                   (lambda ()
-                    (annotate-executed-file fn)))))
+                    (annotate-executed-file fn))
+                  'truncate/replace
+                  )))
             (filter (lambda (path)
                       (and (file-exists? path)
                            (regexp-match "\\.ss$" (path->string path))))
@@ -43,8 +37,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
   (for-each
    (lambda (p)
      (let ((ofn (simplify-path (build-path od (car p)))))
-       (mit-clobbering ofn
-         (cdr p))
+       (with-output-to-file ofn
+         (cdr p)
+         'truncate/replace)
        (fprintf (current-error-port)
                 "Wrote ~a.~%" ofn))
      )
