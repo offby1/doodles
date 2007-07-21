@@ -7,7 +7,6 @@ exec mzscheme -qr "$0" ${1+"$@"}
          (lib "etc.ss"))
 
 (coverage-counts-enabled #t)
-(execute-counts-enabled  #t)
 (execute-counts-enabled #t)
 (profile-paths-enabled #t)
 (profiling-enabled #t)
