@@ -71,14 +71,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (cond
                   ((equal? *my-nick* destination)
                    (printf "for me only")
-                   (do-something-clever (tokens->string (cdr tokens)) source destination #t))
+                   (unless (eq? command-symbol 'NOTICE)
+                     (do-something-clever (tokens->string (cdr tokens)) source destination #t)))
                   ((not destination)
                    (printf "for noone in particular"))
                   ((regexp-match #rx"^#" destination)
                    (printf "for the channel ~a" destination)
                    (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
                      (printf " (hey, it's for me!)")
-                     (do-something-clever (tokens->string (cddr tokens)) source destination #f))
+                     (unless (eq? command-symbol 'NOTICE)
+                     (do-something-clever (tokens->string (cddr tokens)) source destination #f)))
                    )
                   (else
                    (printf "for ... I dunno: ~s" destination))))
