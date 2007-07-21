@@ -3,15 +3,26 @@
 exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
-(require (lib "errortrace.ss" "errortrace"))
-
-(profiling-enabled #t)
-;;(profiling-record-enabled #t)
+(require (lib "errortrace.ss" "errortrace")
+         (lib "etc.ss"))
 
 (coverage-counts-enabled #t)
 (execute-counts-enabled  #t)
+(execute-counts-enabled #t)
+(profile-paths-enabled #t)
+(profiling-enabled #t)
+(profiling-record-enabled #t)
+
 (require "bot.ss")
 
-(printf "Coverage counts: ~s~%Execute counts: ~s~%"
-        (get-coverage-counts)
-        (get-execute-counts))
+(define *file-of-interest* (build-path (this-expression-source-directory) "bot.ss"))
+(define *profile-output-fn* "profile-data.txt")
+(with-output-to-file *profile-output-fn*
+  (lambda ()
+    (printf "-*-fundamental-*-~%")      ; for emacs
+    ;;(annotate-covered-file  *file-of-interest*)
+    (annotate-executed-file *file-of-interest* #t)
+    (fprintf (current-error-port)
+             "Spewed profile stuff to ~s~%" *profile-output-fn*))
+  'truncate/replace)
+
