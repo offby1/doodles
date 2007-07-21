@@ -11,6 +11,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo))
 (provide one-jordanb-quote)
 
+;; TODO -- perhaps, instead of grabbing quotes from my ~/log
+;; directory, I should find some public logging service that logs
+;; #emacs, and grab quotes from it.  The advantage is that anyone,not
+;; just me, would then be able to run this code.
+
 (define (grep pattern ip)
   (let loop ((results '()))
     (let ((line (read-line ip)))
