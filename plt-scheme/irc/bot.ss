@@ -69,6 +69,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
+;; gaah.
+(define (regexp-quote str)
+  (regexp-replace* #rx"." str "\\\\&"))
+
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
@@ -91,7 +95,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (cond
          ;; TODO -- proper CTCP decoding.  See
          ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
-         ((string=? ":\u001VERSION\u001" (first message-tokens))
+         ((string=? "\u001VERSION\u001" (first message-tokens))
           (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
                        requestor
                        *client-name*
@@ -177,15 +181,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((PRIVMSG)
                (unless (*passive?*)
                  (let* ((tokens (split params))
+                        (tokens (if (<= 2 (length tokens))
+                                    (cons (first tokens)
+                                          (cons (regexp-replace
+                                                 #rx"^:"
+                                                 (second tokens)
+                                                 "")
+                                                (cddr tokens)))
+                                  tokens))
                         (destination (car tokens))
                         (source (car prefix)))
 
                    (printf "Tokens ~s; destination ~s source ~s~%"
                            tokens destination source)
                    (cond
+                    ;; private message.
                     ((equal? (*my-nick*) destination)
                      (do-something-clever  (cdr tokens) source destination #t))
-                    ((string=? ":\u0001ACTION" (second tokens))
+
+                    ((string=? "\u0001ACTION" (second tokens))
                      (maybe
                       (lambda ()
                         ;; mimic the action, unless it came from a bot
@@ -208,8 +222,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         #rx"\u0001+"
                                         (string-join (cddr tokens))
                                         "")))))))
+
                     ((regexp-match #rx"^#" destination)
-                     (when (string=? (cadr tokens) (string-append ":" (*my-nick*) ":"))
+                     (when (regexp-match
+                            (regexp
+                             (string-append
+                              "^"
+                              (regexp-quote (*my-nick*))
+                              "[:,]"))
+                            (cadr tokens))
                        (do-something-clever  (cddr tokens) source destination #f)))))))
               ((NOTICE)
                (printf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
