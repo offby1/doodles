@@ -1,0 +1,12 @@
+Make a read-only lisppaste replica.
+
+It'd be a servlet for the PLT web server.  It would occasionally use
+XML-RPC to download data from the real lisppaste, and would render it
+in some amusing way.  Perhaps it would have an "add new paste" button
+that points back to the real lisppaste.
+
+First we'd need to download at least one page's worth of headers, and
+build a page around that.  (We could defer downloading any other
+headers until our user actually asked for them (but that brings up the
+problem: how do we show nice progress messages in the web browser
+while we download the rest?))
