@@ -25,7 +25,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
-         "a-stub-IRC-server.ss")
+         "a-stub-IRC-server.ss"
+         "../web/quote-of-the-day.ss")
 
 (define *passive?* (make-parameter #f))
 (define *test-mode?* #f)
@@ -67,6 +68,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (<= (length result ) 3)
           result
         (loop (cons #f result))))))
+
+(define (maybe thunk)
+  (if (zero? (random 10))
+      (thunk)))
+
+(define (random-choice seq)
+  (list-ref seq (random (length seq))))
 
 (command-line
  "bot"
@@ -165,26 +173,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ((equal? (*my-nick*) destination)
                        (do-something-clever  (cdr tokens) source destination #t))
                       ((string=? ":\u0001ACTION" (second tokens))
-                       ;; mimic the action, unless it came from a bot
-                       ;; (some bots are just like us, and mimic
-                       ;; actions -- if we are responding to one such,
-                       ;; we'll get into an infinite loop!)
-                       (printf "Destination is ~s~%" destination)
-                       (if (regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") source)
-                           (put (format "PRIVMSG ~a :Imagine I copied ~a by saying \"/me ~a\""
-                                        destination
-                                        source
-                                        (regexp-replace*
-                                         #rx"\u0001+"
-                                         (string-join (cddr tokens))
-                                         "")))
-                         (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
-                                      destination
-                                      source
-                                      (regexp-replace*
-                                       #rx"\u0001+"
-                                       (string-join (cddr tokens))
-                                       "")))))
+                       (maybe
+                        (lambda ()
+                          ;; mimic the action, unless it came from a bot
+                          ;; (some bots are just like us, and mimic
+                          ;; actions -- if we are responding to one such,
+                          ;; we'll get into an infinite loop!)
+                          (printf "Destination is ~s~%" destination)
+                          (if (regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") source)
+                              (put (format "PRIVMSG ~a :Imagine I copied ~a by saying \"/me ~a\""
+                                           destination
+                                           source
+                                           (regexp-replace*
+                                            #rx"\u0001+"
+                                            (string-join (cddr tokens))
+                                            "")))
+                            (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
+                                         destination
+                                         source
+                                         (regexp-replace*
+                                          #rx"\u0001+"
+                                          (string-join (cddr tokens))
+                                          "")))))))
                       ((regexp-match #rx"^#" destination)
                        (when (string=? (cadr tokens) (string-append ":" (*my-nick*) ":"))
                          (do-something-clever  (cddr tokens) source destination #f)))))))
@@ -237,7 +247,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (else
       (let ((response-body
              (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                 (one-jordanb-quote *test-mode?*)
+                 (if (zero? (random 2))
+                     (let ((p (random-choice (quotes-of-the-day))))
+                       (string-append (car p)
+                                      "  --"
+                                      (cdr p)))
+                   (one-jordanb-quote *test-mode?*))
                (format "Well, ~a; I think ~a too."
                        requestor
                        (string-join message-tokens)))))

@@ -25,3 +25,9 @@
 
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
+
+* Do the tinyurl thing!!
+  I.e., whenever anyone utters a URL (that isn't itself a tinyurl),
+  send it to tinyurl, and utter the tiny version.  A public service!
+
+* Private messages seem to have a colon as the first character.

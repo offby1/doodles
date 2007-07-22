@@ -38,8 +38,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (*my-nick*)
           blather
           #\return))
-       (trace PRIVMSG)
-       (trace channel-message)
 
        (reply "001" (format "Welcome to the magical internal stub testing IRC server, ~a" (*my-nick*)))
 
@@ -66,7 +64,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         "PING :~a~a~%"
         *server-name*
         #\return)
-       (channel-message (format "~a: quote"  (*my-nick*)))
+       (channel-message (format "~a: quote one"  (*my-nick*)))
+       (channel-message (format "~a: quote two"  (*my-nick*)))
+       (channel-message (format "~a: quote three"  (*my-nick*)))
        (channel-message (format "~a: census" (*my-nick*)))
        (private-message "OK, that's all.")
        (close-output-port writeme)
