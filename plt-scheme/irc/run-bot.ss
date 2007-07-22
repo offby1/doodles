@@ -19,8 +19,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (("-t" "--timeout") timeout "Wait this many seconds before exiting; infinite by default"
    (*timeout-seconds* (string->number timeout)))
-  (("--test-mode") "Don't connect to a real IRC server; instead, use a simple built-in stub"
-   (*test-mode?* #t))
   (("--passive") "Never say anything more than necessary -- in effect just log traffic to stdout"
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"

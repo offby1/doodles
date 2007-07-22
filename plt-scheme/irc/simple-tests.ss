@@ -59,14 +59,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test-suite
     "logs in at startup"
     (test-case
-     "proper JOIN and NICK and whatnot"
+     "proper NICK and whatnot"
      (let ((lines (get-retort "" 'all)))
        (check-equal?
         (first  lines)
         (format "NICK ~a" (*my-nick*)))
        (check-regexp-match
         #rx"USER .* .* .* :.*"
-        (second lines)))))
+        (second lines))))
+
+    ;; TODO -- send it a 001 message and see that it JOINs the list o'
+    ;; channels
+    )
+
+   ;; TODO -- send it a 353 and then see that it has filled in its
+   ;; hash table with reasonable values
+
+   ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "Feed it lines, see what it says"
     (test-false

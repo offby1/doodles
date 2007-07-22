@@ -12,7 +12,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 
-(require "run-bot.ss")
+(require "simple-tests.ss")
 
 (define *file-of-interest* (simplify-path (build-path (this-expression-source-directory) "bot.ss")))
 (define *coverage-output-fn* "coverage-data.txt")
