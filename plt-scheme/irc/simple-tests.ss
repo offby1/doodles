@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+         (planet "util.ss" ("schematics" "schemeunit.plt" 2))
          (only (lib "1.ss" "srfi") third)
          (only (lib "13.ss" "srfi")
                string-tokenize
@@ -50,9 +51,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you")
    "PRIVMSG me :Well, me; I think :hey you too.")
 
-  (test-equal?
+  (test-case
    "Responds to VERSION CTCP request"
-   (get-retort "\u0001VERSION\u0001")
-   "I wonder what goes here.")
+   (check-regexp-match
+    #rx"NOTICE me :\u0001VERSION .*:.*:.*\u0001"
+    (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :\u0001VERSION\u0001")))
   ))
 )
