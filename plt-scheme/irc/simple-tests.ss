@@ -50,47 +50,47 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (else #f))
         )))))
 
-(test/text-ui
- (test-suite
-  "big ol' all-encompassing"
-
+(parameterize
+ ((*random?* #f))
+ (test/text-ui
   (test-suite
-  "logs in at startup"
-  (test-case
-   "proper JOIN and NICK and whatnot"
-   (let ((lines (get-retort "" 'all)))
-     (check-equal?
-      (first  lines)
-      (format "NICK ~a" (*my-nick*)))
+   "big ol' all-encompassing"
+
+   (test-suite
+    "logs in at startup"
+    (test-case
+     "proper JOIN and NICK and whatnot"
+     (let ((lines (get-retort "" 'all)))
+       (check-equal?
+        (first  lines)
+        (format "NICK ~a" (*my-nick*)))
+       (check-regexp-match
+        #rx"USER .* .* .* :.*"
+        (second lines)))))
+   (test-suite
+    "Feed it lines, see what it says"
+    (test-equal?
+     "echoes back stuff addressed to it"
+     (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
+     "PRIVMSG me :Well, me; I think :hey you too.")
+
+    (test-case
+     "Responds to VERSION CTCP request"
      (check-regexp-match
-      #rx"USER .* .* .* :.*"
-      (second lines)))))
- (test-suite
-  "Feed it lines, see what it says"
-  (test-equal?
-   "echoes back stuff addressed to it"
-   (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
-   "PRIVMSG me :Well, me; I think :hey you too.")
+      #rx"NOTICE me :\u0001VERSION .*:.*:.*\u0001"
+      (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
+                          (*my-nick*)))))
 
-  (test-case
-   "Responds to VERSION CTCP request"
-   (check-regexp-match
-    #rx"NOTICE me :\u0001VERSION .*:.*:.*\u0001"
-    (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
-                        (*my-nick*)))))
+    (test-equal?
+     "simple mimicry"
+     (get-retort
+      ":me!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+     "PRIVMSG #some-channel :\u0001ACTION copies me and glances around nervously.\u0001")
 
-  (test-equal?
-   "simple mimicry"
-   (parameterize ((*random?* #f))
-                 (get-retort
-                  ":me!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001"))
-   "PRIVMSG #some-channel :\u0001ACTION copies me and glances around nervously.\u0001")
-
-  (test-equal?
-   "doesn't mimic bots"
-   (parameterize ((*random?* #f))
-                 (get-retort
-                  ":mebot!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001"))
-   "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
-  )))
+    (test-equal?
+     "doesn't mimic bots"
+     (get-retort
+      ":mebot!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+     "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
+    ))))
 )
