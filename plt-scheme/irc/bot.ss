@@ -102,12 +102,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (else
           (let ((response-body
                  (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                     (if (zero? (rnd 2))
-                         (let ((p (random-choice (quotes-of-the-day))))
-                           (string-append (car p)
-                                          "  --"
-                                          (cdr p)))
-                       (one-jordanb-quote (*test-mode?*)))
+                     (let ((r  (rnd 100)))
+
+                       ;; we special-case zero for ease of testing.
+                       (cond ((zero? r)
+                              "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
+                             ((even? r)
+                              (let ((p (random-choice (quotes-of-the-day))))
+                                (string-append (car p)
+                                               "  --"
+                                               (cdr p))))
+                             (else
+                              (one-jordanb-quote (*test-mode?*))))
+                       )
                    (format "Well, ~a; I think ~a too."
                            requestor
                            (string-join message-tokens)))))

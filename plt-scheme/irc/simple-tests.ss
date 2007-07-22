@@ -69,28 +69,47 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (second lines)))))
    (test-suite
     "Feed it lines, see what it says"
+    (test-false
+     "silent unless spoken to, private message edition"
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG somenick :hey you")))
+    (test-false
+     "silent unless spoken to, channel message edition"
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :hey you")))
     (test-equal?
      "echoes back stuff addressed to it"
-     (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
-     "PRIVMSG me :Well, me; I think :hey you too.")
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
+     "PRIVMSG unit-test :Well, unit-test; I think :hey you too.")
 
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match
-      #rx"NOTICE me :\u0001VERSION .*:.*:.*\u0001"
-      (get-retort (format ":me!~~me@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
+      #rx"NOTICE unit-test :\u0001VERSION .*:.*:.*\u0001"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
                           (*my-nick*)))))
 
     (test-equal?
      "simple mimicry"
      (get-retort
-      ":me!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
-     "PRIVMSG #some-channel :\u0001ACTION copies me and glances around nervously.\u0001")
+      ":unit-test!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+     "PRIVMSG #some-channel :\u0001ACTION copies unit-test and glances around nervously.\u0001")
 
     (test-equal?
      "doesn't mimic bots"
      (get-retort
-      ":mebot!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+      ":mebot!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
      "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
+
+    (test-case
+     "witty quotes in response to a private message"
+     (check-regexp-match
+      #rx"PRIVMSG unit-test :.*heirs.*emacs.*johnw$"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :quote"
+                          (*my-nick*)))))
+    (test-case
+     "witty quotes in response to a channel message"
+     (check-regexp-match
+      #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
+                          (*my-nick*)))))
     ))))
 )
