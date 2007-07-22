@@ -76,6 +76,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (when (*verbose*)
     (apply printf args)))
 
+;; Calls THUNK every SECONDS seconds.  Calling the return value with
+;; the symbol CANCEL cancels the next call, and resets the timer.
+;; Calling the return value with any other value kills the thread
+;; permanently.
+(define (do-in-loop-when-not-cancelled seconds thunk)
+  (let* ((s (make-semaphore)            ;1 means "cancel"
+            )
+         (t (thread (lambda ()
+                      (let loop ()
+                        (let ((cancelled? (sync/timeout seconds s)))
+                          (when (not cancelled?)
+                            (thunk)))
+                        (loop))))))
+    (lambda (command)
+      (case command
+        ((cancel) (semaphore-post s))
+        (else (kill-thread t))))))
+(define *cancel-pending-silly-utterance* #f)
+
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
@@ -106,6 +125,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-environment*)))
          ((regexp-match #rx"(?i:^census)( .*$)?" (first message-tokens))
           (put (format "NAMES ~a" channel-name)))
+         ((and *cancel-pending-silly-utterance*
+               (string-ci=? "shaddap" (first message-tokens)))
+          (*cancel-pending-silly-utterance* 'kill))
          (else
           (let ((response-body
                  (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
@@ -165,11 +187,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        command-number
                        params))
               ((353)
-               ;; response to "NAMES"
+               ;; response to "NAMES".  This implies we've issued a
+               ;; NAMES command ourselves (which we don't do, afaik),
+               ;; or else we've joined a channel.
                (let* ((tokens (split params))
                       (match-tokens (cdddr tokens))
                       (fellows (cons (strip-leading-colon (car match-tokens))
-                                     (cdr match-tokens))))
+                                     (cdr match-tokens)))
+                      (channel (third tokens)))
+
+                 (when (and (string=? channel "#emacs")
+                            (not *cancel-pending-silly-utterance*))
+                   (set!
+                    *cancel-pending-silly-utterance*
+                    (do-in-loop-when-not-cancelled
+                     (* 20 60)
+                     (lambda ()
+                       (put (format "PRIVMSG ~a :~a"
+                                    channel
+                                    (one-jordanb-quote)))))))
 
                  ;; the first three tokens appear to be our nick, an
                  ;; =, then the channel name.  of the remaining
@@ -177,10 +213,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ;; them might also have a + or a @ in front.
 
                  (hash-table-put! denizens-by-channel
-                                  (third tokens)
+                                  channel
                                   fellows))))
             (case command-symbol
               ((PRIVMSG)
+               (*cancel-pending-silly-utterance* 'cancel)
                (unless (*passive?*)
                  (let* ((tokens (split params))
                         (tokens (if (<= 2 (length tokens))
@@ -197,10 +234,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (vprintf "Tokens ~s; destination ~s source ~s~%"
                              tokens destination source)
                    (cond
-                    ;; private message.
+                    ;; private message to us.
                     ((equal? (*my-nick*) destination)
                      (do-something-clever  (cdr tokens) source destination #t))
 
+                    ;; someone typed "/me".
                     ((string=? "\u0001ACTION" (second tokens))
                      (maybe
                       (lambda ()
@@ -225,6 +263,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         (string-join (cddr tokens))
                                         "")))))))
 
+                    ;; someone said something to the whole channel.
                     ((regexp-match #rx"^#" destination)
                      (when (regexp-match
                             (regexp
