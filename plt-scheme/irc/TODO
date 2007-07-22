@@ -43,3 +43,8 @@
 
   The solution is probably to have the file that runs the tests be
   separate from that which defines them.
+
+* Keep track of who spoke when
+  I think fsbot does this, in order to answer questions like "seen
+  so-and-so".  Simply: every time someone says something, note the
+  nick, the time, and the channel.

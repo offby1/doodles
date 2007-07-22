@@ -25,7 +25,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (version)
           (system-type 'os)))
 
-(define *echo-server-lines* #f)
+(define *verbose* (make-parameter #f))
 (define *irc-server-name*
   (make-parameter
    "localhost"

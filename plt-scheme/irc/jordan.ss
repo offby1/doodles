@@ -34,12 +34,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; it takes about half a minute to snarf up the files and grep them,
 ;; so we memoize this -- so that the second and subsequent calls are
 ;; fast.
-(define/memo (all-jordanb-quotes test-mode?)
+(define/memo (all-jordanb-quotes)
   (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
          (files  (directory-list log-dir))
-         (files (if test-mode?
-                    (list (car files))
-                  files))
          (quotes (append-map
                   (lambda (fn)
                     (let ((fn (build-path log-dir fn)))
@@ -53,8 +50,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     quotes
     ))
 
-(define (one-jordanb-quote test-mode?)
-  (let* ((all (all-jordanb-quotes test-mode?))
+(define (one-jordanb-quote)
+  (let* ((all (all-jordanb-quotes))
          (l (length all))
          (r (random l)))
     (list-ref all r))

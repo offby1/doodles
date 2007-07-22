@@ -31,7 +31,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (get-retort input 0))
    ((input which)
     (let ((reaction (open-output-string)))
-      (printf "<= ~s~%" input)
       (callback
        input
        (open-input-string "")

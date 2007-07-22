@@ -72,12 +72,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (regexp-quote str)
   (regexp-replace* #rx"." str "\\\\&"))
 
+(define (vprintf . args)
+  (when (*verbose*)
+    (apply printf args)))
+
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
       ;; TODO -- gack if str is > 510 characters long
       (define (put str)
-        (printf "=> ~s~%" str)
+        (vprintf "=> ~s~%" str)
         (display str op)
         (newline op)
         (flush-output op))
@@ -89,8 +93,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                was-private?             ;how they said it
                )
 
-        (printf "message ~s requestor ~s channel-name ~s was-private? ~s~%"
-                message-tokens requestor channel-name was-private?)
+        (vprintf "message ~s requestor ~s channel-name ~s was-private? ~s~%"
+                  message-tokens requestor channel-name was-private?)
         (cond
          ;; TODO -- proper CTCP decoding.  See
          ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
@@ -118,7 +122,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (else
                               (one-jordanb-quote)))
                        )
-                   (format "Well, ~a; I think ~a too."
+                   (format "Well, ~a, I think ~a too."
                            requestor
                            (string-join message-tokens)))))
 
@@ -129,12 +133,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (let-values (((prefix command params)
                     (parse-message line)))
         (let ((prefix (parse-prefix prefix)))
-          (when *echo-server-lines*
-            (printf "<= ~s -> prefix ~s; command ~s params ~s ~%"
+          (vprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
                     line
                     prefix
                     command
-                    params))
+                    params)
           (case state
             ((initial)
              (put (format "NICK ~a" (*my-nick*)))
@@ -153,7 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (case command-number
               ((001)
                (set! state 'logged-in)
-               (printf "Ah, I see we logged in OK.~%")
+               (vprintf "Ah, I see we logged in OK.~%")
                (for-each (lambda (ch)
                            (put (format "JOIN ~a" ch)))
                          (*initial-channel-names*)))
@@ -191,8 +194,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (destination (car tokens))
                         (source (car prefix)))
 
-                   (printf "Tokens ~s; destination ~s source ~s~%"
-                           tokens destination source)
+                   (vprintf "Tokens ~s; destination ~s source ~s~%"
+                             tokens destination source)
                    (cond
                     ;; private message.
                     ((equal? (*my-nick*) destination)
@@ -205,7 +208,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         ;; (some bots are just like us, and mimic
                         ;; actions -- if we are responding to one such,
                         ;; we'll get into an infinite loop!)
-                        (printf "Destination is ~s~%" destination)
+                        (vprintf "Destination is ~s~%" destination)
                         (if (regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") source)
                             (put (format "PRIVMSG ~a :Imagine I copied ~a by saying \"/me ~a\""
                                          destination
@@ -232,10 +235,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (cadr tokens))
                        (do-something-clever  (cddr tokens) source destination #f)))))))
               ((NOTICE)
-               (printf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
-                       prefix
-                       command
-                       params))
+               (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
+                         prefix
+                         command
+                         params))
               ((PING)
                (put (format "PONG ~a" params))))))))))
 
