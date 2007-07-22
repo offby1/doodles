@@ -31,3 +31,17 @@
   send it to tinyurl, and utter the tiny version.  A public service!
 
 * Private messages seem to have a colon as the first character.
+
+* Recognize characters other than a comma after our nick
+  i.e., right now he doesn't respond to "rudybot, so can journalists
+  say anything ...", but only to "rudybot: so can journalists say
+  anything ..."
+
+* planet:
+  <bpalmer> If more than 1 minute have passed with no activity other
+          than parts/joins, and if there is a not-yet-announced
+          headline on planet.emacsen.org, {display it}
+
+* proper testing
+  the stub IRC server is a good start, but we need to examine the
+  bot's actions, instead of just accumulating a code-coverage report.
