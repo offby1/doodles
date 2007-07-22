@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module quote-of-the-day mzscheme
-(require (only (lib "uri-codec.ss" "net")
+(require (lib "trace.ss")
+         (only (lib "uri-codec.ss" "net")
                current-alist-separator-mode)
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
@@ -24,36 +25,41 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi")
                string-join)
          (only (lib "1.ss" "srfi")
-               append-map))
+               append-map
+               second))
+(provide quotes-of-the-day)
+(define (trim str)
+  (regexp-replace*
+   (pregexp "(\r|\n)+")
+   str
+   ""))
+;;(trace trim)
+(define (quotes-of-the-day)
+  (parameterize ((current-alist-separator-mode 'amp))
+                (let* ((url (make-url
+                             "http"             ;scheme
+                             #f                 ;user
+                             "feeds.feedburner.com" ;host
+                             #f                     ;port
+                             #t                     ;path-absolute?
+                             (list (make-path/param "quotationspage" '())
+                                   (make-path/param "qotd" '())) ;path
+                             '()                       ;query
+                             #f                        ;fragment
+                             )))
 
-(parameterize ((current-alist-separator-mode 'amp))
-              (let* ((url (make-url
-                           "http"               ;scheme
-                           #f                   ;user
-                           "feeds.feedburner.com"    ;host
-                           #f                   ;port
-                           #t                   ;path-absolute?
-                           (list (make-path/param "quotationspage" '())
-                                 (make-path/param "qotd" '())) ;path
-                           '()                         ;query
-                           #f                          ;fragment
-                           )))
-
-                (write (url->string url))
-                (newline)
-                (pretty-display
-                 (html->shtml
-                  (port->string (get-pure-port
-                                 url
-                                 (list))))
-
-                 ;;  (append-map (lambda (str)
-                 ;;                                ((sxpath '(// *text*))
-                 ;;                                 (html->shtml str)))
-                 ;;                              ((sxpath '(// item description *text*))
-                 ;;                               (html->shtml
-                 ;;                                (port->string (get-pure-port
-                 ;;                                               url
-                 ;;                                               (list))))))
-                 )))
+                  (let ((stuff
+                         (html->shtml
+                          (port->string (get-pure-port
+                                         url
+                                         (list))))
+                         ))
+                    ;; I suspect there's a way to do this with nothing
+                    ;; more than a single call to sxpath -- no maps, no
+                    ;; cars, no seconds.  Hmph.
+                    (map (lambda (quote author)
+                           (cons (trim quote)
+                                 (trim author)))
+                         (map second ((sxpath '(rss channel item description ) ) stuff))
+                         ((sxpath '(rss channel item title *text*) ) stuff))))))
 )
