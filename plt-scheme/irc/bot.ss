@@ -24,7 +24,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
-         "a-stub-IRC-server.ss"
          "../web/quote-of-the-day.ss")
 (provide callback)
 
@@ -117,7 +116,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                "  --"
                                                (cdr p))))
                              (else
-                              (one-jordanb-quote (*test-mode?*))))
+                              (one-jordanb-quote)))
                        )
                    (format "Well, ~a; I think ~a too."
                            requestor

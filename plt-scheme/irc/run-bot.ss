@@ -7,8 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module run-bot mzscheme
 (require  (lib "cmdline.ss")
           "bot.ss"
-          "globals.ss"
-          "a-stub-IRC-server.ss")
+          "globals.ss")
 (command-line
  "bot"
  (current-command-line-arguments)
@@ -30,9 +29,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
 
 (let-values (((ip op)
-              (if (*test-mode?*)
-                  (stub-irc-server)
-                (tcp-connect (*irc-server-name*) 6667))))
+              (tcp-connect (*irc-server-name*) 6667)))
 
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))

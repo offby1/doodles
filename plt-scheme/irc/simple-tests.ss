@@ -50,89 +50,88 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (else ""))
         )))))
 
-(exit
- (parameterize
-  ((*random?* #f))
-  (test/text-ui
+(parameterize
+ ((*random?* #f))
+ (test/text-ui
+  (test-suite
+   "big ol' all-encompassing"
+
    (test-suite
-    "big ol' all-encompassing"
+    "logs in at startup"
+    (test-case
+     "proper NICK and whatnot"
+     (let ((lines (get-retort "" 'all)))
+       (check-equal?
+        (first  lines)
+        (format "NICK ~a" (*my-nick*)))
+       (check-regexp-match
+        #rx"USER .* .* .* :.*"
+        (second lines))))
 
-    (test-suite
-     "logs in at startup"
-     (test-case
-      "proper NICK and whatnot"
-      (let ((lines (get-retort "" 'all)))
-        (check-equal?
-         (first  lines)
-         (format "NICK ~a" (*my-nick*)))
-        (check-regexp-match
-         #rx"USER .* .* .* :.*"
-         (second lines))))
+    ;; TODO -- send it a 001 message and see that it JOINs the list o'
+    ;; channels
+    )
 
-     ;; TODO -- send it a 001 message and see that it JOINs the list o'
-     ;; channels
-     )
+   ;; TODO -- send it a 353 and then see that it has filled in its
+   ;; hash table with reasonable values
 
-    ;; TODO -- send it a 353 and then see that it has filled in its
-    ;; hash table with reasonable values
+   ;; TODO -- send it a PING and see if it PONGs
+   (test-suite
+    "Feed it lines, see what it says"
+    (test-equal?
+     "silent unless spoken to, private message edition"
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG somenick :hey you"))
+     "")
+    (test-equal?
+     "silent unless spoken to, channel message edition"
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :hey you"))
+     "")
+    (test-equal?
+     "echoes back stuff addressed to it, private message edition"
+     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
+     "PRIVMSG unit-test :Well, unit-test; I think hey you too.")
+    (test-equal?
+     "echoes, channel message edition"
+     (get-retort (format
+                  ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
+                  (*my-nick*)))
+     "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
+    (test-equal?
+     "recognizes a comma after its nick"
+     (get-retort (format
+                  ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a, hey you"
+                  (*my-nick*)))
+     "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
+    (test-case
+     "Responds to VERSION CTCP request"
+     (check-regexp-match
+      #rx"NOTICE unit-test :\u0001VERSION .*:.*:.*\u0001"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
+                          (*my-nick*)))))
 
-    ;; TODO -- send it a PING and see if it PONGs
-    (test-suite
-     "Feed it lines, see what it says"
-     (test-equal?
-      "silent unless spoken to, private message edition"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG somenick :hey you"))
-      "")
-     (test-equal?
-      "silent unless spoken to, channel message edition"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :hey you"))
-      "")
-     (test-equal?
-      "echoes back stuff addressed to it, private message edition"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
-      "PRIVMSG unit-test :Well, unit-test; I think hey you too.")
-     (test-equal?
-      "echoes, channel message edition"
-      (get-retort (format
-                   ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
-                   (*my-nick*)))
-      "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
-     (test-equal?
-      "recognizes a comma after its nick"
-      (get-retort (format
-                   ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a, hey you"
-                   (*my-nick*)))
-      "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
-     (test-case
-      "Responds to VERSION CTCP request"
-      (check-regexp-match
-       #rx"NOTICE unit-test :\u0001VERSION .*:.*:.*\u0001"
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
-                           (*my-nick*)))))
+    (test-equal?
+     "simple mimicry"
+     (get-retort
+      ":unit-test!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+     "PRIVMSG #some-channel :\u0001ACTION copies unit-test and glances around nervously.\u0001")
 
-     (test-equal?
-      "simple mimicry"
-      (get-retort
-       ":unit-test!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
-      "PRIVMSG #some-channel :\u0001ACTION copies unit-test and glances around nervously.\u0001")
+    (test-equal?
+     "doesn't mimic bots"
+     (get-retort
+      ":mebot!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
+     "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
 
-     (test-equal?
-      "doesn't mimic bots"
-      (get-retort
-       ":mebot!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
-      "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
-
-     (test-case
-      "witty quotes in response to a private message"
-      (check-regexp-match
-       #rx"PRIVMSG unit-test :.*heirs.*emacs.*johnw$"
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :quote"
-                           (*my-nick*)))))
-     (test-case
-      "witty quotes in response to a channel message"
-      (check-regexp-match
-       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
-                           (*my-nick*)))))
-     )))))
+    (test-case
+     "witty quotes in response to a private message"
+     (check-regexp-match
+      #rx"PRIVMSG unit-test :.*heirs.*emacs.*johnw$"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :quote"
+                          (*my-nick*)))))
+    (test-case
+     "witty quotes in response to a channel message"
+     (check-regexp-match
+      #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
+                          (*my-nick*)))))
+    ))))
 )

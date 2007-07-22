@@ -11,7 +11,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string-tokenize))
 (define *my-nick* (make-parameter "rudybot"))
 (define *passive?* (make-parameter #f))
-(define *test-mode?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow's bot")
 (define *client-version* "$Rev: 4146 $")
