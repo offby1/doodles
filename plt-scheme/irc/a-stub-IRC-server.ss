@@ -5,10 +5,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module a-stub-IRC-server mzscheme
-(require "globals.ss")
+(require "globals.ss"
+         (lib "trace.ss"))
 (define *server-name* "stub-IRC-server.")
 ;; An IRC server that doesn't do very much at all.  It's for testing
 ;; the client.
+(define *imaginary-friend* (make-parameter "Jan-!n=Hfuy@82.152.177.104"))
 (define (stub-irc-server)
   (let-values (((readme writeme)
                 (make-pipe)))
@@ -17,11 +19,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (define (PRIVMSG str private?)
          (fprintf
           writeme
-          (format
-           ":Jan-!n=Hfuy@82.152.177.104 PRIVMSG ~a :~a~a~%"
-           (if private? (*my-nick*) "#some-channel")
-           str
-           #\return))
+          ":~a PRIVMSG ~a :~a~a~%"
+          (*imaginary-friend*)
+          (if private? (*my-nick*) "#some-channel")
+          str
+          #\return)
          (flush-output writeme))
        (define (private-message str)
          (PRIVMSG str #t))
@@ -36,6 +38,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (*my-nick*)
           blather
           #\return))
+       (trace PRIVMSG)
+       (trace channel-message)
 
        (reply "001" (format "Welcome to the magical internal stub testing IRC server, ~a" (*my-nick*)))
 
@@ -48,6 +52,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (private-message "what up")
        (private-message "\u0001VERSION\u0001")
        (channel-message "\u0001ACTION glances around nervously.\u0001")
+       (parameterize ((*imaginary-friend* "flootbot!~flooty@1.2.3.4"))
+                     (channel-message "\u0001ACTION glances around nervously.\u0001"))
        (fprintf
         writeme
         (format
