@@ -45,3 +45,7 @@
 * proper testing
   the stub IRC server is a good start, but we need to examine the
   bot's actions, instead of just accumulating a code-coverage report.
+
+* Do buubot's job...
+  ... find Ebert reviews of movies.  Use IMDB; find the "external
+  reviews" link; find Ebert's name.
