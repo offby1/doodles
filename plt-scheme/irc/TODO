@@ -31,3 +31,5 @@
 * Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
   reviews" link; find Ebert's name.
+
+* Maybe trim leading and trailing whitespace from tokens
