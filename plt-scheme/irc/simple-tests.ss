@@ -20,25 +20,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (lines str)
   (string-tokenize str (char-set-complement (char-set #\newline))))
 
-(define (get-retort input)
-  (let ((reaction (open-output-string)))
-    (callback
-     input
-     (open-input-string "")
-     reaction)
-    (get-output-string reaction)))
+(define get-retort
+  (case-lambda
+   ((input)
+    (get-retort input 0))
+   ((input which)
+    (let ((reaction (open-output-string)))
+      (callback
+       input
+       (open-input-string "")
+       reaction)
+      (list-ref (lines (get-output-string reaction)) which)))))
 
 (test/text-ui
  (test-suite
   "Feed it lines, see what it says"
   (test-equal?
    "echoes back stuff addressed to it"
-   (third (lines (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you")))
+   (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you" 2)
    "PRIVMSG me :Well, me; I think :hey you too.")
 
   (test-equal?
    "more of the same."
-   (car (lines (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you")))
+   (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you")
    "PRIVMSG me :Well, me; I think :hey you too.")
   ))
 )
