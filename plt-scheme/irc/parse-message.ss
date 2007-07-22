@@ -31,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (command #f)
         (params #f))
     (let ((ip (open-input-string str)))
-      (when (char=? #\: (peek-char ip))
+      (when (equal? #\: (peek-char ip))
         (read-char ip)
         (set! prefix (grab-word ip)))
       (set! command (grab-word ip))
