@@ -22,3 +22,6 @@
   Possibly a separate "silly-spew" thread: it sleeps, then does a
   single PRIVMSG.  Maybe for extra fun, have it grab text to spew from
   some web service.
+
+* Catch Control-C so that we don't spew an ugly stack trace when we're killed.
+  Maybe even do a nice PART and QUIT while we're at it.
