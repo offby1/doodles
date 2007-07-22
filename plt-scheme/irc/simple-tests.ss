@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module simple-tests mzscheme
-(require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+(require (lib "trace.ss")
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
          (only (lib "1.ss" "srfi") third)
          (only (lib "13.ss" "srfi")
@@ -17,9 +18,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          "bot.ss")
 
-(define (lines str)
-  (string-tokenize str (char-set-complement (char-set #\newline))))
-
 (define get-retort
   (case-lambda
    ((input)
@@ -30,7 +28,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        input
        (open-input-string "")
        reaction)
-      (list-ref (lines (get-output-string reaction)) which)))))
+      (let ((lines (string-tokenize
+                    (get-output-string reaction)
+                    (char-set-complement (char-set #\newline)))))
+        (cond
+         ((not (null? lines))
+          (list-ref lines which))
+        (else #f))
+        )))))
 
 (test/text-ui
  (test-suite
@@ -44,5 +49,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    "more of the same."
    (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :hey you")
    "PRIVMSG me :Well, me; I think :hey you too.")
+
+  (test-equal?
+   "Responds to VERSION CTCP request"
+   (get-retort "\u0001VERSION\u0001")
+   "I wonder what goes here.")
   ))
 )
