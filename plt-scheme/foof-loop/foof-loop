@@ -31,7 +31,7 @@
 ;;; We must be very careful about where to add laziness annotations.
 ;;; In particular, we don't want to wrap only the loop's body, because
 ;;; if we did that, the outer bindings produced by the iterators would
-;;; be evaluate eagerly, which is too soon.  So instead, we wrap the
+;;; be evaluated eagerly, which is too soon.  So instead, we wrap the
 ;;; whole thing in a LAZY, and then wrap every call to the loop as
 ;;; well.
 
@@ -78,7 +78,7 @@
 
     ;; FOR handler with tail patterns.  Unfortunately, tail patterns are non-
     ;; standard...
-    ;; 
+    ;;
     ;; ((%LOOP GO name state
     ;;         ((FOR variable0 variable1 ... (looper argument ...))
     ;;          . loop-clauses)
