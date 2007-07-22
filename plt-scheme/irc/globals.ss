@@ -5,6 +5,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module globals mzscheme
-(define *my-nick* "rudybot")
+(define *my-nick* (make-parameter "rudybot"))
 (provide (all-defined))
 )

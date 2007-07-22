@@ -82,6 +82,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (set! *test-mode?* #t))
   (("--passive") "Never say anything more than necessary -- in effect just log traffic to stdout"
    (*passive?* #t))
+  (("-n" "--nick") nick "The nick I will be known by"
+   (*my-nick* nick))
   )
 
  (multi
@@ -111,7 +113,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       params))
             (case state
               ((initial)
-               (put (format "NICK ~a" *my-nick*))
+               (put (format "NICK ~a" (*my-nick*)))
                (put (format "USER ~a ~a ~a :~a, ~a"
                             (getenv "USER")
                             "unknown-host"
@@ -160,7 +162,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (printf "Tokens ~s; destination ~s source ~s~%"
                              tokens destination source)
                      (cond
-                      ((equal? *my-nick* destination)
+                      ((equal? (*my-nick*) destination)
                        (do-something-clever  (cdr tokens) source destination #t))
                       ((string=? ":\u0001ACTION" (second tokens))
                        (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
@@ -171,7 +173,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      (string-join (cddr tokens))
                                      ""))))
                       ((regexp-match #rx"^#" destination)
-                       (when (string=? (cadr tokens) (string-append ":" *my-nick* ":"))
+                       (when (string=? (cadr tokens) (string-append ":" (*my-nick*) ":"))
                          (do-something-clever  (cddr tokens) source destination #f)))))))
                 ((NOTICE)
                  (printf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
