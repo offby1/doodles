@@ -46,13 +46,28 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           result
         (loop (cons #f result))))))
 
+;; during normal operation we want our bot to act randomly.  But when
+;; we're testing it, we want it to act predictably.  Thus we have a
+;; parameter called *random?* which determines which way it acts.
+
+;; TODO -- see if I can parameterize current-random-number-generator
+;; instead; that'd be more reliable.  I'm not doing that now, though,
+;; because it doesn't look like I can supply any arbitrary function
+;; (i.e., one that always returns zero); instead it looks as if I must
+;; supply a vector of integers from which PLT scheme constructs a
+;; pseudo-random-number generator.
+
+(define (rnd . args)
+  (if (not (*random?*))
+      0
+    (apply random args)))
+
 (define (maybe thunk)
-  (if (or (*test-mode?*)
-          (zero? (random 10)))
+  (if (zero? (rnd 10))
       (thunk)))
 
 (define (random-choice seq)
-  (list-ref seq (random (length seq))))
+  (list-ref seq (rnd (length seq))))
 
 (define callback
   (let ((state 'initial))
@@ -87,7 +102,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (else
           (let ((response-body
                  (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                     (if (zero? (random 2))
+                     (if (zero? (rnd 2))
                          (let ((p (random-choice (quotes-of-the-day))))
                            (string-append (car p)
                                           "  --"
@@ -100,6 +115,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (put (format "PRIVMSG ~a :~a"
                          (if was-private? requestor channel-name)
                          response-body))))))
+
       (let-values (((prefix command params)
                     (parse-message line)))
         (let ((prefix (parse-prefix prefix)))

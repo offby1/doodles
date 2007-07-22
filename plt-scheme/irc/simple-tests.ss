@@ -17,7 +17,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set
                char-set-complement
                )
-         "bot.ss")
+         "bot.ss"
+         (only "globals.ss" *random?*))
 
 (define get-retort
   (case-lambda
@@ -25,6 +26,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (get-retort input 0))
    ((input which)
     (let ((reaction (open-output-string)))
+      (printf "<= ~s~%" input)
       (callback
        input
        (open-input-string "")
@@ -56,5 +58,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (check-regexp-match
     #rx"NOTICE me :\u0001VERSION .*:.*:.*\u0001"
     (get-retort ":me!~me@1.2.3.4 PRIVMSG rudybot :\u0001VERSION\u0001")))
+
+  (test-equal?
+   "simple mimicry"
+   (parameterize ((*random?* #f))
+                 (get-retort
+                  ":me!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001"))
+   "PRIVMSG #some-channel :\u0001ACTION copies me and glances around nervously.\u0001")
+
+  (test-equal?
+   "doesn't mimic bots"
+   (parameterize ((*random?* #f))
+                 (get-retort
+                  ":mebot!~me@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001"))
+   "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
   ))
 )

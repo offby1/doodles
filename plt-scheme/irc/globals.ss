@@ -34,5 +34,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    )
   )
 (define *initial-channel-names* (make-parameter '()))
+(define *random?* (make-parameter #t))
 (provide (all-defined))
 )
