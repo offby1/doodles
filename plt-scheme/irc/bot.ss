@@ -93,7 +93,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (case command
         ((cancel) (semaphore-post s))
         (else (kill-thread t))))))
-(define *cancel-pending-silly-utterance* #f)
+(define *timers-by-channel* (make-hash-table 'equal))
 
 (define callback
   (let ((state 'initial))
@@ -125,9 +125,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-environment*)))
          ((regexp-match #rx"(?i:^census)( .*$)?" (first message-tokens))
           (put (format "NAMES ~a" channel-name)))
-         ((and *cancel-pending-silly-utterance*
+         ((and (hash-table-get *timers-by-channel* channel-name #f)
                (string-ci=? "shaddap" (first message-tokens)))
-          (*cancel-pending-silly-utterance* 'kill))
+          ((hash-table-get *timers-by-channel* channel-name) 'kill))
          (else
           (let ((response-body
                  (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
@@ -196,12 +196,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      (cdr match-tokens)))
                       (channel (third tokens)))
 
-                 (when (and (string=? channel "#emacs")
-                            (not *cancel-pending-silly-utterance*))
-                   (set!
-                    *cancel-pending-silly-utterance*
+                 (when (and (or
+                             (string=? channel "#bots")
+                             (string=? channel "#emacs"))
+                            (not (hash-table-get *timers-by-channel* channel #f)))
+                   (hash-table-put!
+                    *timers-by-channel*
+                    channel
                     (do-in-loop-when-not-cancelled
-                     (* 20 60)
+                     (*jordanb-quote-interval*)
                      (lambda ()
                        (put (format "PRIVMSG ~a :~a"
                                     channel
@@ -217,30 +220,33 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   fellows))))
             (case command-symbol
               ((PRIVMSG)
-               (when *cancel-pending-silly-utterance*
-                 (*cancel-pending-silly-utterance* 'cancel))
-               (unless (*passive?*)
-                 (let* ((tokens (split params))
-                        (tokens (if (<= 2 (length tokens))
-                                    (cons (first tokens)
-                                          (cons (regexp-replace
-                                                 #rx"^:"
-                                                 (second tokens)
-                                                 "")
-                                                (cddr tokens)))
-                                  tokens))
-                        (destination (car tokens))
-                        (source (car prefix)))
+               (let* ((tokens (split params))
+                      (tokens (if (<= 2 (length tokens))
+                                  (cons (first tokens)
+                                        (cons (regexp-replace
+                                               #rx"^:"
+                                               (second tokens)
+                                               "")
+                                              (cddr tokens)))
+                                tokens))
+                      (destination (car tokens))
+                      (dest-is-channel? (regexp-match #rx"^#" destination))
+                      (source (car prefix)))
+                 (when (and dest-is-channel?
+                            (hash-table-get *timers-by-channel* destination #f))
+                   ((hash-table-get *timers-by-channel* destination) 'cancel)
+                   (printf "Cancelled timer for ~s~%" destination))
+                 (unless (*passive?*)
 
                    (vprintf "Tokens ~s; destination ~s source ~s~%"
-                             tokens destination source)
+                            tokens destination source)
                    (cond
                     ;; private message to us.
                     ((equal? (*my-nick*) destination)
                      (do-something-clever  (cdr tokens) source destination #t))
 
                     ;; someone said something to the whole channel.
-                    ((regexp-match #rx"^#" destination)
+                    (dest-is-channel?
                      (when (regexp-match
                             (regexp
                              (string-append
@@ -248,7 +254,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (regexp-quote (*my-nick*))
                               "[:,]"))
                             (cadr tokens))
-                       (do-something-clever  (cddr tokens) source destination #f)))))))
+                       (do-something-clever  (cddr tokens) source destination #f))))))
+               )
               ((NOTICE)
                (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
                          prefix

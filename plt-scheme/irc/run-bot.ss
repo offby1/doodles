@@ -22,6 +22,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
+  (("-j" "--jordan") secs "Seconds to wait before emitting a jordanb quote"
+   (*jordanb-quote-interval* (string->number secs)))
   (("-v" "--verbose")
     "Spew I/O to stdout"
     (*verbose* #t))
