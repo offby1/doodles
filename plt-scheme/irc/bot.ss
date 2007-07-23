@@ -52,6 +52,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (parse-prefix str)
   (if (not str)
       '(#f #f #f)
+
+    ;; the first three tokens appear to be our nick, an
+    ;; =, then the channel name.  Of the remaining
+    ;; tokens, the first begins with a colon, and any of
+    ;; them might also have a + or a @ in front.
     (let loop ((result (string-tokenize str (char-set-complement (char-set #\! #\@)))))
       (if (<= (length result ) 3)
           result
@@ -232,8 +237,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (set! *planet-emacs-task*
                          (let ((announce-us (make-queue '()))
                                (last-check-date
-                                ;; for testing, consider older
-                                ;; stuff.
+                                ;; emitting day-old stuff when we
+                                ;; start up is handy for testing, and
+                                ;; I hope it's not too annoying in
+                                ;; "production" on the real server.
                                 (time-utc->date
                                  (add-duration
                                   (date->time-utc (current-date))
@@ -258,11 +265,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                              channel
                                              (entry->string (front-queue announce-us))))
                                 (delete-queue! announce-us)))))))
-
-                 ;; the first three tokens appear to be our nick, an
-                 ;; =, then the channel name.  of the remaining
-                 ;; tokens, the first begins with a colon, and any of
-                 ;; them might also have a + or a @ in front.
 
                  (hash-table-put! denizens-by-channel
                                   channel
