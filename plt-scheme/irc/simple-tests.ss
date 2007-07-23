@@ -68,9 +68,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     ;; channels
     )
 
-   ;; TODO -- send it a 353 and then see that it has filled in its
-   ;; hash table with reasonable values
-
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "Feed it lines, see what it says"
@@ -129,6 +126,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (check-regexp-match
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
+                          (*my-nick*)))))
+
+    (test-case
+     "notes who's in what channel"
+     (callback
+      ":kubrick.freenode.net 353 rudybot = #emacs :sam bob "
+      (open-input-string "")
+      (open-output-string))
+     (check-regexp-match
+      #rx"channel foo is graced by the presence of sam and bob"
+      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: names"
                           (*my-nick*)))))
     )))
 (provide simple-tests)

@@ -1,5 +1,10 @@
 -*-outline-*-
 
+* make it more resilient to bad input
+  e.g., if the server sends a line with too few fields, I'll tokenize
+  it and then merrily call e.g. (list-ref tokens 4) on it, thus
+  crashing.
+
 * maybe periodically see what channels _I'm_ in, and join them if it's
   not already in them.  Like a little puppy dog.  This is harder than
   it sounds, since it's not blindingly clear who "I" am -- sometimes
@@ -10,11 +15,6 @@
   I don't really know what I mean by this, but: I often think of
   improvements to make to it, and hate having to stop it and restart
   it in order to incorporate those improvements.
-
-* Figure out how to spew silliness at random intervals.
-  Possibly a separate "silly-spew" thread: it sleeps, then does a
-  single PRIVMSG.  Maybe for extra fun, have it grab text to spew from
-  some web service.
 
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
@@ -73,7 +73,10 @@
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
-  I'm not entirely sure what that means, but what the hell.
+  He means snag stuff from
+  http://www.emacswiki.org/cgi-bin/wiki?EmacsChannelQuotes, but I'd
+  rather not do that since most of those quotes are multi-line, and
+  wouldn't look good if collapsed.
 
 * Respond to "version"
   since people seem to expect that

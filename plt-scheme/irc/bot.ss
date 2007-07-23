@@ -49,14 +49,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (print-hash-table #t)
 
+;; http://tools.ietf.org/html/rfc1459#section-2.3.1
 (define (parse-prefix str)
   (if (not str)
       '(#f #f #f)
 
-    ;; the first three tokens appear to be our nick, an
-    ;; =, then the channel name.  Of the remaining
-    ;; tokens, the first begins with a colon, and any of
-    ;; them might also have a + or a @ in front.
     (let loop ((result (string-tokenize str (char-set-complement (char-set #\! #\@)))))
       (if (<= (length result ) 3)
           result
@@ -66,26 +63,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; we're testing it, we want it to act predictably.  Thus we have a
 ;; parameter called *random?* which determines which way it acts.
 
-;; TODO -- see if I can parameterize current-random-number-generator
-;; instead; that'd be more reliable.  I'm not doing that now, though,
-;; because it doesn't look like I can supply any arbitrary function
-;; (i.e., one that always returns zero); instead it looks as if I must
-;; supply a vector of integers from which PLT scheme constructs a
-;; pseudo-random-number generator.
-
+;; I know that I could start it with a known seed when I test, but for
+;; reasons I can't articulate, that seems less pleasant than simply
+;; having "rnd" always return 0.
 (define (rnd . args)
   (if (not (*random?*))
       0
     (apply random args)))
 
-(define (maybe thunk)
-  (if (zero? (rnd 10))
-      (thunk)))
-
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
-;; gaah.
+;; gaah.  I wish wish wish that PLT scheme supported Olin Shiver's
+;; "SRE"s.  Maybe I should contribute to
+;; http://www.omnigia.com/scheme/scsh-regexp/.
 (define (regexp-quote str)
   (regexp-replace* #rx"." str "\\\\&"))
 
@@ -109,8 +100,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (case command
         ((postpone POSTPONE) (semaphore-post s))
         (else (kill-thread t))))))
+
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
+
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
@@ -207,9 +200,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ;; NAMES command ourselves (which we don't do, afaik),
                ;; or else we've joined a channel.
                (let* ((tokens (split params))
-                      (match-tokens (cdddr tokens))
-                      (fellows (cons (strip-leading-colon (car match-tokens))
-                                     (cdr match-tokens)))
+                      (fellows (cdddr tokens))
+                      (fellows (cons (strip-leading-colon (car fellows))
+                                     (cdr fellows)))
                       (channel (third tokens)))
 
                  (when (and (or
