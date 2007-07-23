@@ -48,3 +48,13 @@
   I think fsbot does this, in order to answer questions like "seen
   so-and-so".  Simply: every time someone says something, note the
   nick, the time, and the channel.
+
+* Deal with netsplits, or whatever the hell it is 
+  ... that makes the bot not work even though /whois says it's still
+  there.  Also, what do I do if it connects and the server says that
+  the nick is already registered?  (Try again, passing a --nick
+  command.)
+
+** Maybe registering the nick on freenode will help.
+
+
