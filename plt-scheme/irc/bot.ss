@@ -89,20 +89,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (apply printf args)))
 
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
-;; the symbol CANCEL cancels the next call, and resets the task.
-;; Calling the return value with any other value kills the task
-;; permanently.
-(define (do-in-loop-when-not-cancelled seconds thunk)
+;; the symbol POSTPONE postpones the next call (i.e., it resets the
+;; timer).  Calling the return value with any other value kills the
+;; task permanently.
+(define (do-in-loop seconds thunk)
   (let* ((s (make-semaphore))
          (t (thread (lambda ()
                       (let loop ()
-                        (let ((cancelled? (sync/timeout seconds s)))
-                          (when (not cancelled?)
+                        (let ((postponed? (sync/timeout seconds s)))
+                          (when (not postponed?)
                             (thunk)))
                         (loop))))))
     (lambda (command)
       (case command
-        ((cancel CANCEL) (semaphore-post s))
+        ((postpone POSTPONE) (semaphore-post s))
         (else (kill-thread t))))))
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
@@ -217,7 +217,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (hash-table-put!
                     *jordanb-quote-tasks-by-channel*
                     channel
-                    (do-in-loop-when-not-cancelled
+                    (do-in-loop
                      (*jordanb-quote-interval*)
                      (lambda ()
                        (put (format "PRIVMSG ~a :~a"
@@ -236,7 +236,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (date->time-utc (current-date))
                                   (make-time time-duration 0 (- (* 3600 24)))))
                                 ))
-                           (do-in-loop-when-not-cancelled
+                           (do-in-loop
                             60
                             (lambda ()
                               (define latest-entries
@@ -282,12 +282,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (for-each
                     (lambda (task)
                       (when task
-                        (task 'cancel)))
+                        (task 'postpone)))
                     (list
                      (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
-                     *planet-emacs-task*))
+                     *planet-emacs-task*)))
 
-                   (vprintf "Cancelled tasks for ~s~%" destination))
                  (unless (*passive?*)
 
                    (vprintf "Tokens ~s; destination ~s source ~s~%"
