@@ -217,7 +217,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   fellows))))
             (case command-symbol
               ((PRIVMSG)
-               (*cancel-pending-silly-utterance* 'cancel)
+               (when *cancel-pending-silly-utterance*
+                 (*cancel-pending-silly-utterance* 'cancel))
                (unless (*passive?*)
                  (let* ((tokens (split params))
                         (tokens (if (<= 2 (length tokens))
