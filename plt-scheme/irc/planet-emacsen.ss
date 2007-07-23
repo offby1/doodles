@@ -12,7 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "19.ss" "srfi" )
                date->time-utc
 
-               time>=?)
+               time>?)
          (rename (lib "19.ss" "srfi" )
                  19:make-date make-date)
          (only (lib "uri-codec.ss" "net")
@@ -55,7 +55,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (filter
      (lambda (triplet)
-       (time>=?
+       (time>?
         (date->time-utc (first triplet))
         (date->time-utc srfi-19-date)))
 
