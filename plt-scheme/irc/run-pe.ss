@@ -4,6 +4,10 @@
 exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 |#
 
+;; I am just a driver for the planet-emacsen module; once it's
+;; properly working, and integrated into the bot, I will no longer be
+;; needed.
+
 (require "planet-emacsen.ss"
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
