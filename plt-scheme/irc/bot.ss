@@ -21,9 +21,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "14.ss" "srfi")
                char-set
                char-set-complement)
+         (only (lib "19.ss" "srfi")
+               add-duration
+               current-date
+               date->time-utc
+               make-time
+               time-duration
+               time-utc->date
+               )
+         (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+               sxpath)
+         (planet "q.ss" ("offby1" "offby1.plt"))
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
+         "planet-emacsen.ss"
          "../web/quote-of-the-day.ss")
 (provide callback)
 
@@ -77,8 +89,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (apply printf args)))
 
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
-;; the symbol CANCEL cancels the next call, and resets the timer.
-;; Calling the return value with any other value kills the thread
+;; the symbol CANCEL cancels the next call, and resets the task.
+;; Calling the return value with any other value kills the task
 ;; permanently.
 (define (do-in-loop-when-not-cancelled seconds thunk)
   (let* ((s (make-semaphore))
@@ -92,8 +104,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (case command
         ((cancel CANCEL) (semaphore-post s))
         (else (kill-thread t))))))
-(define *timers-by-channel* (make-hash-table 'equal))
-
+(define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
+(define *planet-emacs-task* #f)
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
@@ -124,9 +136,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-environment*)))
          ((regexp-match #rx"(?i:^census)( .*$)?" (first message-tokens))
           (put (format "NAMES ~a" channel-name)))
-         ((and (hash-table-get *timers-by-channel* channel-name #f)
+         ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
                (string-ci=? "shaddap" (first message-tokens)))
-          ((hash-table-get *timers-by-channel* channel-name) 'kill))
+          ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill))
          (else
           (let ((response-body
                  (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
@@ -199,11 +211,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (string=? channel "#bots")
                              (string=? channel "#emacs"))
                             ;; I wonder ... would it be better if I
-                            ;; killed any existing thread, and then
+                            ;; killed any existing task, and then
                             ;; replaced it with a new one?
-                            (not (hash-table-get *timers-by-channel* channel #f)))
+                            (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f)))
                    (hash-table-put!
-                    *timers-by-channel*
+                    *jordanb-quote-tasks-by-channel*
                     channel
                     (do-in-loop-when-not-cancelled
                      (*jordanb-quote-interval*)
@@ -211,6 +223,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (put (format "PRIVMSG ~a :~a"
                                     channel
                                     (one-jordanb-quote)))))))
+
+                 (when (and (string=? channel "#emacs")
+                            (not *planet-emacs-task*))
+                   (set! *planet-emacs-task*
+                         (let ((announce-us (make-queue '()))
+                               (last-check-date
+                                ;; for testing, consider older
+                                ;; stuff.
+                                (time-utc->date
+                                 (add-duration
+                                  (date->time-utc (current-date))
+                                  (make-time time-duration 0 (- (* 3600 24)))))
+                                ))
+                           (do-in-loop-when-not-cancelled
+                            60
+                            (lambda ()
+                              (define latest-entries
+                                (entries-newer-than
+                                 ((sxpath '(feed)) (planet-emacsen-news))
+                                 last-check-date))
+                              (set! last-check-date (current-date))
+                              (vprintf "Checking planet.emacsen ... ~a new entries~%"
+                                       (length latest-entries))
+                              (for-each
+                               (lambda (item)
+                                 (insert-queue! announce-us item))
+                               latest-entries)
+                              (when (not (empty-queue? announce-us))
+                                (put (format "PRIVMSG ~a :~a"
+                                             channel
+                                             (entry->string (front-queue announce-us))))
+                                (delete-queue! announce-us)))))))
 
                  ;; the first three tokens appear to be our nick, an
                  ;; =, then the channel name.  of the remaining
@@ -234,10 +278,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (destination (car tokens))
                       (dest-is-channel? (regexp-match #rx"^#" destination))
                       (source (car prefix)))
-                 (when (and dest-is-channel?
-                            (hash-table-get *timers-by-channel* destination #f))
-                   ((hash-table-get *timers-by-channel* destination) 'cancel)
-                   (printf "Cancelled timer for ~s~%" destination))
+                 (when dest-is-channel?
+                   (for-each
+                    (lambda (task)
+                      (when task
+                        (task 'cancel)))
+                    (list
+                     (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
+                     *planet-emacs-task*))
+
+                   (vprintf "Cancelled tasks for ~s~%" destination))
                  (unless (*passive?*)
 
                    (vprintf "Tokens ~s; destination ~s source ~s~%"

@@ -24,11 +24,9 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 
 (define *some-time-ago* (PLT-date->srfi-19-date (seconds->date (- (current-seconds) (* 24 3600)))))
 
-(define (de-html str)
-  (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
-
 (pretty-print
- (entries-newer-than
-  ((sxpath '(feed)) (planet-emacsen-news))
-  *some-time-ago*))
+ (map entry->string
+      (entries-newer-than
+       ((sxpath '(feed)) (planet-emacsen-news))
+       *some-time-ago*)))
 (newline)

@@ -8,7 +8,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                filter
-               first)
+               first
+               second
+               third)
          (only (lib "19.ss" "srfi" )
                date->time-utc
 
@@ -32,7 +34,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (provide
  planet-emacsen-news
- entries-newer-than)
+ entries-newer-than
+ entry->string)
+
+;; TODO -- define an "entry" structure instead of using "first",
+;; "second", and "third".
+
 (define (trim str)
   (regexp-replace*
    (pregexp "(\r|\n)+")
@@ -71,17 +78,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   ((sxpath '(updated *text*))
                    entry))
                  19:make-date))
-               (source
-                ((sxpath '(source))
-                 entry))
                (title
                 (car
                  ((sxpath '(title *text*))
-                  source)))
-               (subtitle
-                ((sxpath '(subtitle *text*))
-                 source)))
-          (cons updated (cons title subtitle))))
+                  entry)))
+               (link
+                ((sxpath '(link @ href *text*))
+                 entry)))
+          (cons updated (cons title link))))
 
       entries))))
+(define (entry->string triplet)
+  (define (de-html str)
+    (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
+  (format "~a: ~a"
+          (de-html (second triplet))
+          (third triplet)))
 )
