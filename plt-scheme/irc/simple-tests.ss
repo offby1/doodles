@@ -88,19 +88,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (test-equal?
      "echoes back stuff addressed to it, private message edition"
      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
-     "PRIVMSG unit-test :Well, unit-test; I think hey you too.")
+     "PRIVMSG unit-test :Well, unit-test, I think hey you too.")
     (test-equal?
      "echoes, channel message edition"
      (get-retort (format
                   ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
                   (*my-nick*)))
-     "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
+     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-equal?
      "recognizes a comma after its nick"
      (get-retort (format
                   ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a, hey you"
                   (*my-nick*)))
-     "PRIVMSG #some-channel :Well, unit-test; I think hey you too.")
+     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match
@@ -108,17 +108,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
                           (*my-nick*)))))
 
+    ;; mwolson has forbidden it to mimic.
     (test-equal?
-     "simple mimicry"
+     "doesn't mimic under any circumstances"
      (get-retort
       ":unit-test!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
-     "PRIVMSG #some-channel :\u0001ACTION copies unit-test and glances around nervously.\u0001")
+     "")
 
     (test-equal?
-     "doesn't mimic bots"
+     "doesn't mimic bots either"
      (get-retort
       ":mebot!~unit-test@1.2.3.4 PRIVMSG #some-channel :\u0001ACTION glances around nervously.\u0001")
-     "PRIVMSG #some-channel :Imagine I copied mebot by saying \"/me glances around nervously.\"")
+     "")
 
     (test-case
      "witty quotes in response to a private message"

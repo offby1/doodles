@@ -239,31 +239,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     ((equal? (*my-nick*) destination)
                      (do-something-clever  (cdr tokens) source destination #t))
 
-                    ;; someone typed "/me".
-                    ((string=? "\u0001ACTION" (second tokens))
-                     (maybe
-                      (lambda ()
-                        ;; mimic the action, unless it came from a bot
-                        ;; (some bots are just like us, and mimic
-                        ;; actions -- if we are responding to one such,
-                        ;; we'll get into an infinite loop!)
-                        (vprintf "Destination is ~s~%" destination)
-                        (if (regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") source)
-                            (put (format "PRIVMSG ~a :Imagine I copied ~a by saying \"/me ~a\""
-                                         destination
-                                         source
-                                         (regexp-replace*
-                                          #rx"\u0001+"
-                                          (string-join (cddr tokens))
-                                          "")))
-                          (put (format "PRIVMSG ~a :\u0001ACTION copies ~a and ~a\u0001"
-                                       destination
-                                       source
-                                       (regexp-replace*
-                                        #rx"\u0001+"
-                                        (string-join (cddr tokens))
-                                        "")))))))
-
                     ;; someone said something to the whole channel.
                     ((regexp-match #rx"^#" destination)
                      (when (regexp-match
