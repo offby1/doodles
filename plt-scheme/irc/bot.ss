@@ -147,13 +147,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        ;; we special-case zero for ease of testing.
                        (cond ((zero? r)
                               "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
-                             ((even? r)
+                             ((< r 91)
+                              (one-jordanb-quote))
+                             (else
                               (let ((p (random-choice (quotes-of-the-day))))
                                 (string-append (car p)
                                                "  --"
-                                               (cdr p))))
-                             (else
-                              (one-jordanb-quote)))
+                                               (cdr p)))))
                        )
                    (format "Well, ~a, I think ~a too."
                            requestor
