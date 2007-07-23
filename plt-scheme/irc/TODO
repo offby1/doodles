@@ -61,3 +61,14 @@
   I.e., I say "shaddap", and it emits a few more quotes before going
   away (at least, if the interval is just a few seconds).  It should
   be immediate.
+
+* Catch up the testing!
+  As often happens, development has pulled ahead of testing.  In
+  particular, the jordanb-quote-thread stuff isn't tested.
+
+* Convert from strings to bytes
+  Wherever possible, change from using "string" procedures to "bytes"
+  procedures -- since IRC doesn't specify any character encoding.  As
+  things stand now, we're implicitly using UTF-8 everywhere; it'd be
+  better for the encoding to be explicit.  That way, eventually I
+  could have per-channel encodings.

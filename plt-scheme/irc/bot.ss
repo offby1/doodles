@@ -81,8 +81,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; Calling the return value with any other value kills the thread
 ;; permanently.
 (define (do-in-loop-when-not-cancelled seconds thunk)
-  (let* ((s (make-semaphore)            ;1 means "cancel"
-            )
+  (let* ((s (make-semaphore))
          (t (thread (lambda ()
                       (let loop ()
                         (let ((cancelled? (sync/timeout seconds s)))
@@ -91,7 +90,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (loop))))))
     (lambda (command)
       (case command
-        ((cancel) (semaphore-post s))
+        ((cancel CANCEL) (semaphore-post s))
         (else (kill-thread t))))))
 (define *timers-by-channel* (make-hash-table 'equal))
 
@@ -199,6 +198,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (when (and (or
                              (string=? channel "#bots")
                              (string=? channel "#emacs"))
+                            ;; I wonder ... would it be better if I
+                            ;; killed any existing thread, and then
+                            ;; replaced it with a new one?
                             (not (hash-table-get *timers-by-channel* channel #f)))
                    (hash-table-put!
                     *timers-by-channel*
@@ -247,6 +249,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                     ;; someone said something to the whole channel.
                     (dest-is-channel?
+
+                     ;; ... but prefixed it with my nick.
                      (when (regexp-match
                             (regexp
                              (string-append
