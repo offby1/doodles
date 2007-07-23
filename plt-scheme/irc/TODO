@@ -34,16 +34,6 @@
 
 * Maybe trim leading and trailing whitespace from tokens
 
-* Get exit status right for tests.
-  simple-tests.ss doesn't call exit at all, which means that if "make"
-  invokes it, "make" won't notice if any tests failed.  But
-  coverage.ss requires simple-tests.ss, and wants to do stuff after
-  requiring it; so simple-tests had better not call "exit" because
-  that'd prevent coverage from doing its cool after stuff.
-
-  The solution is probably to have the file that runs the tests be
-  separate from that which defines them.
-
 * Keep track of who spoke when
   I think fsbot does this, in order to answer questions like "seen
   so-and-so".  Simply: every time someone says something, note the

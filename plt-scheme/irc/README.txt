@@ -7,8 +7,4 @@ To do very crude code-coverage analysis, type "./coverage.ss".
 
 Some tests:
 
-./run-parse-tests.ss
-./simple-tests.ss
-
-Note that simple-tests.ss always returns a 0 exit status, even if
-tests failed.  See the TODO for why.
+./run-all-tests.ss

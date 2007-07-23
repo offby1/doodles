@@ -22,8 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          "bot.ss"
          (only "globals.ss"
-               *my-nick*
-               *random?*))
+               *my-nick*))
 
 (define get-retort
   (case-lambda
@@ -49,9 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (else ""))
         )))))
 
-(parameterize
- ((*random?* #f))
- (test/text-ui
+(define simple-tests
   (test-suite
    "big ol' all-encompassing"
 
@@ -133,5 +130,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
                           (*my-nick*)))))
-    ))))
+    )))
+(provide simple-tests)
 )
