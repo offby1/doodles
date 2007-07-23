@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi")
                append-map
                filter
+               first
                third)
          (only (lib "19.ss" "srfi" )
                date->time-utc
@@ -22,7 +23,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                time>=?)
          (lib "pretty.ss"))
 
-(define *some-time-ago* (PLT-date->srfi-19-date (seconds->date (- (current-seconds) (* 6 3600)))))
+(define *some-time-ago* (PLT-date->srfi-19-date (seconds->date (- (current-seconds) (* 24 3600)))))
 
 (define (de-html str)
   (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
@@ -30,35 +31,40 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 (define (str seq)
   (de-html (apply string-append seq)))
 
-(let* ((sources
-        ((sxpath '(// entry source))
-         (planet-emacsen-news))))
+(let* ((news ((sxpath '(feed)) (planet-emacsen-news)))
+       (entries
+        ((sxpath '(entry))
+         news)))
+
   (pretty-print
    (filter
     (lambda (triplet)
-      (printf "~s ~s~%"
-              (third triplet)
-              *some-time-ago*)
       (time>=?
-       (date->time-utc (third triplet))
-       (date->time-utc *some-time-ago*)))
+       (date->time-utc (first triplet))
+       (date->time-utc *some-time-ago*))
+      )
 
-    (map (lambda (source)
-           (append
-            (map str
-                 (list
-                  ((sxpath '(title *text*))
-                   source)
-                  ((sxpath '(subtitle *text*))
-                   source)))
-            (map
-             (lambda (str)
+    (map
+     (lambda (entry)
+       (let* ((updated
                (rfc3339-string->srfi19-date/constructor
-                str
+                (car
+                 ((sxpath '(updated *text*))
+                  entry))
                 make-date))
-             ((sxpath '(updated *text*))
-              source))))
-         sources))
-                         )
-  )
+              (source
+               ((sxpath '(source))
+                entry))
+              (title
+               (car
+                ((sxpath '(title *text*))
+                 source)))
+              (subtitle
+               ((sxpath '(subtitle *text*))
+                source))
+              )
+         (cons updated (cons title subtitle))))
+
+     entries))))
+
 (newline)
