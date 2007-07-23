@@ -49,6 +49,12 @@
    ~/log, but my simpleminded "grep" function only retrieves the first
    line.
 
+** some quotes contain timestamps
+   like this:
+
+    <rudybot> Let's live in a basement down the stairs on montague street.
+              [14:09]
+
 ** Cancelling the thread takes a while
   I.e., I say "shaddap", and it emits a few more quotes before going
   away (at least, if the interval is just a few seconds).  It should
@@ -68,3 +74,6 @@
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
   I'm not entirely sure what that means, but what the hell.
+
+* Respond to "version"
+  since people seem to expect that

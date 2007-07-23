@@ -54,6 +54,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 *the-url*
                                 (list))))))
 
+;; make sure this returns the entries with the oldest first, or at
+;; least, document which order they come back in.
 (define (entries-newer-than news srfi-19-date)
 
   (let ((entries

@@ -226,6 +226,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                  (when (and (string=? channel "#emacs")
                             (not *planet-emacs-task*))
+                   ;; TODO -- maybe poll the RSS feed less often than
+                   ;; we check the channel for activity ... so that we
+                   ;; don't piss it off.
                    (set! *planet-emacs-task*
                          (let ((announce-us (make-queue '()))
                                (last-check-date
