@@ -72,3 +72,7 @@
   things stand now, we're implicitly using UTF-8 everywhere; it'd be
   better for the encoding to be explicit.  That way, eventually I
   could have per-channel encodings.
+
+* emacschannelquotes
+  <e1f> offby1: you need to include emacschannelquotes in rudebot
+  I'm not entirely sure what that means, but what the hell.
