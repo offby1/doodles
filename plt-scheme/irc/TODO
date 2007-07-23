@@ -57,12 +57,19 @@
 
 ** Maybe registering the nick on freenode will help.
 
-* Cancelling the jordanb quote thread takes a while
+* jordanb quotes
+
+** multi-line quotes get truncated
+   I.e., I suspect they occupy more than one line in the log file in
+   ~/log, but my simpleminded "grep" function only retrieves the first
+   line.
+
+** Cancelling the thread takes a while
   I.e., I say "shaddap", and it emits a few more quotes before going
   away (at least, if the interval is just a few seconds).  It should
   be immediate.
 
-* Catch up the testing!
+** Catch up the testing!
   As often happens, development has pulled ahead of testing.  In
   particular, the jordanb-quote-thread stuff isn't tested.
 
