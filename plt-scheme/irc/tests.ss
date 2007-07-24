@@ -6,6 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module tests mzscheme
 (require (lib "trace.ss")
+         (lib "kw.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
          (planet "util.ss" ("schematics" "schemeunit.plt" 2))
@@ -55,32 +56,45 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (internal input which)))))
 
 (*verbose* #f)
+(define (p str)
+  (write str)
+  (newline)
+  str)
 
-;; TODO -- rather than having a zillion tiny opaquely-named functions
-;; which all send stuff to the bot in subtly different ways, have ONE
-;; function that takes keyword arguments as God intended.
+;; recipient                                    what I call this kind of message
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; channel, prefixed by *my-nick*
+;; channel, not prefixed by *my-nick*
+;; *my-nick*                                    <-- "private", aka QUERY
+;; other nick                                   <-- we should never see one of these
+
+(define/kw (send text
+                 #:key
+                 [source "unit-test"]
+                 [recipient "#some-channel"]
+                 #:allow-duplicate-keys
+                 )
+  (get-retort
+   (p(format ":~a!n=~a@1.2.3.4 PRIVMSG ~a :~a"
+           source source
+           recipient
+           text))))
+(trace send)
+(define (psend text . args)
+  (apply send (cons text (cons '#:recipient (cons (*my-nick*) args)))))
+
 (define (chsend source text)
-  (get-retort
-   (format ":~a!n=~a@1.2.3.4 PRIVMSG #some-channel :~a"
-           source source text)))
-(define (psend source text)
-  (get-retort
-   (format ":~a!n=~a@1.2.3.4 PRIVMSG ~a :~a"
-           source source (*my-nick*) text)))
+  (send text #:source source))
 
-(define (utsend text)
-  (chsend "unit-test" text))
-
+(define utsend send)
 
 (define *delimiter-char* (make-parameter #\:))
 (define (say-to-bot text)
-  (utsend (format
-           "~a~a ~a"
-           (*my-nick*)
-           (*delimiter-char*)
-           text)))
-(define (psay-to-bot text)
-  (psend "unit-test" text))
+  (send (format "~a: ~a"
+                (*my-nick*)
+                text)
+        ))
+(define psay-to-bot psend)
 
 (define tests
   (test-suite
