@@ -12,8 +12,13 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 
-(require "simple-tests.ss")
-
+(require  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+          (only "globals.ss" *random?*)
+          "parse-tests.ss"
+          "simple-tests.ss")
+(*random?* #f)
+(test/text-ui parse-tests)
+(test/text-ui simple-tests)
 (define *file-of-interest* (simplify-path (build-path (this-expression-source-directory) "bot.ss")))
 (define *coverage-output-fn* "coverage-data.txt")
 (with-output-to-file *coverage-output-fn*
