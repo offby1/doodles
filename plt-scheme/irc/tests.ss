@@ -26,29 +26,61 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *verbose*
                ))
 
+;; str [integer | 'all] -> str | (list of str)
 (define get-retort
-  (case-lambda
-   ((input)
-    (get-retort input 0))
-   ((input which)
-    (let ((reaction (open-output-string)))
-      (callback
-       input
-       (open-input-string "")
-       reaction)
-      (let ((lines (string-tokenize
-                    (get-output-string reaction)
-                    (char-set-complement (char-set #\newline)))))
-        (cond
-         ((not (null? lines))
+  (let ()
+    (define (internal input which)
+      (let ((reaction (open-output-string)))
+        (callback
+         input
+         (open-input-string "")
+         reaction)
+        (let ((lines (string-tokenize
+                      (get-output-string reaction)
+                      (char-set-complement (char-set #\newline)))))
           (cond
-           ((number? which)
-            (list-ref lines which))
-           ((eq? 'all which) lines)
-           (else
-            (error 'get-retort "wanted integer or 'all; got ~s" which))))
-         (else ""))
-        )))))
+           ((not (null? lines))
+            (cond
+             ((number? which)
+              (list-ref lines which))
+             ((eq? 'all which) lines)
+             (else
+              (error 'get-retort "wanted integer or 'all; got ~s" which))))
+           (else ""))
+          )))
+    (case-lambda
+     ((input)
+      (internal input 0))
+     ((input which)
+      (internal input which)))))
+
+(*verbose* #f)
+
+;; TODO -- rather than having a zillion tiny opaquely-named functions
+;; which all send stuff to the bot in subtly different ways, have ONE
+;; function that takes keyword arguments as God intended.
+(define (chsend source text)
+  (get-retort
+   (format ":~a!n=~a@1.2.3.4 PRIVMSG #some-channel :~a"
+           source source text)))
+(define (psend source text)
+  (get-retort
+   (format ":~a!n=~a@1.2.3.4 PRIVMSG ~a :~a"
+           source source (*my-nick*) text)))
+
+(define (utsend text)
+  (chsend "unit-test" text))
+
+
+(define *delimiter-char* (make-parameter #\:))
+(define (say-to-bot text)
+  (utsend (format
+           "~a~a ~a"
+           (*my-nick*)
+           (*delimiter-char*)
+           text)))
+(define (psay-to-bot text)
+  (psend "unit-test" text))
 
 (define tests
   (test-suite
@@ -84,30 +116,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "")
     (test-equal?
      "silent unless spoken to, channel message edition"
-     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :hey you"))
+     (utsend "hey you")
      "")
     (test-equal?
      "echoes back stuff addressed to it, private message edition"
-     (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :hey you" (*my-nick*)))
+     (psay-to-bot "hey you")
      "PRIVMSG unit-test :Well, unit-test, I think hey you too.")
     (test-equal?
      "echoes, channel message edition"
-     (get-retort (format
-                  ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
-                  (*my-nick*)))
+     (say-to-bot "hey you")
      "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-equal?
      "recognizes a comma after its nick"
-     (get-retort (format
-                  ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a, hey you"
-                  (*my-nick*)))
+     (parameterize ((*delimiter-char* #\,))
+     (say-to-bot "hey you"))
      "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match
       #rx"NOTICE unit-test :\u0001VERSION .*:.*:.*\u0001"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :\u0001VERSION\u0001"
-                          (*my-nick*)))))
+      (psay-to-bot "\u0001VERSION\u0001")))
 
     ;; mwolson has forbidden it to mimic.
     (test-equal?
@@ -126,48 +154,63 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "witty quotes in response to a private message"
      (check-regexp-match
       #rx"PRIVMSG unit-test :.*heirs.*emacs.*johnw$"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a :quote"
-                          (*my-nick*)))))
+      (psay-to-bot "quote")))
     (test-case
      "witty quotes in response to a channel message"
      (check-regexp-match
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: quote"
-                          (*my-nick*)))))
+      (say-to-bot "quote")))
 
     (test-case
      "the 'seen' command"
 
      (before
       (let ()
-        (define (send source text)
-          (callback
-           (format ":~a!n=~a@1.2.3.4 PRIVMSG #some-channel :~a"
-                   source source text)
-           (open-input-string "")
-           (open-output-string)))
-        (send "bob" "what up, cuz")
-        (send "sam" "I got your back")
-        (send "bob" "I like Doritos"))
+
+        (chsend "bob" "what up, cuz")
+        (chsend "sam" "I got your back")
+        (chsend "chris" "\u0001ACTION Gets bent\u0001")
+        (chsend "bob" "I like Doritos")
+        (callback (format
+                   ":tim!n=tim@1.2.3.4 PRIVMSG ~a :\u0001ACTION confesses to the bot in private\u0001"
+                   (*my-nick*))
+                  (open-input-string "")
+                  (open-output-string)))
 
       (check-regexp-match
-       #rx"bob last spoke at .*, saying \"I like Doritos\""
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen bob"
-                           (*my-nick*))))
+       #rx"bob last spoke at .*, saying \"I like Doritos\"$"
+       (say-to-bot "seen bob"))
       (check-regexp-match
-       #rx"I haven't seen ted"
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen ted"
-                           (*my-nick*))))
+       #rx"I haven't seen ted$"
+       (say-to-bot "seen ted"))
+      (check-regexp-match
+       #rx"chris last acted at .*: chris Gets bent$"
+       (say-to-bot "seen chris")
+       "failed to notice ACTION")
+
+      (check-regexp-match
+       #rx"I haven't seen tim$"
+       (say-to-bot "seen tim")
+       "blabbed a secret")
+
+      (check-regexp-match
+       #rx"tim last acted at .*: tim confesses"
+       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG ~a: seen tim"
+                           (*my-nick*)))
+       "failed to remind tim of his own (private) action")
+
       ;; ignores 'seen' unless there's an actual argument
       (check-equal?
        "PRIVMSG #some-channel :Well, unit-test, I think seen too."
-       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen "
-                           (*my-nick*))))))
+       (say-to-bot "seen "))))
     (test-equal?
      "mostly ignores bots"
-     (get-retort (format
-                  ":slimebot!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
-                  (*my-nick*)))
+     (chsend  "slimebot"
+              (format
+               "~a~a ~a"
+               (*my-nick*)
+               (*delimiter-char*)
+               "hey you"))
      "PRIVMSG #some-channel :\u0001ACTION holds his tongue.\u0001")
     )
 
@@ -175,7 +218,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "try to break it!!"
     (test-case
      "very long input"
-     (parameterize ((*verbose* #f))
+
      (before
       (callback
        (format ":bob!n=bob@1.2.3.4 PRIVMSG #some-channel :~a"
@@ -188,11 +231,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (get-retort ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :wozzup folks."))
       (check-not-false
        (< (string-length
-           (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen bob"
-                               (*my-nick*))))
+           (say-to-bot "seen bob"))
           511)
        "failed to truncate a stored message")
-      ))))
+      )))
    ))
 
 (provide tests)

@@ -106,7 +106,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
-(define-struct utterance (when what) (make-inspector))
+(define-struct utterance (when what action?) (make-inspector))
 
 (define callback
   (let ((state 'initial))
@@ -123,17 +123,44 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                requestor                ;who said it
                channel-name             ;where they said it
                was-private?             ;how they said it
+               CTCP-message?            ;was it a CTCP?
                )
 
-        (vprintf "message ~s requestor ~s channel-name ~s was-private? ~s~%"
-                  message-tokens requestor channel-name was-private?)
+        (vprintf "do-something-clever: message ~s requestor ~s channel-name ~s was-private? ~s CTCP-message? ~s~%"
+                  message-tokens
+                  requestor
+                  channel-name
+                  was-private?
+                  CTCP-message?)
+
+        ;; maybe throw away some of the initial tokens, since they're
+        ;; not interesting.
+
+        ;; was-private?         CTCP-message?           which tokens
+        ;; #f                   #f                      first two (channel name, my name)
+        ;; #f                   #t                      none
+        ;; #t                   #f                      first one (my name)
+        ;; #t                   #t                      none
+        (when (not CTCP-message?)
+          (set! message-tokens
+                ((if was-private? cdr cddr)
+                 message-tokens)))
+        (vprintf "do-something-clever: message-tokens are now ~s~%"
+                 message-tokens)
         (cond
-         ((string=? "\u001VERSION\u001" (first message-tokens))
-          (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
-                       requestor
-                       *client-name*
-                       *client-version-number*
-                       *client-environment*)))
+         (CTCP-message?
+          =>
+          (lambda (msg)
+            (vprintf "Ooh, ~s is a CTCP message yielding ~s~%"
+                     message-tokens
+                     msg)
+            (cond
+             ((string=? "VERSION" (first message-tokens))
+              (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
+                           requestor
+                           *client-name*
+                           *client-version-number*
+                           *client-environment*))))))
          ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
                (string-ci=? "shaddap" (first message-tokens)))
           ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill))
@@ -154,12 +181,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (data (hash-table-get times-by-nick nick #f)))
                      (vprintf "Sought key ~s in times-by-nick; got ~s~%"
                               nick data)
-                     (if data
-                         (format "~a last spoke at ~a, saying \"~a\""
-                                 nick
-                                 (zdate (utterance-when data))
-                                 (utterance-what data))
-                       (format "I haven't seen ~a" nick))))
+                     (cond
+                      ((not data)
+                       (format "I haven't seen ~a" nick))
+                      ((utterance-action? data)
+                       (format "~a last acted at ~a: ~a ~a"
+                               nick
+                               (zdate (utterance-when data))
+                               nick
+                               (utterance-what data)))
+                      (else
+                       (format "~a last spoke at ~a, saying \"~a\""
+                               nick
+                               (zdate (utterance-when data))
+                               (utterance-what data))))))
 
                   ((regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
                    (let ((r  (rnd 100)))
@@ -285,7 +320,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     fellows))))
               (case command-symbol
                 ((PRIVMSG)
-                 (let* ((tokens (split params))
+                 (let* ((CTCP-message (cond
+                                       ((regexp-match #rx"\u0001(.*)\u0001$" params)
+                                        => second)
+                                       (else #f)))
+                        (tokens
+                         (cond
+                          (CTCP-message => split)
+                          (else (split params))))
                         (tokens (if (<= 2 (length tokens))
                                     (cons (first tokens)
                                           (cons (regexp-replace
@@ -294,9 +336,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                  "")
                                                 (cddr tokens)))
                                   tokens))
-                        (destination (car tokens))
+                        (destination (car (split params)))
                         (dest-is-channel? (regexp-match #rx"^#" destination))
                         (source (car prefix)))
+
+                   (vprintf "CTCP ~s Tokens ~s destination ~s source ~s~%"
+                            CTCP-message
+                            tokens destination source)
                    (when dest-is-channel?
                      (for-each
                       (lambda (task)
@@ -314,7 +360,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                               (make-hash-table 'equal))))
                             (utterance (make-utterance
                                         (seconds->date (current-seconds))
-                                        (string-join (cdr tokens)))))
+                                        (string-join (cdr tokens))
+                                        (not (not CTCP-message)))))
                        (vprintf "putting key ~s, value ~s in times-by-nick~%"
                                 source utterance)
                        (hash-table-put! times-by-nick source utterance)
@@ -322,12 +369,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                    (unless (*passive?*)
 
-                     (vprintf "Tokens ~s; destination ~s source ~s~%"
-                              tokens destination source)
                      (cond
                       ;; private message to us.
                       ((equal? (*my-nick*) destination)
-                       (do-something-clever  (cdr tokens) source destination #t))
+                       (do-something-clever
+                        tokens
+                        source
+                        destination
+                        #t
+                        CTCP-message))
 
                       ;; someone said something to the whole channel.
                       (dest-is-channel?
@@ -340,7 +390,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (regexp-quote (*my-nick*))
                                 "[:,]"))
                               (cadr tokens))
-                         (do-something-clever  (cddr tokens) source destination #f))))))
+                         (do-something-clever
+                          tokens
+                          source
+                          destination
+                          #f
+                          CTCP-message))))))
                  )
                 ((NOTICE)
                  (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
