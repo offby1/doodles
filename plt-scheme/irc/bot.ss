@@ -250,10 +250,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (for-each (lambda (ch)
                              (put (format "JOIN ~a" ch)))
                            (*initial-channel-names*)))
-                ((311 312 317)
-                 (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
-                         command-number
-                         params))
                 ((353)
                  ;; response to "NAMES".  This implies we've issued a
                  ;; NAMES command ourselves (which we don't do, afaik),
