@@ -277,8 +277,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (when (and (string=? channel "#emacs")
                               (not *planet-emacs-task*))
                      (set! *planet-emacs-task*
-                           (let ((the-channel
-                                  (channel-of-entries-since
+                           (let ((the-queue
+                                  (queue-of-entries-since
 ;;                                    (rfc3339-string->srfi19-date/constructor
 ;;                                     "2007-07-16T19:59:00+00:00"
 ;;                                     19:make-date)
@@ -293,14 +293,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               ;; to planet emacs -- that way we
                               ;; consume items from the channel at the
                               ;; same rate that
-                              ;; channel-of-entries-since produces
+                              ;; queue-of-entries-since produces
                               ;; them.  Failing that, it's perhaps
                               ;; best for this number to be a bit
                               ;; smaller than that idea, so that this
                               ;; task finds nothing new occasionally.
                               20
                               (lambda ()
-                                (let ((datum (async-channel-try-get the-channel)))
+                                (let ((datum (async-channel-try-get the-queue)))
                                   (if datum
                                       (put (format "PRIVMSG ~a :~a"
                                                    channel
