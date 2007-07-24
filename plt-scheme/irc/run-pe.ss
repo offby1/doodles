@@ -9,10 +9,8 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
 ;; needed.
 
 (require "planet-emacsen.ss"
-         (only (lib "list.ss") last-pair)
          (lib "async-channel.ss")
          (rename (lib "19.ss" "srfi") 19:make-date make-date)
-         (only (lib "19.ss" "srfi") current-date)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
@@ -26,30 +24,16 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
                filter
 
                third)
-         (lib "pretty.ss"))
+         (lib "pretty.ss")
+         (only "globals.ss" *verbose*))
 
 (define *some-time-ago*
   (rfc3339-string->srfi19-date/constructor
    "2007-07-16T19:59:00+00:00"
    19:make-date))
 
-(let ((the-channel (make-async-channel 10)))
-  (thread
-   (lambda ()
-     (let loop ((last-entry-time *some-time-ago*))
-       (let* ((entries (test-entries-newer-than last-entry-time))
-              (time-of-latest-entry
-               (if (null? entries)
-                   (current-date)
-                 (car (last-pair entries)))))
-         (for-each
-          (lambda (e)
-            (async-channel-put the-channel e))
-          entries)
-         (sleep 3600)
-         (loop time-of-latest-entry))
-       )))
-
+(parameterize ((*verbose* #t))
+(let ((the-channel (channel-of-entries-since *some-time-ago*)))
   (let loop ()
     (let ((datum (async-channel-try-get the-channel)))
       (if datum
@@ -58,7 +42,7 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
           (printf "No data; sleeping~%")
           (sleep 2))))
     (loop)
-    )  )
+    )))
 
 
 (newline)

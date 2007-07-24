@@ -9,6 +9,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module bot mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
+         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
+               rfc3339-string->srfi19-date/constructor)
          (only (lib "1.ss" "srfi")
                first
                second
@@ -21,6 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "14.ss" "srfi")
                char-set
                char-set-complement)
+         (rename (lib "19.ss" "srfi") 19:make-date make-date)
          (only (lib "19.ss" "srfi")
                add-duration
                current-date
@@ -31,12 +34,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
-         (planet "q.ss" ("offby1" "offby1.plt"))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
          "planet-emacsen.ss"
+         "vprintf.ss"
          "../web/quote-of-the-day.ss")
 (provide callback)
 
@@ -82,10 +85,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://www.omnigia.com/scheme/scsh-regexp/.
 (define (regexp-quote str)
   (regexp-replace* #rx"." str "\\\\&"))
-
-(define (vprintf . args)
-  (when (*verbose*)
-    (apply printf args)))
 
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
 ;; the symbol POSTPONE postpones the next call (i.e., it resets the
@@ -251,40 +250,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                    (when (and (string=? channel "#emacs")
                               (not *planet-emacs-task*))
-                     ;; TODO -- maybe poll the RSS feed less often than
-                     ;; we check the channel for activity ... so that we
-                     ;; don't piss it off.
                      (set! *planet-emacs-task*
-                           (let ((announce-us (make-queue '()))
-                                 (last-check-date
-                                  (current-date)))
+                           (let ((the-channel
+                                  (channel-of-entries-since
+                                   (rfc3339-string->srfi19-date/constructor
+                                    "2007-07-16T19:59:00+00:00"
+                                    19:make-date)
+                                   ;;(current-date)
+                                   )))
                              (do-in-loop
-                              3600      ;alas, this is such a long
-                                        ;time that we'll probably
-                                        ;never find the channel quite
-                                        ;for that long.  But I hate
-                                        ;the thought of hitting the
-                                        ;planet-emacsen server more
-                                        ;often than this.  Obviously I
-                                        ;need to separate hitting the
-                                        ;server from emitting the
-                                        ;headlines.
+                              ;; choosing the "correct" interval here is
+                              ;; subtle.  Ideally the interval would
+                              ;; have the property that the channel
+                              ;; goes silent for this long
+                              ;; just as often as someone posts a blog
+                              ;; to planet emacs -- that way we
+                              ;; consume items from the channel at the
+                              ;; same rate that
+                              ;; channel-of-entries-since produces
+                              ;; them.  Failing that, it's perhaps
+                              ;; best for this number to be a bit
+                              ;; smaller than that idea, so that this
+                              ;; task finds nothing new occasionally.
+                              20
                               (lambda ()
-                                (define latest-entries
-                                  (entries-newer-than last-check-date))
-                                (set! last-check-date (current-date))
-                                (vprintf "~a: Checking planet.emacsen ... ~a new entries~%"
-                                         (zdate (seconds->date (current-seconds)))
-                                         (length latest-entries))
-                                (for-each
-                                 (lambda (item)
-                                   (insert-queue! announce-us item))
-                                 latest-entries)
-                                (when (not (empty-queue? announce-us))
-                                  (put (format "PRIVMSG ~a :~a"
-                                               channel
-                                               (entry->string (front-queue announce-us))))
-                                  (delete-queue! announce-us)))))))
+                                (let ((datum (async-channel-try-get the-channel)))
+                                  (if datum
+                                      (put (format "PRIVMSG ~a :~a"
+                                                   channel
+                                                   (entry->string datum)))
+                                    (vtprintf "Nothing new on planet emacs~%")))
+                                )))))
 
                    (hash-table-put! denizens-by-channel
                                     channel

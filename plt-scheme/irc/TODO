@@ -2,14 +2,6 @@
 
 -- High priority
 
-* Separate the getting of stuff from planet.emacsen ...
-  from the emitting of the stuff into the channel.  Probably a queue;
-  get the stuff rarely, like once an hour, but emit it frequently,
-  like every minute of silence in the channel.
-
-  ... maybe not a queue, but an async channel with a maximum size of
-  perhaps ten: one thread writes, the other reads.
-
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus

@@ -5,13 +5,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module planet-emacsen mzscheme
-(require (only (lib "list.ss") sort)
+(require (only (lib "list.ss")
+               last-pair
+               sort)
+         (only (lib "async-channel.ss")
+               async-channel-put
+               make-async-channel)
          (lib "trace.ss")
          (only (lib "etc.ss")
                this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                filter)
          (only (lib "19.ss" "srfi" )
+               current-date
                date->time-utc
                time<?
                time>?)
@@ -30,12 +36,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
          (only (lib "url.ss" "net")
                get-pure-port
-               string->url))
+               string->url)
+         "vprintf.ss")
 
 (provide
- entries-newer-than
+ channel-of-entries-since
  entry->string
- test-entries-newer-than
  )
 
 (define-struct entry (timestamp title link) (make-inspector))
@@ -48,12 +54,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;(trace trim)
 
 (define (planet-emacsen-news)
+  (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
   (html->shtml
    (port->string (get-pure-port
                   (string->url "http://planet.emacsen.org/atom.xml")
                   (list)))))
 
 (define (static-news-for-testing)
+  (vtprintf "SNARFing test data from file.  Chill.~%")
   (html->shtml
    (call-with-input-file
        (build-path
@@ -116,4 +124,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (format "~a: ~a"
           (de-html (entry-title triplet))
           (entry-link triplet)))
+
+;; TODO -- consider exposing the thread, so that we can kill it.
+
+;; Gaah -- beware multiple meanings of the word "channel".
+(define (channel-of-entries-since srfi-19-date)
+
+  ;; It's not clear that there's any point to limiting the size of the
+  ;; channel ... I suppose it ensures that, in case people write blog
+  ;; posts at a furious clip, and people are contantly yammering in
+  ;; #emacs, we won't fill memory with un-announced blog posts :-)
+  (let ((the-channel (make-async-channel 4)))
+    (thread
+     (lambda ()
+       (let loop ((last-entry-time srfi-19-date))
+         (let* ((entries (entries-newer-than last-entry-time))
+                (time-of-latest-entry
+                 (if (null? entries)
+                     (current-date)
+                   (car (last-pair entries)))))
+           (for-each
+            (lambda (e)
+              (async-channel-put the-channel e))
+            entries)
+           (sleep 3600)
+           (loop time-of-latest-entry))
+         )))
+    the-channel)  )
 )
