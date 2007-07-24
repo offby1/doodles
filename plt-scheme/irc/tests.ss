@@ -23,6 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          "bot.ss"
          (only "globals.ss"
+               *initial-channel-names*
                *my-nick*
                *verbose*
                ))
@@ -91,18 +92,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test-suite
     "logs in at startup"
     (test-case
-     "proper NICK and whatnot"
+     "sends NICK and USER at startup"
      (let ((lines (get-retort "" 'all)))
        (check-equal?
         (first  lines)
         (format "NICK ~a" (*my-nick*)))
        (check-regexp-match
         #rx"USER .* .* .* :.*"
-        (second lines))))
+        (second lines)))))
 
-    ;; TODO -- send it a 001 message and see that it JOINs the list o'
-    ;; channels
-    )
+   (let ((chans (list "#rum" "##sodomy" "#the-lash")))
+     (test-equal?
+      "joins channels upon receipt of 001"
+      (parameterize ( ;;(*verbose* #t)
+                     (*initial-channel-names* chans))
+                    (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
+                                'all))
+      (map (lambda (c) (string-append "JOIN " c)) chans)))
 
    ;; TODO -- join #emacs or #bots and see if it does its amusing
    ;; stuff (jordanb quotes, etc.)
@@ -189,10 +195,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        "blabbed a secret")
 
       (when #f
-      (check-regexp-match
-       #rx"tim last acted at .*: tim confesses"
-       (psend "seen tim")
-       "failed to remind tim of his own (private) action"))
+        (check-regexp-match
+         #rx"tim last acted at .*: tim confesses"
+         (psend "seen tim")
+         "failed to remind tim of his own (private) action"))
 
       ;; ignores 'seen' unless there's an actual argument
       (check-equal?
