@@ -1,5 +1,7 @@
 -*-outline-*-
 
+* Quit hitting planet.emacsen every minute!!!
+
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
