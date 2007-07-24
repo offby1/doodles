@@ -135,8 +135,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-name*
                        *client-version-number*
                        *client-environment*)))
-         ((regexp-match #rx"(?i:^census)( .*$)?" (first message-tokens))
-          (put (format "NAMES ~a" channel-name)))
          ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
                (string-ci=? "shaddap" (first message-tokens)))
           ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill))
@@ -257,15 +255,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (set! *planet-emacs-task*
                            (let ((announce-us (make-queue '()))
                                  (last-check-date
-                                  ;; emitting day-old stuff when we
-                                  ;; start up is handy for testing, and
-                                  ;; I hope it's not too annoying in
-                                  ;; "production" on the real server.
-                                  (time-utc->date
-                                   (add-duration
-                                    (date->time-utc (current-date))
-                                    (make-time time-duration 0 (- (* 3600 24)))))
-                                  ))
+                                  (current-date)))
                              (do-in-loop
                               60
                               (lambda ()
@@ -274,7 +264,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    ((sxpath '(feed)) (planet-emacsen-news))
                                    last-check-date))
                                 (set! last-check-date (current-date))
-                                (vprintf "Checking planet.emacsen ... ~a new entries~%"
+                                (vprintf "~a: Checking planet.emacsen ... ~a new entries~%"
+                                         (zdate (seconds->date (current-seconds)))
                                          (length latest-entries))
                                 (for-each
                                  (lambda (item)
