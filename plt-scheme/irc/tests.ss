@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module simple-tests mzscheme
+(module tests mzscheme
 (require (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
@@ -50,7 +50,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (else ""))
         )))))
 
-(define simple-tests
+(define tests
   (test-suite
    "big ol' all-encompassing"
 
@@ -195,5 +195,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ))))
    ))
 
-(provide simple-tests)
+(provide tests)
 )
