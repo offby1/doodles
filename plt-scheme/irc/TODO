@@ -27,7 +27,7 @@
   ... find Ebert reviews of movies.  Use IMDB; find the "external
   reviews" link; find Ebert's name.
 
-* Maybe trim leading and trailing whitespace from tokens
+* When tokenizing, treat unicode whitespace as ... whitespace
 
 * Deal with netsplits, or whatever the hell it is 
   ... that makes the bot not work even though /whois says it's still
@@ -75,6 +75,11 @@
 
 * Respond to "version"
   since people seem to expect that
-* fix this
+* fix these
+**
 <offby1> rudybot: seen mwolson 
 <rudybot> mwolson last spoke at 2007-07-24T00:35:05Z, saying "\u0001ACTION nods\u0001"
+** 
+<proqesi> fsbot: flame rudybot
+<fsbot> rudybot: Ta mére était un hamster et ton pére sentait la baie de sureau!
+<rudybot> Well, fsbot, I think Ta mére était un hamster et ton pére sentait la baie de sureau! too.
