@@ -6,6 +6,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module planet-emacsen mzscheme
 (require (lib "trace.ss")
+         (only (lib "etc.ss")
+               this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                filter
                first
@@ -33,9 +35,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string->url))
 
 (provide
- planet-emacsen-news
  entries-newer-than
- entry->string)
+ entry->string
+ planet-emacsen-news
+ static-news-for-testing
+ )
 
 ;; TODO -- define an "entry" structure instead of using "first",
 ;; "second", and "third".
@@ -53,6 +57,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (port->string (get-pure-port
                                 *the-url*
                                 (list))))))
+
+(define (static-news-for-testing)
+  (html->shtml
+   (call-with-input-file
+       (build-path
+        (this-expression-source-directory)
+        "example-planet-emacsen.xml") port->string)))
 
 ;; make sure this returns the entries with the oldest first, or at
 ;; least, document which order they come back in.
