@@ -70,6 +70,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     ;; channels
     )
 
+   ;; TODO -- join #emacs or #bots and see if it does its amusing
+   ;; stuff (jordanb quotes, etc.)
+
+   ;; TODO -- send it a NOTICE and make sure it does nothing
+
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "Feed it lines, see what it says"
