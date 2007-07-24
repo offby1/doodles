@@ -257,7 +257,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                  (last-check-date
                                   (current-date)))
                              (do-in-loop
-                              60
+                              3600      ;alas, this is such a long
+                                        ;time that we'll probably
+                                        ;never find the channel quite
+                                        ;for that long.  But I hate
+                                        ;the thought of hitting the
+                                        ;planet-emacsen server more
+                                        ;often than this.  Obviously I
+                                        ;need to separate hitting the
+                                        ;server from emitting the
+                                        ;headlines.
                               (lambda ()
                                 (define latest-entries
                                   (entries-newer-than
