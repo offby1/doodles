@@ -236,7 +236,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             "unknown-host"
                             (*irc-server-name*)
                             *client-name*
-                            *client-version*))
+                            (*client-version*)))
                (set! state 'waiting-for-login-confirmation)))
 
             (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
