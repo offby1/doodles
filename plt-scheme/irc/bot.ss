@@ -271,9 +271,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         ;headlines.
                               (lambda ()
                                 (define latest-entries
-                                  (entries-newer-than
-                                   ((sxpath '(feed)) (planet-emacsen-news))
-                                   last-check-date))
+                                  (entries-newer-than last-check-date))
                                 (set! last-check-date (current-date))
                                 (vprintf "~a: Checking planet.emacsen ... ~a new entries~%"
                                          (zdate (seconds->date (current-seconds)))

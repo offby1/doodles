@@ -5,17 +5,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "trace.ss")
+(require (only (lib "list.ss") sort)
+         (lib "trace.ss")
          (only (lib "etc.ss")
                this-expression-source-directory)
          (only (lib "1.ss" "srfi")
-               filter
-               first
-               second
-               third)
+               filter)
          (only (lib "19.ss" "srfi" )
                date->time-utc
-
+               time<?
                time>?)
          (rename (lib "19.ss" "srfi" )
                  19:make-date make-date)
@@ -37,12 +35,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  entries-newer-than
  entry->string
- planet-emacsen-news
- static-news-for-testing
+ test-entries-newer-than
  )
 
-;; TODO -- define an "entry" structure instead of using "first",
-;; "second", and "third".
+(define-struct entry (timestamp title link) (make-inspector))
 
 (define (trim str)
   (regexp-replace*
@@ -50,61 +46,74 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    str
    ""))
 ;;(trace trim)
-(define *the-url* (string->url "http://planet.emacsen.org/atom.xml"))
+
 (define (planet-emacsen-news)
-  (parameterize ((current-alist-separator-mode 'amp))
-                (html->shtml
-                 (port->string (get-pure-port
-                                *the-url*
-                                (list))))))
+  (html->shtml
+   (port->string (get-pure-port
+                  (string->url "http://planet.emacsen.org/atom.xml")
+                  (list)))))
 
 (define (static-news-for-testing)
   (html->shtml
    (call-with-input-file
        (build-path
         (this-expression-source-directory)
-        "example-planet-emacsen.xml") port->string)))
+        "example-planet-emacsen.xml")
+     port->string)))
 
-;; make sure this returns the entries with the oldest first, or at
-;; least, document which order they come back in.
-(define (entries-newer-than news srfi-19-date)
+;;(trace static-news-for-testing)
+(define (entries-newer-than srfi-19-date)
+  (internal-entries-newer-than (planet-emacsen-news) srfi-19-date))
+
+(define (test-entries-newer-than srfi-19-date)
+  (internal-entries-newer-than (static-news-for-testing) srfi-19-date))
+
+;; returned entries are sorted oldest first.
+(define (internal-entries-newer-than news srfi-19-date)
 
   (let ((entries
-         ((sxpath '(entry))
+         ((sxpath '(feed entry))
           news)))
 
-    (filter
-     (lambda (triplet)
-       (time>?
-        (date->time-utc (first triplet))
-        (date->time-utc srfi-19-date)))
+    (sort
+     (filter
+      (lambda (triplet)
+        (time>?
+         (date->time-utc (entry-timestamp triplet))
+         (date->time-utc srfi-19-date)))
 
-     (map
-      (lambda (entry)
-        (let* ((updated
-                ;; if only the Atom spec ensured that all the time
-                ;; zones are the same, all I would have needed to do is
-                ;; ensure that srfi-19-date uses the same zone, and
-                ;; then just compare the strings.  But alas.
-                (rfc3339-string->srfi19-date/constructor
+      (map
+       (lambda (entry)
+         (let* ((updated
+                 ;; if only the Atom spec ensured that all the time
+                 ;; zones are the same, all I would have needed to do is
+                 ;; ensure that srfi-19-date uses the same zone, and
+                 ;; then just compare the strings.  But alas.
+                 (rfc3339-string->srfi19-date/constructor
+                  (car
+                   ((sxpath '(updated *text*))
+                    entry))
+                  19:make-date))
+                (title
                  (car
-                  ((sxpath '(updated *text*))
-                   entry))
-                 19:make-date))
-               (title
-                (car
-                 ((sxpath '(title *text*))
+                  ((sxpath '(title *text*))
+                   entry)))
+                (link
+                 ((sxpath '(link @ href *text*))
                   entry)))
-               (link
-                ((sxpath '(link @ href *text*))
-                 entry)))
-          (cons updated (cons title link))))
+           (make-entry updated title link)))
 
-      entries))))
+       entries))
+
+     (lambda (e1 e2)
+       (time<?
+        (date->time-utc (entry-timestamp e1))
+        (date->time-utc (entry-timestamp e2)))))))
+;(trace internal-entries-newer-than)
 (define (entry->string triplet)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
   (format "~a: ~a"
-          (de-html (second triplet))
-          (third triplet)))
+          (de-html (entry-title triplet))
+          (entry-link triplet)))
 )
