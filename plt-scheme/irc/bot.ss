@@ -255,9 +255,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ;; NAMES command ourselves (which we don't do, afaik),
                  ;; or else we've joined a channel.
                  (let* ((tokens (split params))
-                        (fellows (cdddr tokens))
-                        (fellows (cons (strip-leading-colon (car fellows))
-                                       (cdr fellows)))
                         (channel (third tokens)))
 
                    (when (and (or
@@ -282,7 +279,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (set! *planet-emacs-task*
                            (let ((the-channel
                                   (channel-of-entries-since
-                                   ;; (rfc3339-string->srfi19-date/constructor
+;;                                    (rfc3339-string->srfi19-date/constructor
 ;;                                     "2007-07-16T19:59:00+00:00"
 ;;                                     19:make-date)
                                    (current-date)
@@ -309,11 +306,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                    channel
                                                    (entry->string datum)))
                                     (vtprintf "Nothing new on planet emacs~%")))
-                                )))))
+                                ))))))))
 
-                   (hash-table-put! denizens-by-channel
-                                    channel
-                                    fellows))))
               (case command-symbol
                 ((PRIVMSG)
                  (let* ((CTCP-message (cond
@@ -401,6 +395,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ((PING)
                  (put (format "PONG ~a" params)))))))))))
 
-(define denizens-by-channel (make-hash-table 'equal))
 (define times-by-nick-by-channel (make-hash-table 'equal))
 )
