@@ -158,7 +158,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        "PRIVMSG #some-channel :Well, unit-test, I think seen too."
        (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen "
                            (*my-nick*))))))
-    )))
+    )
+
+   (test-suite
+    "try to break it!!"
+    (test-case
+     "very long input"
+     (parameterize ((*verbose* #f))
+     (before
+      (callback
+       (format ":bob!n=bob@1.2.3.4 PRIVMSG #some-channel :~a"
+               (make-string 10000 #\!))
+       (open-input-string "")
+       (open-output-string))
+
+      (check-equal?
+       ""
+       (get-retort ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :wozzup folks."))
+      (check-not-false
+       (< (string-length
+           (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen bob"
+                               (*my-nick*))))
+          511)
+       "failed to truncate a stored message")
+      ))))
+   ))
 
 (provide simple-tests)
 )

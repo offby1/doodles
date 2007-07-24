@@ -110,12 +110,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
-      ;; TODO -- gack if str is > 510 characters long
       (define (put str)
-        (vprintf "=> ~s~%" str)
-        (display str op)
-        (newline op)
-        (flush-output op))
+        (let ((str (substring str 0 (min 510 (string-length str)))))
+          (vprintf "=> ~s~%" str)
+          (display str op)
+          (newline op)
+          (flush-output op)))
 
       (define (do-something-clever
                message-tokens           ;what they said
@@ -184,173 +184,174 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (if was-private? requestor channel-name)
                          response-body))))))
 
-      (let-values (((prefix command params)
-                    (parse-message line)))
-        (let ((prefix (parse-prefix prefix)))
-          (vprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
-                    line
-                    prefix
-                    command
-                    params)
-          (case state
-            ((initial)
-             (put (format "NICK ~a" (*my-nick*)))
-             (put (format "USER ~a ~a ~a :~a, ~a"
-                          (getenv "USER")
-                          "unknown-host"
-                          (*irc-server-name*)
-                          *client-name*
-                          *client-version*))
-             (set! state 'waiting-for-login-confirmation)))
+      (let ((line (substring line 0 (min 510 (string-length line)))))
+        (let-values (((prefix command params)
+                      (parse-message line)))
+          (let ((prefix (parse-prefix prefix)))
+            (vprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
+                     line
+                     prefix
+                     command
+                     params)
+            (case state
+              ((initial)
+               (put (format "NICK ~a" (*my-nick*)))
+               (put (format "USER ~a ~a ~a :~a, ~a"
+                            (getenv "USER")
+                            "unknown-host"
+                            (*irc-server-name*)
+                            *client-name*
+                            *client-version*))
+               (set! state 'waiting-for-login-confirmation)))
 
-          (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
-                                     (string->number command)))
-                (command-symbol (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
-                                     (string->symbol command))))
-            (case command-number
-              ((001)
-               (set! state 'logged-in)
-               (vprintf "Ah, I see we logged in OK.~%")
-               (for-each (lambda (ch)
-                           (put (format "JOIN ~a" ch)))
-                         (*initial-channel-names*)))
-              ((311 312 317)
-               (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
-                       command-number
-                       params))
-              ((353)
-               ;; response to "NAMES".  This implies we've issued a
-               ;; NAMES command ourselves (which we don't do, afaik),
-               ;; or else we've joined a channel.
-               (let* ((tokens (split params))
-                      (fellows (cdddr tokens))
-                      (fellows (cons (strip-leading-colon (car fellows))
-                                     (cdr fellows)))
-                      (channel (third tokens)))
-
-                 (when (and (or
-                             (string=? channel "#bots")
-                             (string=? channel "#emacs"))
-                            ;; I wonder ... would it be better if I
-                            ;; killed any existing task, and then
-                            ;; replaced it with a new one?
-                            (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f)))
-                   (hash-table-put!
-                    *jordanb-quote-tasks-by-channel*
-                    channel
-                    (do-in-loop
-                     (*jordanb-quote-interval*)
-                     (lambda ()
-                       (put (format "PRIVMSG ~a :~a"
-                                    channel
-                                    (one-jordanb-quote)))))))
-
-                 (when (and (string=? channel "#emacs")
-                            (not *planet-emacs-task*))
-                   ;; TODO -- maybe poll the RSS feed less often than
-                   ;; we check the channel for activity ... so that we
-                   ;; don't piss it off.
-                   (set! *planet-emacs-task*
-                         (let ((announce-us (make-queue '()))
-                               (last-check-date
-                                ;; emitting day-old stuff when we
-                                ;; start up is handy for testing, and
-                                ;; I hope it's not too annoying in
-                                ;; "production" on the real server.
-                                (time-utc->date
-                                 (add-duration
-                                  (date->time-utc (current-date))
-                                  (make-time time-duration 0 (- (* 3600 24)))))
-                                ))
-                           (do-in-loop
-                            60
-                            (lambda ()
-                              (define latest-entries
-                                (entries-newer-than
-                                 ((sxpath '(feed)) (planet-emacsen-news))
-                                 last-check-date))
-                              (set! last-check-date (current-date))
-                              (vprintf "Checking planet.emacsen ... ~a new entries~%"
-                                       (length latest-entries))
-                              (for-each
-                               (lambda (item)
-                                 (insert-queue! announce-us item))
-                               latest-entries)
-                              (when (not (empty-queue? announce-us))
-                                (put (format "PRIVMSG ~a :~a"
-                                             channel
-                                             (entry->string (front-queue announce-us))))
-                                (delete-queue! announce-us)))))))
-
-                 (hash-table-put! denizens-by-channel
-                                  channel
-                                  fellows))))
-            (case command-symbol
-              ((PRIVMSG)
-               (let* ((tokens (split params))
-                      (tokens (if (<= 2 (length tokens))
-                                  (cons (first tokens)
-                                        (cons (regexp-replace
-                                               #rx"^:"
-                                               (second tokens)
-                                               "")
-                                              (cddr tokens)))
-                                tokens))
-                      (destination (car tokens))
-                      (dest-is-channel? (regexp-match #rx"^#" destination))
-                      (source (car prefix)))
-                 (when dest-is-channel?
-                   (for-each
-                    (lambda (task)
-                      (when task
-                        (task 'postpone)))
-                    (list
-                     (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
-                     *planet-emacs-task*)))
-
-                 (when dest-is-channel?
-                   (let* ((times-by-nick (hash-table-get
-                                          times-by-nick-by-channel
-                                          destination
-                                          (lambda ()
-                                            (make-hash-table 'equal))))
-                          (utterance (make-utterance
-                                      (seconds->date (current-seconds))
-                                      (string-join (cdr tokens)))))
-                     (vprintf "putting key ~s, value ~s in times-by-nick~%"
-                              source utterance)
-                     (hash-table-put! times-by-nick source utterance)
-                     (hash-table-put! times-by-nick-by-channel destination times-by-nick)))
-
-                 (unless (*passive?*)
-
-                   (vprintf "Tokens ~s; destination ~s source ~s~%"
-                            tokens destination source)
-                   (cond
-                    ;; private message to us.
-                    ((equal? (*my-nick*) destination)
-                     (do-something-clever  (cdr tokens) source destination #t))
-
-                    ;; someone said something to the whole channel.
-                    (dest-is-channel?
-
-                     ;; ... but prefixed it with my nick.
-                     (when (regexp-match
-                            (regexp
-                             (string-append
-                              "^"
-                              (regexp-quote (*my-nick*))
-                              "[:,]"))
-                            (cadr tokens))
-                       (do-something-clever  (cddr tokens) source destination #f))))))
-               )
-              ((NOTICE)
-               (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
-                         prefix
-                         command
+            (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
+                                       (string->number command)))
+                  (command-symbol (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
+                                       (string->symbol command))))
+              (case command-number
+                ((001)
+                 (set! state 'logged-in)
+                 (vprintf "Ah, I see we logged in OK.~%")
+                 (for-each (lambda (ch)
+                             (put (format "JOIN ~a" ch)))
+                           (*initial-channel-names*)))
+                ((311 312 317)
+                 (printf "Woot -- I got a ~a response to my WHOIS! ~s~%"
+                         command-number
                          params))
-              ((PING)
-               (put (format "PONG ~a" params))))))))))
+                ((353)
+                 ;; response to "NAMES".  This implies we've issued a
+                 ;; NAMES command ourselves (which we don't do, afaik),
+                 ;; or else we've joined a channel.
+                 (let* ((tokens (split params))
+                        (fellows (cdddr tokens))
+                        (fellows (cons (strip-leading-colon (car fellows))
+                                       (cdr fellows)))
+                        (channel (third tokens)))
+
+                   (when (and (or
+                               (string=? channel "#bots")
+                               (string=? channel "#emacs"))
+                              ;; I wonder ... would it be better if I
+                              ;; killed any existing task, and then
+                              ;; replaced it with a new one?
+                              (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f)))
+                     (hash-table-put!
+                      *jordanb-quote-tasks-by-channel*
+                      channel
+                      (do-in-loop
+                       (*jordanb-quote-interval*)
+                       (lambda ()
+                         (put (format "PRIVMSG ~a :~a"
+                                      channel
+                                      (one-jordanb-quote)))))))
+
+                   (when (and (string=? channel "#emacs")
+                              (not *planet-emacs-task*))
+                     ;; TODO -- maybe poll the RSS feed less often than
+                     ;; we check the channel for activity ... so that we
+                     ;; don't piss it off.
+                     (set! *planet-emacs-task*
+                           (let ((announce-us (make-queue '()))
+                                 (last-check-date
+                                  ;; emitting day-old stuff when we
+                                  ;; start up is handy for testing, and
+                                  ;; I hope it's not too annoying in
+                                  ;; "production" on the real server.
+                                  (time-utc->date
+                                   (add-duration
+                                    (date->time-utc (current-date))
+                                    (make-time time-duration 0 (- (* 3600 24)))))
+                                  ))
+                             (do-in-loop
+                              60
+                              (lambda ()
+                                (define latest-entries
+                                  (entries-newer-than
+                                   ((sxpath '(feed)) (planet-emacsen-news))
+                                   last-check-date))
+                                (set! last-check-date (current-date))
+                                (vprintf "Checking planet.emacsen ... ~a new entries~%"
+                                         (length latest-entries))
+                                (for-each
+                                 (lambda (item)
+                                   (insert-queue! announce-us item))
+                                 latest-entries)
+                                (when (not (empty-queue? announce-us))
+                                  (put (format "PRIVMSG ~a :~a"
+                                               channel
+                                               (entry->string (front-queue announce-us))))
+                                  (delete-queue! announce-us)))))))
+
+                   (hash-table-put! denizens-by-channel
+                                    channel
+                                    fellows))))
+              (case command-symbol
+                ((PRIVMSG)
+                 (let* ((tokens (split params))
+                        (tokens (if (<= 2 (length tokens))
+                                    (cons (first tokens)
+                                          (cons (regexp-replace
+                                                 #rx"^:"
+                                                 (second tokens)
+                                                 "")
+                                                (cddr tokens)))
+                                  tokens))
+                        (destination (car tokens))
+                        (dest-is-channel? (regexp-match #rx"^#" destination))
+                        (source (car prefix)))
+                   (when dest-is-channel?
+                     (for-each
+                      (lambda (task)
+                        (when task
+                          (task 'postpone)))
+                      (list
+                       (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
+                       *planet-emacs-task*)))
+
+                   (when dest-is-channel?
+                     (let* ((times-by-nick (hash-table-get
+                                            times-by-nick-by-channel
+                                            destination
+                                            (lambda ()
+                                              (make-hash-table 'equal))))
+                            (utterance (make-utterance
+                                        (seconds->date (current-seconds))
+                                        (string-join (cdr tokens)))))
+                       (vprintf "putting key ~s, value ~s in times-by-nick~%"
+                                source utterance)
+                       (hash-table-put! times-by-nick source utterance)
+                       (hash-table-put! times-by-nick-by-channel destination times-by-nick)))
+
+                   (unless (*passive?*)
+
+                     (vprintf "Tokens ~s; destination ~s source ~s~%"
+                              tokens destination source)
+                     (cond
+                      ;; private message to us.
+                      ((equal? (*my-nick*) destination)
+                       (do-something-clever  (cdr tokens) source destination #t))
+
+                      ;; someone said something to the whole channel.
+                      (dest-is-channel?
+
+                       ;; ... but prefixed it with my nick.
+                       (when (regexp-match
+                              (regexp
+                               (string-append
+                                "^"
+                                (regexp-quote (*my-nick*))
+                                "[:,]"))
+                              (cadr tokens))
+                         (do-something-clever  (cddr tokens) source destination #f))))))
+                 )
+                ((NOTICE)
+                 (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
+                          prefix
+                          command
+                          params))
+                ((PING)
+                 (put (format "PONG ~a" params)))))))))))
 
 (define denizens-by-channel (make-hash-table 'equal))
 (define times-by-nick-by-channel (make-hash-table 'equal))
