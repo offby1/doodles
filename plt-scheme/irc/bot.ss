@@ -158,7 +158,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (vprintf "Sought key ~s in times-by-nick; got ~s~%"
                               nick data)
                      (if data
-                         (format "~a last spoke at ~a, saying ~s"
+                         (format "~a last spoke at ~a, saying \"~a\""
                                  nick
                                  (zdate (utterance-when data))
                                  (utterance-what data))
