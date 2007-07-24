@@ -128,8 +128,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (vprintf "message ~s requestor ~s channel-name ~s was-private? ~s~%"
                   message-tokens requestor channel-name was-private?)
         (cond
-         ;; TODO -- proper CTCP decoding.  See
-         ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
          ((string=? "\u001VERSION\u001" (first message-tokens))
           (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
                        requestor

@@ -24,6 +24,11 @@
 
 -- Low priority
 
+* Be a tad smarter about CTCP
+  If a PRIVMSG's parameters begin and end with a 1 byte, it's CTCP, so
+  strip off those bytes and treat it specially, fer cryin' out loud.
+  See http://www.irchelp.org/irchelp/rfc/ctcpspec.html
+
 * maybe periodically see what channels _I'm_ in, and join them if it's
   not already in them.  Like a little puppy dog.  This is harder than
   it sounds, since it's not blindingly clear who "I" am -- sometimes
