@@ -225,7 +225,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (say-to-bot "seen bob"))
           511)
        "failed to truncate a stored message")
-      )))
+      ))
+    (test-suite
+     "short strings from server"
+     #:before (lambda ()(*verbose* #t))
+     (test-equal? "empty string" (get-retort "") "")
+     (test-equal? "mostly empty string" (get-retort " ") "")
+     (test-equal? "string with just one field" (get-retort "x") "")
+     (test-equal? "string with just two fields" (get-retort "x y") "")
+     (test-equal? "string with just three fields" (get-retort "x y z") ""))
+    )
    ))
 
 (provide tests)

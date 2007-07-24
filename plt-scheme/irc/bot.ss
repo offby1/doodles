@@ -90,6 +90,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; the symbol POSTPONE postpones the next call (i.e., it resets the
 ;; timer).  Calling the return value with any other value kills the
 ;; task permanently.
+
+;; TODO -- maybe make a wrapper for this called
+;; "do-when-channel-idle", which saves the task someplace out of the
+;; way, monitors the named channel, and cancels the task as needed.
+;; Right now those things are being done in "callback".
 (define (do-in-loop seconds thunk)
   (let* ((s (make-semaphore))
          (t (thread (lambda ()

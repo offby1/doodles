@@ -5,7 +5,7 @@
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
-  crashing.
+  crashing.  Alas, I can't repro this.
 
 * Deal with netsplits, or whatever the hell it is 
   ... that makes the bot not work even though /whois says it's still
@@ -94,3 +94,9 @@
 * 
 <fledermaus> every time jordanb chips in with a "Let's..." statement,
 rudebot should reciprocate.
+
+* a "channel" abstraction
+  It's uh ... a stream of messages.  Yeah.  Maybe a lazy stream.  Or
+  something.  Every time we JOIN we create a new one and save it in a
+  list.  The as-yet-unwritten "do-when-channel-idle" would take it as
+  an argument.

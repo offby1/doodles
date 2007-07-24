@@ -40,7 +40,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "vprintf.ss")
 
 (provide
- channel-of-entries-since
+ queue-of-entries-since
  entry->string
  )
 
@@ -128,7 +128,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; TODO -- consider exposing the thread, so that we can kill it.
 
 ;; Gaah -- beware multiple meanings of the word "channel".
-(define (channel-of-entries-since srfi-19-date)
+(define (queue-of-entries-since srfi-19-date)
 
   ;; It's not clear that there's any point to limiting the size of the
   ;; channel ... I suppose it ensures that, in case people write blog
