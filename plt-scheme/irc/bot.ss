@@ -104,6 +104,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
+(define-struct utterance (when what) (make-inspector))
+
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
@@ -139,23 +141,43 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill))
          (else
           (let ((response-body
-                 (if (regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                     (let ((r  (rnd 100)))
+                 (cond
 
-                       ;; we special-case zero for ease of testing.
-                       (cond ((zero? r)
-                              "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
-                             ((< r 91)
-                              (one-jordanb-quote))
-                             (else
-                              (let ((p (random-choice (quotes-of-the-day))))
-                                (string-append (car p)
-                                               "  --"
-                                               (cdr p)))))
-                       )
+                  ((and (string-ci=? "seen" (first message-tokens))
+                        (< 1 (length message-tokens)))
+                   (let* ((nick (second message-tokens))
+                          (times-by-nick (hash-table-get
+                                          times-by-nick-by-channel
+                                          channel-name
+                                          (make-hash-table 'equal)))
+                          (data (hash-table-get times-by-nick nick #f)))
+                     (vprintf "Sought key ~s in times-by-nick; got ~s~%"
+                              nick data)
+                     (if data
+                         (format "~a last spoke at ~a, saying ~s"
+                                 nick
+                                 (utterance-when data)
+                                 (utterance-what data))
+                       (format "I haven't seen ~a" nick))))
+
+                  ((regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
+                   (let ((r  (rnd 100)))
+
+                     ;; we special-case zero for ease of testing.
+                     (cond ((zero? r)
+                            "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
+                           ((< r 91)
+                            (one-jordanb-quote))
+                           (else
+                            (let ((p (random-choice (quotes-of-the-day))))
+                              (string-append (car p)
+                                             "  --"
+                                             (cdr p)))))
+                     ))
+                  (else
                    (format "Well, ~a, I think ~a too."
                            requestor
-                           (string-join message-tokens)))))
+                           (string-join message-tokens))))))
 
             (put (format "PRIVMSG ~a :~a"
                          (if was-private? requestor channel-name)
@@ -285,6 +307,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
                      *planet-emacs-task*)))
 
+                 (when dest-is-channel?
+                   (let* ((times-by-nick (hash-table-get
+                                          times-by-nick-by-channel
+                                          destination
+                                          (lambda ()
+                                            (make-hash-table 'equal))))
+                          (utterance (make-utterance
+                                      (seconds->date (current-seconds))
+                                      (string-join (cdr tokens)))))
+                     (vprintf "putting key ~s, value ~s in times-by-nick~%"
+                              source utterance)
+                     (hash-table-put! times-by-nick source utterance)
+                     (hash-table-put! times-by-nick-by-channel destination times-by-nick)))
+
                  (unless (*passive?*)
 
                    (vprintf "Tokens ~s; destination ~s source ~s~%"
@@ -316,5 +352,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (put (format "PONG ~a" params))))))))))
 
 (define denizens-by-channel (make-hash-table 'equal))
-
+(define times-by-nick-by-channel (make-hash-table 'equal))
 )

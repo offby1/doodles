@@ -22,7 +22,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          "bot.ss"
          (only "globals.ss"
-               *my-nick*))
+               *my-nick*
+               *verbose*
+               ))
 
 (define get-retort
   (case-lambda
@@ -45,7 +47,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            ((eq? 'all which) lines)
            (else
             (error 'get-retort "wanted integer or 'all; got ~s" which))))
-        (else ""))
+         (else ""))
         )))))
 
 (define simple-tests
@@ -129,15 +131,34 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (*my-nick*)))))
 
     (test-case
-     "notes who's in what channel"
-     (callback
-      ":kubrick.freenode.net 353 rudybot = #emacs :sam bob "
-      (open-input-string "")
-      (open-output-string))
-     (check-regexp-match
-      #rx"channel foo is graced by the presence of sam and bob"
-      (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: names"
-                          (*my-nick*)))))
+     "the 'seen' command"
+
+     (before
+      (let ()
+        (define (send source text)
+          (callback
+           (format ":~a!n=~a@1.2.3.4 PRIVMSG #some-channel :~a"
+                   source source text)
+           (open-input-string "")
+           (open-output-string)))
+        (send "bob" "what up, cuz")
+        (send "sam" "I got your back")
+        (send "bob" "I like Doritos"))
+
+      (check-regexp-match
+       #rx"bob last spoke at .*, saying \"I like Doritos\""
+       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen bob"
+                           (*my-nick*))))
+      (check-regexp-match
+       #rx"I haven't seen ted"
+       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen ted"
+                           (*my-nick*))))
+      ;; ignores 'seen' unless there's an actual argument
+      (check-equal?
+       "PRIVMSG #some-channel :Well, unit-test, I think seen too."
+       (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen "
+                           (*my-nick*))))))
     )))
+
 (provide simple-tests)
 )
