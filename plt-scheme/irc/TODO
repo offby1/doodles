@@ -1,9 +1,33 @@
 -*-outline-*-
 
+-- High priority
+
+* Separate the getting of stuff from planet.emacsen ...
+  from the emitting of the stuff into the channel.  Probably a queue;
+  get the stuff rarely, like once an hour, but emit it frequently,
+  like every minute of silence in the channel.
+
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
   crashing.
+
+* Deal with netsplits, or whatever the hell it is 
+  ... that makes the bot not work even though /whois says it's still
+  there.  Also, what do I do if it connects and the server says that
+  the nick is already registered?  (Try again, passing a --nick
+  command.)
+
+** Maybe registering the nick on freenode will help.
+
+* Convert from strings to bytes
+  Wherever possible, change from using "string" procedures to "bytes"
+  procedures -- since IRC doesn't specify any character encoding.  As
+  things stand now, we're implicitly using UTF-8 everywhere; it'd be
+  better for the encoding to be explicit.  That way, eventually I
+  could have per-channel encodings.
+
+-- Low priority
 
 * maybe periodically see what channels _I'm_ in, and join them if it's
   not already in them.  Like a little puppy dog.  This is harder than
@@ -29,14 +53,6 @@
 
 * When tokenizing, treat unicode whitespace as ... whitespace
 
-* Deal with netsplits, or whatever the hell it is 
-  ... that makes the bot not work even though /whois says it's still
-  there.  Also, what do I do if it connects and the server says that
-  the nick is already registered?  (Try again, passing a --nick
-  command.)
-
-** Maybe registering the nick on freenode will help.
-
 * jordanb quotes
 
 ** multi-line quotes get truncated
@@ -59,13 +75,6 @@
   As often happens, development has pulled ahead of testing.  In
   particular, the jordanb-quote-thread stuff isn't tested.
 
-* Convert from strings to bytes
-  Wherever possible, change from using "string" procedures to "bytes"
-  procedures -- since IRC doesn't specify any character encoding.  As
-  things stand now, we're implicitly using UTF-8 everywhere; it'd be
-  better for the encoding to be explicit.  That way, eventually I
-  could have per-channel encodings.
-
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
   He means snag stuff from
@@ -75,6 +84,7 @@
 
 * Respond to "version"
   since people seem to expect that
+
 * fix these
 **
 <offby1> rudybot: seen mwolson 
