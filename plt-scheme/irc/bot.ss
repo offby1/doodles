@@ -32,6 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
          (planet "q.ss" ("offby1" "offby1.plt"))
+         (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "parse-message.ss"
          "globals.ss"
          "jordan.ss"
@@ -156,7 +157,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (if data
                          (format "~a last spoke at ~a, saying ~s"
                                  nick
-                                 (utterance-when data)
+                                 (zdate (utterance-when data))
                                  (utterance-what data))
                        (format "I haven't seen ~a" nick))))
 
