@@ -77,13 +77,13 @@
   rather not do that since most of those quotes are multi-line, and
   wouldn't look good if collapsed.
 
-* Respond to "version"
+* new commands
+
+** Respond to "version"
   since people seem to expect that
 
-* fix these
-**
-<offby1> rudybot: seen mwolson 
-<rudybot> mwolson last spoke at 2007-07-24T00:35:05Z, saying "\u0001ACTION nods\u0001"
+** "uptime"
+  since I'm occasionally curious
 
 * don't restrict "seen" to the current channel
 
