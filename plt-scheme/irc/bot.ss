@@ -40,6 +40,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "../web/quote-of-the-day.ss")
 (provide callback)
 
+(*client-version* "$Rev$")
+
 (define (split str)
   (string-tokenize str (char-set-complement (char-set #\space))))
 
