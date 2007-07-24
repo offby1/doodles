@@ -228,7 +228,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ))
     (test-suite
      "short strings from server"
-     #:before (lambda ()(*verbose* #t))
      (test-equal? "empty string" (get-retort "") "")
      (test-equal? "mostly empty string" (get-retort " ") "")
      (test-equal? "string with just one field" (get-retort "x") "")
