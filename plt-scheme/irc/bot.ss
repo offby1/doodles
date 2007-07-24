@@ -285,19 +285,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (current-date)
                                    )))
                              (do-in-loop
-                              ;; choosing the "correct" interval here is
-                              ;; subtle.  Ideally the interval would
-                              ;; have the property that the channel
-                              ;; goes silent for this long
+                              ;; choosing the "correct" interval here
+                              ;; is subtle.  Ideally the interval
+                              ;; would have the property that the
+                              ;; channel goes silent for this long
                               ;; just as often as someone posts a blog
                               ;; to planet emacs -- that way we
                               ;; consume items from the channel at the
-                              ;; same rate that
-                              ;; queue-of-entries-since produces
-                              ;; them.  Failing that, it's perhaps
-                              ;; best for this number to be a bit
-                              ;; smaller than that idea, so that this
-                              ;; task finds nothing new occasionally.
+                              ;; same rate that queue-of-entries-since
+                              ;; produces them.  Failing that, it's
+                              ;; perhaps best for this number to be a
+                              ;; bit smaller than that idea, so that
+                              ;; this task finds nothing new
+                              ;; occasionally.
                               20
                               (lambda ()
                                 (let ((datum (async-channel-try-get the-queue)))
