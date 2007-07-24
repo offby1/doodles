@@ -83,19 +83,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (psend text . args)
   (apply send (cons text (cons '#:recipient (cons (*my-nick*) args)))))
 
-(define (chsend source text)
-  (send text #:source source))
-
-(define utsend send)
-
-(define *delimiter-char* (make-parameter #\:))
-(define (say-to-bot text)
-  (send (format "~a: ~a"
+(define/kw  (say-to-bot text #:key
+                        [delimiter-char #\:]
+                        [source "unit-test"])
+  (send (format "~a~a ~a"
                 (*my-nick*)
+                delimiter-char
                 text)
+        #:source source
         ))
-(define psay-to-bot psend)
-
+(trace say-to-bot)
 (define tests
   (test-suite
    "big ol' all-encompassing"
@@ -130,11 +127,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "")
     (test-equal?
      "silent unless spoken to, channel message edition"
-     (utsend "hey you")
+     (send "hey you")
      "")
     (test-equal?
      "echoes back stuff addressed to it, private message edition"
-     (psay-to-bot "hey you")
+     (psend "hey you")
      "PRIVMSG unit-test :Well, unit-test, I think hey you too.")
     (test-equal?
      "echoes, channel message edition"
@@ -142,14 +139,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-equal?
      "recognizes a comma after its nick"
-     (parameterize ((*delimiter-char* #\,))
-     (say-to-bot "hey you"))
+     (say-to-bot "hey you" #:delimiter-char #\,)
      "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match
       #rx"NOTICE unit-test :\u0001VERSION .*:.*:.*\u0001"
-      (psay-to-bot "\u0001VERSION\u0001")))
+      (psend "\u0001VERSION\u0001")))
 
     ;; mwolson has forbidden it to mimic.
     (test-equal?
@@ -168,7 +164,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "witty quotes in response to a private message"
      (check-regexp-match
       #rx"PRIVMSG unit-test :.*heirs.*emacs.*johnw$"
-      (psay-to-bot "quote")))
+      (psend "quote")))
     (test-case
      "witty quotes in response to a channel message"
      (check-regexp-match
@@ -181,10 +177,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (before
       (let ()
 
-        (chsend "bob" "what up, cuz")
-        (chsend "sam" "I got your back")
-        (chsend "chris" "\u0001ACTION Gets bent\u0001")
-        (chsend "bob" "I like Doritos")
+        (send "what up, cuz" #:source "bob")
+        (send "I got your back" #:source "sam")
+        (send "\u0001ACTION Gets bent\u0001" #:source "chris")
+        (send "I like Doritos" #:source "bob")
         (callback (format
                    ":tim!n=tim@1.2.3.4 PRIVMSG ~a :\u0001ACTION confesses to the bot in private\u0001"
                    (*my-nick*))
@@ -219,12 +215,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (say-to-bot "seen "))))
     (test-equal?
      "mostly ignores bots"
-     (chsend  "slimebot"
-              (format
-               "~a~a ~a"
-               (*my-nick*)
-               (*delimiter-char*)
-               "hey you"))
+     (say-to-bot "hey you" #:source "slimebot")
      "PRIVMSG #some-channel :\u0001ACTION holds his tongue.\u0001")
     )
 
