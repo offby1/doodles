@@ -158,6 +158,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        "PRIVMSG #some-channel :Well, unit-test, I think seen too."
        (get-retort (format ":unit-test!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: seen "
                            (*my-nick*))))))
+    (test-equal?
+     "mostly ignores bots"
+     (get-retort (format
+                  ":slimebot!~~unit-test@1.2.3.4 PRIVMSG #some-channel :~a: hey you"
+                  (*my-nick*)))
+     "PRIVMSG #some-channel :\u0001ACTION holds his tongue.\u0001")
     )
 
    (test-suite

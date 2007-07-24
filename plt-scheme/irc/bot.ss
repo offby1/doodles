@@ -143,6 +143,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (else
           (let ((response-body
                  (cond
+                  ;; if the requestor seems to be a bot, don't respond normally.
+                  ((regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") requestor)
+                   "\u0001ACTION holds his tongue.\u0001")
 
                   ((and (string-ci=? "seen" (first message-tokens))
                         (< 1 (length message-tokens)))
