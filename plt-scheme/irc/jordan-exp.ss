@@ -155,13 +155,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (newline op))
              (loop (trim-leading-space line)))
             (else
-             (fprintf (current-error-port)
-                      "Extending ~s with ~s~%"
-                      one-partial-utterance
-                      (trim-leading-space line))
-             (loop (string-append one-partial-utterance
-                                  " "
-                                  (trim-leading-space line)))))))
+             (let ((addendum (trim-leading-space line)))
+               (loop (if (positive? (string-length addendum))
+                         (begin
+                           (fprintf (current-error-port)
+                                    "Extending ~s with ~s~%"
+                                    one-partial-utterance
+                                    addendum)
+                           (string-append one-partial-utterance
+                                          " "
+                                          addendum))
+                       one-partial-utterance
+                       )))))))
        (close-output-port op)))
     rv))
 (trace joiner)
