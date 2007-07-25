@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
-         (planet "fmt.ss"       ("ashinn"      "fmt.plt")))
+         (all-except (planet "fmt.ss"       ("ashinn"      "fmt.plt")) cat))
 (provide all-jordanb-quotes
          one-jordanb-quote)
 
@@ -62,7 +62,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ;; be better).  The next thread strips timestamps and joins
         ;; lines.  The last selects just the jordanb quotes.
         'boo!))
-  (list "The jordanb quotes are on vacation.")
+  (list "Let's start making a list.")
   )
 
 
@@ -168,6 +168,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (check-regexp-match
     #rx"Let's start making a list."
     (car (all-jordanb-quotes test-list-of-lines))))
-  ))
+  )
+ (test-suite
+  "filters"
+  (test-equal?
+   "cat"
+   (cat "yin" "yang")
+   (list
+    "One yin line."
+    "An unterminated yin line."
+    "Jerry Yang has no wang."))))
 
 )
