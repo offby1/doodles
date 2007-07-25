@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module jordan-exp mzscheme
-(require (lib "trace.ss")
+(require (lib "port.ss")
+         (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                append-map
                filter
@@ -13,7 +14,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                take
                third)
          (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo)
-         (only (planet "port-to-lines.ss" ("offby1" "offby1.plt")) file->lines)
+         (only (planet "port-to-lines.ss" ("offby1" "offby1.plt"))
+               file->lines
+               port->lines
+               )
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
@@ -79,9 +83,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; (listof string?) -> input-port?
 (define (cat filenames)
   (let-values (((ip op) (make-pipe)))
-    (printf "Well, that was fun.~%"))
+    (thread
+     (lambda ()
+       (for-each
+        (lambda (fn)
+          (call-with-input-file fn
+            (lambda (file-ip)
+              (copy-port file-ip op))))
+        filenames)
+       (close-output-port op)))
+    ip))
 
-  )
 (trace cat)
 
 
@@ -175,7 +187,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    "filters"
   (test-equal?
    "cat"
-   (cat (list "yin" "yang"))
+   (port->lines (cat (list "yin" "yang")))
    (list
     "One yin line."
     "An unterminated yin line."
