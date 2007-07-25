@@ -1,3 +1,3 @@
 (module bug mzscheme
 (require
-  (only (lib "19.ss" "srfi") make-time)))
+  (lib "time.ss" "srfi" "19")))
