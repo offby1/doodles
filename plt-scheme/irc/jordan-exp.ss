@@ -120,7 +120,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (let ((line (read-line ip)))
            (when (not (eof-object? line))
              (display
-               (trim-leading-space (nuke-leading-timetamp line))
+               (nuke-trailing-timestamp (trim-leading-space (nuke-leading-timetamp line)))
               op)
 
              (newline op)
@@ -156,7 +156,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (loop (trim-leading-space line)))
             (else
              (fprintf (current-error-port)
-                      "Joining ~s to ~s~%"
+                      "Extending ~s with ~s~%"
                       one-partial-utterance
                       (trim-leading-space line))
              (loop (string-append one-partial-utterance
@@ -191,8 +191,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (test-case
           "the whole shebang"
           (check-equal?
-           "<jordanb> Let's start making a list."
-           (car (all-jordanb-quotes (list "just-one-jordanb-quote.txt")))))
+           (car (all-jordanb-quotes (list "just-one-jordanb-quote.txt")))
+           "<jordanb> Let's start making a list. it'd be so coool."))
          (test-suite
           "filters"
           (test-equal?
@@ -213,6 +213,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (check-equal?
             (port->lines (stripper (open-input-string "  <x>Yo.")))
             (list "<x>Yo."))
+           (check-equal?
+            (port->lines (stripper (open-input-string "Yo.      [19:18]")))
+            (list "Yo.")
+            "trailing timestamps.")
            )
 
           (test-case
