@@ -132,110 +132,106 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (trim-leading-space str)
   (regexp-replace #rx"^[ \t]+" str ""))
 
-;; (listof string?) -> input-port?
-(define (cat filenames)
+(define (make-filter writer)
   (let-values (((ip op)
                 ;; I might want to add a LIMIT-K argument, to keep the
                 ;; pipe from getting too full.  Without that argument,
                 ;; the new thread will never block, thus filling
                 ;; memory.
-                (make-pipe *pipe-max-bytes*)
-                ))
-    (thread
-     (lambda ()
-       (for-each
-        (lambda (fn)
-          (with-handlers
-              ((exn:fail:filesystem?
-               (lambda (e)
-                 (printf "~a -- keepin' on keepin' on~%"
-                         (exn-message e))
-                 )))
-            (call-with-input-file fn
-              (lambda (file-ip)
-                (fprintf
-                 (current-error-port)
-                 "Pipe has ~a bytes in it; about to copy ~a bytes from ~s.~%"
-                 (fmt #f (num/comma (pipe-content-length op)))
-                 (fmt #f (num/comma (file-size fn)))
-                 fn)
-                (copy-port file-ip op)))))
-        filenames)
-       (close-output-port op)))
+                (make-pipe *pipe-max-bytes*)))
+    (thread (lambda () (writer op)))
     ip))
+
+;; (listof string?) -> input-port?
+(define (cat filenames)
+  (make-filter
+   (lambda (op)
+     (for-each
+      (lambda (fn)
+        (with-handlers
+            ((exn:fail:filesystem?
+              (lambda (e)
+                (printf "~a -- keepin' on keepin' on~%"
+                        (exn-message e))
+                )))
+          (call-with-input-file fn
+            (lambda (file-ip)
+              (fprintf
+               (current-error-port)
+               "Pipe has ~a bytes in it; about to copy ~a bytes from ~s.~%"
+               (fmt #f (num/comma (pipe-content-length op)))
+               (fmt #f (num/comma (file-size fn)))
+               fn)
+              (copy-port file-ip op)))))
+      filenames)
+     (close-output-port op))))
 ;(trace cat)
 
 ;; input-port? -> input-port?
 (define (stripper ip)
-  (let-values (((rv op)
-                (make-pipe *pipe-max-bytes*)))
-    (thread
-     (lambda ()
-       (let loop ()
-         (let ((line (read-line ip)))
-           (when (not (eof-object? line))
-             (display
-               (nuke-trailing-timestamp (trim-leading-space (nuke-leading-timetamp line)))
-              op)
+  (make-filter
+   (lambda (op)
+     (let loop ()
+       (let ((line (read-line ip)))
+         (when (not (eof-object? line))
+           (display
+            (nuke-trailing-timestamp (trim-leading-space (nuke-leading-timetamp line)))
+            op)
 
-             (newline op)
-             (loop))))
-       (close-output-port op)
-       ))
-    rv))
+           (newline op)
+           (loop))))
+     (close-output-port op)
+     )))
 ;(trace stripper)
 
 ;; input-port? -> input-port?
 (define (joiner ip)
-  (let-values (((rv op)
-                (make-pipe *pipe-max-bytes*)))
-    (thread
-     (lambda ()
-       (let loop ((one-partial-utterance ""))
-         (let ((line (read-line ip)))
-           (cond
-            ((eof-object? line)
-             (display  one-partial-utterance op)
+  (make-filter
+   (lambda (op)
+     (let loop ((one-partial-utterance ""))
+       (let ((line (read-line ip)))
+         (cond
+          ((eof-object? line)
+           (display  one-partial-utterance op)
+           (newline op))
+          ((beginning-of-utterance? line)
+           (when (positive? (string-length one-partial-utterance))
+             (display one-partial-utterance op)
              (newline op))
-            ((beginning-of-utterance? line)
-             (when (positive? (string-length one-partial-utterance))
-                 (display one-partial-utterance op)
-                 (newline op))
-             (loop (trim-leading-space line)))
-            (else
-             ;; note: if the line begins with exactly ten spaces, an
-             ;; asterisk, then another space, followed by a nonspace,
-             ;; then it is _probably_ a "/me" line, as in
+           (loop (trim-leading-space line)))
+          (else
+           ;; note: if the line begins with exactly ten spaces, an
+           ;; asterisk, then another space, followed by a nonspace,
+           ;; then it is _probably_ a "/me" line, as in
 
-             "          * offby1 glances around nervously"
+           "          * offby1 glances around nervously"
 
-             ;; and hence should not be considered an addendum to the
-             ;; current quote.
+           ;; and hence should not be considered an addendum to the
+           ;; current quote.
 
-             ;; ten spaces, an asterisk, and a non-letter is probably
-             ;; a message from the server like
-             "*!*@adsl-69-236-*.dsl.pltn13.pacbell.net"
+           ;; ten spaces, an asterisk, and a non-letter is probably
+           ;; a message from the server like
+           "*!*@adsl-69-236-*.dsl.pltn13.pacbell.net"
 
-             ;; ten spaces, three asterisks, and a space is typically
-             ;; and annoucement like
-             "*** ##cinema: topic set by e1f`, 19:17:02 2007/05/02"
+           ;; ten spaces, three asterisks, and a space is typically
+           ;; and annoucement like
+           "*** ##cinema: topic set by e1f`, 19:17:02 2007/05/02"
 
-             ;; Occasionally we see the above with just seven spaces,
-             ;; though :-|
+           ;; Occasionally we see the above with just seven spaces,
+           ;; though :-|
 
-             ;; survey the whole situation by running this at the
-             ;; shell:
+           ;; survey the whole situation by running this at the
+           ;; shell:
 
-             ;; egrep --no-filename '^ *\*' ~/log/* | sort | uniq > /tmp/stars
-             (let ((addendum (trim-leading-space line)))
-               (loop (if (positive? (string-length addendum))
-                         (string-append one-partial-utterance
-                                        " "
-                                        addendum)
-                       one-partial-utterance
-                       )))))))
-       (close-output-port op)))
-    rv))
+           ;; egrep --no-filename '^ *\*' ~/log/* | sort | uniq > /tmp/stars
+           (let ((addendum (trim-leading-space line)))
+             (loop (if (positive? (string-length addendum))
+                       (string-append one-partial-utterance
+                                      " "
+                                      addendum)
+                     one-partial-utterance
+                     )))))))
+     (close-output-port op))))
 ;(trace joiner)
 
 (define (truncate-stuff-past-end-of-sentence str)
@@ -246,21 +242,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (funny-filter ip)
   (define (is-screamingly-funny? line)
     (regexp-match #rx"^(?i:<jordanb> +(let.?s.*)$)" line))
-  (let-values (((rv op)
-                (make-pipe *pipe-max-bytes*)))
-    (thread
-     (lambda ()
-       (let loop ()
-         (let ((line (read-line ip)))
-           (when (not (eof-object? line))
-             (let ((funnitude  (is-screamingly-funny? line)))
-               (when funnitude
-                 (display (truncate-stuff-past-end-of-sentence (second funnitude)) op)
-                 (newline op)))
-             (loop)))
-         )
-       (close-output-port op)))
-    rv))
+  (make-filter
+   (lambda (op)
+     (let loop ()
+       (let ((line (read-line ip)))
+         (when (not (eof-object? line))
+           (let ((funnitude  (is-screamingly-funny? line)))
+             (when funnitude
+               (display (truncate-stuff-past-end-of-sentence (second funnitude)) op)
+               (newline op)))
+           (loop)))
+       )
+     (close-output-port op))))
 
 (when (positive?
        (test/text-ui
@@ -284,6 +277,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (test-not-false
            "ignore initial timestamp"
            (beginning-of-utterance? "[12:34]<harry>"))
+          (test-false
+           "missing <"
+           (beginning-of-utterance? " forcer> "))
+          (test-false
+           "gap after initial <"
+           (beginning-of-utterance? "< forcer> "))
+          (test-false
+           "empty nick"
+           (beginning-of-utterance? "<>"))
           )
 
          (test-equal?
