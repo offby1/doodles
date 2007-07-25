@@ -89,8 +89,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     ;; that I can regenerate the cache whenever I feel like it.
     (when (*cache-file-name*)
       (fprintf (current-error-port)
-               "Damn, that took forever.  Saving hilarious quotes to cache file ~s.~%"
-               *cache-file-name*)
+               "Damn, that took forever.  Saving comedy gold to cache file ~s.~%"
+               (*cache-file-name*))
       (call-with-output-file
           (*cache-file-name*)
         (lambda (op)
@@ -238,6 +238,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     rv))
 ;(trace joiner)
 
+(define (truncate-stuff-past-end-of-sentence str)
+  (regexp-replace (pregexp "([.?!]+).*?$") str "\\1"))
+
 ;; input-port? -> input-port?
 ;; only keeps amusing quotes from jordanb.
 (define (funny-filter ip)
@@ -252,7 +255,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (when (not (eof-object? line))
              (let ((funnitude  (is-screamingly-funny? line)))
                (when funnitude
-                 (display (second funnitude) op)
+                 (display (truncate-stuff-past-end-of-sentence (second funnitude)) op)
                  (newline op)))
              (loop)))
          )
@@ -294,7 +297,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (car
             (parameterize ((*cache-file-name* #f))
                           (all-jordanb-quotes-no-memoizing (list "just-one-jordanb-quote.txt"))))
-           "Let's start making a list. it'd be so coool."))
+           "Let's start making a list, it'd be so coool."))
+         (test-suite
+          "truncate-stuff-past-end-of-sentence"
+          (test-equal? "no punctuation"  (truncate-stuff-past-end-of-sentence "foo bar") "foo bar")
+          (test-equal? "simple sentence" (truncate-stuff-past-end-of-sentence "foo.") "foo.")
+          (test-equal? "the main event" (truncate-stuff-past-end-of-sentence "foo. Bar!") "foo.")
+          (test-equal? "?" (truncate-stuff-past-end-of-sentence "foo? Bar!") "foo?")
+          (test-equal? "!" (truncate-stuff-past-end-of-sentence "foo! Bar!") "foo!")
+          (test-equal? "keeps all punct chars" (truncate-stuff-past-end-of-sentence "foo, Bar!!!!") "foo, Bar!!!!")
+          )
          (test-suite
           "filters"
           (test-equal?

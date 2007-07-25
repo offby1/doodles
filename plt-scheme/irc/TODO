@@ -2,22 +2,6 @@
 
 -- High priority
 
-* jordanb quotes
-
-** Many quotes look like this:
-
-        <jordanb> Let's make a phone system with in-band dialing. *** Users on #emacs: zion TSC
-
-I.e., somehow I thought the "*** Users on #emacs: zion TSC" line was
-part of his utterance when it really wasn't.  This is a tricky
-problem.  Ideas:
-
-*** if the first line ends with a period, don't even bother looking at the next line
-
-*** guess which lines aren't "addenda" by examining the first few characters
-    There are a bunch of notes in the comments around line 200 in
-    jordanb.ss
-
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
