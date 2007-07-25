@@ -296,7 +296,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (check-equal?
            (car
             (parameterize ((*cache-file-name* #f))
-                          (all-jordanb-quotes-no-memoizing (list "just-one-jordanb-quote.txt"))))
+                          (all-jordanb-quotes-no-memoizing
+                           (list
+                            (build-path
+                             (this-expression-source-directory)
+                             "test-data"
+                             "just-one-jordanb-quote.txt")))))
            "Let's start making a list, it'd be so coool."))
          (test-suite
           "truncate-stuff-past-end-of-sentence"
@@ -311,7 +316,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "filters"
           (test-equal?
            "cat"
-           (port->lines (cat (list "yin" "yang")))
+           (port->lines (cat (map (lambda (rfn)
+                                    (build-path
+                                     (this-expression-source-directory)
+                                     "test-data"
+                                     rfn))
+                                  (list "yin" "yang"))))
            (list
             "One yin line."
             "An unterminated yin line.Jerry Yang has no wang."))
