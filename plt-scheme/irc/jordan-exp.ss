@@ -4,12 +4,13 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module jordan mzscheme
+(module jordan-exp mzscheme
 (require (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                append-map
                filter
                second
+               take
                third)
          (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo)
          (only (planet "port-to-lines.ss" ("offby1" "offby1.plt")) file->lines)
@@ -59,13 +60,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (if (null? lines)
       (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
-             (files   (directory-list log-dir)))
+             (files   (take (directory-list log-dir) 3)))
 
         (append-map
          (lambda (fn)
            (let ((fn (build-path log-dir fn)))
              (if (file-exists? fn)
-                 (grep (file->lines fn))
+                 (begin
+                   (fprintf (current-error-port)
+                            "Reading ~a~%" fn)
+                   (file->lines fn))
                '())))
          files))
     (grep (car lines)))
