@@ -274,16 +274,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       channel
                                       (one-jordanb-quote)))))))
 
-                   (when (and (string=? channel "#emacs")
+                   (when (and (or
+                               (string=? channel "#bots")
+                               (string=? channel "#emacs"))
                               (not *planet-emacs-task*))
                      (set! *planet-emacs-task*
                            (let ((the-queue
                                   (queue-of-entries-since
-;;                                    (rfc3339-string->srfi19-date/constructor
-;;                                     "2007-07-16T19:59:00+00:00"
-;;                                     19:make-date)
-                                   (current-date)
-                                   )))
+                                   (current-date))))
                              (do-in-loop
                               ;; choosing the "correct" interval here
                               ;; is subtle.  Ideally the interval
