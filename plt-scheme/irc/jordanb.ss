@@ -145,15 +145,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (lambda ()
        (for-each
         (lambda (fn)
-          (call-with-input-file fn
-            (lambda (file-ip)
-              (fprintf
-               (current-error-port)
-               "Pipe has ~a bytes in it; about to copy ~a bytes from ~s.~%"
-               (fmt #f (num/comma (pipe-content-length op)))
-               (fmt #f (num/comma (file-size fn)))
-               fn)
-              (copy-port file-ip op))))
+          (with-handlers
+              ((exn:fail:filesystem?
+               (lambda (e)
+                 (printf "~a -- keepin' on keepin' on~%"
+                         (exn-message e))
+                 )))
+            (call-with-input-file fn
+              (lambda (file-ip)
+                (fprintf
+                 (current-error-port)
+                 "Pipe has ~a bytes in it; about to copy ~a bytes from ~s.~%"
+                 (fmt #f (num/comma (pipe-content-length op)))
+                 (fmt #f (num/comma (file-size fn)))
+                 fn)
+                (copy-port file-ip op)))))
         filenames)
        (close-output-port op)))
     ip))
@@ -258,14 +264,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (test-suite
          "Jordanb"
 
-
-         ;; this test is harder to write than it looks, since the
-         ;; exception gets thrown in a separate thread.
-;;          (test-not-exn
-;;           "doesn't panic on non-existing file"
-;;           (lambda ()
-;;             (parameterize ((*cache-file-name* #f))
-;;                           (all-jordanb-quotes (list "snsldkfjdlfkjdsf")))))
+         (test-pred
+          "doesn't panic on non-existing file"
+          null?
+          (parameterize ((*cache-file-name* #f))
+                        (all-jordanb-quotes (list "snsldkfjdlfkjdsf"))))
 
          (test-suite
           "beginning-of-utterance?"
