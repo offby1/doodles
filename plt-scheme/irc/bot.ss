@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module bot mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
+         (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
          (only (lib "1.ss" "srfi")
@@ -79,12 +80,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
-
-;; gaah.  I wish wish wish that PLT scheme supported Olin Shiver's
-;; "SRE"s.  Maybe I should contribute to
-;; http://www.omnigia.com/scheme/scsh-regexp/.
-(define (regexp-quote str)
-  (regexp-replace* #rx"." str "\\\\&"))
 
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
 ;; the symbol POSTPONE postpones the next call (i.e., it resets the
@@ -382,7 +377,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (regexp
                                (string-append
                                 "^"
-                                (regexp-quote (*my-nick*))
+                                (pregexp-quote (*my-nick*))
                                 "[:,]"))
                               (cadr tokens))
                          (do-something-clever
