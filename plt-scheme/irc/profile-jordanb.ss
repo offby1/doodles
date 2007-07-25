@@ -10,9 +10,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 
-(require
-          "jordan-exp.ss"
-          )
+(require "jordanb.ss")
 (all-jordanb-quotes)
 (define *profile-output-fn* "profile-data.txt")
 (with-output-to-file *profile-output-fn*

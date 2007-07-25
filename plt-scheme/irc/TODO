@@ -18,7 +18,7 @@ problem.  Ideas:
 
 *** guess which lines aren't "addenda" by examining the first few characters
     There are a bunch of notes in the comments around line 200 in
-    jordan-exp.ss
+    jordanb.ss
 
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
