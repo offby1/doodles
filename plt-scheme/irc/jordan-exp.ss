@@ -172,73 +172,88 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     rv))
 (trace stripper-joiner)
 
-(test/text-ui
- (test-suite
-  "huh?"
+(exit
+ (min 1 (test/text-ui
   (test-suite
-   "beginning-of-utterance?"
-   (test-not-false
-    "yes, simple"
-    (beginning-of-utterance? "<zamfir>"))
-   (test-not-false
-    "yes, leading whitespace"
-    (beginning-of-utterance? " <zamfir>"))
-   (test-not-false
-    "ignore initial timestamp"
-    (beginning-of-utterance? "[12:34]<harry>"))
-   )
-  (test-equal?
-   "one short utterance"
-   (join-broken-IRC-lines (list "<me>huh"))
-   (list "<me>huh"))
-  (test-equal?
-   "one split utterance"
-   (join-broken-IRC-lines (list "<yo> cuz" " what up"))
-   (list "<yo> cuz what up"))
-  (test-equal?
-   "a longer split utterance"
-   (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more"))
-   (list "<me>huh more huh yet more"))
-  (test-equal?
-   "two short utterances"
-   (join-broken-IRC-lines (list "<me>jump" "<you>How high?"))
-   (list "<me>jump" "<you>How high?"))
-  (test-equal?
-   "one split, one short"
-   (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more" "<you>what ho?"))
-   (list "<me>huh more huh yet more" "<you>what ho?"))
+   "huh?"
+   (test-suite
+    "beginning-of-utterance?"
+    (test-not-false
+     "yes, simple"
+     (beginning-of-utterance? "<zamfir>"))
+    (test-not-false
+     "yes, leading whitespace"
+     (beginning-of-utterance? " <zamfir>"))
+    (test-not-false
+     "ignore initial timestamp"
+     (beginning-of-utterance? "[12:34]<harry>"))
+    )
+   (test-equal?
+    "one short utterance"
+    (join-broken-IRC-lines (list "<me>huh"))
+    (list "<me>huh"))
+   (test-equal?
+    "one split utterance"
+    (join-broken-IRC-lines (list "<yo> cuz" " what up"))
+    (list "<yo> cuz what up"))
+   (test-equal?
+    "a longer split utterance"
+    (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more"))
+    (list "<me>huh more huh yet more"))
+   (test-equal?
+    "two short utterances"
+    (join-broken-IRC-lines (list "<me>jump" "<you>How high?"))
+    (list "<me>jump" "<you>How high?"))
+   (test-equal?
+    "one split, one short"
+    (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more" "<you>what ho?"))
+    (list "<me>huh more huh yet more" "<you>what ho?"))
 
-  (test-equal?
-   "now, with added timestamps!!"
-   (map nuke-trailing-timestamp (list "<me>huh   [12:34]" "  more huh [99:88]  " " yet more\t\t[00:00]" "<you>what ho?[18:19]"))
-   (list "<me>huh" "  more huh" " yet more" "<you>what ho?"))
+   (test-equal?
+    "now, with added timestamps!!"
+    (map nuke-trailing-timestamp (list "<me>huh   [12:34]" "  more huh [99:88]  " " yet more\t\t[00:00]" "<you>what ho?[18:19]"))
+    (list "<me>huh" "  more huh" " yet more" "<you>what ho?"))
 
-  (test-case
-   "the whole shebang"
-   (check-regexp-match
-    #rx"Let's start making a list."
-    (car (all-jordanb-quotes test-list-of-lines))))
-  (test-suite
-   "filters"
-  (test-equal?
-   "cat"
-   (port->lines (cat (list "yin" "yang")))
-   (list
-    "One yin line."
-    "An unterminated yin line.Jerry Yang has no wang."))
-
-  (test-suite
-   "stripper-joiner"
    (test-case
-    "just stripping"
-    (check-equal?
-     (port->lines (stripper-joiner (open-input-string "[12:34]  Two spaces.")))
-     (list "  Two spaces."))
-    (check-equal?
-     (port->lines (stripper-joiner (open-input-string "  [12:34] Zamfir knows all.")))
-     (list " Zamfir knows all.")))
+    "the whole shebang"
+    (check-regexp-match
+     #rx"Let's start making a list."
+     (car (all-jordanb-quotes test-list-of-lines))))
+   (test-suite
+    "filters"
+    (test-equal?
+     "cat"
+     (port->lines (cat (list "yin" "yang")))
+     (list
+      "One yin line."
+      "An unterminated yin line.Jerry Yang has no wang."))
 
-   ))))
+    (test-suite
+     "stripper-joiner"
+     (test-case
+      "just stripping"
+      (check-equal?
+       (port->lines (stripper-joiner (open-input-string "[12:34]  Two spaces.")))
+       (list "  Two spaces."))
+      (check-equal?
+       (port->lines (stripper-joiner (open-input-string "  [12:34] Zamfir knows all.")))
+       (list " Zamfir knows all."))
+      (check-equal?
+       (port->lines (stripper-joiner (open-input-string "  <x>Yo.")))
+       (list "<x>Yo."))
+      )
+
+     (test-case
+      "joining"
+      (check-equal?
+       (port->lines (stripper-joiner (open-input-string "<x> hey you\n  I said hey you")))
+       (list "<x> hey you  I said hey you"))
+      (check-equal?
+       (port->lines (stripper-joiner (open-input-string "<x> hey you\n  <y>I said hey you")))
+       (list "<x> hey you  I said hey you"))
+      )
+
+     ))))))
 
 
 )
