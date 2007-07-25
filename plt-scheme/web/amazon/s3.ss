@@ -19,7 +19,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "13.ss" "srfi") string-join substring/shared)
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
-         (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          "aws-common.ss"
          )
