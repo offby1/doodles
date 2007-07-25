@@ -51,39 +51,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   str ""
                   ))
 ;(trace nuke-trailing-timestamp)
-(define test-list-of-lines (list "[12:42 PM]<jordanb> Let's start making a list.                [12:34]"))
 
 ;; it takes about half a minute to snarf up the files and grep them,
 ;; so we memoize this -- so that the second and subsequent calls are
 ;; fast.
-(define (all-jordanb-quotes . lines)
-
-
-  (if (null? lines)
-      (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
-             (files
-              (list "1MB" "2MB" "5MB"
-                    "10MB" "20MB" "50MB"
-                    "100MB")
-              ))
-        ;; today's idea: use a bunch of threads.  The first thread is
-        ;; "cat" -- give it a list of file names, and it will shove
-        ;; their contents, one line at a time, onto an input either a
-        ;; pipe (as in "make-pipe") or a channel (I dunno which would
-        ;; be better).  The next thread strips timestamps and joins
-        ;; lines.  The last selects just the jordanb quotes.
-        'boo!))
-  (list "Let's start making a list.")
-  )
-
+(define (all-jordanb-quotes filenames)
+  (port->lines (joiner (stripper (cat filenames)))))
 
 ;(trace all-jordanb-quotes)
 (define (one-jordanb-quote)
-  (let* ((all (all-jordanb-quotes))
-         (l (length all))
-         (r (random l)))
-    (list-ref all r))
-  )
+  (let ((all (all-jordanb-quotes
+              (directory-list (build-path (find-system-path 'home-dir) "log") ))))
+
+    (list-ref all (random (length all)))))
 
 
 
@@ -256,7 +236,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "the whole shebang"
           (check-regexp-match
            #rx"Let's start making a list."
-           (car (all-jordanb-quotes test-list-of-lines))))
+           (car (all-jordanb-quotes (list "just-one-jordanb-quote.txt")))))
          (test-suite
           "filters"
           (test-equal?
