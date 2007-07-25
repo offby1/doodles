@@ -234,8 +234,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
          (test-case
           "the whole shebang"
-          (check-regexp-match
-           #rx"Let's start making a list."
+          (check-equal?
+           "<jordanb> Let's start making a list."
            (car (all-jordanb-quotes (list "just-one-jordanb-quote.txt")))))
          (test-suite
           "filters"
