@@ -155,7 +155,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (trace cat)
 
 ;; input-port? -> input-port?
-(define (stripper-joiner ip)
+(define (stripper ip)
   (let-values (((rv op)
                 (make-pipe)))
     (thread
@@ -164,14 +164,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (let ((line (read-line ip)))
            (when (not (eof-object? line))
              (display
-              (regexp-replace
-               (pregexp
-                "^[[:space:]]*")
-
-               (nuke-leading-timetamp line)
-               "")
-
-
+               (trim-leading-space (nuke-leading-timetamp line))
               op)
 
              (newline op)
@@ -179,12 +172,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (close-output-port op)
        ))
     rv))
-(trace stripper-joiner)
+(trace stripper)
+
+;; input-port? -> input-port?
+(define (joiner ip)
+  (let-values (((rv op)
+                (make-pipe)))
+    (thread
+     (lambda ()
+       (let loop ((one-partial-utterance ""))
+         (let ((line (read-line ip)))
+           (cond
+            ((eof-object? line)
+             (display  one-partial-utterance op)
+             (newline op))
+            ((beginning-of-utterance? line)
+             (when (positive? (string-length one-partial-utterance))
+                 (display one-partial-utterance op)
+                 (newline op))
+             (loop (trim-leading-space line)))
+            (else
+             (loop (string-append one-partial-utterance
+                                  " "
+                                  (trim-leading-space line)))))))
+       (close-output-port op)))
+    rv))
+(trace joiner)
 
 (when (positive?
        (test/text-ui
         (test-suite
-         "huh?"
+         "Jordan-exp"
          (test-suite
           "beginning-of-utterance?"
           (test-not-false
@@ -237,33 +255,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             "One yin line."
             "An unterminated yin line.Jerry Yang has no wang."))
 
-          (test-suite
-           "stripper-joiner"
-           (test-case
-            "just stripping"
-            (check-equal?
-             (port->lines (stripper-joiner (open-input-string "[12:34]  Two spaces.")))
-             (list "Two spaces."))
-            (check-equal?
-             (port->lines (stripper-joiner (open-input-string "  [12:34] Zamfir knows all.")))
-             (list "Zamfir knows all."))
-            (check-equal?
-             (port->lines (stripper-joiner (open-input-string "  <x>Yo.")))
-             (list "<x>Yo."))
-            )
+          (test-case
+           "stripping"
+           (check-equal?
+            (port->lines (stripper (open-input-string "[12:34]  Two spaces.")))
+            (list "Two spaces."))
+           (check-equal?
+            (port->lines (stripper (open-input-string "  [12:34] Zamfir knows all.")))
+            (list "Zamfir knows all."))
+           (check-equal?
+            (port->lines (stripper (open-input-string "  <x>Yo.")))
+            (list "<x>Yo."))
+           )
 
-           (test-case
-            "joining"
-            (check-equal?
-             (port->lines (stripper-joiner (open-input-string "<x> hey you\n  I said hey you")))
-             (list "<x> hey you  I said hey you"))
-            (check-equal?
-             (port->lines (stripper-joiner (open-input-string "<x> hey you\n  <y>I said hey you")))
-             (list "<x> hey you  I said hey you"))
-            )
-
+          (test-case
+           "joining"
+           (check-equal?
+            (port->lines (joiner (open-input-string "<x> hey you\nI said hey you")))
+            (list "<x> hey you I said hey you"))
+           (check-equal?
+            (port->lines (joiner (open-input-string "<x> hey you\n  <y>I said hey you")))
+            (list "<x> hey you"
+                  "<y>I said hey you"))
            )))))
   (exit 1))
-
 
 )
