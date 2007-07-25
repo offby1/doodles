@@ -79,7 +79,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; (listof string?) -> input-port?
 (define (cat filenames)
   (let-values (((ip op) (make-pipe)))
-    (printf "Well, that was fun.~%")))
+    (printf "Well, that was fun.~%"))
+
+  )
+(trace cat)
 
 
 
@@ -168,15 +171,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (check-regexp-match
     #rx"Let's start making a list."
     (car (all-jordanb-quotes test-list-of-lines))))
-  )
- (test-suite
-  "filters"
+  (test-suite
+   "filters"
   (test-equal?
    "cat"
-   (cat "yin" "yang")
+   (cat (list "yin" "yang"))
    (list
     "One yin line."
     "An unterminated yin line."
-    "Jerry Yang has no wang."))))
+    "Jerry Yang has no wang.")))
+
+  )
+
+ )
 
 )
