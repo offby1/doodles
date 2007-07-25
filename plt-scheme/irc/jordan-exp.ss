@@ -59,7 +59,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; so we memoize this -- so that the second and subsequent calls are
 ;; fast.
 (define (all-jordanb-quotes filenames)
-  (let ((rv (port->lines (joiner (stripper (cat filenames))))))
+  (let ((rv (port->lines (funny-filter (joiner (stripper (cat filenames)))))))
     (let ((cache-file-name
            (build-path
             (this-expression-source-directory)
@@ -84,7 +84,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (filter file-exists?
               (map
                (lambda (rfn) (build-path log-dir rfn))
-               (take (directory-list log-dir ) 10))))))
+               (directory-list log-dir ))))))
 
     (list-ref all (random (length all)))))
 
@@ -180,6 +180,27 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (close-output-port op)))
     rv))
 ;(trace joiner)
+
+;; input-port? -> input-port?
+;; only keeps amusing quotes from jordanb.
+(define (funny-filter ip)
+  (define (is-screamingly-funny? line)
+    (regexp-match #rx"^(?i:<jordanb> +(let.?s.*)$)" line))
+  (let-values (((rv op)
+                (make-pipe *pipe-max-bytes*)))
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((line (read-line ip)))
+           (when (not (eof-object? line))
+
+             (when (is-screamingly-funny? line)
+               (display line op)
+               (newline op))
+             (loop)))
+         )
+       (close-output-port op)))
+    rv))
 
 (when (positive?
        (test/text-ui
