@@ -82,30 +82,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (trim-leading-space str)
   (regexp-replace #rx"^[ \t]+" str ""))
 
-(define (join-broken-IRC-lines seq)
-
-  (define (internal complete-utterances
-                    one-partial-utterance
-                    input)
-    (cond
-     ((null? input)
-      (append complete-utterances (list one-partial-utterance)))
-     ((beginning-of-utterance? (car input))
-      (internal (append
-                 complete-utterances
-                 (if (positive? (string-length one-partial-utterance))
-                     (list one-partial-utterance)
-                   '()))
-                (trim-leading-space (car input))
-                (cdr input)))
-     (else
-      (internal complete-utterances
-                (string-append one-partial-utterance
-                               " "
-                               (trim-leading-space (car input)))
-                (cdr input)))))
-  (internal '() "" seq))
-
 
 
 ;; (listof string?) -> input-port?
@@ -206,26 +182,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            "ignore initial timestamp"
            (beginning-of-utterance? "[12:34]<harry>"))
           )
-         (test-equal?
-          "one short utterance"
-          (join-broken-IRC-lines (list "<me>huh"))
-          (list "<me>huh"))
-         (test-equal?
-          "one split utterance"
-          (join-broken-IRC-lines (list "<yo> cuz" " what up"))
-          (list "<yo> cuz what up"))
-         (test-equal?
-          "a longer split utterance"
-          (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more"))
-          (list "<me>huh more huh yet more"))
-         (test-equal?
-          "two short utterances"
-          (join-broken-IRC-lines (list "<me>jump" "<you>How high?"))
-          (list "<me>jump" "<you>How high?"))
-         (test-equal?
-          "one split, one short"
-          (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more" "<you>what ho?"))
-          (list "<me>huh more huh yet more" "<you>what ho?"))
 
          (test-equal?
           "now, with added timestamps!!"
