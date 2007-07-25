@@ -11,7 +11,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-record-enabled #t)
 
 (require "jordanb.ss")
-(all-jordanb-quotes)
+(parameterize ((*cache-file-name* #f))
+(one-jordanb-quote))
 (define *profile-output-fn* "profile-data.txt")
 (with-output-to-file *profile-output-fn*
   (lambda ()
