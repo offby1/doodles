@@ -250,10 +250,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (let loop ()
          (let ((line (read-line ip)))
            (when (not (eof-object? line))
-
-             (when (is-screamingly-funny? line)
-               (display line op)
-               (newline op))
+             (let ((funnitude  (is-screamingly-funny? line)))
+               (when funnitude
+                 (display (second funnitude) op)
+                 (newline op)))
              (loop)))
          )
        (close-output-port op)))
@@ -294,7 +294,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (car
             (parameterize ((*cache-file-name* #f))
                           (all-jordanb-quotes-no-memoizing (list "just-one-jordanb-quote.txt"))))
-           "<jordanb> Let's start making a list. it'd be so coool."))
+           "Let's start making a list. it'd be so coool."))
          (test-suite
           "filters"
           (test-equal?
