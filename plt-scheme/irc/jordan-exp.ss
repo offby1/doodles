@@ -1,0 +1,171 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+|#
+
+(module jordan mzscheme
+(require (lib "trace.ss")
+         (only (lib "1.ss" "srfi")
+               append-map
+               filter
+               second
+               third)
+         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo)
+         (only (planet "port-to-lines.ss" ("offby1" "offby1.plt")) file->lines)
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
+(provide all-jordanb-quotes
+         one-jordanb-quote)
+
+;; TODO -- perhaps, instead of grabbing quotes from my ~/log
+;; directory, I should find some public logging service that logs
+;; #emacs, and grab quotes from it.  The advantage is that anyone,not
+;; just me, would then be able to run this code.
+
+(define timestamp-regex
+  (string-append
+   "\\[[[:digit:]]{2}:[[:digit:]]{2}"
+   "( [AP]M)?"
+   "\\]"))
+
+(define (nuke-trailing-timestamp str)
+  (regexp-replace (pregexp
+                   (string-append
+                    "[[:space:]]*"
+                    timestamp-regex
+                    "[[:space:]]*$")
+                   ) str ""))
+;(trace nuke-trailing-timestamp)
+(define test-list-of-lines (list "[12:42 PM]<jordanb> Let's start making a list.                [12:34]"))
+
+;; it takes about half a minute to snarf up the files and grep them,
+;; so we memoize this -- so that the second and subsequent calls are
+;; fast.
+(define/memo (all-jordanb-quotes . lines)
+
+  (define (grep lines)
+    (filter (lambda (line)
+              (let ((bou (beginning-of-utterance? line)))
+                (and bou
+                     (string-ci=? (third bou) "jordanb")
+                     (regexp-match
+                      (regexp
+                       "(?i:(let.?s.*)$)")
+                      line))))
+            (join-broken-IRC-lines (map nuke-trailing-timestamp
+                                        lines))))
+
+  (if (null? lines)
+      (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
+             (files   (directory-list log-dir)))
+
+        (append-map
+         (lambda (fn)
+           (let ((fn (build-path log-dir fn)))
+             (if (file-exists? fn)
+                 (grep (file->lines fn))
+               '())))
+         files))
+    (grep (car lines)))
+  )
+
+;(trace all-jordanb-quotes)
+(define (one-jordanb-quote)
+  (let* ((all (all-jordanb-quotes))
+         (l (length all))
+         (r (random l)))
+    (list-ref all r))
+  )
+
+
+
+;; returns #f if the string doesn't look like the beginning of an
+;; utterance.  If it does look like one, then returns a list, the
+;; third element of which is the speaker's nick.
+(define (beginning-of-utterance? str)
+  (regexp-match (pregexp
+                 (string-append
+                  "^"
+                  "(?:" timestamp-regex ")?"
+                  "[[:space:]]*"
+                  "<(" "[[:graph:]]+" ")>")) str))
+
+;(trace beginning-of-utterance?)
+(define (trim-leading-space str)
+  (regexp-replace #rx"^[ \t]+" str ""))
+
+(define (join-broken-IRC-lines seq)
+
+  (define (internal complete-utterances
+                    one-partial-utterance
+                    input)
+    (cond
+     ((null? input)
+      (append complete-utterances (list one-partial-utterance)))
+     ((beginning-of-utterance? (car input))
+      (internal (append
+                 complete-utterances
+                 (if (positive? (string-length one-partial-utterance))
+                     (list one-partial-utterance)
+                   '()))
+                (trim-leading-space (car input))
+                (cdr input)))
+     (else
+      (internal complete-utterances
+                (string-append one-partial-utterance
+                               " "
+                               (trim-leading-space (car input)))
+                (cdr input)))))
+  (internal '() "" seq))
+
+(test/text-ui
+ (test-suite
+  "huh?"
+  (test-suite
+   "beginning-of-utterance?"
+   (test-not-false
+    "yes, simple"
+    (beginning-of-utterance? "<zamfir>"))
+   (test-not-false
+    "yes, leading whitespace"
+    (beginning-of-utterance? " <zamfir>"))
+   (test-not-false
+    "ignore initial timestamp"
+    (beginning-of-utterance? "[12:34]<harry>"))
+   )
+  (test-equal?
+   "one short utterance"
+   (join-broken-IRC-lines (list "<me>huh"))
+   (list "<me>huh"))
+  (test-equal?
+   "one split utterance"
+   (join-broken-IRC-lines (list "<yo> cuz" " what up"))
+   (list "<yo> cuz what up"))
+  (test-equal?
+   "a longer split utterance"
+   (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more"))
+   (list "<me>huh more huh yet more"))
+  (test-equal?
+   "two short utterances"
+   (join-broken-IRC-lines (list "<me>jump" "<you>How high?"))
+   (list "<me>jump" "<you>How high?"))
+  (test-equal?
+   "one split, one short"
+   (join-broken-IRC-lines (list "<me>huh" "more huh" "yet more" "<you>what ho?"))
+   (list "<me>huh more huh yet more" "<you>what ho?"))
+
+  (test-equal?
+   "now, with added timestamps!!"
+   (map nuke-trailing-timestamp (list "<me>huh   [12:34]" "  more huh [99:88]  " " yet more\t\t[00:00]" "<you>what ho?[18:19]"))
+   (list "<me>huh" "  more huh" " yet more" "<you>what ho?"))
+
+  (test-case
+   "the whole shebang"
+   (check-regexp-match
+    #rx"Let's start making a list."
+    (car (all-jordanb-quotes test-list-of-lines))))
+  ))
+
+)
