@@ -7,6 +7,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module tests mzscheme
 (require (lib "trace.ss")
          (lib "kw.ss")
+         (only (lib "etc.ss") build-string)
+         (only (lib "pregexp.ss") pregexp-quote)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
          (planet "util.ss" ("schematics" "schemeunit.plt" 2))
@@ -20,6 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "14.ss" "srfi")
                char-set
                char-set-complement
+               char-set:whitespace
                )
          "bot.ss"
          (only "globals.ss"
@@ -226,6 +229,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           511)
        "failed to truncate a stored message")
       ))
+
+    (test-case
+     "binary input"
+     (let ((spam (build-string 256 integer->char)))
+       (send spam #:source "spammer")
+       (check-regexp-match
+        (regexp
+         (string-append
+          "spammer last spoke at .*, saying \""
+          ;; this seems fishy.  I don't know why it's splitting on
+          ;; #\newline, but it is.
+          (pregexp-quote
+           (first
+            (string-tokenize
+             spam
+             (char-set-complement
+              (char-set #\newline)))))))
+
+        (say-to-bot "seen spammer"))))
+
     (test-suite
      "short strings from server"
      (test-equal? "empty string" (get-retort "") "")
