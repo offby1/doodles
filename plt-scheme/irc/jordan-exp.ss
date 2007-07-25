@@ -60,8 +60,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;(trace all-jordanb-quotes)
 (define (one-jordanb-quote)
-  (let ((all (all-jordanb-quotes
-              (directory-list (build-path (find-system-path 'home-dir) "log") ))))
+  (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
+         (all (all-jordanb-quotes
+              (filter file-exists?
+              (map
+               (lambda (rfn) (build-path log-dir rfn))
+               (directory-list log-dir ))))))
 
     (list-ref all (random (length all)))))
 
@@ -82,8 +86,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (trim-leading-space str)
   (regexp-replace #rx"^[ \t]+" str ""))
 
-
-
 ;; (listof string?) -> input-port?
 (define (cat filenames)
   (let-values (((ip op)
@@ -99,16 +101,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (lambda (fn)
           (call-with-input-file fn
             (lambda (file-ip)
-              (copy-port file-ip op)
               (fprintf
                (current-error-port)
-               "Copied ~s.  Pipe has ~a bytes in it.~%"
-               fn
-               (fmt #f (num/comma (pipe-content-length op)))))))
+               "Pipe has ~a bytes in it; about to copy ~a bytes from ~s.~%"
+               (fmt #f (num/comma (pipe-content-length op)))
+               (fmt #f (num/comma (file-size fn)))
+               fn)
+              (copy-port file-ip op))))
         filenames)
        (close-output-port op)))
     ip))
-(trace cat)
+;(trace cat)
 
 ;; input-port? -> input-port?
 (define (stripper ip)
@@ -128,7 +131,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (close-output-port op)
        ))
     rv))
-(trace stripper)
+;(trace stripper)
 
 ;; input-port? -> input-port?
 (define (joiner ip)
@@ -140,36 +143,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (let ((line (read-line ip)))
            (cond
             ((eof-object? line)
-             ;; BUGBUG?  Should we emit it even if it's empty?
-             (fprintf (current-error-port)
-                      "Nothing more to read; emitting leftover ~s~%"
-                      one-partial-utterance)
              (display  one-partial-utterance op)
              (newline op))
             ((beginning-of-utterance? line)
              (when (positive? (string-length one-partial-utterance))
-                 (fprintf (current-error-port)
-                          "~s is complete~%"
-                          one-partial-utterance)
                  (display one-partial-utterance op)
                  (newline op))
              (loop (trim-leading-space line)))
             (else
              (let ((addendum (trim-leading-space line)))
                (loop (if (positive? (string-length addendum))
-                         (begin
-                           (fprintf (current-error-port)
-                                    "Extending ~s with ~s~%"
-                                    one-partial-utterance
-                                    addendum)
-                           (string-append one-partial-utterance
-                                          " "
-                                          addendum))
+                         (string-append one-partial-utterance
+                                        " "
+                                        addendum)
                        one-partial-utterance
                        )))))))
        (close-output-port op)))
     rv))
-(trace joiner)
+;(trace joiner)
 
 (when (positive?
        (test/text-ui
