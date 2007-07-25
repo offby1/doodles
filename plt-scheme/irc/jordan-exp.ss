@@ -19,7 +19,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                second
                take
                third)
-         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo)
+         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
          (only (planet "port-to-lines.ss" ("offby1" "offby1.plt"))
                file->lines
                port->lines
@@ -69,7 +69,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; hmm ... if a new file appears while the bot is running, it'll
 ;; invalidate this function's memoization cache, and force a complete
 ;; re-read.  Lotta work for little benefit.
-(define/memo (all-jordanb-quotes filenames)
+(define/memo* (all-jordanb-quotes filenames)
   (if (and (*cache-file-name*)
            (file-exists? (*cache-file-name*)))
       (begin
