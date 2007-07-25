@@ -16,7 +16,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "port-to-lines.ss" ("offby1" "offby1.plt")) file->lines)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
+         (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+         (planet "fmt.ss"       ("ashinn"      "fmt.plt")))
 (provide all-jordanb-quotes
          one-jordanb-quote)
 
@@ -44,7 +45,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; it takes about half a minute to snarf up the files and grep them,
 ;; so we memoize this -- so that the second and subsequent calls are
 ;; fast.
-(define/memo (all-jordanb-quotes . lines)
+(define (all-jordanb-quotes . lines)
 
   (define (grep lines)
     (filter (lambda (line)
@@ -60,7 +61,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (if (null? lines)
       (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
-             (files   (take (directory-list log-dir) 3)))
+             (files
+              (directory-list log-dir)
+              ;;  (take (directory-list log-dir) 3)
+              ))
 
         (append-map
          (lambda (fn)
@@ -68,7 +72,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (if (file-exists? fn)
                  (begin
                    (fprintf (current-error-port)
-                            "Reading ~a~%" fn)
+                            "Reading ~a bytes from ~a~%"
+                            (fmt #f (num/comma  (file-size fn)))
+                            fn)
                    (file->lines fn))
                '())))
          files))
