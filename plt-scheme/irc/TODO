@@ -100,3 +100,11 @@ rudebot should reciprocate.
   something.  Every time we JOIN we create a new one and save it in a
   list.  The as-yet-unwritten "do-when-channel-idle" would take it as
   an argument.
+
+* planet snarfing at startup
+  Currently when we start up, we snarf all the headlines but don't
+  emit any of them, since they're all older than (current-date).  That
+  guarntees that we won't spew old news when we start (which is
+  annoying when I'm constantly restarting the bot).  But ideally we'd
+  spew _one_ old headline -- the latest -- at startup, just to prove
+  we can.
