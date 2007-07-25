@@ -80,24 +80,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 
-;; (listof string?) -> input-port?
-(define (cat filenames)
-  (let-values (((ip op) (make-pipe)))
-    (thread
-     (lambda ()
-       (for-each
-        (lambda (fn)
-          (call-with-input-file fn
-            (lambda (file-ip)
-              (copy-port file-ip op))))
-        filenames)
-       (close-output-port op)))
-    ip))
-
-(trace cat)
-
-
-
 ;; returns #f if the string doesn't look like the beginning of an
 ;; utterance.  If it does look like one, then returns a list, the
 ;; third element of which is the speaker's nick.
@@ -137,6 +119,39 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (cdr input)))))
   (internal '() "" seq))
 
+
+
+;; (listof string?) -> input-port?
+(define (cat filenames)
+  (let-values (((ip op)
+                ;; I might want to add a LIMIT-K argument, to keep the
+                ;; pipe from getting too full.  Without that argument,
+                ;; the new thread will never block, thus filling
+                ;; memory.
+                (make-pipe)
+                ))
+    (thread
+     (lambda ()
+       (for-each
+        (lambda (fn)
+          (call-with-input-file fn
+            (lambda (file-ip)
+              (copy-port file-ip op)
+              (fprintf
+               (current-error-port)
+               "Copied ~s.  Pipe has ~a bytes in it.~%"
+               fn
+               (fmt #f (num/comma (pipe-content-length op)))))))
+        filenames)
+       (close-output-port op)))
+    ip))
+(trace cat)
+
+;; input-port? -> input-port?
+(define (stripper-joiner ip)
+  (open-input-string "  Two spaces."))
+
+
 (test/text-ui
  (test-suite
   "huh?"
@@ -190,10 +205,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (port->lines (cat (list "yin" "yang")))
    (list
     "One yin line."
-    "An unterminated yin line.Jerry Yang has no wang.")))
+    "An unterminated yin line.Jerry Yang has no wang."))
 
-  )
+  (test-suite
+   "stripper-joiner"
+   (test-case
+    "just stripping"
+    (check-equal?
+     (port->lines (stripper-joiner (open-input-string "[12:34]  Two spaces.")))
+     (list "  Two spaces."))
+    (check-equal?
+     (port->lines (stripper-joiner (open-input-string "  [12:34] Zamfir knows all.")))
+     (list " Zamfir knows all.")))
 
- )
+   ))))
+
 
 )
