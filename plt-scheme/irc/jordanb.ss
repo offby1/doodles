@@ -28,7 +28,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
          (all-except (planet "fmt.ss"       ("ashinn"      "fmt.plt")) cat))
-(provide all-jordanb-quotes
+(provide *cache-file-name*
+         all-jordanb-quotes
          one-jordanb-quote)
 
 (define *pipe-max-bytes* 4096)
@@ -255,7 +256,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (when (positive?
        (test/text-ui
         (test-suite
-         "Jordan-exp"
+         "Jordanb"
+
+
+         ;; this test is harder to write than it looks, since the
+         ;; exception gets thrown in a separate thread.
+;;          (test-not-exn
+;;           "doesn't panic on non-existing file"
+;;           (lambda ()
+;;             (parameterize ((*cache-file-name* #f))
+;;                           (all-jordanb-quotes (list "snsldkfjdlfkjdsf")))))
+
          (test-suite
           "beginning-of-utterance?"
           (test-not-false
@@ -279,7 +290,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (check-equal?
            (car
             (parameterize ((*cache-file-name* #f))
-            (all-jordanb-quotes-no-memoizing (list "just-one-jordanb-quote.txt"))))
+                          (all-jordanb-quotes-no-memoizing (list "just-one-jordanb-quote.txt"))))
            "<jordanb> Let's start making a list. it'd be so coool."))
          (test-suite
           "filters"
@@ -319,7 +330,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (check-equal?
             (port->lines (joiner (open-input-string "<x> hey you\n\n\n\n\n\n\n")))
             (list "<x> hey you"))
-           )))))
+           )))
+        ))
   (exit 1))
 
 )
