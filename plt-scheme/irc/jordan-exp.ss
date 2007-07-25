@@ -43,6 +43,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     timestamp-regex
                     "[[:space:]]*$")
                    ) str ""))
+(define (nuke-leading-timetamp str)
+  (regexp-replace (pregexp
+                   (string-append
+                    "^[[:space:]]*"
+                    timestamp-regex))
+                  str ""
+                  ))
 ;(trace nuke-trailing-timestamp)
 (define test-list-of-lines (list "[12:42 PM]<jordanb> Let's start making a list.                [12:34]"))
 
@@ -149,8 +156,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; input-port? -> input-port?
 (define (stripper-joiner ip)
-  (open-input-string "  Two spaces."))
-
+  (let-values (((rv op)
+                (make-pipe)))
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((line (read-line ip)))
+           (when (not (eof-object? line))
+             (display (nuke-leading-timetamp line)
+                      op)
+             (newline op)
+             (loop))))
+       (close-output-port op)
+       ))
+    rv))
+(trace stripper-joiner)
 
 (test/text-ui
  (test-suite
