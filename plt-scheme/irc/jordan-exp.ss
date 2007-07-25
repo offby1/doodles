@@ -190,8 +190,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (port->lines (cat (list "yin" "yang")))
    (list
     "One yin line."
-    "An unterminated yin line."
-    "Jerry Yang has no wang.")))
+    "An unterminated yin line.Jerry Yang has no wang.")))
 
   )
 
