@@ -55,10 +55,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (planet-emacsen-news)
   (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
-  (html->shtml
-   (port->string (get-pure-port
-                  (string->url "http://planet.emacsen.org/atom.xml")
-                  (list)))))
+  (let ((rv (html->shtml
+             (port->string (get-pure-port
+                            (string->url "http://planet.emacsen.org/atom.xml")
+                            (list))))))
+    (vtprintf " (~a items, in fact)~%"
+              (length ((sxpath '(feed entry)) rv)))))
 
 (define (static-news-for-testing)
   (vtprintf "SNARFing test data from file.  Chill.~%")
