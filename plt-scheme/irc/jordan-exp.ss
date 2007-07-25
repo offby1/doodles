@@ -47,39 +47,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; fast.
 (define (all-jordanb-quotes . lines)
 
-  (define (grep lines)
-    (filter (lambda (line)
-              (let ((bou (beginning-of-utterance? line)))
-                (and bou
-                     (string-ci=? (third bou) "jordanb")
-                     (regexp-match
-                      (regexp
-                       "(?i:(let.?s.*)$)")
-                      line))))
-            (join-broken-IRC-lines (map nuke-trailing-timestamp
-                                        lines))))
 
   (if (null? lines)
       (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
              (files
-              (directory-list log-dir)
-              ;;  (take (directory-list log-dir) 3)
+              (list "1MB" "2MB" "5MB"
+                    "10MB" "20MB" "50MB"
+                    "100MB")
               ))
-
-        (append-map
-         (lambda (fn)
-           (let ((fn (build-path log-dir fn)))
-             (if (file-exists? fn)
-                 (begin
-                   (fprintf (current-error-port)
-                            "Reading ~a bytes from ~a~%"
-                            (fmt #f (num/comma  (file-size fn)))
-                            fn)
-                   (file->lines fn))
-               '())))
-         files))
-    (grep (car lines)))
+        ;; today's idea: use a bunch of threads.  The first thread is
+        ;; "cat" -- give it a list of file names, and it will shove
+        ;; their contents, one line at a time, onto an input either a
+        ;; pipe (as in "make-pipe") or a channel (I dunno which would
+        ;; be better).  The next thread strips timestamps and joins
+        ;; lines.  The last selects just the jordanb quotes.
+        'boo!))
+  (list "The jordanb quotes are on vacation.")
   )
+
 
 ;(trace all-jordanb-quotes)
 (define (one-jordanb-quote)
@@ -88,6 +73,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (r (random l)))
     (list-ref all r))
   )
+
+
+
+;; (listof string?) -> input-port?
+(define (cat filenames)
+  (let-values (((ip op) (make-pipe)))
+    (printf "Well, that was fun.~%")))
 
 
 
