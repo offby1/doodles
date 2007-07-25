@@ -25,6 +25,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide all-jordanb-quotes
          one-jordanb-quote)
 
+(define *pipe-max-bytes* 4096)
+
 ;; TODO -- perhaps, instead of grabbing quotes from my ~/log
 ;; directory, I should find some public logging service that logs
 ;; #emacs, and grab quotes from it.  The advantage is that anyone,not
@@ -93,7 +95,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ;; pipe from getting too full.  Without that argument,
                 ;; the new thread will never block, thus filling
                 ;; memory.
-                (make-pipe)
+                (make-pipe *pipe-max-bytes*)
                 ))
     (thread
      (lambda ()
@@ -116,7 +118,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; input-port? -> input-port?
 (define (stripper ip)
   (let-values (((rv op)
-                (make-pipe)))
+                (make-pipe *pipe-max-bytes*)))
     (thread
      (lambda ()
        (let loop ()
@@ -136,7 +138,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; input-port? -> input-port?
 (define (joiner ip)
   (let-values (((rv op)
-                (make-pipe)))
+                (make-pipe *pipe-max-bytes*)))
     (thread
      (lambda ()
        (let loop ((one-partial-utterance ""))
