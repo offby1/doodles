@@ -184,14 +184,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (let ((line (read-line ip)))
            (cond
             ((eof-object? line)
+             ;; BUGBUG?  Should we emit it even if it's empty?
+             (fprintf (current-error-port)
+                      "Nothing more to read; emitting leftover ~s~%"
+                      one-partial-utterance)
              (display  one-partial-utterance op)
              (newline op))
             ((beginning-of-utterance? line)
              (when (positive? (string-length one-partial-utterance))
+                 (fprintf (current-error-port)
+                          "~s is complete~%"
+                          one-partial-utterance)
                  (display one-partial-utterance op)
                  (newline op))
              (loop (trim-leading-space line)))
             (else
+             (fprintf (current-error-port)
+                      "Joining ~s to ~s~%"
+                      one-partial-utterance
+                      (trim-leading-space line))
              (loop (string-append one-partial-utterance
                                   " "
                                   (trim-leading-space line)))))))
@@ -277,6 +288,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (port->lines (joiner (open-input-string "<x> hey you\n  <y>I said hey you")))
             (list "<x> hey you"
                   "<y>I said hey you"))
+           (check-equal?
+            (port->lines (joiner (open-input-string "<x> hey you\n\n\n\n\n\n\n")))
+            (list "<x> hey you"))
            )))))
   (exit 1))
 
