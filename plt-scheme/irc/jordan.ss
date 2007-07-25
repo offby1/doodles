@@ -8,7 +8,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (only (lib "1.ss" "srfi")
                append-map
                second)
-         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo))
+         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo)
+         (planet "fmt.ss"       ("ashinn"      "fmt.plt"))
+         "vprintf.ss")
 (provide one-jordanb-quote)
 
 ;; TODO -- perhaps, instead of grabbing quotes from my ~/log
@@ -44,9 +46,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (call-with-input-file
                               fn
                             (lambda (ip)
+                              (vtprintf
+                               "grepping through ~a bytes from ~a~%"
+                               (fmt #f (num/comma  (file-size fn)))
+                               fn)
                               (grep #rx"(?i:<jordanb> +(let.?s.*)$)" ip)))
                         '())))
                   files)))
+    (vtprintf "I now know ~a jordanb quotes.~%"
+              (fmt #f (num/comma (length quotes))))
     quotes
     ))
 
