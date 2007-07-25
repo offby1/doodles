@@ -38,7 +38,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "parse-message.ss"
          "globals.ss"
-         "jordan.ss"
+         "jordan-exp.ss"
          "planet-emacsen.ss"
          "vprintf.ss"
          "../web/quote-of-the-day.ss")

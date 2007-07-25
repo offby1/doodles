@@ -2,6 +2,24 @@
 
 -- High priority
 
+* jordanb quotes
+
+** I forgot to truncate the leading "<jordanb> " !
+
+** Many quotes look like this:
+
+        <jordanb> Let's make a phone system with in-band dialing. *** Users on #emacs: zion TSC
+
+I.e., somehow I thought the "*** Users on #emacs: zion TSC" line was
+part of his utterance when it really wasn't.  This is a tricky
+problem.  Ideas:
+
+*** if the first line ends with a period, don't even bother looking at the next line
+
+*** guess which lines aren't "addenda" by examining the first few characters
+    There are a bunch of notes in the comments around line 200 in
+    jordan-exp.ss
+
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
@@ -50,16 +68,9 @@
 
 * jordanb quotes
 
-** multi-line quotes get truncated
-   I.e., I suspect they occupy more than one line in the log file in
-   ~/log, but my simpleminded "grep" function only retrieves the first
-   line.
-
-** some quotes contain timestamps
-   like this:
-
-    <rudybot> Let's live in a basement down the stairs on montague street.
-              [14:09]
+** Play with pipe size
+  I think it's 4096 now, or something.  See if bigger or smaller
+  values make it faster.
 
 ** Cancelling the thread takes a while
   I.e., I say "shaddap", and it emits a few more quotes before going
