@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module jordan-exp mzscheme
-(require (lib "port.ss")
+(require (only (lib "etc.ss") this-expression-source-directory)
+         (lib "port.ss")
          (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                append-map
@@ -58,7 +59,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; so we memoize this -- so that the second and subsequent calls are
 ;; fast.
 (define (all-jordanb-quotes filenames)
-  (port->lines (joiner (stripper (cat filenames)))))
+  (let ((rv (port->lines (joiner (stripper (cat filenames))))))
+    (let ((cache-file-name
+           (build-path
+            (this-expression-source-directory)
+            "cache.ss")))
+      (call-with-output-file
+          cache-file-name
+        (lambda (op)
+          (for-each
+           (lambda (quote)
+             (write quote op)
+             (newline op))
+           rv))
+        'truncate/replace)
+      (fprintf (current-error-port)
+               "Wrote ~a (whew!) ~%" cache-file-name))
+    rv))
 
 ;(trace all-jordanb-quotes)
 (define (one-jordanb-quote)
@@ -67,7 +84,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (filter file-exists?
               (map
                (lambda (rfn) (build-path log-dir rfn))
-               (directory-list log-dir ))))))
+               (take (directory-list log-dir ) 10))))))
 
     (list-ref all (random (length all)))))
 
