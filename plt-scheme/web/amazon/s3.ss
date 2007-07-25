@@ -91,7 +91,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (current-command-line-arguments)
  *amazon-command-line-parsing-table*
  (lambda (flag-accum)
-
+   (unless (SecretAccessKey)
+     (raise-user-error "You must provide a secret access key on the command line"))
    (printf "Known buckets: ~a ~%"
            ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
    (printf "Creating a bucket: ~a~%"
