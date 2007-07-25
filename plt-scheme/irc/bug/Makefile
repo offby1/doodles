@@ -1,2 +1,2 @@
 check:
-	mzc --exe bot run-bot.ss  && ./bot
+	mzc --exe bug bug.ss  && ./bug
