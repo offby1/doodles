@@ -29,10 +29,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
          (all-except (planet "fmt.ss"       ("ashinn"      "fmt.plt")) cat))
 (provide *cache-file-name*
+         *pipe-max-bytes*
          all-jordanb-quotes
          one-jordanb-quote)
 
-(define *pipe-max-bytes* 4096)
+(define *pipe-max-bytes* (make-parameter 4096))
 
 ;; TODO -- perhaps, instead of grabbing quotes from my ~/log
 ;; directory, I should find some public logging service that logs
@@ -138,7 +139,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ;; pipe from getting too full.  Without that argument,
                 ;; the new thread will never block, thus filling
                 ;; memory.
-                (make-pipe *pipe-max-bytes*)))
+                (make-pipe (*pipe-max-bytes*))))
     (thread (lambda () (writer op)))
     ip))
 
