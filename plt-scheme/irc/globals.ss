@@ -14,7 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow's bot")
-(define *client-version* (make-parameter "unknown 0"))
+(define *client-version* (make-parameter "$Rev$")) ;better than nothing
 
 ;; *sigh*.  The version string with which we reply to CTCP can't have
 ;; a colon, but of course Subversion's keyword expansion inserted a

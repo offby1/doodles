@@ -13,6 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "process.ss"))
 
 ;; (listof string?) -> string?
+(provide (all-defined))
 (define (system-args->string exe . args)
   (let ((output-port (open-output-string (cons exe args))))
     (let-values (((stdout-ip stdin-op pid err-ip controller)
@@ -28,5 +29,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (controller 'wait)
       (get-output-string output-port)))
   )
-(display (system-args->string (path->string (find-executable-path "svnversion")) "."))
 )

@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 this-expression-source-directory)
           "bot.ss"
           "globals.ss"
+          "system.ss"
           (only "planet-emacsen.ss" planet-emacsen-input-port))
 (planet-emacsen-input-port
  (open-input-file
@@ -46,13 +47,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
       (local-atom?  (not (not (planet-emacsen-input-port)))))
   ;; if we're talking to something other than localhost, we should
-  ;; probaby be hitting planet.emacsen for real
+  ;; probably be hitting planet.emacsen for real
   (when (not (equal? local-atom? local-irc?))
     (fprintf (current-error-port)
              "WARNING: you're connecting to IRC server ~a but using ~s for your planet.emacsen feed~%"
              (*irc-server-name*)
              (object-name (planet-emacsen-input-port)))
-    (sleep 10)))
+    (sleep 10))
+
+  ;; if we're talking to a remote server, let's take some time to
+  ;; identify as best we can.
+  (when (not local-irc?)
+    (*client-version*
+     (regexp-replace
+      #rx"\n$"
+      (system-args->string
+      (find-executable-path "svnversion")
+      (path->string (this-expression-source-directory)))
+      ""))
+    (printf "We are ~s~%" (*client-version*)))
+  )
 
 
 (let-values (((ip op)
