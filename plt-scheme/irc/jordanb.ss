@@ -271,9 +271,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (test-pred
           "doesn't panic on non-existing file"
           null?
-          (parameterize ((*cache-file-name* #f))
-                        (fprintf (current-error-port)
-                                 "You may safely ignore this error --> ")
+          (parameterize ((*cache-file-name* #f)
+                         (current-error-port (open-output-bytes)))
                         (all-jordanb-quotes (list "snsldkfjdlfkjdsf"))))
 
          (test-suite
@@ -307,7 +306,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "the whole shebang"
           (check-equal?
            (car
-            (parameterize ((*cache-file-name* #f))
+            (parameterize ((*cache-file-name* #f)
+                           (current-error-port (open-output-bytes)))
                           (all-jordanb-quotes-no-memoizing
                            (list
                             (build-path
@@ -328,12 +328,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "filters"
           (test-equal?
            "cat"
-           (port->lines (cat (map (lambda (rfn)
+           (port->lines (parameterize ((current-error-port (open-output-bytes)))
+                        (cat (map (lambda (rfn)
                                     (build-path
                                      (this-expression-source-directory)
                                      "test-data"
                                      rfn))
-                                  (list "yin" "yang"))))
+                                  (list "yin" "yang")))))
            (list
             "One yin line."
             "An unterminated yin line.Jerry Yang has no wang."))
