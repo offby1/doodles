@@ -3,7 +3,7 @@ incomplete IRC bot.
 
 To run the bot, try "./run-bot.ss --help".  
 
-To do very crude code-coverage analysis, type "./coverage.ss".
+To do very crude code-coverage analysis, type "./tools/coverage.ss".
 
 Some tests:
 
