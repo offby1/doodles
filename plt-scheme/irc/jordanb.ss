@@ -31,6 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide *cache-file-name*
          *pipe-max-bytes*
          all-jordanb-quotes
+         one-jordanb-quote-no-memoizing ;only for testing
          one-jordanb-quote)
 
 (define *pipe-max-bytes* (make-parameter 4096))
@@ -106,9 +107,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     rv))
 
 ;(trace all-jordanb-quotes)
-(define (one-jordanb-quote)
+(define (one-quote-internal getter-of-all-quotes)
   (let* ((log-dir (build-path (find-system-path 'home-dir) "log"))
-         (all (all-jordanb-quotes
+         (all (getter-of-all-quotes
               (filter file-exists?
               (map
                (lambda (rfn) (build-path log-dir rfn))
@@ -116,6 +117,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (list-ref all (random (length all)))))
 
+(define (one-jordanb-quote)
+  (one-quote-internal all-jordanb-quotes))
+
+(define (one-jordanb-quote-no-memoizing)
+  (one-quote-internal all-jordanb-quotes-no-memoizing))
 
 
 ;; returns #f if the string doesn't look like the beginning of an
@@ -152,7 +158,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (with-handlers
             ((exn:fail:filesystem?
               (lambda (e)
-                (printf "~a -- keepin' on keepin' on~%"
+                (fprintf (current-error-port)
+                         "~a -- keepin' on keepin' on~%"
                         (exn-message e))
                 )))
           (call-with-input-file fn
@@ -265,6 +272,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "doesn't panic on non-existing file"
           null?
           (parameterize ((*cache-file-name* #f))
+                        (fprintf (current-error-port)
+                                 "You may safely ignore this error --> ")
                         (all-jordanb-quotes (list "snsldkfjdlfkjdsf"))))
 
          (test-suite
