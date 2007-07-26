@@ -1,14 +1,18 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 ;; I am just a driver for the planet-emacsen module; once it's
 ;; properly working, and integrated into the bot, I will no longer be
 ;; needed.
 
+(module run-pe mzscheme
 (require "planet-emacsen.ss"
+         (lib "cmdline.ss")
+         (only (lib "etc.ss")
+               this-expression-source-directory)
          (lib "async-channel.ss")
          (rename (lib "19.ss" "srfi") 19:make-date make-date)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
@@ -27,22 +31,23 @@ exec mzscheme -M errortrace -qr "$0" ${1+"$@"}
          (lib "pretty.ss")
          (only "globals.ss" *verbose*))
 
-(define *some-time-ago*
-  (rfc3339-string->srfi19-date/constructor
-   "2007-07-16T19:59:00+00:00"
-   19:make-date))
+(parameterize ((*verbose* #t)
+               (planet-emacsen-input-port
+                (open-input-file
+                 (build-path
+                  (this-expression-source-directory)
+                  "example-planet-emacsen.xml"))))
+              (let ((the-channel
+                     (queue-of-entries)))
+                (let loop ()
+                  (let ((datum (async-channel-try-get the-channel)))
+                    (if datum
+                        (pretty-print datum)
+                      (begin
+                        (printf "No data; sleeping~%")
+                        (sleep 2))))
+                  (loop)
+                  )))
 
-(parameterize ((*verbose* #t))
-(let ((the-channel (channel-of-entries-since *some-time-ago*)))
-  (let loop ()
-    (let ((datum (async-channel-try-get the-channel)))
-      (if datum
-          (pretty-print datum)
-        (begin
-          (printf "No data; sleeping~%")
-          (sleep 2))))
-    (loop)
-    )))
 
-
-(newline)
+(newline))

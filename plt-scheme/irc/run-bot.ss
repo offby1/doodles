@@ -6,8 +6,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module run-bot mzscheme
 (require  (lib "cmdline.ss")
+          (only (lib "etc.ss")
+                this-expression-source-directory)
           "bot.ss"
-          "globals.ss")
+          "globals.ss"
+          (only "planet-emacsen.ss" planet-emacsen-input-port))
+(planet-emacsen-input-port
+ (open-input-file
+  (build-path
+   (this-expression-source-directory)
+   "example-planet-emacsen.xml")))
 (command-line
  "bot"
  (current-command-line-arguments)
@@ -24,6 +32,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*my-nick* nick))
   (("-j" "--jordan") secs "Seconds to wait before emitting a jordanb quote"
    (*jordanb-quote-interval* (string->number secs)))
+  (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
+   (planet-emacsen-input-port #f))
   (("-v" "--verbose")
     "Spew I/O to stdout"
     (*verbose* #t))
@@ -32,6 +42,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (multi
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
+
+(let ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
+      (local-atom?  (not (not (planet-emacsen-input-port)))))
+  ;; if we're talking to something other than localhost, we should
+  ;; probaby be hitting planet.emacsen for real
+  (when (not (equal? local-atom? local-irc?))
+    (fprintf (current-error-port)
+             "WARNING: you're connecting to IRC server ~a but using ~s for your planet.emacsen feed~%"
+             (*irc-server-name*)
+             (object-name (planet-emacsen-input-port)))
+    (sleep 10)))
+
 
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))

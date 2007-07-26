@@ -33,6 +33,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                make-time
                time-duration
                time-utc->date
+               time>?
                )
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
@@ -279,10 +280,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                (string=? channel "#bots")
                                (string=? channel "#emacs"))
                               (not *planet-emacs-task*))
+                     ;; TODO: perhaps the planet module should export
+                     ;; a time, not a date, since obviously I _want_ a
+                     ;; time, not a date ...
                      (set! *planet-emacs-task*
-                           (let ((the-queue
-                                  (queue-of-entries-since
-                                   (current-date))))
+                           (let ((the-queue (queue-of-entries))
+                                 (number-spewed 0)
+                                 (time-of-latest-spewed-entry
+                                  (date->time-utc
+                                   (rfc3339-string->srfi19-date/constructor
+                                    "2000-00-00T00:00:00+00:00"
+                                    19:make-date))))
                              (do-in-loop
                               ;; choosing the "correct" interval here
                               ;; is subtle.  Ideally the interval
@@ -300,10 +308,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               20
                               (lambda ()
                                 (let ((datum (async-channel-try-get the-queue)))
-                                  (if datum
-                                      (put (format "PRIVMSG ~a :~a"
-                                                   channel
-                                                   (entry->string datum)))
+                                  ;; spew any _new_ entries that we
+                                  ;; haven't already spewed ... but
+                                  ;; also spew the single newest entry
+                                  ;; even if it's kind of old.
+                                  (if (or
+                                       (zero? number-spewed)
+                                       (and datum
+                                            (time>?
+                                             (date->time-utc
+                                              (entry-datestamp datum))
+                                             time-of-latest-spewed-entry)))
+                                      (begin
+                                        (put (format "PRIVMSG ~a :~a"
+                                                     channel
+                                                     (entry->string datum)))
+                                        (set! number-spewed (add1 number-spewed))
+                                        (vtprintf "So how do ~s and ~s differ?!~%"
+                                                  (entry-datestamp datum)
+                                                  time-of-latest-spewed-entry)
+                                        (when (time>?
+                                               (date->time-utc
+                                                (entry-datestamp datum))
+                                               time-of-latest-spewed-entry)
+                                          (set! time-of-latest-spewed-entry
+                                                (date->time-utc
+                                                 (entry-datestamp datum)))))
                                     (vtprintf "Nothing new on planet emacs~%")))
                                 ))))))))
 

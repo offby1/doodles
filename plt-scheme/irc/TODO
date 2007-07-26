@@ -2,8 +2,8 @@
 
 -- High priority
 
-* test planet-emacsen.ss!
-  There are _no_ tests at all for it.  None.  Zip.  Bupkus.
+* test planet-emacsen.ss better
+  There are almost no tests at all for it; there's just run-pe.ss.
 
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
