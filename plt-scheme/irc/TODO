@@ -15,6 +15,9 @@
 
 ** Maybe registering the nick on freenode will help.
 
+** Maybe simply detecting them
+   ... and then exiting, is better than doing nothing
+
 -- Low priority
 
 * Convert from strings to bytes
