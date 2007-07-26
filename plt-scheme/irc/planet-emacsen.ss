@@ -15,8 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "etc.ss")
                this-expression-source-directory)
          (only (lib "1.ss" "srfi")
-               filter
-               take)
+               filter)
          (only (lib "19.ss" "srfi" )
                current-date
                date->time-utc
@@ -27,8 +26,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "uri-codec.ss" "net")
                current-alist-separator-mode)
 
-         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
-               rfc3339-string->srfi19-date/constructor)
+         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt")) rfc3339-string->srfi19-date/constructor)
          (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
                html->shtml)
          (only (planet "port.ss"      ("schematics"  "port.plt" ))
@@ -81,51 +79,46 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (internal-entries-newer-than (static-news-for-testing) srfi-19-date))
 
 ;; returned entries are sorted oldest first.
-(define (internal-entries-newer-than news srfi-19-date minimum)
+(define (internal-entries-newer-than news srfi-19-date)
 
-  (let* ((entries
-          ((sxpath '(feed entry))
-           news))
-         (filtered
-          (sort
-           (filter
-            (lambda (triplet)
-              (time>?
-               (date->time-utc (entry-timestamp triplet))
-               (date->time-utc srfi-19-date)))
+  (let ((entries
+         ((sxpath '(feed entry))
+          news)))
 
-            (map
-             (lambda (entry)
-               (let* ((updated
-                       ;; if only the Atom spec ensured that all the time
-                       ;; zones are the same, all I would have needed to do is
-                       ;; ensure that srfi-19-date uses the same zone, and
-                       ;; then just compare the strings.  But alas.
-                       (rfc3339-string->srfi19-date/constructor
-                        (car
-                         ((sxpath '(updated *text*))
-                          entry))
-                        19:make-date))
-                      (title
-                       (car
-                        ((sxpath '(title *text*))
-                         entry)))
-                      (link
-                       ((sxpath '(link @ href *text*))
-                        entry)))
-                 (make-entry updated title link)))
+    (sort
+     (filter
+      (lambda (triplet)
+        (time>?
+         (date->time-utc (entry-timestamp triplet))
+         (date->time-utc srfi-19-date)))
 
-             entries))
+      (map
+       (lambda (entry)
+         (let* ((updated
+                 ;; if only the Atom spec ensured that all the time
+                 ;; zones are the same, all I would have needed to do is
+                 ;; ensure that srfi-19-date uses the same zone, and
+                 ;; then just compare the strings.  But alas.
+                 (rfc3339-string->srfi19-date/constructor
+                  (car
+                   ((sxpath '(updated *text*))
+                    entry))
+                  19:make-date))
+                (title
+                 (car
+                  ((sxpath '(title *text*))
+                   entry)))
+                (link
+                 ((sxpath '(link @ href *text*))
+                  entry)))
+           (make-entry updated title link)))
 
-           (lambda (e1 e2)
-             (time<?
-              (date->time-utc (entry-timestamp e1))
-              (date->time-utc (entry-timestamp e2)))))))
-    (if (< (length filtered) minimum)
-        (take filtered (min (length filtered)
-                            minimum))
-        filtered)
-    ))
+       entries))
+
+     (lambda (e1 e2)
+       (time<?
+        (date->time-utc (entry-timestamp e1))
+        (date->time-utc (entry-timestamp e2)))))))
 ;(trace internal-entries-newer-than)
 (define (entry->string triplet)
   (define (de-html str)
