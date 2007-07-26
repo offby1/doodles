@@ -90,6 +90,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 text)
         #:source source))
 
+(define (default-dumb-response recipient)
+  (format "PRIVMSG ~a :\u0001ACTION is at a loss for words.\u0001"
+          (cond
+           ((string? recipient)
+            recipient)
+           (recipient "#some-channel")
+           (else "some-nick"))))
 (define tests
   (test-suite
    "big ol' all-encompassing"
@@ -134,11 +141,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (test-equal?
      "echoes back stuff addressed to it, private message edition"
      (psend "hey you")
-     "PRIVMSG unit-test :Well, unit-test, I think hey you too.")
+     (default-dumb-response "unit-test"))
     (test-equal?
      "echoes, channel message edition"
      (say-to-bot "hey you")
-     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
+     (default-dumb-response #t))
     (test-equal?
      "deals with Unicode whitespace"
      (parameterize ((*whitespace-char*
@@ -147,11 +154,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       #x00A0
                       )))
      (say-to-bot "hey you"))
-     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
+     (default-dumb-response #t))
     (test-equal?
      "recognizes a comma after its nick"
      (say-to-bot "hey you" #:delimiter-char #\,)
-     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
+     (default-dumb-response #t))
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match
@@ -216,7 +223,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       ;; ignores 'seen' unless there's an actual argument
       (check-equal?
-       "PRIVMSG #some-channel :Well, unit-test, I think seen too."
+       (default-dumb-response #t)
        (say-to-bot "seen "))))
     (test-equal?
      "mostly ignores bots"

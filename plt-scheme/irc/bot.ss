@@ -205,6 +205,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                      (cond ((zero? r)
                             "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
                            ((< r 91)
+                            ;; TODO: here's a cute idea -- if
+                            ;; requestor appears to be jordanb
+                            ;; himself, return something utterly
+                            ;; unlike the usual jordanb quote --
+                            ;; something saccharine and Hallmark-y
                             (one-jordanb-quote))
                            (else
                             (let ((p (random-choice (quotes-of-the-day))))
@@ -213,9 +218,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                              (cdr p)))))
                      ))
                   (else
-                   (format "Well, ~a, I think ~a too."
-                           requestor
-                           (string-join message-tokens))))))
+                   "\u0001ACTION is at a loss for words.\u0001"))))
 
             (put (format "PRIVMSG ~a :~a"
                          (if was-private? requestor channel-name)
@@ -378,8 +381,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         (seconds->date (current-seconds))
                                         (string-join (cdr tokens))
                                         (not (not CTCP-message)))))
-                       (vprintf "putting key ~s, value ~s in times-by-nick~%"
-                                source utterance)
                        (hash-table-put! times-by-nick source utterance)
                        (hash-table-put! times-by-nick-by-channel destination times-by-nick)))
 
