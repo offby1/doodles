@@ -52,10 +52,6 @@
 
 * jordanb quotes
 
-** Play with pipe size
-  I think it's 4096 now, or something.  See if bigger or smaller
-  values make it faster.
-
 ** Cancelling the thread takes a while
   I.e., I say "shaddap", and it emits a few more quotes before going
   away (at least, if the interval is just a few seconds).  It should
@@ -87,8 +83,10 @@
   "meow"
 
 * 
-<fledermaus> every time jordanb chips in with a "Let's..." statement,
-rudebot should reciprocate.
+  <fledermaus> every time jordanb chips in with a "Let's..."
+  statement, rudebot should reciprocate.
+
+  Or at least it should squirrel away the quip.
 
 * a "channel" abstraction
   It's uh ... a stream of messages.  Yeah.  Maybe a lazy stream.  Or

@@ -34,7 +34,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          one-jordanb-quote-no-memoizing ;only for testing
          one-jordanb-quote)
 
-(define *pipe-max-bytes* (make-parameter 4096))
+(define *pipe-max-bytes* (make-parameter #f))
 
 ;; TODO -- perhaps, instead of grabbing quotes from my ~/log
 ;; directory, I should find some public logging service that logs
