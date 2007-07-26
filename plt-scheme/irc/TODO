@@ -27,6 +27,9 @@
 
 -- Low priority
 
+* Maybe run svnversion
+  to generate the bot's ID string, instead of using the $Id$ keyword.
+
 * Move some stuff into a "tools" subdir
   anything that isn't essential to the actual running of the bot.
 
