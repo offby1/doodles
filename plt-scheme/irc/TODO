@@ -27,6 +27,11 @@
 
 -- Low priority
 
+* Move some stuff into a "tools" subdir
+  namely the compiling-the-jordanb-quotes thing, and
+  try-out-pipe-sizes, and ... anything else that isn't essential to
+  the actual running of the bot.
+
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
   given 2 ...".  That procedure application is happening in a thread
