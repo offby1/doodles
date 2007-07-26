@@ -13,7 +13,11 @@
   the nick is already registered?  (Answer: try again, specifying some
   other nick via the --nick command-line flag.)
 
-** Maybe registering the nick on freenode will help.
+** Now that I've registered some nicks on freenode ...
+   (namely "rudybot" and "rudebot"; they're "linked"), maybe that'll
+   help.  Perhaps it should do something like "/msg nickserv identify
+   <password>" when it starts up.  It should thus take a new
+   command-line flag for specifying the password.
 
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
