@@ -2,6 +2,9 @@
 
 -- High priority
 
+* test planet-emacsen.ss!
+  There are _no_ tests at all for it.  None.  Zip.  Bupkus.
+
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
@@ -23,6 +26,12 @@
    ... and then exiting, is better than doing nothing
 
 -- Low priority
+
+* Find some way to deal with exceptions in threads
+  e.g., "procedure internal-entries-newer-than: expects 3 arguments,
+  given 2 ...".  That procedure application is happening in a thread
+  other than the main one, and so rather than the whole app dying, it
+  just hangs.  This is annoying during development.
 
 * Convert from strings to bytes
   Wherever possible, change from using "string" procedures to "bytes"
