@@ -28,8 +28,7 @@
 -- Low priority
 
 * Move some stuff into a "tools" subdir
-  namely try-out-pipe-sizes, and ... anything else that isn't
-  essential to the actual running of the bot.
+  anything that isn't essential to the actual running of the bot.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
