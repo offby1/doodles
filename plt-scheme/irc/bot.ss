@@ -23,7 +23,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          (only (lib "14.ss" "srfi")
                char-set
-               char-set-complement)
+               char-set-complement
+               char-set:whitespace)
          (rename (lib "19.ss" "srfi") 19:make-date make-date)
          (only (lib "19.ss" "srfi")
                add-duration
@@ -47,7 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (*client-version* "$Rev$")
 
 (define (split str)
-  (string-tokenize str (char-set-complement (char-set #\space))))
+  (string-tokenize str (char-set-complement char-set:whitespace)))
 
 (define (strip-leading-colon str)
   (if (char=? #\: (string-ref str 0))

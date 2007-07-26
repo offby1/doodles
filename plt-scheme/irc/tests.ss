@@ -77,14 +77,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (psend text . args)
   (apply send (cons text (cons '#:recipient (cons (*my-nick*) args)))))
 
+(define *whitespace-char* (make-parameter #\space))
 (define/kw (say-to-bot
             text
             #:key
             [delimiter-char #\:]
             [source "unit-test"])
-  (send (format "~a~a ~a"
+  (send (format "~a~a~a~a"
                 (*my-nick*)
                 delimiter-char
+                (*whitespace-char*)
                 text)
         #:source source))
 
@@ -136,6 +138,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (test-equal?
      "echoes, channel message edition"
      (say-to-bot "hey you")
+     "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
+    (test-equal?
+     "deals with Unicode whitespace"
+     (parameterize ((*whitespace-char*
+                     (integer->char
+                      ;; NO-BREAK SPACE
+                      #x00A0
+                      )))
+     (say-to-bot "hey you"))
      "PRIVMSG #some-channel :Well, unit-test, I think hey you too.")
     (test-equal?
      "recognizes a comma after its nick"
@@ -239,13 +250,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (string-append
           "spammer last spoke at .*, saying \""
           ;; this seems fishy.  I don't know why it's splitting on
-          ;; #\newline, but it is.
+          ;; whitespace but it is.
           (pregexp-quote
            (first
             (string-tokenize
              spam
              (char-set-complement
-              (char-set #\newline)))))))
+              char-set:whitespace))))))
 
         (say-to-bot "seen spammer"))))
 

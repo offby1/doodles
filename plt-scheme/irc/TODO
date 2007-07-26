@@ -10,10 +10,12 @@
 * Deal with netsplits, or whatever the hell it is 
   ... that makes the bot not work even though /whois says it's still
   there.  Also, what do I do if it connects and the server says that
-  the nick is already registered?  (Try again, passing a --nick
-  command.)
+  the nick is already registered?  (Answer: try again, specifying some
+  other nick via the --nick command-line flag.)
 
 ** Maybe registering the nick on freenode will help.
+
+-- Low priority
 
 * Convert from strings to bytes
   Wherever possible, change from using "string" procedures to "bytes"
@@ -22,13 +24,11 @@
   better for the encoding to be explicit.  That way, eventually I
   could have per-channel encodings.
 
--- Low priority
-
-* maybe periodically see what channels _I'm_ in, and join them if it's
-  not already in them.  Like a little puppy dog.  This is harder than
-  it sounds, since it's not blindingly clear who "I" am -- sometimes
-  my nick changes.  It would probably be best to find me by host name,
-  not nick.
+* maybe periodically see what channels _I'm_ in ...
+  and join them if it's not already in them.  Like a little puppy dog.
+  This is harder than it sounds, since it's not blindingly clear who
+  "I" am -- sometimes my nick changes.  It would probably be best to
+  find me by host name, not nick.
 
 * allow it to be accessed by a REPL while it's running
   I don't really know what I mean by this, but: I often think of
@@ -41,12 +41,14 @@
 * Do the tinyurl thing!!
   I.e., whenever anyone utters a URL (that isn't itself a tinyurl),
   send it to tinyurl, and utter the tiny version.  A public service!
+  This is harder than it seems at first; I had some sort of trouble
+  with URL quoting.
 
 * Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
-  reviews" link; find Ebert's name.
-
-* When tokenizing, treat unicode whitespace as ... whitespace
+  reviews" link; find Ebert's name.  (I honestly think this would be
+  as reliable as searching on rogerebert.com; that site's design is as
+  lame as its content is excellent)
 
 * jordanb quotes
 
