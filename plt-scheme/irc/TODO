@@ -57,9 +57,9 @@
   away (at least, if the interval is just a few seconds).  It should
   be immediate.
 
-** Catch up the testing!
-  As often happens, development has pulled ahead of testing.  In
-  particular, the jordanb-quote-thread stuff isn't tested.
+** Consider moving the complex filtering stuff into a separate program
+  .. that greps the logs and writes the cache file.  It's complex, and
+  doesn't really belong inside the bot, n'est çe pas?
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
