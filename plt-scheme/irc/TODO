@@ -28,9 +28,8 @@
 -- Low priority
 
 * Move some stuff into a "tools" subdir
-  namely the compiling-the-jordanb-quotes thing, and
-  try-out-pipe-sizes, and ... anything else that isn't essential to
-  the actual running of the bot.
+  namely try-out-pipe-sizes, and ... anything else that isn't
+  essential to the actual running of the bot.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
@@ -77,10 +76,6 @@
   I.e., I say "shaddap", and it emits a few more quotes before going
   away (at least, if the interval is just a few seconds).  It should
   be immediate.
-
-** Consider moving the complex filtering stuff into a separate program
-  .. that greps the logs and writes the cache file.  It's complex, and
-  doesn't really belong inside the bot, n'est çe pas?
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot

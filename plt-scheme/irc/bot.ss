@@ -324,9 +324,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                      channel
                                                      (entry->string datum)))
                                         (set! number-spewed (add1 number-spewed))
-                                        (vtprintf "So how do ~s and ~s differ?!~%"
-                                                  (entry-datestamp datum)
-                                                  time-of-latest-spewed-entry)
                                         (when (time>?
                                                (date->time-utc
                                                 (entry-datestamp datum))

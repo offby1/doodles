@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module globals mzscheme
-(require (only (lib "1.ss" "srfi")
+(require (only (lib "etc.ss") this-expression-source-directory)
+         (only (lib "1.ss" "srfi")
                second)
          (only (lib "13.ss" "srfi")
                string-tokenize))
@@ -35,5 +36,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *initial-channel-names* (make-parameter '()))
 (define *random?* (make-parameter #t))
 (define *jordanb-quote-interval* (make-parameter (* 20 60)))
+(define *jordanb-quotes-file-name* (make-parameter
+                                    (build-path
+                                     (this-expression-source-directory)
+                                     "jordanb-quotes")))
 (provide (all-defined))
 )
