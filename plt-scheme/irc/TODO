@@ -119,3 +119,10 @@
   annoying when I'm constantly restarting the bot).  But ideally we'd
   spew _one_ old headline -- the latest -- at startup, just to prove
   we can.
+
+* Terminology
+  I suspect there is one RFC-1149-ly correct term for what I variously
+  call "requester" and "source" (i.e., the guy who sends an IRC
+  message), and other terms.  Try to use the same terms that the RFC
+  uses, so that someone who's familiar with the RFC, when reading this
+  code, will feel right at home.
