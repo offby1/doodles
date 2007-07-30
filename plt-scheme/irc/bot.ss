@@ -399,7 +399,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         CTCP-message))
 
                       ;; someone said something to the whole channel.
-                      (dest-is-channel?
+                      ((and dest-is-channel?
+                            (< 1 (length tokens)))
 
                        ;; ... but prefixed it with my nick.
                        (when (regexp-match
