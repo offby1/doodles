@@ -227,11 +227,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    (test-suite
     "try to break it!!"
-    (test-equal?
+    (test-case
      "Survives a short CTCP request"
-     (parameterize ((*verbose* #t))
-                  (say-to-bot "\u0001GOATSEX\u0001"))
-     "")
+     (check-not-exn
+      (lambda () (say-to-bot "\u0001GOATSEX\u0001"))))
+
     (test-case
      "very long input"
 
