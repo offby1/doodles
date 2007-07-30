@@ -159,6 +159,10 @@ essentially a full-blown IRC client with a scheme syntax.
   we should say "bob last spoke, in #cats, at 1:23:45 PM, saying
   "meow"
 
+* truncate output from "seen" command
+  because it can be annoyingly long, if the last thing they said was
+  annoyingly long.
+
 * 
   <fledermaus> every time jordanb chips in with a "Let's..."
   statement, rudebot should reciprocate.
