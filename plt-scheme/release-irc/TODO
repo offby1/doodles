@@ -1,0 +1,182 @@
+-*-outline-*-
+
+-- High priority
+
+* protect against DOS
+- log at least the last couple of lines we've received from the
+  server; and
+
+- arrange an exception handler that emits those lines on any exception
+  so that we can see what killed us.
+
+* write our own identd server
+  like every other IRC client out there.
+
+* test planet-emacsen.ss better
+  There are almost no tests at all for it; there's just run-pe.ss.
+
+* make it more resilient to bad input
+  e.g., if the server sends a line with too few fields, I'll tokenize
+  it and then merrily call e.g. (list-ref tokens 4) on it, thus
+  crashing.  Alas, I can't repro this.
+
+* Deal with netsplits, or whatever the hell it is
+  ... that makes the bot not work even though /whois says it's still
+  there.  Also, what do I do if it connects and the server says that
+  the nick is already registered?  (Answer: try again, specifying some
+  other nick via the --nick command-line flag.)
+
+** Now that I've registered some nicks on freenode ...
+   (namely "rudybot" and "rudebot"; they're "linked"), maybe that'll
+   help.  Perhaps it should do something like "/msg nickserv identify
+   <password>" when it starts up.  It should thus take a new
+   command-line flag for specifying the password.
+
+** Maybe simply detecting them
+   ... and then exiting, is better than doing nothing
+
+-- Low priority
+
+* persistence
+  It'd be nice to save stuff to disk.  Can't think of _what_, exactly,
+  but surely it'd be handy.  But I dunno if simply "write"ing an
+  sexpression will suffice ... it'd be nice to have bindings to
+  berkeley DB.
+
+* Maybe run svnversion
+  to generate the bot's ID string, instead of using the $Id$ keyword.
+
+* Move some stuff into a "tools" subdir
+  anything that isn't essential to the actual running of the bot.
+
+* Find some way to deal with exceptions in threads
+  e.g., "procedure internal-entries-newer-than: expects 3 arguments,
+  given 2 ...".  That procedure application is happening in a thread
+  other than the main one, and so rather than the whole app dying, it
+  just hangs.  This is annoying during development.
+
+* Convert from strings to bytes
+  Wherever possible, change from using "string" procedures to "bytes"
+  procedures -- since IRC doesn't specify any character encoding.  As
+  things stand now, we're implicitly using UTF-8 everywhere; it'd be
+  better for the encoding to be explicit.  That way, eventually I
+  could have per-channel encodings.
+
+* maybe periodically see what channels _I'm_ in ...
+  and join them if it's not already in them.  Like a little puppy dog.
+  This is harder than it sounds, since it's not blindingly clear who
+  "I" am -- sometimes my nick changes.  It would probably be best to
+  find me by host name, not nick.
+
+* Catch Control-C so that we don't spew an ugly stack trace when we're killed.
+  Maybe even do a nice PART and QUIT while we're at it.
+
+* Do the tinyurl thing!!
+  I.e., whenever anyone utters a URL (that isn't itself a tinyurl),
+  send it to tinyurl, and utter the tiny version.  A public service!
+  This is harder than it seems at first; I had some sort of trouble
+  with URL quoting.
+
+* Do buubot's job...
+  ... find Ebert reviews of movies.  Use IMDB; find the "external
+  reviews" link; find Ebert's name.  (I honestly think this would be
+  as reliable as searching on rogerebert.com; that site's design is as
+  lame as its content is excellent)
+
+* jordanb quotes
+
+** Cancelling the thread takes a while
+  I.e., I say "shaddap", and it emits a few more quotes before going
+  away (at least, if the interval is just a few seconds).  It should
+  be immediate.
+
+* emacschannelquotes
+  <e1f> offby1: you need to include emacschannelquotes in rudebot
+  He means snag stuff from
+  http://www.emacswiki.org/cgi-bin/wiki?EmacsChannelQuotes, but I'd
+  rather not do that since most of those quotes are multi-line, and
+  wouldn't look good if collapsed.
+
+* new commands
+
+** Respond to "version" and "help"
+  since people seem to expect those
+
+** "uptime"
+  since I'm occasionally curious
+
+* repl commands
+
+I wonder if I should make a new module that contains stuff
+specifically for interacting with the bot via the REPL.  It'd be
+essentially a full-blown IRC client with a scheme syntax.
+
+** join and part
+   so that I can change which channels it's on without restarting it
+
+** planet
+   Now that we've got a repl, how about a command which we could
+   invoke like (planet 3), which would emit the last 3 headlines.
+
+** privmsg
+   since I clearly enjoy putting words in its mouth.  Such a command
+   would save a few keystrokes; as it now stands I have to type
+   something like
+
+        (put "PRIVMSG ##cinema :\u0001ACTION casually moves in front of offby1\u0001")
+
+   Be nice to abbreviate that to (PRIVMSG/ACTION "casually moves in
+   front of offby1")
+
+   Note that the REPL uses readline, and has completion, so the
+   rather long identifier PRIVMSG/ACTION wouldn't actually be hard to
+   type.
+
+   Note also that this idea suggests that the bot, or at least the
+   repl, have the notion of a "current channel", just like any other
+   IRC client; and thus there ought to be a command that changes the
+   channel.  Also obviously there should be a way to find out what
+   channel you're in; I suspect the REPL prompt can easily be made to
+   include that.
+
+* don't restrict "seen" to the current channel
+
+  I.e., if bob speaks in #cats, and someone in #dogs asks "seen bob",
+  we should say "bob last spoke, in #cats, at 1:23:45 PM, saying
+  "meow"
+
+* truncate output from "seen" command
+  because it can be annoyingly long, if the last thing they said was
+  annoyingly long.
+
+* 
+  <fledermaus> every time jordanb chips in with a "Let's..."
+  statement, rudebot should reciprocate.
+
+  Or at least it should squirrel away the quip.
+
+* a "channel" abstraction
+  It's uh ... a stream of messages.  Yeah.  Maybe a lazy stream.  Or
+  something.  Every time we JOIN we create a new one and save it in a
+  list.  The as-yet-unwritten "do-when-channel-idle" would take it as
+  an argument.
+
+* planet snarfing at startup
+  Currently when we start up, we snarf all the headlines but don't
+  emit any of them, since they're all older than (current-date).  That
+  guarntees that we won't spew old news when we start (which is
+  annoying when I'm constantly restarting the bot).  But ideally we'd
+  spew _one_ old headline -- the latest -- at startup, just to prove
+  we can.
+
+** command to re-spew 'em
+
+* Terminology
+  I suspect there is one RFC-1149-ly correct term for what I variously
+  call "requester" and "source" (i.e., the guy who sends an IRC
+  message), and other terms.  Try to use the same terms that the RFC
+  uses, so that someone who's familiar with the RFC, when reading this
+  code, will feel right at home.
+
+* General IRC wisdom
+  aptitude install dancer-ircd-doc and read.
