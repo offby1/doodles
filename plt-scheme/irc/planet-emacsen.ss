@@ -42,13 +42,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  entry->string
  entry-timestamp
- planet-emacsen-input-port
+ planet-emacsen-input-file-name
  queue-of-entries
  )
 
 (define-struct entry (timestamp title link) (make-inspector))
 
-(define planet-emacsen-input-port (make-parameter #f))
+(define planet-emacsen-input-file-name (make-parameter #f))
 
 ;; returned entries are sorted oldest first.
 
@@ -80,13 +80,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      ;; Hitmill to Shitmill / Port to String / I can debug / Anything
      ;; / ... Burma Shave
      (html->shtml
-      (port->string
-       (or (planet-emacsen-input-port)
-           (begin
-             (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
-             (get-pure-port
-              (string->url "http://planet.emacsen.org/atom.xml")
-              (list))))))))
+      (let ((ip (if (planet-emacsen-input-file-name)
+                    (begin
+                      (vtprintf "snarfing test data from ~s~%"
+                                (planet-emacsen-input-file-name))
+
+                      (open-input-file (planet-emacsen-input-file-name)))
+                  (begin
+                    (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
+                    (get-pure-port
+                     (string->url "http://planet.emacsen.org/atom.xml")
+                     (list))))))
+        (begin0
+          (port->string ip)
+          (close-input-port ip))
+        ))))
 
    (lambda (e1 e2)
      (time<?

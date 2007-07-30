@@ -32,11 +32,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "globals.ss" *verbose*))
 
 (parameterize ((*verbose* #t)
-               (planet-emacsen-input-port
-                (open-input-file
-                 (build-path
-                  (this-expression-source-directory)
-                  "example-planet-emacsen.xml"))))
+               (planet-emacsen-input-file-name
+                (build-path
+                 (this-expression-source-directory)
+                 "example-planet-emacsen.xml")))
               (let ((the-channel
                      (queue-of-entries 'once)))
                 (let loop ()
