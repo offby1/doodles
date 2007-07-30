@@ -40,10 +40,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "vprintf.ss")
 
 (provide
- queue-of-entries
  entry->string
  entry-timestamp
  planet-emacsen-input-port
+ queue-of-entries
  )
 
 (define-struct entry (timestamp title link) (make-inspector))
@@ -103,9 +103,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (de-html (entry-title entry))
           (entry-link entry)))
 
-;; TODO -- consider exposing the thread, so that we can kill it.
-
-(define (queue-of-entries)
+(define (queue-of-entries . options)
 
   ;; It's not clear that there's any point to limiting the size of the
   ;; channel ... I suppose it ensures that, in case people write blog
@@ -120,7 +118,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (lambda (e)
               (async-channel-put the-channel e))
             entries)
-           (sleep 3600))
+           (if (and (not (null? options))
+                    (eq? (car options)
+                         'once))
+               (async-channel-put the-channel 'no-more)
+             (begin
+               (sleep 3600)
+               (loop))))
          )))
     the-channel)  )
 )

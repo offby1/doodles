@@ -38,15 +38,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (this-expression-source-directory)
                   "example-planet-emacsen.xml"))))
               (let ((the-channel
-                     (queue-of-entries)))
+                     (queue-of-entries 'once)))
                 (let loop ()
                   (let ((datum (async-channel-try-get the-channel)))
-                    (if datum
-                        (printf "~a~%" (entry->string datum))
-                      (begin
-                        (printf "No data; sleeping~%")
-                        (sleep 2))))
-                  (loop)
+                    (cond
+                     ((equal? datum 'no-more)
+                      (printf "I guess that's all, then ~%"))
+                     (datum
+                      (printf "~a~%" (entry->string datum))
+                      (loop))
+                     (else
+                      (printf "No data; sleeping~%")
+                      (sleep 2)
+                      (loop))))
                   )))
 
 
