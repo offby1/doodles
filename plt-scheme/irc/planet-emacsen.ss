@@ -5,8 +5,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "kw.ss")
-         (only (lib "list.ss")
+(require (only (lib "list.ss")
                last-pair
                sort)
          (only (lib "async-channel.ss")
@@ -16,8 +15,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi")
                filter)
          (only (lib "19.ss" "srfi" )
-               current-date
                date->time-utc
+               time-utc->date
                time<?
                time>?)
          (rename (lib "19.ss" "srfi" )
@@ -32,6 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "port.ss" ("schematics" "port.plt" ))
                port->string)
 
+         (only (planet "zdate.ss" ("offby1" "offby1.plt")) date->string)
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
 
          (only (lib "url.ss" "net")
@@ -42,35 +42,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  queue-of-entries
  entry->string
- entry-datestamp
+ entry-timestamp
  planet-emacsen-input-port
  )
 
-(define-struct entry (datestamp title link) (make-inspector))
+(define-struct entry (timestamp title link) (make-inspector))
 
 (define planet-emacsen-input-port (make-parameter #f))
 
 ;; returned entries are sorted oldest first.
 
 ;; void -> (listof entry?)
-(define/kw (snarf-em-all)
+(define (snarf-em-all)
 
   (sort
    (map
     (lambda (entry)
       (let* ((updated
-              (rfc3339-string->srfi19-date/constructor
-               (car
-                ((sxpath '(updated *text*))
-                 entry))
-               19:make-date))
+              (date->time-utc
+               (rfc3339-string->srfi19-date/constructor
+                (car
+                 ((sxpath '(updated *text*))
+                  entry))
+                19:make-date)))
              (title
               (car
                ((sxpath '(title *text*))
                 entry)))
              (link
-              ((sxpath '(link @ href *text*))
-               entry)))
+              (car
+               ((sxpath '(link @ href *text*))
+                entry))))
         (make-entry updated title link)))
 
     ((sxpath '(feed entry))
@@ -88,19 +90,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    (lambda (e1 e2)
      (time<?
-      (date->time-utc (entry-datestamp e1))
-      (date->time-utc (entry-datestamp e2))))))
+      (entry-timestamp e1)
+      (entry-timestamp e2)))))
 
-(define (entry->string triplet)
+(define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
-  (format "~a: ~a"
-          (de-html (entry-title triplet))
-          (entry-link triplet)))
+  (format "(~a) ~a: ~a"
+          (date->string
+           (time-utc->date (entry-timestamp entry) 0)
+           "~A, ~B ~d ~Y ~k:~M ~z")
+          (de-html (entry-title entry))
+          (entry-link entry)))
 
 ;; TODO -- consider exposing the thread, so that we can kill it.
 
-(define/kw (queue-of-entries)
+(define (queue-of-entries)
 
   ;; It's not clear that there's any point to limiting the size of the
   ;; channel ... I suppose it ensures that, in case people write blog

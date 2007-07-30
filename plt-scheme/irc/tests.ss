@@ -187,31 +187,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (say-to-bot "quote")))
 
-    (test-case
+    (test-suite
      "the 'seen' command"
-
-     (before
-      (let ()
-
-        (send "what up, cuz" #:source "bob")
-        (send "I got your back" #:source "sam")
-        (send "\u0001ACTION Gets bent\u0001" #:source "chris")
-        (send "I like Doritos" #:source "bob")
-        (psend "\u0001ACTION confesses to the bot in private\u0001"))
-
+     #:before (lambda ()  (send "what up, cuz" #:source "bob") (send "I got your back" #:source "sam") (send "\u0001ACTION Gets bent\u0001" #:source "chris") (send "I like Doritos" #:source "bob") (psend "\u0001ACTION confesses to the bot in private\u0001"))
+     (test-case
+      "lotsa various ... uh ..."
       (check-regexp-match
-       #rx"bob last spoke at .*, saying \"I like Doritos\"$"
+       #rx"bob last spoke in #some-channel at .*, saying \"I like Doritos\"$"
        (say-to-bot "seen bob"))
       (check-regexp-match
-       #rx"I haven't seen ted$"
+       #rx"I haven't seen ted in #some-channel$"
        (say-to-bot "seen ted"))
       (check-regexp-match
-       #rx"chris last acted at .*: chris Gets bent$"
+       #rx"chris's last action in #some-channel was at .*: chris Gets bent$"
        (say-to-bot "seen chris")
        "failed to notice ACTION")
 
       (check-regexp-match
-       #rx"I haven't seen tim$"
+       #rx"I haven't seen tim in #some-channel$"
        (say-to-bot "seen tim")
        "blabbed a secret")
 
@@ -225,6 +218,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (check-equal?
        (default-dumb-response #t)
        (say-to-bot "seen "))))
+
     (test-equal?
      "mostly ignores bots"
      (say-to-bot "hey you" #:source "slimebot")
@@ -255,7 +249,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (check-regexp-match
         (regexp
          (string-append
-          "spammer last spoke at .*, saying \""
+          "spammer last spoke in #some-channel at .*, saying \""
           ;; this seems fishy.  I don't know why it's splitting on
           ;; whitespace but it is.
           (pregexp-quote

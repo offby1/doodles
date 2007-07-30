@@ -42,7 +42,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (let loop ()
                   (let ((datum (async-channel-try-get the-channel)))
                     (if datum
-                        (pretty-print datum)
+                        (printf "~a~%" (entry->string datum))
                       (begin
                         (printf "No data; sleeping~%")
                         (sleep 2))))

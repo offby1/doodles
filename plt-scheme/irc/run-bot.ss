@@ -46,28 +46,50 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (let ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
       (local-atom?  (not (not (planet-emacsen-input-port)))))
+  (fprintf
+   (current-error-port)
+   "irc server name: ~s; name of port for planet.emacsen.org: ~s~%"
+   (*irc-server-name*)
+   (object-name (planet-emacsen-input-port)))
   ;; if we're talking to something other than localhost, we should
   ;; probably be hitting planet.emacsen for real
   (when (not (equal? local-atom? local-irc?))
     (fprintf (current-error-port)
              "WARNING: you're connecting to IRC server ~a but using ~s for your planet.emacsen feed~%"
              (*irc-server-name*)
-             (object-name (planet-emacsen-input-port)))
+             (or (object-name (planet-emacsen-input-port))
+                 '|the actual Atom feed|))
     (sleep 10))
 
   ;; if we're talking to a remote server, let's take some time to
   ;; identify as best we can.
-  (when (not local-irc?)
-    (*client-version*
-     (regexp-replace
-      #rx"\n$"
-      (system-args->string
-      (find-executable-path "svnversion")
-      (path->string (this-expression-source-directory)))
-      ""))
-    (printf "We are ~s~%" (*client-version*)))
+  (let* ((svnversion (find-executable-path "svnversion"))
+         (version-string
+          (and
+           svnversion
+           (regexp-replace
+            #rx"\n$"
+            (system-args->string
+             svnversion
+             (path->string (this-expression-source-directory)))
+            ""))))
+    (when version-string
+      (*client-version*
+       version-string))
+    (printf "Our version string is ~s~%" (*client-version*)))
   )
 
+(thread
+ (lambda ()
+   (parameterize
+       ((current-namespace
+         (module->namespace "bot.ss")))
+     (fprintf
+      (current-error-port)
+      "Welcome to the ~a namespace.  Use your power only for good.~%"
+      (object-name (current-namespace)))
+     (dynamic-require '(lib "rep.ss" "readline") #f)
+     (read-eval-print-loop))))
 
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))

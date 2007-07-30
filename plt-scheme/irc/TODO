@@ -2,6 +2,9 @@
 
 -- High priority
 
+* write our own identd server
+  like every other IRC client out there.
+
 * test planet-emacsen.ss better
   There are almost no tests at all for it; there's just run-pe.ss.
 
@@ -52,11 +55,6 @@
   "I" am -- sometimes my nick changes.  It would probably be best to
   find me by host name, not nick.
 
-* allow it to be accessed by a REPL while it's running
-  I don't really know what I mean by this, but: I often think of
-  improvements to make to it, and hate having to stop it and restart
-  it in order to incorporate those improvements.
-
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
 
@@ -94,6 +92,15 @@
 ** "uptime"
   since I'm occasionally curious
 
+* repl commands
+
+** join and part
+   so that I can change which channels it's on without restarting it
+
+** planet
+   Now that we've got a repl, how about a command which we could
+   invoke like (planet 3), which would emit the last 3 headlines.
+
 * don't restrict "seen" to the current channel
 
   I.e., if bob speaks in #cats, and someone in #dogs asks "seen bob",
@@ -120,9 +127,14 @@
   spew _one_ old headline -- the latest -- at startup, just to prove
   we can.
 
+** command to re-spew 'em
+
 * Terminology
   I suspect there is one RFC-1149-ly correct term for what I variously
   call "requester" and "source" (i.e., the guy who sends an IRC
   message), and other terms.  Try to use the same terms that the RFC
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
+
+* General IRC wisdom
+  aptitude install dancer-ircd-doc and read.

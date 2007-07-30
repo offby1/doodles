@@ -85,10 +85,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (make-filter writer)
   (let-values (((ip op)
-                ;; I might want to add a LIMIT-K argument, to keep the
-                ;; pipe from getting too full.  Without that argument,
-                ;; the new thread will never block, thus filling
-                ;; memory.
                 (make-pipe (*pipe-max-bytes*))))
     (thread (lambda () (writer op)))
     ip))
@@ -177,12 +173,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
            ;; egrep --no-filename '^ *\*' ~/log/* | sort | uniq > /tmp/stars
            (let ((addendum (trim-leading-space line)))
-             (loop (if (positive? (string-length addendum))
-                       (string-append one-partial-utterance
-                                      " "
-                                      addendum)
-                     one-partial-utterance
-                     )))))))
+             (loop
+              ;; TODO -- see if some function ("string-join"?) will
+              ;; encapsulate the "if" check for me
+              (if (positive? (string-length addendum))
+                  (string-append one-partial-utterance
+                                 " "
+                                 addendum)
+                one-partial-utterance
+                )))))))
      (close-output-port op))))
 ;(trace joiner)
 

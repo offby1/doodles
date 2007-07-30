@@ -107,17 +107,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *planet-emacs-task* #f)
 
 (define-struct utterance (when what action?) (make-inspector))
+(define put #f)
 
 (define callback
   (let ((state 'initial))
     (lambda (line ip op)
-      (define (put str)
-        (let ((str (substring str 0 (min 510 (string-length str)))))
-          (vprintf "=> ~s~%" str)
-          (display str op)
-          (newline op)
-          (flush-output op)))
-
       (define (do-something-clever
                message-tokens           ;what they said
                requestor                ;who said it
@@ -125,13 +119,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                was-private?             ;how they said it
                CTCP-message?            ;was it a CTCP?
                )
-
-        (vprintf "do-something-clever: message ~s requestor ~s channel-name ~s was-private? ~s CTCP-message? ~s~%"
-                  message-tokens
-                  requestor
-                  channel-name
-                  was-private?
-                  CTCP-message?)
 
         ;; maybe throw away some of the initial tokens, since they're
         ;; not interesting.
@@ -145,8 +132,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (set! message-tokens
                 ((if was-private? cdr cddr)
                  message-tokens)))
-        (vprintf "do-something-clever: message-tokens are now ~s~%"
-                 message-tokens)
         (cond
          (CTCP-message?
           =>
@@ -183,38 +168,45 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               nick data)
                      (cond
                       ((not data)
-                       (format "I haven't seen ~a" nick))
+                       (format "I haven't seen ~a in ~a" nick channel-name))
                       ((utterance-action? data)
-                       (format "~a last acted at ~a: ~a ~a"
+                       (format "~a's last action in ~a was at ~a: ~a ~a"
                                nick
+                               channel-name
                                (zdate (utterance-when data))
                                nick
                                (utterance-what data)))
                       (else
-                       (format "~a last spoke at ~a, saying \"~a\""
+                       (format "~a last spoke in ~a at ~a, saying \"~a\""
                                nick
+                               channel-name
                                (zdate (utterance-when data))
                                (utterance-what data))))))
 
                   ((regexp-match #rx"(?i:^quote)( .*$)?" (first message-tokens))
-                   (let ((r  (rnd 100)))
-
-                     ;; we special-case zero for ease of testing.
-                     (cond ((zero? r)
-                            "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
-                           ((< r 91)
-                            ;; TODO: here's a cute idea -- if
-                            ;; requestor appears to be jordanb
-                            ;; himself, return something utterly
-                            ;; unlike the usual jordanb quote --
-                            ;; something saccharine and Hallmark-y
-                            (one-jordanb-quote))
-                           (else
-                            (let ((p (random-choice (quotes-of-the-day))))
-                              (string-append (car p)
-                                             "  --"
-                                             (cdr p)))))
-                     ))
+                   (let try-again ()
+                     (let ((r  (rnd 100)))
+                       ;; we special-case zero for ease of testing.
+                       (cond ((zero? r)
+                              "I've laid out in my will that my heirs should continue working on my .emacs -- johnw")
+                             ((< r 91)
+                              ;; TODO: here's a cute idea -- if
+                              ;; requestor appears to be jordanb
+                              ;; himself, return something utterly
+                              ;; unlike the usual jordanb quote --
+                              ;; something saccharine and Hallmark-y
+                              (one-jordanb-quote))
+                             (else
+                              (with-handlers
+                                  ((exn:fail:network?
+                                    (lambda (e)
+                                      (vtprintf "Warning: quote-of-the-day yielded an exception: ~a~%"
+                                                (exn-message e))
+                                      (try-again))))
+                                (let ((p (random-choice (quotes-of-the-day))))
+                                  (string-append (car p)
+                                                 "  --"
+                                                 (cdr p)))))))))
                   (else
                    "\u0001ACTION is at a loss for words.\u0001"))))
 
@@ -222,15 +214,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (if was-private? requestor channel-name)
                          response-body))))))
 
+      (set! put
+            (lambda
+                (str)
+              (let ((str (substring str 0 (min 510 (string-length str)))))
+                (vtprintf "=> ~s~%" str)
+                (display str op)
+                (newline op)
+                (flush-output op))))
+
       (let ((line (substring line 0 (min 510 (string-length line)))))
         (let-values (((prefix command params)
                       (parse-message line)))
           (let ((prefix (parse-prefix prefix)))
-            (vprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
-                     line
-                     prefix
-                     command
-                     params)
+            (vtprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
+                      line
+                      prefix
+                      command
+                      params)
             (case state
               ((initial)
                (put (format "NICK ~a" (*my-nick*)))
@@ -254,86 +255,85 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (put (format "JOIN ~a" ch)))
                            (*initial-channel-names*)))
                 ((353)
-                 ;; response to "NAMES".  This implies we've issued a
-                 ;; NAMES command ourselves (which we don't do, afaik),
-                 ;; or else we've joined a channel.
+                 ;; response to "NAMES".  This implies we've joined a
+                 ;; channel (or issued a NAMES command ourselves,
+                 ;; which we don't do, afaik)
                  (let* ((tokens (split params))
                         (channel (third tokens)))
 
                    (when (and (or
                                (string=? channel "#bots")
-                               (string=? channel "#emacs"))
-                              ;; I wonder ... would it be better if I
-                              ;; killed any existing task, and then
-                              ;; replaced it with a new one?
-                              (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f)))
-                     (hash-table-put!
-                      *jordanb-quote-tasks-by-channel*
-                      channel
-                      (do-in-loop
-                       (*jordanb-quote-interval*)
-                       (lambda ()
-                         (put (format "PRIVMSG ~a :~a"
-                                      channel
-                                      (one-jordanb-quote)))))))
+                               (string=? channel "#emacs")))
+                     (when
+                         ;; I wonder ... would it be better if I
+                         ;; killed any existing task, and then
+                         ;; replaced it with a new one?
+                         (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f))
+                       (hash-table-put!
+                        *jordanb-quote-tasks-by-channel*
+                        channel
+                        (do-in-loop
+                         (*jordanb-quote-interval*)
+                         (lambda ()
+                           (put (format "PRIVMSG ~a :~a"
+                                        channel
+                                        (one-jordanb-quote)))))))
 
-                   (when (and (or
-                               (string=? channel "#bots")
-                               (string=? channel "#emacs"))
-                              (not *planet-emacs-task*))
-                     ;; TODO: perhaps the planet module should export
-                     ;; a time, not a date, since obviously I _want_ a
-                     ;; time, not a date ...
-                     (set! *planet-emacs-task*
-                           (let ((the-queue (queue-of-entries))
-                                 (number-spewed 0)
-                                 (time-of-latest-spewed-entry
-                                  (date->time-utc
-                                   (rfc3339-string->srfi19-date/constructor
-                                    "2000-00-00T00:00:00+00:00"
-                                    19:make-date))))
-                             (do-in-loop
-                              ;; choosing the "correct" interval here
-                              ;; is subtle.  Ideally the interval
-                              ;; would have the property that the
-                              ;; channel goes silent for this long
-                              ;; just as often as someone posts a blog
-                              ;; to planet emacs -- that way we
-                              ;; consume items from the channel at the
-                              ;; same rate that queue-of-entries-since
-                              ;; produces them.  Failing that, it's
-                              ;; perhaps best for this number to be a
-                              ;; bit smaller than that idea, so that
-                              ;; this task finds nothing new
-                              ;; occasionally.
-                              20
-                              (lambda ()
-                                (let ((datum (async-channel-try-get the-queue)))
-                                  ;; spew any _new_ entries that we
-                                  ;; haven't already spewed ... but
-                                  ;; also spew the single newest entry
-                                  ;; even if it's kind of old.
-                                  (if (or
-                                       (zero? number-spewed)
-                                       (and datum
-                                            (time>?
-                                             (date->time-utc
-                                              (entry-datestamp datum))
-                                             time-of-latest-spewed-entry)))
-                                      (begin
-                                        (put (format "PRIVMSG ~a :~a"
-                                                     channel
-                                                     (entry->string datum)))
-                                        (set! number-spewed (add1 number-spewed))
-                                        (when (time>?
-                                               (date->time-utc
-                                                (entry-datestamp datum))
-                                               time-of-latest-spewed-entry)
-                                          (set! time-of-latest-spewed-entry
-                                                (date->time-utc
-                                                 (entry-datestamp datum)))))
-                                    (vtprintf "Nothing new on planet emacs~%")))
-                                ))))))))
+                     (when (not *planet-emacs-task*)
+                       (set! *planet-emacs-task*
+                             (let ((the-queue (queue-of-entries))
+                                   (number-spewed 0)
+                                   (time-of-latest-spewed-entry
+                                    (date->time-utc
+                                     (rfc3339-string->srfi19-date/constructor
+                                      "2000-00-00T00:00:00+00:00"
+                                      19:make-date))))
+                               (do-in-loop
+                                ;; choosing the "correct" interval
+                                ;; here is subtle.  Ideally the
+                                ;; interval would have the property
+                                ;; that the channel goes silent for
+                                ;; this long just as often as someone
+                                ;; posts a blog to planet emacs --
+                                ;; that way we consume items from the
+                                ;; channel at the same rate that
+                                ;; queue-of-entries-since produces
+                                ;; them.  Failing that, it's perhaps
+                                ;; best for this number to be a bit
+                                ;; smaller than that idea, so that
+                                ;; this task finds nothing new
+                                ;; occasionally.
+                                20
+                                (lambda ()
+                                  (let ((datum (async-channel-try-get the-queue)))
+                                    ;; spew any _new_ entries that we
+                                    ;; haven't already spewed ... but
+                                    ;; also spew the single newest entry
+                                    ;; even if it's kind of old.
+                                    (if (or
+                                         (zero? number-spewed)
+                                         (and datum
+                                              (time>?
+                                               (entry-timestamp datum)
+                                               time-of-latest-spewed-entry)))
+                                        (begin
+                                          (put (format "PRIVMSG ~a :~a"
+                                                       channel
+                                                       (entry->string datum)))
+                                          (set! number-spewed (add1 number-spewed))
+                                          (when (time>?
+                                                 (entry-timestamp datum)
+                                                 time-of-latest-spewed-entry)
+                                            (set! time-of-latest-spewed-entry
+                                                  (entry-timestamp datum))))
+                                      (vtprintf "Nothing new on planet emacs~%")))
+                                  ))))))
+
+                   ))
+                ((433)
+                 (vtprintf "Gaah!!  One of those \"nick already in use\" messages!~%")
+                 (vtprintf "I don't know how to deal with that~%")
+                 (vtprintf "Just start me up again and provide a different nick on the command line, I guess :-|~%")))
 
               (case command-symbol
                 ((PRIVMSG)
@@ -345,14 +345,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (cond
                           (CTCP-message => split)
                           (else (split params))))
-                        (tokens (if (<= 2 (length tokens))
-                                    (cons (first tokens)
-                                          (cons (regexp-replace
-                                                 #rx"^:"
-                                                 (second tokens)
-                                                 "")
-                                                (cddr tokens)))
-                                  tokens))
+                        (tokens
+                         ;; I can't remember why I'm removing this colon
+                         (if (<= 2 (length tokens))
+                             (cons (first tokens)
+                                   (cons (regexp-replace
+                                          #rx"^:"
+                                          (second tokens)
+                                          "")
+                                         (cddr tokens)))
+                           tokens))
                         (destination (car (split params)))
                         (dest-is-channel? (regexp-match #rx"^#" destination))
                         (source (car prefix)))
@@ -367,9 +369,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (task 'postpone)))
                       (list
                        (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
-                       *planet-emacs-task*)))
+                       *planet-emacs-task*))
 
-                   (when dest-is-channel?
                      (let* ((times-by-nick (hash-table-get
                                             times-by-nick-by-channel
                                             destination
@@ -413,10 +414,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           CTCP-message))))))
                  )
                 ((NOTICE)
-                 (vprintf "Hmm, I notice ~s ~s ~s but have been told not to do anything clever~%"
-                          prefix
-                          command
-                          params))
+                 (when (regexp-match #rx"No identd \\(auth\\) response" params)
+                   (fprintf
+                    (current-error-port)
+                    "This is one of those servers that wants us to run identd.  Be patient; it'll take two minutes to connect.~%")
+                   ))
                 ((PING)
                  (put (format "PONG ~a" params)))))))))))
 
