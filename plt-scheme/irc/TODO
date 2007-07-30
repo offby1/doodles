@@ -16,6 +16,13 @@
 <offby1> oops! someone killed the bot :-|                                                                [13:41]
 <bronaugh> yeah, it doesn't like CTCP GOATSEX
 
+And for the future, perhaps
+- log at least the last couple of lines we've received from the
+  server; and
+
+- arrange an exception handler that emits those lines on any exception
+  so that we can see what killed us.
+
 * write our own identd server
   like every other IRC client out there.
 
