@@ -21,6 +21,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                make-url
                make-path/param
                get-pure-port
+               string->url
                url->string)
          (only (lib "13.ss" "srfi")
                string-join)
@@ -36,18 +37,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;;(trace trim)
 (define (quotes-of-the-day)
   (parameterize ((current-alist-separator-mode 'amp))
-                (let* ((url (make-url
-                             "http"             ;scheme
-                             #f                 ;user
-                             "feeds.feedburner.com" ;host
-                             #f                     ;port
-                             #t                     ;path-absolute?
-                             (list (make-path/param "quotationspage" '())
-                                   (make-path/param "qotd" '())) ;path
-                             '()                       ;query
-                             #f                        ;fragment
-                             )))
-
+                (let* ((url (string->url "http://feeds.feedburner.com/quotationspage/qotd")))
                   (let ((stuff
                          (html->shtml
                           (port->string (get-pure-port
