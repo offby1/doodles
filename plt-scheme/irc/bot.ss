@@ -148,7 +148,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            *client-environment*))))))
          ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
                (string-ci=? "shaddap" (first message-tokens)))
-          ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill))
+          ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill)
+          ;; TODO -- maybe now do hash-table-remove! so that the next
+          ;; time we see a 353, we recreate the task.
+          )
          (else
           (let ((response-body
                  (cond

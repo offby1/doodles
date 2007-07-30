@@ -2,6 +2,20 @@
 
 -- High priority
 
+* Fix this DOS vulnerability:
+
+ cadr: expects argument of type <cadrable value>; given ("GOATSEX")
+/home/erich/doodles/plt-scheme/irc/bot.ss:408:30: (cadr tokens)
+/home/erich/doodles/plt-scheme/irc/bot.ss:402:29: (regexp-match (regexp (string-append "^" (pregexp-quote (*my-nick*)) "[:,]")) (cadr tokens))
+/home/erich/doodles/plt-scheme/irc/bot.ss:402:23: (if (regexp-match (regexp (string-append "^" (pregexp-quote ....) (....))) (cadr tokens)) (begin (do-something-clever tokens source destination (....) ....)))
+/home/erich/doodles/plt-scheme/irc/run-bot.ss:101:8: (begin (callback line ip op) (loop))
+
+ === context ===
+/home/erich/doodles/plt-scheme/irc/run-bot.ss:97:2: loop
+
+<offby1> oops! someone killed the bot :-|                                                                [13:41]
+<bronaugh> yeah, it doesn't like CTCP GOATSEX
+
 * write our own identd server
   like every other IRC client out there.
 
@@ -13,7 +27,7 @@
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
   crashing.  Alas, I can't repro this.
 
-* Deal with netsplits, or whatever the hell it is 
+* Deal with netsplits, or whatever the hell it is
   ... that makes the bot not work even though /whois says it's still
   there.  Also, what do I do if it connects and the server says that
   the nick is already registered?  (Answer: try again, specifying some
@@ -27,7 +41,7 @@
 
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
-
+
 -- Low priority
 
 * persistence
@@ -92,8 +106,8 @@
 
 * new commands
 
-** Respond to "version"
-  since people seem to expect that
+** Respond to "version" and "help"
+  since people seem to expect those
 
 ** "uptime"
   since I'm occasionally curious
