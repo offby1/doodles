@@ -7,7 +7,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module tests mzscheme
 (require (lib "trace.ss")
          (lib "kw.ss")
-         (only (lib "etc.ss") build-string)
+         (only (lib "etc.ss")
+               build-string
+               this-expression-source-directory)
          (only (lib "pregexp.ss") pregexp-quote)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
@@ -25,6 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set:whitespace
                )
          "bot.ss"
+         (only "planet-emacsen.ss" planet-emacsen-input-port)
          (only "globals.ss"
                *initial-channel-names*
                *my-nick*
@@ -97,6 +100,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             recipient)
            (recipient "#some-channel")
            (else "some-nick"))))
+
+(planet-emacsen-input-port
+ (open-input-file
+  (build-path
+   (this-expression-source-directory)
+   "example-planet-emacsen.xml")))
+
 (define tests
   (test-suite
    "big ol' all-encompassing"
@@ -130,6 +140,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "Feed it lines, see what it says"
+    (test-case
+     "Returns planet.emacsen.org news on demand"
+     (check-regexp-match
+      (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
+      (say-to-bot "news")))
     (test-equal?
      "silent unless spoken to, private message edition"
      (send "hey you" #:recipient "somenick")

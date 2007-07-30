@@ -15,6 +15,11 @@
 * test planet-emacsen.ss better
   There are almost no tests at all for it; there's just run-pe.ss.
 
+** possible bug: not closing the input port
+   I suspect that after sleeping 3600 seconds we'll try to read from
+   the same port a second time, which won't work, I don't think.  We'd
+   need to close that port and get a new get-pure-port.
+
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
   it and then merrily call e.g. (list-ref tokens 4) on it, thus
