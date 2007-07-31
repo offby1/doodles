@@ -267,6 +267,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (test-equal? "empty string" (get-retort "") "")
      (test-equal? "mostly empty string" (get-retort " ") "")
      (test-equal? "string with just one field" (get-retort "x") "")
+     (test-equal? "numeric string with just one field" (get-retort "353") "")
      (test-equal? "string with just two fields" (get-retort "x y") "")
      (test-equal? "string with just three fields" (get-retort "x y z") ""))
     )
@@ -274,6 +275,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "planet stuff"
     (test-case
      "Spews planet.emacsen.org news occasionally"
+     (display (get-retort "353"))
      (check-true #f "Guess I need to write this test."))
     (test-case
      "Returns planet.emacsen.org news on demand"

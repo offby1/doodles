@@ -261,89 +261,91 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                              (put (format "JOIN ~a" ch)))
                            (*initial-channel-names*)))
                 ((353)
-                 ;; response to "NAMES".  This implies we've joined a
-                 ;; channel (or issued a NAMES command ourselves,
-                 ;; which we don't do, afaik)
-                 (let* ((tokens (split params))
-                        (channel (third tokens)))
+                 (let ((tokens (split params)))
+                   (if (< (length tokens) 3)
+                       (vtprintf "Server is on drugs: there should be three tokens here: ~s~%" params)
+                     ;; response to "NAMES".  This implies we've joined a
+                     ;; channel (or issued a NAMES command ourselves,
+                     ;; which we don't do, afaik)
+                     (let ((channel (third tokens)))
 
-                   (when (or
-                          (string=? channel "#bots")
-                          (string=? channel "#emacs"))
-                     (when
-                         ;; I wonder ... would it be better if I
-                         ;; killed any existing task, and then
-                         ;; replaced it with a new one?
-                         (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f))
-                       (hash-table-put!
-                        *jordanb-quote-tasks-by-channel*
-                        channel
-                        (do-in-loop
-                         (*jordanb-quote-interval*)
-                         (lambda ()
-                           (put (format "PRIVMSG ~a :~a"
-                                        channel
-                                        (one-jordanb-quote)))))))
+                       (when (or
+                              (string=? channel "#bots")
+                              (string=? channel "#emacs"))
+                         (when
+                             ;; I wonder ... would it be better if I
+                             ;; killed any existing task, and then
+                             ;; replaced it with a new one?
+                             (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f))
+                           (hash-table-put!
+                            *jordanb-quote-tasks-by-channel*
+                            channel
+                            (do-in-loop
+                             (*jordanb-quote-interval*)
+                             (lambda ()
+                               (put (format "PRIVMSG ~a :~a"
+                                            channel
+                                            (one-jordanb-quote)))))))
 
-                     (when (not *planet-emacs-task*)
-                       (set! *planet-emacs-task*
-                             (let ((the-queue (queue-of-entries
-                                               #:whence
-                                               (and (*use-real-atom-feed?*)
-                                                    (lambda ()
-                                                      (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
-                                                      (get-pure-port
-                                                       (string->url "http://planet.emacsen.org/atom.xml")
-                                                       (list)))
-                                                    )))
-                                   (number-spewed 0)
-                                   (time-of-latest-spewed-entry
-                                    (date->time-utc
-                                     (rfc3339-string->srfi19-date/constructor
-                                      "2000-00-00T00:00:00+00:00"
-                                      19:make-date))))
-                               (do-in-loop
-                                ;; choosing the "correct" interval
-                                ;; here is subtle.  Ideally the
-                                ;; interval would have the property
-                                ;; that the channel goes silent for
-                                ;; this long just as often as someone
-                                ;; posts a blog to planet emacs --
-                                ;; that way we consume items from the
-                                ;; channel at the same rate that
-                                ;; queue-of-entries-since produces
-                                ;; them.  Failing that, it's perhaps
-                                ;; best for this number to be a bit
-                                ;; smaller than that idea, so that
-                                ;; this task finds nothing new
-                                ;; occasionally.
-                                (*planet-task-spew-interval*)
-                                (lambda ()
-                                  (let ((datum (async-channel-try-get the-queue)))
-                                    ;; spew any _new_ entries that we
-                                    ;; haven't already spewed ... but
-                                    ;; also spew the single newest entry
-                                    ;; even if it's kind of old.
-                                    (if (or
-                                         (zero? number-spewed)
-                                         (and datum
-                                              (time>?
-                                               (entry-timestamp datum)
-                                               time-of-latest-spewed-entry)))
-                                        (begin
-                                          (put (format "PRIVMSG ~a :~a"
-                                                       channel
-                                                       (entry->string datum)))
-                                          (set! number-spewed (add1 number-spewed))
-                                          (when (time>?
-                                                 (entry-timestamp datum)
-                                                 time-of-latest-spewed-entry)
-                                            (set! time-of-latest-spewed-entry
-                                                  (entry-timestamp datum))))
-                                      (vtprintf "Nothing new on planet emacs~%")))
-                                  ))))))
+                         (when (not *planet-emacs-task*)
+                           (set! *planet-emacs-task*
+                                 (let ((the-queue (queue-of-entries
+                                                   #:whence
+                                                   (and (*use-real-atom-feed?*)
+                                                        (lambda ()
+                                                          (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
+                                                          (get-pure-port
+                                                           (string->url "http://planet.emacsen.org/atom.xml")
+                                                           (list)))
+                                                        )))
+                                       (number-spewed 0)
+                                       (time-of-latest-spewed-entry
+                                        (date->time-utc
+                                         (rfc3339-string->srfi19-date/constructor
+                                          "2000-00-00T00:00:00+00:00"
+                                          19:make-date))))
+                                   (do-in-loop
+                                    ;; choosing the "correct" interval
+                                    ;; here is subtle.  Ideally the
+                                    ;; interval would have the property
+                                    ;; that the channel goes silent for
+                                    ;; this long just as often as someone
+                                    ;; posts a blog to planet emacs --
+                                    ;; that way we consume items from the
+                                    ;; channel at the same rate that
+                                    ;; queue-of-entries-since produces
+                                    ;; them.  Failing that, it's perhaps
+                                    ;; best for this number to be a bit
+                                    ;; smaller than that idea, so that
+                                    ;; this task finds nothing new
+                                    ;; occasionally.
+                                    (*planet-task-spew-interval*)
+                                    (lambda ()
+                                      (let ((datum (async-channel-try-get the-queue)))
+                                        ;; spew any _new_ entries that we
+                                        ;; haven't already spewed ... but
+                                        ;; also spew the single newest entry
+                                        ;; even if it's kind of old.
+                                        (if (or
+                                             (zero? number-spewed)
+                                             (and datum
+                                                  (time>?
+                                                   (entry-timestamp datum)
+                                                   time-of-latest-spewed-entry)))
+                                            (begin
+                                              (put (format "PRIVMSG ~a :~a"
+                                                           channel
+                                                           (entry->string datum)))
+                                              (set! number-spewed (add1 number-spewed))
+                                              (when (time>?
+                                                     (entry-timestamp datum)
+                                                     time-of-latest-spewed-entry)
+                                                (set! time-of-latest-spewed-entry
+                                                      (entry-timestamp datum))))
+                                          (vtprintf "Nothing new on planet emacs~%")))
+                                      ))))))
 
-                   ))
+                       ))))
                 ((433)
                  (vtprintf "Gaah!!  One of those \"nick already in use\" messages!~%")
                  (vtprintf "I don't know how to deal with that~%")
