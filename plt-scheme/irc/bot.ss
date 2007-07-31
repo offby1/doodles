@@ -18,6 +18,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "1.ss" "srfi")
                first
                second
+               take
                third
                )
          (only (lib "13.ss" "srfi")
@@ -129,6 +130,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *client-name*
                (*client-version*)) op)  )
 
+(define (make-bounded-queue size)
+  (let ((the-queue '()))
+    (define (bounded-queue . args)
+      (cond
+       ((null? args)
+        the-queue)
+       ((null? (cdr args))
+        (when (= (length the-queue)
+                 size)
+          (set! the-queue
+                (take the-queue
+                      (sub1 size))))
+        (set! the-queue (cons (car args)
+                              the-queue)))
+       (else
+        (error 'bounded-queue "I don't know what to do with" args))))
+    (trace bounded-queue)
+    bounded-queue))
+
+(define *some-recent-entries*
+  (make-bounded-queue
+   ;; choose a number that's small enough so that this many news items
+   ;; can fit in one IRC message ... which is something around 500
+   ;; bytes
+   3))
+
 ;; string? output-port? -> void
 
 ;; now that I think about it, there's no good reason this couldn't
@@ -182,6 +209,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") requestor)
                "\u0001ACTION holds his tongue.\u0001")
 
+              ((string-ci=? "news" (first message-tokens))
+               (apply string-append
+                      (map entry->string (*some-recent-entries*))))
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
                (let* ((nick (second message-tokens))
@@ -304,6 +334,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      (rfc3339-string->srfi19-date/constructor
                                       "2000-00-00T00:00:00+00:00"
                                       19:make-date))))
+
                                (do-in-loop
                                 ;; choosing the "correct" interval
                                 ;; here is subtle.  Ideally the
@@ -323,6 +354,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (lambda ()
                                   (let ((datum (async-channel-try-get the-queue)))
                                     (when datum
+                                      (*some-recent-entries* datum)
+
                                       ;; spew any _new_ entries that we
                                       ;; haven't already spewed ... but
                                       ;; also spew the single newest entry

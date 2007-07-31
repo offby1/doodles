@@ -289,9 +289,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (get-output-string op))))
     (test-case
      "Returns planet.emacsen.org news on demand"
-     (check-regexp-match
-      (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-      (say-to-bot "news"))))
+     (parameterize
+      ((*planet-task-spew-interval* 0)
+       (*verbose* #t))
+      (get-retort "353 foo bar #bots")
+      (sleep 1/10)
+
+      (let ((recent-news (say-to-bot "news")))
+        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136058331/2007.07.21.php")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://www.ee.ryerson.ca/~elf/powerbook/#upsidedown")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://www.emacsblog.org/2007/07/21/package-faves-rcodetools/")) recent-news)
+        ))))
    ))
 
 (provide tests)
