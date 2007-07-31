@@ -49,6 +49,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "vprintf.ss"
          "../web/quote-of-the-day.ss")
 (provide
+ *atom-timestamp-file-name*
  do-startup-stuff
  kill-all-tasks
  respond)
@@ -136,6 +137,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (*irc-server-name*)
                *client-name*
                (*client-version*)) op)  )
+
+(define *atom-timestamp-file-name* "timestamp")
 
 (define (make-bounded-queue size)
   (let ((the-queue '()))
@@ -339,7 +342,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (time-of-latest-spewed-entry
                                     (date->time-utc
                                      (rfc3339-string->srfi19-date/constructor
-                                      "2000-00-00T00:00:00+00:00"
+                                      (or (and (file-exists? *atom-timestamp-file-name*)
+                                               (call-with-input-file *atom-timestamp-file-name* read))
+                                          "2000-00-00T00:00:00+00:00")
                                       19:make-date))))
 
                                (do-in-loop
@@ -367,11 +372,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       ;; haven't already spewed ... but
                                       ;; also spew the single newest entry
                                       ;; even if it's kind of old.
-                                      (if (or
-                                           (zero? number-spewed)
-                                           (and (time>?
+                                      (if (time>?
                                                  (entry-timestamp datum)
-                                                 time-of-latest-spewed-entry)))
+                                                 time-of-latest-spewed-entry)
                                           (begin
                                             (put (format "PRIVMSG #emacs :~a"
                                                          (entry->string datum)) op)
@@ -379,10 +382,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                             (when (time>?
                                                    (entry-timestamp datum)
                                                    time-of-latest-spewed-entry)
-                                              ;; TODO -- persist this
-                                              ;; timestamp to disk
                                               (set! time-of-latest-spewed-entry
-                                                    (entry-timestamp datum))))
+                                                    (entry-timestamp datum))
+                                              (call-with-output-file
+                                                  *atom-timestamp-file-name*
+                                                (lambda (op)
+                                                  (write
+                                                   (zdate
+                                                    (time-utc->date time-of-latest-spewed-entry))
+                                                   op))
+                                                'truncate/replace)))
                                         (vtprintf "Nothing new on planet emacs~%"))))
                                   ))))))
 
