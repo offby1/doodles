@@ -98,6 +98,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (if (eof-object? line)
           (printf "eof on server~%")
         (begin
-          (callback line ip op)
+          (callback line op)
           (loop))))))
 )

@@ -114,7 +114,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define callback
   (let ((state 'initial))
-    (lambda (line ip op)
+    (lambda (line op)
       (define (do-something-clever
                message-tokens           ;what they said
                requestor                ;who said it

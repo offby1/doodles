@@ -36,10 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
   (let ((reaction (open-output-string)))
-    (callback
-     input
-     (open-input-string "")
-     reaction)
+    (callback input reaction)
     (let ((lines (string-tokenize
                   (get-output-string reaction)
                   (char-set-complement (char-set #\newline)))))
