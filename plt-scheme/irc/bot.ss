@@ -373,8 +373,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                  (entry-timestamp datum)
                                                  time-of-latest-spewed-entry)))
                                           (begin
-                                            (put (format "PRIVMSG ~a :~a"
-                                                         channel
+                                            (put (format "PRIVMSG #emacs :~a"
                                                          (entry->string datum)) op)
                                             (set! number-spewed (add1 number-spewed))
                                             (when (time>?

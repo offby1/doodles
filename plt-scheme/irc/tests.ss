@@ -87,13 +87,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (recipient "#some-channel")
            (else "some-nick"))))
 
+(define (string->lines str)
+  (string-tokenize
+     str
+     (char-set-complement (char-set #\newline))))
+
 ;; output-port? -> void -> (listof string?)
 (define (collect-output func)
   (let ((string-port (open-output-string)))
     (func string-port)
-    (string-tokenize
-     (get-output-string string-port)
-     (char-set-complement (char-set #\newline)))))
+    (string->lines
+     (get-output-string string-port))))
 
 (define tests
   (test-suite
@@ -279,21 +283,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test-suite
     "planet stuff"
     (test-case
-     "Spews planet.emacsen.org news occasionally"
+     "Occasionally spews planet.emacsen.org news to #emacs"
      (let ((op (open-output-string)))
        (parameterize ((*planet-task-spew-interval* 0))
                      (kill-all-tasks)
                      (respond "353 foo bar #bots" op)
                      (sleep 1/10))
-       (check-regexp-match
-        (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-        (get-output-string op))))
+       (let ((newstext (get-output-string op)))
+         (check-regexp-match
+          #rx"^PRIVMSG #emacs :"
+          (car (string->lines newstext))
+          "didn't spew to #emacs")
+         (check-regexp-match
+          (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
+          newstext))))
     (test-case
      "Returns planet.emacsen.org news on demand"
      (parameterize
       ((*planet-task-spew-interval* 0))
       (kill-all-tasks)
-      (get-retort "353 foo bar #bots")
+      (get-retort "353 foo bar #emacs")
       (sleep 1/10)
 
       (let ((recent-news (say-to-bot "news")))
