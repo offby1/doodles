@@ -34,32 +34,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ))
 
 ;; str [integer | 'all] -> str | (list of str)
-(define get-retort
-  (let ()
-    (define (internal input which)
-      (let ((reaction (open-output-string)))
-        (callback
-         input
-         (open-input-string "")
-         reaction)
-        (let ((lines (string-tokenize
-                      (get-output-string reaction)
-                      (char-set-complement (char-set #\newline)))))
-          (cond
-           ((not (null? lines))
-            (cond
-             ((number? which)
-              (list-ref lines which))
-             ((eq? 'all which) lines)
-             (else
-              (error 'get-retort "wanted integer or 'all; got ~s" which))))
-           (else ""))
-          )))
-    (case-lambda
-     ((input)
-      (internal input 0))
-     ((input which)
-      (internal input which)))))
+(define/kw (get-retort input #:key [which 0])
+  (let ((reaction (open-output-string)))
+    (callback
+     input
+     (open-input-string "")
+     reaction)
+    (let ((lines (string-tokenize
+                  (get-output-string reaction)
+                  (char-set-complement (char-set #\newline)))))
+      (cond
+       ((not (null? lines))
+        (cond
+         ((number? which)
+          (list-ref lines which))
+         ((eq? 'all which) lines)
+         (else
+          (error 'get-retort "wanted integer or 'all; got ~s" which))))
+       (else ""))
+      )))
 
 (*verbose* #f)
 
@@ -108,7 +101,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "logs in at startup"
     (test-case
      "sends NICK and USER at startup"
-     (let ((lines (get-retort "" 'all)))
+     (let ((lines (get-retort "" #:which 'all)))
        (check-equal?
         (first  lines)
         (format "NICK ~a" (*my-nick*)))
@@ -122,7 +115,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (parameterize ( ;;(*verbose* #t)
                      (*initial-channel-names* chans))
                     (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
-                                'all))
+                                #:which 'all))
       (map (lambda (c) (string-append "JOIN " c)) chans)))
 
    ;; TODO -- join #emacs or #bots and see if it does its amusing
@@ -133,11 +126,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "Feed it lines, see what it says"
-    (test-case
-     "Returns planet.emacsen.org news on demand"
-     (check-regexp-match
-      (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-      (say-to-bot "news")))
     (test-equal?
      "silent unless spoken to, private message edition"
      (send "hey you" #:recipient "somenick")
@@ -282,6 +270,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (test-equal? "string with just two fields" (get-retort "x y") "")
      (test-equal? "string with just three fields" (get-retort "x y z") ""))
     )
+   (test-suite
+    "planet stuff"
+    (test-case
+     "Spews planet.emacsen.org news occasionally"
+     (check-true #f "Guess I need to write this test."))
+    (test-case
+     "Returns planet.emacsen.org news on demand"
+     (check-regexp-match
+      (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
+      (say-to-bot "news"))))
    ))
 
 (provide tests)
