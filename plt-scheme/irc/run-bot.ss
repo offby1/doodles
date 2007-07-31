@@ -93,11 +93,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))
 
+  (do-startup-stuff op)
+
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
       (if (eof-object? line)
           (printf "eof on server~%")
         (begin
-          (callback line op)
+          (respond line op)
           (loop))))))
 )

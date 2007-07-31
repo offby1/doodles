@@ -35,21 +35,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
-  (let ((reaction (open-output-string)))
-    (callback input reaction)
-    (let ((lines (string-tokenize
-                  (get-output-string reaction)
-                  (char-set-complement (char-set #\newline)))))
+  (let ((lines (collect-output (lambda (op) (respond input op)))))
+    (cond
+     ((not (null? lines))
       (cond
-       ((not (null? lines))
-        (cond
-         ((number? which)
-          (list-ref lines which))
-         ((eq? 'all which) lines)
-         (else
-          (error 'get-retort "wanted integer or 'all; got ~s" which))))
-       (else ""))
-      )))
+       ((number? which)
+        (list-ref lines which))
+       ((eq? 'all which) lines)
+       (else
+        (error 'get-retort "wanted integer or 'all; got ~s" which))))
+     (else ""))
+    ))
 
 (*verbose* #f)
 
@@ -90,6 +86,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (recipient "#some-channel")
            (else "some-nick"))))
 
+;; output-port? -> void -> (listof string?)
+(define (collect-output func)
+  (let ((string-port (open-output-string)))
+    (func string-port)
+    (string-tokenize
+     (get-output-string string-port)
+     (char-set-complement (char-set #\newline)))))
+
 (define tests
   (test-suite
    "big ol' all-encompassing"
@@ -98,7 +102,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "logs in at startup"
     (test-case
      "sends NICK and USER at startup"
-     (let ((lines (get-retort "" #:which 'all)))
+
+     (let ((lines (collect-output do-startup-stuff)))
+       (check-true (pair? lines) "retort isn't a pair")
        (check-equal?
         (first  lines)
         (format "NICK ~a" (*my-nick*)))
@@ -146,7 +152,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ;; NO-BREAK SPACE
                       #x00A0
                       )))
-     (say-to-bot "hey you"))
+                   (say-to-bot "hey you"))
      (default-dumb-response #t))
     (test-equal?
      "recognizes a comma after its nick"
