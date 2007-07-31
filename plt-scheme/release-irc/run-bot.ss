@@ -33,7 +33,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)
    (*planet-poll-interval* 3600)
-   (*planet-task-spew-interval* 20))
+   (*planet-task-spew-interval* (* 60 20)))
   (("-v" "--verbose")
     "Spew I/O to stdout"
     (*verbose* #t))
