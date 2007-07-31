@@ -18,11 +18,6 @@
 * write our own identd server
   like every other IRC client out there.
 
-* make it more resilient to bad input
-  e.g., if the server sends a line with too few fields, I'll tokenize
-  it and then merrily call e.g. (list-ref tokens 4) on it, thus
-  crashing.  Alas, I can't repro this.
-
 * Deal with netsplits, or whatever the hell it is
   ... that makes the bot not work even though /whois says it's still
   there.  Also, what do I do if it connects and the server says that
@@ -43,8 +38,10 @@
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
   particular, its repl) is running, I need to type "reset" at the
-  shell in order to see characters echo.  I suspect this is a bug in
-  mzscheme itself, but I should at least work around it.
+  shell in order to see characters echo.  This is a bug in mzscheme
+  itself
+  (http://bugs.plt-scheme.org/query/gnatsweb.pl?cmd=view%20audit-trail&database=default&pr=8836),
+  but I should at least work around it.
 
 * persistence
   It'd be nice to save stuff to disk.  Perhaps the date of the last
