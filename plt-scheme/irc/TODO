@@ -41,6 +41,10 @@
 
 -- Low priority
 
+* try file-stream-buffer-mode
+  ... on current-output-port and current-error-port, as an alternative
+  to scattering calls to "flush-output" everywhere
+
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
   particular, its repl) is running, I need to type "reset" at the

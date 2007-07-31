@@ -30,6 +30,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "globals.ss"
                *initial-channel-names*
                *my-nick*
+               *planet-task-spew-interval*
                *verbose*
                ))
 
@@ -128,7 +129,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
-    "Feed it lines, see what it says"
+    "excercise the \"respond\" function"
     (test-equal?
      "silent unless spoken to, private message edition"
      (send "hey you" #:recipient "somenick")
@@ -274,12 +275,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (test-equal? "string with just two fields" (get-retort "x y") "")
      (test-equal? "string with just three fields" (get-retort "x y z") ""))
     )
+
    (test-suite
     "planet stuff"
     (test-case
      "Spews planet.emacsen.org news occasionally"
-     (display (get-retort "353"))
-     (check-true #f "Guess I need to write this test."))
+     (let ((op (open-output-string)))
+       (parameterize ((*planet-task-spew-interval* 0))
+                     (respond "353 foo bar #bots" op)
+                     (sleep 1/10))
+       (check-regexp-match
+        (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
+        (get-output-string op))))
     (test-case
      "Returns planet.emacsen.org news on demand"
      (check-regexp-match

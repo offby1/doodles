@@ -322,27 +322,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 (*planet-task-spew-interval*)
                                 (lambda ()
                                   (let ((datum (async-channel-try-get the-queue)))
-                                    ;; spew any _new_ entries that we
-                                    ;; haven't already spewed ... but
-                                    ;; also spew the single newest entry
-                                    ;; even if it's kind of old.
-                                    (if (or
-                                         (zero? number-spewed)
-                                         (and datum
-                                              (time>?
-                                               (entry-timestamp datum)
-                                               time-of-latest-spewed-entry)))
-                                        (begin
-                                          (put (format "PRIVMSG ~a :~a"
-                                                       channel
-                                                       (entry->string datum)) op)
-                                          (set! number-spewed (add1 number-spewed))
-                                          (when (time>?
+                                    (when datum
+                                      ;; spew any _new_ entries that we
+                                      ;; haven't already spewed ... but
+                                      ;; also spew the single newest entry
+                                      ;; even if it's kind of old.
+                                      (if (or
+                                           (zero? number-spewed)
+                                           (and (time>?
                                                  (entry-timestamp datum)
-                                                 time-of-latest-spewed-entry)
-                                            (set! time-of-latest-spewed-entry
-                                                  (entry-timestamp datum))))
-                                      (vtprintf "Nothing new on planet emacs~%")))
+                                                 time-of-latest-spewed-entry)))
+                                          (begin
+                                            (put (format "PRIVMSG ~a :~a"
+                                                         channel
+                                                         (entry->string datum)) op)
+                                            (set! number-spewed (add1 number-spewed))
+                                            (when (time>?
+                                                   (entry-timestamp datum)
+                                                   time-of-latest-spewed-entry)
+                                              ;; TODO -- persist this
+                                              ;; timestamp to disk
+                                              (set! time-of-latest-spewed-entry
+                                                    (entry-timestamp datum))))
+                                        (vtprintf "Nothing new on planet emacs~%"))))
                                   ))))))
 
                    ))))
