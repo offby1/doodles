@@ -10,12 +10,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 this-expression-source-directory)
           "bot.ss"
           "globals.ss"
+          (only "planet-emacsen.ss" *planet-poll-interval*)
           "system.ss"
-          (only "planet-emacsen.ss" planet-emacsen-input-file-name))
-(planet-emacsen-input-file-name
- (build-path
-  (this-expression-source-directory)
-  "example-planet-emacsen.xml"))
+          )
+
 (command-line
  "bot"
  (current-command-line-arguments)
@@ -33,7 +31,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-j" "--jordan") secs "Seconds to wait before emitting a jordanb quote"
    (*jordanb-quote-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
-   (planet-emacsen-input-file-name #f))
+   (*use-real-atom-feed?* #t)
+   (*planet-poll-interval* 3600)
+   (*planet-task-spew-interval* 20))
   (("-v" "--verbose")
     "Spew I/O to stdout"
     (*verbose* #t))
@@ -43,21 +43,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
 
-(let ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
-      (local-atom?  (not (not (planet-emacsen-input-file-name)))))
+(let* ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
+       (local-atom? (begin0 local-irc?
+                            (fprintf (current-error-port)
+                                     "Warning: not sanity-checking your atom feed~%"))))
   (fprintf
    (current-error-port)
    "irc server name: ~s; name of port for planet.emacsen.org: ~s~%"
    (*irc-server-name*)
-   (object-name (planet-emacsen-input-file-name)))
+   "damn, I dunno")
   ;; if we're talking to something other than localhost, we should
   ;; probably be hitting planet.emacsen for real
   (when (not (equal? local-atom? local-irc?))
     (fprintf (current-error-port)
              "WARNING: you're connecting to IRC server ~a but using ~s for your planet.emacsen feed~%"
              (*irc-server-name*)
-             (or (object-name (planet-emacsen-input-file-name))
-                 '|the actual Atom feed|))
+             "I dunno")
     (sleep 10))
 
   ;; if we're talking to a remote server, let's take some time to

@@ -27,7 +27,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set:whitespace
                )
          "bot.ss"
-         (only "planet-emacsen.ss" planet-emacsen-input-file-name)
          (only "globals.ss"
                *initial-channel-names*
                *my-nick*
@@ -100,11 +99,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             recipient)
            (recipient "#some-channel")
            (else "some-nick"))))
-
-(planet-emacsen-input-file-name
- (build-path
-  (this-expression-source-directory)
-  "example-planet-emacsen.xml"))
 
 (define tests
   (test-suite

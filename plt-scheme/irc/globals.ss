@@ -40,5 +40,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     (build-path
                                      (this-expression-source-directory)
                                      "jordanb-quotes")))
+(define *use-real-atom-feed?* (make-parameter #f))
+
+;; setting this too low can cause the IRC server to hang up on us,
+;; complaining "ERROR :Closing Link: rudybot (Excess Flood)".  I
+;; haven't found anything in the crappy dancer-ircd docs to tellme
+;; what the maximum allowable rate _is_, so I chose this default by
+;; trial and error.
+
+;; To be fair, this is unlikely to be a problem in practice, since the
+;; bot only spews when the channel is quiet, and it also bumps this
+;; to a much higher value when we pass the --planet command-line flag.
+
+;; too slow: 1
+(define *planet-task-spew-interval* (make-parameter 2))
 (provide (all-defined))
 )

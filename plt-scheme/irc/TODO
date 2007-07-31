@@ -2,6 +2,12 @@
 
 -- High priority
 
+* test planet-emacsen.ss better
+  There are almost no tests at all for it; there's just run-pe.ss.
+
+* Test regularly on Windows
+  I'm 98% the repl won't work there, since I try to use "readline"
+
 * protect against DOS
 - log at least the last couple of lines we've received from the
   server; and
@@ -11,14 +17,6 @@
 
 * write our own identd server
   like every other IRC client out there.
-
-* test planet-emacsen.ss better
-  There are almost no tests at all for it; there's just run-pe.ss.
-
-** possible bug: not closing the input port
-   I suspect that after sleeping 3600 seconds we'll try to read from
-   the same port a second time, which won't work, I don't think.  We'd
-   need to close that port and get a new get-pure-port.
 
 * make it more resilient to bad input
   e.g., if the server sends a line with too few fields, I'll tokenize
@@ -42,11 +40,17 @@
 
 -- Low priority
 
+* reset terminal state on abort
+  I notice that, when I abort the terminal in which the bot (and, in
+  particular, its repl) is running, I need to type "reset" at the
+  shell in order to see characters echo.  I suspect this is a bug in
+  mzscheme itself, but I should at least work around it.
+
 * persistence
-  It'd be nice to save stuff to disk.  Can't think of _what_, exactly,
-  but surely it'd be handy.  But I dunno if simply "write"ing an
-  sexpression will suffice ... it'd be nice to have bindings to
-  berkeley DB.
+  It'd be nice to save stuff to disk.  Perhaps the date of the last
+  planet.emacsen.org headline that we spewed ...  But I dunno if
+  simply "write"ing an sexpression will suffice for more complex data
+  ... it'd be nice to have bindings to Berkeley DB.
 
 * Maybe run svnversion
   to generate the bot's ID string, instead of using the $Id$ keyword.
@@ -166,13 +170,26 @@ essentially a full-blown IRC client with a scheme syntax.
   list.  The as-yet-unwritten "do-when-channel-idle" would take it as
   an argument.
 
-* planet snarfing at startup
-  Currently when we start up, we snarf all the headlines but don't
-  emit any of them, since they're all older than (current-date).  That
-  guarntees that we won't spew old news when we start (which is
-  annoying when I'm constantly restarting the bot).  But ideally we'd
-  spew _one_ old headline -- the latest -- at startup, just to prove
-  we can.
+* planet
+
+** talks to random channel?
+   From looking at the code, it seems like it'll spew headlines to
+   whichever of #bots or #emacs it first joins.  Ick.
+
+   Another way to say it: I just ran the release-irc version, r4333,
+   and it started spewing headlines into #bots.  There are actually
+   _two_ mysteries:  why is it spewing at all (I thought I told it
+   only to spew stuff as it comes in, although I recall _wanted_ to
+   have it spew some older items); and why is it spewing in #bots,
+   instead of #emacs, which would make more sense?
+
+** snarfing at startup
+   Currently when we start up, we snarf all the headlines but don't
+   emit any of them, since they're all older than (current-date).  That
+   guarantees that we won't spew old news when we start (which is
+   annoying when I'm constantly restarting the bot).  But ideally we'd
+   spew _one_ old headline -- the latest -- at startup, just to prove
+   we can.
 
 ** command to re-spew 'em
 

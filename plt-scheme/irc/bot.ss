@@ -12,6 +12,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
+         (only (lib "url.ss" "net")
+               get-pure-port
+               string->url)
          (only (lib "1.ss" "srfi")
                first
                second
@@ -264,9 +267,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (let* ((tokens (split params))
                         (channel (third tokens)))
 
-                   (when (and (or
-                               (string=? channel "#bots")
-                               (string=? channel "#emacs")))
+                   (when (or
+                          (string=? channel "#bots")
+                          (string=? channel "#emacs"))
                      (when
                          ;; I wonder ... would it be better if I
                          ;; killed any existing task, and then
@@ -284,7 +287,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                      (when (not *planet-emacs-task*)
                        (set! *planet-emacs-task*
-                             (let ((the-queue (queue-of-entries))
+                             (let ((the-queue (queue-of-entries
+                                               #:whence
+                                               (and (*use-real-atom-feed?*)
+                                                    (lambda ()
+                                                      (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
+                                                      (get-pure-port
+                                                       (string->url "http://planet.emacsen.org/atom.xml")
+                                                       (list)))
+                                                    )))
                                    (number-spewed 0)
                                    (time-of-latest-spewed-entry
                                     (date->time-utc
@@ -306,7 +317,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 ;; smaller than that idea, so that
                                 ;; this task finds nothing new
                                 ;; occasionally.
-                                20
+                                (*planet-task-spew-interval*)
                                 (lambda ()
                                   (let ((datum (async-channel-try-get the-queue)))
                                     ;; spew any _new_ entries that we
