@@ -36,7 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define atom-input-port-generator #f)
 (command-line
- "bot"
+ "run-pe"
  (current-command-line-arguments)
  (once-each
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
@@ -57,6 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (when (< passes 2)
                   (let ((the-channel
                          (queue-of-entries
+                          #:whence atom-input-port-generator
                           #:how-many 'once)))
                     (let loop ()
                       (let ((datum (async-channel-try-get the-channel)))
