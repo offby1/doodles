@@ -282,6 +282,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      "Spews planet.emacsen.org news occasionally"
      (let ((op (open-output-string)))
        (parameterize ((*planet-task-spew-interval* 0))
+                     (kill-all-tasks)
                      (respond "353 foo bar #bots" op)
                      (sleep 1/10))
        (check-regexp-match
@@ -290,15 +291,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (test-case
      "Returns planet.emacsen.org news on demand"
      (parameterize
-      ((*planet-task-spew-interval* 0)
-       (*verbose* #t))
+      ((*planet-task-spew-interval* 0))
+      (kill-all-tasks)
       (get-retort "353 foo bar #bots")
       (sleep 1/10)
 
       (let ((recent-news (say-to-bot "news")))
-        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136058331/2007.07.21.php")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://www.ee.ryerson.ca/~elf/powerbook/#upsidedown")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://www.emacsblog.org/2007/07/21/package-faves-rcodetools/")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://yrk.livejournal.com/186492.html")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136355742/2007.07.22.php")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://blog.mwolson.org/tech/trying_to_get_emacs22_into_gutsy__part_3.html")) recent-news)
         ))))
    ))
 

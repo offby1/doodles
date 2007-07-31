@@ -50,6 +50,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "../web/quote-of-the-day.ss")
 (provide
  do-startup-stuff
+ kill-all-tasks
  respond)
 
 (define (split str)
@@ -112,6 +113,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
+;; for testing
+(define (kill-all-tasks)
+  (for-each (lambda (thing)
+              (when (thread? thing) (kill-thread thing)))
+            (cons *planet-emacs-task* (map cdr (hash-table-map *jordanb-quote-tasks-by-channel* cons)))))
+
 (define-struct utterance (when what action?) (make-inspector))
 (define (put str op)
   (let ((str (substring str 0 (min 510 (string-length str)))))
@@ -146,7 +153,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               the-queue)))
        (else
         (error 'bounded-queue "I don't know what to do with" args))))
-    (trace bounded-queue)
+    ;;(trace bounded-queue)
     bounded-queue))
 
 (define *some-recent-entries*
