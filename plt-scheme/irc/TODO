@@ -114,6 +114,8 @@
 ** "uptime"
   since I'm occasionally curious
 
+* put debug spew someplace where it won't interfere with the REPL
+
 * repl commands
 
 I wonder if I should make a new module that contains stuff
