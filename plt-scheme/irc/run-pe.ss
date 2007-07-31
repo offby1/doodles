@@ -66,9 +66,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (printf "I guess that's all, then ~%"))
                          (datum
                           (printf "~a~%" (entry->string datum))
+                          (flush-output)
                           (loop))
                          (else
                           (printf "No data; sleeping~%")
+                          (flush-output)
                           (sleep 2)
                           (loop))))
                       ))

@@ -5,8 +5,14 @@
 * test planet-emacsen.ss better
   There are almost no tests for it; there's just run-pe.ss.
 
-* Test regularly on Windows
-  I'm 98% the repl won't work there, since I try to use "readline"
+* Windows
+
+** Test regularly
+   I'd have expected that the repl won't work there, since I try to
+   use "readline", and yet it seems ok
+
+** "ERROR :Closing Link: fartbot (Invalid username [~#f])" -> prefix (#f #f #f); command "ERROR" params ":Closing Link: fartbot (Invalid username [~#f])" 
+  I suspect I can simply set some "username" parameter to something if it's #f
 
 * protect against DOS
 - log at least the last couple of lines we've received from the
