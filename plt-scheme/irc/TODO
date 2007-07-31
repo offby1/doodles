@@ -3,7 +3,7 @@
 -- High priority
 
 * test planet-emacsen.ss better
-  There are almost no tests at all for it; there's just run-pe.ss.
+  There are almost no tests for it; there's just run-pe.ss.
 
 * Test regularly on Windows
   I'm 98% the repl won't work there, since I try to use "readline"
