@@ -7,7 +7,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module tests mzscheme
 (require (lib "trace.ss")
          (lib "kw.ss")
-         (only (lib "etc.ss") build-string)
+         (only (lib "etc.ss")
+               build-string
+               this-expression-source-directory)
          (only (lib "pregexp.ss") pregexp-quote)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
@@ -28,36 +30,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "globals.ss"
                *initial-channel-names*
                *my-nick*
+               *planet-task-spew-interval*
                *verbose*
                ))
 
 ;; str [integer | 'all] -> str | (list of str)
-(define get-retort
-  (let ()
-    (define (internal input which)
-      (let ((reaction (open-output-string)))
-        (callback
-         input
-         (open-input-string "")
-         reaction)
-        (let ((lines (string-tokenize
-                      (get-output-string reaction)
-                      (char-set-complement (char-set #\newline)))))
-          (cond
-           ((not (null? lines))
-            (cond
-             ((number? which)
-              (list-ref lines which))
-             ((eq? 'all which) lines)
-             (else
-              (error 'get-retort "wanted integer or 'all; got ~s" which))))
-           (else ""))
-          )))
-    (case-lambda
-     ((input)
-      (internal input 0))
-     ((input which)
-      (internal input which)))))
+(define/kw (get-retort input #:key [which 0])
+  (let ((lines (collect-output (lambda (op) (respond input op)))))
+    (cond
+     ((not (null? lines))
+      (cond
+       ((number? which)
+        (list-ref lines which))
+       ((eq? 'all which) lines)
+       (else
+        (error 'get-retort "wanted integer or 'all; got ~s" which))))
+     (else ""))
+    ))
 
 (*verbose* #f)
 
@@ -97,6 +86,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             recipient)
            (recipient "#some-channel")
            (else "some-nick"))))
+
+(define (string->lines str)
+  (string-tokenize
+     str
+     (char-set-complement (char-set #\newline))))
+
+;; output-port? -> void -> (listof string?)
+(define (collect-output func)
+  (let ((string-port (open-output-string)))
+    (func string-port)
+    (string->lines
+     (get-output-string string-port))))
+
 (define tests
   (test-suite
    "big ol' all-encompassing"
@@ -105,7 +107,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     "logs in at startup"
     (test-case
      "sends NICK and USER at startup"
-     (let ((lines (get-retort "" 'all)))
+
+     (let ((lines (collect-output do-startup-stuff)))
+       (check-true (pair? lines) "retort isn't a pair")
        (check-equal?
         (first  lines)
         (format "NICK ~a" (*my-nick*)))
@@ -119,7 +123,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (parameterize ( ;;(*verbose* #t)
                      (*initial-channel-names* chans))
                     (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
-                                'all))
+                                #:which 'all))
       (map (lambda (c) (string-append "JOIN " c)) chans)))
 
    ;; TODO -- join #emacs or #bots and see if it does its amusing
@@ -129,7 +133,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
    ;; TODO -- send it a PING and see if it PONGs
    (test-suite
-    "Feed it lines, see what it says"
+    "excercise the \"respond\" function"
     (test-equal?
      "silent unless spoken to, private message edition"
      (send "hey you" #:recipient "somenick")
@@ -153,7 +157,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ;; NO-BREAK SPACE
                       #x00A0
                       )))
-     (say-to-bot "hey you"))
+                   (say-to-bot "hey you"))
      (default-dumb-response #t))
     (test-equal?
      "recognizes a comma after its nick"
@@ -271,9 +275,51 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (test-equal? "empty string" (get-retort "") "")
      (test-equal? "mostly empty string" (get-retort " ") "")
      (test-equal? "string with just one field" (get-retort "x") "")
+     (test-equal? "numeric string with just one field" (get-retort "353") "")
      (test-equal? "string with just two fields" (get-retort "x y") "")
      (test-equal? "string with just three fields" (get-retort "x y z") ""))
     )
+
+   (test-suite
+    "planet stuff"
+    (test-case
+     "Occasionally spews planet.emacsen.org news to #emacs"
+     (if (file-exists? *atom-timestamp-file-name*)
+         (begin
+           (fprintf (current-error-port)
+                    "file ~s exists; skipping a test~%"
+                    *atom-timestamp-file-name*)
+           (check-true #t))
+       (let ((op (open-output-string)))
+         (parameterize ((*planet-task-spew-interval* 0))
+                       (kill-all-tasks)
+                       (respond "353 foo bar #bots" op)
+                       (sleep 1/10))
+         (let ((newstext (get-output-string op)))
+           (check-regexp-match
+            #rx"^PRIVMSG #emacs :"
+            (car (string->lines newstext))
+            "didn't spew to #emacs")
+           (check-regexp-match
+
+            ;; this matches the oldest item in our sample Atom data
+            (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
+
+            newstext)))))
+    (test-case
+     "Returns planet.emacsen.org news on demand"
+     (parameterize
+      ((*planet-task-spew-interval* 0))
+      (kill-all-tasks)
+      (get-retort "353 foo bar #emacs")
+      (sleep 1/10)
+
+      (let ((recent-news (say-to-bot "news")))
+        ;; these match the newest items in the sample Atom data
+        (check-regexp-match (pregexp (pregexp-quote "http://yrk.livejournal.com/186492.html")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136355742/2007.07.22.php")) recent-news)
+        (check-regexp-match (pregexp (pregexp-quote "http://blog.mwolson.org/tech/trying_to_get_emacs22_into_gutsy__part_3.html")) recent-news)
+        ))))
    ))
 
 (provide tests)

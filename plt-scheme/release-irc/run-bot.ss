@@ -10,13 +10,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 this-expression-source-directory)
           "bot.ss"
           "globals.ss"
+          (only "planet-emacsen.ss" *planet-poll-interval*)
           "system.ss"
-          (only "planet-emacsen.ss" planet-emacsen-input-port))
-(planet-emacsen-input-port
- (open-input-file
-  (build-path
-   (this-expression-source-directory)
-   "example-planet-emacsen.xml")))
+          )
+
 (command-line
  "bot"
  (current-command-line-arguments)
@@ -31,10 +28,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-j" "--jordan") secs "Seconds to wait before emitting a jordanb quote"
+  (("-j" "--jordan") secs "Seconds of channel silence required to emit a jordanb quote"
    (*jordanb-quote-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
-   (planet-emacsen-input-port #f))
+   (*use-real-atom-feed?* #t)
+   (*planet-poll-interval* 3600)
+   (*planet-task-spew-interval* 20))
   (("-v" "--verbose")
     "Spew I/O to stdout"
     (*verbose* #t))
@@ -44,21 +43,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
 
-(let ((local-irc?   (not (not (string=? "localhost" (*irc-server-name*)))))
-      (local-atom?  (not (not (planet-emacsen-input-port)))))
+(let ((remote-irc? (not (string=? "localhost" (*irc-server-name*))))
+      (feed-description (if (*use-real-atom-feed?*) "real" "fake")))
+
   (fprintf
    (current-error-port)
-   "irc server name: ~s; name of port for planet.emacsen.org: ~s~%"
+   "irc server name: ~s; using ~a Atom feed~%"
    (*irc-server-name*)
-   (object-name (planet-emacsen-input-port)))
+   feed-description)
   ;; if we're talking to something other than localhost, we should
   ;; probably be hitting planet.emacsen for real
-  (when (not (equal? local-atom? local-irc?))
+  (when (not (equal? (*use-real-atom-feed?*) remote-irc?))
     (fprintf (current-error-port)
-             "WARNING: you're connecting to IRC server ~a but using ~s for your planet.emacsen feed~%"
+             "WARNING: you're connecting to IRC server ~a but using a ~a Atom feed~%"
              (*irc-server-name*)
-             (or (object-name (planet-emacsen-input-port))
-                 '|the actual Atom feed|))
+             feed-description)
     (sleep 10))
 
   ;; if we're talking to a remote server, let's take some time to
@@ -94,11 +93,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))
 
+  (do-startup-stuff op)
+
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
       (if (eof-object? line)
           (printf "eof on server~%")
         (begin
-          (callback line ip op)
+          (respond line op)
           (loop))))))
 )

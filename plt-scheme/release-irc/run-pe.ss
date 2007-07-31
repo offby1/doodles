@@ -14,6 +14,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "etc.ss")
                this-expression-source-directory)
          (lib "async-channel.ss")
+         (only (lib "url.ss" "net")
+               get-pure-port
+               string->url)
          (rename (lib "19.ss" "srfi") 19:make-date make-date)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
@@ -31,27 +34,47 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "pretty.ss")
          (only "globals.ss" *verbose*))
 
-(parameterize ((*verbose* #t)
-               (planet-emacsen-input-port
-                (open-input-file
-                 (build-path
-                  (this-expression-source-directory)
-                  "example-planet-emacsen.xml"))))
-              (let ((the-channel
-                     (queue-of-entries 'once)))
-                (let loop ()
-                  (let ((datum (async-channel-try-get the-channel)))
-                    (cond
-                     ((equal? datum 'no-more)
-                      (printf "I guess that's all, then ~%"))
-                     (datum
-                      (printf "~a~%" (entry->string datum))
-                      (loop))
-                     (else
-                      (printf "No data; sleeping~%")
-                      (sleep 2)
-                      (loop))))
-                  )))
+(define atom-input-port-generator #f)
+(command-line
+ "run-pe"
+ (current-command-line-arguments)
+ (once-each
+  (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
+   (set!
+    atom-input-port-generator
+    (lambda ()
+      (printf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
+      (get-pure-port
+       (string->url "http://planet.emacsen.org/atom.xml")
+       (list)))))
+
+  (("-v" "--verbose")
+    "Spew I/O to stdout"
+    (*verbose* #t))))
+
+(parameterize ((*verbose* #t))
+              (let pass ((passes 0))
+                (when (< passes 2)
+                  (let ((the-channel
+                         (queue-of-entries
+                          #:whence atom-input-port-generator
+                          #:how-many 'once)))
+                    (let loop ()
+                      (let ((datum (async-channel-try-get the-channel)))
+                        (cond
+                         ((equal? datum 'no-more)
+                          (printf "I guess that's all, then ~%"))
+                         (datum
+                          (printf "~a~%" (entry->string datum))
+                          (flush-output)
+                          (loop))
+                         (else
+                          (printf "No data; sleeping~%")
+                          (flush-output)
+                          (sleep 2)
+                          (loop))))
+                      ))
+                  (pass (add1 passes)))))
 
 
 (newline))

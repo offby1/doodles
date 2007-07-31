@@ -5,7 +5,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module planet-emacsen mzscheme
-(require (only (lib "list.ss")
+(require (only (lib "etc.ss") this-expression-source-directory)
+         (lib "kw.ss")
+         (only (lib "list.ss")
                last-pair
                sort)
          (only (lib "async-channel.ss")
@@ -42,18 +44,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  entry->string
  entry-timestamp
- planet-emacsen-input-port
  queue-of-entries
+ *planet-poll-interval*
  )
 
-(define-struct entry (timestamp title link) (make-inspector))
+;; how often (in seconds) do we re-create and read the input port
+(define *planet-poll-interval* (make-parameter 10))
 
-(define planet-emacsen-input-port (make-parameter #f))
+(define-struct entry (timestamp title link) (make-inspector))
 
 ;; returned entries are sorted oldest first.
 
 ;; void -> (listof entry?)
-(define (snarf-em-all)
+(define (snarf-em-all ip)
 
   (sort
    (map
@@ -80,13 +83,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      ;; Hitmill to Shitmill / Port to String / I can debug / Anything
      ;; / ... Burma Shave
      (html->shtml
-      (port->string
-       (or (planet-emacsen-input-port)
-           (begin
-             (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
-             (get-pure-port
-              (string->url "http://planet.emacsen.org/atom.xml")
-              (list))))))))
+      (begin0
+        (port->string ip)
+        (close-input-port ip)))))
 
    (lambda (e1 e2)
      (time<?
@@ -103,8 +102,21 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (de-html (entry-title entry))
           (entry-link entry)))
 
-(define (queue-of-entries . options)
+(define/kw (queue-of-entries
+            #:key
+            [whence]
+            [how-many 'continuous])
 
+  (when (not whence)
+    (set! whence
+          (lambda ()
+            (let ((fn (build-path
+                       (this-expression-source-directory)
+                       "example-planet-emacsen.xml")))
+              (vtprintf "snarfing test data from ~s~%"
+                        fn)
+
+              (open-input-file fn)))))
   ;; It's not clear that there's any point to limiting the size of the
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
@@ -113,18 +125,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (thread
      (lambda ()
        (let loop ()
-         (let* ((entries (snarf-em-all)))
-           (for-each
-            (lambda (e)
-              (async-channel-put the-channel e))
-            entries)
-           (if (and (not (null? options))
-                    (eq? (car options)
-                         'once))
-               (async-channel-put the-channel 'no-more)
-             (begin
-               (sleep 3600)
-               (loop))))
+         (for-each
+          (lambda (e)
+            (async-channel-put the-channel e))
+           (snarf-em-all (whence)))
+         (if (eq? how-many 'once)
+             (async-channel-put the-channel 'no-more)
+           (begin
+             (vtprintf "Planet sleeping ~a seconds before snarfing again~%"
+                       (*planet-poll-interval*))
+             (sleep (*planet-poll-interval*))
+             (loop)))
          )))
     the-channel)  )
 )
