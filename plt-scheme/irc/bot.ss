@@ -112,6 +112,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-struct utterance (when what action?) (make-inspector))
 (define put #f)
 
+;; string? output-port? -> void
+
+;; now that I think about it, there's no good reason this couldn't
+;; just be string? -> (listof string?)
 (define callback
   (let ((state 'initial))
     (lambda (line op)
