@@ -28,7 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-j" "--jordan") secs "Seconds to wait before emitting a jordanb quote"
+  (("-j" "--jordan") secs "Seconds of channel silence required to emit a jordanb quote"
    (*jordanb-quote-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)

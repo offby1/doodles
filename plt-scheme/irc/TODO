@@ -122,6 +122,7 @@
   since I'm occasionally curious
 
 * put debug spew someplace where it won't interfere with the REPL
+  Like, oh, I don't know, maybe ... a LOG FILE?!?!
 
 * repl commands
 
