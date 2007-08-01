@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
  (only "globals.ss" *random?*)
  "parse-tests.ss"
+ "pe-tests.ss"
  "tests.ss")
 
 (parameterize

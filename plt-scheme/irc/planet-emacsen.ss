@@ -127,7 +127,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (let loop ()
          (for-each
           (lambda (e)
-            (vtprintf "Planet producer thread about to put ~s onto the channel ... "
+            (vtprintf "Planet producer thread about to put ~s onto the async ... "
                       (entry->string e))
             (async-channel-put the-channel e)
             (vtprintf "done~%"))

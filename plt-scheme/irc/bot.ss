@@ -232,6 +232,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                "\u0001ACTION holds his tongue.\u0001")
 
               ((string-ci=? "news" (first message-tokens))
+               ;; TODO -- maybe send an #f to the task
                (apply string-append
                       (map entry->string (*some-recent-entries*))))
               ((and (string-ci=? "seen" (first message-tokens))
