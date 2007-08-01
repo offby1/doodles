@@ -297,8 +297,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (respond "353 foo bar #bots" op)
                        (sleep 1/10))
          (let ((newstext (get-output-string op)))
-           (check-not-false
-            (null? newstext)
+           (check-false (null? newstext)
             "No text from our news feed :-(")
            (check-regexp-match
             #rx"^PRIVMSG #emacs :"
