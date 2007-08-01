@@ -34,8 +34,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*use-real-atom-feed?* #t)
    (*planet-poll-interval* 3600)
    (*planet-task-spew-interval* (* 60 20)))
+  (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"
+   (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
-    "Spew I/O to stdout"
+    "Spew debug stuff to logfile"
     (*verbose* #t))
   )
 
@@ -55,7 +57,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; probably be hitting planet.emacsen for real
   (when (not (equal? (*use-real-atom-feed?*) remote-irc?))
     (fprintf (current-error-port)
-             "WARNING: you're connecting to IRC server ~a but using a ~a Atom feed~%"
+             "WARNING: you're connecting to IRC server ~s but using a ~a Atom feed~%"
              (*irc-server-name*)
              feed-description)
     (sleep 10))

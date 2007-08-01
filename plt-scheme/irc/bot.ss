@@ -296,7 +296,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (string->symbol command))))
           (case command-number
             ((001)
-             (vprintf "Ah, I see we logged in OK.~%")
              (for-each (lambda (ch)
                          (put (format "JOIN ~a" ch) op))
                        (*initial-channel-names*)))
