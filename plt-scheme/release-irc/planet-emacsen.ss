@@ -127,12 +127,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (let loop ()
          (for-each
           (lambda (e)
-            (async-channel-put the-channel e))
+            (vtprintf "Planet producer thread about to put ~s onto the channel ... "
+                      (entry->string e))
+            (async-channel-put the-channel e)
+            (vtprintf "done~%"))
            (snarf-em-all (whence)))
          (if (eq? how-many 'once)
              (async-channel-put the-channel 'no-more)
            (begin
-             (vtprintf "Planet sleeping ~a seconds before snarfing again~%"
+             (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
                        (*planet-poll-interval*))
              (sleep (*planet-poll-interval*))
              (loop)))

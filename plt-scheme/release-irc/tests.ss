@@ -34,6 +34,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *verbose*
                ))
 
+(require/expose "bot.ss" (do-in-loop))
+
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
   (let ((lines (collect-output (lambda (op) (respond input op)))))
@@ -102,6 +104,50 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define tests
   (test-suite
    "big ol' all-encompassing"
+
+   (test-suite
+    "do-in-loop"
+    (test-case
+     "does something"
+     (printf "Doing some tediously-long tests; patience~%")
+     (let* ((output '())
+            (control (do-in-loop 1/10 (lambda ()
+                                        (set! output (cons (current-process-milliseconds) output))))))
+       (sleep 1)
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check > l 5 "loop ran five times")
+         (sleep 1)
+         (check-equal? (length output) l "thread stopped when we killed it")
+         )
+       ))
+    (test-case
+     "sending it #fs speeds it up"
+     (let* ((output '())
+            (control (do-in-loop 1/10 (lambda ()
+                                        (set! output (cons (current-process-milliseconds) output))))))
+       (control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)
+       (sleep 1)
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check > l 15 "loop ran fifteen times"))
+       ))
+
+    (test-case
+     "sending it POSTPONE slows it down"
+     (let* ((output '())
+            (control (do-in-loop 1 (lambda ()
+                                     (set! output (cons (current-process-milliseconds) output))))))
+
+       (for-each (lambda ignored
+                   (printf "Sleeping ~a ...~%" ignored)
+                   (sleep 9/10)
+                   (control 'postpone))
+                 '(a b c d e f g h i j k l m fart oops))
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check < l 2 "loop barely ran"))
+       )))
 
    (test-suite
     "logs in at startup"
@@ -296,6 +342,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (respond "353 foo bar #bots" op)
                        (sleep 1/10))
          (let ((newstext (get-output-string op)))
+           (check-false (null? newstext)
+            "No text from our news feed :-(")
            (check-regexp-match
             #rx"^PRIVMSG #emacs :"
             (car (string->lines newstext))

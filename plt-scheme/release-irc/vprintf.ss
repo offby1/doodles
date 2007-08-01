@@ -12,8 +12,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define (vprintf . args)
   (when (*verbose*)
+    (parameterize ((current-output-port (*log-output-port*)))
     (apply printf args)
-    (flush-output)))
+    (flush-output))))
 (define (vtprintf . args)
   (apply vprintf
          (string-append "~a: " (car args))

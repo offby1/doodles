@@ -98,18 +98,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; "do-when-channel-idle", which saves the task someplace out of the
 ;; way, monitors the named channel, and cancels the task as needed.
 ;; Right now those things are being done in "respond".
+;; sit around and wait a while, then do the thunk, then start over.
+
+;; we'll cut the wait short, and do the thunk, if someone shoves an #f
+;; at us.
+
+;; we'll cut the wait short, and _not_ do the thunk, if someone shoves
+;; 'POSTPONE at us.
+
+;; we'll go away entirely if we receive any other value.
 (define (do-in-loop seconds thunk)
-  (let* ((s (make-semaphore))
+  (let* ((c (make-channel))
          (t (thread (lambda ()
                       (let loop ()
-                        (let ((postponed? (sync/timeout seconds s)))
-                          (when (not postponed?)
+                        (let ((reason (sync/timeout seconds c)))
+                          ;(printf "sync/timeout returned ~s~%" reason)
+                          (when (or (not reason) ;timed out
+                                    (not (channel-get c)))
                             (thunk)))
-                        (loop))))))
+                        (loop)
+                        )))))
     (lambda (command)
-      (case command
-        ((postpone POSTPONE) (semaphore-post s))
-        (else (kill-thread t))))))
+      (if (memq command '(#f postpone POSTPONE))
+          (channel-put c command)
+        (kill-thread t)))))
 
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
@@ -296,7 +308,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (string->symbol command))))
           (case command-number
             ((001)
-             (vprintf "Ah, I see we logged in OK.~%")
              (for-each (lambda (ch)
                          (put (format "JOIN ~a" ch) op))
                        (*initial-channel-names*)))
@@ -329,7 +340,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                      (when (not *planet-emacs-task*)
                        (set! *planet-emacs-task*
-                             (let ((the-queue (queue-of-entries
+                             (let ((atom-feed (queue-of-entries
                                                #:whence
                                                (and (*use-real-atom-feed?*)
                                                     (lambda ()
@@ -364,7 +375,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 ;; occasionally.
                                 (*planet-task-spew-interval*)
                                 (lambda ()
-                                  (let ((datum (async-channel-try-get the-queue)))
+                                  (let ((datum (async-channel-try-get atom-feed)))
+                                    (vtprintf "Consumer thread: Just got ~s from our atom feed~%" datum)
                                     (when datum
                                       (*some-recent-entries* datum)
 
@@ -373,8 +385,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       ;; also spew the single newest entry
                                       ;; even if it's kind of old.
                                       (if (time>?
-                                                 (entry-timestamp datum)
-                                                 time-of-latest-spewed-entry)
+                                           (entry-timestamp datum)
+                                           time-of-latest-spewed-entry)
                                           (begin
                                             (put (format "PRIVMSG #emacs :~a"
                                                          (entry->string datum)) op)
@@ -392,7 +404,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                     (time-utc->date time-of-latest-spewed-entry))
                                                    op))
                                                 'truncate/replace)))
-                                        (vtprintf "Nothing new on planet emacs~%"))))
+                                        (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
                                   ))))))
 
                    ))))
@@ -425,9 +437,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (dest-is-channel? (regexp-match #rx"^#" destination))
                     (source (car prefix)))
 
-               (vprintf "CTCP ~s Tokens ~s destination ~s source ~s~%"
-                        CTCP-message
-                        tokens destination source)
                (when dest-is-channel?
                  (for-each
                   (lambda (task)
