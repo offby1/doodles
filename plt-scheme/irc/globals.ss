@@ -54,5 +54,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; too slow: 1
 (define *planet-task-spew-interval* (make-parameter 2))
+(define *log-output-port* (open-output-file "bot-log" 'truncate/replace))
 (provide (all-defined))
 )

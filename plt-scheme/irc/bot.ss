@@ -111,7 +111,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ((postpone POSTPONE) (semaphore-post s))
         (else (kill-thread t))))))
 
-(define *log-output-port* (open-output-file "bot-log" 'truncate/replace))
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
