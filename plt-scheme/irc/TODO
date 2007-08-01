@@ -54,10 +54,10 @@
   but I should at least work around it.
 
 * persistence
-  It'd be nice to save stuff to disk.  Perhaps the date of the last
-  planet.emacsen.org headline that we spewed ...  But I dunno if
-  simply "write"ing an sexpression will suffice for more complex data
-  ... it'd be nice to have bindings to Berkeley DB.
+  It'd be nice to save stuff to disk.  Currently I save the date of
+  the last planet.emacsen.org headline that we spewed ...  But I dunno
+  if simply "write"ing an sexpression will suffice for more complex
+  data ... it'd be nice to have bindings to Berkeley DB.
 
 * Maybe run svnversion
   to generate the bot's ID string, instead of using the $Id$ keyword.
@@ -93,12 +93,15 @@
   This is harder than it seems at first; I had some sort of trouble
   with URL quoting.
 
-* Do buubot's job...
+* movies
+** Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
   reviews" link; find Ebert's name.  (I honestly think this would be
   as reliable as searching on rogerebert.com; that site's design is as
   lame as its content is excellent)
 
+** my del.icio.us "moviestowatchfor" ...
+  maybe, somehow, spam ##cinema with one of those.
 * jordanb quotes
 
 ** Cancelling the thread takes a while
@@ -120,6 +123,9 @@
 
 ** "uptime"
   since I'm occasionally curious
+
+** auto shakespeare insults
+   I've got scheme code to do that around here somewhere.
 
 * put debug spew someplace where it won't interfere with the REPL
   Like, oh, I don't know, maybe ... a LOG FILE?!?!
@@ -157,6 +163,10 @@ essentially a full-blown IRC client with a scheme syntax.
    channel.  Also obviously there should be a way to find out what
    channel you're in; I suspect the REPL prompt can easily be made to
    include that.
+** cancel a timer
+   Say I get bored waiting for it to finish sleeping 3600 seconds to
+   download more news from Planet Emacs; I could type a command that
+   would cause that "sleep" to exit, and the loop to continue.
 
 * don't restrict "seen" to the current channel
 
@@ -182,26 +192,13 @@ essentially a full-blown IRC client with a scheme syntax.
 
 * planet
 
-** talks to random channel?
-   From looking at the code, it seems like it'll spew headlines to
-   whichever of #bots or #emacs it first joins.  Ick.
+I started it up, I think there was already a timestamp file, it didn't
+emit any headlines, I typed "rudybot: news" ... and nothing.
 
-   Another way to say it: I just ran the release-irc version, r4333,
-   and it started spewing headlines into #bots.  There are actually
-   _two_ mysteries:  why is it spewing at all (I thought I told it
-   only to spew stuff as it comes in, although I recall _wanted_ to
-   have it spew some older items); and why is it spewing in #bots,
-   instead of #emacs, which would make more sense?
-
-** snarfing at startup
-   Currently when we start up, we snarf all the headlines but don't
-   emit any of them, since they're all older than (current-date).  That
-   guarantees that we won't spew old news when we start (which is
-   annoying when I'm constantly restarting the bot).  But ideally we'd
-   spew _one_ old headline -- the latest -- at startup, just to prove
-   we can.
-
-** command to re-spew 'em
+My guess is that the async-channel is full of old headlines, and the
+thread that feeds the channel is sleeping.  So *some-recent-entries*
+has had no chance to be filled.  Perhaps the "news" command should
+somehow force the issue ...
 
 * Terminology
   I suspect there is one RFC-1149-ly correct term for what I variously
