@@ -111,6 +111,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ((postpone POSTPONE) (semaphore-post s))
         (else (kill-thread t))))))
 
+(define *log-output-port* (open-output-file "bot-log" 'truncate/replace))
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
@@ -373,8 +374,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       ;; also spew the single newest entry
                                       ;; even if it's kind of old.
                                       (if (time>?
-                                                 (entry-timestamp datum)
-                                                 time-of-latest-spewed-entry)
+                                           (entry-timestamp datum)
+                                           time-of-latest-spewed-entry)
                                           (begin
                                             (put (format "PRIVMSG #emacs :~a"
                                                          (entry->string datum)) op)
@@ -425,9 +426,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (dest-is-channel? (regexp-match #rx"^#" destination))
                     (source (car prefix)))
 
-               (vprintf "CTCP ~s Tokens ~s destination ~s source ~s~%"
-                        CTCP-message
-                        tokens destination source)
                (when dest-is-channel?
                  (for-each
                   (lambda (task)
