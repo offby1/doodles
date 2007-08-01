@@ -328,7 +328,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                      (when (not *planet-emacs-task*)
                        (set! *planet-emacs-task*
-                             (let ((the-queue (queue-of-entries
+                             (let ((atom-feed (queue-of-entries
                                                #:whence
                                                (and (*use-real-atom-feed?*)
                                                     (lambda ()
@@ -363,7 +363,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                 ;; occasionally.
                                 (*planet-task-spew-interval*)
                                 (lambda ()
-                                  (let ((datum (async-channel-try-get the-queue)))
+                                  (let ((datum (async-channel-try-get atom-feed)))
+                                    (vtprintf "Consumer thread: Just got ~s from our atom feed~%" datum)
                                     (when datum
                                       (*some-recent-entries* datum)
 
@@ -391,7 +392,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                     (time-utc->date time-of-latest-spewed-entry))
                                                    op))
                                                 'truncate/replace)))
-                                        (vtprintf "Nothing new on planet emacs~%"))))
+                                        (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
                                   ))))))
 
                    ))))
