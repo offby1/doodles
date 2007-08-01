@@ -291,11 +291,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     *atom-timestamp-file-name*)
            (check-true #t))
        (let ((op (open-output-string)))
-         (parameterize ((*planet-task-spew-interval* 0))
+         (parameterize ((*planet-task-spew-interval* 0)
+                        (*verbose* #t))
                        (kill-all-tasks)
                        (respond "353 foo bar #bots" op)
                        (sleep 1/10))
          (let ((newstext (get-output-string op)))
+           (check-not-false
+            (null? newstext)
+            "No text from our news feed :-(")
            (check-regexp-match
             #rx"^PRIVMSG #emacs :"
             (car (string->lines newstext))
