@@ -98,18 +98,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; "do-when-channel-idle", which saves the task someplace out of the
 ;; way, monitors the named channel, and cancels the task as needed.
 ;; Right now those things are being done in "respond".
+;; sit around and wait a while, then do the thunk, then start over.
+
+;; we'll cut the wait short, and do the thunk, if someone shoves an #f
+;; at us.
+
+;; we'll cut the wait short, and _not_ do the thunk, if someone shoves
+;; 'POSTPONE at us.
+
+;; we'll go away entirely if we receive any other value.
 (define (do-in-loop seconds thunk)
-  (let* ((s (make-semaphore))
+  (let* ((c (make-channel))
          (t (thread (lambda ()
                       (let loop ()
-                        (let ((postponed? (sync/timeout seconds s)))
-                          (when (not postponed?)
+                        (let ((reason (sync/timeout seconds c)))
+                          ;(printf "sync/timeout returned ~s~%" reason)
+                          (when (or (not reason) ;timed out
+                                    (not (channel-get c)))
                             (thunk)))
-                        (loop))))))
+                        (loop)
+                        )))))
     (lambda (command)
-      (case command
-        ((postpone POSTPONE) (semaphore-post s))
-        (else (kill-thread t))))))
+      (if (memq command '(#f postpone POSTPONE))
+          (channel-put c command)
+        (kill-thread t)))))
 
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
