@@ -323,52 +323,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  '(a b c d e f g h i j k l m fart oops))
        (control 'die-damn-you-die)
        (let ((l (length output)))
-         (check < l 2 "loop barely ran"))
-       )))
+         (check < l 2 "loop barely ran")))))))
 
-   (test-suite
-    "planet stuff"
-    (test-case
-     "Occasionally spews planet.emacsen.org news to #emacs"
-     (if (file-exists? *atom-timestamp-file-name*)
-         (begin
-           (fprintf (current-error-port)
-                    "file ~s exists; skipping a test~%"
-                    *atom-timestamp-file-name*)
-           (check-true #t))
-       (let ((op (open-output-string)))
-         (parameterize ((*planet-task-spew-interval* 0))
-                       (kill-all-tasks)
-                       (respond "353 foo bar #bots" op)
-                       (sleep 1/10))
-         (let ((newstext (get-output-string op)))
-           (check-false (null? newstext)
-            "No text from our news feed :-(")
-           (check-regexp-match
-            #rx"^PRIVMSG #emacs :"
-            (car (string->lines newstext))
-            "didn't spew to #emacs")
-           (check-regexp-match
 
-            ;; this matches the oldest item in our sample Atom data
-            (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-
-            newstext)))))
-    (test-case
-     "Returns planet.emacsen.org news on demand"
-     (parameterize
-      ((*planet-task-spew-interval* 0))
-      (kill-all-tasks)
-      (get-retort "353 foo bar #emacs")
-      (sleep 1/10)
-
-      (let ((recent-news (say-to-bot "news")))
-        ;; these match the newest items in the sample Atom data
-        (check-regexp-match (pregexp (pregexp-quote "http://yrk.livejournal.com/186492.html")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136355742/2007.07.22.php")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://blog.mwolson.org/tech/trying_to_get_emacs22_into_gutsy__part_3.html")) recent-news)
-        ))))
-   ))
-
-(provide tests)
+(provide
+ get-retort
+ say-to-bot
+ string->lines
+ tests)
 )
