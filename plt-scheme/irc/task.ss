@@ -29,7 +29,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; we'll go away entirely if we receive any other value.
 
 ;; TODO -- for debugging, perhaps make this return a structure that
-;; prints nicely (i.e., it could include a name like "jordanb-quotes"
+;; prints nicely (i.e., it could include a name like "quotes"
 ;; or "planet-emacs-headlines" or something)
 (define/kw (do-in-loop seconds thunk #:key [name "unknown task"])
   (let* ((c (make-channel))

@@ -90,7 +90,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
-(define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
+(define *quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
 ;; for testing
@@ -105,7 +105,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (else
                 (vtprintf "Man, I don't know _what_ the hell it is~%"))
                ))
-            (cons *planet-emacs-task* (map cdr (hash-table-map *jordanb-quote-tasks-by-channel* cons)))))
+            (cons *planet-emacs-task* (map cdr (hash-table-map *quote-tasks-by-channel* cons)))))
 
 (define-struct utterance (when what action?) (make-inspector))
 (define (put str op)
@@ -169,9 +169,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-name*
                        *client-version-number*
                        *client-environment*) op)))))
-     ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
+     ((and (hash-table-get *quote-tasks-by-channel* channel-name #f)
            (string-ci=? "shaddap" (first message-tokens)))
-      ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'die-damn-you-die)
+      ((hash-table-get *quote-tasks-by-channel* channel-name) 'die-damn-you-die)
       ;; TODO -- maybe now do hash-table-remove! so that the next
       ;; time we see a 353, we recreate the task.
       )
@@ -229,7 +229,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           ;; himself, return something utterly
                           ;; unlike the usual jordanb quote --
                           ;; something saccharine and Hallmark-y
-                          (one-jordanb-quote))
+                          (one-quote))
                          (else
                           (with-handlers
                               ((exn:fail:network?
@@ -285,16 +285,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          ;; I wonder ... would it be better if I
                          ;; killed any existing task, and then
                          ;; replaced it with a new one?
-                         (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f))
+                         (not (hash-table-get *quote-tasks-by-channel* channel #f))
                        (hash-table-put!
-                        *jordanb-quote-tasks-by-channel*
+                        *quote-tasks-by-channel*
                         channel
                         (do-in-loop
-                         (*jordanb-quote-interval*)
+                         (*quote-interval*)
                          (lambda ()
                            (put (format "PRIVMSG ~a :~a"
                                         channel
-                                        (one-jordanb-quote)) op))
+                                        (one-quote)) op))
                          #:name "jordanb quote task")))
 
                      (vtprintf "353: *planet-emacs-task* is ~s~%"
@@ -406,7 +406,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (when task
                       (task 'postpone)))
                   (list
-                   (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
+                   (hash-table-get *quote-tasks-by-channel* destination #f)
                    *planet-emacs-task*))
 
                  (let* ((times-by-nick (hash-table-get
