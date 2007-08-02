@@ -36,9 +36,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) date->string)
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
 
-         (only (lib "url.ss" "net")
-               get-pure-port
-               string->url)
          "vprintf.ss")
 
 (provide
@@ -141,4 +138,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (loop)))
          )))
     the-channel)  )
+(trace queue-of-entries)
 )
