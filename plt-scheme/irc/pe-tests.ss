@@ -97,7 +97,7 @@ YOW!!!
     "Returns planet.emacsen.org news on demand"
     (before
      (test-prep)
-     (parameterize ((*verbose* #t)
+     (parameterize (
                     ;; roughly, "never"
                     (*planet-task-spew-interval* 3600))
 
