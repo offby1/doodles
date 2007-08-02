@@ -32,10 +32,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *my-nick*
                *planet-task-spew-interval*
                *verbose*
-               ))
+               )
+         "vprintf.ss")
 
 (require/expose "bot.ss" (do-in-loop))
 
+;; returns #f if we didn't find what we're looking for.
+(define (expect/timeout ip regex seconds)
+  (let* ((ch (make-channel))
+         (reader
+         (thread
+          (lambda ()
+            (let loop ()
+              (let ((line (read-line ip)))
+                (vtprintf "expect/timeout: got ~s~%" line)
+                (cond
+                 ((eof-object? line)
+                  (channel-put ch #f))
+                 ((regexp-match regex line)
+                  (channel-put ch #t))
+                 (else
+                  (loop)))
+
+                ))))))
+    (and (sync/timeout seconds ch)
+         ch)))
+(trace expect/timeout)
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
   (let ((lines (collect-output (lambda (op) (respond input op)))))
@@ -49,8 +71,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (error 'get-retort "wanted integer or 'all; got ~s" which))))
      (else ""))
     ))
-
-(*verbose* #f)
 
 (define/kw (send
             text
@@ -96,7 +116,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; output-port? -> void -> (listof string?)
 (define (collect-output func)
-  (let ((string-port (open-output-string)))
+  (let ((string-port (open-output-string "op for testing")))
     (func string-port)
     (string->lines
      (get-output-string string-port))))
@@ -327,6 +347,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 (provide
+ expect/timeout
  get-retort
  say-to-bot
  string->lines

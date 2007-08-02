@@ -22,6 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          (only (lib "pregexp.ss") pregexp-quote)
          (only "tests.ss"
+               expect/timeout
                get-retort
                say-to-bot
                string->lines)
@@ -127,25 +128,33 @@ YOW!!!
    (test-case
     "Returns planet.emacsen.org news on demand"
     (parameterize
-     ((*planet-task-spew-interval* 0))
+     ((*planet-task-spew-interval* 0)
+      (*verbose* #t))
      (kill-all-tasks)
-     (get-retort "353 foo bar #emacs")
 
-     ;; This is unspeakably awful.  A test shouldn't depend on obscure
-     ;; timing parameters.
-     (sleep 1)
+     (check-not-false
+      (let-values (((ip op) (make-pipe #f "input port" "please write to me!!!")))
+        (printf "Our output port looks like this ~s; its name is ~s~%"
+                op
+                (object-name op))
 
-     (let ((recent-news (say-to-bot "news")))
-       ;; these match the newest items in the sample Atom data
-       (check-regexp-match (pregexp (pregexp-quote "http://yrk.livejournal.com/186492.html")) recent-news)
-       (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136355742/2007.07.22.php")) recent-news)
-       (check-regexp-match (pregexp (pregexp-quote "http://blog.mwolson.org/tech/trying_to_get_emacs22_into_gutsy__part_3.html")) recent-news)
-       ))))
-  )
+        (respond "353 foo bar #emacs" op)
+        (close-output-port op)
+        (let loop ()
+          (let ((line (read-line ip)))
+            (printf "snagged ~s~%" line)
+            (when (not (eof-object? line))
+              (loop))))
+        (expect/timeout
+         ip
+         (pregexp-quote "http://yrk.livejournal.com/186492.html")
+         10)
+        )
+      "we get some news after we say 'news'")))))
+
 (provide pe-tests)
-(*verbose* #t)
-(exit  (if (positive? (test/text-ui
-                       pe-tests))
-           1
-         0))
+;;(*verbose* #t)
+(exit (if (positive? (test/text-ui
+                      pe-tests))
+          1 0))
 )

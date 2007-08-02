@@ -4,7 +4,9 @@ exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
 (require (lib "errortrace.ss" "errortrace")
-         (lib "etc.ss"))
+         (lib "etc.ss")
+         (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
+         )
 
 (coverage-counts-enabled #t)
 (execute-counts-enabled #t)
@@ -12,13 +14,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 
-(require  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2))
-          (only "../globals.ss" *random?*)
-          "../parse-tests.ss"
-          "../tests.ss")
-(*random?* #f)
-(test/text-ui parse-tests)
-(test/text-ui tests)
+(require "../pe-tests.ss")
+
 (define *file-of-interest*
   (simplify-path (build-path
                   (this-expression-source-directory)

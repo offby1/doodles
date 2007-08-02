@@ -111,8 +111,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let* ((c (make-channel))
          (t (thread (lambda ()
                       (let loop ()
+                        (printf "Loopy thread: waiting ~a seconds for channel~%"
+                                seconds)
                         (let ((reason (sync/timeout seconds c)))
-                          ;(printf "sync/timeout returned ~s~%" reason)
+                          (printf "sync/timeout returned ~s~%" reason)
                           (when (or (not reason) ;timed out
                                     (not (channel-get c)))
                             (thunk)))
@@ -135,11 +137,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-struct utterance (when what action?) (make-inspector))
 (define (put str op)
   (let ((str (substring str 0 (min 510 (string-length str)))))
-    (vtprintf "=> ~s~%" str)
+    (printf "=> to op ~s ~s~%" (object-name op) str)
     (display str op)
     (newline op)
     (flush-output op)))
-
+(trace put)
 
 (define (do-startup-stuff op)
   (put (format "NICK ~a" (*my-nick*)) op)
@@ -182,7 +184,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; now that I think about it, there's no good reason this couldn't
 ;; just be string? -> (listof string?)
-(define ( respond line op)
+(define (respond line op)
 
   (define (do-something-clever
            message-tokens               ;what they said
@@ -292,7 +294,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (put (format "PRIVMSG ~a :~a"
                      (if was-private? requestor channel-name)
                      response-body) op)))))
-
+  (vtprintf "Respond: output port's name is ~s"
+            (object-name op))
   (let ((line (substring line 0 (min 510 (string-length line)))))
     (let-values (((prefix command params)
                   (parse-message line)))
@@ -498,6 +501,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ))
             ((PING)
              (put (format "PONG ~a" params) op))))))))
-
+(trace respond)
 (define times-by-nick-by-channel (make-hash-table 'equal))
 )
