@@ -88,7 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (time<?
       (entry-timestamp e1)
       (entry-timestamp e2)))))
-
+;;(trace snarf-em-all)
 (define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
@@ -118,16 +118,23 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-async-channel 4)))
+  (let ((the-channel (make-async-channel 4))
+        (entries-put (make-hash-table 'equal)))
     (thread
      (lambda ()
        (let loop ()
          (for-each
           (lambda (e)
-            (vtprintf "Planet producer thread about to put ~s onto the async ... "
-                      (entry->string e))
-            (async-channel-put the-channel e)
-            (vtprintf "done~%"))
+            ;; this is annoying -- apparently structures with equal
+            ;; elements aren't themselves equal -- so I have to use
+            ;; (entry->string e) as the hash table key, instead of
+            ;; simply e.
+            (when (not (hash-table-get entries-put (entry->string e) #f))
+              (vtprintf "Planet producer thread about to put ~s onto the async ... "
+                        (entry->string e))
+              (async-channel-put the-channel e)
+              (vtprintf "done~%")
+              (hash-table-put! entries-put (entry->string e) #t)))
            (snarf-em-all (whence)))
          (if (eq? how-many 'once)
              (async-channel-put the-channel 'no-more)
@@ -138,5 +145,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (loop)))
          )))
     the-channel)  )
-(trace queue-of-entries)
+;;(trace queue-of-entries)
 )
