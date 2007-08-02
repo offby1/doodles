@@ -16,6 +16,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (prefix 19: (lib "19.ss" "srfi" ))
          (lib "async-channel.ss")
          (only "globals.ss"
+               *my-nick*
                *planet-task-spew-interval*
                *verbose*)
          (only "bot.ss"
@@ -90,39 +91,42 @@ YOW!!!
   (test-suite
    "planet.emacsen.org"
    #:before (lambda () (set! original-timestamp-file-name (*atom-timestamp-file-name*))
-                       (*atom-timestamp-file-name* "test-timestamp"))
+                    (*atom-timestamp-file-name* "test-timestamp"))
    #:after  (lambda () (*atom-timestamp-file-name* original-timestamp-file-name))
    (test-case
     "Returns planet.emacsen.org news on demand"
     (before
      (test-prep)
-     (parameterize (
+     (parameterize ((*verbose* #t)
                     ;; roughly, "never"
                     (*planet-task-spew-interval* 3600))
 
        (check-regexp-match
-        #rx"no news yet"
+        #rx"haven't .* news yet"
         (say-to-bot "news"))
 
        ;; cause some news to get put into the async
-       (respond "353 foo bar #bots" (open-output-string))
+       (check-not-false
+        (let-values (((ip op) (make-pipe
+                               #f
+                               "read me for news headlines"
+                               "bot should send headlines here")))
+          (respond "353 foo bar #bots" op)
 
-       (for-each (lambda (url)
-                   (check-regexp-match
+          ;; ick.  We need to wait awhile to ensure the "producer"
+          ;; (the task that puts entries onto the async channel) has
+          ;; started; otherwise our saying "news" to the bot will have
+          ;; no effect, and we'll have to wait an hour.
+          (sleep 1/3)
 
-                    (pregexp-quote url)
+          (say-to-bot "news")
 
-                    (say-to-bot "news")
-                    "we didn't see the URL we wuz looking for"
-                    ))
-                 (list
-                  ;; this is the oldest item in our example xml
-                  "http://yrk.livejournal.com/186492.html"
-
-                  ;; of course this is the second-oldest
-                  "http://ty.phoo"
-                  )
-       ))))
+          (expect/timeout
+           ip
+           (pregexp-quote
+            "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
+           3))
+        ))))
 
    (test-case
     "feed contains no dups"
@@ -146,16 +150,16 @@ YOW!!!
      (test-prep)
 
      (parameterize ((*planet-task-spew-interval* 0))
-     (let-values (((ip op) (make-pipe)))
-       (respond "353 foo bar #bots" op)
-       (check-not-false
-        (expect/timeout
-         ip
-         (pregexp-quote
-          "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
-         10)
-        "didn't find the headline we expected :-("
-        )))))
+       (let-values (((ip op) (make-pipe)))
+         (respond "353 foo bar #bots" op)
+         (check-not-false
+          (expect/timeout
+           ip
+           (pregexp-quote
+            "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
+           10)
+          "didn't find the headline we expected :-("
+          )))))
    ))
 
 (provide pe-tests)

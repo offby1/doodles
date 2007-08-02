@@ -183,7 +183,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                "\u0001ACTION holds his tongue.\u0001")
 
               ((string-ci=? "news" (first message-tokens))
-               "Sorry, no news yet.")
+
+               (if *planet-emacs-task*
+                   (begin
+                     (*planet-emacs-task* #f)
+                     "You should see a headline shortly.")
+                 "Hmm, I haven't started gathering news yet.  That's odd."))
 
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
@@ -289,7 +294,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (lambda ()
                            (put (format "PRIVMSG ~a :~a"
                                         channel
-                                        (one-jordanb-quote)) op)))))
+                                        (one-jordanb-quote)) op))
+                         #:name "jordanb quote task")))
 
                      (vtprintf "353: *planet-emacs-task* is ~s~%"
                                *planet-emacs-task*)
@@ -359,7 +365,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                    op))
                                                 'truncate/replace)))
                                         (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
-                                  ))))
+                                  )
+                                #:name "headline consumer task")))
                        (vtprintf "353: *planet-emacs-task* is now ~s~%"
                                  *planet-emacs-task*)))
 

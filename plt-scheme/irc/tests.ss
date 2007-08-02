@@ -41,24 +41,29 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (expect/timeout ip regex seconds)
   (let* ((ch (make-channel))
          (reader
-         (thread
-          (lambda ()
-            (let loop ()
-              (let ((line (read-line ip)))
-                (vtprintf "expect/timeout: got ~s~%" line)
-                (cond
-                 ((eof-object? line)
-                  (channel-put ch #f))
-                 ((regexp-match regex line)
-                  (printf "expect/timeout: w00t!~%")
-                  (channel-put ch #t))
-                 (else
-                  (loop)))
+          (thread
+           (lambda ()
+             (let loop ()
+               (printf "expect/timeout: about to read from ~s~%"
+                       (object-name ip))
+               (let ((line (read-line ip)))
+                 (printf "expect/timeout: got ~s~%" line)
+                 (cond
+                  ((eof-object? line)
+                   (channel-put ch #f))
+                  ((regexp-match regex line)
+                   (printf "w00t~%")
+                   (channel-put ch #t))
+                  (else
+                   (printf "Damn, didn't match ~a~%" regex)
+                   (loop)))
 
-                ))))))
+                 ))))))
     (and (sync/timeout seconds ch)
          ch)))
-;(trace expect/timeout)
+
+(trace expect/timeout)
+
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
   (let ((lines (collect-output (lambda (op) (respond input op)))))

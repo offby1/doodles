@@ -5,6 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module task mzscheme
+(require (lib "kw.ss")
+         "vprintf.ss")
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
 ;; the symbol POSTPONE postpones the next call (i.e., it resets the
 ;; timer).  Calling the return value with any other value kills the
@@ -29,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; TODO -- for debugging, perhaps make this return a structure that
 ;; prints nicely (i.e., it could include a name like "jordanb-quotes"
 ;; or "planet-emacs-headlines" or something)
-(define (do-in-loop seconds thunk)
+(define/kw (do-in-loop seconds thunk #:key [name "unknown task"])
   (let* ((c (make-channel))
          (t (thread (lambda ()
                       (let loop ()
@@ -40,6 +42,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (loop)
                         )))))
     (lambda (command)
+      (vtprintf "do-in-loop: got command ~s for task ~s~%"
+                command name)
       (case  command
        ((#f postpone POSTPONE)
         (channel-put c command))
@@ -48,7 +52,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        ((die-damn-you-die)
         (kill-thread t))
        (else
-        (error "I don't know how to deal with ~s" command))))))
+        (error 'do-in-loop "I don't know how to deal with ~s" command))))))
 
 (provide (all-defined))
 )
