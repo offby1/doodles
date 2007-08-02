@@ -23,4 +23,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (kill-thread writer)
           (raise (make-exn:fail "generator exhausted" (current-continuation-marks))))
         (car datum)))))
+
+(define g (generator (list 1 2 3)))
+(printf "~a ~a ~a~%" (g)
+        (g)
+        (g))
+(printf "One last time ... ")
+(flush-output)
+(g)
 )
