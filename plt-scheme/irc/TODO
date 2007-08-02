@@ -2,20 +2,6 @@
 
 -- High priority
 
-* test planet-emacsen.ss better
-  There are almost no tests for it; there's just run-pe.ss.
-
-** I still haven't written something that simulates the web site ...
-   ... namely, puts roughly the same batch of entries into the channel
-   over and over, but occasionally removing the oldest entry and
-   adding a brand-new one.
-
-** no dups?
-   Perhaps the bit that fills the async-channel should ensure that it
-   never puts the same entry in there twice, so that the consumer can
-   be assured that anything it gets from the channel is new (in the
-   sense that it's never seen it before).
-
 * Windows
 
 ** Test regularly
@@ -172,6 +158,11 @@ essentially a full-blown IRC client with a scheme syntax.
    Say I get bored waiting for it to finish sleeping 3600 seconds to
    download more news from Planet Emacs; I could type a command that
    would cause that "sleep" to exit, and the loop to continue.
+
+** examine a timer
+   Or maybe have the timers constantly visible in the repl (it'd be
+   nice to have curses support to do this).  So I could watch them
+   count down.
 
 * don't restrict "seen" to the current channel
 

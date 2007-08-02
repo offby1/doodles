@@ -4,6 +4,9 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; TODO -- find a clean way to parameterize *atom-timestamp-file-name*
+;; to "test-timestamp" while the tests run.
+
 (module pe-tests mzscheme
 (require (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
@@ -79,14 +82,52 @@ YOW!!!
   (*planet-task-spew-interval* 0)
   (printf "Killing all tasks~%")
   (kill-all-tasks)
+  (printf "Checking for timestamp file ~s ... " (*atom-timestamp-file-name*))
   (when (file-exists? (*atom-timestamp-file-name*))
-    (printf "Deleting ~s~%" (*atom-timestamp-file-name*))
-    (delete-file (*atom-timestamp-file-name*))))
+    (printf "deleting it")
+    (delete-file (*atom-timestamp-file-name*)))
+  (printf "~%"))
 
 ;;(trace all-distinct?)
+(define original-timestamp-file-name #f)
 (define pe-tests
   (test-suite
    "planet.emacsen.org"
+   #:before (lambda () (set! original-timestamp-file-name (*atom-timestamp-file-name*))
+                       (*atom-timestamp-file-name* "test-timestamp"))
+   #:after  (lambda () (*atom-timestamp-file-name* original-timestamp-file-name))
+   (test-case
+    "Returns planet.emacsen.org news on demand"
+    (before
+     (test-prep)
+     (parameterize ((*verbose* #t)
+
+                    ;; roughly, "never"
+                    (*planet-task-spew-interval* 3600))
+
+       (check-regexp-match
+        #rx"no news yet"
+        (say-to-bot "news"))
+
+       ;; cause some news to get put into the async
+       (respond "353 foo bar #bots" (open-output-string))
+
+       (for-each (lambda (url)
+                   (check-regexp-match
+
+                    (pregexp-quote url)
+
+                    (say-to-bot "news")
+                    "we didn't see the URL we wuz looking for"
+                    ))
+                 (list
+                  ;; this is the oldest item in our example xml
+                  "http://yrk.livejournal.com/186492.html"
+
+                  ;; of course this is the second-oldest
+                  "http://ty.phoo"
+                  )
+       ))))
 
    (test-case
     "feed contains no dups"
@@ -109,6 +150,7 @@ YOW!!!
     (before
      (test-prep)
 
+     (parameterize ((*planet-task-spew-interval* 0))
      (let-values (((ip op) (make-pipe)))
        (respond "353 foo bar #bots" op)
        (check-not-false
@@ -117,39 +159,10 @@ YOW!!!
          (pregexp-quote
           "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
          10)
-        "No text from our news feed :-("
-        ))))
-
-   ;; this is JUST AWFUL.  This test requires the previous test to
-   ;; have run, since the previous test causes a crucial side-effect
-   ;; -- namely, the accumulation of atom entries.
-   (test-case
-    "Returns planet.emacsen.org news on demand"
-    (before
-     (test-prep)
-     (parameterize
-         (
-          ;;        (*verbose* #t)
-          )
-
-       ;; (check-regexp-match
-
-;;         #rx"no news yet"
-;;         (say-to-bot "news"))
-
-       ;; cause some news to spew to the channel
-       (respond "353 foo bar #bots" (open-output-string))
-       (sleep 1/2)
-       (check-regexp-match
-
-        ;; this is the newest item in our example xml
-        (pregexp-quote "http://yrk.livejournal.com/186492.html")
-
-        (say-to-bot "news")
-        "we didn't see the URL we wuz looking for"
-        ))))
+        "didn't find the headline we expected :-("
+        )))))
    ))
-
+(*verbose* #t)
 (provide pe-tests)
 )
 

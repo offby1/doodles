@@ -46,6 +46,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "globals.ss"
          "jordanb.ss"
          "planet-emacsen.ss"
+         "task.ss"
          "vprintf.ss"
          "../web/quote-of-the-day.ss")
 (provide
@@ -89,46 +90,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
-;; Calls THUNK every SECONDS seconds.  Calling the return value with
-;; the symbol POSTPONE postpones the next call (i.e., it resets the
-;; timer).  Calling the return value with any other value kills the
-;; task permanently.
-
-;; TODO -- maybe make a wrapper for this called
-;; "do-when-channel-idle", which saves the task someplace out of the
-;; way, monitors the named channel, and cancels the task as needed.
-;; Right now those things are being done in "respond".
-;; sit around and wait a while, then do the thunk, then start over.
-
-;; we'll cut the wait short, and do the thunk, if someone shoves an #f
-;; at us.
-
-;; we'll cut the wait short, and _not_ do the thunk, if someone shoves
-;; 'POSTPONE at us.
-
-;; we'll go away entirely if we receive any other value.
-(define (do-in-loop seconds thunk)
-  (let* ((c (make-channel))
-         (t (thread (lambda ()
-                      (let loop ()
-                        (let ((reason (sync/timeout seconds c)))
-                          (when (or (not reason) ;timed out
-                                    (not (channel-get c)))
-                            (thunk)))
-                        (loop)
-                        )))))
-    (lambda (command)
-      (if (memq command '(#f postpone POSTPONE))
-          (channel-put c command)
-        (kill-thread t)))))
-
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
 ;; for testing
 (define (kill-all-tasks)
   (for-each (lambda (thing)
-              (when (thread? thing) (kill-thread thing)))
+              (vtprintf "Shall I kill \"task\" ~s?~%" thing)
+              (cond
+               ((thread? thing)
+                (kill-thread thing)
+                (vtprintf "Yup; 'twas a thread; it's outta here"))
+               ((procedure? thing)
+                (vtprintf "Hmm, it's a procedure; I prolly need to call it or something~%")
+                (thing 'die-damn-you-die))
+               ((not thing)
+                (vtprintf "No need; it's #f~%"))
+               (else
+                (vtprintf "Man, I don't know _what_ the hell it is~%"))
+               ))
             (cons *planet-emacs-task* (map cdr (hash-table-map *jordanb-quote-tasks-by-channel* cons)))))
 
 (define-struct utterance (when what action?) (make-inspector))
@@ -320,6 +300,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (put (format "JOIN ~a" ch) op))
                        (*initial-channel-names*)))
             ((353)
+             (vtprintf "Got the 353~%")
              (let ((tokens (split params)))
                (if (< (length tokens) 3)
                    (vtprintf "Server is on drugs: there should be three tokens here: ~s~%" params)
@@ -327,7 +308,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ;; channel (or issued a NAMES command ourselves,
                  ;; which we don't do, afaik)
                  (let ((channel (third tokens)))
-
+                   (vtprintf "353: tokens ~s; channel ~s~%"
+                             tokens channel)
                    (when (or
                           (string=? channel "#bots")
                           (string=? channel "#emacs"))
@@ -346,7 +328,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                         channel
                                         (one-jordanb-quote)) op)))))
 
-                     (when (not *planet-emacs-task*)
+                     (vtprintf "353: *planet-emacs-task* is ~s~%"
+                               *planet-emacs-task*)
+                     (when (not (and *planet-emacs-task*
+                                     (*planet-emacs-task* 'running?)))
                        (set! *planet-emacs-task*
                              (let ((atom-feed (queue-of-entries
                                                #:whence
@@ -413,7 +398,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                    op))
                                                 'truncate/replace)))
                                         (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
-                                  ))))))
+                                  ))))
+                       (vtprintf "353: *planet-emacs-task* is now ~s~%"
+                                 *planet-emacs-task*)))
 
                    ))))
             ((433)
