@@ -170,6 +170,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     ;;(trace bounded-queue)
     bounded-queue))
 
+;; this will store entries that we retreive from the feed.  It's a
+;; crock.  It's hard to test; it's stateful; it's ... *shudder*  I'm
+;; trying to think of a cleaner way to do this.
 (define *some-recent-entries*
   (make-bounded-queue
    ;; choose a number that's small enough so that this many news items
@@ -179,8 +182,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; string? output-port? -> void
 
-;; now that I think about it, there's no good reason this couldn't
-;; just be string? -> (listof string?)
+;; given a line of text (presumably from the IRC server), spew a
+;; response to the output port, and perhaps do all sorts of evil
+;; untestable kludgy side-effects (like starting a thread that will
+;; eventually spew more stuff to the output port)
 (define (respond line op)
 
   (define (do-something-clever
@@ -236,6 +241,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    "Sorry, no news yet."
                  (apply string-append
                         (map entry->string (*some-recent-entries*)))))
+
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
                (let* ((nick (second message-tokens))
