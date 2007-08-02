@@ -80,13 +80,9 @@ YOW!!!
 
 (define (test-prep)
   (*planet-task-spew-interval* 0)
-  (printf "Killing all tasks~%")
   (kill-all-tasks)
-  (printf "Checking for timestamp file ~s ... " (*atom-timestamp-file-name*))
   (when (file-exists? (*atom-timestamp-file-name*))
-    (printf "deleting it")
-    (delete-file (*atom-timestamp-file-name*)))
-  (printf "~%"))
+    (delete-file (*atom-timestamp-file-name*))))
 
 ;;(trace all-distinct?)
 (define original-timestamp-file-name #f)
@@ -100,8 +96,7 @@ YOW!!!
     "Returns planet.emacsen.org news on demand"
     (before
      (test-prep)
-     (parameterize ((*verbose* #t)
-
+     (parameterize (
                     ;; roughly, "never"
                     (*planet-task-spew-interval* 3600))
 
@@ -162,7 +157,7 @@ YOW!!!
         "didn't find the headline we expected :-("
         )))))
    ))
-(*verbose* #t)
+
 (provide pe-tests)
 )
 

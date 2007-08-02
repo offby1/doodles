@@ -45,8 +45,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (channel-put c command))
        ((running?)
         (not (thread-dead? t)))
+       ((die-damn-you-die)
+        (kill-thread t))
        (else
-        (kill-thread t))))))
+        (error "I don't know how to deal with ~s" command))))))
 
 (provide (all-defined))
 )

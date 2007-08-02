@@ -96,16 +96,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; for testing
 (define (kill-all-tasks)
   (for-each (lambda (thing)
-              (vtprintf "Shall I kill \"task\" ~s?~%" thing)
               (cond
                ((thread? thing)
-                (kill-thread thing)
-                (vtprintf "Yup; 'twas a thread; it's outta here"))
+                (kill-thread thing))
                ((procedure? thing)
-                (vtprintf "Hmm, it's a procedure; I prolly need to call it or something~%")
                 (thing 'die-damn-you-die))
-               ((not thing)
-                (vtprintf "No need; it's #f~%"))
+               ((not thing))
                (else
                 (vtprintf "Man, I don't know _what_ the hell it is~%"))
                ))
