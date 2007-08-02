@@ -149,7 +149,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *client-name*
                (*client-version*)) op)  )
 
-(define *atom-timestamp-file-name* "timestamp")
+(define *atom-timestamp-file-name* (make-parameter "timestamp"))
 
 (define (make-bounded-queue size)
   (let ((the-queue '()))
@@ -232,8 +232,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
               ((string-ci=? "news" (first message-tokens))
                ;; TODO -- maybe send an #f to the task
-               (printf "*some-recent-entries*: ~s~%"
-                       (*some-recent-entries*))
                (if (null? (*some-recent-entries*))
                    "Sorry, no news yet."
                  (apply string-append
@@ -357,8 +355,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (time-of-latest-spewed-entry
                                     (date->time-utc
                                      (rfc3339-string->srfi19-date/constructor
-                                      (or (and (file-exists? *atom-timestamp-file-name*)
-                                               (call-with-input-file *atom-timestamp-file-name* read))
+                                      (or (and (file-exists? (*atom-timestamp-file-name*))
+                                               (call-with-input-file (*atom-timestamp-file-name*) read))
                                           "2000-00-00T00:00:00+00:00")
                                       19:make-date))))
 
@@ -401,7 +399,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                               (set! time-of-latest-spewed-entry
                                                     (entry-timestamp datum))
                                               (call-with-output-file
-                                                  *atom-timestamp-file-name*
+                                                  (*atom-timestamp-file-name*)
                                                 (lambda (op)
                                                   (write
                                                    (zdate

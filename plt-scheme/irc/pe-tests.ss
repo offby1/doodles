@@ -46,19 +46,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          <entry>
          <title type="html"> Joseph Miklojcik: gnupg </title>
          <link href="http://jfm3-repl.blogspot.com/2007/07/gnupg.html"/>
-         <id> tag:blogger.com,1999:blog-29447904.post-8169203024370114899 </id>
-         <updated>
 YOW!!!
+         "<updated>"
          (zdate (seconds->date time))
+         "</updated>"
          #<<YOW!!!
-         </updated>
-         <content type="html"> You stink. </content>
-         <author> <name> jfm3 </name> <uri> http://jfm3-repl.blogspot.com/ </uri> </author>
-         <source>
-         <title type="html"> jfm3's journal </title>
-         <link rel="self" href="http://jfm3-repl.blogspot.com/atom.xml"/>
-         <id> tag:blogger.com,1999:blog-29447904 </id>
-         <updated> 2007-07-22T17:46:09+00:00 </updated> </source>
          </entry>
          </feed>
 YOW!!!
@@ -83,14 +75,23 @@ YOW!!!
                 seq)
       #t)))
 
+(define (test-prep)
+  (*planet-task-spew-interval* 0)
+  (printf "Killing all tasks~%")
+  (kill-all-tasks)
+  (when (file-exists? (*atom-timestamp-file-name*))
+    (printf "Deleting ~s~%" (*atom-timestamp-file-name*))
+    (delete-file (*atom-timestamp-file-name*))))
+
 ;;(trace all-distinct?)
 (define pe-tests
   (test-suite
    "planet.emacsen.org"
+
    (test-case
        "feed contains no dups"
        (before
-        (lambda () (kill-all-tasks))
+        test-prep
         (let ((feed (queue-of-entries #:whence stub-atom-feed #:how-many 'once)))
           (let loop ((items '()))
             (when (and (list? items)
@@ -104,45 +105,49 @@ YOW!!!
           )))
 
    (test-case
-    "Occasionally spews planet.emacsen.org news to #emacs"
-    (before
-     (lambda () (kill-all-tasks))
-     (if (file-exists? *atom-timestamp-file-name*)
-         (begin
-           (fprintf (current-error-port)
-                    "file ~s exists; skipping a test~%"
-                    *atom-timestamp-file-name*)
-           (check-true #t))
-
-       (parameterize ((*planet-task-spew-interval* 0))
-         (let-values (((ip op) (make-pipe)))
-           (respond "353 foo bar #bots" op)
-           (check-not-false
-            (expect/timeout
-             ip
-              (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
-             10)
-            "No text from our news feed :-("
-            ))
-         ))))
-   (test-case
     "Returns planet.emacsen.org news on demand"
     (before
-     (lambda ()(kill-all-tasks))
+     test-prep
      (parameterize
-      ((*planet-task-spew-interval* 0)
+      (
 ;;        (*verbose* #t)
        )
 
       (check-regexp-match
+
+       #rx"no news yet"
+       (say-to-bot "news"))
+
+      ;; cause some news to spew to the channel
+      (respond "353 foo bar #bots" (open-output-string))
+      (sleep 1/2)
+      (check-regexp-match
+
+       ;; this is the newest item in our example xml
        (pregexp-quote "http://yrk.livejournal.com/186492.html")
+
        (say-to-bot "news")
        "we didn't see the URL we wuz looking for"
        ))))
+   (test-case
+    "Occasionally spews planet.emacsen.org news to #emacs"
+    (before
+     test-prep
+
+     (let-values (((ip op) (make-pipe)))
+       (respond "353 foo bar #bots" op)
+       (check-not-false
+        (expect/timeout
+         ip
+         (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
+         10)
+        "No text from our news feed :-("
+        ))))
    ))
 
 (provide pe-tests)
 ;;(*verbose* #t)
-(exit (if (positive? (test/text-ui pe-tests 'verbose))
+(exit (if (positive? (parameterize ((*atom-timestamp-file-name* "test-timestamp"))
+                     (test/text-ui pe-tests 'verbose)))
           1 0))
 )
