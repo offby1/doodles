@@ -46,6 +46,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "globals.ss"
          "jordanb.ss"
          "planet-emacsen.ss"
+         "task.ss"
          "vprintf.ss"
          "../web/quote-of-the-day.ss")
 (provide
@@ -89,57 +90,31 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
-;; Calls THUNK every SECONDS seconds.  Calling the return value with
-;; the symbol POSTPONE postpones the next call (i.e., it resets the
-;; timer).  Calling the return value with any other value kills the
-;; task permanently.
-
-;; TODO -- maybe make a wrapper for this called
-;; "do-when-channel-idle", which saves the task someplace out of the
-;; way, monitors the named channel, and cancels the task as needed.
-;; Right now those things are being done in "respond".
-;; sit around and wait a while, then do the thunk, then start over.
-
-;; we'll cut the wait short, and do the thunk, if someone shoves an #f
-;; at us.
-
-;; we'll cut the wait short, and _not_ do the thunk, if someone shoves
-;; 'POSTPONE at us.
-
-;; we'll go away entirely if we receive any other value.
-(define (do-in-loop seconds thunk)
-  (let* ((c (make-channel))
-         (t (thread (lambda ()
-                      (let loop ()
-                        (let ((reason (sync/timeout seconds c)))
-                          ;(printf "sync/timeout returned ~s~%" reason)
-                          (when (or (not reason) ;timed out
-                                    (not (channel-get c)))
-                            (thunk)))
-                        (loop)
-                        )))))
-    (lambda (command)
-      (if (memq command '(#f postpone POSTPONE))
-          (channel-put c command)
-        (kill-thread t)))))
-
 (define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
 (define *planet-emacs-task* #f)
 
 ;; for testing
 (define (kill-all-tasks)
   (for-each (lambda (thing)
-              (when (thread? thing) (kill-thread thing)))
+              (cond
+               ((thread? thing)
+                (kill-thread thing))
+               ((procedure? thing)
+                (thing 'die-damn-you-die))
+               ((not thing))
+               (else
+                (vtprintf "Man, I don't know _what_ the hell it is~%"))
+               ))
             (cons *planet-emacs-task* (map cdr (hash-table-map *jordanb-quote-tasks-by-channel* cons)))))
 
 (define-struct utterance (when what action?) (make-inspector))
 (define (put str op)
   (let ((str (substring str 0 (min 510 (string-length str)))))
-    (vtprintf "=> ~s~%" str)
+    (vtprintf "=> to op ~s ~s~%" (object-name op) str)
     (display str op)
     (newline op)
     (flush-output op)))
-
+;(trace put)
 
 (define (do-startup-stuff op)
   (put (format "NICK ~a" (*my-nick*)) op)
@@ -150,39 +125,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *client-name*
                (*client-version*)) op)  )
 
-(define *atom-timestamp-file-name* "timestamp")
-
-(define (make-bounded-queue size)
-  (let ((the-queue '()))
-    (define (bounded-queue . args)
-      (cond
-       ((null? args)
-        the-queue)
-       ((null? (cdr args))
-        (when (= (length the-queue)
-                 size)
-          (set! the-queue
-                (take the-queue
-                      (sub1 size))))
-        (set! the-queue (cons (car args)
-                              the-queue)))
-       (else
-        (error 'bounded-queue "I don't know what to do with" args))))
-    ;;(trace bounded-queue)
-    bounded-queue))
-
-(define *some-recent-entries*
-  (make-bounded-queue
-   ;; choose a number that's small enough so that this many news items
-   ;; can fit in one IRC message ... which is something around 500
-   ;; bytes
-   3))
+(define *atom-timestamp-file-name* (make-parameter "timestamp"))
 
 ;; string? output-port? -> void
 
-;; now that I think about it, there's no good reason this couldn't
-;; just be string? -> (listof string?)
-(define ( respond line op)
+;; given a line of text (presumably from the IRC server), spew a
+;; response to the output port, and perhaps do all sorts of evil
+;; untestable kludgy side-effects (like starting a thread that will
+;; eventually spew more stuff to the output port)
+(define (respond line op)
 
   (define (do-something-clever
            message-tokens               ;what they said
@@ -232,8 +183,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                "\u0001ACTION holds his tongue.\u0001")
 
               ((string-ci=? "news" (first message-tokens))
-               (apply string-append
-                      (map entry->string (*some-recent-entries*))))
+
+               (if *planet-emacs-task*
+                   (begin
+                     (*planet-emacs-task* #f)
+                     "You should see a headline shortly.")
+                 "Hmm, I haven't started gathering news yet.  That's odd."))
+
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
                (let* ((nick (second message-tokens))
@@ -312,6 +268,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (put (format "JOIN ~a" ch) op))
                        (*initial-channel-names*)))
             ((353)
+             (vtprintf "Got the 353~%")
              (let ((tokens (split params)))
                (if (< (length tokens) 3)
                    (vtprintf "Server is on drugs: there should be three tokens here: ~s~%" params)
@@ -319,7 +276,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ;; channel (or issued a NAMES command ourselves,
                  ;; which we don't do, afaik)
                  (let ((channel (third tokens)))
-
+                   (vtprintf "353: tokens ~s; channel ~s~%"
+                             tokens channel)
                    (when (or
                           (string=? channel "#bots")
                           (string=? channel "#emacs"))
@@ -336,9 +294,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (lambda ()
                            (put (format "PRIVMSG ~a :~a"
                                         channel
-                                        (one-jordanb-quote)) op)))))
+                                        (one-jordanb-quote)) op))
+                         #:name "jordanb quote task")))
 
-                     (when (not *planet-emacs-task*)
+                     (vtprintf "353: *planet-emacs-task* is ~s~%"
+                               *planet-emacs-task*)
+                     (when (not (and *planet-emacs-task*
+                                     (*planet-emacs-task* 'running?)))
                        (set! *planet-emacs-task*
                              (let ((atom-feed (queue-of-entries
                                                #:whence
@@ -353,8 +315,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                    (time-of-latest-spewed-entry
                                     (date->time-utc
                                      (rfc3339-string->srfi19-date/constructor
-                                      (or (and (file-exists? *atom-timestamp-file-name*)
-                                               (call-with-input-file *atom-timestamp-file-name* read))
+                                      (or (and (file-exists? (*atom-timestamp-file-name*))
+                                               (call-with-input-file (*atom-timestamp-file-name*) read))
                                           "2000-00-00T00:00:00+00:00")
                                       19:make-date))))
 
@@ -378,8 +340,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (let ((datum (async-channel-try-get atom-feed)))
                                     (vtprintf "Consumer thread: Just got ~s from our atom feed~%" datum)
                                     (when datum
-                                      (*some-recent-entries* datum)
-
                                       ;; spew any _new_ entries that we
                                       ;; haven't already spewed ... but
                                       ;; also spew the single newest entry
@@ -397,7 +357,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                               (set! time-of-latest-spewed-entry
                                                     (entry-timestamp datum))
                                               (call-with-output-file
-                                                  *atom-timestamp-file-name*
+                                                  (*atom-timestamp-file-name*)
                                                 (lambda (op)
                                                   (write
                                                    (zdate
@@ -405,7 +365,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                    op))
                                                 'truncate/replace)))
                                         (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
-                                  ))))))
+                                  )
+                                #:name "headline consumer task")))
+                       (vtprintf "353: *planet-emacs-task* is now ~s~%"
+                                 *planet-emacs-task*)))
 
                    ))))
             ((433)
@@ -497,6 +460,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ))
             ((PING)
              (put (format "PONG ~a" params) op))))))))
-
+;(trace respond)
 (define times-by-nick-by-channel (make-hash-table 'equal))
 )

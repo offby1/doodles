@@ -13,7 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *my-nick* (make-parameter "rudybot"))
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
-(define *client-name* "Eric Hanchrow's bot")
+(define *client-name* "Eric Hanchrow (aka offby1)'s bot")
 (define *client-version* (make-parameter "$Rev$")) ;better than nothing
 
 ;; *sigh*.  The version string with which we reply to CTCP can't have
@@ -26,7 +26,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (version)
           (system-type 'os)))
 
-(define *verbose* (make-parameter #f))
+(define *verbose*
+  (make-parameter
+   #f
+   (lambda (value)
+     (unless value
+       (error 'who-did-that))
+     value)) )
 (define *irc-server-name*
   (make-parameter
    "localhost"

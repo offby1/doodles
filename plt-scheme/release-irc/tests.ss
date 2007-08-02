@@ -32,9 +32,32 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *my-nick*
                *planet-task-spew-interval*
                *verbose*
-               ))
+               )
+         "vprintf.ss")
 
 (require/expose "bot.ss" (do-in-loop))
+
+;; returns #f if we didn't find what we're looking for.
+(define (expect/timeout ip regex seconds)
+  (let* ((ch (make-channel))
+         (reader
+          (thread
+           (lambda ()
+             (let loop ()
+               (let ((line (read-line ip)))
+                 (cond
+                  ((eof-object? line)
+                   (channel-put ch #f))
+                  ((regexp-match regex line)
+                   (channel-put ch #t))
+                  (else
+                   (loop)))
+
+                 ))))))
+    (and (sync/timeout seconds ch)
+         ch)))
+
+;(trace expect/timeout)
 
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
@@ -49,8 +72,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (error 'get-retort "wanted integer or 'all; got ~s" which))))
      (else ""))
     ))
-
-(*verbose* #f)
 
 (define/kw (send
             text
@@ -96,7 +117,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; output-port? -> void -> (listof string?)
 (define (collect-output func)
-  (let ((string-port (open-output-string)))
+  (let ((string-port (open-output-string "op for testing")))
     (func string-port)
     (string->lines
      (get-output-string string-port))))
@@ -104,50 +125,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define tests
   (test-suite
    "big ol' all-encompassing"
-
-   (test-suite
-    "do-in-loop"
-    (test-case
-     "does something"
-     (printf "Doing some tediously-long tests; patience~%")
-     (let* ((output '())
-            (control (do-in-loop 1/10 (lambda ()
-                                        (set! output (cons (current-process-milliseconds) output))))))
-       (sleep 1)
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check > l 5 "loop ran five times")
-         (sleep 1)
-         (check-equal? (length output) l "thread stopped when we killed it")
-         )
-       ))
-    (test-case
-     "sending it #fs speeds it up"
-     (let* ((output '())
-            (control (do-in-loop 1/10 (lambda ()
-                                        (set! output (cons (current-process-milliseconds) output))))))
-       (control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)
-       (sleep 1)
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check > l 15 "loop ran fifteen times"))
-       ))
-
-    (test-case
-     "sending it POSTPONE slows it down"
-     (let* ((output '())
-            (control (do-in-loop 1 (lambda ()
-                                     (set! output (cons (current-process-milliseconds) output))))))
-
-       (for-each (lambda ignored
-                   (printf "Sleeping ~a ...~%" ignored)
-                   (sleep 9/10)
-                   (control 'postpone))
-                 '(a b c d e f g h i j k l m fart oops))
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check < l 2 "loop barely ran"))
-       )))
 
    (test-suite
     "logs in at startup"
@@ -327,48 +304,54 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     )
 
    (test-suite
-    "planet stuff"
+    "do-in-loop"
     (test-case
-     "Occasionally spews planet.emacsen.org news to #emacs"
-     (if (file-exists? *atom-timestamp-file-name*)
-         (begin
-           (fprintf (current-error-port)
-                    "file ~s exists; skipping a test~%"
-                    *atom-timestamp-file-name*)
-           (check-true #t))
-       (let ((op (open-output-string)))
-         (parameterize ((*planet-task-spew-interval* 0))
-                       (kill-all-tasks)
-                       (respond "353 foo bar #bots" op)
-                       (sleep 1/10))
-         (let ((newstext (get-output-string op)))
-           (check-false (null? newstext)
-            "No text from our news feed :-(")
-           (check-regexp-match
-            #rx"^PRIVMSG #emacs :"
-            (car (string->lines newstext))
-            "didn't spew to #emacs")
-           (check-regexp-match
-
-            ;; this matches the oldest item in our sample Atom data
-            (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-
-            newstext)))))
+     "does something"
+     (printf "Doing some tediously-long tests; patience~%")
+     (let* ((output '())
+            (control (do-in-loop 1/10 (lambda ()
+                                        (set! output (cons (current-process-milliseconds) output))))))
+       (sleep 1)
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check > l 5 "loop ran five times")
+         (sleep 1)
+         (check-equal? (length output) l "thread stopped when we killed it")
+         )
+       ))
     (test-case
-     "Returns planet.emacsen.org news on demand"
-     (parameterize
-      ((*planet-task-spew-interval* 0))
-      (kill-all-tasks)
-      (get-retort "353 foo bar #emacs")
-      (sleep 1/10)
+     "sending it #fs speeds it up"
+     (let* ((output '())
+            (control (do-in-loop 1/10 (lambda ()
+                                        (set! output (cons (current-process-milliseconds) output))))))
+       (control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)
+       (sleep 1)
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check > l 15 "loop ran fifteen times"))
+       ))
 
-      (let ((recent-news (say-to-bot "news")))
-        ;; these match the newest items in the sample Atom data
-        (check-regexp-match (pregexp (pregexp-quote "http://yrk.livejournal.com/186492.html")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://feeds.feedburner.com/~r/sachac/~3/136355742/2007.07.22.php")) recent-news)
-        (check-regexp-match (pregexp (pregexp-quote "http://blog.mwolson.org/tech/trying_to_get_emacs22_into_gutsy__part_3.html")) recent-news)
-        ))))
-   ))
+    (test-case
+     "sending it POSTPONE slows it down"
+     (let* ((output '())
+            (control (do-in-loop 1 (lambda ()
+                                     (set! output (cons (current-process-milliseconds) output))))))
 
-(provide tests)
+       (for-each (lambda ignored
+                   (printf "Sleeping ~a ...~%" ignored)
+                   (sleep 9/10)
+                   (control 'postpone))
+                 '(a b c d e f g h i j k l m fart oops))
+       (control 'die-damn-you-die)
+       (let ((l (length output)))
+         (check < l 2 "loop barely ran")))))))
+
+
+(provide
+ collect-output
+ expect/timeout
+ get-retort
+ say-to-bot
+ string->lines
+ tests)
 )
