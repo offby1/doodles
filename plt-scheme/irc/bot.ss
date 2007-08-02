@@ -44,7 +44,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "parse-message.ss"
          "globals.ss"
-         "jordanb.ss"
+         "quotes.ss"
          "planet-emacsen.ss"
          "task.ss"
          "vprintf.ss"
@@ -171,7 +171,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-environment*) op)))))
      ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
            (string-ci=? "shaddap" (first message-tokens)))
-      ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill)
+      ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'die-damn-you-die)
       ;; TODO -- maybe now do hash-table-remove! so that the next
       ;; time we see a 353, we recreate the task.
       )

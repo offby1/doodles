@@ -45,7 +45,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *jordanb-quotes-file-name* (make-parameter
                                     (build-path
                                      (this-expression-source-directory)
-                                     "jordanb-quotes")))
+                                     "quotes")))
 (define *use-real-atom-feed?* (make-parameter #f))
 
 ;; setting this too low can cause the IRC server to hang up on us,

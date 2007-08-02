@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module jordanb mzscheme
+(module quotes mzscheme
 (require (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
          "globals.ss")
 (provide all-jordanb-quotes

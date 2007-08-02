@@ -214,6 +214,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (say-to-bot "quote")))
 
+    (test-case
+     "witty quotes after being told to shaddap"
+     (parameterize ((*verbose* #t))
+     (say-to-bot "shaddap")
+     (check-regexp-match
+      #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
+      (say-to-bot "quote"))))
+
     (test-suite
      "the 'seen' command"
      #:before (lambda ()  (send "what up, cuz" #:source "bob") (send "I got your back" #:source "sam") (send "\u0001ACTION Gets bent\u0001" #:source "chris") (send "I like Doritos" #:source "bob") (psend "\u0001ACTION confesses to the bot in private\u0001"))
