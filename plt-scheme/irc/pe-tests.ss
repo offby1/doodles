@@ -153,8 +153,4 @@ YOW!!!
    ))
 
 (provide pe-tests)
-;;(*verbose* #t)
-(exit (if (positive? (parameterize ((*atom-timestamp-file-name* "test-timestamp"))
-                     (test/text-ui pe-tests 'verbose)))
-          1 0))
 )
