@@ -111,10 +111,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let* ((c (make-channel))
          (t (thread (lambda ()
                       (let loop ()
-                        (printf "Loopy thread: waiting ~a seconds for channel~%"
-                                seconds)
                         (let ((reason (sync/timeout seconds c)))
-                          (printf "sync/timeout returned ~s~%" reason)
                           (when (or (not reason) ;timed out
                                     (not (channel-get c)))
                             (thunk)))
@@ -137,11 +134,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-struct utterance (when what action?) (make-inspector))
 (define (put str op)
   (let ((str (substring str 0 (min 510 (string-length str)))))
-    (printf "=> to op ~s ~s~%" (object-name op) str)
+    (vtprintf "=> to op ~s ~s~%" (object-name op) str)
     (display str op)
     (newline op)
     (flush-output op)))
-(trace put)
+;(trace put)
 
 (define (do-startup-stuff op)
   (put (format "NICK ~a" (*my-nick*)) op)
@@ -235,8 +232,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
               ((string-ci=? "news" (first message-tokens))
                ;; TODO -- maybe send an #f to the task
-               (apply string-append
-                      (map entry->string (*some-recent-entries*))))
+               (printf "*some-recent-entries*: ~s~%"
+                       (*some-recent-entries*))
+               (if (null? (*some-recent-entries*))
+                   "Sorry, no news yet."
+                 (apply string-append
+                        (map entry->string (*some-recent-entries*)))))
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
                (let* ((nick (second message-tokens))
@@ -294,8 +295,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (put (format "PRIVMSG ~a :~a"
                      (if was-private? requestor channel-name)
                      response-body) op)))))
-  (vtprintf "Respond: output port's name is ~s"
-            (object-name op))
+
   (let ((line (substring line 0 (min 510 (string-length line)))))
     (let-values (((prefix command params)
                   (parse-message line)))
@@ -501,6 +501,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                ))
             ((PING)
              (put (format "PONG ~a" params) op))))))))
-(trace respond)
+;(trace respond)
 (define times-by-nick-by-channel (make-hash-table 'equal))
 )
