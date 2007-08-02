@@ -130,7 +130,10 @@ YOW!!!
      ((*planet-task-spew-interval* 0))
      (kill-all-tasks)
      (get-retort "353 foo bar #emacs")
-     (sleep 1/10)
+
+     ;; This is unspeakably awful.  A test shouldn't depend on obscure
+     ;; timing parameters.
+     (sleep 1)
 
      (let ((recent-news (say-to-bot "news")))
        ;; these match the newest items in the sample Atom data
@@ -140,7 +143,7 @@ YOW!!!
        ))))
   )
 (provide pe-tests)
-;;(*verbose* #t)
+(*verbose* #t)
 (exit  (if (positive? (test/text-ui
                        pe-tests))
            1
