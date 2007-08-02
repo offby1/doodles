@@ -114,10 +114,8 @@ YOW!!!
        (check-not-false
         (expect/timeout
          ip
-         "."
-         ;; (pregexp-quote
-;;           "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"
-;;           )
+         (pregexp-quote
+          "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
          10)
         "No text from our news feed :-("
         ))))
@@ -154,3 +152,7 @@ YOW!!!
 
 (provide pe-tests)
 )
+
+;; to run just these from the command line:
+
+;; mzscheme --no-init-file --mute-banner --version --require ./pe-tests.ss -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui pe-tests)'
