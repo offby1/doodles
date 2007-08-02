@@ -50,6 +50,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  ((eof-object? line)
                   (channel-put ch #f))
                  ((regexp-match regex line)
+                  (printf "expect/timeout: w00t!~%")
                   (channel-put ch #t))
                  (else
                   (loop)))
@@ -57,7 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 ))))))
     (and (sync/timeout seconds ch)
          ch)))
-(trace expect/timeout)
+;(trace expect/timeout)
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
   (let ((lines (collect-output (lambda (op) (respond input op)))))
@@ -347,6 +348,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 
 (provide
+ collect-output
  expect/timeout
  get-retort
  say-to-bot

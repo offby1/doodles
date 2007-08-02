@@ -22,6 +22,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          (only (lib "pregexp.ss") pregexp-quote)
          (only "tests.ss"
+               collect-output
                expect/timeout
                get-retort
                say-to-bot
@@ -87,74 +88,61 @@ YOW!!!
   (test-suite
    "planet.emacsen.org"
    (test-case
-    "feed contains no dups"
-    (let ((feed (queue-of-entries #:whence stub-atom-feed #:how-many 'once)))
-      (let loop ((items '()))
-        (when (and (list? items)
-                   (< (length items ) 10))
-          (vtprintf "Getting from stub-atom-feed ... ")
-          (let ((datum (async-channel-get feed)))
-            (vtprintf "Snarfed ~s~%" datum)
-            (when (entry? datum)
-              (loop (cons datum items)))))
-        (check-pred all-distinct?  items))
-      ))
+       "feed contains no dups"
+       (before
+        (lambda () (kill-all-tasks))
+        (let ((feed (queue-of-entries #:whence stub-atom-feed #:how-many 'once)))
+          (let loop ((items '()))
+            (when (and (list? items)
+                       (< (length items ) 10))
+              (vtprintf "Getting from stub-atom-feed ... ")
+              (let ((datum (async-channel-get feed)))
+                (vtprintf "Snarfed ~s~%" datum)
+                (when (entry? datum)
+                  (loop (cons datum items)))))
+            (check-pred all-distinct?  items))
+          )))
+
    (test-case
     "Occasionally spews planet.emacsen.org news to #emacs"
-    (if (file-exists? *atom-timestamp-file-name*)
-        (begin
-          (fprintf (current-error-port)
-                   "file ~s exists; skipping a test~%"
-                   *atom-timestamp-file-name*)
-          (check-true #t))
-      (let ((op (open-output-string)))
-        (parameterize ((*planet-task-spew-interval* 0))
-                      (kill-all-tasks)
-                      (respond "353 foo bar #bots" op)
-                      (sleep 1/10))
-        (let ((newstext (get-output-string op)))
-          (check-false (null? (string->lines newstext))
-                       "No text from our news feed :-(")
-          (check-regexp-match
-           #rx"^PRIVMSG #emacs :"
-           (car (string->lines newstext))
-           "didn't spew to #emacs")
-          (check-regexp-match
+    (before
+     (lambda () (kill-all-tasks))
+     (if (file-exists? *atom-timestamp-file-name*)
+         (begin
+           (fprintf (current-error-port)
+                    "file ~s exists; skipping a test~%"
+                    *atom-timestamp-file-name*)
+           (check-true #t))
 
-           ;; this matches the oldest item in our sample Atom data
-           (pregexp (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast"))
-
-           newstext)))))
+       (parameterize ((*planet-task-spew-interval* 0))
+         (let-values (((ip op) (make-pipe)))
+           (respond "353 foo bar #bots" op)
+           (check-not-false
+            (expect/timeout
+             ip
+              (pregexp-quote "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
+             10)
+            "No text from our news feed :-("
+            ))
+         ))))
    (test-case
     "Returns planet.emacsen.org news on demand"
-    (parameterize
-     ((*planet-task-spew-interval* 0)
-      (*verbose* #t))
-     (kill-all-tasks)
+    (before
+     (lambda ()(kill-all-tasks))
+     (parameterize
+      ((*planet-task-spew-interval* 0)
+;;        (*verbose* #t)
+       )
 
-     (check-not-false
-      (let-values (((ip op) (make-pipe #f "input port" "please write to me!!!")))
-        (printf "Our output port looks like this ~s; its name is ~s~%"
-                op
-                (object-name op))
-
-        (respond "353 foo bar #emacs" op)
-        (close-output-port op)
-        (let loop ()
-          (let ((line (read-line ip)))
-            (printf "snagged ~s~%" line)
-            (when (not (eof-object? line))
-              (loop))))
-        (expect/timeout
-         ip
-         (pregexp-quote "http://yrk.livejournal.com/186492.html")
-         10)
-        )
-      "we get some news after we say 'news'")))))
+      (check-regexp-match
+       (pregexp-quote "http://yrk.livejournal.com/186492.html")
+       (say-to-bot "news")
+       "we didn't see the URL we wuz looking for"
+       ))))
+   ))
 
 (provide pe-tests)
 ;;(*verbose* #t)
-(exit (if (positive? (test/text-ui
-                      pe-tests))
+(exit (if (positive? (test/text-ui pe-tests 'verbose))
           1 0))
 )
