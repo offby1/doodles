@@ -35,6 +35,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    str
    ""))
 ;;(trace trim)
+;; TODO -- handle exceptions, in particular those which come from the
+;; web site being down.
 (define (quotes-of-the-day)
   (parameterize ((current-alist-separator-mode 'amp))
                 (let* ((url (string->url "http://feeds.feedburner.com/quotationspage/qotd")))
