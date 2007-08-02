@@ -127,35 +127,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *atom-timestamp-file-name* (make-parameter "timestamp"))
 
-(define (make-bounded-queue size)
-  (let ((the-queue '()))
-    (define (bounded-queue . args)
-      (cond
-       ((null? args)
-        the-queue)
-       ((null? (cdr args))
-        (when (= (length the-queue)
-                 size)
-          (set! the-queue
-                (take the-queue
-                      (sub1 size))))
-        (set! the-queue (cons (car args)
-                              the-queue)))
-       (else
-        (error 'bounded-queue "I don't know what to do with" args))))
-    ;;(trace bounded-queue)
-    bounded-queue))
-
-;; this will store entries that we retreive from the feed.  It's a
-;; crock.  It's hard to test; it's stateful; it's ... *shudder*  I'm
-;; trying to think of a cleaner way to do this.
-(define *some-recent-entries*
-  (make-bounded-queue
-   ;; choose a number that's small enough so that this many news items
-   ;; can fit in one IRC message ... which is something around 500
-   ;; bytes
-   3))
-
 ;; string? output-port? -> void
 
 ;; given a line of text (presumably from the IRC server), spew a
@@ -212,11 +183,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                "\u0001ACTION holds his tongue.\u0001")
 
               ((string-ci=? "news" (first message-tokens))
-               ;; TODO -- maybe send an #f to the task
-               (if (null? (*some-recent-entries*))
-                   "Sorry, no news yet."
-                 (apply string-append
-                        (map entry->string (*some-recent-entries*)))))
+               "Sorry, no news yet.")
 
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
@@ -367,8 +334,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                   (let ((datum (async-channel-try-get atom-feed)))
                                     (vtprintf "Consumer thread: Just got ~s from our atom feed~%" datum)
                                     (when datum
-                                      (*some-recent-entries* datum)
-
                                       ;; spew any _new_ entries that we
                                       ;; haven't already spewed ... but
                                       ;; also spew the single newest entry
