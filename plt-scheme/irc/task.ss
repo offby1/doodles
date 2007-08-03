@@ -33,26 +33,54 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; or "planet-emacs-headlines" or something)
 (define/kw (do-in-loop seconds thunk #:key [name "unknown task"])
   (let* ((c (make-channel))
-         (t (thread (lambda ()
-                      (let loop ()
-                        (let ((reason (sync/timeout seconds c)))
-                          (when (or (not reason) ;timed out
-                                    (not (channel-get c)))
-                            (thunk)))
-                        (loop)
-                        )))))
-    (lambda (command)
-      (vtprintf "do-in-loop: got command ~s for task ~s~%"
-                command name)
-      (case  command
-       ((#f postpone POSTPONE)
-        (channel-put c command))
-       ((running?)
-        (not (thread-dead? t)))
-       ((die-damn-you-die)
-        (kill-thread t))
-       (else
-        (error 'do-in-loop "I don't know how to deal with ~s" command))))))
+         (t (delay
+              (thread (lambda ()
+                        (let loop ()
+                          (let ((reason (sync/timeout seconds c)))
+                            (when (or (not reason) ;timed out
+                                      (not (channel-get c)))
+                              (thunk)))
+                          (loop)
+                          ))))))
 
-(provide (all-defined))
+    (lambda (command)
+      (let ((t (force t)))
+        (case  command
+          ((#f postpone POSTPONE)
+           (thread-resume t)
+           (channel-put c command))
+          ((running?)
+           (thread-running? t))
+          ((die-damn-you-die)
+           (kill-thread t))
+          (else
+           (error 'do-in-loop "I don't know how to deal with ~s" command)))))))
+
+(define-struct task (name-symbol interval message-generator-thunk controller)
+  (make-inspector))
+
+(define/kw (public-make-task name-symbol interval message-generator-thunk
+                             #:key [verbose #f])
+  (make-task name-symbol interval message-generator-thunk
+             (do-in-loop interval (lambda ()
+                                    (when verbose
+                                      (printf "task ~s about to do its thang~%" name-symbol))
+                                    (message-generator-thunk)) #:name name-symbol)))
+
+;; for testing, so that a test can start from a known state
+(define (kill task)
+  ((task-controller task) 'die-damn-you-die)
+)
+
+(define (task-unsuspend task)
+  ((task-controller task) 'running?))
+
+(define (do-it-now! task)
+  ((task-controller task) #f))
+
+(define (postpone task)
+  ((task-controller task) 'postpone))
+
+(provide (all-defined-except do-in-loop make-task))
+(provide (rename public-make-task make-task))
 )

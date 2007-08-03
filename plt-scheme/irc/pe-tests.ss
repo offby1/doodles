@@ -101,10 +101,6 @@ YOW!!!
                     ;; roughly, "never"
                     (*planet-task-spew-interval* 3600))
 
-       (check-regexp-match
-        #rx"haven't .* news yet"
-        (say-to-bot "news"))
-
        ;; cause some news to get put into the async
        (check-not-false
         (let-values (((ip op) (make-pipe

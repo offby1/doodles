@@ -11,6 +11,11 @@ with funny quotes that it didn't get around to responding to PING
 ... if so, that suggests that we ought to prioritize our threads, and
 give the PING response higher priority than the quotes.
 
+* news in wrong channel
+  have him either ignore the word "news" in channels other than
+  #emacs, or else spew the news into the channel in which he was asked
+  for it, rather than just always #emacs.
+
 * Windows
 
 ** Test regularly
