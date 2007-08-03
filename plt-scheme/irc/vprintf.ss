@@ -11,7 +11,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                current-date))
 
 (define (vprintf . args)
-  (when (*verbose*)
+  (when *verbose*
     (parameterize ((current-output-port (*log-output-port*)))
     (apply printf args)
     (flush-output))))

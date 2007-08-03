@@ -19,8 +19,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              1/10
              (lambda ()
                (set-box! times-run (add1 (unbox times-run)))
-               (format "I am ~s; my purpose in life is merely to increment a little counter"
-                       name))
+               (format
+                "I am ~s; my purpose in life is merely to increment a little counter"
+                name))
              #:verbose #t
              )))
     (checker-proc times-run t)

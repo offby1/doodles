@@ -10,12 +10,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (only "globals.ss" *random?*)
  "parse-tests.ss"
  "pe-tests.ss"
+ "task-tests.ss"
  "tests.ss")
 
 (parameterize
  ((*random?* #f))
 
  (exit (if (positive? (+
+                       (test/text-ui
+                        task-tests)
                        (test/text-ui
                         parse-tests)
                        (test/text-ui

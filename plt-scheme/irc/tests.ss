@@ -43,13 +43,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (thread
            (lambda ()
              (let loop ()
+               (printf "expect/timeout about to look for ~s from ~s ...~%"
+                       regex
+                       (object-name ip))
                (let ((line (read-line ip)))
                  (cond
                   ((eof-object? line)
+                   (printf "expect/timeout: eof~%")
                    (channel-put ch #f))
                   ((regexp-match regex line)
+                   (printf "expect/timeout: Got match!~%")
                    (channel-put ch #t))
                   (else
+                   (printf "expect/timeout: nope; retrying~%")
                    (loop)))
 
                  ))))))
@@ -142,7 +148,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (let ((chans (list "#rum" "##sodomy" "#the-lash")))
      (test-equal?
       "joins channels upon receipt of 001"
-      (parameterize ( ;;(*verbose* #t)
+      (parameterize (
                      (*initial-channel-names* chans))
         (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
                     #:which 'all))
@@ -215,11 +221,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (test-case
      "witty quotes after being told to shaddap"
-     (parameterize ((*verbose* #t))
-       (say-to-bot "shaddap")
-       (check-regexp-match
-        #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
-        (say-to-bot "quote"))))
+     (say-to-bot "shaddap")
+     (check-regexp-match
+      #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
+      (say-to-bot "quote")))
 
     (test-suite
      "the 'seen' command"

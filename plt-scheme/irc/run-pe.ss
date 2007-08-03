@@ -32,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                third)
          (lib "pretty.ss")
-         (only "globals.ss" *verbose*))
+         (only "globals.ss" (verbose!)))
 
 (define atom-input-port-generator #f)
 (command-line
@@ -50,31 +50,30 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (("-v" "--verbose")
     "Spew I/O to stdout"
-    (*verbose* #t))))
+    (verbose!))))
 
-(parameterize ((*verbose* #t))
-              (let pass ((passes 0))
-                (when (< passes 2)
-                  (let ((the-channel
-                         (queue-of-entries
-                          #:whence atom-input-port-generator
-                          #:how-many 'once)))
-                    (let loop ()
-                      (let ((datum (async-channel-try-get the-channel)))
-                        (cond
-                         ((equal? datum 'no-more)
-                          (printf "I guess that's all, then ~%"))
-                         (datum
-                          (printf "~a~%" (entry->string datum))
-                          (flush-output)
-                          (loop))
-                         (else
-                          (printf "No data; sleeping~%")
-                          (flush-output)
-                          (sleep 2)
-                          (loop))))
-                      ))
-                  (pass (add1 passes)))))
+(let pass ((passes 0))
+  (when (< passes 2)
+    (let ((the-channel
+           (queue-of-entries
+            #:whence atom-input-port-generator
+            #:how-many 'once)))
+      (let loop ()
+        (let ((datum (async-channel-try-get the-channel)))
+          (cond
+           ((equal? datum 'no-more)
+            (printf "I guess that's all, then ~%"))
+           (datum
+            (printf "~a~%" (entry->string datum))
+            (flush-output)
+            (loop))
+           (else
+            (printf "No data; sleeping~%")
+            (flush-output)
+            (sleep 2)
+            (loop))))
+        ))
+    (pass (add1 passes))))
 
 
 (newline))

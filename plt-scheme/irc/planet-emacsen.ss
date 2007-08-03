@@ -123,6 +123,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (thread
      (lambda ()
        (let loop ()
+         (vtprintf "queue-of-entries top of a loop~%")
          (for-each
           (lambda (e)
             ;; this is annoying -- apparently structures with equal

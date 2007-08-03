@@ -26,13 +26,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (version)
           (system-type 'os)))
 
-(define *verbose*
-  (make-parameter
-   #f
-   (lambda (value)
-     (unless value
-       (error 'who-did-that))
-     value)) )
+(define *verbose* #f)
+(define (verbose!) (set! *verbose* #t))
+
 (define *irc-server-name*
   (make-parameter
    "localhost"

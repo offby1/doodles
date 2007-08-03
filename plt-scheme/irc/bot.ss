@@ -7,14 +7,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://tools.ietf.org/html/rfc1459
 
 (module bot mzscheme
-(require (lib "async-channel.ss")
+(require
          (lib "trace.ss")
          (only (lib "pregexp.ss") pregexp-quote)
-         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
-               rfc3339-string->srfi19-date/constructor)
-         (only (lib "url.ss" "net")
-               get-pure-port
-               string->url)
          (only (lib "1.ss" "srfi")
                filter
                first
@@ -30,30 +25,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set
                char-set-complement
                char-set:whitespace)
-         (rename (lib "19.ss" "srfi") 19:make-date make-date)
-         (only (lib "19.ss" "srfi")
-               add-duration
-               current-date
-               date->time-utc
-               make-time
-               time-duration
-               time-utc->date
-               time>?
-               )
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
-         "parse-message.ss"
+         "../web/quote-of-the-day.ss"
          "globals.ss"
+         "parse-message.ss"
+         "planet-emacs-task.ss"
          "quotes.ss"
-         "planet-emacsen.ss"
          "task.ss"
          "vprintf.ss"
-         "../web/quote-of-the-day.ss")
+         )
 (provide
- *atom-timestamp-file-name*
+ *tasks-by-channel*
  do-startup-stuff
- kill-all-tasks
  respond)
 
 (define (split str)
@@ -93,12 +78,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define-struct utterance (when what action?) (make-inspector))
 
-(define (kill-all-tasks)
-  (hash-table-for-each
-   running-tasks-by-channel
-   (lambda (channel-name task)
-     (kill task))))
-
 ;; this will get set to a function that calls PUT, with the proper
 ;; output port.  It's useful from the REPL.
 (define p* #f)
@@ -120,17 +99,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *client-name*
                (*client-version*)) op)  )
 
-(define *atom-timestamp-file-name* (make-parameter "timestamp"))
-
-;; these data are what we will create tasks from.  We do this at most
-;; once per channel.
-(define task-info-by-channel (make-hash-table 'equal))
-
 ;; these are running (or possibly dead) tasks.  Perhaps this table
 ;; could be combined with the above.  The values would be a bunch of
 ;; startup stuff, plus the actual task, which isn't running yet; then
 ;; at channel-join time I'd merely start the task.
-(define running-tasks-by-channel  (make-hash-table 'equal))
+(define *tasks-by-channel*  (make-hash-table 'equal))
 
 ;; string? output-port? -> void
 
@@ -187,7 +160,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                            (task #f))
                          (filter (lambda (task)
                                    (eq? task-name-symbol 'news))
-                                 (hash-table-map running-tasks-by-channel (lambda (k v) v)))))
+                                 (hash-table-map *tasks-by-channel* (lambda (k v) v))))
+               "Just poked some task or other")
 
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
@@ -282,7 +256,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (let ((channel (third tokens)))
                    (vtprintf "353: tokens ~s; channel ~s~%"
                              tokens channel)
-                   (for-each task-unsuspend (hash-table-get task-info-by-channel channel '()))))))
+                   (for-each
+                    (lambda (t)
+                      (vtprintf "Unsuspending task ~s~%" (task-name-symbol t))
+                      (task-unsuspend t))
+                    (hash-table-get *tasks-by-channel* channel '()))))))
             ((433)
              (vtprintf "Gaah!!  One of those \"nick already in use\" messages!~%")
              (vtprintf "I don't know how to deal with that~%")
@@ -317,7 +295,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (lambda (task)
                     (when task
                       (task 'postpone)))
-                  (hash-table-get running-tasks-by-channel destination '()))
+                  (hash-table-get *tasks-by-channel* destination '()))
 
                  (let* ((times-by-nick (hash-table-get
                                         times-by-nick-by-channel

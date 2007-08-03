@@ -37,13 +37,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (thread (lambda ()
                         (let loop ()
                           (let ((reason (sync/timeout seconds c)))
+                            (vtprintf "thread for task ~s: woke up because ~s~%"
+                                    name reason)
                             (when (or (not reason) ;timed out
                                       (not (channel-get c)))
                               (thunk)))
                           (loop)
                           ))))))
 
+    (vtprintf "do-in-loop: creating task ~s~%" name)
     (lambda (command)
+      (vtprintf "task ~s: got command ~s~%" name command)
       (let ((t (force t)))
         (case  command
           ((#f postpone POSTPONE)
@@ -64,7 +68,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (make-task name-symbol interval message-generator-thunk
              (do-in-loop interval (lambda ()
                                     (when verbose
-                                      (printf "task ~s about to do its thang~%" name-symbol))
+                                      (vtprintf "task ~s about to do its thang~%" name-symbol))
                                     (message-generator-thunk)) #:name name-symbol)))
 
 ;; for testing, so that a test can start from a known state
@@ -73,7 +77,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 )
 
 (define (task-unsuspend task)
-  ((task-controller task) 'running?))
+  ((task-controller task) #f))
 
 (define (do-it-now! task)
   ((task-controller task) #f))

@@ -38,7 +38,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
     "Spew debug stuff to logfile"
-    (*verbose* #t))
+    (verbose!))
   )
 
  (multi
@@ -77,7 +77,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (when version-string
       (*client-version*
        version-string))
-    (printf "Our version string is ~s~%" (*client-version*)))
+    (vtprintf "Our version string is ~s~%" (*client-version*)))
   )
 
 (thread
@@ -96,11 +96,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (tcp-connect (*irc-server-name*) 6667)))
 
   (do-startup-stuff op)
+  (let ((consumer (make-pe-consumer-proc)))
+    (hash-table-put!
+     tasks-by-channel
+     "#emacs"
+     (make-task 'headline-consumer-task
+                (* 60 20)
+                (lambda ()
+                  (consumer op)))))
 
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
       (if (eof-object? line)
-          (printf "eof on server~%")
+          (vtprintf "eof on server~%")
         (begin
           (respond line op)
           (loop))))))
