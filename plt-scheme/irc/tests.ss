@@ -7,7 +7,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module tests mzscheme
 (require (lib "trace.ss")
          (lib "kw.ss")
-         (only (lib "misc.ss" "swindle") dotimes)
          (only (lib "etc.ss")
                build-string
                this-expression-source-directory)
