@@ -2,6 +2,15 @@
 
 -- High priority
 
+* bug
+
+at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
+dancer-ircd eventually disconnected the bot, saying something about a
+"ping timeout".  I wonder if the bot was so busy spamming the channel
+with funny quotes that it didn't get around to responding to PING
+... if so, that suggests that we ought to prioritize our threads, and
+give the PING response higher priority than the quotes.
+
 * Windows
 
 ** Test regularly
