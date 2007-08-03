@@ -5,6 +5,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module task-tests mzscheme
+(require (lib "kw.ss")
+         (only (lib "misc.ss" "swindle") dotimes)
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+         "task.ss")
 (define/kw (check-generic-task-thingy
             checker-proc
             #:key [name 'unknown]
@@ -55,7 +59,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (lambda (times-run t)
        (dotimes (i 15)
                 (printf "~a ... " i) (flush-output)
-                (sleep 9/10)
+                (sleep 9/100)
                 (postpone t))
 
        (kill t)
