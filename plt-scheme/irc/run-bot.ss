@@ -108,6 +108,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (do-startup-stuff op)
   (let ((consumer (make-pe-consumer-proc)))
+
     (hash-table-append!
      *tasks-by-channel*
      "#emacs"
@@ -121,7 +122,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    "#emacs"
    (make-task 'quote-spewer-task
               (*quote-and-headline-interval*)
-              (lambda () (one-quote-to-op op))))
+              (lambda () (put (format "PRIVMSG #emacs :~a" (one-quote)) op))))
 
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))

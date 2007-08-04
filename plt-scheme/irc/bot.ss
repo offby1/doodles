@@ -39,6 +39,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  *tasks-by-channel*
  do-startup-stuff
+ put
  respond)
 
 (define (split str)
