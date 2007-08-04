@@ -2,7 +2,9 @@
 
 -- High priority
 
-* bug
+* bugs
+
+** ping timeout
 
 at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
 dancer-ircd eventually disconnected the bot, saying something about a
@@ -45,6 +47,10 @@ give the PING response higher priority than the quotes.
 
 -- Low priority
 
+* unify jordanb quotes and planet.emacsen.org news
+  ... they're both the same: each gets stuff from a source,
+  periodically spews it into the channel, and will also spew on
+  demand.
 * try file-stream-buffer-mode
   ... on current-output-port and current-error-port, as an alternative
   to scattering calls to "flush-output" everywhere
