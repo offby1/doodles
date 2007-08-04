@@ -69,6 +69,11 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
     #rx"^http://tinyurl.com/.....$"
     (make-tiny-url "http://photo.net")))
    (test-equal?
+    "empty snagging"
+     (snag-urls-from-bytes
+      #"I'm telling ya, photo.net is rilly cool")
+     (list))
+   (test-equal?
     "snagging"
      (snag-urls-from-bytes
       #"I'm telling ya, http://photo.net/foo?bar=baz, is, like rilly cool; http://microsoft.com is not")
