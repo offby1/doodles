@@ -21,6 +21,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 ;; stolen from erc-button.el in Emacs 22
 (define url-regexp (pregexp "http(s)?(//[-a-zA-Z0-9_.]+:[0-9]*)?[-a-zA-Z0-9_=!?#$@~`%&*+\\/:;.,]+[-a-zA-Z0-9_=#$@~`%&*+\\/]"))
 
+;; string? -> (listof string?)
 (define (snag-urls-from-bytes bytes)
   (let ((ip (open-input-bytes bytes)))
     (let loop ((result '()))
@@ -33,6 +34,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
                      result))
             (reverse result)))))))
 
+;; string? -> string?
 (define (make-tiny-url url)
   (car
    ((sxpath '(html body (table 2) tr (td 2) p blockquote small a @ href *text*))

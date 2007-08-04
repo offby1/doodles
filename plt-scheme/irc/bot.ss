@@ -79,7 +79,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (do-startup-stuff op)
   (put (format "NICK ~a" (*my-nick*)) op)
   (put (format "USER ~a ~a ~a :~a, ~a"
-               (getenv "USER")
+               (or (getenv "USER") "unknown-user")
                "unknown-host"
                (*irc-server-name*)
                *client-name*
