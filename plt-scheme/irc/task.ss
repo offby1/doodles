@@ -77,7 +77,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 )
 
 (define (task-unsuspend task)
-  ((task-controller task) #f))
+  (unless ((task-controller task) 'running?)
+    ((task-controller task) #f)))
 
 (define (do-it-now! task)
   ((task-controller task) #f))
