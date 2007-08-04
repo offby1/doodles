@@ -226,6 +226,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (say-to-bot "quote")))
 
+    (test-case
+     "tiny-ifies URLs"
+     (check-regexp-match
+      #rx"http://tinyurl.com/....., http://tinyurl.com/.....$"
+      (say-to-bot "I'm telling ya, http://photo.net/foo?bar=baz, is, like rilly cool; http://microsoft.com is not")))
     (test-suite
      "the 'seen' command"
      #:before (lambda ()  (send "what up, cuz" #:source "bob") (send "I got your back" #:source "sam") (send "\u0001ACTION Gets bent\u0001" #:source "chris") (send "I like Doritos" #:source "bob") (psend "\u0001ACTION confesses to the bot in private\u0001"))
