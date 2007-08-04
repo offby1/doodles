@@ -18,6 +18,21 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
+;; stolen from erc-button.el in Emacs 22
+(define url-regexp (pregexp "http(s)?(//[-a-zA-Z0-9_.]+:[0-9]*)?[-a-zA-Z0-9_=!?#$@~`%&*+\\/:;.,]+[-a-zA-Z0-9_=#$@~`%&*+\\/]"))
+
+(define (snag-urls-from-bytes bytes)
+  (let ((ip (open-input-bytes bytes)))
+    (let loop ((result '()))
+      (if (eof-object? (peek-char ip))
+          (reverse result)
+        (let ((match (regexp-match url-regexp ip)))
+          (if match
+              (loop
+               (cons (car match)
+                     result))
+            (reverse result)))))))
+
 (define (make-tiny-url url)
   (car
    ((sxpath '(html body (table 2) tr (td 2) p blockquote small a @ href *text*))
@@ -52,7 +67,12 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
     "photo.net"
     (check-regexp-match
     #rx"^http://tinyurl.com/.....$"
-    (make-tiny-url "http://photo.net")))))
+    (make-tiny-url "http://photo.net")))
+   (test-equal?
+    "snagging"
+     (snag-urls-from-bytes
+      #"I'm telling ya, http://photo.net/foo?bar=baz, is, like rilly cool; http://microsoft.com is not")
+     (list #"http://photo.net/foo?bar=baz" #"http://microsoft.com"))))
 
 (provide (all-defined))
 )
