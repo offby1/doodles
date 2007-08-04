@@ -161,14 +161,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               ((regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") requestor)
                "\u0001ACTION holds his tongue.\u0001")
 
-              ((string-ci=? "news" (first message-tokens))
-
-               (for-each do-it-now!
-                         (vfilter (lambda (task)
-                                   (eq? (task-name-symbol task) 'headline-consumer-task))
-                                 (hash-table-get *tasks-by-channel* channel-name '())))
-               "I like news too")
-
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
                (let* ((nick (second message-tokens))
@@ -335,12 +327,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (pregexp-quote (*my-nick*))
                             "[:,]"))
                           (cadr tokens))
-                     (do-something-clever
-                      tokens
-                      source
-                      destination
-                      #f
-                      CTCP-message))))))
+                     (cond
+                      ((string-ci=? "news" (third tokens))
+
+                       (for-each do-it-now!
+                                 (vfilter (lambda (task)
+                                            (eq? (task-name-symbol task) 'headline-consumer-task))
+                                          (hash-table-get *tasks-by-channel* destination '()))))
+                      (else
+                       (do-something-clever
+                        tokens
+                        source
+                        destination
+                        #f
+                        CTCP-message))))))))
              )
             ((NOTICE)
              (when (regexp-match #rx"No identd \\(auth\\) response" params)

@@ -60,45 +60,44 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (zdate (time-utc->date time-of-latest-spewed-entry)))
     (lambda (op)
       (let loop ()
-        (let ((datum (async-channel-try-get atom-feed)))
+        (let ((datum (async-channel-get atom-feed)))
           (vtprintf "Consumer thread: Just got ~s from our atom feed~%" (and datum (entry->string datum)))
           (vtprintf "Consumer thread: time-of-latest-spewed-entry is ~s~%"
                     (zdate (time-utc->date time-of-latest-spewed-entry)))
-          (when datum
-            ;; spew any _new_ entries that we
-            ;; haven't already spewed ... but
-            ;; also spew the single newest entry
-            ;; even if it's kind of old.
-            (if (time>?
-                 (entry-timestamp datum)
-                 time-of-latest-spewed-entry)
-                (begin
-                  (vtprintf "consumer thread writing ~s to ~s~%"
-                            (entry->string datum)
-                            (object-name op))
-                  (fprintf
-                   op
-                   "PRIVMSG #emacs :~a~%"
-                   (entry->string datum))
-                  (flush-output op)
-                  (set! number-spewed (add1 number-spewed))
-                  (when (time>?
-                         (entry-timestamp datum)
-                         time-of-latest-spewed-entry)
-                    (set! time-of-latest-spewed-entry
-                          (entry-timestamp datum))
-                    (call-with-output-file
-                        (*atom-timestamp-file-name*)
-                      (lambda (op)
-                        (write
-                         (zdate
-                          (time-utc->date time-of-latest-spewed-entry))
-                         op))
-                      'truncate/replace)))
+          ;; spew any _new_ entries that we
+          ;; haven't already spewed ... but
+          ;; also spew the single newest entry
+          ;; even if it's kind of old.
+          (if (time>?
+               (entry-timestamp datum)
+               time-of-latest-spewed-entry)
               (begin
-                (vtprintf "Consumer thread: Nothing new on planet emacs (we already spewed an entry dated ~s) ~%"
-                          (zdate (time-utc->date time-of-latest-spewed-entry)))
-                (loop))))))
+                (vtprintf "consumer thread writing ~s to ~s~%"
+                          (entry->string datum)
+                          (object-name op))
+                (fprintf
+                 op
+                 "PRIVMSG #emacs :~a~%"
+                 (entry->string datum))
+                (flush-output op)
+                (set! number-spewed (add1 number-spewed))
+                (when (time>?
+                       (entry-timestamp datum)
+                       time-of-latest-spewed-entry)
+                  (set! time-of-latest-spewed-entry
+                        (entry-timestamp datum))
+                  (call-with-output-file
+                      (*atom-timestamp-file-name*)
+                    (lambda (op)
+                      (write
+                       (zdate
+                        (time-utc->date time-of-latest-spewed-entry))
+                       op))
+                    'truncate/replace)))
+            (begin
+              (vtprintf "Consumer thread: Nothing new on planet emacs (we already spewed an entry dated ~s) ~%"
+                        (zdate (time-utc->date time-of-latest-spewed-entry)))
+              (loop)))))
       )))
 (provide (all-defined))
 )
