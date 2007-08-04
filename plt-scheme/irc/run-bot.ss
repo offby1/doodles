@@ -106,7 +106,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (hash-table-append!
      *tasks-by-channel*
      "#emacs"
-     (make-task 'headline-consumer-task
+     (make-task 'headline-spewer-task
                 (* 60 20)
                 (lambda ()
                   (consumer op)))))
@@ -114,6 +114,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
       (if (eof-object? line)
+          ;; TODO: maybe reconnect
           (vtprintf "eof on server~%")
         (begin
           (respond line op)

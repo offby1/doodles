@@ -109,7 +109,7 @@ YOW!!!
                          "read headlines from here"
                          "headlines get writ here")))
     (let* ((consumer (make-pe-consumer-proc))
-           (t (make-task 'headline-consumer-task
+           (t (make-task 'headline-spewer-task
                         (* 60 20)
                         (lambda ()
                           (consumer op)))))

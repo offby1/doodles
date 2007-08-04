@@ -332,7 +332,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                        (for-each do-it-now!
                                  (vfilter (lambda (task)
-                                            (eq? (task-name-symbol task) 'headline-consumer-task))
+                                            (eq? (task-name-symbol task) 'headline-spewer-task))
                                           (hash-table-get *tasks-by-channel* destination '()))))
                       (else
                        (do-something-clever
