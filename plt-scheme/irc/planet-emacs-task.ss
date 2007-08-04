@@ -58,7 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (printf "make-pe-consumer-proc: time-of-latest-spewed-entry is ~s~%"
             (zdate (time-utc->date time-of-latest-spewed-entry)))
-    (lambda (op)
+    (lambda (output-proc)
       (let loop ()
         (let ((datum (async-channel-get atom-feed)))
           (vtprintf "Consumer thread: Just got ~s from our atom feed~%" (and datum (entry->string datum)))
@@ -69,14 +69,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (entry-timestamp datum)
                time-of-latest-spewed-entry)
               (begin
-                (vtprintf "consumer thread writing ~s to ~s~%"
-                          (entry->string datum)
-                          (object-name op))
-                ;; TODO -- gaah!  Use "put" instead of "fprintf"
-                (fprintf
-                 op
-                 "PRIVMSG #emacs :~a~%"
-                 (entry->string datum))
+                (vtprintf "consumer thread writing ~s to output proc~%"
+                          (entry->string datum))
+
+                (output-proc
+                 (format "PRIVMSG #emacs :~a~%"
+                         (entry->string datum)))
 
                 (set! number-spewed (add1 number-spewed))
                 (when (time>?

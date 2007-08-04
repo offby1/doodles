@@ -115,7 +115,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (make-task 'headline-spewer-task
                 (*quote-and-headline-interval*)
                 (lambda ()
-                  (consumer op)))))
+                  (consumer (lambda (str) (put str op)))))))
 
   (hash-table-append!
    *tasks-by-channel*
