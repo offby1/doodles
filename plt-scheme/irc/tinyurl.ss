@@ -26,8 +26,9 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
       (post-pure-port
        (string->url
         "http://tinyurl.com/create.php")
-       (string->bytes/utf-8 (parameterize ((current-alist-separator-mode 'amp))
-                              (alist->form-urlencoded `((url . ,url)))))
+       (string->bytes/utf-8
+        (parameterize ((current-alist-separator-mode 'amp))
+          (alist->form-urlencoded `((url . ,url)))))
 
        ;; this works as is, but let us note for the record that the
        ;; "tinyurl creator" extension for Firefox
@@ -41,7 +42,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
        ;; ("Referer", "http://tinyurl.com/");
 
        (list "Content-Type: application/x-www-form-urlencoded")
-                                                               ))))))
+       ))))))
 
 (define tinyurl-tests
 
