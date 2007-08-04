@@ -4,6 +4,13 @@
 exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui pipe-tests)'
 |#
 
+;; An experiemnt.  I'm thinking that when we connect to a channel,
+;; we'll generate one of these weird output ports that prefixes all
+;; lines with "PRIVMSG #channel-name :", and hand it out to any client
+;; who wants to write to the channel -- that way the client can just
+;; (display "hey you" op), and the Right Stuff will get sent to the
+;; server.
+
 (module port-transformer mzscheme
 (require (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt"))
@@ -29,11 +36,16 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
        ))))
 
 (trace my-read-line)
+
+;; given an output port, and a proc that transforms strings, returns
+;; another output port.  Everything you write to the returned output
+;; port will get transformed by the proc, and that transformed string
+;; will get written to the original output port.
 (define (make-weird-thing original-op string-transformer-proc)
   (let-values (((ip op) (make-pipe)))
     (thread
      (lambda ()
-       (let driver-loop ()
+       (let loop ()
          (let-values (((line terminator) (my-read-line ip)))
            (if (eof-object? line)
                (close-output-port original-op)
@@ -42,7 +54,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
                (unless (eof-object? terminator)
                  (display terminator original-op))
                (flush-output original-op)
-               (driver-loop)))))))
+               (loop)))))))
     op))
 
 (define (do-weird-thing input)
