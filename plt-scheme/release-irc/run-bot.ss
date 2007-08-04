@@ -11,7 +11,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "bot.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
+          "planet-emacs-task.ss"
           "system.ss"
+          "task.ss"
+          "vprintf.ss"
           )
 
 (command-line
@@ -29,7 +32,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
   (("-j" "--jordan") secs "Seconds of channel silence required to emit a jordanb quote"
-   (*jordanb-quote-interval* (string->number secs)))
+   (*quote-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)
    (*planet-poll-interval* 3600)
@@ -38,7 +41,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
     "Spew debug stuff to logfile"
-    (*verbose* #t))
+    (verbose!))
   )
 
  (multi
@@ -77,7 +80,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (when version-string
       (*client-version*
        version-string))
-    (printf "Our version string is ~s~%" (*client-version*)))
+    (vtprintf "Our version string is ~s~%" (*client-version*)))
   )
 
 (thread
@@ -92,15 +95,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (dynamic-require '(lib "rep.ss" "readline") #f)
      (read-eval-print-loop))))
 
+(define (hash-table-append! t k v)
+  (hash-table-put! t k (cons v (hash-table-get t k '()))))
+
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))
 
   (do-startup-stuff op)
+  (let ((consumer (make-pe-consumer-proc)))
+    (hash-table-append!
+     *tasks-by-channel*
+     "#emacs"
+     (make-task 'headline-consumer-task
+                (* 60 20)
+                (lambda ()
+                  (consumer op)))))
 
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
       (if (eof-object? line)
-          (printf "eof on server~%")
+          (vtprintf "eof on server~%")
         (begin
           (respond line op)
           (loop))))))

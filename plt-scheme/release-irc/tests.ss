@@ -33,9 +33,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *planet-task-spew-interval*
                *verbose*
                )
+         "task.ss"
          "vprintf.ss")
-
-(require/expose "bot.ss" (do-in-loop))
 
 ;; returns #f if we didn't find what we're looking for.
 (define (expect/timeout ip regex seconds)
@@ -44,13 +43,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (thread
            (lambda ()
              (let loop ()
+               (printf "expect/timeout about to look for ~s from ~s ...~%"
+                       regex
+                       (object-name ip))
                (let ((line (read-line ip)))
                  (cond
                   ((eof-object? line)
+                   (printf "expect/timeout: eof~%")
                    (channel-put ch #f))
                   ((regexp-match regex line)
+                   (printf "expect/timeout: Got match!~%")
                    (channel-put ch #t))
                   (else
+                   (printf "expect/timeout: nope; retrying~%")
                    (loop)))
 
                  ))))))
@@ -143,10 +148,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (let ((chans (list "#rum" "##sodomy" "#the-lash")))
      (test-equal?
       "joins channels upon receipt of 001"
-      (parameterize ( ;;(*verbose* #t)
+      (parameterize (
                      (*initial-channel-names* chans))
-                    (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
-                                #:which 'all))
+        (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
+                    #:which 'all))
       (map (lambda (c) (string-append "JOIN " c)) chans)))
 
    ;; TODO -- join #emacs or #bots and see if it does its amusing
@@ -180,7 +185,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       ;; NO-BREAK SPACE
                       #x00A0
                       )))
-                   (say-to-bot "hey you"))
+       (say-to-bot "hey you"))
      (default-dumb-response #t))
     (test-equal?
      "recognizes a comma after its nick"
@@ -210,6 +215,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (psend "quote")))
     (test-case
      "witty quotes in response to a channel message"
+     (check-regexp-match
+      #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
+      (say-to-bot "quote")))
+
+    (test-case
+     "witty quotes after being told to shaddap"
+     (say-to-bot "shaddap")
      (check-regexp-match
       #rx"PRIVMSG #some-channel :.*heirs.*emacs.*johnw$"
       (say-to-bot "quote")))
@@ -303,49 +315,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (test-equal? "string with just three fields" (get-retort "x y z") ""))
     )
 
-   (test-suite
-    "do-in-loop"
-    (test-case
-     "does something"
-     (printf "Doing some tediously-long tests; patience~%")
-     (let* ((output '())
-            (control (do-in-loop 1/10 (lambda ()
-                                        (set! output (cons (current-process-milliseconds) output))))))
-       (sleep 1)
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check > l 5 "loop ran five times")
-         (sleep 1)
-         (check-equal? (length output) l "thread stopped when we killed it")
-         )
-       ))
-    (test-case
-     "sending it #fs speeds it up"
-     (let* ((output '())
-            (control (do-in-loop 1/10 (lambda ()
-                                        (set! output (cons (current-process-milliseconds) output))))))
-       (control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)(control #f)
-       (sleep 1)
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check > l 15 "loop ran fifteen times"))
-       ))
-
-    (test-case
-     "sending it POSTPONE slows it down"
-     (let* ((output '())
-            (control (do-in-loop 1 (lambda ()
-                                     (set! output (cons (current-process-milliseconds) output))))))
-
-       (for-each (lambda ignored
-                   (printf "Sleeping ~a ...~%" ignored)
-                   (sleep 9/10)
-                   (control 'postpone))
-                 '(a b c d e f g h i j k l m fart oops))
-       (control 'die-damn-you-die)
-       (let ((l (length output)))
-         (check < l 2 "loop barely ran")))))))
-
+   ))
 
 (provide
  collect-output

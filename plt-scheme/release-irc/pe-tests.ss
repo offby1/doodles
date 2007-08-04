@@ -18,10 +18,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "globals.ss"
                *my-nick*
                *planet-task-spew-interval*
-               *verbose*)
+               verbose!)
          (only "bot.ss"
-               *atom-timestamp-file-name*
-               kill-all-tasks
+               *tasks-by-channel*
                respond
                )
          (only (lib "pregexp.ss") pregexp-quote)
@@ -32,6 +31,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                say-to-bot
                string->lines)
          (only "planet-emacsen.ss" queue-of-entries)
+         (only "planet-emacs-task.ss"
+               *atom-timestamp-file-name*
+               make-pe-consumer-proc)
+         (only "task.ss"
+               kill
+               make-task
+               task-unsuspend
+               )
          "vprintf.ss")
 (require/expose
  "planet-emacsen.ss"
@@ -39,6 +46,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   entry?
   make-entry
   ))
+
+(define (kill-all-tasks)
+  (hash-table-for-each
+   *tasks-by-channel*
+   (lambda (channel-name task)
+     (kill task))))
 (define make-fake-atom-xml
   (let ((time (current-seconds)))
     (lambda ()
@@ -63,7 +76,7 @@ YOW!!!
       (set! time (add1 time)))))  )
 ;;(trace make-fake-atom-xml)
 (define (stub-atom-feed)
-  (let-values (((ip op) (make-pipe)))
+  (let-values (((ip op) (make-pipe #f "stub ip" "stub op")))
     (display (make-fake-atom-xml) op)
     (display (make-fake-atom-xml) op)
     (close-output-port op)
@@ -79,11 +92,40 @@ YOW!!!
                 seq)
       #t)))
 
+(define *headlines-source* (make-parameter #f))
+
 (define (test-prep)
   (*planet-task-spew-interval* 0)
   (kill-all-tasks)
-  (when (file-exists? (*atom-timestamp-file-name*))
-    (delete-file (*atom-timestamp-file-name*))))
+  (if (file-exists? (*atom-timestamp-file-name*))
+    (begin
+      (vtprintf "Deleted ~s~%" (*atom-timestamp-file-name*))
+      (delete-file (*atom-timestamp-file-name*)))
+    (vtprintf "No file named ~s~%"
+              (*atom-timestamp-file-name*)))
+
+  (let-values (((ip op) (make-pipe
+                         #f
+                         "read headlines from here"
+                         "headlines get writ here")))
+    (let* ((consumer (make-pe-consumer-proc))
+           (t (make-task 'headline-consumer-task
+                        (* 60 20)
+                        (lambda ()
+                          (consumer op)))))
+      (hash-table-put!
+       *tasks-by-channel*
+       "#emacs"
+       t)
+
+      ;; ick.  We need to wait awhile to ensure the "producer"
+      ;; (the task that puts entries onto the async channel) has
+      ;; started; otherwise our saying "news" to the bot will have
+      ;; no effect, and we'll have to wait an hour.
+      (sleep 1/3)
+
+      (task-unsuspend t))
+    (*headlines-source* ip)))
 
 ;;(trace all-distinct?)
 (define original-timestamp-file-name #f)
@@ -101,31 +143,19 @@ YOW!!!
                     ;; roughly, "never"
                     (*planet-task-spew-interval* 3600))
 
-       (check-regexp-match
-        #rx"haven't .* news yet"
-        (say-to-bot "news"))
-
        ;; cause some news to get put into the async
        (check-not-false
-        (let-values (((ip op) (make-pipe
-                               #f
-                               "read me for news headlines"
-                               "bot should send headlines here")))
-          (respond "353 foo bar #bots" op)
-
-          ;; ick.  We need to wait awhile to ensure the "producer"
-          ;; (the task that puts entries onto the async channel) has
-          ;; started; otherwise our saying "news" to the bot will have
-          ;; no effect, and we'll have to wait an hour.
-          (sleep 1/3)
+        (begin
+          (respond "353 foo bar #bots" (open-output-string "/dev/null"))
 
           (say-to-bot "news")
 
           (expect/timeout
-           ip
+           (*headlines-source*)
            (pregexp-quote
             "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
            3))
+
         ))))
 
    (test-case
@@ -154,7 +184,7 @@ YOW!!!
          (respond "353 foo bar #bots" op)
          (check-not-false
           (expect/timeout
-           ip
+           (*headlines-source*)
            (pregexp-quote
             "Michael Olson: [tech] Managing several radio feeds with MusicPD and Icecast")
            10)

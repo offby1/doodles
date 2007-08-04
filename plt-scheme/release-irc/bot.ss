@@ -7,15 +7,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; http://tools.ietf.org/html/rfc1459
 
 (module bot mzscheme
-(require (lib "async-channel.ss")
+(require
          (lib "trace.ss")
          (only (lib "pregexp.ss") pregexp-quote)
-         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
-               rfc3339-string->srfi19-date/constructor)
-         (only (lib "url.ss" "net")
-               get-pure-port
-               string->url)
          (only (lib "1.ss" "srfi")
+               filter
                first
                second
                take
@@ -29,30 +25,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                char-set
                char-set-complement
                char-set:whitespace)
-         (rename (lib "19.ss" "srfi") 19:make-date make-date)
-         (only (lib "19.ss" "srfi")
-               add-duration
-               current-date
-               date->time-utc
-               make-time
-               time-duration
-               time-utc->date
-               time>?
-               )
          (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
-         "parse-message.ss"
+         "../web/quote-of-the-day.ss"
          "globals.ss"
-         "jordanb.ss"
-         "planet-emacsen.ss"
+         "parse-message.ss"
+         "planet-emacs-task.ss"
+         "quotes.ss"
          "task.ss"
          "vprintf.ss"
-         "../web/quote-of-the-day.ss")
+         )
 (provide
- *atom-timestamp-file-name*
+ *tasks-by-channel*
  do-startup-stuff
- kill-all-tasks
  respond)
 
 (define (split str)
@@ -90,24 +76,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (random-choice seq)
   (list-ref seq (rnd (length seq))))
 
-(define *jordanb-quote-tasks-by-channel* (make-hash-table 'equal))
-(define *planet-emacs-task* #f)
-
-;; for testing
-(define (kill-all-tasks)
-  (for-each (lambda (thing)
-              (cond
-               ((thread? thing)
-                (kill-thread thing))
-               ((procedure? thing)
-                (thing 'die-damn-you-die))
-               ((not thing))
-               (else
-                (vtprintf "Man, I don't know _what_ the hell it is~%"))
-               ))
-            (cons *planet-emacs-task* (map cdr (hash-table-map *jordanb-quote-tasks-by-channel* cons)))))
-
 (define-struct utterance (when what action?) (make-inspector))
+
+;; this will get set to a function that calls PUT, with the proper
+;; output port.  It's useful from the REPL.
+(define p* #f)
+
 (define (put str op)
   (let ((str (substring str 0 (min 510 (string-length str)))))
     (vtprintf "=> to op ~s ~s~%" (object-name op) str)
@@ -125,9 +99,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *client-name*
                (*client-version*)) op)  )
 
-(define *atom-timestamp-file-name* (make-parameter "timestamp"))
+;; these are running (or possibly dead) tasks.  Perhaps this table
+;; could be combined with the above.  The values would be a bunch of
+;; startup stuff, plus the actual task, which isn't running yet; then
+;; at channel-join time I'd merely start the task.
+(define *tasks-by-channel*  (make-hash-table 'equal))
 
 ;; string? output-port? -> void
+
+(define (vfilter proc seq)
+  (filter (lambda (thing)
+            (let ((rv (proc thing)))
+              (vtprintf "filtering ~s: ~s~%" thing rv)
+              rv))
+          seq))
 
 ;; given a line of text (presumably from the IRC server), spew a
 ;; response to the output port, and perhaps do all sorts of evil
@@ -169,26 +154,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        *client-name*
                        *client-version-number*
                        *client-environment*) op)))))
-     ((and (hash-table-get *jordanb-quote-tasks-by-channel* channel-name #f)
-           (string-ci=? "shaddap" (first message-tokens)))
-      ((hash-table-get *jordanb-quote-tasks-by-channel* channel-name) 'kill)
-      ;; TODO -- maybe now do hash-table-remove! so that the next
-      ;; time we see a 353, we recreate the task.
-      )
      (else
       (let ((response-body
              (cond
               ;; if the requestor seems to be a bot, don't respond normally.
               ((regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") requestor)
                "\u0001ACTION holds his tongue.\u0001")
-
-              ((string-ci=? "news" (first message-tokens))
-
-               (if *planet-emacs-task*
-                   (begin
-                     (*planet-emacs-task* #f)
-                     "You should see a headline shortly.")
-                 "Hmm, I haven't started gathering news yet.  That's odd."))
 
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
@@ -229,7 +200,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           ;; himself, return something utterly
                           ;; unlike the usual jordanb quote --
                           ;; something saccharine and Hallmark-y
-                          (one-jordanb-quote))
+                          (one-quote))
                          (else
                           (with-handlers
                               ((exn:fail:network?
@@ -247,6 +218,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (put (format "PRIVMSG ~a :~a"
                      (if was-private? requestor channel-name)
                      response-body) op)))))
+
+  (set! p* (lambda (str)
+             (put str op)))
 
   (let ((line (substring line 0 (min 510 (string-length line)))))
     (let-values (((prefix command params)
@@ -269,6 +243,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        (*initial-channel-names*)))
             ((353)
              (vtprintf "Got the 353~%")
+             ;; start up whatever tasks pertain to this channel, if we
+             ;; haven't already
              (let ((tokens (split params)))
                (if (< (length tokens) 3)
                    (vtprintf "Server is on drugs: there should be three tokens here: ~s~%" params)
@@ -278,99 +254,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                  (let ((channel (third tokens)))
                    (vtprintf "353: tokens ~s; channel ~s~%"
                              tokens channel)
-                   (when (or
-                          (string=? channel "#bots")
-                          (string=? channel "#emacs"))
-                     (when
-                         ;; I wonder ... would it be better if I
-                         ;; killed any existing task, and then
-                         ;; replaced it with a new one?
-                         (not (hash-table-get *jordanb-quote-tasks-by-channel* channel #f))
-                       (hash-table-put!
-                        *jordanb-quote-tasks-by-channel*
-                        channel
-                        (do-in-loop
-                         (*jordanb-quote-interval*)
-                         (lambda ()
-                           (put (format "PRIVMSG ~a :~a"
-                                        channel
-                                        (one-jordanb-quote)) op))
-                         #:name "jordanb quote task")))
-
-                     (vtprintf "353: *planet-emacs-task* is ~s~%"
-                               *planet-emacs-task*)
-                     (when (not (and *planet-emacs-task*
-                                     (*planet-emacs-task* 'running?)))
-                       (set! *planet-emacs-task*
-                             (let ((atom-feed (queue-of-entries
-                                               #:whence
-                                               (and (*use-real-atom-feed?*)
-                                                    (lambda ()
-                                                      (vtprintf "SNARFING REAL DATA FROM WEB!!!!!!!~%")
-                                                      (get-pure-port
-                                                       (string->url "http://planet.emacsen.org/atom.xml")
-                                                       (list)))
-                                                    )))
-                                   (number-spewed 0)
-                                   (time-of-latest-spewed-entry
-                                    (date->time-utc
-                                     (rfc3339-string->srfi19-date/constructor
-                                      (or (and (file-exists? (*atom-timestamp-file-name*))
-                                               (call-with-input-file (*atom-timestamp-file-name*) read))
-                                          "2000-00-00T00:00:00+00:00")
-                                      19:make-date))))
-
-                               (do-in-loop
-                                ;; choosing the "correct" interval
-                                ;; here is subtle.  Ideally the
-                                ;; interval would have the property
-                                ;; that the channel goes silent for
-                                ;; this long just as often as someone
-                                ;; posts a blog to planet emacs --
-                                ;; that way we consume items from the
-                                ;; channel at the same rate that
-                                ;; queue-of-entries-since produces
-                                ;; them.  Failing that, it's perhaps
-                                ;; best for this number to be a bit
-                                ;; smaller than that idea, so that
-                                ;; this task finds nothing new
-                                ;; occasionally.
-                                (*planet-task-spew-interval*)
-                                (lambda ()
-                                  (let ((datum (async-channel-try-get atom-feed)))
-                                    (vtprintf "Consumer thread: Just got ~s from our atom feed~%" datum)
-                                    (when datum
-                                      ;; spew any _new_ entries that we
-                                      ;; haven't already spewed ... but
-                                      ;; also spew the single newest entry
-                                      ;; even if it's kind of old.
-                                      (if (time>?
-                                           (entry-timestamp datum)
-                                           time-of-latest-spewed-entry)
-                                          (begin
-                                            (put (format "PRIVMSG #emacs :~a"
-                                                         (entry->string datum)) op)
-                                            (set! number-spewed (add1 number-spewed))
-                                            (when (time>?
-                                                   (entry-timestamp datum)
-                                                   time-of-latest-spewed-entry)
-                                              (set! time-of-latest-spewed-entry
-                                                    (entry-timestamp datum))
-                                              (call-with-output-file
-                                                  (*atom-timestamp-file-name*)
-                                                (lambda (op)
-                                                  (write
-                                                   (zdate
-                                                    (time-utc->date time-of-latest-spewed-entry))
-                                                   op))
-                                                'truncate/replace)))
-                                        (vtprintf "Consumer thread: Nothing new on planet emacs~%"))))
-                                  )
-                                #:name "headline consumer task")))
-                       (vtprintf "353: *planet-emacs-task* is now ~s~%"
-                                 *planet-emacs-task*)))
-
-                   ))))
+                   (for-each
+                    (lambda (t)
+                      (vtprintf "Unsuspending task ~s~%" (task-name-symbol t))
+                      (task-unsuspend t))
+                    (hash-table-get *tasks-by-channel* channel '()))))))
             ((433)
              (vtprintf "Gaah!!  One of those \"nick already in use\" messages!~%")
              (vtprintf "I don't know how to deal with that~%")
@@ -401,13 +289,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (source (car prefix)))
 
                (when dest-is-channel?
-                 (for-each
-                  (lambda (task)
-                    (when task
-                      (task 'postpone)))
-                  (list
-                   (hash-table-get *jordanb-quote-tasks-by-channel* destination #f)
-                   *planet-emacs-task*))
+                 (for-each postpone (hash-table-get *tasks-by-channel* destination '()))
 
                  (let* ((times-by-nick (hash-table-get
                                         times-by-nick-by-channel
@@ -445,12 +327,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (pregexp-quote (*my-nick*))
                             "[:,]"))
                           (cadr tokens))
-                     (do-something-clever
-                      tokens
-                      source
-                      destination
-                      #f
-                      CTCP-message))))))
+                     (cond
+                      ((string-ci=? "news" (third tokens))
+
+                       (for-each do-it-now!
+                                 (vfilter (lambda (task)
+                                            (eq? (task-name-symbol task) 'headline-consumer-task))
+                                          (hash-table-get *tasks-by-channel* destination '()))))
+                      (else
+                       (do-something-clever
+                        tokens
+                        source
+                        destination
+                        #f
+                        CTCP-message))))))))
              )
             ((NOTICE)
              (when (regexp-match #rx"No identd \\(auth\\) response" params)

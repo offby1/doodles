@@ -29,30 +29,62 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; we'll go away entirely if we receive any other value.
 
 ;; TODO -- for debugging, perhaps make this return a structure that
-;; prints nicely (i.e., it could include a name like "jordanb-quotes"
+;; prints nicely (i.e., it could include a name like "quotes"
 ;; or "planet-emacs-headlines" or something)
 (define/kw (do-in-loop seconds thunk #:key [name "unknown task"])
   (let* ((c (make-channel))
-         (t (thread (lambda ()
-                      (let loop ()
-                        (let ((reason (sync/timeout seconds c)))
-                          (when (or (not reason) ;timed out
-                                    (not (channel-get c)))
-                            (thunk)))
-                        (loop)
-                        )))))
-    (lambda (command)
-      (vtprintf "do-in-loop: got command ~s for task ~s~%"
-                command name)
-      (case  command
-       ((#f postpone POSTPONE)
-        (channel-put c command))
-       ((running?)
-        (not (thread-dead? t)))
-       ((die-damn-you-die)
-        (kill-thread t))
-       (else
-        (error 'do-in-loop "I don't know how to deal with ~s" command))))))
+         (t (delay
+              (thread (lambda ()
+                        (let loop ()
+                          (let ((reason (sync/timeout seconds c)))
+                            (vtprintf "thread for task ~s: woke up because ~s~%"
+                                    name reason)
+                            (when (or (not reason) ;timed out
+                                      (not (channel-get c)))
+                              (thunk)))
+                          (loop)
+                          ))))))
 
-(provide (all-defined))
+    (vtprintf "do-in-loop: creating task ~s~%" name)
+    (lambda (command)
+      (vtprintf "task ~s: got command ~s~%" name command)
+      (let ((t (force t)))
+        (case  command
+          ((#f postpone POSTPONE)
+           (thread-resume t)
+           (channel-put c command))
+          ((running?)
+           (thread-running? t))
+          ((die-damn-you-die)
+           (kill-thread t))
+          (else
+           (error 'do-in-loop "I don't know how to deal with ~s" command)))))))
+
+(define-struct task (name-symbol interval message-generator-thunk controller)
+  (make-inspector))
+
+(define/kw (public-make-task name-symbol interval message-generator-thunk
+                             #:key [verbose #f])
+  (make-task name-symbol interval message-generator-thunk
+             (do-in-loop interval (lambda ()
+                                    (when verbose
+                                      (vtprintf "task ~s about to do its thang~%" name-symbol))
+                                    (message-generator-thunk)) #:name name-symbol)))
+
+;; for testing, so that a test can start from a known state
+(define (kill task)
+  ((task-controller task) 'die-damn-you-die)
+)
+
+(define (task-unsuspend task)
+  ((task-controller task) #f))
+
+(define (do-it-now! task)
+  ((task-controller task) #f))
+
+(define (postpone task)
+  ((task-controller task) 'postpone))
+
+(provide (all-defined-except do-in-loop make-task))
+(provide (rename public-make-task make-task))
 )
