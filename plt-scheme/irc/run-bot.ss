@@ -12,6 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "planet-emacs-task.ss"
+          "quotes.ss"
           "system.ss"
           "task.ss"
           "vprintf.ss"
@@ -31,8 +32,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-j" "--jordan") secs "Seconds of channel silence required to emit a jordanb quote"
-   (*quote-interval* (string->number secs)))
+  (("-q" "--quote-and-headline-interval")
+   secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
+   (*quote-and-headline-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)
    (*planet-poll-interval* 3600)
@@ -101,15 +103,25 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))
 
+  ;; so we don't have to call flush-output all the time
+  (file-stream-buffer-mode op 'line)
+
   (do-startup-stuff op)
   (let ((consumer (make-pe-consumer-proc)))
     (hash-table-append!
      *tasks-by-channel*
      "#emacs"
      (make-task 'headline-spewer-task
-                (* 60 20)
+                (*quote-and-headline-interval*)
                 (lambda ()
                   (consumer op)))))
+
+  (hash-table-append!
+   *tasks-by-channel*
+   "#emacs"
+   (make-task 'quote-spewer-task
+              (*quote-and-headline-interval*)
+              (lambda () (one-quote-to-op op))))
 
   (let loop ()
     (let ((line (read-line ip 'return-linefeed)))
