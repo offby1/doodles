@@ -27,11 +27,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
        (string->url
         "http://tinyurl.com/create.php")
        (string->bytes/utf-8 (parameterize ((current-alist-separator-mode 'amp))
-                              (alist->form-urlencoded `((submit . "Make TinyURL!")
-                                                        (url . ,url)))))
-       (list "Content-Type: application/x-www-form-urlencoded"))))))
-
-    )
+                              (alist->form-urlencoded `((url . ,url)))))
+       (list "Content-Type: application/x-www-form-urlencoded")))))))
 
 (define tinyurl-tests
 
