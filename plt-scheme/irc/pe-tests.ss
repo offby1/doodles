@@ -46,7 +46,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   entry?
   make-entry
   ))
-(verbose!)
+
 (define (kill-all-tasks)
   (hash-table-for-each
    *tasks-by-channel*

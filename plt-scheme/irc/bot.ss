@@ -107,6 +107,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; string? output-port? -> void
 
+(define (vfilter proc seq)
+  (filter (lambda (thing)
+            (let ((rv (proc thing)))
+              (vtprintf "filtering ~s: ~s~%" thing rv)
+              rv))
+          seq))
+
 ;; given a line of text (presumably from the IRC server), spew a
 ;; response to the output port, and perhaps do all sorts of evil
 ;; untestable kludgy side-effects (like starting a thread that will
@@ -156,12 +163,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
               ((string-ci=? "news" (first message-tokens))
 
-               (for-each (lambda (task)
-                           (task #f))
-                         (filter (lambda (task)
-                                   (eq? task-name-symbol 'news))
-                                 (hash-table-map *tasks-by-channel* (lambda (k v) v))))
-               "Just poked some task or other")
+               (for-each do-it-now!
+                         (vfilter (lambda (task)
+                                   (eq? (task-name-symbol task) 'headline-consumer-task))
+                                 (hash-table-get *tasks-by-channel* channel-name '())))
+               "I like news too")
 
               ((and (string-ci=? "seen" (first message-tokens))
                     (< 1 (length message-tokens)))
@@ -291,11 +297,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (source (car prefix)))
 
                (when dest-is-channel?
-                 (for-each
-                  (lambda (task)
-                    (when task
-                      (task 'postpone)))
-                  (hash-table-get *tasks-by-channel* destination '()))
+                 (for-each postpone (hash-table-get *tasks-by-channel* destination '()))
 
                  (let* ((times-by-nick (hash-table-get
                                         times-by-nick-by-channel

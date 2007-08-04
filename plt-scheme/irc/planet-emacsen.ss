@@ -118,7 +118,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-async-channel 4))
+  (let ((the-channel (make-async-channel #f))
         (entries-put (make-hash-table 'equal)))
     (thread
      (lambda ()
@@ -131,10 +131,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             ;; (entry->string e) as the hash table key, instead of
             ;; simply e.
             (when (not (hash-table-get entries-put (entry->string e) #f))
-              (vtprintf "Planet producer thread about to put ~s onto the async ... "
+              (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
                         (entry->string e))
               (async-channel-put the-channel e)
-              (vtprintf "done~%")
+              (vtprintf "ppt: done~%")
               (hash-table-put! entries-put (entry->string e) #t)))
            (snarf-em-all (whence)))
          (if (eq? how-many 'once)

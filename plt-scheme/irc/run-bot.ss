@@ -11,7 +11,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "bot.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
+          "planet-emacs-task.ss"
           "system.ss"
+          "task.ss"
+          "vprintf.ss"
           )
 
 (command-line
@@ -92,13 +95,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (dynamic-require '(lib "rep.ss" "readline") #f)
      (read-eval-print-loop))))
 
+(define (hash-table-append! t k v)
+  (hash-table-put! t k (cons v (hash-table-get t k '()))))
+
 (let-values (((ip op)
               (tcp-connect (*irc-server-name*) 6667)))
 
   (do-startup-stuff op)
   (let ((consumer (make-pe-consumer-proc)))
-    (hash-table-put!
-     tasks-by-channel
+    (hash-table-append!
+     *tasks-by-channel*
      "#emacs"
      (make-task 'headline-consumer-task
                 (* 60 20)
