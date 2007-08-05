@@ -21,11 +21,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                verbose!)
          (only "bot.ss"
                *tasks-by-channel*
+               kill-all-tasks
                respond
                )
          (only (lib "pregexp.ss") pregexp-quote)
          (only "tests.ss"
-               collect-output
                expect/timeout
                get-retort
                say-to-bot
@@ -47,11 +47,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   make-entry
   ))
 
-(define (kill-all-tasks)
-  (hash-table-for-each
-   *tasks-by-channel*
-   (lambda (channel-name task)
-     (kill task))))
 (define make-fake-atom-xml
   (let ((time (current-seconds)))
     (lambda ()

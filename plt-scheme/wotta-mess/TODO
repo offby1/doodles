@@ -110,6 +110,9 @@ give the PING response higher priority than the quotes.
   as reliable as searching on rogerebert.com; that site's design is as
   lame as its content is excellent)
 
+** Ebert's Little Movie Glossary
+   random snippets therefrom.
+
 ** my del.icio.us "moviestowatchfor" ...
   maybe, somehow, spam ##cinema with one of those.
 * jordanb quotes
@@ -137,8 +140,12 @@ give the PING response higher priority than the quotes.
 ** auto shakespeare insults
    I've got scheme code to do that around here somewhere.
 
-* put debug spew someplace where it won't interfere with the REPL
-  Like, oh, I don't know, maybe ... a LOG FILE?!?!
+** "chat"?
+
+brx suggested I teach the bot to spout Markov-chain gibberish.
+Perhaps it could monitor all conversations, and once it has enough
+text from a given nick, it'd be capable of parroting back silliness to
+them ... instead of saying "/me is at a loss for words"
 
 * repl commands
 

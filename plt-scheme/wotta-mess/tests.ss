@@ -31,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                *initial-channel-names*
                *my-nick*
                *planet-task-spew-interval*
-               *verbose*
+               verbose!
                )
          "task.ss"
          "vprintf.ss")
@@ -66,7 +66,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 ;; str [integer | 'all] -> str | (list of str)
 (define/kw (get-retort input #:key [which 0])
-  (let ((lines (collect-output (lambda (op) (respond input op)))))
+  (let ((lines (get-output-string *op-for-them-tests*)))
     (cond
      ((not (null? lines))
       (cond
@@ -120,23 +120,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      str
      (char-set-complement (char-set #\newline))))
 
-;; output-port? -> void -> (listof string?)
-(define (collect-output func)
-  (let ((string-port (open-output-string "op for testing")))
-    (func string-port)
-    (string->lines
-     (get-output-string string-port))))
-
+(define *op-for-them-tests* (open-output-string "op for testing"))
 (define tests
   (test-suite
    "big ol' all-encompassing"
-
+   #:before (lambda () (verbose!)
+                       (kill-all-tasks)
+                       (start-usual-tasks! *op-for-them-tests*))
    (test-suite
     "logs in at startup"
     (test-case
      "sends NICK and USER at startup"
 
-     (let ((lines (collect-output do-startup-stuff)))
+     (let ((lines (get-output-string *op-for-them-tests*)))
        (check-true (pair? lines) "retort isn't a pair")
        (check-equal?
         (first  lines)
@@ -323,7 +319,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    ))
 
 (provide
- collect-output
  expect/timeout
  get-retort
  say-to-bot

@@ -39,8 +39,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  *tasks-by-channel*
  do-startup-stuff
+ kill-all-tasks
  put
- respond)
+ respond
+ start-usual-tasks!
+ )
 
 (define (split str)
   (string-tokenize str (char-set-complement char-set:whitespace)))
@@ -91,6 +94,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; at channel-join time I'd merely start the task.
 (define *tasks-by-channel*  (make-hash-table 'equal))
 
+(define (kill-all-tasks)
+  (hash-table-for-each
+   *tasks-by-channel*
+   (lambda (channel-name task)
+     (kill task))))
+
+(define (start-usual-tasks! op)
+  (define (hash-table-append! t k v)
+    (hash-table-put! t k (cons v (hash-table-get t k '()))))
+
+  (let ((consumer (make-pe-consumer-proc)))
+
+    (hash-table-append!
+     *tasks-by-channel*
+     "#emacs"
+     (make-task 'headline-spewer-task
+                (*quote-and-headline-interval*)
+                (lambda ()
+                  (consumer (lambda (str) (put str op)))))))
+
+  (hash-table-append!
+   *tasks-by-channel*
+   "#emacs"
+   (make-task 'quote-spewer-task
+              (*quote-and-headline-interval*)
+              (lambda () (put (format "PRIVMSG #emacs :~a" (one-quote)) op))))
+
+  (hash-table-for-each
+   *tasks-by-channel*
+   (lambda (k tasks)
+     (for-each task-unsuspend tasks))))
+
 ;; string? output-port? -> void
 
 (define (vfilter proc seq)

@@ -6,6 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module task mzscheme
 (require (lib "kw.ss")
+         (lib "trace.ss")
          "vprintf.ss")
 ;; Calls THUNK every SECONDS seconds.  Calling the return value with
 ;; the symbol POSTPONE postpones the next call (i.e., it resets the
@@ -36,29 +37,36 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (t (delay
               (thread (lambda ()
                         (let loop ()
+                          (printf "thread for task ~s: syncing~%"
+                                     name)
                           (let ((reason (sync/timeout seconds c)))
-                            (vtprintf "thread for task ~s: woke up because ~s~%"
-                                    name reason)
+                            (printf "thread for task ~s: woke up because ~s~%"
+                                     name reason)
                             (when (or (not reason) ;timed out
                                       (not (channel-get c)))
                               (thunk)))
                           (loop)
                           ))))))
 
+    (define task-controller
+      (lambda (command)
+
+        (let ((t (force t)))
+          (printf "task ~s, thread ~s: got command ~s~%"
+                  name (eq-hash-code t) command)
+          (case  command
+            ((#f postpone POSTPONE)
+             (thread-resume t)
+             (channel-put c command))
+            ((running?)
+             (thread-running? t))
+            ((die-damn-you-die)
+             (kill-thread t))
+            (else
+             (error 'do-in-loop "I don't know how to deal with ~s" command))))))
     (vtprintf "do-in-loop: creating task ~s~%" name)
-    (lambda (command)
-      (vtprintf "task ~s: got command ~s~%" name command)
-      (let ((t (force t)))
-        (case  command
-          ((#f postpone POSTPONE)
-           (thread-resume t)
-           (channel-put c command))
-          ((running?)
-           (thread-running? t))
-          ((die-damn-you-die)
-           (kill-thread t))
-          (else
-           (error 'do-in-loop "I don't know how to deal with ~s" command)))))))
+    (trace task-controller)
+    task-controller))
 
 (define-struct task (name-symbol interval message-generator-thunk controller)
   (make-inspector))
