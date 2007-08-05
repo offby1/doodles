@@ -24,13 +24,13 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
    (test-pred
     "empty"
     stream-null? (port->line-stream (open-input-string "")))
-   (test-false
+   (test-case
     "not empty"
-    (stream-null? (port->line-stream (open-input-string "yow"))))
-   (test-equal?
-    "right value in trivial case"
-    (stream-car (port->line-stream (open-input-string "yow")))
-    "yow")
+    (let ((s  (port->line-stream (open-input-string "yow"))))
+      (check-false (stream-null? s))
+      (check-equal? (stream-car (port->line-stream (open-input-string "yow")))
+                    "yow")
+      (check-true  (stream-null? (stream-cdr s)))))
    (test-case
     "lines come back in the right order"
     (let ((two-lines (port->line-stream (open-input-string "foo\nbar"))))
