@@ -17,8 +17,15 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 (define (thread-id)
   (eq-hash-code (current-thread)))
 
+(define *main-thread-id* (thread-id))
+
 (define (tprintf . args)
-  (printf "~s: " (thread-id))
+  (printf "~a: "
+          (if (equal? (thread-id)
+                      *main-thread-id*)
+              "main thread"
+            (thread-id))
+          )
   (apply printf args))
 
 ;; Riastradh wrote this
@@ -121,13 +128,20 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 
          (tprintf "~s~%" (stream-null? s))
          (tprintf "After \"stream-null?\": ")
-         (display "how de" op) (newline op)
-         (tprintf "After how de: ~s~%" (stream-null? s))
+
+         (display "how de" op)
+         (newline op)
+
+          (tprintf "After how de~%")
+
          (check-equal? (read-line ip1) "how de")
          (check-equal? (read-line ip2) "how de")
          )))
 
     )))
 
-(provide (all-defined-except split-string thread-id))
+(provide (all-defined-except
+          split-string
+          *main-thread-id*
+          thread-id))
 )
