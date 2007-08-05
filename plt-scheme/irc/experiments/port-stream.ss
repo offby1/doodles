@@ -4,7 +4,8 @@
 exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui port-stream-tests)'
 |#
 (module port-stream mzscheme
-(require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+(require (lib "trace.ss")
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "port.ss" ("schematics" "port.plt" 1 0))
                port->string-list
@@ -20,8 +21,29 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
            stream-null
          (stream-cons line (recur)))))))
 
-(define (line-stream->port s)
-  (open-input-string ""))
+(define (line-stream->input-port s)
+  (let-values (((ip op) (make-pipe #f "pipe from a line-stream")))
+    (let ((driver
+           (thread
+            (lambda ()
+              (let loop ((s s))
+                (if (stream-null? s)
+                    (close-output-port op)
+                  (begin
+                    (display (stream-car s)
+                             op)
+                    (newline op)
+                    (loop (stream-cdr s)))
+                  ))
+              ))))
+      ip)))
+
+;; for testing
+(define (split-string s)
+  (port->string-list
+   (line-stream->input-port
+    (port->line-stream
+     (open-input-string s)))))
 
 (define port-stream-tests
 
@@ -51,16 +73,13 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
     "stream->port"
     (test-equal?
      "empty"
-     (port->string (line-stream->port (port->line-stream (open-input-string ""))))
-     "")
+     (split-string "") (list))
     (test-equal?
      "not quite so empty"
-     (port->string (line-stream->port (port->line-stream (open-input-string "huzzah"))))
-     "huzzah")
+     (split-string "huzzah") (list "huzzah"))
     (test-equal?
      "two lines"
-     (port->string-list (line-stream->port (port->line-stream (open-input-string "foo\nbar"))))
-     (list "foo" "bar")))))
+     (split-string "foo\nbar") (list "foo" "bar")))))
 
-(provide (all-defined))
+(provide (all-defined-except split-string))
 )
