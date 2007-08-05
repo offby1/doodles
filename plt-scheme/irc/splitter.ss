@@ -9,9 +9,14 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
  (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss" ("schematics" "schemeunit.plt" 2)))
 
+;; IDEA -- folks on IRC (namely zbigniew and j85wilson) suggest that I
+;; should somehow convert my input port into a stream, clone streams
+;; from it, and then convert those streams back into input ports.  No
+;; idea _how_ I'd do that, but it seems worth considering
+
 (define (split-input-port ip)
-  (let-values (((in1 out1) (make-pipe #f  "splitter's pipe for in1"))
-               ((in2 out2) (make-pipe #f  "splitter's pipe for in2")))
+  (let-values (((in1 out1) (make-pipe 4  "splitter's pipe for in1"))
+               ((in2 out2) (make-pipe 4  "splitter's pipe for in2")))
     (let* ((ops (list out1 out2))
            (driver
             (thread
