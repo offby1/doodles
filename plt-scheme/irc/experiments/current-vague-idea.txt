@@ -18,3 +18,17 @@ like this
   (lambda (string)
     (regexp-match #rx"news$" string))
   *lines-from-server*))
+
+...
+
+or with requisite refactoring
+
+(blubber
+  (lambda (string)
+    (regexp-match #rx"news$" string))
+ 
+  (lambda (string)
+   (mumble string)
+   (fprintf 
+    *output-port-for-server*
+    "PRIVMSG #some-channel :oh, ~a is very funny" string)))
