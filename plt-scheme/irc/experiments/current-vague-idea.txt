@@ -32,3 +32,21 @@ or with requisite refactoring
    (fprintf 
     *output-port-for-server*
     "PRIVMSG #some-channel :oh, ~a is very funny" string)))
+
+...
+
+perhaps blubber could pass the value from the first procedure to the
+second:
+
+
+(blubber
+  (lambda (string)
+    (cond
+      ((regexp-match #rx"news$" string)
+       => tokenize)))
+ 
+  (lambda (tokens)
+   (mumble (first tokens))
+   (fprintf 
+    *output-port-for-server*
+    "PRIVMSG #some-channel :oh, ~a is very funny" (second tokens))))
