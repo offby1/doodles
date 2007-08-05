@@ -13,6 +13,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (lib "40.ss" "srfi")
          )
 
+;; Riastradh wrote this
 (define (port->line-stream ip)
   (stream-delay
    (let recur ()
@@ -30,12 +31,9 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
                 (if (stream-null? s)
                     (close-output-port op)
                   (begin
-                    (display (stream-car s)
-                             op)
+                    (display (stream-car s) op)
                     (newline op)
-                    (loop (stream-cdr s)))
-                  ))
-              ))))
+                    (loop (stream-cdr s)))))))))
       ip)))
 
 ;; for testing
@@ -67,8 +65,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
        (check-equal? (stream-car two-lines)
                      "foo")
        (check-equal? (stream-car (stream-cdr two-lines))
-                     "bar")))
-    )
+                     "bar"))))
+
    (test-suite
     "stream->port"
     (test-equal?
