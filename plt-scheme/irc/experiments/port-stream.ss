@@ -24,7 +24,12 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
     stream-null? (port->line-stream (open-input-string "")))
    (test-false
     "not empty"
-    (stream-null? (port->line-stream (open-input-string "yow"))))))
+    (stream-null? (port->line-stream (open-input-string "yow"))))
+   (test-equal?
+    "right value in trivial case"
+    (stream-car (port->line-stream (open-input-string "yow")))
+    "yow")
+   ))
 
 (provide (all-defined))
 )
