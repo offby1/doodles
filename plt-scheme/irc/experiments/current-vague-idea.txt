@@ -50,3 +50,16 @@ second:
    (fprintf 
     *output-port-for-server*
     "PRIVMSG #some-channel :oh, ~a is very funny" (second tokens))))
+
+
+Riastradh suggests something like
+
+(define (jordanb-chatter)
+  (sync 
+   (choose-evt
+    (wrap-evt (channel-input-evt)
+              (lambda ignore (jordanb-chatter)))
+    (wrap-evt (timer-evt (* 20 60 1000))
+              (lambda ignore
+                (say-something-funny)
+                (jordanb-chatter))))))
