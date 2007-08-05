@@ -47,8 +47,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
     (vtprintf "do-in-loop: creating task ~s~%" name)
     (lambda (command)
-      (vtprintf "task ~s: got command ~s~%" name command)
+      (when (promise? t)
+        (vtprintf "task ~s has never run~%" name))
       (let ((t (force t)))
+        (vtprintf "task ~s: got command ~s~%" name command)
         (case  command
           ((#f postpone POSTPONE)
            (thread-resume t)
