@@ -9,11 +9,11 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (lib "40.ss" "srfi"))
 
 (define (port->line-stream ip)
-  (let loop ((rv stream-null))
+  (let recur ()
     (let ((line (read-line ip)))
       (if (eof-object? line)
-          rv
-        (loop (stream-cons line rv))))))
+          stream-null
+        (stream-cons line (recur))))))
 
 (define port-stream-tests
 
