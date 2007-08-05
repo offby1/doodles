@@ -29,6 +29,13 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
     "right value in trivial case"
     (stream-car (port->line-stream (open-input-string "yow")))
     "yow")
+   (test-case
+    "lines come back in the right order"
+    (let ((two-lines (port->line-stream (open-input-string "foo\nbar"))))
+      (check-equal? (stream-car two-lines)
+                    "foo")
+      (check-equal? (stream-car (stream-cdr two-lines))
+                    "bar")))
    ))
 
 (provide (all-defined))
