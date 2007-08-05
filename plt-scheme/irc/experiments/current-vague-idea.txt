@@ -1,0 +1,20 @@
+rewrite the guts of the bot.
+
+It'll read lines from the IRC server socket, and transform them into a
+stream of lines, which will be a big fat global variable.
+
+The output port for writing to the server will also be a global.
+
+Then there will be a number of tasks, each of which looks something
+like this
+
+(stream-for-each
+ (lambda (string)
+   (mumble string)
+   (fprintf 
+    *output-port-for-server*
+    "PRIVMSG #some-channel :oh, ~a is very funny" string))
+ (stream-filter
+  (lambda (string)
+    (regexp-match #rx"news$" string))
+  *lines-from-server*))
