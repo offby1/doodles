@@ -9,22 +9,27 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 
 (define register-handler! values)
 
+(define scratchpad #f)
+
 (define dispatcher-tests
 
   (test-suite
    "dispatcher"
-   (let ((scratchpad #f))
-     (let-values (((ip op) (make-pipe)))
-       (test-case
-        "yow"
-        (before
-         (lambda ()
-           (register-handler! values ip)
-           (display "egads" op)
-           (newline op))
-         (check-equal?
-          scratchpad
-          'handler-ran!)))))))
+   (test-case
+    "yow"
+    (let-values (((ip op) (make-pipe)))
+      (register-handler!
+       ip
+       (lambda (string)
+         (when (regexp-match
+                #rx"gad"
+                string)
+           (set! scratchpad 'handler-ran!))))
+      (display "egads" op)
+      (newline op)
+      (check-equal?
+       scratchpad
+       'handler-ran!)))))
 
 (provide (all-defined))
 )
