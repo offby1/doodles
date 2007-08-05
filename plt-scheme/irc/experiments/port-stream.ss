@@ -6,14 +6,16 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 (module port-stream mzscheme
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         (lib "40.ss" "srfi"))
+         (lib "40.ss" "srfi")
+         )
 
 (define (port->line-stream ip)
-  (let recur ()
-    (let ((line (read-line ip)))
-      (if (eof-object? line)
-          stream-null
-        (stream-cons line (recur))))))
+  (stream-delay
+   (let recur ()
+     (let ((line (read-line ip)))
+       (if (eof-object? line)
+           stream-null
+         (stream-cons line (recur)))))))
 
 (define port-stream-tests
 
