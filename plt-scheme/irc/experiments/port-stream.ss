@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui port-stream-tests)'
+exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui port-stream-tests 'verbose)"
 |#
 (module port-stream mzscheme
 (require (lib "trace.ss")
@@ -13,6 +13,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (lib "40.ss" "srfi")
          )
 
+;; for debugging
+(define (thread-id)
+  (eq-hash-code (current-thread)))
+
 ;; Riastradh wrote this
 (define (port->line-stream ip)
   (stream-delay
@@ -20,7 +24,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
      (let ((line (read-line ip)))
        (if (eof-object? line)
            stream-null
-         (stream-cons line (recur)))))))
+         (begin0
+           (stream-cons line (recur))
+           (printf "consed ~s onto a stream~%"
+                   line)))))))
 
 (define (line-stream->input-port s)
   (let-values (((ip op) (make-pipe #f "pipe from a line-stream")))
@@ -28,9 +35,15 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
            (thread
             (lambda ()
               (let loop ((s s))
+                (printf "~s: Top of driver loop~%"
+                        (thread-id))
                 (if (stream-null? s)
                     (close-output-port op)
                   (begin
+                    (printf "~s: shoving ~s (and a newline) onto ~s~%"
+                            (thread-id)
+                            (stream-car s)
+                            (object-name op))
                     (display (stream-car s) op)
                     (newline op)
                     (loop (stream-cdr s)))))))))
@@ -77,7 +90,34 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
      (split-string "huzzah") (list "huzzah"))
     (test-equal?
      "two lines"
-     (split-string "foo\nbar") (list "foo" "bar")))))
+     (split-string "foo\nbar") (list "foo" "bar"))
+    (test-case
+     "independent ports"
+     (let* ((s  (port->line-stream (open-input-string "zow")))
+            (ip1 (line-stream->input-port s))
+            (ip2 (line-stream->input-port s)))
+       (check-equal? (read-line ip1) "zow")
+       (check-equal? (read-line ip1) eof)
 
-(provide (all-defined-except split-string))
+       (check-equal? (read-line ip2) "zow")
+       (check-equal? (read-line ip2) eof)
+
+       ))
+
+    (test-case
+     "writeable"
+     (let-values (((ip op) (make-pipe)))
+       (let* ((s (port->line-stream ip))
+              (ip1 (line-stream->input-port s))
+              (ip2 (line-stream->input-port s)))
+         (check-false (char-ready? ip1))
+         (check-false (char-ready? ip2))
+         (display "how de" op) (newline op)
+         (check-equal? (read-line ip1) "how de")
+         (check-equal? (read-line ip2) "how de")
+         )))
+
+    )))
+
+(provide (all-defined-except split-string thread-id))
 )
