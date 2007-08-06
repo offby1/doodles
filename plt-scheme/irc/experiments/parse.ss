@@ -16,10 +16,7 @@
          (only (planet "port.ss" ("schematics" "port.plt" 1 0))
                port->string-list)
          (only (lib "1.ss" "srfi")
-               second
-               third
-               fifth
-               fourth)
+               first second third fourth fifth)
          (only (lib "13.ss" "srfi")
                string-tokenize
                )
@@ -35,6 +32,7 @@
 (define (public-message-command x)
   (read-from-string (message-command x)))
 
+(define-struct (PRIVMSG message) (destination text) (make-inspector))
 (define (parse-irc-message string)
   (let ((prefix #f)
         (sans-prefix string))
@@ -54,8 +52,12 @@
                                             (positive? (string-length t)))
                                        (list t)
                                      '()))))
-        (make-message prefix command (append middle-params  trailing-parameter))))))
-
+        (if (string=? "PRIVMSG" command)
+            (make-PRIVMSG prefix command (append middle-params  trailing-parameter)
+                          (first middle-params)
+                          (car trailing-parameter))
+          (make-message prefix command (append middle-params  trailing-parameter)))))))
+;(trace parse-irc-message)
 
 (define (test-parse input pref cmd params)
   (test-case
@@ -82,10 +84,10 @@
                "localhost."
                "NOTICE"
                '("you" "all suck"))
-   (test-parse ":localhost. PRIVMSG :e1f: you all suck"
+   (test-parse ":localhost. PRIVMSG #emacs :e1f: you all suck"
                "localhost."
                "PRIVMSG"
-               '("e1f: you all suck"))
+               '("#emacs" "e1f: you all suck"))
    (test-parse
     ":ChanServ!ChanServ@services. MODE #cinema +tc "
     "ChanServ!ChanServ@services."
@@ -109,7 +111,21 @@
    (test-equal?
     "trailing params (not ust trailing)"
     (message-params (parse-irc-message "COMMAND poo poo :platter puss"))
-    (list "poo" "poo" "platter puss"))))
+    (list "poo" "poo" "platter puss"))
+   (test-false
+    "average command isn't a PRIVMSG"
+    (PRIVMSG? (parse-irc-message "COMMAND poo poo :platter puss")))
+   (test-pred
+    "PRIVMSGs are indeed PRIVMSGs"
+    PRIVMSG?
+    (parse-irc-message "PRIVMSG poo poo :platter puss"))
+   (test-case
+    "PRIVMSGs get properly parsed"
+    (check-equal? (PRIVMSG-destination (parse-irc-message "PRIVMSG poo poo :platter puss"))
+                  "poo")
+    (check-equal? (PRIVMSG-text (parse-irc-message "PRIVMSG poo poo :platter puss"))
+                  "platter puss")
+    )))
 
 (provide (all-defined-except message-command)
          (rename public-message-command message-command))
