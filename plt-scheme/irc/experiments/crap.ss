@@ -28,26 +28,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *task-custodian* (make-custodian))
 
-(define (make-periodic-dealer what-to-do when-to-do-it)
-  (parameterize ((current-custodian *task-custodian*))
-    (let* ((ch (make-channel))
-           (task (thread (lambda ()
-                           (let loop ()
-                             (let ((datum (sync/timeout 60 ch)))
-                               (printf "periodic thread got datum ~s~%"
-                                       datum)
-                               (when (or
-
-                                      ;; timeout -- channel has been
-                                      ;; quiet for a while
-                                      (not datum)
-                                      (when-to-do-it datum))
-                                 (what-to-do datum)))
-                             (loop))))))
-
-      (lambda (message)
-        (channel-put ch message)))))
-
 (define (respond line ip op)
   (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
@@ -76,6 +56,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (c message)
         )))
 
+    (define (make-periodic-dealer what-to-do when-to-do-it)
+      ;; gaah.  Beware the two TOTALLY DIFFERENT meanings of the
+      ;; word "channel".
+      (let ((my-channel (third (message-params message))))
+        (let* ((ch (make-channel))
+               (task (thread (lambda ()
+                               (let loop ()
+                                 (let ((datum (sync/timeout 10 ch)))
+                                   (printf "periodic thread got datum ~s~%"
+                                           datum)
+                                   (when (or
+
+                                          ;; timeout -- channel has been
+                                          ;; quiet for a while
+                                          (not datum)
+                                          (and
+                                           (PRIVMSG? datum)
+                                           (equal? (PRIVMSG-destination datum) my-channel)
+                                           (when-to-do-it datum))
+                                          )
+                                     (what-to-do datum my-channel)))
+                                 (loop))))))
+
+          (lambda (message)
+            (channel-put ch message)))))
+
     ;; pass the message to every dealer, to give them a chance to
     ;; ... deal with it
     (for-each-dealer
@@ -97,21 +103,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; message for a given channel, in which case we should
          ;; probably not start a second thread for that channel.
          (add-dealer!
-          (let ((my-channel (third (message-params message))))
-            (make-periodic-dealer
-             (lambda (datum)
-               (when (PRIVMSG? datum)
-                 (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
-                          (PRIVMSG-destination datum))
-                 (printf "waal, ah printed it~%")))
-             (lambda (m)
-               ;; someone specifically asked
-               ;; for a quote
-
-               (and
-                (PRIVMSG? m)
-                (equal? (PRIVMSG-destination m) my-channel)
-                (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m))))))))
+          (make-periodic-dealer
+           (lambda (datum my-channel)
+             (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
+                      my-channel)
+             (printf "waal, ah printed it~%"))
+           (lambda (m)
+             ;; someone specifically asked
+             ;; for a quote
+             (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m))))))
 
         ((433)
          (error 'respond "Nick already in use!")
