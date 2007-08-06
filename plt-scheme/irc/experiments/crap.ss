@@ -4,30 +4,44 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module crap mzscheme
-(require (lib "trace.ss")
-         (lib "async-channel.ss")
+(require (only (lib "thread.ss")
+               consumer-thread)
+         (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "parse.ss")
 
 ;; a dealer is a thread that deals with a particular kind of message.
-(define-struct dealer (channel thread id) (make-inspector))
+(define-struct dealer (thread consumer-proc id) (make-inspector))
 (define *dealers* '())
 
-(define add-dealer!
-  (let ((dealers-added 0))
-    (lambda ( thunk)
-      (set! *dealers* (cons (make-dealer
-                             (make-async-channel )
-                             thunk
-                             dealers-added)
-                            *dealers*))
-      (set! dealers-added (add1 dealers-added)))))
+(define (for-each-dealer proc)
+  (for-each proc *dealers*))
 
 (define (respond line ip op)
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
+
+    (define add-dealer!
+      (lambda (proc)
+        (let-values (((t c) (consumer-thread proc)))
+          (set! *dealers* (cons (make-dealer
+                                 t
+                                 c
+                                 (length *dealers*))
+                                *dealers*))
+
+          ;; now that we've created a thread, have it run once,
+          ;; since it won't otherwise get a chance to run until the
+          ;; next time "respond" gets called.
+          (c message)
+          )))
+
+    ;; pass the message to every dealer, to give them a chance to
+    ;; ... deal with it
+    (for-each-dealer (lambda (d)
+                       ((dealer-consumer-proc d) message)))
     (case (message-command message)
       ((001)
        (fprintf
@@ -36,9 +50,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        )
       ((353)
        (add-dealer!
-        (thread (lambda ()
-                  (fprintf op "Apple sure sucks.~%")
-                  (printf "waal, ah printed it~%")))))
+        (lambda (message)
+          (fprintf op "~s => Apple sure sucks.~%" message)
+          (printf "waal, ah printed it~%"))))
 
       ((433)
        #t ;; gaah! "Nick already in use!"
@@ -92,9 +106,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;; The first thing we do, let's kill all the dealers.
 (define (kill-all-dealers!)
-  (for-each (lambda (d)
-              (kill-thread (dealer-thread d)))
-            *dealers*)
+  (for-each-dealer (lambda (d)
+              (kill-thread (dealer-thread d))))
   (set! *dealers* '()))
 
 (define-check (check-response input expected-output)
@@ -115,15 +128,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    #:after
    (lambda ()
      (printf "~a dealers:~%" (length *dealers*))
-     (for-each
+     (for-each-dealer
       (lambda (d)
         (printf "dealer ~s: running: ~a; dead: ~a~%"
                 (dealer-id d)
                 (if (thread-running? (dealer-thread d))
                     "yes" " no")
                 (if (thread-dead? (dealer-thread d))
-                    "yes" " no")))
-      (reverse *dealers*)))
+                    "yes" " no")))))
    (test-case
     "join"
     (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join")
@@ -138,9 +150,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 so it doesn't matter what we put here.")
        op)
       (sleep 1/10)
-      (check-equal?
-       (read-line ip)
-       "Apple sure sucks.")
+      (check-regexp-match
+       #rx"Apple sure sucks.$"
+       (read-line ip))
 
       (respond
        ":server 353 :howdy"
@@ -148,9 +160,9 @@ so it doesn't matter what we put here.")
 so it doesn't matter what we put here.")
        op)
       (sleep 1/10)
-      (check-equal?
-       (read-line ip)
-       "Apple sure sucks.")
+      (check-regexp-match
+       #rx"Apple sure sucks.$"
+       (read-line ip))
 
       ))))
 
