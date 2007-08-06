@@ -15,19 +15,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (list "some bogus parameters")))
 
 (define (respond line ip op)
-  (printf "Well, how would _you_ respond to ~s?~%" line)
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
     (case (message-command message)
       ((001)
-       #t ;; join some channels
+       (fprintf op "JOIN #emacs")
        )
       ((353)
        #t ;; start tasks for this channel
        )
 
       ((433)
-       #t ;; gaah! "Nick alreday in use!"
+       #t ;; gaah! "Nick already in use!"
        )
       ((NOTICE)
        #t ;; if it's a whine about identd, warn that it's gonna be slow.
@@ -38,7 +37,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       ((PRIVMSG)
        #t ;; respond cleverly
        )
-      ))
+      (else
+       (printf "Well, how would _you_ respond to ~s?~%" line))))
   )
 
 (define (start)
@@ -72,10 +72,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (test-suite
    "crap"
    (test-case
-    "yow"
-    (check-response ":server 001 :welcome"
-                    "JOIN #emacs"
-                    "I guess something didn't work!"))))
+    "join"
+    (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join")
+    (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join second time"))
+
+   (test-case
+    "starts threads"
+    (respond
+     ":server 353 :howdy"
+     (open-input-string "")
+     (open-output-string))
+    (fail "where should the thread go?")
+    )
+   ))
 
 (provide (all-defined))
 )
