@@ -42,7 +42,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                       ;; quiet for a while
                                       (not datum)
                                       (when-to-do-it datum))
-                                 (what-to-do)))
+                                 (what-to-do datum)))
                              (loop))))))
 
       (lambda (message)
@@ -89,27 +89,29 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (else
       (case (message-command message)
         ((001)
-         (fprintf
-          op
-          "JOIN #emacs~%"))
+         (fprintf op "JOIN #emacs~%")
+         (fprintf op "JOIN #bots~%"))
 
         ((353)
          ;; I suppose it's possible that we might get more than one 353
          ;; message for a given channel, in which case we should
          ;; probably not start a second thread for that channel.
          (add-dealer!
-          (make-periodic-dealer
-           (lambda ()
-             (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
-             (printf "waal, ah printed it~%"))
-           (lambda (m)
-             ;; someone specifically asked
-             ;; for a quote
+          (let ((my-channel (third (message-params message))))
+            (make-periodic-dealer
+             (lambda (datum)
+               (when (PRIVMSG? datum)
+                 (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
+                          (PRIVMSG-destination datum))
+                 (printf "waal, ah printed it~%")))
+             (lambda (m)
+               ;; someone specifically asked
+               ;; for a quote
 
-             (and
-              (PRIVMSG? m)
-              (equal? (PRIVMSG-destination m) "#emacs")
-              (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m)))))))
+               (and
+                (PRIVMSG? m)
+                (equal? (PRIVMSG-destination m) my-channel)
+                (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
