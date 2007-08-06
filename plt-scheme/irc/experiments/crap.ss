@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module crap mzscheme
-(require (lib "async-channel.ss")
+(require (lib "kw.ss")
+         (lib "async-channel.ss")
          (only (lib "1.ss" "srfi")
                first second third
                filter)
@@ -35,10 +36,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                           *periodicals*))
 
   (let ((message (parse-irc-message line)))
-    (define (add-periodical! what-to-do
-                             interval
-                             when-else-to-do-it
-                             where-to-do-it)
+    (define/kw (add-periodical! what-to-do
+                                interval
+                                when-else-to-do-it
+                                where-to-do-it
+                                #:key
+                                [id (length *periodicals*)])
 
       (parameterize ((current-custodian *task-custodian*))
 
@@ -46,7 +49,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                (task (thread (lambda ()
                                (let loop ()
                                  (let ((datum (sync/timeout interval ch)))
-                                   (printf "periodic thread got datum ~s~%"
+                                   (printf "periodic thread ~s got datum ~s~%"
+                                           id
                                            datum)
                                    (when (or
                                           ;; timeout -- channel has been
@@ -63,7 +67,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (set! *periodicals* (cons (make-periodical
                                      task
                                      ch
-                                     (length *periodicals*))
+                                     id)
                                     *periodicals*))
 
 
@@ -95,30 +99,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (set! times-to-run (sub1 times-to-run)))
            3/2
            (lambda (m) #f)
-           (first (message-params message)))))
+           (first (message-params message))
+           #:id "auto self-destruct sequence")))
       )
      (else
       (case (message-command message)
         ((001)
-         (fprintf op "JOIN #emacs~%")
          (fprintf op "JOIN #bots~%"))
 
-        ((353)
-         ;; I suppose it's possible that we might get more than one 353
-         ;; message for a given channel, in which case we should
-         ;; probably not start a second thread for that channel.
+        ((366)
          (add-periodical!
           (lambda (datum my-channel)
             (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
                      my-channel))
-          10
+          2
           (lambda (m)
             ;; someone specifically asked
             ;; for a quote
             (let ((w (PRIVMSG-text-words m)))
               (and (< 1 (length w))
                    (string-ci=? "quote" (second w)))))
-          (third (message-params message))))
+          (second (message-params message))
+          #:id "funny quotes"))
 
         ((433)
          (error 'respond "Nick already in use!")
@@ -198,7 +200,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        op)
       (sleep 1/10)
       (check-regexp-match
-       #rx"JOIN #emacs"
+       #rx"JOIN #bots"
        (read-line ip)
        "didn't join"))
     )
@@ -207,7 +209,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     "starts threads"
     (let-values (((ip op) (make-pipe)))
       (respond
-       ":server 353 yournick = #channel :howdy"
+       ":server 366 yournick #channel :End of NAMES, dude."
        op)
       (sleep 1/10)
       (check-regexp-match
@@ -215,7 +217,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (read-line ip))
 
       (respond
-       ":server 353 mynick <> #gully :howdy"
+       ":server 366 mynick #gully :drop dead"
        op)
       (sleep 1/10)
       (check-regexp-match
