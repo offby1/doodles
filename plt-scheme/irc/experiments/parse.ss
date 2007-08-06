@@ -37,6 +37,9 @@
 ;(trace make-message)
 ;(trace make-PRIVMSG)
 ;(trace make-ACTION)
+(define (PRIVMSG-is-for-channel? m)
+  (regexp-match #rx"^#" (PRIVMSG-destination m)))
+
 (define (parse-irc-message string)
   (let ((prefix #f)
         (sans-prefix string))
@@ -157,8 +160,17 @@
         (check-pred PRIVMSG? m)
         (check-pred ACTION? m)
         (check-equal? (PRIVMSG-text m) "eats cornflakes"))))
-    )
-   ))
+
+    (test-case
+     "channel versus truly private message"
+     (check-pred
+      PRIVMSG-is-for-channel?
+      (parse-irc-message "PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
+     (check-false
+      (PRIVMSG-is-for-channel?
+      (parse-irc-message "PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
+
+    )))
 
 (provide (all-defined-except message-command)
          (rename public-message-command message-command))

@@ -87,22 +87,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (async-channel-put (periodical-async-channel d) message)))
 
     (cond
-     ((PRIVMSG? message)
-      (when (regexp-match #rx"^die!" (PRIVMSG-text message))
-        (let ((times-to-run 10))
-          (add-periodical!
-           (lambda (datum my-channel)
-             (when (zero? times-to-run)
-               (fprintf op "PRIVMSG ~a :Goodbye, cruel world~%"
-                        my-channel)
-               (kill-thread (current-thread)))
-             (fprintf op "PRIVMSG ~a :~a~%"
-                      my-channel times-to-run)
-             (set! times-to-run (sub1 times-to-run)))
-           3/2
-           (lambda (m) #f)
-           (first (message-params message))
-           #:id "auto self-destruct sequence")))
+     ((and (ACTION? message)
+           (PRIVMSG-is-for-channel? message)
+           (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
+      (fprintf op "PRIVMSG ~a :\u0001ACTION loosens his collar with his index finger\u0001~%"
+               (PRIVMSG-destination message))
+      )
+     ((and (PRIVMSG? message)
+           (regexp-match #rx"^die!" (PRIVMSG-text message)))
+      (let ((times-to-run 10))
+        (add-periodical!
+         (lambda (datum my-channel)
+           (when (zero? times-to-run)
+             (fprintf op "PRIVMSG ~a :Goodbye, cruel world~%"
+                      my-channel)
+             (kill-thread (current-thread)))
+           (fprintf op "PRIVMSG ~a :~a~%"
+                    my-channel times-to-run)
+           (set! times-to-run (sub1 times-to-run)))
+         3/2
+         (lambda (m) #f)
+         (first (message-params message))
+         #:id "auto self-destruct sequence"))
       )
      (else
       (case (message-command message)
