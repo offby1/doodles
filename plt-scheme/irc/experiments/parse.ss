@@ -32,7 +32,7 @@
 (define (public-message-command x)
   (read-from-string (message-command x)))
 
-(define-struct (PRIVMSG message) (destination text) (make-inspector))
+(define-struct (PRIVMSG message) (destination text text-words) (make-inspector))
 (define (parse-irc-message string)
   (let ((prefix #f)
         (sans-prefix string))
@@ -55,7 +55,9 @@
         (if (string=? "PRIVMSG" command)
             (make-PRIVMSG prefix command (append middle-params  trailing-parameter)
                           (first middle-params)
-                          (car trailing-parameter))
+                          (car trailing-parameter)
+                          (string-tokenize (car trailing-parameter)
+                                           (char-set-complement char-set:whitespace)))
           (make-message prefix command (append middle-params  trailing-parameter)))))))
 ;(trace parse-irc-message)
 

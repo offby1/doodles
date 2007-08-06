@@ -15,7 +15,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "parse.ss")
 
 ;; a periodical is a thread that deals with a particular kind of message.
-(define-struct periodical (thread consumer-proc id) (make-inspector))
+(define-struct periodical (thread async-channel id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
 ;; of this variable local to each server, instead of just one global
@@ -30,18 +30,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (respond line op)
   ;; cull the dead periodicals.
 
-  (printf "Before culling: ~a periodicals...~%" (length *periodicals*))
   (set! *periodicals* (filter (lambda (d)
                             (not (thread-dead? (periodical-thread d))))
                           *periodicals*))
-  (printf "After culling: ~a periodicals...~%" (length *periodicals*))
 
-  ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
     (define (add-periodical! what-to-do
-                         interval
-                         when-else-to-do-it
-                         where-to-do-it)
+                             interval
+                             when-else-to-do-it
+                             where-to-do-it)
 
       (parameterize ((current-custodian *task-custodian*))
 
@@ -64,11 +61,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                  (loop))))))
 
           (set! *periodicals* (cons (make-periodical
-                                 task
-                                 (lambda (message)
-                                   (async-channel-put ch message))
-                                 (length *periodicals*))
-                                *periodicals*))
+                                     task
+                                     ch
+                                     (length *periodicals*))
+                                    *periodicals*))
 
 
           ;; now that we've created a thread, have it run once,
@@ -77,11 +73,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (async-channel-put ch message))))
 
     (printf "responding to ~s...~%" message)
+
     ;; pass the message to every periodical, to give them a chance to
     ;; ... deal with it
     (for-each-periodical
      (lambda (d)
-       ((periodical-consumer-proc d) message)))
+       (async-channel-put (periodical-async-channel d) message)))
 
     (cond
      ((PRIVMSG? message)
@@ -113,13 +110,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (add-periodical!
           (lambda (datum my-channel)
             (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
-                     my-channel)
-            (printf "waal, ah printed it~%"))
+                     my-channel))
           10
           (lambda (m)
             ;; someone specifically asked
             ;; for a quote
-            (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m)))
+            (let ((w (PRIVMSG-text-words m)))
+              (and (< 1 (length w))
+                   (string-ci=? "quote" (second w)))))
           (third (message-params message))))
 
         ((433)
@@ -131,8 +129,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ((PING)
          #t ;; send a PONG
          )
+        ((JOIN)
+         (let ((who (message-prefix message))
+               (where (car (message-params message))))
+           (fprintf op "PRIVMSG ~a :Howdy, ~a~%"
+                    where who)
+           ))
         (else
-         (printf "Well, how would _you_ respond to ~s?~%" line))))))
+         (printf "Well, how would _you_ respond to ~s?~%" message))))))
   )
 (trace respond)
 
