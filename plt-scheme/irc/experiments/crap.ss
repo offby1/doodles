@@ -88,10 +88,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (cond
      ((and (ACTION? message)
-           (PRIVMSG-is-for-channel? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (fprintf op "PRIVMSG ~a :\u0001ACTION loosens his collar with his index finger\u0001~%"
-               (PRIVMSG-destination message))
+               (if (PRIVMSG-is-for-channel? message)
+                   (PRIVMSG-destination message)
+                 (PRIVMSG-speaker message)))
       )
      ((and (PRIVMSG? message)
            (regexp-match #rx"^die!" (PRIVMSG-text message)))
