@@ -41,6 +41,11 @@ give the PING response higher priority than the quotes.
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
 
+* add jordanb "we should" quotes
+  ... that is, grep my old IRC logs for quips from him that begin with
+  "We should", just as I've already gotten quips that begin with
+  "Let's".
+
 * unify jordanb quotes and planet.emacsen.org news
   ... they're both the same: each gets stuff from a source,
   periodically spews it into the channel, and will also spew on
