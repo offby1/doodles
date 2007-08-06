@@ -32,7 +32,7 @@
 (define (public-message-command x)
   (read-from-string (message-command x)))
 
-(define-struct (PRIVMSG message) (destination text text-words) (make-inspector))
+(define-struct (PRIVMSG message) (speaker destination text text-words) (make-inspector))
 (define-struct (ACTION PRIVMSG) () (make-inspector))
 ;(trace make-message)
 ;(trace make-PRIVMSG)
@@ -59,11 +59,13 @@
                                         (positive? (string-length t))
                                         t))))
         (if (string=? "PRIVMSG" command)
-            (let* ((m (regexp-match "^\u0001ACTION (.*)\u0001$" trailing-parameter))
-                   (text (if m (second m)
-                           trailing-parameter)))
-              ((if m make-ACTION make-PRIVMSG)
+            (let* ((action-match (regexp-match "^\u0001ACTION (.*)\u0001$" trailing-parameter))
+                   (text (if action-match (second action-match)
+                           trailing-parameter))
+                   (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
+              ((if action-match make-ACTION make-PRIVMSG)
                prefix command (append middle-params (list text))
+               (second prefix-match)
                (first middle-params)
                text
                (string-tokenize
@@ -104,8 +106,8 @@
                "localhost."
                "NOTICE"
                '("you" "all suck"))
-   (test-parse ":localhost. PRIVMSG #emacs :e1f: you all suck"
-               "localhost."
+   (test-parse ":foo!foo@localhost. PRIVMSG #emacs :e1f: you all suck"
+               "foo!foo@localhost."
                "PRIVMSG"
                '("#emacs" "e1f: you all suck"))
    (test-parse
@@ -140,23 +142,25 @@
     (test-pred
      "PRIVMSGs are indeed PRIVMSGs"
      PRIVMSG?
-     (parse-irc-message "PRIVMSG poo poo :platter puss"))
+     (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
     (test-case
      "PRIVMSGs get properly parsed"
-     (check-equal? (PRIVMSG-destination (parse-irc-message "PRIVMSG poo poo :platter puss"))
+     (check-equal? (PRIVMSG-destination (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
                    "poo")
-     (check-equal? (PRIVMSG-text (parse-irc-message "PRIVMSG poo poo :platter puss"))
+     (check-equal? (PRIVMSG-text (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
                    "platter puss")
+     (check-equal? (PRIVMSG-speaker (parse-irc-message ":fsbot!n=user@batfish.pepperfish.net PRIVMSG #emacs :yow!"))
+                   "fsbot")
      )
     (test-suite
      "ACTION"
      (test-false
       "rejects non-actions"
       (ACTION?
-       (parse-irc-message "PRIVMSG #playroom :\u0001UNDERWEAR eats cornflakes\u0001")))
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001UNDERWEAR eats cornflakes\u0001")))
      (test-case
       "properly recognized and parsed"
-      (let ((m (parse-irc-message "PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
+      (let ((m (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
         (check-pred PRIVMSG? m)
         (check-pred ACTION? m)
         (check-equal? (PRIVMSG-text m) "eats cornflakes"))))
@@ -165,10 +169,10 @@
      "channel versus truly private message"
      (check-pred
       PRIVMSG-is-for-channel?
-      (parse-irc-message "PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
+      (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
      (check-false
       (PRIVMSG-is-for-channel?
-      (parse-irc-message "PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
+      (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
 
     )))
 
