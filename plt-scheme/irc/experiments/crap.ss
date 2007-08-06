@@ -31,8 +31,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *task-custodian* (make-custodian))
 
 (define (respond line op)
-  ;; cull the dead periodicals.
 
+  (define (pm target msg)
+    (fprintf op "PRIVMSG ~a :~a~%" target msg))
+
+  ;; cull the dead periodicals.
   (set! *periodicals* (filter (lambda (d)
                             (not (thread-dead? (periodical-thread d))))
                           *periodicals*))
@@ -89,10 +92,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (cond
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
-      (fprintf op "PRIVMSG ~a :\u0001ACTION loosens his collar with his index finger\u0001~%"
-               (if (PRIVMSG-is-for-channel? message)
-                   (PRIVMSG-destination message)
-                 (PRIVMSG-speaker message)))
+      (pm (if (PRIVMSG-is-for-channel? message)
+              (PRIVMSG-destination message)
+            (PRIVMSG-speaker message))
+          "\u0001ACTION loosens his collar with his index finger\u0001")
       )
      ((and (PRIVMSG? message)
            (regexp-match #rx"^die!" (PRIVMSG-text message)))
@@ -100,11 +103,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (add-periodical!
          (lambda (datum my-channel)
            (when (zero? times-to-run)
-             (fprintf op "PRIVMSG ~a :Goodbye, cruel world~%"
-                      my-channel)
+             (pm my-channel "Goodbye, cruel world")
              (kill-thread (current-thread)))
-           (fprintf op "PRIVMSG ~a :~a~%"
-                    my-channel times-to-run)
+           (pm my-channel (format "~a" times-to-run))
            (set! times-to-run (sub1 times-to-run)))
          3/2
          (lambda (m) #f)
@@ -119,8 +120,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ((366)
          (add-periodical!
           (lambda (datum my-channel)
-            (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
-                     my-channel))
+            (pm my-channel "Apple sure sucks."))
           2
           (lambda (m)
             ;; someone specifically asked
@@ -141,15 +141,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          #t ;; send a PONG
          )
         ((JOIN)
-         (let ((who (message-prefix message))
-               (where (car (message-params message))))
-           (fprintf op "PRIVMSG ~a :Howdy, ~a~%"
-                    where who)
-           ))
+         (pm (car (message-params message))
+             (format "Howdy, ~a" (message-prefix message))))
+
         (else
-         (printf "Well, how would _you_ respond to ~s?~%" message))))))
-  )
-(trace respond)
+         (printf "Well, how would _you_ respond to ~s?~%" message)))))))
+
+;(trace respond)
 
 (define (start)
   (let-values (((ip op)
