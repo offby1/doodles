@@ -40,19 +40,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
-
     (define (add-dealer! proc)
       (parameterize ((current-custodian *task-custodian*))
-      (let-values (((t c) (consumer-thread proc)))
-        (set! *dealers* (cons (make-dealer
-                               t
-                               c
-                               (length *dealers*))
-                              *dealers*))
+        (let-values (((t c) (consumer-thread proc)))
+          (set! *dealers* (cons (make-dealer
+                                 t
+                                 c
+                                 (length *dealers*))
+                                *dealers*))
 
-        ;; now that we've created a thread, have it run once,
-        ;; since it won't otherwise get a chance to run until the
-        ;; next time "respond" gets called.
+          ;; now that we've created a thread, have it run once,
+          ;; since it won't otherwise get a chance to run until the
+          ;; next time "respond" gets called.
         (c message)
         )))
 
@@ -67,16 +66,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                    (printf "periodic thread got datum ~s~%"
                                            datum)
                                    (when (or
-
-                                          ;; timeout -- channel has been
-                                          ;; quiet for a while
-                                          (not datum)
-                                          (and
-                                           (PRIVMSG? datum)
-                                           (equal? (PRIVMSG-destination datum) my-channel)
-                                           (when-to-do-it datum))
-                                          )
-                                     (what-to-do datum my-channel)))
+                                        ;; timeout -- channel has been
+                                        ;; quiet for a while
+                                        (not datum)
+                                        (and
+                                         (PRIVMSG? datum)
+                                         (equal? (PRIVMSG-destination datum) my-channel)
+                                         (when-to-do-it datum))
+                                        )
+                                   (what-to-do datum my-channel)))
                                  (loop))))))
 
           (lambda (message)
@@ -218,3 +216,7 @@ so it doesn't matter what we put here.")
 
 (provide (all-defined))
 )
+
+;; Local Variables:
+;; compile-command: "mzscheme -M errortrace -qtmv crap.ss -e \"(start)\""
+;; End:
