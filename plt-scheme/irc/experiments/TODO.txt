@@ -1,5 +1,0 @@
--*-outline-*-
-
-* is *dealers* necessary?
-  ... since the custodian has at least some of that information
-
