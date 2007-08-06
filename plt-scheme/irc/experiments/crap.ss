@@ -4,11 +4,10 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module crap mzscheme
-(require (only (lib "1.ss" "srfi")
+(require (lib "async-channel.ss")
+         (only (lib "1.ss" "srfi")
                first second third
                filter)
-         (only (lib "thread.ss")
-               consumer-thread)
          (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
@@ -39,48 +38,43 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
-    (define (add-dealer! proc)
+    (define (add-dealer! what-to-do
+                         interval
+                         when-else-to-do-it)
+
       (parameterize ((current-custodian *task-custodian*))
-        (let-values (((t c) (consumer-thread proc)))
-          (set! *dealers* (cons (make-dealer
-                                 t
-                                 c
-                                 (length *dealers*))
-                                *dealers*))
 
-          ;; now that we've created a thread, have it run once,
-          ;; since it won't otherwise get a chance to run until the
-          ;; next time "respond" gets called.
-          (c message)
-          )))
+        (let ((target-destination (third (message-params message))))
+          (let* ((ch (make-async-channel))
+                 (task (thread (lambda ()
+                                 (let loop ()
+                                   (let ((datum (sync/timeout interval ch)))
+                                     (printf "periodic thread got datum ~s~%"
+                                             datum)
+                                     (when (or
+                                            ;; timeout -- channel has been
+                                            ;; quiet for a while
+                                            (not datum)
+                                            (and
+                                             (PRIVMSG? datum)
+                                             (equal? (PRIVMSG-destination datum) target-destination)
+                                             (when-else-to-do-it datum))
+                                            )
+                                       (what-to-do datum target-destination)))
+                                   (loop))))))
 
-    (define (make-periodic-dealer
-             what-to-do
-             interval
-             when-else-to-do-it)
-      ;; gaah.  Beware the two TOTALLY DIFFERENT meanings of the
-      ;; word "channel".
-      (let ((my-channel (third (message-params message))))
-        (let* ((ch (make-channel))
-               (task (thread (lambda ()
-                               (let loop ()
-                                 (let ((datum (sync/timeout interval ch)))
-                                   (printf "periodic thread got datum ~s~%"
-                                           datum)
-                                   (when (or
-                                          ;; timeout -- channel has been
-                                          ;; quiet for a while
-                                          (not datum)
-                                          (and
-                                           (PRIVMSG? datum)
-                                           (equal? (PRIVMSG-destination datum) my-channel)
-                                           (when-else-to-do-it datum))
-                                          )
-                                     (what-to-do datum my-channel)))
-                                 (loop))))))
+            (set! *dealers* (cons (make-dealer
+                                   task
+                                   (lambda (message)
+                                     (async-channel-put ch message))
+                                   (length *dealers*))
+                                  *dealers*))
 
-          (lambda (message)
-            (channel-put ch message)))))
+
+            ;; now that we've created a thread, have it run once,
+            ;; since it won't otherwise get a chance to run until the
+            ;; next time "respond" gets called.
+            (async-channel-put ch message)))))
 
     (printf "responding to ~s...~%" message)
     ;; pass the message to every dealer, to give them a chance to
@@ -104,16 +98,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; message for a given channel, in which case we should
          ;; probably not start a second thread for that channel.
          (add-dealer!
-          (make-periodic-dealer
-           (lambda (datum my-channel)
-             (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
-                      my-channel)
-             (printf "waal, ah printed it~%"))
-           10
-           (lambda (m)
-             ;; someone specifically asked
-             ;; for a quote
-             (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m))))))
+          (lambda (datum my-channel)
+            (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
+                     my-channel)
+            (printf "waal, ah printed it~%"))
+          10
+          (lambda (m)
+            ;; someone specifically asked
+            ;; for a quote
+            (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m)))))
 
         ((433)
          (error 'respond "Nick already in use!")
