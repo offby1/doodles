@@ -1,0 +1,10 @@
+-*-outline-*-
+
+* inherited structures
+
+  I already have a "message" structure, but it might be nice to have
+  derived structures for things like PRIVMSG, NOTICE, whatever.
+
+* is *dealers* necessary?
+  ... since the custodian has at least some of that information
+
