@@ -4,7 +4,9 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module crap mzscheme
-(require (only (lib "thread.ss")
+(require (only (lib "1.ss" "srfi")
+               filter)
+         (only (lib "thread.ss")
                consumer-thread)
          (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
@@ -14,12 +16,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;; a dealer is a thread that deals with a particular kind of message.
 (define-struct dealer (thread consumer-proc id) (make-inspector))
+
+;; if we ever connect to two servers at once, we'd want one instance
+;; of this variable local to each server, instead of just one global
+;; as it is now.
 (define *dealers* '())
 
 (define (for-each-dealer proc)
   (for-each proc *dealers*))
 
 (define (respond line ip op)
+  ;; cull the dead dealers.
+  (let ()
+    (printf "Before culling: ~a dealers...~%" (length *dealers*))
+    (set! *dealers* (filter (lambda (d)
+                              (not (thread-dead? (dealer-thread d))))
+                            *dealers*))
+    (printf "After culling: ~a dealers...~%" (length *dealers*)))
+
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
 
@@ -44,15 +58,33 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                        ((dealer-consumer-proc d) message)))
     (case (message-command message)
       ((001)
-       (fprintf
-        op
-        "JOIN #emacs")
-       )
-      ((353)
        (add-dealer!
         (lambda (message)
-          (fprintf op "~s => Apple sure sucks.~%" message)
-          (printf "waal, ah printed it~%"))))
+          (fprintf
+           op
+           "JOIN #emacs~%")
+
+          ;; My purpose in life is fully served once I've run just
+          ;; once; thus I will gracefully commit suicide
+          (kill-thread (current-thread))
+
+          ))
+       )
+      ((353)
+       ;; I suppose it's possible that we might get more than one 353
+       ;; message for a given channel, in which case we should
+       ;; probably not start a second thread for that channel.
+       (add-dealer!
+        (let* ((ch (make-channel))
+               (task (thread (lambda ()
+                               (let loop ()
+                                 (when (not (sync/timeout 10 ch))
+                                   (fprintf op "~s => Apple sure sucks.~%" message)
+                                   (printf "waal, ah printed it~%"))
+                                 (loop))))))
+
+          (lambda (message)
+            (channel-put ch message)))))
 
       ((433)
        #t ;; gaah! "Nick already in use!"
@@ -69,7 +101,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (else
        (printf "Well, how would _you_ respond to ~s?~%" line))))
   )
-;;(trace respond)
+(trace respond)
 
 (define (start)
   (let-values (((ip op)
@@ -87,36 +119,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (respond line ip op)
             (loop)))))))
 
-(define (get-response input)
-  (let ((os (open-output-string)))
-    (respond
-     (cond
-      ((string? input)
-       input)
-      ((procedure? input)
-       (input))
-      (else
-       (error 'get-response)))
-     (open-input-string "")
-     os)
-    (get-output-string os)))
-
-(trace get-response)
-
 
 ;; The first thing we do, let's kill all the dealers.
 (define (kill-all-dealers!)
   (for-each-dealer (lambda (d)
               (kill-thread (dealer-thread d))))
   (set! *dealers* '()))
-
-(define-check (check-response input expected-output)
-  (let ((actual-output (get-response input)))
-    (when (not (string=? actual-output expected-output))
-      (with-check-info*
-       (list (make-check-actual actual-output)
-             (make-check-expected expected-output))
-       (lambda () (fail-check))))))
 
 (define crap-tests
 
@@ -138,8 +146,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                     "yes" " no")))))
    (test-case
     "join"
-    (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join")
-    (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join second time"))
+    (let-values (((ip op) (make-pipe)))
+      (respond
+       ":server 001 :welcome"
+       (open-input-string "")
+       op)
+      (sleep 1/10)
+      (check-regexp-match
+       #rx"JOIN #emacs"
+       (read-line ip)
+       "didn't join"))
+    )
 
    (test-case
     "starts threads"
