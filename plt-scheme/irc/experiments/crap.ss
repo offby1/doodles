@@ -15,7 +15,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "parse.ss")
 
-;; a periodical is a thread that deals with a particular kind of message.
+;; A periodical is a thread that spews into a specific channel, both
+;; periodically (hence the name), and optionally in response to a
+;; message.
 (define-struct periodical (thread async-channel id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
