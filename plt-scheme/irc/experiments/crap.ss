@@ -28,7 +28,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *task-custodian* (make-custodian))
 
-(define (respond line ip op)
+(define (respond line op)
   (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
   (let ()
@@ -142,7 +142,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             ;; TODO: maybe reconnect
             (printf "eof on server~%")
           (begin
-            (respond line ip op)
+            (respond line op)
             (loop)))))))
 
 
@@ -180,7 +180,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let-values (((ip op) (make-pipe)))
       (respond
        ":server 001 :welcome"
-       (open-input-string "")
        op)
       (sleep 1/10)
       (check-regexp-match
@@ -193,9 +192,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     "starts threads"
     (let-values (((ip op) (make-pipe)))
       (respond
-       ":server 353 :howdy"
-       (open-input-string "this particular task doesn't bother reading
-so it doesn't matter what we put here.")
+       ":server 353 yournick = #channel :howdy"
        op)
       (sleep 1/10)
       (check-regexp-match
@@ -203,9 +200,7 @@ so it doesn't matter what we put here.")
        (read-line ip))
 
       (respond
-       ":server 353 :howdy"
-       (open-input-string "this particular task doesn't bother reading
-so it doesn't matter what we put here.")
+       ":server 353 mynick <> #gully :howdy"
        op)
       (sleep 1/10)
       (check-regexp-match
