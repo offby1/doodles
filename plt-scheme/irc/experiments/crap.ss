@@ -28,6 +28,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *task-custodian* (make-custodian))
 
+(define (make-periodic-dealer what-to-do when-to-do-it)
+  (parameterize ((current-custodian *task-custodian*))
+    (let* ((ch (make-channel))
+           (task (thread (lambda ()
+                           (let loop ()
+                             (let ((datum (sync/timeout 5 ch)))
+                               (printf "periodic thread got datum ~s~%"
+                                       datum)
+                               (when (or
+
+                                      ;; timeout -- channel has been
+                                      ;; quiet for a while
+                                      (not datum)
+                                      (when-to-do-it datum))
+                                 (what-to-do)))
+                             (loop))))))
+
+      (lambda (message)
+        (channel-put ch message)))))
+
 (define (respond line ip op)
   (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
@@ -79,32 +99,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        ;; message for a given channel, in which case we should
        ;; probably not start a second thread for that channel.
        (add-dealer!
-        (parameterize ((current-custodian *task-custodian*))
-        (let* ((ch (make-channel))
-               (task (thread (lambda ()
-                               (let loop ()
-                                 (let ((datum (sync/timeout 1 ch)))
-                                   (printf "quote thread got datum ~s~%"
-                                           datum)
-                                   (when (or
+        (make-periodic-dealer
+         (lambda ()
+           (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
+           (printf "waal, ah printed it~%"))
+         (lambda (m)
+           ;; someone specifically asked
+           ;; for a quote
 
-                                          ;; timeout -- channel has been
-                                          ;; quiet for a while
-                                          (not datum)
-
-                                          ;; someone specifically asked
-                                          ;; for a quote
-                                          (and  (equal? (first (message-params datum))
-                                                        "#emacs")
-                                                (regexp-match
-                                                 #rx"^quote\\b"
-                                                 (second (message-params datum)))))
-                                     (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
-                                     (printf "waal, ah printed it~%")))
-                                 (loop))))))
-
-          (lambda (message)
-            (channel-put ch message))))))
+           (and
+            (equal? (first (message-params m))
+                    "#emacs")
+            (regexp-match
+             #rx"^quote\\b"
+             (second (message-params m))))))))
 
       ((433)
        (error 'respond "Nick already in use!")
@@ -130,7 +138,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode op 'line)
 
-    (fprintf op "NICK footsie~%" )
+    (fprintf op "NICK zeppo~%" )
     (fprintf op "USER luser unknown-host localhost :rudybot, version whatever~%")
     (printf "Sent NICK and USER~%")
 
