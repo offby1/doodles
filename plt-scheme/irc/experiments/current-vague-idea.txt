@@ -56,7 +56,7 @@ Riastradh suggests something like
 
 (define (jordanb-chatter)
   (sync 
-   (choose-evt
+   (choice-evt
     (wrap-evt (channel-input-evt)
               (lambda ignore (jordanb-chatter)))
     (wrap-evt (timer-evt (* 20 60 1000))
