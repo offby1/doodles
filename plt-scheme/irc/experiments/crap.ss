@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui crap-tests)'
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module crap mzscheme
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
@@ -57,11 +57,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (respond line ip op)
             (loop)))))))
 
-(define-simple-check (check-response input expected-output)
+(define-check (check-response input expected-output)
   (let ((os (open-output-string)))
     (respond input (open-input-string "") os)
     (let ((actual-output (get-output-string os)))
-      (string=? actual-output expected-output))))
+      (when (not (string=? actual-output expected-output))
+        (with-check-info*
+         (list (make-check-actual actual-output)
+               (make-check-expected expected-output))
+         (lambda () (fail-check)))))))
 
 (define crap-tests
 
@@ -70,7 +74,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "yow"
     (check-response ":server 001 :welcome"
-                    "JOIN #emacs"))))
+                    "JOIN #emacs"
+                    "I guess something didn't work!"))))
 
 (provide (all-defined))
 )
