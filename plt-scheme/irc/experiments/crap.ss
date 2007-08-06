@@ -26,6 +26,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (for-each-dealer proc)
   (for-each proc *dealers*))
 
+(define *task-custodian* (make-custodian))
+
 (define (respond line ip op)
   (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
@@ -39,20 +41,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
 
-    (define add-dealer!
-      (lambda (proc)
-        (let-values (((t c) (consumer-thread proc)))
-          (set! *dealers* (cons (make-dealer
-                                 t
-                                 c
-                                 (length *dealers*))
-                                *dealers*))
+    (define (add-dealer! proc)
+      (parameterize ((current-custodian *task-custodian*))
+      (let-values (((t c) (consumer-thread proc)))
+        (set! *dealers* (cons (make-dealer
+                               t
+                               c
+                               (length *dealers*))
+                              *dealers*))
 
-          ;; now that we've created a thread, have it run once,
-          ;; since it won't otherwise get a chance to run until the
-          ;; next time "respond" gets called.
-          (c message)
-          )))
+        ;; now that we've created a thread, have it run once,
+        ;; since it won't otherwise get a chance to run until the
+        ;; next time "respond" gets called.
+        (c message)
+        )))
 
     ;; pass the message to every dealer, to give them a chance to
     ;; ... deal with it
@@ -77,13 +79,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        ;; message for a given channel, in which case we should
        ;; probably not start a second thread for that channel.
        (add-dealer!
+        (parameterize ((current-custodian *task-custodian*))
         (let* ((ch (make-channel))
-               ;; TODO -- this thread hangs around even if the dealer
-               ;; that created it is killed (as with
-               ;; kill-all-dealers!).  So I need to find a way to make
-               ;; it go away.  I suspect that I can put all these new
-               ;; threads in a separate custodian, and then simply
-               ;; have kill-all-dealers! shut down that custodian.
                (task (thread (lambda ()
                                (let loop ()
                                  (let ((datum (sync/timeout 1 ch)))
@@ -107,10 +104,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                  (loop))))))
 
           (lambda (message)
-            (channel-put ch message)))))
+            (channel-put ch message))))))
 
       ((433)
-       #t ;; gaah! "Nick already in use!"
+       (error 'respond "Nick already in use!")
        )
       ((NOTICE)
        #t ;; if it's a whine about identd, warn that it's gonna be slow.
@@ -133,7 +130,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode op 'line)
 
-    (fprintf op "NICK danger~%" )
+    (fprintf op "NICK footsie~%" )
     (fprintf op "USER luser unknown-host localhost :rudybot, version whatever~%")
     (printf "Sent NICK and USER~%")
 
@@ -149,8 +146,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;; The first thing we do, let's kill all the dealers.
 (define (kill-all-dealers!)
-  (for-each-dealer (lambda (d)
-              (kill-thread (dealer-thread d))))
+  (printf "About to shut down custodian what manages all these dudes: ~s~%"
+          (custodian-managed-list *task-custodian* (current-custodian)))
+  (custodian-shutdown-all *task-custodian*)
+  (set! *task-custodian* (make-custodian))
   (set! *dealers* '()))
 
 (define crap-tests
@@ -170,7 +169,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (if (thread-running? (dealer-thread d))
                     "yes" " no")
                 (if (thread-dead? (dealer-thread d))
-                    "yes" " no")))))
+                    "yes" " no"))))
+     (printf "*task-custodian* manages all these dudes: ~s~%"
+             (custodian-managed-list *task-custodian* (current-custodian)))
+     )
    (test-case
     "join"
     (let-values (((ip op) (make-pipe)))
