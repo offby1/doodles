@@ -14,12 +14,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 1
                 (list "some bogus parameters")))
 
-(define (respond line ip op)
+(define *server-output-port* (make-parameter (current-output-port)))
+(define (respond line ip)
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
     (case (message-command message)
       ((001)
-       (fprintf op "JOIN #emacs")
+       (fprintf
+        (*server-output-port*)
+        "JOIN #emacs")
        )
       ((353)
        #t ;; start tasks for this channel
@@ -45,8 +48,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (let-values (((ip op)
                 (tcp-connect "localhost" 6667)))
 
+    (*server-output-port* op)
+
     ;; so we don't have to call flush-output all the time
-    (file-stream-buffer-mode op 'line)
+    (file-stream-buffer-mode (*server-output-port*) 'line)
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
@@ -54,18 +59,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             ;; TODO: maybe reconnect
             (printf "eof on server~%")
           (begin
-            (respond line ip op)
+            (respond line ip)
             (loop)))))))
 
 (define-check (check-response input expected-output)
   (let ((os (open-output-string)))
-    (respond input (open-input-string "") os)
-    (let ((actual-output (get-output-string os)))
-      (when (not (string=? actual-output expected-output))
-        (with-check-info*
-         (list (make-check-actual actual-output)
-               (make-check-expected expected-output))
-         (lambda () (fail-check)))))))
+    (parameterize ((*server-output-port* os))
+      (respond input (open-input-string ""))
+      (let ((actual-output (get-output-string os)))
+        (when (not (string=? actual-output expected-output))
+          (with-check-info*
+           (list (make-check-actual actual-output)
+                 (make-check-expected expected-output))
+           (lambda () (fail-check))))))))
 
 (define crap-tests
 
@@ -80,8 +86,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     "starts threads"
     (respond
      ":server 353 :howdy"
-     (open-input-string "")
-     (open-output-string))
+     (open-input-string ""))
     (fail "where should the thread go?")
     )
    ))
