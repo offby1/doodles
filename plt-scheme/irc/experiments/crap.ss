@@ -86,7 +86,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                ;; have kill-all-dealers! shut down that custodian.
                (task (thread (lambda ()
                                (let loop ()
-                                 (let ((datum (sync/timeout 10 ch)))
+                                 (let ((datum (sync/timeout 1 ch)))
                                    (printf "quote thread got datum ~s~%"
                                            datum)
                                    (when (or
