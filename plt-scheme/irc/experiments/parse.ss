@@ -49,8 +49,11 @@
              (middle-params (string-tokenize
                              (or (second m) "")
                              (char-set-complement (char-set #\space))))
-             (trailing-parameter (if (fifth m) (list (fifth m))
-                                   '())))
+             (trailing-parameter (let ((t (fifth m)))
+                                   (if (and t
+                                            (positive? (string-length t)))
+                                       (list t)
+                                     '()))))
         (make-message prefix command (append middle-params  trailing-parameter))))))
 
 
@@ -73,7 +76,7 @@
     (check-exn
      exn:fail:contract? (lambda () (parse-irc-message ":foo :"))))
 
-   (test-parse ":foo bar baz :"                         "foo" "bar" '("baz" ""))
+   (test-parse ":foo bar baz :"                         "foo" "bar" '("baz"))
    (test-parse ":foo bar baz :params go here"          "foo" "bar" '("baz" "params go here"))
    (test-parse ":localhost. NOTICE you :all suck"
                "localhost."
@@ -88,30 +91,25 @@
     "ChanServ!ChanServ@services."
     "MODE"
     '("#cinema" "+tc"))
-   ;;     (test-parse "foo "                                  )
-
-   ;;     (test-equal?
-   ;;      "prefix"
-   ;;      (message-prefix (parse-irc-message ":zip zap zop :snot"))
-   ;;      "zip")
-   ;;     (test-false
-   ;;      "missing prefix"
-   ;;      (message-prefix (parse-irc-message "NOTICE All Apple fanbois will be taken out back")))
-   ;;     (test-equal?
-   ;;      "command"
-   ;;      (message-command (parse-irc-message "NOTICE All Apple fanbois will be taken out back"))
-   ;;      'NOTICE)
-   ;;     (test-equal?
-   ;;      "real params (not ust trailing)"
-   ;;      (message-command (parse-irc-message "COMMAND foo bar baz"))
-   ;;      (list "foo" "bar" "baz"))
-   ;;     (test-equal?
-   ;;      "trailing params (not ust trailing)"
-   ;;      (message-command (parse-irc-message "COMMAND poo poo :platter puss"))
-   ;;      (list "poo" "poo" "platter puss"))
-
-
-   ))
+   (test-equal?
+    "prefix"
+    (message-prefix (parse-irc-message ":zip zap zop :snot"))
+    "zip")
+   (test-false
+    "missing prefix"
+    (message-prefix (parse-irc-message "NOTICE All Apple fanbois will be taken out back")))
+   (test-equal?
+    "command"
+    (message-command (parse-irc-message "NOTICE All Apple fanbois will be taken out back"))
+    "NOTICE")
+   (test-equal?
+    "no trailing params"
+    (message-params (parse-irc-message "COMMAND foo bar baz :"))
+    (list "foo" "bar" "baz"))
+   (test-equal?
+    "trailing params (not ust trailing)"
+    (message-params (parse-irc-message "COMMAND poo poo :platter puss"))
+    (list "poo" "poo" "platter puss"))))
 
 (provide (all-defined-except message-command)
          (rename public-message-command message-command))
