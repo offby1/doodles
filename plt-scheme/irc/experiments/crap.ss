@@ -54,14 +54,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (c message)
           )))
 
-    (define (make-periodic-dealer what-to-do when-to-do-it)
+    (define (make-periodic-dealer
+             what-to-do
+             interval
+             when-else-to-do-it)
       ;; gaah.  Beware the two TOTALLY DIFFERENT meanings of the
       ;; word "channel".
       (let ((my-channel (third (message-params message))))
         (let* ((ch (make-channel))
                (task (thread (lambda ()
                                (let loop ()
-                                 (let ((datum (sync/timeout 10 ch)))
+                                 (let ((datum (sync/timeout interval ch)))
                                    (printf "periodic thread got datum ~s~%"
                                            datum)
                                    (when (or
@@ -71,7 +74,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                           (and
                                            (PRIVMSG? datum)
                                            (equal? (PRIVMSG-destination datum) my-channel)
-                                           (when-to-do-it datum))
+                                           (when-else-to-do-it datum))
                                           )
                                      (what-to-do datum my-channel)))
                                  (loop))))))
@@ -106,6 +109,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
                       my-channel)
              (printf "waal, ah printed it~%"))
+           10
            (lambda (m)
              ;; someone specifically asked
              ;; for a quote
