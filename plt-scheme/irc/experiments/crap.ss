@@ -14,31 +14,31 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "parse.ss")
 
-;; a dealer is a thread that deals with a particular kind of message.
-(define-struct dealer (thread consumer-proc id) (make-inspector))
+;; a periodical is a thread that deals with a particular kind of message.
+(define-struct periodical (thread consumer-proc id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
 ;; of this variable local to each server, instead of just one global
 ;; as it is now.
-(define *dealers* '())
+(define *periodicals* '())
 
-(define (for-each-dealer proc)
-  (for-each proc *dealers*))
+(define (for-each-periodical proc)
+  (for-each proc *periodicals*))
 
 (define *task-custodian* (make-custodian))
 
 (define (respond line op)
-  ;; cull the dead dealers.
+  ;; cull the dead periodicals.
 
-  (printf "Before culling: ~a dealers...~%" (length *dealers*))
-  (set! *dealers* (filter (lambda (d)
-                            (not (thread-dead? (dealer-thread d))))
-                          *dealers*))
-  (printf "After culling: ~a dealers...~%" (length *dealers*))
+  (printf "Before culling: ~a periodicals...~%" (length *periodicals*))
+  (set! *periodicals* (filter (lambda (d)
+                            (not (thread-dead? (periodical-thread d))))
+                          *periodicals*))
+  (printf "After culling: ~a periodicals...~%" (length *periodicals*))
 
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
-    (define (add-dealer! what-to-do
+    (define (add-periodical! what-to-do
                          interval
                          when-else-to-do-it
                          where-to-do-it)
@@ -63,12 +63,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                      (what-to-do datum where-to-do-it)))
                                  (loop))))))
 
-          (set! *dealers* (cons (make-dealer
+          (set! *periodicals* (cons (make-periodical
                                  task
                                  (lambda (message)
                                    (async-channel-put ch message))
-                                 (length *dealers*))
-                                *dealers*))
+                                 (length *periodicals*))
+                                *periodicals*))
 
 
           ;; now that we've created a thread, have it run once,
@@ -77,17 +77,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (async-channel-put ch message))))
 
     (printf "responding to ~s...~%" message)
-    ;; pass the message to every dealer, to give them a chance to
+    ;; pass the message to every periodical, to give them a chance to
     ;; ... deal with it
-    (for-each-dealer
+    (for-each-periodical
      (lambda (d)
-       ((dealer-consumer-proc d) message)))
+       ((periodical-consumer-proc d) message)))
 
     (cond
      ((PRIVMSG? message)
       (when (regexp-match #rx"^die!" (PRIVMSG-text message))
         (let ((times-to-run 10))
-          (add-dealer!
+          (add-periodical!
            (lambda (datum my-channel)
              (when (zero? times-to-run)
                (fprintf op "PRIVMSG ~a :Goodbye, cruel world~%"
@@ -110,7 +110,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; I suppose it's possible that we might get more than one 353
          ;; message for a given channel, in which case we should
          ;; probably not start a second thread for that channel.
-         (add-dealer!
+         (add-periodical!
           (lambda (datum my-channel)
             (fprintf op "PRIVMSG ~a :Apple sure sucks.~%"
                      my-channel)
@@ -157,13 +157,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (loop)))))))
 
 
-;; The first thing we do, let's kill all the dealers.
-(define (kill-all-dealers!)
+;; The first thing we do, let's kill all the periodicals.
+(define (kill-all-periodicals!)
   (printf "About to shut down custodian what manages all these dudes: ~s~%"
           (custodian-managed-list *task-custodian* (current-custodian)))
   (custodian-shutdown-all *task-custodian*)
   (set! *task-custodian* (make-custodian))
-  (set! *dealers* '()))
+  (set! *periodicals* '()))
 
 (define crap-tests
 
@@ -171,17 +171,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "crap"
    #:before
    (lambda ()
-     (kill-all-dealers!))
+     (kill-all-periodicals!))
    #:after
    (lambda ()
-     (printf "~a dealers:~%" (length *dealers*))
-     (for-each-dealer
+     (printf "~a periodicals:~%" (length *periodicals*))
+     (for-each-periodical
       (lambda (d)
-        (printf "dealer ~s: running: ~a; dead: ~a~%"
-                (dealer-id d)
-                (if (thread-running? (dealer-thread d))
+        (printf "periodical ~s: running: ~a; dead: ~a~%"
+                (periodical-id d)
+                (if (thread-running? (periodical-thread d))
                     "yes" " no")
-                (if (thread-dead? (dealer-thread d))
+                (if (thread-dead? (periodical-thread d))
                     "yes" " no"))))
      (printf "*task-custodian* manages all these dudes: ~s~%"
              (custodian-managed-list *task-custodian* (current-custodian)))
