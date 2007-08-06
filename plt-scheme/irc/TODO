@@ -184,3 +184,8 @@ essentially a full-blown IRC client with a scheme syntax.
   message), and other terms.  Try to use the same terms that the RFC
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
+
+* Use streams?
+  I'd been mulling them over, and am now pretty sure that I'm not
+  interested.  Still, j85wilson in #scheme suggested I take a look at
+  this: http://paste.lisp.org/display/45711
