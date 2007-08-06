@@ -7,14 +7,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
-
-(define-struct message (prefix command params))
-
-(define (parse-irc-message string)
-  (make-message "some bogus prefix"
-                1
-                (list "some bogus parameters")))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         "parse.ss")
 
 (define (respond line ip op)
   ;; parse the line into an optional prefix, a command, and parameters.
@@ -80,6 +74,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (trace get-response)
 
+
+
 (define-check (check-response input expected-output)
   (let ((actual-output (get-response input)))
     (when (not (string=? actual-output expected-output))
@@ -92,28 +88,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   (test-suite
    "crap"
-   (test-suite
-    "parsing"
-    (test-equal?
-     "prefix"
-     (message-prefix (parse-irc-message ":zip zap zop"))
-     "zip")
-    (test-false
-     "missing prefix"
-     (message-prefix (parse-irc-message "NOTICE All Apple fanbois will be taken out back")))
-    (test-equal?
-     "command"
-     (message-command (parse-irc-message "NOTICE All Apple fanbois will be taken out back"))
-     'NOTICE)
-    (test-equal?
-     "real params (not ust trailing)"
-     (message-command (parse-irc-message "COMMAND foo bar baz"))
-     (list "foo" "bar" "baz"))
-    (test-equal?
-     "trailing params (not ust trailing)"
-     (message-command (parse-irc-message "COMMAND poo poo :platter puss"))
-     (list "poo" "poo" "platter puss"))
-    )
    (test-case
     "join"
     (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join")

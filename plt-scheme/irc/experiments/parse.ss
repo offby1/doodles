@@ -12,6 +12,7 @@
 |#
 (module parse mzscheme
 (require (lib "trace.ss")
+         (only (lib "string.ss") read-from-string)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0))
                port->string-list)
          (only (lib "1.ss" "srfi")
@@ -31,11 +32,8 @@
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
 (define-struct message (prefix command params) (make-inspector))
-
-(define (p val)
-  (write val)
-  (newline)
-  val)
+(define (public-message-command x)
+  (read-from-string (message-command x)))
 
 (define (parse-irc-message string)
   (let ((prefix #f)
@@ -47,8 +45,7 @@
     (let* ((m (regexp-match #rx"^(.*?) (.*)$" sans-prefix))
            (command (second m))
            (sans-command (third m)))
-      (printf "sans-command: ~s~%" sans-command)
-      (let* ((m (p (regexp-match #rx"((.*?) )?(:(.*))?$" sans-command)))
+      (let* ((m (regexp-match #rx"((.*?) )?(:(.*))?$" sans-command))
              (middle-params (string-tokenize
                              (or (second m) "")
                              (char-set-complement (char-set #\space))))
@@ -56,7 +53,6 @@
                                    '())))
         (make-message prefix command (append middle-params  trailing-parameter))))))
 
-(trace parse-irc-message)
 
 (define (test-parse input pref cmd params)
   (test-case
@@ -117,5 +113,6 @@
 
    ))
 
-(provide (all-defined))
+(provide (all-defined-except message-command)
+         (rename public-message-command message-command))
 )
