@@ -82,17 +82,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                        ((dealer-consumer-proc d) message)))
     (case (message-command message)
       ((001)
-       (add-dealer!
-        (lambda (message)
-          (fprintf
-           op
-           "JOIN #emacs~%")
-
-          ;; My purpose in life is fully served once I've run just
-          ;; once; thus I will gracefully commit suicide
-          (kill-thread (current-thread))
-
-          ))
+       (fprintf
+        op
+        "JOIN #emacs~%")
        )
       ((353)
        ;; I suppose it's possible that we might get more than one 353
@@ -138,7 +130,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode op 'line)
 
-    (fprintf op "NICK zeppo~%" )
+    (fprintf op "NICK x~a~%" (current-seconds))
     (fprintf op "USER luser unknown-host localhost :rudybot, version whatever~%")
     (printf "Sent NICK and USER~%")
 
