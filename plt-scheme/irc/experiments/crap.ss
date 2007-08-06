@@ -29,14 +29,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *task-custodian* (make-custodian))
 
 (define (respond line op)
-  (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
-  (let ()
-    (printf "Before culling: ~a dealers...~%" (length *dealers*))
-    (set! *dealers* (filter (lambda (d)
-                              (not (thread-dead? (dealer-thread d))))
-                            *dealers*))
-    (printf "After culling: ~a dealers...~%" (length *dealers*)))
+
+  (printf "Before culling: ~a dealers...~%" (length *dealers*))
+  (set! *dealers* (filter (lambda (d)
+                            (not (thread-dead? (dealer-thread d))))
+                          *dealers*))
+  (printf "After culling: ~a dealers...~%" (length *dealers*))
 
   ;; parse the line into an optional prefix, a command, and parameters.
   (let ((message (parse-irc-message line)))
@@ -52,8 +51,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ;; now that we've created a thread, have it run once,
           ;; since it won't otherwise get a chance to run until the
           ;; next time "respond" gets called.
-        (c message)
-        )))
+          (c message)
+          )))
 
     (define (make-periodic-dealer what-to-do when-to-do-it)
       ;; gaah.  Beware the two TOTALLY DIFFERENT meanings of the
@@ -66,20 +65,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                    (printf "periodic thread got datum ~s~%"
                                            datum)
                                    (when (or
-                                        ;; timeout -- channel has been
-                                        ;; quiet for a while
-                                        (not datum)
-                                        (and
-                                         (PRIVMSG? datum)
-                                         (equal? (PRIVMSG-destination datum) my-channel)
-                                         (when-to-do-it datum))
-                                        )
-                                   (what-to-do datum my-channel)))
+                                          ;; timeout -- channel has been
+                                          ;; quiet for a while
+                                          (not datum)
+                                          (and
+                                           (PRIVMSG? datum)
+                                           (equal? (PRIVMSG-destination datum) my-channel)
+                                           (when-to-do-it datum))
+                                          )
+                                     (what-to-do datum my-channel)))
                                  (loop))))))
 
           (lambda (message)
             (channel-put ch message)))))
 
+    (printf "responding to ~s...~%" message)
     ;; pass the message to every dealer, to give them a chance to
     ;; ... deal with it
     (for-each-dealer
