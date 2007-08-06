@@ -5,6 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module crap mzscheme
 (require (only (lib "1.ss" "srfi")
+               first second third
                filter)
          (only (lib "thread.ss")
                consumer-thread)
@@ -78,9 +79,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (let* ((ch (make-channel))
                (task (thread (lambda ()
                                (let loop ()
-                                 (when (not (sync/timeout 10 ch))
-                                   (fprintf op "~s => Apple sure sucks.~%" message)
-                                   (printf "waal, ah printed it~%"))
+                                 (let ((datum (sync/timeout 10 ch)))
+                                   (when (or
+
+                                          ;; timeout -- channel has been
+                                          ;; quiet for a while
+                                          (not datum)
+
+                                          ;; someone specifically asked
+                                          ;; for a quote
+                                          (and  (equal? (first (message-params datum))
+                                                        "#emacs")
+                                                (regexp-match
+                                                 #rx"^quote\\b"
+                                                 (second (message-params datum)))))
+                                     (fprintf op "~s => Apple sure sucks.~%" message)
+                                     (printf "waal, ah printed it~%")))
                                  (loop))))))
 
           (lambda (message)
