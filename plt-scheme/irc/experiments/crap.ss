@@ -5,10 +5,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module crap mzscheme
 (require (lib "trace.ss")
+         (lib "async-channel.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "parse.ss")
+
+;; a dealer is a thread that deals with a particular kind of message.
+(define-struct dealer (channel thread id) (make-inspector))
+(define *dealers* '())
+
+(define add-dealer!
+  (let ((dealers-added 0))
+    (lambda ( thunk)
+      (set! *dealers* (cons (make-dealer
+                             (make-async-channel )
+                             thunk
+                             dealers-added)
+                            *dealers*))
+      (set! dealers-added (add1 dealers-added)))))
 
 (define (respond line ip op)
   ;; parse the line into an optional prefix, a command, and parameters.
@@ -20,10 +35,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         "JOIN #emacs")
        )
       ((353)
-       (thread (lambda ()
-                 (fprintf op "Apple sure sucks.~%")
-                 (printf "waal, ah printed it~%")))
-       )
+       (add-dealer!
+        (thread (lambda ()
+                  (fprintf op "Apple sure sucks.~%")
+                  (printf "waal, ah printed it~%")))))
 
       ((433)
        #t ;; gaah! "Nick already in use!"
@@ -75,6 +90,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (trace get-response)
 
 
+;; The first thing we do, let's kill all the dealers.
+(define (kill-all-dealers!)
+  (for-each (lambda (d)
+              (kill-thread (dealer-thread d)))
+            *dealers*)
+  (set! *dealers* '()))
 
 (define-check (check-response input expected-output)
   (let ((actual-output (get-response input)))
@@ -88,6 +109,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   (test-suite
    "crap"
+   #:before
+   (lambda ()
+     (kill-all-dealers!))
+   #:after
+   (lambda ()
+     (printf "~a dealers:~%" (length *dealers*))
+     (for-each
+      (lambda (d)
+        (printf "dealer ~s: running: ~a; dead: ~a~%"
+                (dealer-id d)
+                (if (thread-running? (dealer-thread d))
+                    "yes" " no")
+                (if (thread-dead? (dealer-thread d))
+                    "yes" " no")))
+      (reverse *dealers*)))
    (test-case
     "join"
     (check-response ":server 001 :welcome" "JOIN #emacs" "didn't join")
@@ -96,17 +132,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "starts threads"
     (let-values (((ip op) (make-pipe)))
-      (let ((task
-             (respond
-              ":server 353 :howdy"
-              (open-input-string "this particular task doesn't bother reading
+      (respond
+       ":server 353 :howdy"
+       (open-input-string "this particular task doesn't bother reading
 so it doesn't matter what we put here.")
-              op)))
+       op)
+      (sleep 1/10)
+      (check-equal?
+       (read-line ip)
+       "Apple sure sucks.")
 
-        (sleep 1/10)
-        (check-equal?
-         (read-line ip)
-         "Apple sure sucks."))))))
+      (respond
+       ":server 353 :howdy"
+       (open-input-string "this particular task doesn't bother reading
+so it doesn't matter what we put here.")
+       op)
+      (sleep 1/10)
+      (check-equal?
+       (read-line ip)
+       "Apple sure sucks.")
+
+      ))))
 
 (provide (all-defined))
 )
