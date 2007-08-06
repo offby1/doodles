@@ -33,7 +33,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let* ((ch (make-channel))
            (task (thread (lambda ()
                            (let loop ()
-                             (let ((datum (sync/timeout 5 ch)))
+                             (let ((datum (sync/timeout 60 ch)))
                                (printf "periodic thread got datum ~s~%"
                                        datum)
                                (when (or
@@ -82,46 +82,46 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (lambda (d)
        ((dealer-consumer-proc d) message)))
 
-    (case (message-command message)
-      ((001)
-       (fprintf
-        op
-        "JOIN #emacs~%"))
+    (cond
+     ((PRIVMSG? message)
+      #t ;; respond cleverly
+      )
+     (else
+      (case (message-command message)
+        ((001)
+         (fprintf
+          op
+          "JOIN #emacs~%"))
 
-      ((353)
-       ;; I suppose it's possible that we might get more than one 353
-       ;; message for a given channel, in which case we should
-       ;; probably not start a second thread for that channel.
-       (add-dealer!
-        (make-periodic-dealer
-         (lambda ()
-           (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
-           (printf "waal, ah printed it~%"))
-         (lambda (m)
-           ;; someone specifically asked
-           ;; for a quote
+        ((353)
+         ;; I suppose it's possible that we might get more than one 353
+         ;; message for a given channel, in which case we should
+         ;; probably not start a second thread for that channel.
+         (add-dealer!
+          (make-periodic-dealer
+           (lambda ()
+             (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
+             (printf "waal, ah printed it~%"))
+           (lambda (m)
+             ;; someone specifically asked
+             ;; for a quote
 
-           (and
-            (equal? (first (message-params m))
-                    "#emacs")
-            (regexp-match
-             #rx"^quote\\b"
-             (second (message-params m))))))))
+             (and
+              (PRIVMSG? m)
+              (equal? (PRIVMSG-destination m) "#emacs")
+              (regexp-match (pregexp "^.*? quote[[:space:]]*$") (PRIVMSG-text m)))))))
 
-      ((433)
-       (error 'respond "Nick already in use!")
-       )
-      ((NOTICE)
-       #t ;; if it's a whine about identd, warn that it's gonna be slow.
-       )
-      ((PING)
-       #t ;; send a PONG
-       )
-      ((PRIVMSG)
-       #t ;; respond cleverly
-       )
-      (else
-       (printf "Well, how would _you_ respond to ~s?~%" line))))
+        ((433)
+         (error 'respond "Nick already in use!")
+         )
+        ((NOTICE)
+         #t ;; if it's a whine about identd, warn that it's gonna be slow.
+         )
+        ((PING)
+         #t ;; send a PONG
+         )
+        (else
+         (printf "Well, how would _you_ respond to ~s?~%" line))))))
   )
 (trace respond)
 
