@@ -78,14 +78,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     ;; pass the message to every dealer, to give them a chance to
     ;; ... deal with it
-    (for-each-dealer (lambda (d)
-                       ((dealer-consumer-proc d) message)))
+    (for-each-dealer
+     (lambda (d)
+       ((dealer-consumer-proc d) message)))
+
     (case (message-command message)
       ((001)
        (fprintf
         op
-        "JOIN #emacs~%")
-       )
+        "JOIN #emacs~%"))
+
       ((353)
        ;; I suppose it's possible that we might get more than one 353
        ;; message for a given channel, in which case we should
