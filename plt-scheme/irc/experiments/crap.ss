@@ -27,6 +27,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (for-each proc *dealers*))
 
 (define (respond line ip op)
+  (printf "responding to ~s...~%" line)
   ;; cull the dead dealers.
   (let ()
     (printf "Before culling: ~a dealers...~%" (length *dealers*))
@@ -77,9 +78,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        ;; probably not start a second thread for that channel.
        (add-dealer!
         (let* ((ch (make-channel))
+               ;; TODO -- this thread hangs around even if the dealer
+               ;; that created it is killed (as with
+               ;; kill-all-dealers!).  So I need to find a way to make
+               ;; it go away.  I suspect that I can put all these new
+               ;; threads in a separate custodian, and then simply
+               ;; have kill-all-dealers! shut down that custodian.
                (task (thread (lambda ()
                                (let loop ()
                                  (let ((datum (sync/timeout 10 ch)))
+                                   (printf "quote thread got datum ~s~%"
+                                           datum)
                                    (when (or
 
                                           ;; timeout -- channel has been
@@ -93,7 +102,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                                 (regexp-match
                                                  #rx"^quote\\b"
                                                  (second (message-params datum)))))
-                                     (fprintf op "~s => Apple sure sucks.~%" message)
+                                     (fprintf op "PRIVMSG #emacs :Apple sure sucks.~%")
                                      (printf "waal, ah printed it~%")))
                                  (loop))))))
 
@@ -123,6 +132,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode op 'line)
+
+    (fprintf op "NICK danger~%" )
+    (fprintf op "USER luser unknown-host localhost :rudybot, version whatever~%")
+    (printf "Sent NICK and USER~%")
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
