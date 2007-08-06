@@ -1,0 +1,76 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e '(test/text-ui crap-tests)'
+|#
+(module crap mzscheme
+(require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
+
+(define-struct message (prefix command params))
+
+(define (parse-irc-message string)
+  (make-message "some bogus prefix"
+                1
+                (list "some bogus parameters")))
+
+(define (respond line ip op)
+  (printf "Well, how would _you_ respond to ~s?~%" line)
+  ;; parse the line into an optional prefix, a command, and parameters.
+  (let ((message (parse-irc-message line)))
+    (case (message-command message)
+      ((001)
+       #t ;; join some channels
+       )
+      ((353)
+       #t ;; start tasks for this channel
+       )
+
+      ((433)
+       #t ;; gaah! "Nick alreday in use!"
+       )
+      ((NOTICE)
+       #t ;; if it's a whine about identd, warn that it's gonna be slow.
+       )
+      ((PING)
+       #t ;; send a PONG
+       )
+      ((PRIVMSG)
+       #t ;; respond cleverly
+       )
+      ))
+  )
+
+(define (start)
+  (let-values (((ip op)
+                (tcp-connect "localhost" 6667)))
+
+    ;; so we don't have to call flush-output all the time
+    (file-stream-buffer-mode op 'line)
+
+    (let loop ()
+      (let ((line (read-line ip 'return-linefeed)))
+        (if (eof-object? line)
+            ;; TODO: maybe reconnect
+            (printf "eof on server~%")
+          (begin
+            (respond line ip op)
+            (loop)))))))
+
+(define-simple-check (check-response input expected-output)
+  (let ((os (open-output-string)))
+    (respond input (open-input-string "") os)
+    (let ((actual-output (get-output-string os)))
+      (string=? actual-output expected-output))))
+
+(define crap-tests
+
+  (test-suite
+   "crap"
+   (test-case
+    "yow"
+    (check-response ":server 001 :welcome"
+                    "JOIN #emacs"))))
+
+(provide (all-defined))
+)
