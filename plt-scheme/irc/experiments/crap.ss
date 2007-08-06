@@ -100,11 +100,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      "zip")
     (test-false
      "missing prefix"
-     (message-prefix (parse-irc-message "NOTICE: All Apple fanbois will be taken out back")))
+     (message-prefix (parse-irc-message "NOTICE All Apple fanbois will be taken out back")))
     (test-equal?
      "command"
-     (message-command (parse-irc-message "NOTICE: All Apple fanbois will be taken out back"))
+     (message-command (parse-irc-message "NOTICE All Apple fanbois will be taken out back"))
      'NOTICE)
+    (test-equal?
+     "real params (not ust trailing)"
+     (message-command (parse-irc-message "COMMAND foo bar baz"))
+     (list "foo" "bar" "baz"))
+    (test-equal?
+     "trailing params (not ust trailing)"
+     (message-command (parse-irc-message "COMMAND poo poo :platter puss"))
+     (list "poo" "poo" "platter puss"))
     )
    (test-case
     "join"
@@ -120,13 +128,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               (open-input-string "this particular task doesn't bother reading
 so it doesn't matter what we put here.")
               op)))
+        (fail "I know this is gonna hang")
         (sleep 1/10)
         (check-equal?
          (read-line ip)
-         "Apple sure sucks.")
-        ))
-    )
-   ))
+         "Apple sure sucks."))))))
 
 (provide (all-defined))
 )
