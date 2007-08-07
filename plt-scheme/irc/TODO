@@ -26,6 +26,10 @@ give the PING response higher priority than the quotes.
 
 -- Low priority
 
+* quotes and news headlines
+  I should make the silly quotes have a different period than the news
+  headlines, so they don't always arrive together.
+
 * Windows
 
 ** Test regularly
@@ -72,6 +76,9 @@ give the PING response higher priority than the quotes.
 
   On the other hand, I can't think of anything else that I need to
   persist, so ...
+
+  ... and the PLT "preferences" might be a good place to store that
+  data.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
