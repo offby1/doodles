@@ -35,7 +35,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    ;;"irc.freenode.net"
    )
   )
-(define *initial-channel-names* (make-parameter '()))
+(define *initial-channel-names* (make-parameter '("#bots" "#scheme-bots")))
 (define *random?* (make-parameter #t))
 (define *quote-and-headline-interval* (make-parameter (* 20 60)))
 (define *quotes-file-name* (make-parameter
