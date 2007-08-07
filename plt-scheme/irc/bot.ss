@@ -275,7 +275,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          )
         ((PING)
          #t ;; send a PONG
-         (out "PONG ~a" (message-params message)))
+         (out "PONG :~a~%" (car (message-params message))))
 
 
         )))))
