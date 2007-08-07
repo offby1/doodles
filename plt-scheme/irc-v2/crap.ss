@@ -15,7 +15,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "globals.ss"
-         "parse.ss")
+         "parse.ss"
+         "quotes.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
 ;; periodically (hence the name), and optionally in response to a
@@ -188,7 +189,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ((366)
          (add-periodical!
           (lambda (datum my-channel)
-            (pm my-channel "Apple sure sucks."))
+            (pm my-channel (one-quote)))
           (*quote-and-headline-interval*)
           (lambda (m)
             ;; someone specifically asked
