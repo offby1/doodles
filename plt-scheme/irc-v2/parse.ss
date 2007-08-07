@@ -32,11 +32,13 @@
 (define (public-message-command x)
   (read-from-string (message-command x)))
 
-(define-struct (PRIVMSG message) (speaker destination text text-words) (make-inspector))
+(define-struct (PRIVMSG message)
+  (speaker destination approximate-recipient text text-words)
+  (make-inspector))
 (define-struct (ACTION PRIVMSG) () (make-inspector))
-;(trace make-message)
-;(trace make-PRIVMSG)
-;(trace make-ACTION)
+;; (trace make-message)
+;; (trace make-PRIVMSG)
+;; (trace make-ACTION)
 (define (PRIVMSG-is-for-channel? m)
   (regexp-match #rx"^#" (PRIVMSG-destination m)))
 
@@ -57,7 +59,24 @@
              (trailing-parameter (let ((t (fifth m)))
                                    (and t
                                         (positive? (string-length t))
-                                        t))))
+                                        t)))
+             (addressee
+              (and
+               trailing-parameter
+               (let ((fw (first
+                          (string-tokenize
+                           trailing-parameter
+                           (char-set-complement (char-set #\space)))))
+                     (trailing-delimiter-rx #rx"[:,]$"))
+                 (and
+                  (regexp-match
+                   trailing-delimiter-rx
+                   fw)
+                  (regexp-replace
+                   trailing-delimiter-rx
+                   fw
+                   "")))))
+             )
         (if (string=? "PRIVMSG" command)
             (let* ((action-match (regexp-match "^\u0001ACTION (.*)\u0001$" trailing-parameter))
                    (text (if action-match (second action-match)
@@ -67,6 +86,7 @@
                prefix command (append middle-params (list text))
                (second prefix-match)
                (first middle-params)
+               addressee
                text
                (string-tokenize
                 text
@@ -81,13 +101,11 @@
 ;(trace parse-irc-message)
 
 
-(define (test-parse input pref cmd params)
-  (test-case
-   "yow"
-   (let ((m (parse-irc-message input)))
-     (check-equal? (message-prefix  m) pref   (format "prefix of ~s"  input))
-     (check-equal? (message-command m) cmd    (format "command of ~s" input))
-     (check-equal? (message-params  m) params (format "params of ~s"  input)))))
+(define-shortcut (test-parse input pref cmd params)
+  (let ((m (parse-irc-message input)))
+    (check-equal? (message-prefix  m) pref   (format "prefix of ~s"  input))
+    (check-equal? (message-command m) cmd    (format "command of ~s" input))
+    (check-equal? (message-params  m) params (format "params of ~s"  input))))
 
 (define parse-tests
 
@@ -100,17 +118,26 @@
     (check-exn
      exn:fail:contract? (lambda () (parse-irc-message ":foo :"))))
 
-   (test-parse ":foo bar baz :"                         "foo" "bar" '("baz"))
-   (test-parse ":foo bar baz :params go here"          "foo" "bar" '("baz" "params go here"))
-   (test-parse ":localhost. NOTICE you :all suck"
-               "localhost."
-               "NOTICE"
-               '("you" "all suck"))
-   (test-parse ":foo!foo@localhost. PRIVMSG #emacs :e1f: you all suck"
-               "foo!foo@localhost."
-               "PRIVMSG"
-               '("#emacs" "e1f: you all suck"))
    (test-parse
+    "no trailing"
+    ":foo bar baz :"                         "foo" "bar" '("baz"))
+   (test-parse
+    "trailing"
+    ":foo bar baz :params go here"          "foo" "bar" '("baz" "params go here"))
+   (test-parse
+    "NOTICE"
+    ":localhost. NOTICE you :all suck"
+    "localhost."
+    "NOTICE"
+    '("you" "all suck"))
+   (test-parse
+    "PRIVMSG"
+    ":foo!foo@localhost. PRIVMSG #emacs :e1f: you all suck"
+    "foo!foo@localhost."
+    "PRIVMSG"
+    '("#emacs" "e1f: you all suck"))
+   (test-parse
+    "MODE"
     ":ChanServ!ChanServ@services. MODE #cinema +tc "
     "ChanServ!ChanServ@services."
     "MODE"
@@ -172,7 +199,20 @@
       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
      (check-false
       (PRIVMSG-is-for-channel?
-      (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
+       (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
+
+    (test-case
+     "approximate recipient"
+     (check-false
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001")))
+     (check-false
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :well I think you smell")))
+     (check-equal?
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :well, I think you smell"))
+      "well"))
 
     )))
 

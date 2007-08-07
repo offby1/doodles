@@ -120,49 +120,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (check-regexp-match
         #rx"USER .* .* .* :.*"
         (second lines)))))
-
-   (let ((chans (list "#rum" "##sodomy" "#the-lash")))
-     (test-equal?
-      "joins channels upon receipt of 001"
-      (parameterize (
-                     (*initial-channel-names* chans))
-        (get-retort ":naughty.but.nice.net 001 yoyobot :Hey, man, smell my finger"
-                    #:which 'all))
-      (map (lambda (c) (string-append "JOIN " c)) chans)))
-
-   ;; TODO -- join #emacs or #bots and see if it does its amusing
-   ;; stuff (jordanb quotes, etc.)
-
-   ;; TODO -- send it a NOTICE and make sure it does nothing
-
-   ;; TODO -- send it a PING and see if it PONGs
    (test-suite
     "excercise the \"respond\" function"
-    (test-equal?
-     "silent unless spoken to, private message edition"
-     (send "hey you" #:recipient "somenick")
-     "")
-    (test-equal?
-     "silent unless spoken to, channel message edition"
-     (send "hey you")
-     "")
-    (test-equal?
-     "echoes back stuff addressed to it, private message edition"
-     (psend "hey you")
-     (default-dumb-response "unit-test"))
-    (test-equal?
-     "echoes, channel message edition"
-     (say-to-bot "hey you")
-     (default-dumb-response #t))
-    (test-equal?
-     "deals with Unicode whitespace"
-     (parameterize ((*whitespace-char*
-                     (integer->char
-                      ;; NO-BREAK SPACE
-                      #x00A0
-                      )))
-       (say-to-bot "hey you"))
-     (default-dumb-response #t))
+
     (test-equal?
      "recognizes a comma after its nick"
      (say-to-bot "hey you" #:delimiter-char #\,)
