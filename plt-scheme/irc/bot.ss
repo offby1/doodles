@@ -55,7 +55,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (define (out . args)
       (apply fprintf op args)
 
-      (display (zdate (seconds->date (current-seconds))))
+      (display (zdate (seconds->date (current-seconds))) (*log-output-port*))
       (display " => " (*log-output-port*))
       (write (apply format args) (*log-output-port*))
       (newline (*log-output-port*)))
@@ -137,8 +137,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     ;; might be worth doing this in a separate thread, since it can
     ;; take a while.
+
+    ;; disabled until I deal with TODO items
     (cond
      ((and
+       #f
        (PRIVMSG? message)
        (regexp-match url-regexp (PRIVMSG-text message)))
       =>
