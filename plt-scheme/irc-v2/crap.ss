@@ -151,9 +151,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (poop (hash-table-get *appearances-by-nick* who #f)))
         (reply (or poop (format "I haven't seen ~a" who)))))
 
-     ((VERSION? message)
-      (fprintf op "NOTICE ~a :\u0001VERSION none of your damned business\0001~%"
-               (PRIVMSG-speaker message) ))
+     ((or (VERSION? message)
+          (and (PRIVMSG? message)
+               (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))
+               (< 1 (length (PRIVMSG-text-words message)))
+               (string-ci=? "version" (second (PRIVMSG-text-words message)))))
+      (let ((version-string "none of your damned business"))
+        (if (VERSION? message)
+            (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
+                     (PRIVMSG-speaker message)
+                     version-string)
+          (reply version-string))))
      ((SOURCE? message)
       (fprintf op "NOTICE ~a :\u0001SOURCE not yet publically released, but the author would be willing if asked nicely\0001~%"
                (PRIVMSG-speaker message) ))
