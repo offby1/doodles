@@ -2,6 +2,14 @@
 
 -- High priority
 
+* tinyurl
+
+** ignore from bots
+
+** use NOTICE instead of PRIVMSG to respond
+
+** ignore URLs that are already short
+
 * bugs
 
 ** ignores private messages?
