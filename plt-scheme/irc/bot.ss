@@ -19,7 +19,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "globals.ss"
          "parse.ss"
          "planet-emacs-task.ss"
-         "quotes.ss")
+         "quotes.ss"
+         "tinyurl.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
 ;; periodically (hence the name), and optionally in response to having
@@ -133,6 +134,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                  (if was-action?
                      (format ": ~a ~a" who what)
                    (format ", saying \"~a\"" what))))))
+
+    ;; might be worth doing this in a separate thread, since it can
+    ;; take a while.
+    (cond
+     ((and
+       (PRIVMSG? message)
+       (regexp-match url-regexp (PRIVMSG-text message)))
+      =>
+      (lambda (match-data)
+        (reply (make-tiny-url (car match-data))
+               ))))
 
     (cond
      ((and (ACTION? message)
