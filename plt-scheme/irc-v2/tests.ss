@@ -123,10 +123,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (test-suite
     "excercise the \"respond\" function"
 
-    (test-equal?
-     "recognizes a comma after its nick"
-     (say-to-bot "hey you" #:delimiter-char #\,)
-     (default-dumb-response #t))
     (test-case
      "Responds to VERSION CTCP request"
      (check-regexp-match

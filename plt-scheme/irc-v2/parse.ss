@@ -35,10 +35,12 @@
 (define-struct (PRIVMSG message)
   (speaker destination approximate-recipient text text-words)
   (make-inspector))
-(define-struct (ACTION PRIVMSG) () (make-inspector))
+(define-struct (CTCP PRIVMSG) (req/extended-data) (make-inspector))
+(define-struct (ACTION CTCP) () (make-inspector))
+(define-struct (VERSION CTCP) () (make-inspector))
 ;; (trace make-message)
 ;; (trace make-PRIVMSG)
-;; (trace make-ACTION)
+;; (trace make-CTCP)
 (define (PRIVMSG-is-for-channel? m)
   (regexp-match #rx"^#" (PRIVMSG-destination m)))
 
@@ -78,11 +80,20 @@
                    "")))))
              )
         (if (string=? "PRIVMSG" command)
-            (let* ((action-match (regexp-match "^\u0001ACTION (.*)\u0001$" trailing-parameter))
-                   (text (if action-match (second action-match)
+            (let* ((ctcp-match (regexp-match
+                                  (pregexp "^\u0001([[:alpha:]]+) (.*)\u0001$")
+                                  trailing-parameter))
+                   (text (if ctcp-match (third ctcp-match)
                            trailing-parameter))
+                   (req/x (and ctcp-match (second ctcp-match)))
                    (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
-              ((if action-match make-ACTION make-PRIVMSG)
+              (apply
+               (if ctcp-match
+                   (cond
+                    ((equal? req/x "ACTION" ) make-ACTION)
+                    ((equal? req/x "VERSION") make-VERSION)
+                    (else make-CTCP))
+                 make-PRIVMSG)
                prefix command (append middle-params (list text))
                (second prefix-match)
                (first middle-params)
@@ -90,7 +101,8 @@
                text
                (string-tokenize
                 text
-                (char-set-complement char-set:whitespace))))
+                (char-set-complement char-set:whitespace))
+               (if ctcp-match (list (first ctcp-match)) '())))
           (make-message
            prefix command
            (append
@@ -189,7 +201,7 @@
       "properly recognized and parsed"
       (let ((m (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
         (check-pred PRIVMSG? m)
-        (check-pred ACTION? m)
+        (check-pred CTCP? m)
         (check-equal? (PRIVMSG-text m) "eats cornflakes"))))
 
     (test-case
