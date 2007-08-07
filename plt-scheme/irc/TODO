@@ -6,6 +6,10 @@
 
 ** ignores private messages?
 
+   Yup.  Don't ask me why, but I check all the incoming messages with
+   ch-for-us?.  Maybe I had a good reason for doing that, but if so,
+   I've forgotten what it was.
+
 ** ping timeout
 
 at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
