@@ -33,7 +33,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *periodicals-by-id* (make-hash-table 'equal))
 
 (define (for-each-periodical proc)
-  (hash-table-for-each *periodicals-by-id* (lambda (k v) (proc v))))
+  (hash-table-for-each *periodicals-by-id* proc))
 
 (define *task-custodian* (make-custodian))
 
@@ -105,31 +105,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
-      ;; note who did what, when, where, how, and wearing what kind of
-      ;; skirt; so that later we can respond to "seen Ted?"
       (let ((who         (PRIVMSG-speaker     message))
             (where       (PRIVMSG-destination message))
             (what        (PRIVMSG-text        message))
-            (when        (current-seconds))
+            (time        (current-seconds))
             (was-action? (ACTION?             message)))
 
         (for-each-periodical
-         (lambda (p)
+         (lambda (id p)
            (when (equal? (periodical-channel-of-interest p)
                          where)
              (semaphore-post (periodical-back-to-sleep p)))))
 
-        (let ((the-skinny (format "~a~a in ~a~a ~a~a"
-                                  who
-                                  (if was-action? "'s last action" " last spoke")
-                                  where
-                                  (if was-action? " was at"        ""           )
-                                  (zdate (seconds->date when))
-                                  (if was-action?
-                                      (format ": ~a ~a" who what)
-                                    (format ", saying \"~a\"" what)))))
-          (hash-table-put! *appearances-by-nick* who the-skinny)
-          )))
+        ;; note who did what, when, where, how, and wearing what kind
+        ;; of skirt; so that later we can respond to "seen Ted?"
+        (hash-table-put!
+         *appearances-by-nick*
+         who
+         (format "~a~a in ~a~a ~a~a"
+                 who
+                 (if was-action? "'s last action" " last spoke")
+                 where
+                 (if was-action? " was at"        ""           )
+                 (zdate (seconds->date time))
+                 (if was-action?
+                     (format ": ~a ~a" who what)
+                   (format ", saying \"~a\"" what))))))
 
     (cond
      ((and (ACTION? message)
@@ -354,12 +355,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (lambda ()
      (printf "~a periodicals:~%" (hash-table-count *periodicals-by-id*))
      (for-each-periodical
-      (lambda (d)
+      (lambda (id p)
         (printf "periodical ~s: running: ~a; dead: ~a~%"
-                (periodical-id d)
-                (if (thread-running? (periodical-thread d))
+                (periodical-id p)
+                (if (thread-running? (periodical-thread p))
                     "yes" " no")
-                (if (thread-dead? (periodical-thread d))
+                (if (thread-dead? (periodical-thread p))
                     "yes" " no"))))
      (printf "*task-custodian* manages all these dudes: ~s~%"
              (custodian-managed-list *task-custodian* (current-custodian)))
