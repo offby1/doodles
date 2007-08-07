@@ -43,7 +43,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (let ((message (parse-irc-message line)))
 
     (define (pm target msg)
-      (fprintf op "PRIVMSG ~a :~a~%" target msg))
+      (fprintf op "PRIVMSG ~a :~a~%" target msg)
+      (printf "PRIVMSG ~a :~a~%" target msg))
     (define (reply response)
       (pm (if (PRIVMSG-is-for-channel? message)
               (PRIVMSG-destination message)
@@ -146,6 +147,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (else
       (case (message-command message)
         ((001)
+         (printf "Joined a couple o' channels~%")
          (fprintf op "JOIN #bots~%")
          (fprintf op "JOIN #scheme-bots~%"))
 
@@ -153,7 +155,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (add-periodical!
           (lambda (datum my-channel)
             (pm my-channel "Apple sure sucks."))
-          20
+          5
           (lambda (m)
             ;; someone specifically asked
             ;; for a quote
@@ -209,6 +211,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (custodian-shutdown-all *task-custodian*)
   (set! *task-custodian* (make-custodian))
   (set! *periodicals* '()))
+;; returns #f if we didn't find what we're looking for.
+
+(define (expect/timeout ip regex seconds)
+  (let* ((ch (make-channel))
+         (reader
+          (thread
+           (lambda ()
+             (let loop ()
+               (printf "expect/timeout about to look for ~s from ~s ...~%"
+                       regex
+                       (object-name ip))
+               (let ((line (read-line ip)))
+                 (cond
+                  ((eof-object? line)
+                   (printf "expect/timeout: eof~%")
+                   (channel-put ch #f))
+                  ((regexp-match regex line)
+                   (printf "expect/timeout: Got match!~%")
+                   (channel-put ch #t))
+                  (else
+                   (printf "expect/timeout: nope; retrying~%")
+                   (loop)))
+
+                 ))))))
+    (and (sync/timeout seconds ch)
+         ch)))
 
 (define crap-tests
 
@@ -238,9 +266,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        ":server 001 :welcome"
        op)
       (sleep 1/10)
-      (check-regexp-match
-       #rx"JOIN #bots"
-       (read-line ip)
+      (check-not-false
+       (expect/timeout ip #rx"JOIN #bots" 2)
        "didn't join"))
     )
 
@@ -250,18 +277,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (respond
        ":server 366 yournick #channel :End of NAMES, dude."
        op)
-      (sleep 1/10)
-      (check-regexp-match
-       #rx"Apple sure sucks.$"
-       (read-line ip))
+
+      (check-not-false (expect/timeout  ip #rx"Apple sure sucks.$" 10))
 
       (respond
        ":server 366 mynick #gully :drop dead"
        op)
-      (sleep 1/10)
-      (check-regexp-match
-       #rx"Apple sure sucks.$"
-       (read-line ip))
+
+      (check-not-false (expect/timeout ip #rx"Apple sure sucks.$" 10))
 
       ))))
 

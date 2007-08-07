@@ -36,31 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "task.ss"
          "vprintf.ss")
 
-;; returns #f if we didn't find what we're looking for.
-(define (expect/timeout ip regex seconds)
-  (let* ((ch (make-channel))
-         (reader
-          (thread
-           (lambda ()
-             (let loop ()
-               (printf "expect/timeout about to look for ~s from ~s ...~%"
-                       regex
-                       (object-name ip))
-               (let ((line (read-line ip)))
-                 (cond
-                  ((eof-object? line)
-                   (printf "expect/timeout: eof~%")
-                   (channel-put ch #f))
-                  ((regexp-match regex line)
-                   (printf "expect/timeout: Got match!~%")
-                   (channel-put ch #t))
-                  (else
-                   (printf "expect/timeout: nope; retrying~%")
-                   (loop)))
 
-                 ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
 
 ;(trace expect/timeout)
 
