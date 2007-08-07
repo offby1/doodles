@@ -244,30 +244,33 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (else
       (case (message-command message)
         ((001)
-         (printf "Joined a couple o' channels~%")
          (for-each (lambda (cn)
+                     (printf "Joining ~a~%" cn)
                      (fprintf op "JOIN ~a~%" cn))
                    (*initial-channel-names*)))
 
         ((366)
-         (add-periodical!
-          (lambda (my-channel)
-            (pm my-channel (one-quote)))
-          (*quote-and-headline-interval*)
-          (second (message-params message))
-          #:id 'quote-spewer)
+         (let ((this-channel (second (message-params message))))
 
-         (let ((planet-thing (make-pe-consumer-proc)))
-           (add-periodical!
-            (lambda (my-channel)
-              (planet-thing
-               (lambda (headline)
-                 (pm my-channel headline))))
+           (when (member this-channel '("#emacs" "#bots" ))
+             (add-periodical!
+              (lambda (my-channel)
+                (pm my-channel (one-quote)))
+              (* 11/10 (*quote-and-headline-interval*))
+              this-channel
+              #:id 'quote-spewer))
 
-            (*quote-and-headline-interval*)
-            (second (message-params message))
-            #:id 'news-spewer))
-         )
+           (when (member this-channel '("#emacs" "#scheme-bots"))
+             (let ((planet-thing (make-pe-consumer-proc)))
+               (add-periodical!
+                (lambda (my-channel)
+                  (planet-thing
+                   (lambda (headline)
+                     (pm my-channel headline))))
+
+                (*quote-and-headline-interval*)
+                this-channel
+                #:id 'news-spewer)))))
 
         ((433)
          (error 'respond "Nick already in use!")
