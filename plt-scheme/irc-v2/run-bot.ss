@@ -8,13 +8,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require  (lib "cmdline.ss")
           (only (lib "etc.ss")
                 this-expression-source-directory)
-          "bot.ss"
+          "crap.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "planet-emacs-task.ss"
           "quotes.ss"
           "system.ss"
-          "task.ss"
           "vprintf.ss"
           )
 
@@ -89,7 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lambda ()
    (parameterize
        ((current-namespace
-         (module->namespace "bot.ss")))
+         (module->namespace "crap.ss")))
      (fprintf
       (current-error-port)
       "Welcome to the ~a namespace.  Use your power only for good.~%"
@@ -97,39 +96,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (dynamic-require '(lib "rep.ss" "readline") #f)
      (read-eval-print-loop))))
 
-(define (hash-table-append! t k v)
-  (hash-table-put! t k (cons v (hash-table-get t k '()))))
-
-(let-values (((ip op)
-              (tcp-connect (*irc-server-name*) 6667)))
-
-  ;; so we don't have to call flush-output all the time
-  (file-stream-buffer-mode op 'line)
-
-  (do-startup-stuff op)
-  (let ((consumer (make-pe-consumer-proc)))
-
-    (hash-table-append!
-     *tasks-by-channel*
-     "#emacs"
-     (make-task 'headline-spewer-task
-                (*quote-and-headline-interval*)
-                (lambda ()
-                  (consumer (lambda (str) (put str op)))))))
-
-  (hash-table-append!
-   *tasks-by-channel*
-   "#emacs"
-   (make-task 'quote-spewer-task
-              (*quote-and-headline-interval*)
-              (lambda () (put (format "PRIVMSG #emacs :~a" (one-quote)) op))))
-
-  (let loop ()
-    (let ((line (read-line ip 'return-linefeed)))
-      (if (eof-object? line)
-          ;; TODO: maybe reconnect
-          (vtprintf "eof on server~%")
-        (begin
-          (respond line op)
-          (loop))))))
+(start)
 )
