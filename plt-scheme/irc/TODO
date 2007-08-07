@@ -4,10 +4,6 @@
 
 * bugs
 
-** waits too long
-   r4523: spews news every 23 minutes, rather than the 20 I told it
-   to.  Total effing whodunit.
-
 ** ping timeout
 
 at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local

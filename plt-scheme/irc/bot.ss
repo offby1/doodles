@@ -25,7 +25,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; periodically (hence the name), and optionally in response to having
 ;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
 ;; clock.  (do-it-now! and back-to-sleep are semaphores.)
-(define-struct periodical (thread do-it-now! back-to-sleep id) (make-inspector))
+(define-struct periodical (channel-of-interest thread do-it-now! back-to-sleep id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
 ;; of this variable local to each server, instead of just one global
@@ -97,14 +97,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            *periodicals-by-id*
            (cons id where-to-do-it)
            (make-periodical
+            where-to-do-it
             task
             do-it-now!
             back-to-sleep
             id)))))
-
-    (for-each-periodical
-     (lambda (d)
-       (semaphore-post (periodical-back-to-sleep d))))
 
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
@@ -115,6 +112,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (what        (PRIVMSG-text        message))
             (when        (current-seconds))
             (was-action? (ACTION?             message)))
+
+        (for-each-periodical
+         (lambda (p)
+           (when (equal? (periodical-channel-of-interest p)
+                         where)
+             (semaphore-post (periodical-back-to-sleep p)))))
+
         (let ((the-skinny (format "~a~a in ~a~a ~a~a"
                                   who
                                   (if was-action? "'s last action" " last spoke")
