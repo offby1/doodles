@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
+#$Id: bot.ss 4527 2007-08-07 15:03:50Z erich $
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module bot mzscheme
@@ -8,6 +8,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (lib "1.ss" "srfi")
                first second third
                filter)
+         (only (lib "13.ss" "srfi")
+               string-join)
          (lib "trace.ss")
          (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
@@ -22,7 +24,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; A periodical is a thread that spews into a specific channel, both
 ;; periodically (hence the name), and optionally in response to having
 ;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
-;; clock.
+;; clock.  (do-it-now! and back-to-sleep are semaphores.)
 (define-struct periodical (thread do-it-now! back-to-sleep id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
@@ -37,7 +39,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *appearances-by-nick* (make-hash-table 'equal))
 
-(define (respond line op)
+(define/kw (respond line op #:key [preparsed-message #f])
 
   ;; cull the dead periodicals.
   (hash-table-for-each
@@ -46,12 +48,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (when (thread-dead? (periodical-thread v))
        (hash-table-remove! *periodicals-by-id* k))))
 
-  (let ((message (parse-irc-message line)))
+  (let ((message (or preparsed-message
+                     (parse-irc-message line))))
 
     (define (out . args)
       (apply fprintf op args)
       (display "=> " (*log-output-port*))
-      (write (apply format args) (*log-output-port*)))
+      (write (apply format args) (*log-output-port*))
+      (newline (*log-output-port*)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
@@ -127,6 +131,43 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
+
+     ((and ch-for-us?
+           (let ((w  (PRIVMSG-text-words message)))
+             (and
+              (< 2 (length w))
+              (string-ci=? "later" (second w))
+              (string-ci=? "do"    (third w)))))
+      (let* ((parsed-command (cons
+                              (format "~a:" (*my-nick*))
+                              (cdddr (PRIVMSG-text-words message))))
+             (command (string-join parsed-command))
+             (params  (list (PRIVMSG-destination message)
+                            command)))
+        (add-periodical!
+         (lambda (my-channel)
+           (sleep 10)
+           (respond
+            ""                          ;ignored
+            op
+            #:preparsed-message
+            ;; *groan* how un-Lispy that I have to spell out all
+            ;; these identifiers!
+            ;; http://www.paulgraham.com/popular.html
+            (make-PRIVMSG
+             (message-prefix message)
+             (symbol->string (message-command message))
+             params
+             (PRIVMSG-speaker message)
+             (PRIVMSG-destination message)
+             (PRIVMSG-approximate-recipient message)
+             command
+             parsed-command))
+           (kill-thread (current-thread)))
+         1                              ;irrelevant
+         (PRIVMSG-destination message)
+         #:id (format "delayed command ~s" command)
+         )))
 
      ((and ch-for-us?
            (string-ci=? "die!" (second (PRIVMSG-text-words message))))
