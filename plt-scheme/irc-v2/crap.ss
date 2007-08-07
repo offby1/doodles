@@ -55,6 +55,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               (PRIVMSG-destination message)
             (PRIVMSG-speaker message))
           response))
+    (define ch-for-us?
+      (and (PRIVMSG? message)
+           (PRIVMSG-is-for-channel? message)
+           (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
+
     (define/kw (add-periodical! what-to-do
                                 interval
                                 when-else-to-do-it
@@ -129,8 +134,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
 
-     ((and (PRIVMSG? message)
-           (regexp-match #rx"^die!" (PRIVMSG-text message)))
+     ((and ch-for-us?
+           (string-ci=? "die!" (second (PRIVMSG-text-words message))))
       (let ((times-to-run 10))
         (add-periodical!
          (lambda (datum my-channel)
@@ -152,9 +157,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (reply (or poop (format "I haven't seen ~a" who)))))
 
      ((or (VERSION? message)
-          (and (PRIVMSG? message)
-               (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))
-               (< 1 (length (PRIVMSG-text-words message)))
+          (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
       (let ((version-string "none of your damned business"))
         (if (VERSION? message)
@@ -163,9 +166,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                      version-string)
           (reply version-string))))
      ((or (SOURCE? message)
-          (and (PRIVMSG? message)
-               (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))
-               (< 1 (length (PRIVMSG-text-words message)))
+          (and ch-for-us?
                (string-ci=? "source" (second (PRIVMSG-text-words message)))))
       (let ((source-string
              "not yet publically released, but the author would be willing if asked nicely"))
@@ -174,6 +175,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                      (PRIVMSG-speaker message)
                      source-string)
           (reply source-string))))
+     (ch-for-us?
+      (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
       (case (message-command message)
         ((001)
