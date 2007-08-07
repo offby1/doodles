@@ -4,6 +4,8 @@
 
 * bugs
 
+** ignores private messages?
+
 ** ping timeout
 
 at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
@@ -13,6 +15,13 @@ with funny quotes that it didn't get around to responding to PING
 ... if so, that suggests that we ought to prioritize our threads, and
 give the PING response higher priority than the quotes.
 
+* timestamp file confusion
+  It reads and writes a timestamp file in its current directory, which
+  can get messy if I sometimes start it from here and sometimes from
+  there.  Perhaps that info should be stored in a PLT preference, so
+  that there's just one copy of it.  (But then during testing we won't
+  want to clobber it ... perhaps make the name of the preference
+  depend upon whether we're testing or not)
 
 
 -- Low priority
