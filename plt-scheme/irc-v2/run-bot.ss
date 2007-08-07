@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require  (lib "cmdline.ss")
           (only (lib "etc.ss")
                 this-expression-source-directory)
-          "crap.ss"
+          "bot.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "planet-emacs-task.ss"
@@ -88,7 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lambda ()
    (parameterize
        ((current-namespace
-         (module->namespace "crap.ss")))
+         (module->namespace "bot.ss")))
      (fprintf
       (current-error-port)
       "Welcome to the ~a namespace.  Use your power only for good.~%"

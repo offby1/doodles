@@ -3,7 +3,7 @@
 #$Id$
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
-(module crap mzscheme
+(module bot mzscheme
 (require (lib "kw.ss")
          (only (lib "1.ss" "srfi")
                first second third
