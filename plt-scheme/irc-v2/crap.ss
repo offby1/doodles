@@ -162,9 +162,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                      (PRIVMSG-speaker message)
                      version-string)
           (reply version-string))))
-     ((SOURCE? message)
-      (fprintf op "NOTICE ~a :\u0001SOURCE not yet publically released, but the author would be willing if asked nicely\0001~%"
-               (PRIVMSG-speaker message) ))
+     ((or (SOURCE? message)
+          (and (PRIVMSG? message)
+               (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))
+               (< 1 (length (PRIVMSG-text-words message)))
+               (string-ci=? "source" (second (PRIVMSG-text-words message)))))
+      (let ((source-string
+             "not yet publically released, but the author would be willing if asked nicely"))
+        (if (SOURCE? message)
+            (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
+                     (PRIVMSG-speaker message)
+                     source-string)
+          (reply source-string))))
      (else
       (case (message-command message)
         ((001)
