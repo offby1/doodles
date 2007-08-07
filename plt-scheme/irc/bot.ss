@@ -10,6 +10,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                filter)
          (only (lib "13.ss" "srfi")
                string-join)
+         (only (lib "19.ss" "srfi")
+               current-date)
          (lib "trace.ss")
          (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
@@ -55,7 +57,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (define (out . args)
       (apply fprintf op args)
 
-      (display (zdate (seconds->date (current-seconds))) (*log-output-port*))
+      (display (zdate (current-date)) (*log-output-port*))
       (display " => " (*log-output-port*))
       (write (apply format args) (*log-output-port*))
       (newline (*log-output-port*)))
@@ -322,7 +324,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
         (fprintf (*log-output-port*) "~a <= ~s~%"
-                 (zdate (seconds->date (current-seconds)))
+                 (zdate (current-date))
                  line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
