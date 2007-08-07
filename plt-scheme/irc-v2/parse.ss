@@ -81,7 +81,7 @@
              )
         (if (string=? "PRIVMSG" command)
             (let* ((ctcp-match (regexp-match
-                                  (pregexp "^\u0001([[:alpha:]]+) (.*)\u0001$")
+                                  (pregexp "^\u0001([[:alpha:]]+) ?(.*)\u0001$")
                                   trailing-parameter))
                    (text (if ctcp-match (third ctcp-match)
                            trailing-parameter))
@@ -192,17 +192,22 @@
                    "fsbot")
      )
     (test-suite
-     "ACTION"
+     "CTCP"
      (test-false
       "rejects non-actions"
       (ACTION?
        (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001UNDERWEAR eats cornflakes\u0001")))
      (test-case
-      "properly recognized and parsed"
+      "recognizes and parses ACTION"
       (let ((m (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
         (check-pred PRIVMSG? m)
         (check-pred CTCP? m)
-        (check-equal? (PRIVMSG-text m) "eats cornflakes"))))
+        (check-equal? (PRIVMSG-text m) "eats cornflakes")))
+     (test-case
+      "recognizes VERSION"
+      (check-pred
+       VERSION?
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001VERSION\u0001"))))
 
     (test-case
      "channel versus truly private message"

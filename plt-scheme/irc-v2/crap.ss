@@ -42,9 +42,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   (let ((message (parse-irc-message line)))
 
+    (define (out . args)
+      (apply fprintf op args)
+      (display "=> ")
+      (display (apply format args)))
+
     (define (pm target msg)
-      (fprintf op "PRIVMSG ~a :~a~%" target msg)
-      (printf "PRIVMSG ~a :~a~%" target msg))
+      (out "PRIVMSG ~a :~a~%" target msg))
     (define (reply response)
       (pm (if (PRIVMSG-is-for-channel? message)
               (PRIVMSG-destination message)
@@ -140,10 +144,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          #:id "auto self-destruct sequence")))
 
      ((and (PRIVMSG? message)
+           (pair? (PRIVMSG-text-words message))
            (string-ci=? "seen" (first (PRIVMSG-text-words message))))
       (let* ((who (regexp-replace #rx"\\?+$" (second (PRIVMSG-text-words message)) ""))
              (poop (hash-table-get *appearances-by-nick* who #f)))
         (reply (or poop (format "I haven't seen ~a" who)))))
+
+     ((VERSION? message)
+      (fprintf op "NOTICE ~a :\u0001VERSION none of your damned business\0001~%"
+               (PRIVMSG-speaker message) ))
      (else
       (case (message-command message)
         ((001)
