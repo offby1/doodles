@@ -53,7 +53,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (define (out . args)
       (apply fprintf op args)
-      (display "=> " (*log-output-port*))
+
+      (display (zdate (seconds->date (current-seconds))))
+      (display " => " (*log-output-port*))
       (write (apply format args) (*log-output-port*))
       (newline (*log-output-port*)))
 
@@ -301,7 +303,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
-        (fprintf (*log-output-port*) "<= ~s~%" line)
+        (fprintf (*log-output-port*) "~a <= ~s~%"
+                 (zdate (seconds->date (current-seconds)))
+                 line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
             (printf "eof on server~%")
