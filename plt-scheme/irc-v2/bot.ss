@@ -51,7 +51,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (define (out . args)
       (apply fprintf op args)
       (display "=> " (*log-output-port*))
-      (display (apply format args) (*log-output-port*)))
+      (write (apply format args) (*log-output-port*)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))

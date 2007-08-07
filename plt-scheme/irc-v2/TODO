@@ -46,11 +46,6 @@ give the PING response higher priority than the quotes.
   "We should", just as I've already gotten quips that begin with
   "Let's".
 
-* unify jordanb quotes and planet.emacsen.org news
-  ... they're both the same: each gets stuff from a source,
-  periodically spews it into the channel, and will also spew on
-  demand.
-
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
   particular, its repl) is running, I need to type "reset" at the
@@ -118,7 +113,7 @@ give the PING response higher priority than the quotes.
 
 * new commands
 
-** Respond to "version" and "help"
+** Respond to "help"
   since people seem to expect those
 
 ** "uptime"
