@@ -153,6 +153,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ((VERSION? message)
       (fprintf op "NOTICE ~a :\u0001VERSION none of your damned business\0001~%"
                (PRIVMSG-speaker message) ))
+     ((SOURCE? message)
+      (fprintf op "NOTICE ~a :\u0001SOURCE not yet publically released, but the author would be willing if asked nicely\0001~%"
+               (PRIVMSG-speaker message) ))
      (else
       (case (message-command message)
         ((001)

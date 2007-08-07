@@ -38,6 +38,7 @@
 (define-struct (CTCP PRIVMSG) (req/extended-data) (make-inspector))
 (define-struct (ACTION CTCP) () (make-inspector))
 (define-struct (VERSION CTCP) () (make-inspector))
+(define-struct (SOURCE CTCP) () (make-inspector))
 ;; (trace make-message)
 ;; (trace make-PRIVMSG)
 ;; (trace make-CTCP)
@@ -92,6 +93,7 @@
                    (cond
                     ((equal? req/x "ACTION" ) make-ACTION)
                     ((equal? req/x "VERSION") make-VERSION)
+                    ((equal? req/x "SOURCE" ) make-SOURCE)
                     (else make-CTCP))
                  make-PRIVMSG)
                prefix command (append middle-params (list text))
@@ -207,7 +209,13 @@
       "recognizes VERSION"
       (check-pred
        VERSION?
-       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001VERSION\u0001"))))
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001VERSION\u0001")))
+
+     (test-case
+      "recognizes SOURCE"
+      (check-pred
+       SOURCE?
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001SOURCE\u0001"))))
 
     (test-case
      "channel versus truly private message"
