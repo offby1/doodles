@@ -16,6 +16,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "globals.ss"
          "parse.ss"
+         "planet-emacs-task.ss"
          "quotes.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
@@ -175,6 +176,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (lambda (p)
           (semaphore-post (periodical-do-it-now! p))))
        ))
+     ((and ch-for-us?
+           (string-ci=? "news" (second (PRIVMSG-text-words message))))
+      (cond
+       ((hash-table-get *periodicals-by-id* (cons 'news-spewer (PRIVMSG-destination message)) #f)
+        =>
+        (lambda (p)
+          (semaphore-post (periodical-do-it-now! p))))
+       ))
      (ch-for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
@@ -191,7 +200,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (pm my-channel (one-quote)))
           (*quote-and-headline-interval*)
           (second (message-params message))
-          #:id 'quote-spewer))
+          #:id 'quote-spewer)
+
+         (let ((planet-thing (make-pe-consumer-proc)))
+           (add-periodical!
+            (lambda (my-channel)
+              (planet-thing
+               (lambda (headline)
+                 (pm my-channel headline))))
+
+            (*quote-and-headline-interval*)
+            (second (message-params message))
+            #:id 'news-spewer))
+         )
 
         ((433)
          (error 'respond "Nick already in use!")
