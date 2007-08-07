@@ -31,10 +31,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *task-custodian* (make-custodian))
 
-(define (respond line op)
+(define *appearances-by-nick* (make-hash-table 'equal))
 
-  (define (pm target msg)
-    (fprintf op "PRIVMSG ~a :~a~%" target msg))
+(define (respond line op)
 
   ;; cull the dead periodicals.
   (set! *periodicals* (filter (lambda (d)
@@ -42,6 +41,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                           *periodicals*))
 
   (let ((message (parse-irc-message line)))
+
+    (define (pm target msg)
+      (fprintf op "PRIVMSG ~a :~a~%" target msg))
+    (define (reply response)
+      (pm (if (PRIVMSG-is-for-channel? message)
+              (PRIVMSG-destination message)
+            (PRIVMSG-speaker message))
+          response))
     (define/kw (add-periodical! what-to-do
                                 interval
                                 when-else-to-do-it
@@ -99,22 +106,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (what        (PRIVMSG-text        message))
             (when        (current-seconds))
             (was-action? (ACTION?             message)))
-        (printf "~a~a in ~a~a ~a~a~%"
-                who
-                (if was-action? "'s last action" " last spoke")
-                where
-                (if was-action? " was at"        ""           )
-                (zdate (seconds->date when))
-                (if was-action?
-                    (format ": ~a ~a" who what)
-                  (format ", saying \"~a\"" what)))))
+        (let ((the-skinny (format "~a~a in ~a~a ~a~a"
+                                  who
+                                  (if was-action? "'s last action" " last spoke")
+                                  where
+                                  (if was-action? " was at"        ""           )
+                                  (zdate (seconds->date when))
+                                  (if was-action?
+                                      (format ": ~a ~a" who what)
+                                    (format ", saying \"~a\"" what)))))
+          (hash-table-put! *appearances-by-nick* who the-skinny)
+          )))
+
     (cond
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
-      (pm (if (PRIVMSG-is-for-channel? message)
-              (PRIVMSG-destination message)
-            (PRIVMSG-speaker message))
-          "\u0001ACTION loosens his collar with his index finger\u0001"))
+      (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
 
      ((and (PRIVMSG? message)
            (regexp-match #rx"^die!" (PRIVMSG-text message)))
@@ -130,16 +137,23 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lambda (m) #f)
          (first (message-params message))
          #:id "auto self-destruct sequence")))
+
+     ((and (PRIVMSG? message)
+           (string-ci=? "seen" (first (PRIVMSG-text-words message))))
+      (let* ((who (regexp-replace #rx"\\?+$" (second (PRIVMSG-text-words message)) ""))
+             (poop (hash-table-get *appearances-by-nick* who #f)))
+        (reply (or poop (format "I haven't seen ~a" who)))))
      (else
       (case (message-command message)
         ((001)
-         (fprintf op "JOIN #bots~%"))
+         (fprintf op "JOIN #bots~%")
+         (fprintf op "JOIN #scheme-bots~%"))
 
         ((366)
          (add-periodical!
           (lambda (datum my-channel)
             (pm my-channel "Apple sure sucks."))
-          2
+          20
           (lambda (m)
             ;; someone specifically asked
             ;; for a quote
