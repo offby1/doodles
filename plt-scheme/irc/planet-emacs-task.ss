@@ -73,8 +73,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                           (entry->string datum))
 
                 (output-proc
-                 (format "PRIVMSG #emacs :~a~%"
-                         (entry->string datum)))
+                 (entry->string datum))
 
                 (set! number-spewed (add1 number-spewed))
                 (when (time>?

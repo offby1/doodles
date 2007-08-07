@@ -1,324 +1,348 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
-
-;; http://tools.ietf.org/html/rfc1459
-
 (module bot mzscheme
-(require
+(require (lib "kw.ss")
+         (only (lib "1.ss" "srfi")
+               first second third
+               filter)
          (lib "trace.ss")
          (only (lib "pregexp.ss") pregexp-quote)
-         (only (lib "1.ss" "srfi")
-               filter
-               first
-               second
-               take
-               third
-               )
-         (only (lib "13.ss" "srfi")
-               string-join
-               string-tokenize
-               )
-         (only (lib "14.ss" "srfi")
-               char-set
-               char-set-complement
-               char-set:whitespace)
-         (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-               sxpath)
+         (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
-         "../web/quote-of-the-day.ss"
          "globals.ss"
-         "parse-message.ss"
+         "parse.ss"
          "planet-emacs-task.ss"
-         "quotes.ss"
-         "task.ss"
-         "vprintf.ss"
-         )
-(provide
- *tasks-by-channel*
- do-startup-stuff
- put
- respond)
+         "quotes.ss")
 
-(define (split str)
-  (string-tokenize str (char-set-complement char-set:whitespace)))
+;; A periodical is a thread that spews into a specific channel, both
+;; periodically (hence the name), and optionally in response to having
+;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
+;; clock.
+(define-struct periodical (thread do-it-now! back-to-sleep id) (make-inspector))
 
-(define (strip-leading-colon str)
-  (if (char=? #\: (string-ref str 0))
-        (substring str 1)
-      str))
+;; if we ever connect to two servers at once, we'd want one instance
+;; of this variable local to each server, instead of just one global
+;; as it is now.
+(define *periodicals-by-id* (make-hash-table 'equal))
 
-(print-hash-table #t)
+(define (for-each-periodical proc)
+  (hash-table-for-each *periodicals-by-id* (lambda (k v) (proc v))))
 
-;; http://tools.ietf.org/html/rfc1459#section-2.3.1
-(define (parse-prefix str)
-  (if (not str)
-      '(#f #f #f)
+(define *task-custodian* (make-custodian))
 
-    (let loop ((result (string-tokenize str (char-set-complement (char-set #\! #\@)))))
-      (if (<= (length result ) 3)
-          result
-        (loop (cons #f result))))))
+(define *appearances-by-nick* (make-hash-table 'equal))
 
-(define-struct utterance (when what action?) (make-inspector))
-
-;; this will get set to a function that calls PUT, with the proper
-;; output port.  It's useful from the REPL.
-(define p* #f)
-
-(define (put str op)
-  (let ((str (substring str 0 (min 510 (string-length str)))))
-    (vtprintf "=> to op ~s ~s~%" (object-name op) str)
-    (display str op)
-    (newline op)))
-
-;(trace put)
-
-(define (do-startup-stuff op)
-  (put (format "NICK ~a" (*my-nick*)) op)
-  (put (format "USER ~a ~a ~a :~a, ~a"
-               (or (getenv "USER") "unknown-user")
-               "unknown-host"
-               (*irc-server-name*)
-               *client-name*
-               (*client-version*)) op)  )
-
-;; these are running (or possibly dead) tasks.  Perhaps this table
-;; could be combined with the above.  The values would be a bunch of
-;; startup stuff, plus the actual task, which isn't running yet; then
-;; at channel-join time I'd merely start the task.
-(define *tasks-by-channel*  (make-hash-table 'equal))
-
-;; string? output-port? -> void
-
-(define (vfilter proc seq)
-  (filter (lambda (thing)
-            (let ((rv (proc thing)))
-              (vtprintf "filtering ~s: ~s~%" thing rv)
-              rv))
-          seq))
-
-;; given a line of text (presumably from the IRC server), spew a
-;; response to the output port, and perhaps do all sorts of evil
-;; untestable kludgy side-effects (like starting a thread that will
-;; eventually spew more stuff to the output port)
 (define (respond line op)
 
-  (define (do-something-clever
-           message-tokens               ;what they said
-           requestor                    ;who said it
-           channel-name                 ;where they said it
-           was-private?                 ;how they said it
-           CTCP-message?                ;was it a CTCP?
-           )
+  ;; cull the dead periodicals.
+  (hash-table-for-each
+   *periodicals-by-id*
+   (lambda (k v)
+     (when (thread-dead? (periodical-thread v))
+       (hash-table-remove! *periodicals-by-id* k))))
 
-    ;; maybe throw away some of the initial tokens, since they're
-    ;; not interesting.
+  (let ((message (parse-irc-message line)))
 
-    ;; was-private?         CTCP-message?           which tokens
-    ;; #f                   #f                      first two (channel name, my name)
-    ;; #f                   #t                      none
-    ;; #t                   #f                      first one (my name)
-    ;; #t                   #t                      none
-    (when (not CTCP-message?)
-      (set! message-tokens
-            ((if was-private? cdr cddr)
-             message-tokens)))
+    (define (out . args)
+      (apply fprintf op args)
+      (display "=> " (*log-output-port*))
+      (write (apply format args) (*log-output-port*)))
+
+    (define (pm target msg)
+      (out "PRIVMSG ~a :~a~%" target msg))
+    (define (reply response)
+      (pm (if (PRIVMSG-is-for-channel? message)
+              (PRIVMSG-destination message)
+            (PRIVMSG-speaker message))
+          response))
+    (define ch-for-us?
+      (and (PRIVMSG? message)
+           (PRIVMSG-is-for-channel? message)
+           (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
+
+    (define/kw (add-periodical! what-to-do
+                                interval
+                                where-to-do-it
+                                #:key
+                                [id (hash-table-count *periodicals-by-id*)])
+
+      (parameterize ((current-custodian *task-custodian*))
+
+        (let* ((do-it-now!    (make-semaphore 1))
+               (back-to-sleep (make-semaphore 0))
+               (task (thread (lambda ()
+                               (let loop ()
+                                 (let ((datum (sync/timeout
+                                               interval
+                                               do-it-now!
+                                               back-to-sleep)))
+                                   (when (or (not datum)
+                                             (equal? datum do-it-now!))
+                                     (what-to-do where-to-do-it))
+
+                                   (loop)
+                                   )
+                                 (loop))))))
+
+          (hash-table-put!
+           *periodicals-by-id*
+           (cons id where-to-do-it)
+           (make-periodical
+            task
+            do-it-now!
+            back-to-sleep
+            id)))))
+
+    (for-each-periodical
+     (lambda (d)
+       (semaphore-post (periodical-back-to-sleep d))))
+
+    (when (and (PRIVMSG? message)
+               (PRIVMSG-is-for-channel? message))
+      ;; note who did what, when, where, how, and wearing what kind of
+      ;; skirt; so that later we can respond to "seen Ted?"
+      (let ((who         (PRIVMSG-speaker     message))
+            (where       (PRIVMSG-destination message))
+            (what        (PRIVMSG-text        message))
+            (when        (current-seconds))
+            (was-action? (ACTION?             message)))
+        (let ((the-skinny (format "~a~a in ~a~a ~a~a"
+                                  who
+                                  (if was-action? "'s last action" " last spoke")
+                                  where
+                                  (if was-action? " was at"        ""           )
+                                  (zdate (seconds->date when))
+                                  (if was-action?
+                                      (format ": ~a ~a" who what)
+                                    (format ", saying \"~a\"" what)))))
+          (hash-table-put! *appearances-by-nick* who the-skinny)
+          )))
+
     (cond
-     (CTCP-message?
-      =>
-      (lambda (msg)
-        (vprintf "Ooh, ~s is a CTCP message yielding ~s~%"
-                 message-tokens
-                 msg)
-        (cond
-         ((string=? "VERSION" (first message-tokens))
-          (put (format "NOTICE ~a :\001VERSION ~a (offby1@blarg.net):~a:~a\001"
-                       requestor
-                       *client-name*
-                       *client-version-number*
-                       *client-environment*) op)))))
+     ((and (ACTION? message)
+           (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
+      (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
+
+     ((and ch-for-us?
+           (string-ci=? "die!" (second (PRIVMSG-text-words message))))
+      (let ((times-to-run 10))
+        (add-periodical!
+         (lambda (my-channel)
+           (when (zero? times-to-run)
+             (pm my-channel "Goodbye, cruel world")
+             (kill-thread (current-thread)))
+           (pm my-channel (format "~a" times-to-run))
+           (set! times-to-run (sub1 times-to-run)))
+         3/2
+         (first (message-params message))
+         #:id "auto self-destruct sequence")))
+
+     ((and ch-for-us?
+           (string-ci=? "seen" (second (PRIVMSG-text-words message))))
+      (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
+             (poop (hash-table-get *appearances-by-nick* who #f)))
+        (reply (or poop (format "I haven't seen ~a" who)))))
+
+     ((or (VERSION? message)
+          (and ch-for-us?
+               (string-ci=? "version" (second (PRIVMSG-text-words message)))))
+      (let ((version-string (format
+                             "~a (offby1@blarg.net):~a:~a"
+                             *client-name*
+                             *client-version-number*
+                             *client-environment*)))
+        (if (VERSION? message)
+            (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
+                     (PRIVMSG-speaker message)
+                     version-string)
+          (reply version-string))))
+     ((or (SOURCE? message)
+          (and ch-for-us?
+               (string-ci=? "source" (second (PRIVMSG-text-words message)))))
+      (let ((source-string
+             "not yet publically released, but the author would be willing if asked nicely"))
+        (if (SOURCE? message)
+            (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
+                     (PRIVMSG-speaker message)
+                     source-string)
+          (reply source-string))))
+     ((and ch-for-us?
+           (string-ci=? "quote" (second (PRIVMSG-text-words message))))
+      (cond
+       ((hash-table-get *periodicals-by-id* (cons 'quote-spewer (PRIVMSG-destination message)) #f)
+        =>
+        (lambda (p)
+          (semaphore-post (periodical-do-it-now! p))))
+       ))
+     ((and ch-for-us?
+           (string-ci=? "news" (second (PRIVMSG-text-words message))))
+      (cond
+       ((hash-table-get *periodicals-by-id* (cons 'news-spewer (PRIVMSG-destination message)) #f)
+        =>
+        (lambda (p)
+          (semaphore-post (periodical-do-it-now! p))))
+       ))
+     (ch-for-us?
+      (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
-      (let ((response-body
-             (cond
-              ;; if the requestor seems to be a bot, don't respond normally.
-              ((regexp-match (pregexp "bot[^[:space:][:alnum:]]*$") requestor)
-               "\u0001ACTION holds his tongue.\u0001")
+      (case (message-command message)
+        ((001)
+         (printf "Joined a couple o' channels~%")
+         (for-each (lambda (cn)
+                     (fprintf op "JOIN ~a~%" cn))
+                   (*initial-channel-names*)))
 
-              ((and (string-ci=? "seen" (first message-tokens))
-                    (< 1 (length message-tokens)))
-               (let* ((nick (second message-tokens))
-                      (times-by-nick (hash-table-get
-                                      times-by-nick-by-channel
-                                      channel-name
-                                      (make-hash-table 'equal)))
-                      (data (hash-table-get times-by-nick nick #f)))
-                 (vprintf "Sought key ~s in times-by-nick; got ~s~%"
-                          nick data)
-                 (cond
-                  ((not data)
-                   (format "I haven't seen ~a in ~a" nick channel-name))
-                  ((utterance-action? data)
-                   (format "~a's last action in ~a was at ~a: ~a ~a"
-                           nick
-                           channel-name
-                           (zdate (utterance-when data))
-                           nick
-                           (utterance-what data)))
-                  (else
-                   (format "~a last spoke in ~a at ~a, saying \"~a\""
-                           nick
-                           channel-name
-                           (zdate (utterance-when data))
-                           (utterance-what data))))))
+        ((366)
+         (add-periodical!
+          (lambda (my-channel)
+            (pm my-channel (one-quote)))
+          (*quote-and-headline-interval*)
+          (second (message-params message))
+          #:id 'quote-spewer)
 
-              (else
-               "\u0001ACTION is at a loss for words.\u0001"))))
+         (let ((planet-thing (make-pe-consumer-proc)))
+           (add-periodical!
+            (lambda (my-channel)
+              (planet-thing
+               (lambda (headline)
+                 (pm my-channel headline))))
 
-        (put (format "PRIVMSG ~a :~a"
-                     (if was-private? requestor channel-name)
-                     response-body) op)))))
+            (*quote-and-headline-interval*)
+            (second (message-params message))
+            #:id 'news-spewer))
+         )
 
-  (set! p* (lambda (str)
-             (put str op)))
+        ((433)
+         (error 'respond "Nick already in use!")
+         )
+        ((NOTICE)
+         #t ;; if it's a whine about identd, warn that it's gonna be slow.
+         )
+        ((PING)
+         #t ;; send a PONG
+         (out "PONG ~a" (message-params message)))
 
-  (let ((line (substring line 0 (min 510 (string-length line)))))
-    (let-values (((prefix command params)
-                  (parse-message line)))
-      (let ((prefix (parse-prefix prefix)))
-        (vtprintf "<= ~s -> prefix ~s; command ~s params ~s ~%"
-                  line
-                  prefix
-                  command
-                  params)
 
-        (let ((command-number (and (regexp-match (pregexp "^[[:digit:]]{3}$") command )
-                                   (string->number command)))
-              (command-symbol (and (regexp-match (pregexp "^[[:alpha:]]+$") command)
-                                   (string->symbol command))))
-          (case command-number
-            ((001)
-             (for-each (lambda (ch)
-                         (put (format "JOIN ~a" ch) op))
-                       (*initial-channel-names*)))
-            ((353)
-             (vtprintf "Got the 353~%")
-             ;; start up whatever tasks pertain to this channel, if we
-             ;; haven't already
-             (let ((tokens (split params)))
-               (if (< (length tokens) 3)
-                   (vtprintf "Server is on drugs: there should be three tokens here: ~s~%" params)
-                 ;; response to "NAMES".  This implies we've joined a
-                 ;; channel (or issued a NAMES command ourselves,
-                 ;; which we don't do, afaik)
-                 (let ((channel (third tokens)))
-                   (vtprintf "353: tokens ~s; channel ~s~%"
-                             tokens channel)
-                   (for-each
-                    (lambda (t)
-                      (vtprintf "Unsuspending task ~s~%" (task-name-symbol t))
-                      (task-unsuspend t))
-                    (hash-table-get *tasks-by-channel* channel '()))))))
-            ((433)
-             (vtprintf "Gaah!!  One of those \"nick already in use\" messages!~%")
-             (vtprintf "I don't know how to deal with that~%")
-             (vtprintf "Just start me up again and provide a different nick on the command line, I guess :-|~%")))
+        )))))
 
-          (case command-symbol
-            ((PRIVMSG)
-             (let* ((CTCP-message (cond
-                                   ((regexp-match #rx"\u0001(.*)\u0001$" params)
-                                    => second)
-                                   (else #f)))
-                    (tokens
-                     (cond
-                      (CTCP-message => split)
-                      (else (split params))))
-                    (tokens
-                     ;; I can't remember why I'm removing this colon
-                     (if (<= 2 (length tokens))
-                         (cons (first tokens)
-                               (cons (regexp-replace
-                                      #rx"^:"
-                                      (second tokens)
-                                      "")
-                                     (cddr tokens)))
-                       tokens))
-                    (destination (car (split params)))
-                    (dest-is-channel? (regexp-match #rx"^#" destination))
-                    (source (car prefix)))
-
-               (when dest-is-channel?
-                 (for-each postpone (hash-table-get *tasks-by-channel* destination '()))
-
-                 (let* ((times-by-nick (hash-table-get
-                                        times-by-nick-by-channel
-                                        destination
-                                        (lambda ()
-                                          (make-hash-table 'equal))))
-                        (utterance (make-utterance
-                                    (seconds->date (current-seconds))
-                                    (string-join (cdr tokens))
-                                    (not (not CTCP-message)))))
-                   (hash-table-put! times-by-nick source utterance)
-                   (hash-table-put! times-by-nick-by-channel destination times-by-nick)))
-
-               (unless (*passive?*)
-
-                 (cond
-                  ;; private message to us.
-                  ((equal? (*my-nick*) destination)
-                   (do-something-clever
-                    tokens
-                    source
-                    destination
-                    #t
-                    CTCP-message))
-
-                  ;; someone said something to the whole channel.
-                  ((and dest-is-channel?
-                        (< 1 (length tokens)))
-
-                   ;; ... but prefixed it with my nick.
-                   (when (regexp-match
-                          (regexp
-                           (string-append
-                            "^"
-                            (pregexp-quote (*my-nick*))
-                            "[:,]"))
-                          (cadr tokens))
-                     (cond
-                      ((string-ci=? "quote" (third tokens))
-
-                       (for-each do-it-now!
-                                 (vfilter (lambda (task)
-                                            (eq? (task-name-symbol task) 'quote-spewer-task))
-                                          (hash-table-get *tasks-by-channel* destination '()))))
-
-                      ((string-ci=? "news" (third tokens))
-
-                       (for-each do-it-now!
-                                 (vfilter (lambda (task)
-                                            (eq? (task-name-symbol task) 'headline-spewer-task))
-                                          (hash-table-get *tasks-by-channel* destination '()))))
-                      (else
-                       (do-something-clever
-                        tokens
-                        source
-                        destination
-                        #f
-                        CTCP-message))))))))
-             )
-            ((NOTICE)
-             (when (regexp-match #rx"No identd \\(auth\\) response" params)
-               (fprintf
-                (current-error-port)
-                "This is one of those servers that wants us to run identd.  Be patient; it'll take two minutes to connect.~%")
-               ))
-            ((PING)
-             (put (format "PONG ~a" params) op))))))))
 ;(trace respond)
-(define times-by-nick-by-channel (make-hash-table 'equal))
+
+(define (start)
+  (let-values (((ip op)
+                (tcp-connect (*irc-server-name*) 6667)))
+
+    ;; so we don't have to call flush-output all the time
+    (for-each (lambda (p)
+                (file-stream-buffer-mode p 'line))
+              (list op (*log-output-port*)))
+
+    (fprintf op "NICK ~a~%" (*my-nick*))
+    (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
+             (or (getenv "USER") "unknown")
+             (*irc-server-name*)
+             *client-name*
+             (*client-version*))
+    (printf "Sent NICK and USER~%")
+
+    (let loop ()
+      (let ((line (read-line ip 'return-linefeed)))
+        (fprintf (*log-output-port*) "<= ~s~%" line)
+        (if (eof-object? line)
+            ;; TODO: maybe reconnect
+            (printf "eof on server~%")
+          (begin
+            (respond line op)
+            (loop)))))))
+
+
+;; The first thing we do, let's kill all the periodicals.
+(define (kill-all-periodicals!)
+  (printf "About to shut down custodian what manages all these dudes: ~s~%"
+          (custodian-managed-list *task-custodian* (current-custodian)))
+  (custodian-shutdown-all *task-custodian*)
+  (set! *task-custodian* (make-custodian))
+  (set! *periodicals-by-id* (make-hash-table 'equal)))
+;; returns #f if we didn't find what we're looking for.
+
+(define (expect/timeout ip regex seconds)
+  (let* ((ch (make-channel))
+         (reader
+          (thread
+           (lambda ()
+             (let loop ()
+               (printf "expect/timeout about to look for ~s from ~s ...~%"
+                       regex
+                       (object-name ip))
+               (let ((line (read-line ip)))
+                 (cond
+                  ((eof-object? line)
+                   (printf "expect/timeout: eof~%")
+                   (channel-put ch #f))
+                  ((regexp-match regex line)
+                   (printf "expect/timeout: Got match!~%")
+                   (channel-put ch #t))
+                  (else
+                   (printf "expect/timeout: nope; retrying~%")
+                   (loop)))
+
+                 ))))))
+    (and (sync/timeout seconds ch)
+         ch)))
+
+(define crap-tests
+
+  (test-suite
+   "crap"
+   #:before
+   (lambda ()
+     (kill-all-periodicals!))
+   #:after
+   (lambda ()
+     (printf "~a periodicals:~%" (hash-table-count *periodicals-by-id*))
+     (for-each-periodical
+      (lambda (d)
+        (printf "periodical ~s: running: ~a; dead: ~a~%"
+                (periodical-id d)
+                (if (thread-running? (periodical-thread d))
+                    "yes" " no")
+                (if (thread-dead? (periodical-thread d))
+                    "yes" " no"))))
+     (printf "*task-custodian* manages all these dudes: ~s~%"
+             (custodian-managed-list *task-custodian* (current-custodian)))
+     )
+   (test-case
+    "join"
+    (let-values (((ip op) (make-pipe)))
+      (respond
+       ":server 001 :welcome"
+       op)
+      (sleep 1/10)
+      (check-not-false
+       (expect/timeout ip #rx"JOIN #bots" 2)
+       "didn't join"))
+    )
+
+   (test-case
+    "starts threads"
+    (let-values (((ip op) (make-pipe)))
+      (respond
+       ":server 366 yournick #channel :End of NAMES, dude."
+       op)
+
+      (check-not-false (expect/timeout  ip #rx"Apple sure sucks.$" 10))
+
+      (respond
+       ":server 366 mynick #gully :drop dead"
+       op)
+
+      (check-not-false (expect/timeout ip #rx"Apple sure sucks.$" 10))
+
+      ))))
+
+(provide (all-defined))
 )
