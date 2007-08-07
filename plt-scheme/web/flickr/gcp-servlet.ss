@@ -4,6 +4,8 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; ln -s me.ss .../plt/lib/plt/collects/web-server/default-web-root/servlets/
+
 (module gcp-servlet mzscheme
 (require (only  (lib "url.ss" "net")
                 string->url
