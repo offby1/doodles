@@ -4,6 +4,12 @@
 
 * bugs
 
+** ignores private messages?
+
+   Yup.  Don't ask me why, but I check all the incoming messages with
+   ch-for-us?.  Maybe I had a good reason for doing that, but if so,
+   I've forgotten what it was.
+
 ** ping timeout
 
 at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
@@ -13,19 +19,26 @@ with funny quotes that it didn't get around to responding to PING
 ... if so, that suggests that we ought to prioritize our threads, and
 give the PING response higher priority than the quotes.
 
-* news in wrong channel
-  have him either ignore the word "news" in channels other than
-  #emacs, or else spew the news into the channel in which he was asked
-  for it, rather than just always #emacs.
+* timestamp file confusion
+  It reads and writes a timestamp file in its current directory, which
+  can get messy if I sometimes start it from here and sometimes from
+  there.  Perhaps that info should be stored in a PLT preference, so
+  that there's just one copy of it.  (But then during testing we won't
+  want to clobber it ... perhaps make the name of the preference
+  depend upon whether we're testing or not)
+
+
+-- Low priority
+
+* quotes and news headlines
+  I should make the silly quotes have a different period than the news
+  headlines, so they don't always arrive together.
 
 * Windows
 
 ** Test regularly
    I'd have expected that the repl won't work there, since I try to
    use "readline", and yet it seems ok
-
-** "ERROR :Closing Link: fartbot (Invalid username [~#f])" -> prefix (#f #f #f); command "ERROR" params ":Closing Link: fartbot (Invalid username [~#f])" 
-  I suspect I can simply set some "username" parameter to something if it's #f
 
 * write our own identd server
   like every other IRC client out there.
@@ -44,16 +57,11 @@ give the PING response higher priority than the quotes.
 
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
-
--- Low priority
 
-* unify jordanb quotes and planet.emacsen.org news
-  ... they're both the same: each gets stuff from a source,
-  periodically spews it into the channel, and will also spew on
-  demand.
-* try file-stream-buffer-mode
-  ... on current-output-port and current-error-port, as an alternative
-  to scattering calls to "flush-output" everywhere
+* add jordanb "we should" quotes
+  ... that is, grep my old IRC logs for quips from him that begin with
+  "We should", just as I've already gotten quips that begin with
+  "Let's".
 
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
@@ -61,7 +69,8 @@ give the PING response higher priority than the quotes.
   shell in order to see characters echo.  This is a bug in mzscheme
   itself
   (http://bugs.plt-scheme.org/query/gnatsweb.pl?cmd=view%20audit-trail&database=default&pr=8836),
-  but I should at least work around it.
+  but I should at least work around it.  (elibarzilay says it can't be
+  done but I don't believe him)
 
 * persistence
   It'd be nice to save stuff to disk.  Currently I save the date of
@@ -69,17 +78,18 @@ give the PING response higher priority than the quotes.
   if simply "write"ing an sexpression will suffice for more complex
   data ... it'd be nice to have bindings to Berkeley DB.
 
-* Maybe run svnversion
-  to generate the bot's ID string, instead of using the $Id$ keyword.
+  On the other hand, I can't think of anything else that I need to
+  persist, so ...
 
-* Move some stuff into a "tools" subdir
-  anything that isn't essential to the actual running of the bot.
+  ... and the PLT "preferences" might be a good place to store that
+  data.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
   given 2 ...".  That procedure application is happening in a thread
   other than the main one, and so rather than the whole app dying, it
-  just hangs.  This is annoying during development.
+  just hangs.  This is annoying during development (but might turn out
+  to be nice in "production").
 
 * Convert from strings to bytes
   Wherever possible, change from using "string" procedures to "bytes"
@@ -89,7 +99,8 @@ give the PING response higher priority than the quotes.
   could have per-channel encodings.
 
 * maybe periodically see what channels _I'm_ in ...
-  and join them if it's not already in them.  Like a little puppy dog.
+  (where "I" means "someone with the nick 'offby1'") and have the bot
+  join them if it's not already in them.  Like a little puppy dog.
   This is harder than it sounds, since it's not blindingly clear who
   "I" am -- sometimes my nick changes.  It would probably be best to
   find me by host name, not nick.
@@ -100,8 +111,8 @@ give the PING response higher priority than the quotes.
 * Do the tinyurl thing!!
   I.e., whenever anyone utters a URL (that isn't itself a tinyurl),
   send it to tinyurl, and utter the tiny version.  A public service!
-  This is harder than it seems at first; I had some sort of trouble
-  with URL quoting.
+  I've got the guts of this working already but I haven't yet
+  integrated it into the bot proper
 
 * movies
 ** Do buubot's job...
@@ -112,12 +123,6 @@ give the PING response higher priority than the quotes.
 
 ** my del.icio.us "moviestowatchfor" ...
   maybe, somehow, spam ##cinema with one of those.
-* jordanb quotes
-
-** Cancelling the thread takes a while
-  I.e., I say "shaddap", and it emits a few more quotes before going
-  away (at least, if the interval is just a few seconds).  It should
-  be immediate.
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
@@ -128,7 +133,7 @@ give the PING response higher priority than the quotes.
 
 * new commands
 
-** Respond to "version" and "help"
+** Respond to "help"
   since people seem to expect those
 
 ** "uptime"
@@ -136,9 +141,6 @@ give the PING response higher priority than the quotes.
 
 ** auto shakespeare insults
    I've got scheme code to do that around here somewhere.
-
-* put debug spew someplace where it won't interfere with the REPL
-  Like, oh, I don't know, maybe ... a LOG FILE?!?!
 
 * repl commands
 
@@ -148,10 +150,6 @@ essentially a full-blown IRC client with a scheme syntax.
 
 ** join and part
    so that I can change which channels it's on without restarting it
-
-** planet
-   Now that we've got a repl, how about a command which we could
-   invoke like (planet 3), which would emit the last 3 headlines.
 
 ** privmsg
    since I clearly enjoy putting words in its mouth.  Such a command
@@ -174,15 +172,10 @@ essentially a full-blown IRC client with a scheme syntax.
    channel you're in; I suspect the REPL prompt can easily be made to
    include that.
 
-** cancel a timer
-   Say I get bored waiting for it to finish sleeping 3600 seconds to
-   download more news from Planet Emacs; I could type a command that
-   would cause that "sleep" to exit, and the loop to continue.
-
 ** examine a timer
-   Or maybe have the timers constantly visible in the repl (it'd be
-   nice to have curses support to do this).  So I could watch them
-   count down.
+   Maybe have the timers constantly visible in the repl (it'd be nice
+   to have curses support to do this).  So I could watch them count
+   down.
 
 * don't restrict "seen" to the current channel
 
@@ -200,22 +193,6 @@ essentially a full-blown IRC client with a scheme syntax.
 
   Or at least it should squirrel away the quip.
 
-* a "channel" abstraction
-  It's uh ... a stream of messages.  Yeah.  Maybe a lazy stream.  Or
-  something.  Every time we JOIN we create a new one and save it in a
-  list.  The as-yet-unwritten "do-when-channel-idle" would take it as
-  an argument.
-
-* planet
-
-I started it up, I think there was already a timestamp file, it didn't
-emit any headlines, I typed "rudybot: news" ... and nothing.
-
-My guess is that the async-channel is full of old headlines, and the
-thread that feeds the channel is sleeping.  So *some-recent-entries*
-has had no chance to be filled.  Perhaps the "news" command should
-somehow force the issue ...
-
 * Terminology
   I suspect there is one RFC-1149-ly correct term for what I variously
   call "requester" and "source" (i.e., the guy who sends an IRC
@@ -223,5 +200,7 @@ somehow force the issue ...
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
 
-* General IRC wisdom
-  aptitude install dancer-ircd-doc and read.
+* Use streams?
+  I'd been mulling them over, and am now pretty sure that I'm not
+  interested.  Still, j85wilson in #scheme suggested I take a look at
+  this: http://paste.lisp.org/display/45711

@@ -12,8 +12,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "planet-emacs-task.ss"
+          "quotes.ss"
           "system.ss"
-          "task.ss"
           "vprintf.ss"
           )
 
@@ -31,12 +31,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*passive?* #t))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-j" "--jordan") secs "Seconds of channel silence required to emit a jordanb quote"
-   (*quote-interval* (string->number secs)))
+  (("-q" "--quote-and-headline-interval")
+   secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
+   (*quote-and-headline-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)
-   (*planet-poll-interval* 3600)
-   (*planet-task-spew-interval* (* 60 20)))
+   (*planet-poll-interval* 3600))
   (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"
    (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
@@ -95,27 +95,5 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (dynamic-require '(lib "rep.ss" "readline") #f)
      (read-eval-print-loop))))
 
-(define (hash-table-append! t k v)
-  (hash-table-put! t k (cons v (hash-table-get t k '()))))
-
-(let-values (((ip op)
-              (tcp-connect (*irc-server-name*) 6667)))
-
-  (do-startup-stuff op)
-  (let ((consumer (make-pe-consumer-proc)))
-    (hash-table-append!
-     *tasks-by-channel*
-     "#emacs"
-     (make-task 'headline-consumer-task
-                (* 60 20)
-                (lambda ()
-                  (consumer op)))))
-
-  (let loop ()
-    (let ((line (read-line ip 'return-linefeed)))
-      (if (eof-object? line)
-          (vtprintf "eof on server~%")
-        (begin
-          (respond line op)
-          (loop))))))
+(start)
 )
