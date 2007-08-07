@@ -13,6 +13,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "parse.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
@@ -89,14 +90,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (lambda (d)
        (async-channel-put (periodical-async-channel d) message)))
 
+    (when (and (PRIVMSG? message)
+               (PRIVMSG-is-for-channel? message))
+      ;; note who did what, when, where, how, and wearing what kind of
+      ;; skirt; so that later we can respond to "seen Ted?"
+      (let ((who         (PRIVMSG-speaker     message))
+            (where       (PRIVMSG-destination message))
+            (what        (PRIVMSG-text        message))
+            (when        (current-seconds))
+            (was-action? (ACTION?             message)))
+        (printf "~a~a in ~a~a ~a~a~%"
+                who
+                (if was-action? "'s last action" " last spoke")
+                where
+                (if was-action? " was at"        ""           )
+                (zdate (seconds->date when))
+                (if was-action?
+                    (format ": ~a ~a" who what)
+                  (format ", saying \"~a\"" what)))))
     (cond
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (pm (if (PRIVMSG-is-for-channel? message)
               (PRIVMSG-destination message)
             (PRIVMSG-speaker message))
-          "\u0001ACTION loosens his collar with his index finger\u0001")
-      )
+          "\u0001ACTION loosens his collar with his index finger\u0001"))
+
      ((and (PRIVMSG? message)
            (regexp-match #rx"^die!" (PRIVMSG-text message)))
       (let ((times-to-run 10))
@@ -110,8 +129,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          3/2
          (lambda (m) #f)
          (first (message-params message))
-         #:id "auto self-destruct sequence"))
-      )
+         #:id "auto self-destruct sequence")))
      (else
       (case (message-command message)
         ((001)
