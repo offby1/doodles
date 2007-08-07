@@ -5,7 +5,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module crap mzscheme
 (require (lib "kw.ss")
-         (lib "async-channel.ss")
          (only (lib "1.ss" "srfi")
                first second third
                filter)
@@ -19,17 +18,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "quotes.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
-;; periodically (hence the name), and optionally in response to a
-;; message.
-(define-struct periodical (thread async-channel id) (make-inspector))
+;; periodically (hence the name), and optionally in response to having
+;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
+;; clock.
+(define-struct periodical (thread do-it-now! back-to-sleep id) (make-inspector))
 
 ;; if we ever connect to two servers at once, we'd want one instance
 ;; of this variable local to each server, instead of just one global
 ;; as it is now.
-(define *periodicals* '())
+(define *periodicals-by-id* (make-hash-table 'equal))
 
 (define (for-each-periodical proc)
-  (for-each proc *periodicals*))
+  (hash-table-for-each *periodicals-by-id* (lambda (k v) (proc v))))
 
 (define *task-custodian* (make-custodian))
 
@@ -38,9 +38,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (respond line op)
 
   ;; cull the dead periodicals.
-  (set! *periodicals* (filter (lambda (d)
-                            (not (thread-dead? (periodical-thread d))))
-                          *periodicals*))
+  (hash-table-for-each
+   *periodicals-by-id*
+   (lambda (k v)
+     (when (thread-dead? (periodical-thread v))
+       (hash-table-remove! *periodicals-by-id* k))))
 
   (let ((message (parse-irc-message line)))
 
@@ -63,51 +65,42 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (define/kw (add-periodical! what-to-do
                                 interval
-                                when-else-to-do-it
                                 where-to-do-it
                                 #:key
-                                [id (length *periodicals*)])
+                                [id (hash-table-count *periodicals-by-id*)])
 
       (parameterize ((current-custodian *task-custodian*))
 
-        (let* ((ch (make-async-channel))
+        (let* ((do-it-now!    (make-semaphore 1))
+               (back-to-sleep (make-semaphore 0))
                (task (thread (lambda ()
                                (let loop ()
-                                 (let ((datum (sync/timeout interval ch)))
-                                   (printf "periodic thread ~s got datum ~s~%"
-                                           id
-                                           datum)
-                                   (when (or
-                                          ;; timeout -- channel has been
-                                          ;; quiet for a while
-                                          (not datum)
-                                          (and
-                                           (PRIVMSG? datum)
-                                           (equal? (PRIVMSG-destination datum) where-to-do-it)
-                                           (when-else-to-do-it datum))
-                                          )
-                                     (what-to-do datum where-to-do-it)))
+                                 (let ((datum (sync/timeout
+                                               interval
+                                               do-it-now!
+                                               back-to-sleep)))
+                                   (when (or (not datum)
+                                             (equal? datum do-it-now!))
+                                     (what-to-do datum where-to-do-it))
+
+                                   (loop)
+                                   )
                                  (loop))))))
 
-          (set! *periodicals* (cons (make-periodical
-                                     task
-                                     ch
-                                     id)
-                                    *periodicals*))
-
-
-          ;; now that we've created a thread, have it run once,
-          ;; since it won't otherwise get a chance to run until the
-          ;; next time "respond" gets called.
-          (async-channel-put ch message))))
+          (hash-table-put!
+           *periodicals-by-id*
+           (cons id where-to-do-it)
+           (make-periodical
+            task
+            do-it-now!
+            back-to-sleep
+            id)))))
 
     (printf "responding to ~s...~%" message)
 
-    ;; pass the message to every periodical, to give them a chance to
-    ;; ... deal with it
     (for-each-periodical
      (lambda (d)
-       (async-channel-put (periodical-async-channel d) message)))
+       (semaphore-post (periodical-back-to-sleep d))))
 
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
@@ -146,7 +139,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (pm my-channel (format "~a" times-to-run))
            (set! times-to-run (sub1 times-to-run)))
          3/2
-         (lambda (m) #f)
          (first (message-params message))
          #:id "auto self-destruct sequence")))
 
@@ -176,6 +168,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                      (PRIVMSG-speaker message)
                      source-string)
           (reply source-string))))
+     ((and ch-for-us?
+           (string-ci=? "quote" (second (PRIVMSG-text-words message))))
+      (cond
+       ((hash-table-get *periodicals-by-id* (cons 'quote-spewer (PRIVMSG-destination message)) #f)
+        =>
+        (lambda (p)
+          (semaphore-post (periodical-do-it-now! p))))
+       ))
      (ch-for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
@@ -191,14 +191,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (lambda (datum my-channel)
             (pm my-channel (one-quote)))
           (*quote-and-headline-interval*)
-          (lambda (m)
-            ;; someone specifically asked
-            ;; for a quote
-            (let ((w (PRIVMSG-text-words m)))
-              (and (< 1 (length w))
-                   (string-ci=? "quote" (second w)))))
           (second (message-params message))
-          #:id "funny quotes"))
+          #:id 'quote-spewer))
 
         ((433)
          (error 'respond "Nick already in use!")
@@ -249,7 +243,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (custodian-managed-list *task-custodian* (current-custodian)))
   (custodian-shutdown-all *task-custodian*)
   (set! *task-custodian* (make-custodian))
-  (set! *periodicals* '()))
+  (set! *periodicals-by-id* (make-hash-table 'equal)))
 ;; returns #f if we didn't find what we're looking for.
 
 (define (expect/timeout ip regex seconds)
@@ -286,7 +280,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (kill-all-periodicals!))
    #:after
    (lambda ()
-     (printf "~a periodicals:~%" (length *periodicals*))
+     (printf "~a periodicals:~%" (hash-table-count *periodicals-by-id*))
      (for-each-periodical
       (lambda (d)
         (printf "periodical ~s: running: ~a; dead: ~a~%"
@@ -329,7 +323,3 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (provide (all-defined))
 )
-
-;; Local Variables:
-;; compile-command: "mzscheme -M errortrace -qtmv crap.ss -e \"(start)\""
-;; End:
