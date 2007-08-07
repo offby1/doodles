@@ -132,6 +132,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
 
+     ;; "later do foo".  We kludge up a new message that is similar to
+     ;; the one that we just received, but with the words "later do"
+     ;; hacked out, and then call ourselves recursively with that new
+     ;; message.
      ((and ch-for-us?
            (let ((w  (PRIVMSG-text-words message)))
              (and

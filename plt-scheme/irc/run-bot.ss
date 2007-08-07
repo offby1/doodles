@@ -36,8 +36,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*quote-and-headline-interval* (string->number secs)))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t)
-   (*planet-poll-interval* 3600)
-   (*planet-task-spew-interval* (* 60 20)))
+   (*planet-poll-interval* 3600))
   (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"
    (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
