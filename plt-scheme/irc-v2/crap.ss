@@ -142,17 +142,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (first (message-params message))
          #:id "auto self-destruct sequence")))
 
-     ((and (PRIVMSG? message)
-           (pair? (PRIVMSG-text-words message))
-           (string-ci=? "seen" (first (PRIVMSG-text-words message))))
-      (let* ((who (regexp-replace #rx"\\?+$" (second (PRIVMSG-text-words message)) ""))
+     ((and ch-for-us?
+           (string-ci=? "seen" (second (PRIVMSG-text-words message))))
+      (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
              (poop (hash-table-get *appearances-by-nick* who #f)))
         (reply (or poop (format "I haven't seen ~a" who)))))
 
      ((or (VERSION? message)
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
-      (let ((version-string "none of your damned business"))
+      (let ((version-string (format
+                             "~a (offby1@blarg.net):~a:~a"
+                             *client-name*
+                             *client-version-number*
+                             *client-environment*)))
         (if (VERSION? message)
             (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
                      (PRIVMSG-speaker message)
@@ -222,17 +225,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          )
         ((PING)
          #t ;; send a PONG
-         )
-        ((JOIN)
-         (let ((who-joined (message-prefix message)))
-           (unless (regexp-match
-                    (string-append
-                     "^"
-                     (pregexp-quote (*my-nick*))
-                     "!")
-                    who-joined)
-             (pm (car (message-params message))
-                 (format "Howdy, ~a" who-joined)))))
+         (out "PONG ~a" (message-params message)))
+
 
         )))))
 
@@ -243,7 +237,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (tcp-connect (*irc-server-name*) 6667)))
 
     ;; so we don't have to call flush-output all the time
-    (file-stream-buffer-mode op 'line)
+    (for-each (lambda (p)
+                (file-stream-buffer-mode p 'line))
+              (list op (*log-output-port*)))
 
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"

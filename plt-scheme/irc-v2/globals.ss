@@ -19,7 +19,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; *sigh*.  The version string with which we reply to CTCP can't have
 ;; a colon, but of course Subversion's keyword expansion inserted a
 ;; colon into *client-version*, so we have to parse out the number.
-(define *client-version-number* (second (string-tokenize (*client-version*)) ))
+(define *client-version-number* (format "v2.~a" (second (string-tokenize (*client-version*)) )))
 
 (define *client-environment*
   (format "PLT scheme version ~a on ~a"
