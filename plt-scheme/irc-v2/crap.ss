@@ -9,6 +9,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                first second third
                filter)
          (lib "trace.ss")
+         (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
@@ -81,7 +82,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                                back-to-sleep)))
                                    (when (or (not datum)
                                              (equal? datum do-it-now!))
-                                     (what-to-do datum where-to-do-it))
+                                     (what-to-do where-to-do-it))
 
                                    (loop)
                                    )
@@ -95,8 +96,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             do-it-now!
             back-to-sleep
             id)))))
-
-    (printf "responding to ~s...~%" message)
 
     (for-each-periodical
      (lambda (d)
@@ -132,7 +131,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (string-ci=? "die!" (second (PRIVMSG-text-words message))))
       (let ((times-to-run 10))
         (add-periodical!
-         (lambda (datum my-channel)
+         (lambda (my-channel)
            (when (zero? times-to-run)
              (pm my-channel "Goodbye, cruel world")
              (kill-thread (current-thread)))
@@ -188,7 +187,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         ((366)
          (add-periodical!
-          (lambda (datum my-channel)
+          (lambda (my-channel)
             (pm my-channel (one-quote)))
           (*quote-and-headline-interval*)
           (second (message-params message))
@@ -204,11 +203,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          #t ;; send a PONG
          )
         ((JOIN)
-         (pm (car (message-params message))
-             (format "Howdy, ~a" (message-prefix message))))
+         (let ((who-joined (message-prefix message)))
+           (unless (regexp-match
+                    (string-append
+                     "^"
+                     (pregexp-quote (*my-nick*))
+                     "!")
+                    who-joined)
+             (pm (car (message-params message))
+                 (format "Howdy, ~a" who-joined)))))
 
-        (else
-         (printf "Well, how would _you_ respond to ~s?~%" message)))))))
+        )))))
 
 ;(trace respond)
 
@@ -229,6 +234,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
+        (fprintf (*log-output-port*) "<= ~s~%" line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
             (printf "eof on server~%")
