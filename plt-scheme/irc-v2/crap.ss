@@ -14,6 +14,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
+         "globals.ss"
          "parse.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
@@ -44,8 +45,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (define (out . args)
       (apply fprintf op args)
-      (display "=> ")
-      (display (apply format args)))
+      (display "=> " (*log-output-port*))
+      (display (apply format args) (*log-output-port*)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
@@ -160,14 +161,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (case (message-command message)
         ((001)
          (printf "Joined a couple o' channels~%")
-         (fprintf op "JOIN #bots~%")
-         (fprintf op "JOIN #scheme-bots~%"))
+         (for-each (lambda (cn)
+                     (fprintf op "JOIN ~a~%" cn))
+                   (*initial-channel-names*)))
 
         ((366)
          (add-periodical!
           (lambda (datum my-channel)
             (pm my-channel "Apple sure sucks."))
-          5
+          (*quote-and-headline-interval*)
           (lambda (m)
             ;; someone specifically asked
             ;; for a quote
@@ -197,13 +199,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (start)
   (let-values (((ip op)
-                (tcp-connect "localhost" 6667)))
+                (tcp-connect (*irc-server-name*) 6667)))
 
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode op 'line)
 
-    (fprintf op "NICK x~a~%" (current-seconds))
-    (fprintf op "USER luser unknown-host localhost :rudybot, version whatever~%")
+    (fprintf op "NICK ~a~%" (*my-nick*))
+    (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
+             (or (getenv "USER") "unknown")
+             (*irc-server-name*)
+             *client-name*
+             (*client-version*))
     (printf "Sent NICK and USER~%")
 
     (let loop ()
