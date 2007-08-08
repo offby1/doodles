@@ -27,22 +27,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "triggers like any alarm"
     (check-not-false
-     (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1)))
-       (sync/timeout 2 sync-on-me-baby)
+     (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1/10)))
+       (sync/timeout 2/10 sync-on-me-baby)
        )
      "damn, it didn't get triggered."))
    (test-case
     "doesn't trigger if we tickle it"
-    (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1)))
-      (check-false (sync/timeout 9/10 sync-on-me-baby))
+    (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1/10)))
+      (check-false (sync/timeout 9/100 sync-on-me-baby))
       (reset!)
-      (check-false (sync/timeout 9/10 sync-on-me-baby))
+      (check-false (sync/timeout 9/100 sync-on-me-baby))
       (reset!)
-      (check-false (sync/timeout 9/10 sync-on-me-baby))
+      (check-false (sync/timeout 9/100 sync-on-me-baby))
       (reset!)
-      (check-false (sync/timeout 9/10 sync-on-me-baby))
+      (check-false (sync/timeout 9/100 sync-on-me-baby))
       (check-not-false
-       (sync/timeout 2/10 sync-on-me-baby)
+       (sync/timeout 2/100 sync-on-me-baby)
        "it didn't")
       ))
    ))
