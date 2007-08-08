@@ -2,6 +2,10 @@
 
 -- High priority
 
+* Review the code!
+  That's right.  I've stumbled into enough of these "cannot take car
+  of '()" bugs that I bet there are a few more still lurking.
+
 * channel-has-gone-quiet event
 
   (make-word-in-edgewise-event interval channel-name tickler) returns
