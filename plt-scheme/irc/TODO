@@ -139,8 +139,8 @@
   sexpression will suffice for more complex data ... it'd be nice to
   have bindings to Berkeley DB.
 
-  On the other hand, I can't think of anything else that I need to
-  persist, so ...
+  On the other hand, I can't think of much that I need to persist
+  ... maybe the appearances-by-nick data for the "seen" command.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
@@ -186,10 +186,9 @@
 * new commands
 
 ** "eval"
-   I suspect that PLT somewhere has a safe way of doing "eval" --
-   i.e., they can't call "exit", can't mess with the filesystem, etc.
-   (Such a thing might be useful for the PLT web server, e.g.)  Find
-   it and us it.
+   sandbox.ss is a safe way of doing "eval" -- i.e., they can't call
+   "exit", can't mess with the filesystem, etc.  (Such a thing might
+   be useful for the PLT web server, e.g.)  Find it and use it.
 
 ** "you suck"
    to emit some TODO list entries, or just a URL to the TODO file
