@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id: bot.ss 4527 2007-08-07 15:03:50Z erich $
+#$Id: bot.ss 4540 2007-08-07 22:18:26Z erich $
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module bot mzscheme
@@ -10,8 +10,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                filter)
          (only (lib "13.ss" "srfi")
                string-join)
+         (only (lib "19.ss" "srfi")
+               current-date)
          (lib "trace.ss")
-         (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
@@ -55,17 +56,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (define (out . args)
       (apply fprintf op args)
 
-      (display (zdate (seconds->date (current-seconds))))
+      (display (zdate (current-date)) (*log-output-port*))
       (display " => " (*log-output-port*))
       (write (apply format args) (*log-output-port*))
       (newline (*log-output-port*)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
-    (define (reply response)
-      (pm (if (PRIVMSG-is-for-channel? message)
-              (PRIVMSG-destination message)
-            (PRIVMSG-speaker message))
+    (define (notice target msg)
+      (out "NOTICE ~a :~a~%" target msg))
+
+    (define/kw (reply response #:key [proc pm])
+      (proc (if (PRIVMSG-is-for-channel? message)
+                (PRIVMSG-destination message)
+              (PRIVMSG-speaker message))
           response))
     (define ch-for-us?
       (and (PRIVMSG? message)
@@ -140,11 +144,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (cond
      ((and
        (PRIVMSG? message)
+       (not (regexp-match #rx"bot$" (PRIVMSG-speaker message)))
        (regexp-match url-regexp (PRIVMSG-text message)))
       =>
       (lambda (match-data)
-        (reply (make-tiny-url (car match-data))
-               ))))
+        (let ((url (car match-data)))
+          ;; tiny URLs are about 25 characters, so it seems reasonable
+          ;; to ignore URLs that are shorter than twice that.
+          (when (< 50 (string-length url))
+            (reply (make-tiny-url url)
+                   #:proc notice))))))
 
     (cond
      ((and (ACTION? message)
@@ -193,6 +202,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          )))
 
      ((and ch-for-us?
+           (= 1 (length (PRIVMSG-text-words message))))
+      (reply "Eh?  Speak up.")
+      )
+
+     ((and ch-for-us?
            (string-ci=? "die!" (second (PRIVMSG-text-words message))))
       (let ((times-to-run 10))
         (add-periodical!
@@ -229,7 +243,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (and ch-for-us?
                (string-ci=? "source" (second (PRIVMSG-text-words message)))))
       (let ((source-string
-             "not yet publically released, but the author would be willing if asked nicely"))
+             "http://offby1.ath.cx/~erich/bot/"
+             ))
         (if (SOURCE? message)
             (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
                      (PRIVMSG-speaker message)
@@ -319,7 +334,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
         (fprintf (*log-output-port*) "~a <= ~s~%"
-                 (zdate (seconds->date (current-seconds)))
+                 (zdate (current-date))
                  line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
@@ -328,90 +343,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (respond line op)
             (loop)))))))
 
-
-;; The first thing we do, let's kill all the periodicals.
-(define (kill-all-periodicals!)
-  (printf "About to shut down custodian what manages all these dudes: ~s~%"
-          (custodian-managed-list *task-custodian* (current-custodian)))
-  (custodian-shutdown-all *task-custodian*)
-  (set! *task-custodian* (make-custodian))
-  (set! *periodicals-by-id* (make-hash-table 'equal)))
-;; returns #f if we didn't find what we're looking for.
-
-(define (expect/timeout ip regex seconds)
-  (let* ((ch (make-channel))
-         (reader
-          (thread
-           (lambda ()
-             (let loop ()
-               (printf "expect/timeout about to look for ~s from ~s ...~%"
-                       regex
-                       (object-name ip))
-               (let ((line (read-line ip)))
-                 (cond
-                  ((eof-object? line)
-                   (printf "expect/timeout: eof~%")
-                   (channel-put ch #f))
-                  ((regexp-match regex line)
-                   (printf "expect/timeout: Got match!~%")
-                   (channel-put ch #t))
-                  (else
-                   (printf "expect/timeout: nope; retrying~%")
-                   (loop)))
-
-                 ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
-
-(define crap-tests
-
-  (test-suite
-   "crap"
-   #:before
-   (lambda ()
-     (kill-all-periodicals!))
-   #:after
-   (lambda ()
-     (printf "~a periodicals:~%" (hash-table-count *periodicals-by-id*))
-     (for-each-periodical
-      (lambda (id p)
-        (printf "periodical ~s: running: ~a; dead: ~a~%"
-                (periodical-id p)
-                (if (thread-running? (periodical-thread p))
-                    "yes" " no")
-                (if (thread-dead? (periodical-thread p))
-                    "yes" " no"))))
-     (printf "*task-custodian* manages all these dudes: ~s~%"
-             (custodian-managed-list *task-custodian* (current-custodian)))
-     )
-   (test-case
-    "join"
-    (let-values (((ip op) (make-pipe)))
-      (respond
-       ":server 001 :welcome"
-       op)
-      (sleep 1/10)
-      (check-not-false
-       (expect/timeout ip #rx"JOIN #bots" 2)
-       "didn't join"))
-    )
-
-   (test-case
-    "starts threads"
-    (let-values (((ip op) (make-pipe)))
-      (respond
-       ":server 366 yournick #channel :End of NAMES, dude."
-       op)
-
-      (check-not-false (expect/timeout  ip #rx"Apple sure sucks.$" 10))
-
-      (respond
-       ":server 366 mynick #gully :drop dead"
-       op)
-
-      (check-not-false (expect/timeout ip #rx"Apple sure sucks.$" 10))
-
-      ))))
-
-(provide (all-defined))
+(provide
+ respond
+ start)
 )
