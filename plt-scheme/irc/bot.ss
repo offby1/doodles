@@ -139,11 +139,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     ;; might be worth doing this in a separate thread, since it can
     ;; take a while.
-
-    ;; disabled until I deal with TODO items
     (cond
      ((and
-       #f
        (PRIVMSG? message)
        (regexp-match url-regexp (PRIVMSG-text message)))
       =>
@@ -334,90 +331,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (respond line op)
             (loop)))))))
 
-
-;; The first thing we do, let's kill all the periodicals.
-(define (kill-all-periodicals!)
-  (printf "About to shut down custodian what manages all these dudes: ~s~%"
-          (custodian-managed-list *task-custodian* (current-custodian)))
-  (custodian-shutdown-all *task-custodian*)
-  (set! *task-custodian* (make-custodian))
-  (set! *periodicals-by-id* (make-hash-table 'equal)))
-;; returns #f if we didn't find what we're looking for.
-
-(define (expect/timeout ip regex seconds)
-  (let* ((ch (make-channel))
-         (reader
-          (thread
-           (lambda ()
-             (let loop ()
-               (printf "expect/timeout about to look for ~s from ~s ...~%"
-                       regex
-                       (object-name ip))
-               (let ((line (read-line ip)))
-                 (cond
-                  ((eof-object? line)
-                   (printf "expect/timeout: eof~%")
-                   (channel-put ch #f))
-                  ((regexp-match regex line)
-                   (printf "expect/timeout: Got match!~%")
-                   (channel-put ch #t))
-                  (else
-                   (printf "expect/timeout: nope; retrying~%")
-                   (loop)))
-
-                 ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
-
-(define crap-tests
-
-  (test-suite
-   "crap"
-   #:before
-   (lambda ()
-     (kill-all-periodicals!))
-   #:after
-   (lambda ()
-     (printf "~a periodicals:~%" (hash-table-count *periodicals-by-id*))
-     (for-each-periodical
-      (lambda (id p)
-        (printf "periodical ~s: running: ~a; dead: ~a~%"
-                (periodical-id p)
-                (if (thread-running? (periodical-thread p))
-                    "yes" " no")
-                (if (thread-dead? (periodical-thread p))
-                    "yes" " no"))))
-     (printf "*task-custodian* manages all these dudes: ~s~%"
-             (custodian-managed-list *task-custodian* (current-custodian)))
-     )
-   (test-case
-    "join"
-    (let-values (((ip op) (make-pipe)))
-      (respond
-       ":server 001 :welcome"
-       op)
-      (sleep 1/10)
-      (check-not-false
-       (expect/timeout ip #rx"JOIN #bots" 2)
-       "didn't join"))
-    )
-
-   (test-case
-    "starts threads"
-    (let-values (((ip op) (make-pipe)))
-      (respond
-       ":server 366 yournick #channel :End of NAMES, dude."
-       op)
-
-      (check-not-false (expect/timeout  ip #rx"Apple sure sucks.$" 10))
-
-      (respond
-       ":server 366 mynick #gully :drop dead"
-       op)
-
-      (check-not-false (expect/timeout ip #rx"Apple sure sucks.$" 10))
-
-      ))))
-
-(provide (all-defined))
+(provide
+ respond
+ start)
 )
