@@ -2,22 +2,18 @@
 
 -- High priority
 
+* Say "no news" when they ain't no news
+
 * bugs
+
+** joins channels twice
+   r4530
 
 ** ignores private messages?
 
    Yup.  Don't ask me why, but I check all the incoming messages with
    ch-for-us?.  Maybe I had a good reason for doing that, but if so,
    I've forgotten what it was.
-
-** ping timeout
-
-at r4401, I ran "./run-bot.ss -v -c '#emacs' -j 1", and my local
-dancer-ircd eventually disconnected the bot, saying something about a
-"ping timeout".  I wonder if the bot was so busy spamming the channel
-with funny quotes that it didn't get around to responding to PING
-... if so, that suggests that we ought to prioritize our threads, and
-give the PING response higher priority than the quotes.
 
 * timestamp file confusion
   It reads and writes a timestamp file in its current directory, which
@@ -132,6 +128,12 @@ give the PING response higher priority than the quotes.
   wouldn't look good if collapsed.
 
 * new commands
+
+** "eval"
+   I suspect that PLT somewhere has a safe way of doing "eval" --
+   i.e., they can't call "exit", can't mess with the filesystem, etc.
+   (Such a thing might be useful for the PLT web server, e.g.)  Find
+   it and us it.
 
 ** "you suck"
    to emit some TODO list entries, or just a URL to the TODO file
