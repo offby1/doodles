@@ -83,6 +83,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (vtprintf "Our version string is ~s~%" (*client-version*)))
   )
 
+(print-hash-table #t)
 (thread
  (lambda ()
    (parameterize
