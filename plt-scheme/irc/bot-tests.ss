@@ -89,7 +89,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (check-not-false
         (expect/timeout ip #rx"JOIN #bots" 1)
         "didn't join")))
-    )))
+    )
+   (test-case
+    "short semi-private message"
+    (check-not-exn
+     (lambda ()
+       (respond
+        ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs :rudybot: "
+        (open-output-string)))))
+     ))
 
 (provide (all-defined))
 )
