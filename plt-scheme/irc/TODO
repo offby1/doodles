@@ -12,7 +12,7 @@
        (let loop ()
          (let ((news 
                 ;; wait for something to say
-                (sync planet-emacs-news-evt)))
+                (sync planet-emacs-news-channel)))
 
            ;; wait for a chance to say it
            (sync word-in-edgewise-evt)
@@ -20,10 +20,14 @@
            (loop)
          ))
 
-  The above example would never repeat itself (assuming that
-  planet-emacs-news-evt never repeats _itself_, which I'm not actually
-  sure of).  But we might want a task that does repeat itself if
-  there's no news for a while:
+  ("tickler" is there so that the main loop -- the thing that reads
+  lines from the IRC server -- can pass in each line, so that our
+  gizmo can decide if in fact the channel has gone quiet.)
+  
+  The above example would never spew the same news twice (assuming
+  that planet-emacs-news-channel never yields the same thing twice,
+  which I'm not actually sure of).  But we might want a task that does
+  spew the same thing over and over if there's no news for a while:
 
        (let loop ()
          (let ((review
