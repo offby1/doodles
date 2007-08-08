@@ -239,7 +239,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (and ch-for-us?
                (string-ci=? "source" (second (PRIVMSG-text-words message)))))
       (let ((source-string
-             "svn+ssh://irc-bot@offby1.ath.cx/home/erich/svn-repos/trunk/doodles/plt-scheme/irc (but you'll need to contact me first, lest ye get an \"authorization denied\" error)"
+             "http://offby1.ath.cx/~erich/bot/"
              ))
         (if (SOURCE? message)
             (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
