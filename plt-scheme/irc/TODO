@@ -8,10 +8,11 @@
 
 * channel-has-gone-quiet event
 
-  (make-word-in-edgewise-event interval channel-name tickler) returns
-  something you can pass to "sync".  That way typical tasks (which I
-  now call "periodicals", but which with this scheme probably won't
-  need a special type) would look like this:
+  (make-word-in-edgewise-event interval channel-name) returns
+  something you can pass to "sync" (and a thunk I like to call ... the
+  "resetter"; see below).  That way typical tasks (which I now call
+  "periodicals", but which with this scheme probably won't need a
+  special type) would look like this:
 
        (let loop ()
          (let ((news 
@@ -24,9 +25,9 @@
            (loop)
          ))
 
-  ("tickler" is there so that the main loop -- the thing that reads
-  lines from the IRC server -- can pass in each line, so that our
-  gizmo can decide if in fact the channel has gone quiet.)
+  (The "resetter" is there so that the main loop -- the thing that
+  reads lines from the IRC server -- can pass in each line, so that
+  our gizmo can decide if in fact the channel has gone quiet.)
   
   The above example would never spew the same news twice (assuming
   that planet-emacs-news-channel never yields the same thing twice,
@@ -72,9 +73,11 @@
   ... semaphore-try-wait?
 
   how about: the event we wait on is a semaphore.  We create a thread
-  that simply sleeps for the interval, and then posts.  The tickler
+  that simply sleeps for the interval, and then posts.  The resetter
   kills that thread and replaces it with another identical one
   (identical, that is, except that the new one hasn't yet started).
+
+  I've done this in "thing.ss"; let's see how it works.
 
 * version registry
 
