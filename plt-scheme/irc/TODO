@@ -77,7 +77,7 @@
   kills that thread and replaces it with another identical one
   (identical, that is, except that the new one hasn't yet started).
 
-  I've done this in "thing.ss"; let's see how it works.
+  I've done this in "resttable-alarm.ss"; let's see how it works.
 
 * version registry
 

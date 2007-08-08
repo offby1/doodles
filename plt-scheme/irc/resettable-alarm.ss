@@ -1,39 +1,43 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui thing-tests 'verbose))"
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui resettable-alarm-tests 'verbose))"
 |#
-(module thing mzscheme
+(module resettable-alarm mzscheme
 (require (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
-(define (make-my-doohickey interval)
+(define (make-resettable-alarm interval)
   (let* ((s (make-semaphore))
+         (id (current-milliseconds))
          (sleeper (lambda ()
                     (sleep interval)
-                    (printf "Posting!~%")
+                    (printf "~a says RINNGGGGGG!!! Time to wake up!!~%"
+                            id)
                     (semaphore-post s))))
     (let ((t (thread sleeper)))
       (values s (lambda ()
                   (kill-thread t)
-                  (printf "Resetting!~%")
+                  (printf "~a says you may snoooze for ~a seconds.~%"
+                          id
+                          interval)
                   (set! t (thread sleeper)))))))
 
-(define thing-tests
+(define resettable-alarm-tests
 
   (test-suite
-   "thing"
+   "resettable-alarm"
    (test-case
     "triggers like any alarm"
     (check-not-false
-     (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1/10)))
+     (let-values (((sync-on-me-baby reset!) (make-resettable-alarm 1/10)))
        (sync/timeout 2/10 sync-on-me-baby)
        )
      "damn, it didn't get triggered."))
    (test-case
     "doesn't trigger if we tickle it"
-    (let-values (((sync-on-me-baby reset!) (make-my-doohickey 1/10)))
+    (let-values (((sync-on-me-baby reset!) (make-resettable-alarm 1/10)))
       (check-false (sync/timeout 9/100 sync-on-me-baby))
       (reset!)
       (check-false (sync/timeout 9/100 sync-on-me-baby))
