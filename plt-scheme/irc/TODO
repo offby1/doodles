@@ -2,6 +2,55 @@
 
 -- High priority
 
+* channel-has-gone-quiet event
+
+  (make-word-in-edgewise-event interval channel-name tickler) returns
+  something you can pass to "sync".  That way typical tasks (which I
+  now call "periodicals", but which with this scheme probably won't
+  need a special type) would look like this:
+
+       (let loop ()
+         (let ((news 
+                ;; wait for something to say
+                (sync planet-emacs-news-evt)))
+
+           ;; wait for a chance to say it
+           (sync word-in-edgewise-evt)
+           (spew "Hey, folks, news from Planet Emacs: ~a" news)
+           (loop)
+         ))
+
+  The above example would never repeat itself (assuming that
+  planet-emacs-news-evt never repeats _itself_, which I'm not actually
+  sure of).  But we might want a task that does repeat itself if
+  there's no news for a while:
+
+       (let loop ()
+         (let ((review
+                ;; wait for something to say
+                (sync/timeout 3600 movie-review-news-evt)))
+
+           (when review
+              (save-in-some-cache! review))
+           ;; wait for a chance to say it
+           (sync word-in-edgewise-evt)
+           (spew "A movie review: ~a" 
+              (or review
+                  (get-from-cache)))
+           (loop)
+         ))
+
+
+* version registry
+
+  Each module exports a value that contains its Subversion $Id$ info.
+  At load time, it pushes that value into some global list.  That way
+  the "version" command can get very complete (albeit voluminous)
+  info, which is nicer than the output of "svnversion"
+
+* NOTICE instead of PRIVMSG
+  VERSION and SOURCE comands, perhaps
+
 * bugs
 
 * "log in" at startup
