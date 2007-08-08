@@ -2,18 +2,7 @@
 
 -- High priority
 
-* Say "no news" when they ain't no news
-
 * bugs
-
-** joins channels twice
-   r4530
-
-** ignores private messages?
-
-   Yup.  Don't ask me why, but I check all the incoming messages with
-   ch-for-us?.  Maybe I had a good reason for doing that, but if so,
-   I've forgotten what it was.
 
 * timestamp file confusion
   It reads and writes a timestamp file in its current directory, which
@@ -26,9 +15,28 @@
 
 -- Low priority
 
+* low-priority bugs
+
+** joins channels twice
+   r4530.  Probably because I passed a few channel names on the
+   command line which were also in the default list, and it's too dumb
+   to uniquify the resulting list.
+
+** ignores private messages?
+
+   Yup.  Don't ask me why, but I check all the incoming messages with
+   ch-for-us?.  Maybe I had a good reason for doing that, but if so,
+   I've forgotten what it was.
+
+
 * quotes and news headlines
+
   I should make the silly quotes have a different period than the news
-  headlines, so they don't always arrive together.
+  headlines, so they don't always arrive together.  This is mostly
+  irrelevant, though, since if there's any real chatter in the
+  channel, each will get delayed by more-or-less random amounts.
+
+** Say "no news" when they ain't no news
 
 * Windows
 
@@ -53,11 +61,6 @@
 
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
-
-* add jordanb "we should" quotes
-  ... that is, grep my old IRC logs for quips from him that begin with
-  "We should", just as I've already gotten quips that begin with
-  "Let's".
 
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
@@ -104,12 +107,6 @@
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
 
-* Do the tinyurl thing!!
-  I.e., whenever anyone utters a URL (that isn't itself a tinyurl),
-  send it to tinyurl, and utter the tiny version.  A public service!
-  I've got the guts of this working already but I haven't yet
-  integrated it into the bot proper
-
 * movies
 ** Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
@@ -139,10 +136,10 @@
    to emit some TODO list entries, or just a URL to the TODO file
 
 ** Respond to "help"
-  since people seem to expect those
+   since people seem to expect those
 
 ** "uptime"
-  since I'm occasionally curious
+   since I'm occasionally curious
 
 ** auto shakespeare insults
    I've got scheme code to do that around here somewhere.
@@ -182,12 +179,6 @@ essentially a full-blown IRC client with a scheme syntax.
    to have curses support to do this).  So I could watch them count
    down.
 
-* don't restrict "seen" to the current channel
-
-  I.e., if bob speaks in #cats, and someone in #dogs asks "seen bob",
-  we should say "bob last spoke, in #cats, at 1:23:45 PM, saying
-  "meow"
-
 * truncate output from "seen" command
   because it can be annoyingly long, if the last thing they said was
   annoyingly long.
@@ -204,8 +195,3 @@ essentially a full-blown IRC client with a scheme syntax.
   message), and other terms.  Try to use the same terms that the RFC
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
-
-* Use streams?
-  I'd been mulling them over, and am now pretty sure that I'm not
-  interested.  Still, j85wilson in #scheme suggested I take a look at
-  this: http://paste.lisp.org/display/45711
