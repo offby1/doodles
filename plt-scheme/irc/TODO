@@ -62,6 +62,20 @@
   And then there's choice, wrap, handle, and guard; none of which I
   understand.
 
+  Perhaps I could use "guard-evt" to make an event-like gizmo that
+  returns either another event, which suggests that the client should
+  wait on it too (presumably because someone spoke in the channel), or
+  #f, which means the timer ran out and the channel has been quiet.
+  Even if this works, it's not quite what I want, since then our
+  client has to effectively poll this event.
+
+  ... semaphore-try-wait?
+
+  how about: the event we wait on is a semaphore.  We create a thread
+  that simply sleeps for the interval, and then posts.  The tickler
+  kills that thread and replaces it with another identical one
+  (identical, that is, except that the new one hasn't yet started).
+
 * version registry
 
   Each module exports a value that contains its Subversion $Id$ info.
