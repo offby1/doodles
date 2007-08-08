@@ -40,6 +40,19 @@
            (loop)
          ))
 
+  I don't know what event primitive to use, though.  There doesn't
+  seem to be a general-purpose way to create your own events; alarms
+  sounded good but they cannot be cancelled; a thread that waits and
+  then posts to a sempahore will probably work but I dislike the idea
+  that the thread might actually post twice before any client syncs on
+  it (it seems silly to spew two messages at once because the channel
+  has been quiet for twice the interval, and the spewer was busy all
+  during that time)
+
+  One _can_ make structures that act as events, but I simply don't
+  understand their documentation, so I don't know if they'd help me.
+  And then there's choice, wrap, handle, and guard; none of which I
+  understand.
 
 * version registry
 
