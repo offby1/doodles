@@ -31,19 +31,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "triggers like any alarm"
     (check-not-false
-     (let-values (((sync-on-me-baby reset!) (make-resettable-alarm 1/10)))
+     (let-values (((sync-on-me-baby snooze) (make-resettable-alarm 1/10)))
        (sync/timeout 2/10 sync-on-me-baby)
        )
      "damn, it didn't get triggered."))
    (test-case
     "doesn't trigger if we tickle it"
-    (let-values (((sync-on-me-baby reset!) (make-resettable-alarm 1/10)))
+    (let-values (((sync-on-me-baby snooze) (make-resettable-alarm 1/10)))
       (check-false (sync/timeout 9/100 sync-on-me-baby))
-      (reset!)
+      (snooze)
       (check-false (sync/timeout 9/100 sync-on-me-baby))
-      (reset!)
+      (snooze)
       (check-false (sync/timeout 9/100 sync-on-me-baby))
-      (reset!)
+      (snooze)
       (check-false (sync/timeout 9/100 sync-on-me-baby))
       (check-not-false
        (sync/timeout 2/100 sync-on-me-baby)
