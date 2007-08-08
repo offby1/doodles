@@ -8,7 +8,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
-         (only "globals.ss" *initial-channel-names*))
+         (only "globals.ss" *initial-channel-names*)
+         "vprintf.ss")
 
 (require/expose
  "bot.ss"
@@ -40,19 +41,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (thread
            (lambda ()
              (let loop ()
-               (printf "expect/timeout about to look for ~s from ~s ...~%"
-                       regex
-                       (object-name ip))
+               (vprintf "expect/timeout about to look for ~s from ~s ...~%"
+                        regex
+                        (object-name ip))
                (let ((line (read-line ip)))
                  (cond
                   ((eof-object? line)
-                   (printf "expect/timeout: eof~%")
+                   (vprintf "expect/timeout: eof~%")
                    (channel-put ch #f))
                   ((regexp-match regex line)
-                   (printf "expect/timeout: Got match!~%")
+                   (vprintf "expect/timeout: Got match!~%")
                    (channel-put ch #t))
                   (else
-                   (printf "expect/timeout: nope; retrying~%")
+                   (vprintf "expect/timeout: nope; retrying~%")
                    (loop)))
 
                  ))))))

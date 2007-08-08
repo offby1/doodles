@@ -64,10 +64,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
-    (define (reply response)
-      (pm (if (PRIVMSG-is-for-channel? message)
-              (PRIVMSG-destination message)
-            (PRIVMSG-speaker message))
+    (define (notice target msg)
+      (out "NOTICE ~a :~a~%" target msg))
+
+    (define/kw (reply response #:key [proc pm])
+      (proc (if (PRIVMSG-is-for-channel? message)
+                (PRIVMSG-destination message)
+              (PRIVMSG-speaker message))
           response))
     (define ch-for-us?
       (and (PRIVMSG? message)
@@ -142,11 +145,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (cond
      ((and
        (PRIVMSG? message)
+       (not (regexp-match #rx"bot$" (PRIVMSG-speaker message)))
        (regexp-match url-regexp (PRIVMSG-text message)))
       =>
       (lambda (match-data)
-        (reply (make-tiny-url (car match-data))
-               ))))
+        (let ((url (car match-data)))
+          ;; tiny URLs are about 25 characters, so it seems reasonable
+          ;; to ignore URLs that are shorter than twice that.
+          (when (< 50 (string-length url))
+            (reply (make-tiny-url url)
+                   #:proc notice))))))
 
     (cond
      ((and (ACTION? message)

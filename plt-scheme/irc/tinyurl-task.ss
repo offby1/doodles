@@ -9,7 +9,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
          "bot-tests.ss"
+         (only "globals.ss"
+               *log-output-port*
+               verbose!)
          "tinyurl.ss")
+
+(define (got-response? input regexp)
+  (let-values (((ip op) (make-pipe)))
+    (respond input op)
+    (expect/timeout ip regexp 1)))
+
+(define long-url "http://foo.bar/baz/i/hope/this/is/long/enough/its/really/quite/long")
 
 (define tinyurl-task-tests
 
@@ -17,19 +27,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "tinyurl-task"
    (test-case
     "no response for a short URL"
-    (let-values (((ip op) (make-pipe)))
-      (respond
-        ":x!y@z PRIVMSG #duh :http://foo.bar"
-       op)
-
-      (check-false (expect/timeout ip
-                                   #rx"doesn't matter"
-                                   2))
-      )
+    (check-false
+     (got-response?
+      ":x!y@z PRIVMSG #duh :http://foo.bar"
+      #rx""))
    )
 
-   (test-case "no response to a bot"     (check-true #f "I haven't yet written the test!!"))
-   (test-case "uses NOTICE, not PRIVMSG" (check-true #f "I haven't yet written the test!!"))))
+   (test-case
+    "uses NOTICE, not PRIVMSG"
+    (check-not-false
+     (got-response?
+      (format ":x!y@z PRIVMSG #duh :~a" long-url)
+      #rx"NOTICE #duh :http://tinyurl.com/")
+     ))
+
+   (test-case
+    "no response to a bot"
+    (check-false
+     (got-response?
+      (format ":botbot!botbot@z PRIVMSG #duh :~a" long-url)
+      #rx"")
+     ))))
 
 (provide (all-defined))
 )
