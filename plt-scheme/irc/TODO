@@ -143,6 +143,9 @@ give the PING response higher priority than the quotes.
 
 * new commands
 
+** "you suck"
+   to emit some TODO list entries, or just a URL to the TODO file
+
 ** Respond to "help"
   since people seem to expect those
 
