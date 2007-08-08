@@ -14,11 +14,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                verbose!)
          "tinyurl.ss")
 
-(define (got-response? input regexp)
-  (let-values (((ip op) (make-pipe)))
-    (respond input op)
-    (expect/timeout ip regexp 1)))
-
 (define long-url "http://foo.bar/baz/i/hope/this/is/long/enough/its/really/quite/long")
 
 (define tinyurl-task-tests

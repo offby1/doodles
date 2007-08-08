@@ -13,7 +13,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (lib "19.ss" "srfi")
                current-date)
          (lib "trace.ss")
-         (only (lib "pregexp.ss") pregexp-quote)
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
@@ -201,6 +200,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (PRIVMSG-destination message)
          #:id (format "delayed command ~s" command)
          )))
+
+     ((and ch-for-us?
+           (= 1 (length (PRIVMSG-text-words message))))
+      (reply "Eh?  Speak up.")
+      )
 
      ((and ch-for-us?
            (string-ci=? "die!" (second (PRIVMSG-text-words message))))

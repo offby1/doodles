@@ -4,11 +4,14 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot-tests mzscheme
-(require (lib "trace.ss")
+(require (only (lib "pregexp.ss") pregexp-quote)
+         (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
-         (only "globals.ss" *initial-channel-names*)
+         (only "globals.ss"
+               *initial-channel-names*
+               verbose!)
          "vprintf.ss")
 
 (require/expose
@@ -23,6 +26,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   periodical-id
   periodical-thread
   ))
+
+;; TODO -- write proper "check-response", so that it gives meaningful
+;; spew when it fails
+(define (got-response? input regexp)
+  (let-values (((ip op) (make-pipe)))
+    (respond input op)
+    (expect/timeout ip regexp 1)))
 
 ;; The first thing we do, let's kill all the periodicals.
 
@@ -92,11 +102,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     )
    (test-case
     "short semi-private message"
-    (check-not-exn
-     (lambda ()
-       (respond
-        ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs :rudybot: "
-        (open-output-string)))))
+    (check-not-false
+     (got-response?
+      ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs :rudybot: "
+      (pregexp-quote "PRIVMSG #emacs :Eh?  Speak up."))
+     ))
      ))
 
 (provide (all-defined))
