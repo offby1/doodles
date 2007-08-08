@@ -21,6 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "parse.ss"
          "planet-emacs-task.ss"
          "quotes.ss"
+         "resettable-alarm.ss"
          "tinyurl.ss")
 
 ;; A periodical is a thread that spews into a specific channel, both
@@ -33,6 +34,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; of this variable local to each server, instead of just one global
 ;; as it is now.
 (define *periodicals-by-id* (make-hash-table 'equal))
+
+;; two thunks.  Call "now", and the associated task will run once now.
+;; Call "later", and the associated task _won't_ run for a while.  Do
+;; neither, and eventually the task will run.
+(define-struct control (now later) (make-inspector))
+
+(define *controls-by-channel-and-task*  (make-hash-table 'equal))
 
 (define (for-each-periodical proc)
   (hash-table-for-each *periodicals-by-id* proc))
@@ -117,6 +125,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (what        (PRIVMSG-text        message))
             (time        (current-seconds))
             (was-action? (ACTION?             message)))
+
+        (hash-table-for-each
+         *controls-by-channel-and-task*
+         (lambda (id control)
+           (when (equal? (car id) where)
+             ((control-later control)))))
 
         (for-each-periodical
          (lambda (id p)
@@ -253,10 +267,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ((and ch-for-us?
            (string-ci=? "quote" (second (PRIVMSG-text-words message))))
       (cond
-       ((hash-table-get *periodicals-by-id* (cons 'quote-spewer (PRIVMSG-destination message)) #f)
-        =>
-        (lambda (p)
-          (semaphore-post (periodical-do-it-now! p))))
+       ((hash-table-get
+         *controls-by-channel-and-task*
+         (cons (PRIVMSG-destination message) 'quote-spewer)
+         #f)
+        => (lambda (c)
+             (printf "posting to 'quote-spewer's \"now\"~%")
+             (semaphore-post (control-now c))))
+       (else
+        (printf "Nothing in ~s for quote-spewer and ~s~%"
+                *controls-by-channel-and-task*
+                (PRIVMSG-destination message)))
        ))
      ((and ch-for-us?
            (string-ci=? "news" (second (PRIVMSG-text-words message))))
@@ -280,12 +301,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (let ((this-channel (second (message-params message))))
 
            (when (member this-channel '("#emacs" "#bots" ))
-             (add-periodical!
-              (lambda (my-channel)
-                (pm my-channel (one-quote)))
-              (* 11/10 (*quote-and-headline-interval*))
-              this-channel
-              #:id 'quote-spewer))
+             (let ((task 'quote-spewer)
+                   (trigger (make-semaphore)))
+
+               ;; it seems odd not to put the thread object in any
+               ;; variable, but I can't think of any reason to do so.
+
+               (thread
+                (lambda ()
+                  (let loop ()
+                    (let-values (((alarm snooze-button)
+                                  (make-resettable-alarm (*quote-and-headline-interval*))))
+
+                      (hash-table-put!
+                       *controls-by-channel-and-task*
+                       (cons this-channel task)
+                       (make-control trigger snooze-button))
+
+                      (sync alarm trigger)
+                      (pm this-channel (one-quote)))
+                    (loop))))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
              (let ((planet-thing (make-pe-consumer-proc)))
@@ -297,7 +332,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
                 (*quote-and-headline-interval*)
                 this-channel
-                #:id 'news-spewer)))))
+                #:id 'news-spewer)))
+           ))
 
         ((433)
          (error 'respond "Nick already in use!")
