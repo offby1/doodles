@@ -79,11 +79,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        time-of-latest-spewed-entry)
                   (set! time-of-latest-spewed-entry
                         (entry-timestamp datum))
-                  (put-preferences
-                   (list (*atom-timestamp-preference-name*))
-                   (list
-                    (zdate
-                     (time-utc->date time-of-latest-spewed-entry))))))
+                  (let retry ()
+                    (put-preferences
+                     (list (*atom-timestamp-preference-name*))
+                     (list
+                      (zdate
+                       (time-utc->date time-of-latest-spewed-entry)))
+                     (lambda (lockpath)
+                       (vtprintf "preference file is locked (~s); retrying~%" lockpath)
+                       (sleep (/ (add1 (random 10)) 10))
+                       (retry))))))
             (begin
               (vtprintf "Consumer thread: Nothing new on planet emacs (we already spewed an entry dated ~s) ~%"
                         (zdate (time-utc->date time-of-latest-spewed-entry)))
