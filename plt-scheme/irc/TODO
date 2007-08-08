@@ -12,6 +12,10 @@
   want to clobber it ... perhaps make the name of the preference
   depend upon whether we're testing or not)
 
+* "log in" at startup
+  i.e., do "/msg nickserv identify", or whatever it is, so that we can
+  send private messages on freenode
+
 
 -- Low priority
 
