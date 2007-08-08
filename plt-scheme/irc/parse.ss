@@ -66,19 +66,20 @@
              (addressee
               (and
                trailing-parameter
-               (let ((fw (first
-                          (string-tokenize
-                           trailing-parameter
-                           (char-set-complement (char-set #\space)))))
-                     (trailing-delimiter-rx #rx"[:,]$"))
-                 (and
-                  (regexp-match
-                   trailing-delimiter-rx
-                   fw)
-                  (regexp-replace
-                   trailing-delimiter-rx
-                   fw
-                   "")))))
+               (let ((tp-tokens (string-tokenize
+                                  trailing-parameter
+                                  (char-set-complement (char-set #\space)))))
+                 (and (not (null? tp-tokens))
+                      (let ((fw (first tp-tokens))
+                            (trailing-delimiter-rx #rx"[:,]$"))
+                        (and
+                         (regexp-match
+                          trailing-delimiter-rx
+                          fw)
+                         (regexp-replace
+                          trailing-delimiter-rx
+                          fw
+                          "")))))))
              )
         (if (string=? "PRIVMSG" command)
             (let* ((ctcp-match (regexp-match
@@ -177,6 +178,10 @@
     (list "poo" "poo" "platter puss"))
    (test-suite
     "PRIVMSGs"
+    (test-not-exn
+     "No puke on a single-space"
+     (lambda ()
+       (parse-irc-message ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs : ")))
     (test-false
      "average command isn't a PRIVMSG"
      (PRIVMSG? (parse-irc-message "COMMAND poo poo :platter puss")))
