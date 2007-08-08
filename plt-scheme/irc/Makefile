@@ -27,6 +27,6 @@ $(tarball):
 	$(cleanup)
 
 clean:
-	rm -rf $(plt-file)
+	rm -rf $(plt-file) $(tarball)
 
 .PHONY: clean all plt tar
