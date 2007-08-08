@@ -4,14 +4,6 @@
 
 * bugs
 
-* timestamp file confusion
-  It reads and writes a timestamp file in its current directory, which
-  can get messy if I sometimes start it from here and sometimes from
-  there.  Perhaps that info should be stored in a PLT preference, so
-  that there's just one copy of it.  (But then during testing we won't
-  want to clobber it ... perhaps make the name of the preference
-  depend upon whether we're testing or not)
-
 * "log in" at startup
   i.e., do "/msg nickserv identify", or whatever it is, so that we can
   send private messages on freenode
@@ -77,15 +69,13 @@
 
 * persistence
   It'd be nice to save stuff to disk.  Currently I save the date of
-  the last planet.emacsen.org headline that we spewed ...  But I dunno
-  if simply "write"ing an sexpression will suffice for more complex
-  data ... it'd be nice to have bindings to Berkeley DB.
+  the last planet.emacsen.org headline that we spewed in the the PLT
+  "preferences" file ...  But I dunno if simply "write"ing an
+  sexpression will suffice for more complex data ... it'd be nice to
+  have bindings to Berkeley DB.
 
   On the other hand, I can't think of anything else that I need to
   persist, so ...
-
-  ... and the PLT "preferences" might be a good place to store that
-  data.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
