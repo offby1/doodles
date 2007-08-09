@@ -21,7 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "parse.ss"
          "planet-emacs-task.ss"
          "quotes.ss"
-         "resettable-alarm.ss"
+         "alarm-with-snooze.ss"
          "tinyurl.ss")
 
 ;; two thunks.  Call "now", and the associated task will run once now.
@@ -44,12 +44,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (thread
      (lambda ()
        (let loop ()
-         (let ((alarm (make-resettable-alarm interval #:id id)))
+         (let ((alarm (make-alarm-with-snooze interval #:id id)))
 
            (hash-table-put!
             *controls-by-channel-and-task*
             id
-            (make-control trigger (resettable-alarm-snooze-button alarm)))
+            (make-control trigger (alarm-with-snooze-snooze-button alarm)))
 
            (sync alarm trigger)
            (action-thunk))
