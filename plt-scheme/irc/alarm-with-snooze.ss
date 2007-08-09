@@ -29,19 +29,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (sleeper (lambda ()
                     (let loop ()
                       (sleep interval)
-                      (printf "~a says RINNGGGGGG!!! Time to wake up!!~%"
-                              id)
                       (semaphore-post s)
                       (when periodic? (loop))))))
     (let ((t (thread sleeper)))
       (make-alarm-with-snooze
        s
-       (lambda ()
+       (lambda/kw (#:key [fatal? #f])
          (kill-thread t)
-         (printf "~a says you may snoooze for ~a seconds.~%"
-                 id
-                 interval)
-         (set! t (thread sleeper)))
+         (when (not fatal?)
+           (set! t (thread sleeper))))
        id))))
 
 (define alarm-with-snooze-tests
@@ -65,6 +61,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (check-not-false (sync/timeout 2/10 ra))
       (check-not-false (sync/timeout 2/10 ra))
       (check-not-false (sync/timeout 2/10 ra))
+      ))
+
+   (test-case
+    "dies when asked"
+    (let ((ra (public-make-alarm-with-snooze
+               1/100
+               #:periodic? #t
+               #:id 'killable)))
+      (check-not-false (sync/timeout 2/100 ra))
+      (check-not-false (sync/timeout 2/100 ra))
+      ((alarm-with-snooze-snooze-button ra) #:fatal? #t)
+      (check-false (sync/timeout 2 ra))
       ))
 
    (test-case
