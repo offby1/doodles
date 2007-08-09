@@ -47,21 +47,23 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
-    (let* ((chatter-msg
-            (parse-irc-message
-             ":x!x@z PRIVMSG #snooze :wakey wakey"
-             ))
-           (cie (public-make-channel-idle-event "#snooze" 1))
-           (t (thread (lambda ()
+    (let* ((cie (public-make-channel-idle-event "#snooze" 1))
+           (make-yammerer
+            (lambda (string)
+              (thread (lambda ()
                         (let loop ((x 10))
                           (when (positive? x)
                             ((channel-idle-event-input-examiner cie)
-                             chatter-msg)
+                             (parse-irc-message string))
                             (sleep 1/2)
                             (loop (sub1 x))))
-                        ))))
-
-      (check-false (sync/timeout 2 cie)))
+                        )))))
+      (let ((relevant (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")))
+        (check-false (sync/timeout 2 cie))
+        (kill-thread relevant)
+        (let ((irrelevant (make-yammerer ":x!x@z PRIVMSG #other-channel :wakey wakey")))
+          (check-not-false (sync/timeout 2 cie))
+          (kill-thread irrelevant))))
     )
    ))
 
