@@ -49,7 +49,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *appearances-by-nick* (make-hash-table 'equal))
 
-(define (start-task! id interval action-thunk task-registry)
+(define (start-task! id interval action-thunk)
   (let ((trigger (make-semaphore)))
 
     ;; it seems odd not to put the thread object in any
@@ -61,7 +61,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (let ((alarm (make-resettable-alarm interval #:id id)))
 
            (hash-table-put!
-            task-registry
+            *controls-by-channel-and-task*
             id
             (make-control trigger (resettable-alarm-snooze-button alarm)))
 
@@ -284,6 +284,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                      (PRIVMSG-speaker message)
                      source-string)
           (reply source-string))))
+
      ((and ch-for-us?
            (string-ci=? "quote" (second (PRIVMSG-text-words message))))
       (cond
@@ -292,21 +293,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (cons (PRIVMSG-destination message) 'quote-spewer)
          #f)
         => (lambda (c)
-             (printf "posting to 'quote-spewer's \"now\"~%")
-             (semaphore-post (control-now c))))
-       (else
-        (printf "Nothing in ~s for quote-spewer and ~s~%"
-                *controls-by-channel-and-task*
-                (PRIVMSG-destination message)))
-       ))
+             (semaphore-post (control-now c))))))
+
      ((and ch-for-us?
            (string-ci=? "news" (second (PRIVMSG-text-words message))))
       (cond
-       ((hash-table-get *periodicals-by-id* (cons 'news-spewer (PRIVMSG-destination message)) #f)
+       ((hash-table-get
+         *controls-by-channel-and-task*
+         (cons (PRIVMSG-destination message) 'news-spewer)
+         #f)
         =>
-        (lambda (p)
-          (semaphore-post (periodical-do-it-now! p))))
+        (lambda (c)
+          (semaphore-post (control-now c))))
        ))
+
      (ch-for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
@@ -325,21 +325,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               (cons this-channel 'quote-spewer)
               (*quote-and-headline-interval*)
               (lambda ()
-                (pm this-channel (one-quote)))
-               *controls-by-channel-and-task*))
+                (pm this-channel (one-quote)))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
              (let ((planet-thing (make-pe-consumer-proc)))
-               (add-periodical!
-                (lambda (my-channel)
+               (start-task!
+                (cons this-channel 'news-spewer)
+                (*quote-and-headline-interval*)
+                (lambda ()
                   (planet-thing
                    (lambda (headline)
-                     (pm my-channel headline))))
-
-                (*quote-and-headline-interval*)
-                this-channel
-                #:id 'news-spewer)))
-           ))
+                     (pm this-channel headline)))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
