@@ -310,13 +310,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                (thread
                 (lambda ()
                   (let loop ()
-                    (let-values (((alarm snooze-button)
-                                  (make-resettable-alarm (*quote-and-headline-interval*))))
+                    (let ((alarm
+                           (make-resettable-alarm
+                            (*quote-and-headline-interval*)
+                            #:id task)))
 
                       (hash-table-put!
                        *controls-by-channel-and-task*
                        (cons this-channel task)
-                       (make-control trigger snooze-button))
+                       (make-control trigger (resettable-alarm-snooze-button alarm)))
 
                       (sync alarm trigger)
                       (pm this-channel (one-quote)))
