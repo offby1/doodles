@@ -12,7 +12,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define-values (struct:resettable-alarm make-resettable-alarm resettable-alarm? resettable-alarm-ref resettable-alarm-set!)
     (make-struct-type 'resettable-alarm #f 3 0
                       #f (list (cons prop:evt 0))
-                      #f #f '(0 1 2)))
+                      (make-inspector) #f '(0 1 2)))
 
 (define (resettable-alarm-snooze-button r)
   (resettable-alarm-ref r 1))
