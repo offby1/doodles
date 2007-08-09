@@ -69,5 +69,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     )
    ))
 
-(provide (all-defined))
+(provide (all-defined-except make-channel-idle-event channel-idle-event-ref channel-idle-event-set!)
+         (rename public-make-channel-idle-event make-channel-idle-event))
 )

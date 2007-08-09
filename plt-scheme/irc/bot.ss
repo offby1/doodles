@@ -17,6 +17,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
+         "channel-idle-event.ss"
          "globals.ss"
          "parse.ss"
          "planet-emacs-task.ss"
@@ -35,6 +36,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *task-custodian* (make-custodian))
 
 (define *appearances-by-nick* (make-hash-table 'equal))
+
+(define *message-subscriptions* '())
+(define (subscribe-proc-to-server-messages! proc)
+  (set! *message-subscriptions* (cons proc *message-subscriptions*)))
 
 (define (start-task! id interval action-thunk)
   (let ((trigger (make-semaphore)))
@@ -63,11 +68,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (define (out . args)
       (apply fprintf op args)
-
-      (display (zdate (current-date)) (*log-output-port*))
-      (display " => " (*log-output-port*))
-      (write (apply format args) (*log-output-port*))
-      (newline (*log-output-port*)))
+      (vtprintf " => ~s~%" (apply format args)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
@@ -79,10 +80,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (PRIVMSG-destination message)
               (PRIVMSG-speaker message))
           response))
+
     (define ch-for-us?
       (and (PRIVMSG? message)
            (PRIVMSG-is-for-channel? message)
            (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
+
+    (vtprintf " <= ~s~%" message)
+
+    (for-each (lambda (proc)
+                (proc message))
+              *message-subscriptions*)
 
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
@@ -187,9 +195,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
       (if (VERSION? message)
-          (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
-                   (PRIVMSG-speaker message)
-                   (long-version-string))
+          (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
+               (PRIVMSG-speaker message)
+               (long-version-string))
         (reply (long-version-string))))
      ((or (SOURCE? message)
           (and ch-for-us?
@@ -198,20 +206,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              "http://offby1.ath.cx/~erich/bot/"
              ))
         (if (SOURCE? message)
-            (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
-                     (PRIVMSG-speaker message)
-                     source-string)
+            (out "NOTICE ~a :\u0001SOURCE ~a\0001~%"
+                 (PRIVMSG-speaker message)
+                 source-string)
           (reply source-string))))
-
-     ((and ch-for-us?
-           (string-ci=? "quote" (second (PRIVMSG-text-words message))))
-      (cond
-       ((hash-table-get
-         *controls-by-channel-and-task*
-         (cons (PRIVMSG-destination message) 'quote-spewer)
-         #f)
-        => (lambda (c)
-             (semaphore-post (control-now c))))))
 
      ((and ch-for-us?
            (string-ci=? "news" (second (PRIVMSG-text-words message))))
@@ -232,20 +230,34 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ((001)
          (for-each (lambda (cn)
                      (vtprintf "Joining ~a~%" cn)
-                     (fprintf op "JOIN ~a~%" cn))
+                     (out "JOIN ~a~%" cn))
                    (*initial-channel-names*)))
 
         ((366)
          (let ((this-channel (second (message-params message))))
-
+           (vtprintf "Got the 366.~%")
            (when (member this-channel '("#emacs" "#bots" ))
-             (start-task!
-              (cons this-channel 'quote-spewer)
-              (*quote-and-headline-interval*)
+             (vtprintf "It's #emacs or #bots.~%")
+             (thread
               (lambda ()
-                (pm this-channel (one-quote)))))
+                (vtprintf "I am the quote-spewing thread.~%")
+                (let ((its-quiet-yeah-too-quiet
+                       (make-channel-idle-event
+                        this-channel
+                        5)))
+                  (subscribe-proc-to-server-messages!
+                   (channel-idle-event-input-examiner its-quiet-yeah-too-quiet))
+                  (let loop ()
+                    (let ((q (one-quote)))
+                      (vtprintf "quote-spewing thread at top of loop; waiting for chance to say ~s~%"
+                                q)
+                      (sync its-quiet-yeah-too-quiet)
+                      (vtprintf "quote-spewing thread: there, I said it.~%")
+                      (pm this-channel q)
+                      (loop)))))))
 
-           (when (member this-channel '("#emacs" "#scheme-bots"))
+           (when (and #f
+                 (member this-channel '("#emacs" "#scheme-bots")))
              (let ((planet-thing (make-pe-consumer-proc)))
                (start-task!
                 (cons this-channel 'news-spewer)
@@ -289,9 +301,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
-        (fprintf (*log-output-port*) "~a <= ~s~%"
-                 (zdate (current-date))
-                 line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
             (vtprintf "eof on server~%")
