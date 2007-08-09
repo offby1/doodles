@@ -35,7 +35,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                   (equal? (PRIVMSG-destination irc-message)
                           channel-name))
          ((alarm-with-snooze-snooze-button alarm)))))))
-;(trace public-make-channel-idle-event)
+
+
+
 (define channel-idle-event-tests
 
   (test-suite

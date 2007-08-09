@@ -22,7 +22,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "planet-emacs-task.ss"
          "quotes.ss"
          "alarm-with-snooze.ss"
-         "tinyurl.ss")
+         "tinyurl.ss"
+         "vprintf.ss")
 
 ;; two thunks.  Call "now", and the associated task will run once now.
 ;; Call "later", and the associated task _won't_ run for a while.  Do
@@ -235,7 +236,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (case (message-command message)
         ((001)
          (for-each (lambda (cn)
-                     (printf "Joining ~a~%" cn)
+                     (vtprintf "Joining ~a~%" cn)
                      (fprintf op "JOIN ~a~%" cn))
                    (*initial-channel-names*)))
 
@@ -289,7 +290,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (*irc-server-name*)
              *client-name*
              (*client-version*))
-    (printf "Sent NICK and USER~%")
+    (vtprintf "Sent NICK and USER~%")
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
@@ -298,7 +299,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                  line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
-            (printf "eof on server~%")
+            (vtprintf "eof on server~%")
           (begin
             (respond line op)
             (loop)))))))

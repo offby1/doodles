@@ -2,6 +2,9 @@
 
 -- High priority
 
+* send HTTP headers to tinyurl, for politeness
+* unify atom getting (planet emacs) with getting moviestowatchfor
+
 * Review the code!
   That's right.  I've stumbled into enough of these "cannot take car
   of '()" bugs that I bet there are a few more still lurking.

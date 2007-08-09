@@ -8,6 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "text-ui.ss"    ("schematics" "schemeunit.plt" 2))
          "alarm-with-snooze.ss"
          "bot-tests.ss"
+         "channel-idle-event.ss"
          "parse.ss"
          "tinyurl-task.ss"
          "tinyurl.ss"
@@ -16,8 +17,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (test-suite
                        "eva thang"
                        alarm-with-snooze-tests
-                       parse-tests
                        bot-tests
+                       channel-idle-event-tests
+                       parse-tests
                        tinyurl-tests
                        tinyurl-task-tests)))
           1 0))
