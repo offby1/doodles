@@ -24,26 +24,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "resettable-alarm.ss"
          "tinyurl.ss")
 
-;; A periodical is a thread that spews into a specific channel, both
-;; periodically (hence the name), and optionally in response to having
-;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
-;; clock.  (do-it-now! and back-to-sleep are semaphores.)
-(define-struct periodical (channel-of-interest thread do-it-now! back-to-sleep id) (make-inspector))
-
-;; if we ever connect to two servers at once, we'd want one instance
-;; of this variable local to each server, instead of just one global
-;; as it is now.
-(define *periodicals-by-id* (make-hash-table 'equal))
-
 ;; two thunks.  Call "now", and the associated task will run once now.
 ;; Call "later", and the associated task _won't_ run for a while.  Do
 ;; neither, and eventually the task will run.
 (define-struct control (now later) (make-inspector))
 
 (define *controls-by-channel-and-task*  (make-hash-table 'equal))
-
-(define (for-each-periodical proc)
-  (hash-table-for-each *periodicals-by-id* proc))
 
 (define *task-custodian* (make-custodian))
 
@@ -71,13 +57,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define/kw (respond line op #:key [preparsed-message #f])
 
-  ;; cull the dead periodicals.
-  (hash-table-for-each
-   *periodicals-by-id*
-   (lambda (k v)
-     (when (thread-dead? (periodical-thread v))
-       (hash-table-remove! *periodicals-by-id* k))))
-
   (let ((message (or preparsed-message
                      (parse-irc-message line))))
 
@@ -104,40 +83,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (PRIVMSG-is-for-channel? message)
            (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
 
-    (define/kw (add-periodical! what-to-do
-                                interval
-                                where-to-do-it
-                                #:key
-                                [id (hash-table-count *periodicals-by-id*)])
-
-      (parameterize ((current-custodian *task-custodian*))
-
-        (let* ((do-it-now!    (make-semaphore 1))
-               (back-to-sleep (make-semaphore 0))
-               (task (thread (lambda ()
-                               (let loop ()
-                                 (let ((datum (sync/timeout
-                                               interval
-                                               do-it-now!
-                                               back-to-sleep)))
-                                   (when (or (not datum)
-                                             (equal? datum do-it-now!))
-                                     (what-to-do where-to-do-it))
-
-                                   (loop)
-                                   )
-                                 (loop))))))
-
-          (hash-table-put!
-           *periodicals-by-id*
-           (cons id where-to-do-it)
-           (make-periodical
-            where-to-do-it
-            task
-            do-it-now!
-            back-to-sleep
-            id)))))
-
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
       (let ((who         (PRIVMSG-speaker     message))
@@ -151,12 +96,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lambda (id control)
            (when (equal? (car id) where)
              ((control-later control)))))
-
-        (for-each-periodical
-         (lambda (id p)
-           (when (equal? (periodical-channel-of-interest p)
-                         where)
-             (semaphore-post (periodical-back-to-sleep p)))))
 
         ;; note who did what, when, where, how, and wearing what kind
         ;; of skirt; so that later we can respond to "seen Ted?"
@@ -210,13 +149,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (command (string-join parsed-command))
              (params  (list (PRIVMSG-destination message)
                             command)))
-        (add-periodical!
-         (lambda (my-channel)
+        (thread
+         (lambda ()
            (sleep 10)
            (respond
-            ""                          ;ignored
+            ""                          ;ignored because we're passing
+                                        ;in a preparsed message
             op
             #:preparsed-message
+
             ;; *groan* how un-Lispy that I have to spell out all
             ;; these identifiers!
             ;; http://www.paulgraham.com/popular.html
@@ -228,31 +169,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (PRIVMSG-destination message)
              (PRIVMSG-approximate-recipient message)
              command
-             parsed-command))
-           (kill-thread (current-thread)))
-         1                              ;irrelevant
-         (PRIVMSG-destination message)
-         #:id (format "delayed command ~s" command)
-         )))
+             parsed-command))))))
 
      ((and ch-for-us?
            (= 1 (length (PRIVMSG-text-words message))))
       (reply "Eh?  Speak up.")
       )
-
-     ((and ch-for-us?
-           (string-ci=? "die!" (second (PRIVMSG-text-words message))))
-      (let ((times-to-run 10))
-        (add-periodical!
-         (lambda (my-channel)
-           (when (zero? times-to-run)
-             (pm my-channel "Goodbye, cruel world")
-             (kill-thread (current-thread)))
-           (pm my-channel (format "~a" times-to-run))
-           (set! times-to-run (sub1 times-to-run)))
-         3/2
-         (first (message-params message))
-         #:id "auto self-destruct sequence")))
 
      ((and ch-for-us?
            (string-ci=? "seen" (second (PRIVMSG-text-words message))))
