@@ -111,6 +111,10 @@
   "I" am -- sometimes my nick changes.  It would probably be best to
   find me by host name, not nick.
 
+** brx suggests a "stalk" function
+   which takes the name of a victim.  Like the above but oh so
+   sinister.
+
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
 
