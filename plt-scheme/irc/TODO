@@ -6,6 +6,16 @@
   That's right.  I've stumbled into enough of these "cannot take car
   of '()" bugs that I bet there are a few more still lurking.
 
+* Events
+  finish up "channel-idle-event" and then make a new
+  "someone-said-foo-in-channel-bar" event that is true only when
+  ... you get the picture.  Perhaps I should do some meta programming
+  and write a general-purpose "make-interesting-event" procedure,
+  which creates events that trigger on interesting criteria of a
+  message from the IRC server; that way it could easily create
+  "someone-said-foo-in-channel-bar"; "someone-joined-channel-foo";
+  "brx-is-moaning-about-his-girlfriend-again", etc.
+
 * version registry
 
   Each module exports a value that contains its Subversion $Id$ info.
