@@ -20,13 +20,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (alarm-with-snooze-id r)
   (alarm-with-snooze-ref r 2))
 
-(define/kw (public-make-alarm-with-snooze interval #:key [id 'unknown])
+(define/kw (public-make-alarm-with-snooze
+            interval
+            #:key
+            [id 'unknown]
+            [periodic? #f])
   (let* ((s (make-semaphore))
          (sleeper (lambda ()
-                    (sleep interval)
-                    (printf "~a says RINNGGGGGG!!! Time to wake up!!~%"
-                            id)
-                    (semaphore-post s))))
+                    (let loop ()
+                      (sleep interval)
+                      (printf "~a says RINNGGGGGG!!! Time to wake up!!~%"
+                              id)
+                      (semaphore-post s)
+                      (when periodic? (loop))))))
     (let ((t (thread sleeper)))
       (make-alarm-with-snooze
        s
@@ -45,12 +51,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "triggers like any alarm"
     (check-not-false
-     (let ((ra (public-make-alarm-with-snooze 1/10)))
+     (let ((ra (public-make-alarm-with-snooze 1/10 #:id 'triggers-like-any)))
        (sync/timeout 2/10 ra))
      "damn, it didn't get triggered."))
+
+   (test-case
+    "triggers repeatedly when asked"
+    (let ((ra (public-make-alarm-with-snooze
+               1/10
+               #:periodic? #t
+               #:id 'triggers-repeatedly)))
+      (check-not-false (sync/timeout 2/10 ra))
+      (check-not-false (sync/timeout 2/10 ra))
+      (check-not-false (sync/timeout 2/10 ra))
+      (check-not-false (sync/timeout 2/10 ra))
+      ))
+
    (test-case
     "doesn't trigger if we tickle it"
-    (let ((ra (public-make-alarm-with-snooze 1/10)))
+    (let ((ra (public-make-alarm-with-snooze
+               1/10
+               #:id 'tickle-me-Elmo)))
       (check-false (sync/timeout 9/100 ra))
       ((alarm-with-snooze-snooze-button ra))
       (check-false (sync/timeout 9/100 ra))
