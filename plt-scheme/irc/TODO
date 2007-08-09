@@ -2,7 +2,6 @@
 
 -- High priority
 
-* send HTTP headers to tinyurl, for politeness
 * unify atom getting (planet emacs) with getting moviestowatchfor
 
 * Review the code!

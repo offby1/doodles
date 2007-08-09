@@ -5,7 +5,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
 |#
 
 (module tinyurl mzscheme
-(require (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+(require (lib "kw.ss")
+         (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          (lib "uri-codec.ss" "net")
          (only (lib "url.ss" "net")
                post-pure-port
@@ -35,7 +36,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
             (reverse result)))))))
 
 ;; string? -> string?
-(define (make-tiny-url url)
+(define/kw (make-tiny-url url #:key [user-agent #f])
   (car
    ((sxpath '(html body (table 2) tr (td 2) p blockquote small a @ href *text*))
     (html->shtml
@@ -58,7 +59,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
        ;; ("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
        ;; ("Referer", "http://tinyurl.com/");
 
-       (list "Content-Type: application/x-www-form-urlencoded")
+       (cons "Content-Type: application/x-www-form-urlencoded"
+             (if user-agent
+                 (list (format "User-Agent: ~a" user-agent ))
+               '()))
        ))))))
 
 (define tinyurl-tests
@@ -68,18 +72,23 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
    (test-case
     "photo.net"
     (check-regexp-match
-    #rx"^http://tinyurl.com/.....$"
-    (make-tiny-url "http://photo.net")))
+     #rx"^http://tinyurl.com/.....$"
+     (make-tiny-url "http://photo.net")))
+   (test-case
+    "including a user agent"
+    (check-regexp-match
+     #rx"^http://tinyurl.com/.....$"
+     (make-tiny-url "http://photo.net" #:user-agent "test code for Eric's bot")))
    (test-equal?
     "empty snagging"
-     (snag-urls-from-bytes
-      #"I'm telling ya, photo.net is rilly cool")
-     (list))
+    (snag-urls-from-bytes
+     #"I'm telling ya, photo.net is rilly cool")
+    (list))
    (test-equal?
     "snagging"
-     (snag-urls-from-bytes
-      #"I'm telling ya, http://photo.net/foo?bar=baz, is, like rilly cool; http://microsoft.com is not")
-     (list #"http://photo.net/foo?bar=baz" #"http://microsoft.com"))))
+    (snag-urls-from-bytes
+     #"I'm telling ya, http://photo.net/foo?bar=baz, is, like rilly cool; http://microsoft.com is not")
+    (list #"http://photo.net/foo?bar=baz" #"http://microsoft.com"))))
 
 (provide (all-defined))
 )

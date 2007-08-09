@@ -126,7 +126,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ;; tiny URLs are about 25 characters, so it seems reasonable
           ;; to ignore URLs that are shorter than twice that.
           (when (< 50 (string-length url))
-            (reply (make-tiny-url url)
+            (reply (make-tiny-url url #:user-agent (long-version-string))
                    #:proc notice))))))
 
     (cond
@@ -186,16 +186,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ((or (VERSION? message)
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
-      (let ((version-string (format
-                             "~a (offby1@blarg.net):~a:~a"
-                             *client-name*
-                             *client-version-number*
-                             *client-environment*)))
-        (if (VERSION? message)
-            (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
-                     (PRIVMSG-speaker message)
-                     version-string)
-          (reply version-string))))
+      (if (VERSION? message)
+          (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
+                   (PRIVMSG-speaker message)
+                   (long-version-string))
+        (reply (long-version-string))))
      ((or (SOURCE? message)
           (and ch-for-us?
                (string-ci=? "source" (second (PRIVMSG-text-words message)))))
