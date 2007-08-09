@@ -16,6 +16,10 @@
   "someone-said-foo-in-channel-bar"; "someone-joined-channel-foo";
   "brx-is-moaning-about-his-girlfriend-again", etc.
 
+  Make sure they compose, too, so that one event can be implemented as
+  a slight modificiation of another (i.e., the new one is only ready
+  when the old one is, and maybe not even then)
+
 * version registry
 
   Each module exports a value that contains its Subversion $Id$ info.
