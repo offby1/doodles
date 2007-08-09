@@ -26,7 +26,10 @@ $(tarball):
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
+check:
+	./run-all-tests.ss
+
 clean:
 	rm -rf $(plt-file) $(tarball)
 
-.PHONY: clean all plt tar
+.PHONY: clean all plt tar check
