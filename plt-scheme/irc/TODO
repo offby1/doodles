@@ -22,6 +22,15 @@
   a slight modificiation of another (i.e., the new one is only ready
   when the old one is, and maybe not even then)
 
+  The ultimate goal is to be able to write the periodic events very
+  simply, like this:
+
+  (let loop ()
+    (let ((tidbit (sync something-to-say-evt)))
+      (sync opportunity-to-say-it-evt)
+      (say tidbit)
+      (loop)))
+
 * version registry
 
   Each module exports a value that contains its Subversion $Id$ info.
