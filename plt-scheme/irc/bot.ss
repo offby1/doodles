@@ -49,6 +49,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *appearances-by-nick* (make-hash-table 'equal))
 
+(define (start-task! id interval action-thunk task-registry)
+  (let ((trigger (make-semaphore)))
+
+    ;; it seems odd not to put the thread object in any
+    ;; variable, but I can't think of any reason to do so.
+
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((alarm (make-resettable-alarm interval #:id id)))
+
+           (hash-table-put!
+            task-registry
+            id
+            (make-control trigger (resettable-alarm-snooze-button alarm)))
+
+           (sync alarm trigger)
+           (action-thunk))
+         (loop))))))
+
 (define/kw (respond line op #:key [preparsed-message #f])
 
   ;; cull the dead periodicals.
@@ -301,28 +321,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (let ((this-channel (second (message-params message))))
 
            (when (member this-channel '("#emacs" "#bots" ))
-             (let ((task 'quote-spewer)
-                   (trigger (make-semaphore)))
-
-               ;; it seems odd not to put the thread object in any
-               ;; variable, but I can't think of any reason to do so.
-
-               (thread
-                (lambda ()
-                  (let loop ()
-                    (let ((alarm
-                           (make-resettable-alarm
-                            (*quote-and-headline-interval*)
-                            #:id task)))
-
-                      (hash-table-put!
-                       *controls-by-channel-and-task*
-                       (cons this-channel task)
-                       (make-control trigger (resettable-alarm-snooze-button alarm)))
-
-                      (sync alarm trigger)
-                      (pm this-channel (one-quote)))
-                    (loop))))))
+             (start-task!
+              (cons this-channel 'quote-spewer)
+              (*quote-and-headline-interval*)
+              (lambda ()
+                (pm this-channel (one-quote)))
+               *controls-by-channel-and-task*))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
              (let ((planet-thing (make-pe-consumer-proc)))
