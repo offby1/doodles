@@ -42,12 +42,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "channel-idle-event"
    (test-case
     "channel goes idle when we're not yammering at it"
-    (let* ((channel-idle-event (public-make-channel-idle-event "#snooze" 1)))
-      (check-not-false (sync/timeout 2 channel-idle-event))))
+    (let* ((channel-idle-event (public-make-channel-idle-event "#snooze" 1/10)))
+      (check-not-false (sync/timeout 2/10 channel-idle-event))))
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
-    (let* ((cie (public-make-channel-idle-event "#snooze" 1))
+    (let* ((cie (public-make-channel-idle-event "#snooze" 1/10))
            (make-yammerer
             (lambda (string)
               (thread (lambda ()
@@ -55,14 +55,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                           (when (positive? x)
                             ((channel-idle-event-input-examiner cie)
                              (parse-irc-message string))
-                            (sleep 1/2)
+                            (sleep 1/20)
                             (loop (sub1 x))))
                         )))))
       (let ((relevant (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")))
-        (check-false (sync/timeout 2 cie))
+        (check-false (sync/timeout 2/10 cie))
         (kill-thread relevant)
         (let ((irrelevant (make-yammerer ":x!x@z PRIVMSG #other-channel :wakey wakey")))
-          (check-not-false (sync/timeout 2 cie))
+          (check-not-false (sync/timeout 2/10 cie))
           (kill-thread irrelevant))))
     )
    ))
