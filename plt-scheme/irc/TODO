@@ -2,8 +2,6 @@
 
 -- High priority
 
-* unify atom getting (planet emacs) with getting moviestowatchfor
-
 * Review the code!
   That's right.  I've stumbled into enough of these "cannot take car
   of '()" bugs that I bet there are a few more still lurking.
@@ -31,13 +29,6 @@
       (say tidbit)
       (loop)))
 
-* version registry
-
-  Each module exports a value that contains its Subversion $Id$ info.
-  At load time, it pushes that value into some global list.  That way
-  the "version" command can get very complete (albeit voluminous)
-  info, which is nicer than the output of "svnversion"
-
 * NOTICE instead of PRIVMSG
   VERSION and SOURCE comands, perhaps
 
@@ -49,6 +40,15 @@
 
 
 -- Low priority
+
+* version registry
+
+  Each module exports a value that contains its Subversion $Id$ info.
+  At load time, it pushes that value into some global list.  That way
+  the "version" command can get very complete (albeit voluminous)
+  info, which is nicer than the output of "svnversion"
+
+* unify atom getting (planet emacs) with getting moviestowatchfor
 
 * low-priority bugs
 
@@ -151,7 +151,8 @@
   lame as its content is excellent)
 
 ** my del.icio.us "moviestowatchfor" ...
-  maybe, somehow, spam ##cinema with one of those.
+  maybe, somehow, spam ##cinema with one of those.  This would
+  effecticely be another news feed, just like planet.emacsen.org.
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
@@ -164,14 +165,12 @@
 
 ** "eval"
    sandbox.ss is a safe way of doing "eval" -- i.e., they can't call
-   "exit", can't mess with the filesystem, etc.  (Such a thing might
-   be useful for the PLT web server, e.g.)  Find it and use it.
+   "exit", can't mess with the filesystem, etc.
 
 ** "you suck"
    to emit some TODO list entries, or just a URL to the TODO file
 
-** Respond to "help"
-   since people seem to expect those
+** "help"
 
 ** "uptime"
    since I'm occasionally curious
