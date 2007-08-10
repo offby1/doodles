@@ -21,7 +21,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "direct-bot-command-evt.ss"
          "globals.ss"
          "parse.ss"
-         "planet-emacs-task.ss"
          "quotes.ss"
          "alarm-with-snooze.ss"
          "tinyurl.ss"

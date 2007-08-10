@@ -11,7 +11,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "bot.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
-          "planet-emacs-task.ss"
           "quotes.ss"
           "system.ss"
           "vprintf.ss"
