@@ -267,15 +267,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
                (thread
                 (lambda ()
-                  (let loop ()
-                    (let ((headline (sync q)))
-                      (sync idle-evt news-trigger-evt)
-                      (pm this-channel
-                          (format
-                           "~a ~a"
-                           (zdate)
-                           (entry->string headline)))
-                      (loop)))))))))
+                  (let loop ((last-headline #f))
+                    (let ((headline (or (sync/timeout 3600 q)
+                                        last-headline)))
+                      (when headline
+                        (sync idle-evt news-trigger-evt)
+                        (pm this-channel
+                            (format "~a" (entry->string headline))))
+                      (loop headline)))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
