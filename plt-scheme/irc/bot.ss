@@ -203,7 +203,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (let loop ()
                     (let ((q (one-quote)))
                       (sync idle-evt quote-trigger-evt)
-                      (pm this-channel (format "~a ~a" (zdate) q))
+                      (pm this-channel q)
                       (loop)))))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
