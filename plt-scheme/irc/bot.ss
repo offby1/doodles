@@ -21,6 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "direct-bot-command-evt.ss"
          "globals.ss"
          "parse.ss"
+         "planet-emacsen.ss"
          "quotes.ss"
          "alarm-with-snooze.ss"
          "tinyurl.ss"
@@ -264,19 +265,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                       (pm this-channel q)
                       (loop)))))))
 
-;;            (when (member this-channel '("#emacs" "#scheme-bots"))
-;;              (let ((planet-thing (make-pe-consumer-proc)))
-;;                (thread
-;;                 (lambda ()
-;;                   (let loop ()
-;;                     (let ((headline ))
-;;                       (sync its-quiet-yeah-too-quiet someone-asked-for-news)
-;;                       (pm this-channel headline)
-;;                       (loop))))
-;;                 ))
-
-;;              )
-           ))
+           (when (member this-channel '("#emacs" "#scheme-bots"))
+             ;; might consider allowing a timeout here, and re-spewing
+             ;; the most recent headline if we do time out.
+             (let ((q (queue-of-entries))
+                   (quiet-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
+                   (news-trigger-evt (make-direct-bot-command-evt this-channel "news!")))
+               (thread
+                (lambda ()
+                  (let loop ()
+                    (let ((headline (sync q)))
+                      (sync quiet-evt news-trigger-evt)
+                      (pm this-channel headline)
+                      (loop)))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
