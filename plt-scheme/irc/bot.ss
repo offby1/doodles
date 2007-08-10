@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id: bot.ss 4527 2007-08-07 15:03:50Z erich $
+#$Id$
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
 |#
 (module bot mzscheme
