@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 (module bot mzscheme
 (require (lib "kw.ss")
@@ -27,40 +27,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "tinyurl.ss"
          "vprintf.ss")
 
-;; two thunks.  Call "now", and the associated task will run once now.
-;; Call "later", and the associated task _won't_ run for a while.  Do
-;; neither, and eventually the task will run.
-(define-struct control (now later) (make-inspector))
-
-(define *controls-by-channel-and-task*  (make-hash-table 'equal))
-
-(define *task-custodian* (make-custodian))
-
 (define *appearances-by-nick* (make-hash-table 'equal))
 
 (define *message-subscriptions* '())
 (define (subscribe-proc-to-server-messages! proc)
   (set! *message-subscriptions* (cons proc *message-subscriptions*)))
-
-(define (start-task! id interval action-thunk)
-  (let ((trigger (make-semaphore)))
-
-    ;; it seems odd not to put the thread object in any
-    ;; variable, but I can't think of any reason to do so.
-
-    (thread
-     (lambda ()
-       (let loop ()
-         (let ((alarm (make-alarm-with-snooze interval #:id id)))
-
-           (hash-table-put!
-            *controls-by-channel-and-task*
-            id
-            (make-control trigger (alarm-with-snooze-snooze-button alarm)))
-
-           (sync alarm trigger)
-           (action-thunk))
-         (loop))))))
 
 (define/kw (respond line op #:key [preparsed-message #f])
 
@@ -100,12 +71,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (what        (PRIVMSG-text        message))
             (time        (current-seconds))
             (was-action? (ACTION?             message)))
-
-        (hash-table-for-each
-         *controls-by-channel-and-task*
-         (lambda (id control)
-           (when (equal? (car id) where)
-             ((control-later control)))))
 
         ;; note who did what, when, where, how, and wearing what kind
         ;; of skirt; so that later we can respond to "seen Ted?"
@@ -211,18 +176,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                  (PRIVMSG-speaker message)
                  source-string)
           (reply source-string))))
-
-     ((and ch-for-us?
-           (string-ci=? "news" (second (PRIVMSG-text-words message))))
-      (cond
-       ((hash-table-get
-         *controls-by-channel-and-task*
-         (cons (PRIVMSG-destination message) 'news-spewer)
-         #f)
-        =>
-        (lambda (c)
-          (semaphore-post (control-now c))))
-       ))
 
      (ch-for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
