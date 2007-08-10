@@ -44,6 +44,11 @@
   _doesn't_ come and we're wondering why we can't sent private
   messages.
 
+** don't log in everywhere?
+   I imagine that other IRC networks, besides freenode, either don't
+   require logging in, or have a different way of doing it.  We should
+   really log in only if we clearly need it
+
 * version registry
 
   Each module exports a value that contains its Subversion $Id$ info.
