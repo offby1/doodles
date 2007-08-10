@@ -174,6 +174,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     the-channel)  )
 ;;(trace queue-of-entries)
 
+
+
 (define planet-tests
 
   (test-suite
@@ -188,7 +190,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     "delivers an entry raht quick-like"
     (verbose!)
     (let ((q (queue-of-entries #:whence #f)))
-      (let ((first-entry  (sync q))
+      (let ((first-entry (sync q))
             (leftover-headline-stamp (get-preference (*atom-timestamp-preference-name*))))
 
         (check-pred entry? first-entry "It's not an entry!!")
