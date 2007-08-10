@@ -1,0 +1,90 @@
+   in 4629: Nobody asked him for news, and the channel hadn't been
+   quiet for 20 minutes, and yet:
+
+<offby1> vm looks like abandonware                                                         [08:34]
+<squido> What about mews?
+<fledermaus> there are also mew and wanderlust (wl)                                        [08:35]
+<fledermaus> offby1: yes, SA went crazy and dumped 4GiB of logs into the fs.
+<Sketch> i was just looking at vm, someone else took over vm recently
+<fledermaus> it got caught and cleaned up.
+<Sketch> http://www.nongnu.org/viewmail/                                                   [08:36]
+<rudybot> (Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant:
+          http://www.ee.ryerson.ca/~elf/powerbook/#onoes                                   [08:39]
+<offby1> oh dear.  The bot spewed news when the channel hadn't been quiet for 20 minutes   [08:40]
+
+I just noticed that, at 7:49, I'd said "rudybot: news", and he'd
+responded with no news.  I wonder if by saying that I'd signaled the
+direct-bot-command-evt, which then stayed signaled until the next
+headline came in.  If that's the case, then I need to somehow "expire"
+that event if it doesn't get used quickly :-|
+
+2007-08-10T08:39:16-0700: queue-of-entries top of a loop
+2007-08-10T08:39:17-0700:  => "PRIVMSG #bots :Let's be xenophobes.\n"
+2007-08-10T08:39:17-0700: seen it ("sachachua: Links for 2007-08-03 [del.icio.us]")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Apple's Product Cycle")
+2007-08-10T08:39:17-0700: seen it ("Yoni Rabkin Katzenell: Tonight on the late show: YRKLisp")
+2007-08-10T08:39:17-0700: seen it ("sachachua: No plans yet")
+2007-08-10T08:39:17-0700: seen it ("John Sullivan: History of modern art in 7 minutes")
+2007-08-10T08:39:17-0700: seen it ("Bryan Murdock: Too Many Gadgets")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Moving back to PCFinancial")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Weekly review")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Quake Zero")
+2007-08-10T08:39:17-0700: seen it ("Michael Olson: [tech] New XFCE theme: Saner-dawn")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Preparing for defense")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Hugo Nominees")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Links for 2007-08-06 [del.icio.us]")
+2007-08-10T08:39:17-0700: seen it ("M-x all-things-emacs: Quick Tip: show-paren-mode")
+2007-08-10T08:39:17-0700: seen it ("emacspeak: The Web The Way You Want")
+2007-08-10T08:39:17-0700: seen it ("Joseph Miklojcik: We Have Always Been At War With Top Posting")
+2007-08-10T08:39:17-0700: seen it ("Yoni Rabkin Katzenell: Echos of Lemonodor")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Mac Buyer's Guide")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Thesis defense is tomorrow")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Ultrathin Is In")
+2007-08-10T08:39:17-0700: seen it ("sachachua: Links for 2007-08-07 [del.icio.us]")
+2007-08-10T08:39:17-0700: seen it ("Emacs Life: lisp inside")
+2007-08-10T08:39:17-0700: seen it ("Yoni Rabkin Katzenell: T minus 3 hours to STS-118 liftoff")
+2007-08-10T08:39:17-0700: seen it ("Flickr tag 'emacs': the time i tried to learn emacs &amp; lisp")
+2007-08-10T08:39:17-0700: seen it ("Flickr tag 'emacs': to give you an idea of how things went")
+2007-08-10T08:39:17-0700: seen it ("sachachua: I survived my defense!")
+2007-08-10T08:39:17-0700: seen it ("Flickr tag 'emacs': icicle-menu")
+2007-08-10T08:39:17-0700: seen it ("Flickr tag 'emacs': icicle-read-color")
+2007-08-10T08:39:17-0700: seen it ("Luis Fernandes: Zero Downtime")
+2007-08-10T08:39:17-0700: Planet producer thread about to put "(Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant: http://www.ee.ryerson.ca/~elf/powerbook/#onoes" onto the async ... 
+2007-08-10T08:39:17-0700: ppt: done
+2007-08-10T08:39:17-0700: Planet producer thread sleeping 3600 seconds before snarfing again
+2007-08-10T08:39:17-0700:  => "PRIVMSG #emacs :(Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant: http://www.ee.ryerson.ca/~elf/powerbook/#onoes\n"
+2007-08-10T08:39:18-0700: seen it ("sachachua: Links for 2007-08-03 [del.icio.us]")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Apple's Product Cycle")
+2007-08-10T08:39:18-0700: seen it ("Yoni Rabkin Katzenell: Tonight on the late show: YRKLisp")
+2007-08-10T08:39:18-0700: seen it ("sachachua: No plans yet")
+2007-08-10T08:39:18-0700: seen it ("John Sullivan: History of modern art in 7 minutes")
+2007-08-10T08:39:18-0700: seen it ("Bryan Murdock: Too Many Gadgets")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Moving back to PCFinancial")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Weekly review")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Quake Zero")
+2007-08-10T08:39:18-0700: seen it ("Michael Olson: [tech] New XFCE theme: Saner-dawn")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Preparing for defense")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Hugo Nominees")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Links for 2007-08-06 [del.icio.us]")
+2007-08-10T08:39:18-0700: seen it ("M-x all-things-emacs: Quick Tip: show-paren-mode")
+2007-08-10T08:39:18-0700: seen it ("emacspeak: The Web The Way You Want")
+2007-08-10T08:39:18-0700: seen it ("Joseph Miklojcik: We Have Always Been At War With Top Posting")
+2007-08-10T08:39:18-0700: seen it ("Yoni Rabkin Katzenell: Echos of Lemonodor")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Mac Buyer's Guide")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Thesis defense is tomorrow")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Ultrathin Is In")
+2007-08-10T08:39:18-0700: seen it ("sachachua: Links for 2007-08-07 [del.icio.us]")
+2007-08-10T08:39:18-0700: seen it ("Emacs Life: lisp inside")
+2007-08-10T08:39:18-0700: seen it ("Yoni Rabkin Katzenell: T minus 3 hours to STS-118 liftoff")
+2007-08-10T08:39:18-0700: seen it ("Flickr tag 'emacs': the time i tried to learn emacs &amp; lisp")
+2007-08-10T08:39:18-0700: seen it ("Flickr tag 'emacs': to give you an idea of how things went")
+2007-08-10T08:39:18-0700: seen it ("sachachua: I survived my defense!")
+2007-08-10T08:39:18-0700: seen it ("Flickr tag 'emacs': icicle-menu")
+2007-08-10T08:39:18-0700: seen it ("Flickr tag 'emacs': icicle-read-color")
+2007-08-10T08:39:18-0700: seen it ("Luis Fernandes: Zero Downtime")
+2007-08-10T08:39:18-0700: Planet producer thread about to put "(Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant: http://www.ee.ryerson.ca/~elf/powerbook/#onoes" onto the async ... 
+2007-08-10T08:39:18-0700: ppt: done
+2007-08-10T08:39:18-0700: Planet producer thread sleeping 3600 seconds before snarfing again
+2007-08-10T08:39:18-0700:  => "PRIVMSG #scheme-bots :(Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant: http://www.ee.ryerson.ca/~elf/powerbook/#onoes\n"
+2007-08-10T08:40:48-0700:  <= #9(struct:PRIVMSG "offby1!n=user@q-static-138-125.avvanta.com" "PRIVMSG" ("#emacs" "oh dear.  The bot spewed news when the channel hadn't been quiet for 20 minutes") "offby1" "#emacs" #f "oh dear.  The bot spewed news when the channel hadn't been quiet for 20 minutes" ("oh" "dear." "The" "bot" "spewed" "news" "when" "the" "channel" "hadn't" "been" "quiet" "for" "20" "minutes"))
+

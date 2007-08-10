@@ -210,8 +210,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (loop)))))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
-             ;; might consider allowing a timeout here, and re-spewing
-             ;; the most recent headline if we do time out.
              (let ((q (queue-of-entries
                        #:whence
                        (and (*use-real-atom-feed?*)
@@ -229,6 +227,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
                (thread
                 (lambda ()
+                  ;; re-spew the most recent headline if there's no
+                  ;; new news.
                   (let loop ((last-headline #f))
                     (let ((headline (or (sync/timeout 3600 q)
                                         last-headline)))

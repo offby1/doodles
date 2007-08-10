@@ -35,19 +35,7 @@
 * bugs
 
 ** unprompted news
-   in 4629: Nobody asked him for news, and the channel hadn't been
-   quiet for 20 minutes, and yet:
-
-<offby1> vm looks like abandonware                                                         [08:34]
-<squido> What about mews?
-<fledermaus> there are also mew and wanderlust (wl)                                        [08:35]
-<fledermaus> offby1: yes, SA went crazy and dumped 4GiB of logs into the fs.
-<Sketch> i was just looking at vm, someone else took over vm recently
-<fledermaus> it got caught and cleaned up.
-<Sketch> http://www.nongnu.org/viewmail/                                                   [08:36]
-<rudybot> (Thursday, August 09 2007 17:00 Z) Luis Fernandes: Monthly Google Rant:
-          http://www.ee.ryerson.ca/~elf/powerbook/#onoes                                   [08:39]
-<offby1> oh dear.  The bot spewed news when the channel hadn't been quiet for 20 minutes   [08:40]
+   see bug/unprompted-news
 
 ** mangles "CTCP source"
 in 4625:4626M:
