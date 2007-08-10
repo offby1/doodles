@@ -6,6 +6,10 @@
   That's right.  I've stumbled into enough of these "cannot take car
   of '()" bugs that I bet there are a few more still lurking.
 
+  It might suffice to just wrap the whole parser in an exception
+  handler -- quietly log the malformed line, and the exception, and
+  return ... uh ... dunno what
+
 * NOTICE instead of PRIVMSG
   VERSION and SOURCE commands, perhaps
 
