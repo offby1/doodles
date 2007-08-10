@@ -9,6 +9,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
+         (only "globals.ss" *initial-channel-names*)
          "vprintf.ss")
 
 (require/expose
@@ -60,13 +61,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (before
      (custodian-shutdown-all *task-custodian*)
      (set! *task-custodian* (make-custodian))
-     (let-values (((ip op) (make-pipe)))
-       (respond
-        ":server 001 :welcome"
-        op)
-       (check-not-false
-        (expect/timeout ip #rx"JOIN #bots" 1)
-        "didn't join")))
+     (parameterize ((*initial-channel-names* (list "#bots")))
+       (let-values (((ip op) (make-pipe)))
+         (respond
+          ":server 001 :welcome"
+          op)
+         (check-not-false
+          (expect/timeout ip #rx"JOIN #bots" 1)
+          "didn't join"))))
     )
    (test-case
     "short semi-private message"

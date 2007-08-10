@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "alarm-with-snooze.ss"
          "bot-tests.ss"
          "channel-idle-event.ss"
+         "direct-bot-command-evt.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "tinyurl-task.ss"
@@ -20,9 +21,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        alarm-with-snooze-tests
                        bot-tests
                        channel-idle-event-tests
+                       direct-bot-command-evt-tests
                        parse-tests
                        planet-tests
-                       tinyurl-tests
-                       tinyurl-task-tests)))
+                       tinyurl-task-tests
+                       tinyurl-tests)))
           1 0))
 )
