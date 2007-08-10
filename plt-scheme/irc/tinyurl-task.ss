@@ -12,9 +12,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only "globals.ss"
                *log-output-port*
                verbose!)
+         "globals.ss"
          "tinyurl.ss")
 
-(define long-url "http://foo.bar/baz/i/hope/this/is/long/enough/its/really/quite/long")
+(define long-url
+  (let loop ((kinda-long "http://foo.bar/baz/i/hope/this/is/long/enough"))
+    (if (< (string-length kinda-long) (*tinyurl-url-length-threshold*))
+        (loop (string-append kinda-long (format "/geez-louise~a" (string-length kinda-long))))
+      kinda-long)))
 
 (define tinyurl-task-tests
 
@@ -43,6 +48,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (format ":botbot!botbot@z PRIVMSG #duh :~a" long-url)
       #rx"")
      ))))
-
 (provide (all-defined))
 )
