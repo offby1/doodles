@@ -18,7 +18,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only "globals.ss"
                *my-nick*
                verbose!)
-         "parse.ss")
+         "parse.ss"
+         "vprintf.ss")
 
 (define-values (struct:direct-bot-command-evt
                 make-direct-bot-command-evt
@@ -44,6 +45,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                   (< 1 (length (PRIVMSG-text-words irc-message)))
                   (equal? sought-tokens (cdr (PRIVMSG-text-words irc-message))))
 
+         (vtprintf "Doing something because someone said ~s in ~s~%"
+                   magic-phrase
+                   channel-name)
          (semaphore-post s))))))
 
 (define (direct-bot-command-evt-input-examiner e)
