@@ -12,6 +12,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string-join)
          (only (lib "19.ss" "srfi")
                current-date)
+         (only (lib "url.ss" "net")
+               get-pure-port
+               string->url)
          (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
@@ -209,7 +212,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (when (member this-channel '("#emacs" "#scheme-bots"))
              ;; might consider allowing a timeout here, and re-spewing
              ;; the most recent headline if we do time out.
-             (let ((q (queue-of-entries))
+             (let ((q (queue-of-entries
+                       #:whence
+                       (and (*use-real-atom-feed?*)
+                            (lambda ()
+                              (get-pure-port
+                               (string->url "http://planet.emacsen.org/atom.xml")
+                               (list))))))
                    (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
                    (news-trigger-evt (make-direct-bot-command-evt this-channel "news")))
 
