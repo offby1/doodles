@@ -17,7 +17,7 @@
   "brx-is-moaning-about-his-girlfriend-again", etc.
 
   Make sure they compose, too, so that one event can be implemented as
-  a slight modificiation of another (i.e., the new one is only ready
+  a slight modification of another (i.e., the new one is only ready
   when the old one is, and maybe not even then)
 
   The ultimate goal is to be able to write the periodic events very
@@ -29,13 +29,8 @@
       (say tidbit)
       (loop)))
 
-** planet
-   put the filtering of articles on the _producer_ side of the
-   async-channel, so that the consumer side can be nice and pristine
-   as above.
-
 * NOTICE instead of PRIVMSG
-  VERSION and SOURCE comands, perhaps
+  VERSION and SOURCE commands, perhaps
 
 * bugs
 
@@ -157,7 +152,7 @@
 
 ** my del.icio.us "moviestowatchfor" ...
   maybe, somehow, spam ##cinema with one of those.  This would
-  effecticely be another news feed, just like planet.emacsen.org.
+  effectively be another news feed, just like planet.emacsen.org.
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
