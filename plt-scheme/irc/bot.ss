@@ -102,7 +102,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (let ((url (car match-data)))
           ;; tiny URLs are about 25 characters, so it seems reasonable
           ;; to ignore URLs that are shorter than twice that.
-          (when (< 50 (string-length url))
+          (when (< (*tinyurl-url-length-threshold*) (string-length url))
             (reply (make-tiny-url url #:user-agent (long-version-string))
                    #:proc notice))))))
 

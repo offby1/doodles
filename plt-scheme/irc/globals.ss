@@ -55,6 +55,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       'rudybot-planet-emacs-last-headline
     'rudybot-test-planet-emacs-last-headline))
 
+;; the bot will "tiny-ify" URLs this long and longer.
+(define *tinyurl-url-length-threshold* (make-parameter 75))
+
 (define *log-output-port* (make-parameter (current-output-port)))
 (provide (all-defined))
 )
