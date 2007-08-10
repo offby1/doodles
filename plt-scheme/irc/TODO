@@ -6,29 +6,6 @@
   That's right.  I've stumbled into enough of these "cannot take car
   of '()" bugs that I bet there are a few more still lurking.
 
-* Events
-  finish up "channel-idle-event" and then make a new
-  "someone-said-foo-in-channel-bar" event that is true only when
-  ... you get the picture.  Perhaps I should do some meta programming
-  and write a general-purpose "make-interesting-event" procedure,
-  which creates events that trigger on interesting criteria of a
-  message from the IRC server; that way it could easily create
-  "someone-said-foo-in-channel-bar"; "someone-joined-channel-foo";
-  "brx-is-moaning-about-his-girlfriend-again", etc.
-
-  Make sure they compose, too, so that one event can be implemented as
-  a slight modification of another (i.e., the new one is only ready
-  when the old one is, and maybe not even then)
-
-  The ultimate goal is to be able to write the periodic events very
-  simply, like this:
-
-  (let loop ()
-    (let ((tidbit (sync something-to-say-evt)))
-      (sync opportunity-to-say-it-evt)
-      (say tidbit)
-      (loop)))
-
 * NOTICE instead of PRIVMSG
   VERSION and SOURCE commands, perhaps
 
@@ -51,6 +28,26 @@ ERC> /ctcp rudybot source
 
 
 -- Low priority
+
+* Events
+  It still bothers me that each task thread has to 'subscribe' to the
+  lines coming from the server ... which means that the main thread
+  has to go and poke each task every time a line comes in, which means
+  it needs to keep all the subscriptions in a global.  I'd prefer
+  if the main thread could simply "broadcast" the arrived line, and
+  each task would "examine" the line, and perhaps do its thing if the
+  line was the kind it was interested in.  The problem is that I
+  haven't found a synchronizable event which will unblock _multiple_
+  threads.  Ideally I'd have an async-channel which the main thread
+  would put the line into, and then each task would have a clone of,
+  from which it could remove lines without disturbing the other
+  clones.  (But then what about the lines that no thread is interested
+  in?  They'd need to be cleared out lest the async get fuller and
+  fuller and suck up all available memory)
+         
+  "semaphore-peek-evt" might help if the main thread were merely
+  posting a semaphore.  I wonder if there's some equivalent for
+  async-channels...
 
 * ack "MODE" at startup
   after we do "/msg nickserv identify" (so that we can send private
