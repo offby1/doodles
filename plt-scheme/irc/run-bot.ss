@@ -33,6 +33,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-q" "--quote-and-headline-interval")
    secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
    (*quote-and-headline-interval* (string->number secs)))
+  (("-p" "--password")
+   pw "Password for NICKSERV"
+   (*nickserv-password* pw))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t))
   (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"

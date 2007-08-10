@@ -49,7 +49,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      "quotes")))
 
 (define *use-real-atom-feed?* (make-parameter #f))
-
+(define *nickserv-password* (make-parameter #f))
 (define (*atom-timestamp-preference-name*)
   (if (*use-real-atom-feed?*)
       'rudybot-planet-emacs-last-headline

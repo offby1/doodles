@@ -259,6 +259,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (*irc-server-name*)
              *client-name*
              (*client-version*))
+
+    (when (*nickserv-password*)
+      (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
+
+    ;; TODO -- wait for
+
+
     (vtprintf "Sent NICK and USER~%")
 
     (let loop ()
