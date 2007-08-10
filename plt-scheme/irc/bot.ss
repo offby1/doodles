@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot-tests.ss -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot mzscheme
 (require (lib "kw.ss")
@@ -21,7 +21,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "channel-idle-event.ss"
-         "direct-bot-command-evt.ss"
          "globals.ss"
          "parse.ss"
          "planet-emacsen.ss"
@@ -193,19 +192,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ((366)
          (let ((this-channel (second (message-params message))))
            (when (member this-channel '("#emacs" "#bots" ))
-             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
-                   (quote-trigger-evt (make-direct-bot-command-evt this-channel "quote")))
+             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
 
                (for-each
                 subscribe-proc-to-server-messages!
-                (list (channel-idle-event-input-examiner idle-evt)
-                      (direct-bot-command-evt-input-examiner quote-trigger-evt)))
+                (list (channel-idle-event-input-examiner idle-evt)))
 
                (thread
                 (lambda ()
                   (let loop ()
                     (let ((q (one-quote)))
-                      (sync idle-evt quote-trigger-evt)
+                      (sync idle-evt)
                       (pm this-channel q)
                       (loop)))))))
 
@@ -217,13 +214,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                               (get-pure-port
                                (string->url "http://planet.emacsen.org/atom.xml")
                                (list))))))
-                   (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
-                   (news-trigger-evt (make-direct-bot-command-evt this-channel "news")))
+                   (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
 
                (for-each
                 subscribe-proc-to-server-messages!
-                (list (channel-idle-event-input-examiner idle-evt)
-                      (direct-bot-command-evt-input-examiner news-trigger-evt)))
+                (list (channel-idle-event-input-examiner idle-evt)))
 
                (thread
                 (lambda ()
@@ -233,7 +228,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (let ((headline (or (sync/timeout 3600 q)
                                         last-headline)))
                       (when headline
-                        (sync idle-evt news-trigger-evt)
+                        (sync idle-evt)
                         (pm this-channel
                             (format "~a" (entry->string headline))))
                       (loop headline)))))))))
