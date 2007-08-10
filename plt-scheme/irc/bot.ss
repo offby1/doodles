@@ -159,6 +159,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (poop (hash-table-get *appearances-by-nick* who #f)))
         (reply (or poop (format "I haven't seen ~a" who)))))
 
+     ((and ch-for-us?
+           (string-ci=? "quote" (second (PRIVMSG-text-words message)))
+           (reply (one-quote))))
+
      ((or (VERSION? message)
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
