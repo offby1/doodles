@@ -21,9 +21,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "parse.ss"
          "vprintf.ss")
 
-;; this event is ready when someone in the named channel says the
-;; named word "to" us (which means: they say our nick, a colon,
-;; followed by the word)
 (define-values (struct:direct-bot-command-evt
                 make-direct-bot-command-evt
                 direct-bot-command-evt?
@@ -33,6 +30,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                       #f (list (cons prop:evt 0))
                       (make-inspector) #f '(0 1)))
 
+;; this event is ready when someone in the named channel says the
+;; named word "to" us (which means: they say our nick, a colon,
+;; followed by the word)
 (define (public-make-direct-bot-command-evt channel-name magic-phrase)
   (let ((s (make-semaphore))
         (sought-tokens (string-tokenize magic-phrase (char-set-complement char-set:whitespace))))
@@ -72,14 +72,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (check-not-false (sync/timeout 1/1000 e))
           (check-false (sync/timeout 1/100 e))))
 
-      (check-pair "#snorkly" "doit!" #t)
-      (check-pair "#stupid" "doit!" #f)
-      (check-pair "#stupid" "get bent" #f)
+      (check-pair "#snorkly" "doit!"    #t)
+      (check-pair "#stupid"  "doit!"    #f)
+      (check-pair "#stupid"  "get bent" #f)
       (check-pair "#snorkly" "get bent" #f)
       ))))
 
 (provide
  direct-bot-command-evt-tests
+ direct-bot-command-evt-input-examiner
  (rename
   public-make-direct-bot-command-evt make-direct-bot-command-evt
   ))

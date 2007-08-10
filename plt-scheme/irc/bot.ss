@@ -18,6 +18,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "channel-idle-event.ss"
+         "direct-bot-command-evt.ss"
          "globals.ss"
          "parse.ss"
          "planet-emacs-task.ss"
@@ -238,20 +239,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (vtprintf "Got the 366.~%")
            (when (member this-channel '("#emacs" "#bots" ))
              (vtprintf "It's #emacs or #bots.~%")
-             (thread
-              (lambda ()
-                (vtprintf "I am the quote-spewing thread.~%")
-                (let ((its-quiet-yeah-too-quiet
-                       (make-channel-idle-event
-                        this-channel
-                        5)))
-                  (subscribe-proc-to-server-messages!
-                   (channel-idle-event-input-examiner its-quiet-yeah-too-quiet))
+             (let ((its-quiet-yeah-too-quiet
+                    (make-channel-idle-event
+                     this-channel
+                     15))
+                   (someone-wanted-a-quote
+                    (make-direct-bot-command-evt
+                     this-channel
+
+                     "quote!")))
+               (for-each
+                subscribe-proc-to-server-messages!
+                (list (direct-bot-command-evt-input-examiner someone-wanted-a-quote)
+                      (channel-idle-event-input-examiner its-quiet-yeah-too-quiet)))
+
+               (thread
+                (lambda ()
+                  (vtprintf "I am the quote-spewing thread.~%")
                   (let loop ()
                     (let ((q (one-quote)))
                       (vtprintf "quote-spewing thread at top of loop; waiting for chance to say ~s~%"
                                 q)
-                      (sync its-quiet-yeah-too-quiet)
+                      (sync its-quiet-yeah-too-quiet someone-wanted-a-quote)
                       (vtprintf "quote-spewing thread: there, I said it.~%")
                       (pm this-channel q)
                       (loop)))))))
