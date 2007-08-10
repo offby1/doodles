@@ -120,7 +120,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;; for keeping track of which entries we've put into the channel.
 ;; It's easier to serialize than an actual entry.
+
+;; TODO -- this should probably be a _list_ of hashes, not just one,
+;; in case we get a bunch of headlines that all have the same
+;; timestamp.
 (define-struct hstamp (time-type nanosecond second hash))
+
 (define (entry->stamp e)
 
   (make-hstamp
@@ -176,6 +181,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (for-each
             (lambda (e)
               (let ((this-stamp (entry->stamp e)))
+
+                ;; put this headline in the channel if it's newer than
+                ;; any we've previously seen, OR if it's no older AND
+                ;; we haven't already seen it.
                 (if (or (stamp>? this-stamp leftover-hstamp)
                         (and (not (stamp>? leftover-hstamp this-stamp))
                              (not (equal? (hstamp-hash this-stamp)
