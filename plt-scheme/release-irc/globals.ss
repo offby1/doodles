@@ -15,6 +15,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
 (define *client-version* (make-parameter "$Rev$")) ;better than nothing
+(define (long-version-string) (format
+                               "~a (offby1@blarg.net):~a:~a"
+                               *client-name*
+                               *client-version-number*
+                               *client-environment*))
 
 ;; *sigh*.  The version string with which we reply to CTCP can't have
 ;; a colon, but of course Subversion's keyword expansion inserted a
@@ -35,14 +40,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    ;;"irc.freenode.net"
    )
   )
-(define *initial-channel-names* (make-parameter '("#bots" "#scheme-bots")))
+(define *initial-channel-names* (make-parameter '()))
 (define *random?* (make-parameter #t))
 (define *quote-and-headline-interval* (make-parameter (* 20 60)))
 (define *quotes-file-name* (make-parameter
                                     (build-path
                                      (this-expression-source-directory)
                                      "quotes")))
+
 (define *use-real-atom-feed?* (make-parameter #f))
+(define *nickserv-password* (make-parameter #f))
+(define (*atom-timestamp-preference-name*)
+  (if (*use-real-atom-feed?*)
+      'rudybot-planet-emacs-last-headline
+    'rudybot-test-planet-emacs-last-headline))
 
 (define *log-output-port* (make-parameter (current-output-port)))
 (provide (all-defined))

@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id: bot.ss 4540 2007-08-07 22:18:26Z erich $
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(test/text-ui crap-tests 'verbose)"
+#$Id$
+exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 (module bot mzscheme
 (require (lib "kw.ss")
@@ -12,54 +12,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                string-join)
          (only (lib "19.ss" "srfi")
                current-date)
+         (only (lib "url.ss" "net")
+               get-pure-port
+               string->url)
          (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
+         "channel-idle-event.ss"
+         "direct-bot-command-evt.ss"
          "globals.ss"
          "parse.ss"
-         "planet-emacs-task.ss"
+         "planet-emacsen.ss"
          "quotes.ss"
-         "tinyurl.ss")
-
-;; A periodical is a thread that spews into a specific channel, both
-;; periodically (hence the name), and optionally in response to having
-;; do-it-now! tickled.  Also, tickling back-to-sleep restarts the
-;; clock.  (do-it-now! and back-to-sleep are semaphores.)
-(define-struct periodical (channel-of-interest thread do-it-now! back-to-sleep id) (make-inspector))
-
-;; if we ever connect to two servers at once, we'd want one instance
-;; of this variable local to each server, instead of just one global
-;; as it is now.
-(define *periodicals-by-id* (make-hash-table 'equal))
-
-(define (for-each-periodical proc)
-  (hash-table-for-each *periodicals-by-id* proc))
-
-(define *task-custodian* (make-custodian))
+         "alarm-with-snooze.ss"
+         "tinyurl.ss"
+         "vprintf.ss")
 
 (define *appearances-by-nick* (make-hash-table 'equal))
 
-(define/kw (respond line op #:key [preparsed-message #f])
+(define *message-subscriptions* '())
+(define (subscribe-proc-to-server-messages! proc)
+  (set! *message-subscriptions* (cons proc *message-subscriptions*)))
 
-  ;; cull the dead periodicals.
-  (hash-table-for-each
-   *periodicals-by-id*
-   (lambda (k v)
-     (when (thread-dead? (periodical-thread v))
-       (hash-table-remove! *periodicals-by-id* k))))
+(define/kw (respond line op #:key [preparsed-message #f])
 
   (let ((message (or preparsed-message
                      (parse-irc-message line))))
 
     (define (out . args)
       (apply fprintf op args)
-
-      (display (zdate (current-date)) (*log-output-port*))
-      (display " => " (*log-output-port*))
-      (write (apply format args) (*log-output-port*))
-      (newline (*log-output-port*)))
+      (vtprintf " => ~s~%" (apply format args)))
 
     (define (pm target msg)
       (out "PRIVMSG ~a :~a~%" target msg))
@@ -71,44 +55,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (PRIVMSG-destination message)
               (PRIVMSG-speaker message))
           response))
+
     (define ch-for-us?
       (and (PRIVMSG? message)
            (PRIVMSG-is-for-channel? message)
            (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
 
-    (define/kw (add-periodical! what-to-do
-                                interval
-                                where-to-do-it
-                                #:key
-                                [id (hash-table-count *periodicals-by-id*)])
+    (vtprintf " <= ~s~%" message)
 
-      (parameterize ((current-custodian *task-custodian*))
-
-        (let* ((do-it-now!    (make-semaphore 1))
-               (back-to-sleep (make-semaphore 0))
-               (task (thread (lambda ()
-                               (let loop ()
-                                 (let ((datum (sync/timeout
-                                               interval
-                                               do-it-now!
-                                               back-to-sleep)))
-                                   (when (or (not datum)
-                                             (equal? datum do-it-now!))
-                                     (what-to-do where-to-do-it))
-
-                                   (loop)
-                                   )
-                                 (loop))))))
-
-          (hash-table-put!
-           *periodicals-by-id*
-           (cons id where-to-do-it)
-           (make-periodical
-            where-to-do-it
-            task
-            do-it-now!
-            back-to-sleep
-            id)))))
+    (for-each (lambda (proc)
+                (proc message))
+              *message-subscriptions*)
 
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
@@ -117,12 +74,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (what        (PRIVMSG-text        message))
             (time        (current-seconds))
             (was-action? (ACTION?             message)))
-
-        (for-each-periodical
-         (lambda (id p)
-           (when (equal? (periodical-channel-of-interest p)
-                         where)
-             (semaphore-post (periodical-back-to-sleep p)))))
 
         ;; note who did what, when, where, how, and wearing what kind
         ;; of skirt; so that later we can respond to "seen Ted?"
@@ -152,7 +103,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ;; tiny URLs are about 25 characters, so it seems reasonable
           ;; to ignore URLs that are shorter than twice that.
           (when (< 50 (string-length url))
-            (reply (make-tiny-url url)
+            (reply (make-tiny-url url #:user-agent (long-version-string))
                    #:proc notice))))))
 
     (cond
@@ -176,13 +127,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (command (string-join parsed-command))
              (params  (list (PRIVMSG-destination message)
                             command)))
-        (add-periodical!
-         (lambda (my-channel)
+        (thread
+         (lambda ()
            (sleep 10)
            (respond
-            ""                          ;ignored
+            ""                          ;ignored because we're passing
+                                        ;in a preparsed message
             op
             #:preparsed-message
+
             ;; *groan* how un-Lispy that I have to spell out all
             ;; these identifiers!
             ;; http://www.paulgraham.com/popular.html
@@ -194,31 +147,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (PRIVMSG-destination message)
              (PRIVMSG-approximate-recipient message)
              command
-             parsed-command))
-           (kill-thread (current-thread)))
-         1                              ;irrelevant
-         (PRIVMSG-destination message)
-         #:id (format "delayed command ~s" command)
-         )))
+             parsed-command))))))
 
      ((and ch-for-us?
            (= 1 (length (PRIVMSG-text-words message))))
       (reply "Eh?  Speak up.")
       )
-
-     ((and ch-for-us?
-           (string-ci=? "die!" (second (PRIVMSG-text-words message))))
-      (let ((times-to-run 10))
-        (add-periodical!
-         (lambda (my-channel)
-           (when (zero? times-to-run)
-             (pm my-channel "Goodbye, cruel world")
-             (kill-thread (current-thread)))
-           (pm my-channel (format "~a" times-to-run))
-           (set! times-to-run (sub1 times-to-run)))
-         3/2
-         (first (message-params message))
-         #:id "auto self-destruct sequence")))
 
      ((and ch-for-us?
            (string-ci=? "seen" (second (PRIVMSG-text-words message))))
@@ -229,16 +163,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ((or (VERSION? message)
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
-      (let ((version-string (format
-                             "~a (offby1@blarg.net):~a:~a"
-                             *client-name*
-                             *client-version-number*
-                             *client-environment*)))
-        (if (VERSION? message)
-            (fprintf op "NOTICE ~a :\u0001VERSION ~a\0001~%"
-                     (PRIVMSG-speaker message)
-                     version-string)
-          (reply version-string))))
+      (if (VERSION? message)
+          (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
+               (PRIVMSG-speaker message)
+               (long-version-string))
+        (reply (long-version-string))))
      ((or (SOURCE? message)
           (and ch-for-us?
                (string-ci=? "source" (second (PRIVMSG-text-words message)))))
@@ -246,58 +175,68 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              "http://offby1.ath.cx/~erich/bot/"
              ))
         (if (SOURCE? message)
-            (fprintf op "NOTICE ~a :\u0001SOURCE ~a\0001~%"
-                     (PRIVMSG-speaker message)
-                     source-string)
+            (out "NOTICE ~a :\u0001SOURCE ~a\0001~%"
+                 (PRIVMSG-speaker message)
+                 source-string)
           (reply source-string))))
-     ((and ch-for-us?
-           (string-ci=? "quote" (second (PRIVMSG-text-words message))))
-      (cond
-       ((hash-table-get *periodicals-by-id* (cons 'quote-spewer (PRIVMSG-destination message)) #f)
-        =>
-        (lambda (p)
-          (semaphore-post (periodical-do-it-now! p))))
-       ))
-     ((and ch-for-us?
-           (string-ci=? "news" (second (PRIVMSG-text-words message))))
-      (cond
-       ((hash-table-get *periodicals-by-id* (cons 'news-spewer (PRIVMSG-destination message)) #f)
-        =>
-        (lambda (p)
-          (semaphore-post (periodical-do-it-now! p))))
-       ))
+
      (ch-for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
      (else
       (case (message-command message)
         ((001)
          (for-each (lambda (cn)
-                     (printf "Joining ~a~%" cn)
-                     (fprintf op "JOIN ~a~%" cn))
+                     (vtprintf "Joining ~a~%" cn)
+                     (out "JOIN ~a~%" cn))
                    (*initial-channel-names*)))
 
         ((366)
          (let ((this-channel (second (message-params message))))
-
            (when (member this-channel '("#emacs" "#bots" ))
-             (add-periodical!
-              (lambda (my-channel)
-                (pm my-channel (one-quote)))
-              (* 11/10 (*quote-and-headline-interval*))
-              this-channel
-              #:id 'quote-spewer))
+             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
+                   (quote-trigger-evt (make-direct-bot-command-evt this-channel "quote")))
+
+               (for-each
+                subscribe-proc-to-server-messages!
+                (list (channel-idle-event-input-examiner idle-evt)
+                      (direct-bot-command-evt-input-examiner quote-trigger-evt)))
+
+               (thread
+                (lambda ()
+                  (let loop ()
+                    (let ((q (one-quote)))
+                      (sync idle-evt quote-trigger-evt)
+                      (pm this-channel q)
+                      (loop)))))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
-             (let ((planet-thing (make-pe-consumer-proc)))
-               (add-periodical!
-                (lambda (my-channel)
-                  (planet-thing
-                   (lambda (headline)
-                     (pm my-channel headline))))
+             ;; might consider allowing a timeout here, and re-spewing
+             ;; the most recent headline if we do time out.
+             (let ((q (queue-of-entries
+                       #:whence
+                       (and (*use-real-atom-feed?*)
+                            (lambda ()
+                              (get-pure-port
+                               (string->url "http://planet.emacsen.org/atom.xml")
+                               (list))))))
+                   (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
+                   (news-trigger-evt (make-direct-bot-command-evt this-channel "news")))
 
-                (*quote-and-headline-interval*)
-                this-channel
-                #:id 'news-spewer)))))
+               (for-each
+                subscribe-proc-to-server-messages!
+                (list (channel-idle-event-input-examiner idle-evt)
+                      (direct-bot-command-evt-input-examiner news-trigger-evt)))
+
+               (thread
+                (lambda ()
+                  (let loop ((last-headline #f))
+                    (let ((headline (or (sync/timeout 3600 q)
+                                        last-headline)))
+                      (when headline
+                        (sync idle-evt news-trigger-evt)
+                        (pm this-channel
+                            (format "~a" (entry->string headline))))
+                      (loop headline)))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
@@ -329,16 +268,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (*irc-server-name*)
              *client-name*
              (*client-version*))
-    (printf "Sent NICK and USER~%")
+
+    (when (*nickserv-password*)
+      (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
+
+    ;; TODO -- wait for
+
+
+    (vtprintf "Sent NICK and USER~%")
 
     (let loop ()
       (let ((line (read-line ip 'return-linefeed)))
-        (fprintf (*log-output-port*) "~a <= ~s~%"
-                 (zdate (current-date))
-                 line)
         (if (eof-object? line)
             ;; TODO: maybe reconnect
-            (printf "eof on server~%")
+            (vtprintf "eof on server~%")
           (begin
             (respond line op)
             (loop)))))))

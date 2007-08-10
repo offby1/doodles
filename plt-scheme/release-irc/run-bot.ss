@@ -11,7 +11,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "bot.ss"
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
-          "planet-emacs-task.ss"
           "quotes.ss"
           "system.ss"
           "vprintf.ss"
@@ -34,9 +33,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-q" "--quote-and-headline-interval")
    secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
    (*quote-and-headline-interval* (string->number secs)))
+  (("-p" "--password")
+   pw "Password for NICKSERV"
+   (*nickserv-password* pw))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
-   (*use-real-atom-feed?* #t)
-   (*planet-poll-interval* 3600))
+   (*use-real-atom-feed?* #t))
   (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"
    (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
@@ -83,6 +84,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (vtprintf "Our version string is ~s~%" (*client-version*)))
   )
 
+(print-hash-table #t)
 (thread
  (lambda ()
    (parameterize

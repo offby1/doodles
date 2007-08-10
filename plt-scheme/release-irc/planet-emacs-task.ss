@@ -5,7 +5,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module planet-emacs-task mzscheme
-(require  (lib "async-channel.ss")
+(require (lib "async-channel.ss")
+         (only  (lib "file.ss")
+                get-preference
+                put-preferences)
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
          (rename (lib "19.ss" "srfi") 19:make-date make-date)
@@ -26,7 +29,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only "globals.ss"
                *use-real-atom-feed?*)
          "vprintf.ss")
-(define *atom-timestamp-file-name* (make-parameter "timestamp"))
+(define (*atom-timestamp-preference-name*)
+  (if (*use-real-atom-feed?*)
+      'rudybot-planet-emacs-timestamp
+    'rudybot-test-planet-emacs-timestamp))
 
 ;; TODO -- probably parameterize this by URL, name of channel, and
 ;; procedure to reduce the atom feed to list of entries
@@ -44,15 +50,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (time-of-latest-spewed-entry
          (date->time-utc
           (rfc3339-string->srfi19-date/constructor
-           (or (and (file-exists? (*atom-timestamp-file-name*))
-                    (call-with-input-file
-                        (*atom-timestamp-file-name*)
-                      (lambda (ip)
-                        (printf "consumer task: reading timestamp file ~s: "
-                                  (object-name ip))
-                        (let ((rv (read ip)))
-                          (printf "~s~%" rv)
-                          rv))))
+           (or (get-preference (*atom-timestamp-preference-name*))
                "2000-00-00T00:00:00+00:00")
            19:make-date))))
 
@@ -81,14 +79,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                        time-of-latest-spewed-entry)
                   (set! time-of-latest-spewed-entry
                         (entry-timestamp datum))
-                  (call-with-output-file
-                      (*atom-timestamp-file-name*)
-                    (lambda (op)
-                      (write
-                       (zdate
-                        (time-utc->date time-of-latest-spewed-entry))
-                       op))
-                    'truncate/replace)))
+                  (put-preferences
+                   (list (*atom-timestamp-preference-name*))
+                   (list
+                    (zdate
+                     (time-utc->date time-of-latest-spewed-entry))))))
             (begin
               (vtprintf "Consumer thread: Nothing new on planet emacs (we already spewed an entry dated ~s) ~%"
                         (zdate (time-utc->date time-of-latest-spewed-entry)))

@@ -2,18 +2,73 @@
 
 -- High priority
 
+* Review the code!
+  That's right.  I've stumbled into enough of these "cannot take car
+  of '()" bugs that I bet there are a few more still lurking.
+
+* Events
+  finish up "channel-idle-event" and then make a new
+  "someone-said-foo-in-channel-bar" event that is true only when
+  ... you get the picture.  Perhaps I should do some meta programming
+  and write a general-purpose "make-interesting-event" procedure,
+  which creates events that trigger on interesting criteria of a
+  message from the IRC server; that way it could easily create
+  "someone-said-foo-in-channel-bar"; "someone-joined-channel-foo";
+  "brx-is-moaning-about-his-girlfriend-again", etc.
+
+  Make sure they compose, too, so that one event can be implemented as
+  a slight modification of another (i.e., the new one is only ready
+  when the old one is, and maybe not even then)
+
+  The ultimate goal is to be able to write the periodic events very
+  simply, like this:
+
+  (let loop ()
+    (let ((tidbit (sync something-to-say-evt)))
+      (sync opportunity-to-say-it-evt)
+      (say tidbit)
+      (loop)))
+
+* NOTICE instead of PRIVMSG
+  VERSION and SOURCE commands, perhaps
+
 * bugs
 
-* timestamp file confusion
-  It reads and writes a timestamp file in its current directory, which
-  can get messy if I sometimes start it from here and sometimes from
-  there.  Perhaps that info should be stored in a PLT preference, so
-  that there's just one copy of it.  (But then during testing we won't
-  want to clobber it ... perhaps make the name of the preference
-  depend upon whether we're testing or not)
+** mangles "CTCP source"
+in 4625:4626M:
+
+ERC> /ctcp rudybot version
+*** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4541:PLT scheme
+    version 370.6 on unix
+<offby1> yay, rudybot now answers ctcp version                                             [06:48]
+ERC> /ctcp rudybot source
+*** Unknown CTCP message from rudybot (n=erich@q-static-138-125.avvanta.com): SOURCE
+    http://offby1.ath.cx/~erich/bot/
+<offby1> D'oh
 
 
 -- Low priority
+
+* ack "MODE" at startup
+  after we do "/msg nickserv identify" (so that we can send private
+  messages on freenode), the server responds with <<:services. MODE
+  rudebot :+e>> .  We should note receipt of that message, in case it
+  _doesn't_ come and we're wondering why we can't sent private
+  messages.
+
+** don't log in everywhere?
+   I imagine that other IRC networks, besides freenode, either don't
+   require logging in, or have a different way of doing it.  We should
+   really log in only if we clearly need it
+
+* version registry
+
+  Each module exports a value that contains its Subversion $Id$ info.
+  At load time, it pushes that value into some global list.  That way
+  the "version" command can get very complete (albeit voluminous)
+  info, which is nicer than the output of "svnversion"
+
+* unify atom getting (planet emacs) with getting moviestowatchfor
 
 * low-priority bugs
 
@@ -27,7 +82,6 @@
    Yup.  Don't ask me why, but I check all the incoming messages with
    ch-for-us?.  Maybe I had a good reason for doing that, but if so,
    I've forgotten what it was.
-
 
 * quotes and news headlines
 
@@ -73,15 +127,13 @@
 
 * persistence
   It'd be nice to save stuff to disk.  Currently I save the date of
-  the last planet.emacsen.org headline that we spewed ...  But I dunno
-  if simply "write"ing an sexpression will suffice for more complex
-  data ... it'd be nice to have bindings to Berkeley DB.
+  the last planet.emacsen.org headline that we spewed in the the PLT
+  "preferences" file ...  But I dunno if simply "write"ing an
+  sexpression will suffice for more complex data ... it'd be nice to
+  have bindings to Berkeley DB.
 
-  On the other hand, I can't think of anything else that I need to
-  persist, so ...
-
-  ... and the PLT "preferences" might be a good place to store that
-  data.
+  On the other hand, I can't think of much that I need to persist
+  ... maybe the appearances-by-nick data for the "seen" command.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
@@ -104,6 +156,10 @@
   "I" am -- sometimes my nick changes.  It would probably be best to
   find me by host name, not nick.
 
+** brx suggests a "stalk" function
+   which takes the name of a victim.  Like the above but oh so
+   sinister.
+
 * Catch Control-C so that we don't spew an ugly stack trace when we're killed.
   Maybe even do a nice PART and QUIT while we're at it.
 
@@ -115,7 +171,8 @@
   lame as its content is excellent)
 
 ** my del.icio.us "moviestowatchfor" ...
-  maybe, somehow, spam ##cinema with one of those.
+  maybe, somehow, spam ##cinema with one of those.  This would
+  effectively be another news feed, just like planet.emacsen.org.
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
@@ -127,16 +184,13 @@
 * new commands
 
 ** "eval"
-   I suspect that PLT somewhere has a safe way of doing "eval" --
-   i.e., they can't call "exit", can't mess with the filesystem, etc.
-   (Such a thing might be useful for the PLT web server, e.g.)  Find
-   it and us it.
+   sandbox.ss is a safe way of doing "eval" -- i.e., they can't call
+   "exit", can't mess with the filesystem, etc.
 
 ** "you suck"
    to emit some TODO list entries, or just a URL to the TODO file
 
-** Respond to "help"
-   since people seem to expect those
+** "help"
 
 ** "uptime"
    since I'm occasionally curious
