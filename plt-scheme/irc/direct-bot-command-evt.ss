@@ -18,8 +18,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only "globals.ss"
                *my-nick*
                verbose!)
-         "parse.ss"
-         "vprintf.ss")
+         "parse.ss")
 
 (define-values (struct:direct-bot-command-evt
                 make-direct-bot-command-evt
@@ -39,7 +38,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (make-direct-bot-command-evt
      s
      (lambda (irc-message)
-       (vprintf "~s~%" irc-message)
        (when (and (PRIVMSG? irc-message)
                   (equal? (PRIVMSG-destination irc-message)
                           channel-name)

@@ -236,47 +236,45 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         ((366)
          (let ((this-channel (second (message-params message))))
-           (vtprintf "Got the 366.~%")
            (when (member this-channel '("#emacs" "#bots" ))
-             (vtprintf "It's #emacs or #bots.~%")
-             (let ((its-quiet-yeah-too-quiet
-                    (make-channel-idle-event
-                     this-channel
-                     (*quote-and-headline-interval*)))
-                   (someone-wanted-a-quote
-                    (make-direct-bot-command-evt
-                     this-channel
+             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
+                   (quote-trigger-evt (make-direct-bot-command-evt this-channel "quote")))
 
-                     "quote!")))
                (for-each
                 subscribe-proc-to-server-messages!
-                (list (direct-bot-command-evt-input-examiner someone-wanted-a-quote)
-                      (channel-idle-event-input-examiner its-quiet-yeah-too-quiet)))
+                (list (channel-idle-event-input-examiner idle-evt)
+                      (direct-bot-command-evt-input-examiner quote-trigger-evt)))
 
                (thread
                 (lambda ()
-                  (vtprintf "I am the quote-spewing thread.~%")
                   (let loop ()
                     (let ((q (one-quote)))
-                      (vtprintf "quote-spewing thread at top of loop; waiting for chance to say ~s~%"
-                                q)
-                      (sync its-quiet-yeah-too-quiet someone-wanted-a-quote)
-                      (vtprintf "quote-spewing thread: there, I said it.~%")
-                      (pm this-channel q)
+                      (sync idle-evt quote-trigger-evt)
+                      (pm this-channel (format "~a ~a" (zdate) q))
                       (loop)))))))
 
            (when (member this-channel '("#emacs" "#scheme-bots"))
              ;; might consider allowing a timeout here, and re-spewing
              ;; the most recent headline if we do time out.
              (let ((q (queue-of-entries))
-                   (quiet-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
-                   (news-trigger-evt (make-direct-bot-command-evt this-channel "news!")))
+                   (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*)))
+                   (news-trigger-evt (make-direct-bot-command-evt this-channel "news")))
+
+               (for-each
+                subscribe-proc-to-server-messages!
+                (list (channel-idle-event-input-examiner idle-evt)
+                      (direct-bot-command-evt-input-examiner news-trigger-evt)))
+
                (thread
                 (lambda ()
                   (let loop ()
                     (let ((headline (sync q)))
-                      (sync quiet-evt news-trigger-evt)
-                      (pm this-channel headline)
+                      (sync idle-evt news-trigger-evt)
+                      (pm this-channel
+                          (format
+                           "~a ~a"
+                           (zdate)
+                           (entry->string headline)))
                       (loop)))))))))
 
         ((433)

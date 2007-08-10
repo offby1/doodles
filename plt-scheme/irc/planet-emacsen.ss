@@ -58,10 +58,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *planet-poll-interval* (make-parameter 3600))
 
 (define-struct entry (timestamp title link) (make-inspector))
-(define (entry-hash e)
-  (equal-hash-code (cons (entry-timestamp e)
-                         (cons (entry-title e)
-                               (entry-link e)))))
+
 ;; returned entries are sorted oldest first.
 
 ;; void -> (listof entry?)
@@ -121,10 +118,36 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sleep (/ (add1 (random 10)) 10))
        (retry)))))
 
+;; for keeping track of which entries we've put into the channel.
+;; It's easier to serialize than an actual entry.
+(define-struct hstamp (time-type nanosecond second hash))
+(define (entry->stamp e)
+
+  (make-hstamp
+   (time-type       (entry-timestamp e))
+   (time-nanosecond (entry-timestamp e))
+   (time-second     (entry-timestamp e))
+   (equal-hash-code (cons (entry-timestamp e)
+                          (cons (entry-title e)
+                                (entry-link e))))))
+(define (hstamp->list h)
+  (list  (hstamp-time-type  h)
+         (hstamp-nanosecond h)
+         (hstamp-second     h)
+         (hstamp-hash       h)))
+
+(define (stamp>? a b)
+  (time>?
+   (make-time (hstamp-time-type  a)
+              (hstamp-nanosecond a)
+              (hstamp-second     a))
+   (make-time (hstamp-time-type  b)
+              (hstamp-nanosecond b)
+              (hstamp-second     b))))
+
 (define/kw (queue-of-entries
             #:key
-            [whence]
-            [how-many 'continuous])
+            [whence])
 
   (when (not whence)
     (set! whence
@@ -140,37 +163,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-async-channel #f))
-        (entries-put (make-hash-table 'equal)))
+  (let ((the-channel (make-async-channel #f)))
     (thread
      (lambda ()
        (let loop ()
          (vtprintf "queue-of-entries top of a loop~%")
-         (for-each
-          (lambda (e)
-            ;; this is annoying -- apparently structures with equal
-            ;; elements aren't themselves equal -- so I have to use
-            ;; (entry->string e) as the hash table key, instead of
-            ;; simply e.
-            (when (not (hash-table-get entries-put (entry->string e) #f))
-              (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
-                        (entry->string e))
-              (reliably-put-pref (list (time-type (entry-timestamp e))
-                                       (time-nanosecond (entry-timestamp e))
-                                       (time-second (entry-timestamp e))
-                                       (entry-hash e)))
-              (async-channel-put the-channel e)
-              (vtprintf "ppt: done~%")
-              (hash-table-put! entries-put (entry->string e) #t)))
-           (snarf-em-all (whence)))
-         (if (eq? how-many 'once)
-             (async-channel-put the-channel 'no-more)
-           (begin
-             (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
-                       (*planet-poll-interval*))
-             (sleep (*planet-poll-interval*))
-             (loop)))
-         )))
+         (let ((leftover-hstamp (apply
+                                 make-hstamp
+                                 (or (get-preference (*atom-timestamp-preference-name*))
+                                     (list 'time-utc 0 0 0))
+                                 )))
+           (for-each
+            (lambda (e)
+              (let ((this-stamp (entry->stamp e)))
+                (if (or (stamp>? this-stamp leftover-hstamp)
+                        (and (not (stamp>? leftover-hstamp this-stamp))
+                             (not (equal? (hstamp-hash this-stamp)
+                                          (hstamp-hash leftover-hstamp)))))
+                    (begin
+                      (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
+                                (entry->string e))
+                      (reliably-put-pref (hstamp->list this-stamp))
+                      (async-channel-put the-channel e)
+                      (vtprintf "ppt: done~%"))
+                  (vtprintf "seen it (~s)~%" (entry-title e))
+                  )))
+            (snarf-em-all (whence))))
+
+         (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
+                   (*planet-poll-interval*))
+         (sleep (*planet-poll-interval*))
+         (loop))))
+
     the-channel)  )
 ;;(trace queue-of-entries)
 
@@ -191,24 +215,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (verbose!)
     (let ((q (queue-of-entries #:whence #f)))
       (let ((first-entry (sync q))
-            (leftover-headline-stamp (get-preference (*atom-timestamp-preference-name*))))
+            (leftover-hstamp (get-preference (*atom-timestamp-preference-name*))))
 
         (check-pred entry? first-entry "It's not an entry!!")
-        (check-not-false leftover-headline-stamp "queue didn't save a preference")
+        (check-not-false leftover-hstamp "queue didn't save a preference")
         (printf "First entry: ~s; hash: ~s~%"
                 first-entry
-                (entry-hash first-entry))
+                (entry->stamp first-entry))
 
-        (let ((t (make-time (first leftover-headline-stamp)
-                            (second leftover-headline-stamp)
-                            (third leftover-headline-stamp)))
-              (hash (fourth leftover-headline-stamp)))
+        (let ((t (make-time (first leftover-hstamp)
+                            (second leftover-hstamp)
+                            (third leftover-hstamp)))
+              (hash (fourth leftover-hstamp)))
 
           (printf "time from disk: ~s; hash from disk: ~s~%"
                   t hash)
 
           (if (time=? t (entry-timestamp first-entry))
-              (check-false (equal? hash (entry-hash first-entry))
+              (check-false (equal? hash (hstamp-hash (entry->stamp first-entry)))
                            "we just got the same headline that was saved on disk!!")
             (check-true (time<? (entry-timestamp first-entry) t)
                         "we just got a headline older than the one on disk!!")))))
