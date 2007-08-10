@@ -27,12 +27,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "planet-emacsen.ss"
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only "globals.ss"
+               *atom-timestamp-preference-name*
                *use-real-atom-feed?*)
          "vprintf.ss")
-(define (*atom-timestamp-preference-name*)
-  (if (*use-real-atom-feed?*)
-      'rudybot-planet-emacs-timestamp
-    'rudybot-test-planet-emacs-timestamp))
 
 ;; TODO -- probably parameterize this by URL, name of channel, and
 ;; procedure to reduce the atom feed to list of entries

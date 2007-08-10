@@ -242,7 +242,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (let ((its-quiet-yeah-too-quiet
                     (make-channel-idle-event
                      this-channel
-                     15))
+                     (*quote-and-headline-interval*)))
                    (someone-wanted-a-quote
                     (make-direct-bot-command-evt
                      this-channel
@@ -265,16 +265,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                       (pm this-channel q)
                       (loop)))))))
 
-           (when (and #f
-                 (member this-channel '("#emacs" "#scheme-bots")))
-             (let ((planet-thing (make-pe-consumer-proc)))
-               (start-task!
-                (cons this-channel 'news-spewer)
-                (*quote-and-headline-interval*)
-                (lambda ()
-                  (planet-thing
-                   (lambda (headline)
-                     (pm this-channel headline)))))))))
+;;            (when (member this-channel '("#emacs" "#scheme-bots"))
+;;              (let ((planet-thing (make-pe-consumer-proc)))
+;;                (thread
+;;                 (lambda ()
+;;                   (let loop ()
+;;                     (let ((headline ))
+;;                       (sync its-quiet-yeah-too-quiet someone-asked-for-news)
+;;                       (pm this-channel headline)
+;;                       (loop))))
+;;                 ))
+
+;;              )
+           ))
 
         ((433)
          (error 'respond "Nick already in use!")

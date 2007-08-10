@@ -29,6 +29,11 @@
       (say tidbit)
       (loop)))
 
+** planet
+   put the filtering of articles on the _producer_ side of the
+   async-channel, so that the consumer side can be nice and pristine
+   as above.
+
 * NOTICE instead of PRIVMSG
   VERSION and SOURCE comands, perhaps
 

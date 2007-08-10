@@ -47,7 +47,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                     (build-path
                                      (this-expression-source-directory)
                                      "quotes")))
+
 (define *use-real-atom-feed?* (make-parameter #f))
+
+(define (*atom-timestamp-preference-name*)
+  (if (*use-real-atom-feed?*)
+      'rudybot-planet-emacs-last-headline
+    'rudybot-test-planet-emacs-last-headline))
 
 (define *log-output-port* (make-parameter (current-output-port)))
 (provide (all-defined))
