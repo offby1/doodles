@@ -5,7 +5,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "trace.ss")
+(require (lib "async-channel.ss")
+         (lib "trace.ss")
          (only  (lib "file.ss")
                 get-preference
                 put-preferences)
@@ -97,7 +98,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (time<?
       (entry-timestamp e1)
       (entry-timestamp e2)))))
-;;(trace snarf-em-all)
+(trace snarf-em-all)
 (define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
@@ -124,7 +125,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; TODO -- this should probably be a _list_ of hashes, not just one,
 ;; in case we get a bunch of headlines that all have the same
 ;; timestamp.
-(define-struct hstamp (time-type nanosecond second hash))
+(define-struct hstamp (time-type nanosecond second hash) (make-inspector))
 
 (define (entry->stamp e)
 
@@ -150,6 +151,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               (hstamp-nanosecond b)
               (hstamp-second     b))))
 
+(define (p val)
+  (printf "some value or other is ~s~%" val)
+  val)
 (define/kw (queue-of-entries
             #:key
             [whence])
@@ -178,6 +182,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                  (or (get-preference (*atom-timestamp-preference-name*))
                                      (list 'time-utc 0 0 0))
                                  )))
+           (vtprintf "leftover-hstamp is ~s~%" leftover-hstamp)
            (for-each
             (lambda (e)
               (let ((this-stamp (entry->stamp e)))
@@ -197,7 +202,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                       (vtprintf "ppt: done~%"))
                   (vtprintf "seen it (~s)~%" (entry-title e))
                   )))
-            (snarf-em-all (whence))))
+            (p (snarf-em-all (whence)))))
 
          (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
                    (*planet-poll-interval*))
@@ -205,48 +210,109 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (loop))))
 
     the-channel)  )
-;;(trace queue-of-entries)
+(trace queue-of-entries)
 
 
+
+(define (async->list as)
+  (let loop ((what-we-found '()))
+    (let ((datum (sync/timeout 1/10 as)))
+
+      (if datum
+          (loop (cons datum what-we-found))
+        what-we-found))))
+(trace async->list)
+
+(define (preloaded-input-port)
+  (define data #<<THASSALL
+<feed>
+<entry>
+<title >Yo vinnie</title>
+<link href="http://vincent.it"/>
+<updated>2000-00-00T00:00:00+00:00</updated>
+</entry>
+<entry>
+<title>Whassup</title>
+<link href="http://dawg.za"/>
+<updated>2000-00-00T00:00:00+00:00</updated>
+</entry>
+</feed>
+THASSALL
+    )
+  (let-values (((ip op) (make-pipe)))
+    (display data op)
+    (newline op)
+    (close-output-port op)
+    ip)
+  )
 
 (define planet-tests
 
   (test-suite
    "planet"
-   #:before
-   (lambda ()
-     (*use-real-atom-feed?* #f)
-     (put-preferences (list (*atom-timestamp-preference-name*))
-                      (list #f)))
 
    (test-case
+    "doesn't duplicate headlines"
+    (before
+     (begin
+       (*use-real-atom-feed?* #f)
+     (put-preferences (list (*atom-timestamp-preference-name*))
+                      (list #f)))
+     ;; create two entries with identical times but different content.
+
+    ;; delete the preference
+    (put-preferences (list (*atom-timestamp-preference-name*))
+                     (list #f))
+
+    ;; create a fake atom feed for queue-of-entries to read
+
+    ;; stuff both entries into the fake feed
+
+    (let ((q (queue-of-entries #:whence preloaded-input-port)))
+      (check-equal? (length (async->list q))
+                    2
+                    "didn't get both entries"))
+    (let ((q (queue-of-entries #:whence preloaded-input-port)))
+      ;; now stuff both entries back into the fake feed, and pull
+      ;; again; you should see nothing.
+
+      (check-equal? (length (async->list q)) 0
+                    "nuts! not exactly zero entries")))
+    )
+   (test-case
     "delivers an entry raht quick-like"
-    (verbose!)
-    (let ((q (queue-of-entries #:whence #f)))
-      (let ((first-entry (sync q))
-            (leftover-hstamp (get-preference (*atom-timestamp-preference-name*))))
+    (before
+     (begin
+       (*use-real-atom-feed?* #f)
+       (put-preferences (list (*atom-timestamp-preference-name*))
+                        (list #f)))
+     (let ((q (queue-of-entries #:whence #f)))
+       (let ((first-entry (sync q))
+             (leftover-hstamp (get-preference (*atom-timestamp-preference-name*))))
 
-        (check-pred entry? first-entry "It's not an entry!!")
-        (check-not-false leftover-hstamp "queue didn't save a preference")
-        (printf "First entry: ~s; hash: ~s~%"
-                first-entry
-                (entry->stamp first-entry))
+         (check-pred entry? first-entry "It's not an entry!!")
+         (check-not-false leftover-hstamp "queue didn't save a preference")
+         (printf "First entry: ~s; hash: ~s~%"
+                 first-entry
+                 (entry->stamp first-entry))
 
-        (let ((t (make-time (first leftover-hstamp)
-                            (second leftover-hstamp)
-                            (third leftover-hstamp)))
-              (hash (fourth leftover-hstamp)))
+         (let ((t (make-time (first leftover-hstamp)
+                             (second leftover-hstamp)
+                             (third leftover-hstamp)))
+               (hash (fourth leftover-hstamp)))
 
-          (printf "time from disk: ~s; hash from disk: ~s~%"
-                  t hash)
+           (printf "time from disk: ~s; hash from disk: ~s~%"
+                   t hash)
 
-          (if (time=? t (entry-timestamp first-entry))
-              (check-false (equal? hash (hstamp-hash (entry->stamp first-entry)))
-                           "we just got the same headline that was saved on disk!!")
-            (check-true (time<? (entry-timestamp first-entry) t)
-                        "we just got a headline older than the one on disk!!")))))
+           (if (time=? t (entry-timestamp first-entry))
+               (check-false (equal? hash (hstamp-hash (entry->stamp first-entry)))
+                            "we just got the same headline that was saved on disk!!")
+             (check-true (time<? (entry-timestamp first-entry) t)
+                         "we just got a headline older than the one on disk!!"))))))
 
-    )))
+    )
+   ))
+
 
 (provide
  entry->string
@@ -255,4 +321,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
  queue-of-entries
  *planet-poll-interval*
  )
+(verbose!)
 )
