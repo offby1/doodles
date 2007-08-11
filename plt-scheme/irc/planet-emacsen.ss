@@ -98,7 +98,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (time<?
       (entry-timestamp e1)
       (entry-timestamp e2)))))
-(trace snarf-em-all)
+;;(trace snarf-em-all)
 (define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
