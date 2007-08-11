@@ -264,9 +264,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (tcp-connect (*irc-server-name*) 6667)))
 
     ;; so we don't have to call flush-output all the time
-    (for-each (lambda (p)
-                (file-stream-buffer-mode p 'line))
-              (list op (*log-output-port*)))
+    (file-stream-buffer-mode (*log-output-port*) 'line)
 
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
