@@ -58,6 +58,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; how often (in seconds) do we re-create and read the input port
 (define *planet-poll-interval* (make-parameter 3600))
 
+;; this is what our queue returns.
 (define-struct entry (timestamp title link) (make-inspector))
 
 ;; returned entries are sorted oldest first.
@@ -99,6 +100,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (entry-timestamp e1)
       (entry-timestamp e2)))))
 ;;(trace snarf-em-all)
+;; this is for display purposes, not for serializing.
+
 (define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
@@ -108,6 +111,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            "~A, ~B ~d ~Y ~k:~M ~z")
           (de-html (entry-title entry))
           (entry-link entry)))
+
+;; so we want to ensure that we never put the same article onto the
+;; async-channel twice.  I can't think of a simple way to absolutely
+;; guarantee that, but I can think of a simple way to come pretty
+;; darned close:
+
+;; - every time we put an article onto the channel, we save its
+;; timestamp in a "prefernce" -- that's on-disk storage, so it'll be
+;; there after we exit.
+
+;; - also when we put an article onto the channel, we save the whole
+;; article into a hash table.
+
+;; before we put an article onto the channel, we check its timestamp
+;; against the saved one -- if it's older, we skip it.  And if it's
+;; not older, we check the hash table: if it's in there, we skip it
+;; too.
+
+;; Now the only way we'll put the same article in twice is if we shut
+;; down after putting article A in the async-channel, then start up
+;; again before that article vanishes from the output of our atom
+;; feed.  This will actually happen pretty often, but oh well.
 
 (define (reliably-put-pref value)
   (let retry ()
@@ -119,41 +144,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sleep (/ (add1 (random 10)) 10))
        (retry)))))
 
-;; for keeping track of which entries we've put into the channel.
-;; It's easier to serialize than an actual entry.
-
-;; TODO -- this should probably be a _list_ of hashes, not just one,
-;; in case we get a bunch of headlines that all have the same
-;; timestamp.
-(define-struct hstamp (time-type nanosecond second hash) (make-inspector))
-
-(define (entry->stamp e)
-
-  (make-hstamp
-   (time-type       (entry-timestamp e))
-   (time-nanosecond (entry-timestamp e))
-   (time-second     (entry-timestamp e))
-   (equal-hash-code (cons (entry-timestamp e)
-                          (cons (entry-title e)
-                                (entry-link e))))))
-(define (hstamp->list h)
-  (list  (hstamp-time-type  h)
-         (hstamp-nanosecond h)
-         (hstamp-second     h)
-         (hstamp-hash       h)))
-
-(define (stamp>? a b)
-  (time>?
-   (make-time (hstamp-time-type  a)
-              (hstamp-nanosecond a)
-              (hstamp-second     a))
-   (make-time (hstamp-time-type  b)
-              (hstamp-nanosecond b)
-              (hstamp-second     b))))
-
-(define (p val)
-  (printf "some value or other is ~s~%" val)
-  val)
 (define/kw (queue-of-entries
             #:key
             [whence])
@@ -172,37 +162,34 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-async-channel #f)))
+  (let ((the-channel (make-async-channel #f))
+        (entries-put (make-hash-table 'equal)))
     (thread
      (lambda ()
        (let loop ()
          (vtprintf "queue-of-entries top of a loop~%")
-         (let ((leftover-hstamp (apply
-                                 make-hstamp
-                                 (or (get-preference (*atom-timestamp-preference-name*))
-                                     (list 'time-utc 0 0 0))
-                                 )))
-           (vtprintf "leftover-hstamp is ~s~%" leftover-hstamp)
+         (let ((time-of-last-entry-put
+                (or (get-preference (*atom-timestamp-preference-name*))
+                    0)))
            (for-each
             (lambda (e)
-              (let ((this-stamp (entry->stamp e)))
+              ;; put this headline in the channel if it's newer than
+              ;; any we've previously seen, AND we haven't already
+              ;; seen it.
+              (if (and (> (time-second (entry-timestamp e))
+                         time-of-last-entry-put)
+                       (not (hash-table-get entries-put e #f)))
 
-                ;; put this headline in the channel if it's newer than
-                ;; any we've previously seen, OR if it's no older AND
-                ;; we haven't already seen it.
-                (if (or (stamp>? this-stamp leftover-hstamp)
-                        (and (not (stamp>? leftover-hstamp this-stamp))
-                             (not (equal? (hstamp-hash this-stamp)
-                                          (hstamp-hash leftover-hstamp)))))
-                    (begin
-                      (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
-                                (entry->string e))
-                      (reliably-put-pref (hstamp->list this-stamp))
-                      (async-channel-put the-channel e)
-                      (vtprintf "ppt: done~%"))
-                  (vtprintf "seen it (~s)~%" (entry-title e))
-                  )))
-            (p (snarf-em-all (whence)))))
+                  (begin
+                    (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
+                              (entry->string e))
+                    (reliably-put-pref (time-second (entry-timestamp e)))
+                    (hash-table-put! entries-put e #t)
+                    (async-channel-put the-channel e)
+                    (vtprintf "ppt: done~%"))
+                (vtprintf "seen it (~s)~%" (entry-title e))))
+
+            (snarf-em-all (whence))))
 
          (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
                    (*planet-poll-interval*))
@@ -210,6 +197,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (loop))))
 
     the-channel)  )
+
 (trace queue-of-entries)
 
 
@@ -223,8 +211,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         what-we-found))))
 (trace async->list)
 
+;; the key thing about this data is that there's more than one entry,
+;; they have the same timestamp, but otherwise their content is
+;; different.
 (define (preloaded-input-port)
-  (define data #<<THASSALL
+  (let-values (((ip op) (make-pipe)))
+    (display  #<<THASSALL
 <feed>
 <entry>
 <title >Yo vinnie</title>
@@ -238,9 +230,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 </entry>
 </feed>
 THASSALL
-    )
-  (let-values (((ip op) (make-pipe)))
-    (display data op)
+op)
     (newline op)
     (close-output-port op)
     ip)
@@ -288,30 +278,10 @@ THASSALL
                         (list #f)))
      (let ((q (queue-of-entries #:whence #f)))
        (let ((first-entry (sync q))
-             (leftover-hstamp (get-preference (*atom-timestamp-preference-name*))))
+             (time-of-last-entry-put (get-preference (*atom-timestamp-preference-name*))))
 
          (check-pred entry? first-entry "It's not an entry!!")
-         (check-not-false leftover-hstamp "queue didn't save a preference")
-         (printf "First entry: ~s; hash: ~s~%"
-                 first-entry
-                 (entry->stamp first-entry))
-
-         (let ((t (make-time (first leftover-hstamp)
-                             (second leftover-hstamp)
-                             (third leftover-hstamp)))
-               (hash (fourth leftover-hstamp)))
-
-           (printf "time from disk: ~s; hash from disk: ~s~%"
-                   t hash)
-
-           (if (time=? t (entry-timestamp first-entry))
-               (check-false (equal? hash (hstamp-hash (entry->stamp first-entry)))
-                            "we just got the same headline that was saved on disk!!")
-             (check-true (time<? (entry-timestamp first-entry) t)
-                         "we just got a headline older than the one on disk!!"))))))
-
-    )
-   ))
+         (check-not-false time-of-last-entry-put "queue didn't save a preference")))))))
 
 
 (provide
@@ -321,5 +291,5 @@ THASSALL
  queue-of-entries
  *planet-poll-interval*
  )
-(verbose!)
-)
+(verbose!))
+
