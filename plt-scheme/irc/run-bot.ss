@@ -49,7 +49,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
 
-(let ((remote-irc? (not (string=? "localhost" (*irc-server-name*))))
+(let ((remote-irc? (and (*irc-server-name*)
+                   (not (equal? "localhost" (*irc-server-name*)))))
       (feed-description (if (*use-real-atom-feed?*) "real" "fake")))
 
   (fprintf
@@ -85,17 +86,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   )
 
 (print-hash-table #t)
-(thread
- (lambda ()
-   (parameterize
-       ((current-namespace
-         (module->namespace "bot.ss")))
-     (fprintf
-      (current-error-port)
-      "Welcome to the ~a namespace.  Use your power only for good.~%"
-      (object-name (current-namespace)))
-     (dynamic-require '(lib "rep.ss" "readline") #f)
-     (read-eval-print-loop))))
+
+;; run a repl, but only if we're not already trying to read from stdin
+(when (*irc-server-name*)
+  (thread
+   (lambda ()
+     (parameterize
+         ((current-namespace
+           (module->namespace "bot.ss")))
+       (fprintf
+        (current-error-port)
+        "Welcome to the ~a namespace.  Use your power only for good.~%"
+        (object-name (current-namespace)))
+       (dynamic-require '(lib "rep.ss" "readline") #f)
+       (read-eval-print-loop)))))
 
 (start)
 )

@@ -256,7 +256,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 (define (start)
   (let-values (((ip op)
-                (tcp-connect (*irc-server-name*) 6667)))
+                (if (*irc-server-name*)
+                    (tcp-connect (*irc-server-name*) 6667)
+                  (values (current-input-port)
+                            (current-output-port)))))
 
     ;; so we don't have to call flush-output all the time
     (file-stream-buffer-mode (*log-output-port*) 'line)
@@ -289,7 +292,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                ;; TODO: maybe reconnect
                (vtprintf "eof on server~%")
              (begin
-               (respond (parse-irc-message line) op)
+               (with-handlers
+                   ([exn:fail:irc-parse?
+                     (lambda (e)
+                       (vtprintf "malformed line from server: ~s => ~s~%"
+                                 (exn:fail:irc-parse-string e)
+                                 e))])
+               (respond (parse-irc-message line) op))
                (loop)))))))))
 
 (provide

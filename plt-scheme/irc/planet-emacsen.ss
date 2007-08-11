@@ -198,7 +198,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     the-channel)  )
 
-(trace queue-of-entries)
+;;(trace queue-of-entries)
 
 
 
@@ -209,7 +209,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (if datum
           (loop (cons datum what-we-found))
         what-we-found))))
-(trace async->list)
+;;(trace async->list)
 
 ;; the key thing about this data is that there's more than one entry,
 ;; they have the same timestamp, but otherwise their content is

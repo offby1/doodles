@@ -34,12 +34,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *verbose* #f)
 (define (verbose!) (set! *verbose* #t))
 
-(define *irc-server-name*
-  (make-parameter
-   "localhost"
-   ;;"irc.freenode.net"
-   )
-  )
+;; #f means read from stdin, write to stdout
+(define *irc-server-name* (make-parameter #f))
+
 (define *initial-channel-names* (make-parameter '()))
 (define *random?* (make-parameter #t))
 (define *quote-and-headline-interval* (make-parameter (* 20 60)))
