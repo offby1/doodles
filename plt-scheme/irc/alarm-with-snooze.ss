@@ -7,8 +7,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (lib "kw.ss")
          (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         "vprintf.ss")
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
 (define-values (struct:alarm-with-snooze make-alarm-with-snooze alarm-with-snooze? alarm-with-snooze-ref alarm-with-snooze-set!)
     (make-struct-type 'alarm-with-snooze #f 3 0
@@ -30,8 +29,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (sleeper (lambda ()
                     (let loop ()
                       (sleep interval)
-                      (vtprintf "alarm ~s is about to go off~%"
-                                id)
                       (semaphore-post s)
                       (when periodic? (loop))))))
     (let ((t (thread sleeper)))

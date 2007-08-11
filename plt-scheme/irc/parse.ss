@@ -29,6 +29,8 @@
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
 (define-struct message (prefix command params) (make-inspector))
+
+;; turn "NOTICE", e.g., into 'NOTICE
 (define (public-message-command x)
   (read-from-string (message-command x)))
 

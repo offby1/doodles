@@ -10,13 +10,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
          (only "globals.ss" *initial-channel-names*)
+         (only "parse.ss"
+               parse-irc-message)
          "vprintf.ss")
 
 ;; TODO -- write proper "check-response", so that it gives meaningful
 ;; spew when it fails
 (define (got-response? input regexp)
   (let-values (((ip op) (make-pipe)))
-    (respond input op)
+    (respond (parse-irc-message input) op)
     (expect/timeout ip regexp 1)))
 
 ;; returns #f if we didn't find what we're looking for.
@@ -55,7 +57,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (parameterize ((*initial-channel-names* (list "#bots")))
       (let-values (((ip op) (make-pipe)))
         (respond
-         ":server 001 :welcome"
+         (parse-irc-message ":server 001 :welcome")
          op)
         (check-not-false
          (expect/timeout ip #rx"JOIN #bots" 1)
