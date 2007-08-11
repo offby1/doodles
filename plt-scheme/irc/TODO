@@ -101,6 +101,27 @@ ERC> /ctcp rudybot source
 
 ** Say "no news" when they ain't no news
 
+** many headlines with same timestamp
+   I've seen the news spewer will duplicate headlines; I wonder if
+   it's because many headlines have the same timestamp, but my
+   mechanism to keep track of that only stores one hash along with the
+   timestamp in the preferences.  It should probably store a _list_ of
+   hashes.  The selection algorithm would then be:
+
+- get a headline from the Atom feed
+
+- if there's no preference at all, create a new one that contains this
+  entry's timestamp, and an empty list
+
+- if this headline is newer than the preference, just stick it into
+  the async channel;
+
+- else if it's older, just skip it;
+
+- else if its hash appears in the list of hashes, skip it;
+
+- else add its hash to the list, and stick it into the async channel
+
 * Windows
 
 ** Test regularly
