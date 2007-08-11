@@ -28,6 +28,7 @@
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
+(define-struct (exn:fail:irc-parse exn:fail:contract) (string original-exception))
 (define-struct message (prefix command params) (make-inspector))
 
 ;; turn "NOTICE", e.g., into 'NOTICE
@@ -48,73 +49,80 @@
   (regexp-match #rx"^#" (PRIVMSG-destination m)))
 
 (define (parse-irc-message string)
-  (let ((prefix #f)
-        (sans-prefix string))
-    (when (char=? #\: (string-ref string 0))
-      (let ((m (regexp-match #rx"^:(.*?) (.*)$" string)))
-        (set! prefix (second m))
-        (set! sans-prefix (third m))))
-    (let* ((m (regexp-match #rx"^(.*?) (.*)$" sans-prefix))
-           (command (second m))
-           (sans-command (third m)))
-      (let* ((m (regexp-match #rx"((.*?) )?(:(.*))?$" sans-command))
-             (middle-params (string-tokenize
-                             (or (second m) "")
-                             (char-set-complement (char-set #\space))))
-             (trailing-parameter (let ((t (fifth m)))
-                                   (and t
-                                        (positive? (string-length t))
-                                        t)))
-             (addressee
-              (and
-               trailing-parameter
-               (let ((tp-tokens (string-tokenize
-                                  trailing-parameter
-                                  (char-set-complement (char-set #\space)))))
-                 (and (not (null? tp-tokens))
-                      (let ((fw (first tp-tokens))
-                            (trailing-delimiter-rx #rx"[:,]$"))
-                        (and
-                         (regexp-match
-                          trailing-delimiter-rx
-                          fw)
-                         (regexp-replace
-                          trailing-delimiter-rx
-                          fw
-                          "")))))))
-             )
-        (if (string=? "PRIVMSG" command)
-            (let* ((ctcp-match (regexp-match
+  (with-handlers
+      ([exn:fail:contract?
+        (lambda (e)
+          (raise (make-exn:fail:irc-parse
+                  (exn-message e)
+                  (exn-continuation-marks e)
+                  string e)))])
+    (let ((prefix #f)
+          (sans-prefix string))
+      (when (char=? #\: (string-ref string 0))
+        (let ((m (regexp-match #rx"^:(.*?) (.*)$" string)))
+          (set! prefix (second m))
+          (set! sans-prefix (third m))))
+      (let* ((m (regexp-match #rx"^(.*?) (.*)$" sans-prefix))
+             (command (second m))
+             (sans-command (third m)))
+        (let* ((m (regexp-match #rx"((.*?) )?(:(.*))?$" sans-command))
+               (middle-params (string-tokenize
+                               (or (second m) "")
+                               (char-set-complement (char-set #\space))))
+               (trailing-parameter (let ((t (fifth m)))
+                                     (and t
+                                          (positive? (string-length t))
+                                          t)))
+               (addressee
+                (and
+                 trailing-parameter
+                 (let ((tp-tokens (string-tokenize
+                                   trailing-parameter
+                                   (char-set-complement (char-set #\space)))))
+                   (and (not (null? tp-tokens))
+                        (let ((fw (first tp-tokens))
+                              (trailing-delimiter-rx #rx"[:,]$"))
+                          (and
+                           (regexp-match
+                            trailing-delimiter-rx
+                            fw)
+                           (regexp-replace
+                            trailing-delimiter-rx
+                            fw
+                            "")))))))
+               )
+          (if (string=? "PRIVMSG" command)
+              (let* ((ctcp-match (regexp-match
                                   (pregexp "^\u0001([[:alpha:]]+) ?(.*)\u0001$")
                                   trailing-parameter))
-                   (text (if ctcp-match (third ctcp-match)
-                           trailing-parameter))
-                   (req/x (and ctcp-match (second ctcp-match)))
-                   (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
-              (apply
-               (if ctcp-match
-                   (cond
-                    ((equal? req/x "ACTION" ) make-ACTION)
-                    ((equal? req/x "VERSION") make-VERSION)
-                    ((equal? req/x "SOURCE" ) make-SOURCE)
-                    (else make-CTCP))
-                 make-PRIVMSG)
-               prefix command (append middle-params (list text))
-               (second prefix-match)
-               (first middle-params)
-               addressee
-               text
-               (string-tokenize
-                text
-                (char-set-complement char-set:whitespace))
-               (if ctcp-match (list (first ctcp-match)) '())))
-          (make-message
-           prefix command
-           (append
-            middle-params
-            (if trailing-parameter
-                (list trailing-parameter)
-              '()))))))))
+                     (text (if ctcp-match (third ctcp-match)
+                             trailing-parameter))
+                     (req/x (and ctcp-match (second ctcp-match)))
+                     (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
+                (apply
+                 (if ctcp-match
+                     (cond
+                      ((equal? req/x "ACTION" ) make-ACTION)
+                      ((equal? req/x "VERSION") make-VERSION)
+                      ((equal? req/x "SOURCE" ) make-SOURCE)
+                      (else make-CTCP))
+                   make-PRIVMSG)
+                 prefix command (append middle-params (list text))
+                 (second prefix-match)
+                 (first middle-params)
+                 addressee
+                 text
+                 (string-tokenize
+                  text
+                  (char-set-complement char-set:whitespace))
+                 (if ctcp-match (list (first ctcp-match)) '())))
+            (make-message
+             prefix command
+             (append
+              middle-params
+              (if trailing-parameter
+                  (list trailing-parameter)
+                '())))))))))
 ;(trace parse-irc-message)
 
 
@@ -131,9 +139,9 @@
    (test-case
     "barfs on malformed data from server"
     (check-exn
-     exn:fail:contract? (lambda () (parse-irc-message ":foo ")))
+     exn:fail:irc-parse? (lambda () (parse-irc-message ":foo ")))
     (check-exn
-     exn:fail:contract? (lambda () (parse-irc-message ":foo :"))))
+     exn:fail:irc-parse? (lambda () (parse-irc-message ":foo :"))))
 
    (test-parse
     "no trailing"
