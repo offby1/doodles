@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot-tests.ss -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot mzscheme
-(require (lib "kw.ss")
+(require (lib "async-channel.ss")
+         (lib "kw.ss")
          (only (lib "1.ss" "srfi")
                first second third
                filter)
@@ -34,6 +35,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (define *message-subscriptions* '())
 (define (subscribe-proc-to-server-messages! proc)
   (set! *message-subscriptions* (cons proc *message-subscriptions*)))
+
+(define *planet-emacs-newsfeed* (queue-of-entries
+           #:whence
+           (and (*use-real-atom-feed?*)
+                (lambda ()
+                  (get-pure-port
+                   (string->url "http://planet.emacsen.org/atom.xml")
+                   (list))))))
 
 (define/kw (respond line op #:key [preparsed-message #f])
 
@@ -163,6 +172,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (string-ci=? "quote" (second (PRIVMSG-text-words message)))
            (reply (one-quote))))
 
+     ((and ch-for-us?
+           (string-ci=? "news" (second (PRIVMSG-text-words message))))
+      (reply (or (let ((entry (async-channel-try-get *planet-emacs-newsfeed*)))
+                   (and entry (entry->string entry)))
+                 "Sorry, no news yet.")))
+
      ((or (VERSION? message)
           (and ch-for-us?
                (string-ci=? "version" (second (PRIVMSG-text-words message)))))
@@ -210,15 +225,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                       (pm this-channel q)
                       (loop)))))))
 
-           (when (member this-channel '("#emacs" "#scheme-bots"))
-             (let ((q (queue-of-entries
-                       #:whence
-                       (and (*use-real-atom-feed?*)
-                            (lambda ()
-                              (get-pure-port
-                               (string->url "http://planet.emacsen.org/atom.xml")
-                               (list))))))
-                   (idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
+           (when (equal? this-channel "#emacs")
+             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
 
                (for-each
                 subscribe-proc-to-server-messages!
@@ -228,14 +236,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (lambda ()
                   ;; re-spew the most recent headline if there's no
                   ;; new news.
-                  (let loop ((last-headline #f))
-                    (let ((headline (or (sync/timeout 3600 q)
-                                        last-headline)))
+                  (let loop ()
+                    (let ((headline (sync/timeout 3600 *planet-emacs-newsfeed*)))
                       (when headline
                         (sync idle-evt)
                         (pm this-channel
                             (format "~a" (entry->string headline))))
-                      (loop headline)))))))))
+                      (loop)))))))))
 
         ((433)
          (error 'respond "Nick already in use!")
@@ -276,14 +283,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (vtprintf "Sent NICK and USER~%")
 
-    (let loop ()
-      (let ((line (read-line ip 'return-linefeed)))
-        (if (eof-object? line)
-            ;; TODO: maybe reconnect
-            (vtprintf "eof on server~%")
-          (begin
-            (respond line op)
-            (loop)))))))
+    (parameterize-break
+     #t
+     (with-handlers
+         ([exn:break?
+           (lambda (x)
+             (fprintf op "QUIT :Ah been shot!~%")
+             (close-output-port op))])
+       (let loop ()
+         (let ((line (read-line ip 'return-linefeed)))
+           (if (eof-object? line)
+               ;; TODO: maybe reconnect
+               (vtprintf "eof on server~%")
+             (begin
+               (respond line op)
+               (loop)))))))))
 
 (provide
  respond
