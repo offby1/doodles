@@ -122,6 +122,11 @@ ERC> /ctcp rudybot source
 
 - else add its hash to the list, and stick it into the async channel
 
+** <j85wilson> 
+
+   offby1: suggestion for rudybot: only have him spew news in a
+   channel if there has been speech since the last time he spewed news
+
 * Windows
 
 ** Test regularly
