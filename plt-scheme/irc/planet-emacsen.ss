@@ -167,7 +167,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (thread
      (lambda ()
        (let loop ()
-         (vtprintf "queue-of-entries top of a loop~%")
          (let ((time-of-last-entry-put
                 (or (get-preference (*atom-timestamp-preference-name*))
                     0)))
@@ -181,18 +180,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                        (not (hash-table-get entries-put e #f)))
 
                   (begin
-                    (vtprintf "Planet producer thread about to put ~s onto the async ... ~%"
-                              (entry->string e))
                     (reliably-put-pref (time-second (entry-timestamp e)))
                     (hash-table-put! entries-put e #t)
-                    (async-channel-put the-channel e)
-                    (vtprintf "ppt: done~%"))
-                (vtprintf "seen it (~s)~%" (entry-title e))))
+                    (async-channel-put the-channel e))))
 
             (snarf-em-all (whence))))
 
-         (vtprintf "Planet producer thread sleeping ~a seconds before snarfing again~%"
-                   (*planet-poll-interval*))
          (sleep (*planet-poll-interval*))
          (loop))))
 
