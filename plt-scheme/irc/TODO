@@ -83,12 +83,6 @@ ERC> /ctcp rudybot source
    command line which were also in the default list, and it's too dumb
    to uniquify the resulting list.
 
-** ignores private messages?
-
-   Yup.  Don't ask me why, but I check all the incoming messages with
-   ch-for-us?.  Maybe I had a good reason for doing that, but if so,
-   I've forgotten what it was.
-
 * quotes and news headlines
 
   I should make the silly quotes have a different period than the news

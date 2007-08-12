@@ -62,10 +62,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (PRIVMSG-speaker message))
           response))
 
-  (define ch-for-us?
-    (and (PRIVMSG? message)
-         (PRIVMSG-is-for-channel? message)
-         (equal? (*my-nick*) (PRIVMSG-approximate-recipient message))))
+  (define for-us?
+    (and
+     (PRIVMSG? message)
+     (equal? (*my-nick*)
+             ((if (PRIVMSG-is-for-channel? message)
+                  PRIVMSG-approximate-recipient
+                PRIVMSG-destination) message))))
+  (define gist-for-us
+    (and for-us?
+         (cond
+          ((and (PRIVMSG-is-for-channel? message)
+                (< 1 (length (PRIVMSG-text-words message))))
+           (second (PRIVMSG-text-words message)))
+          ((and (not (PRIVMSG-is-for-channel? message))
+                (< 0 (length (PRIVMSG-text-words message))))
+           (first (PRIVMSG-text-words message)))
+          (else
+           #f))
+         ))
 
   (vtprintf " <= ~s~%" message)
 
@@ -121,7 +136,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
    ;; the one that we just received, but with the words "later do"
    ;; hacked out, and then call ourselves recursively with that new
    ;; message.
-   ((and ch-for-us?
+   ((and for-us?
          (let ((w  (PRIVMSG-text-words message)))
            (and
             (< 2 (length w))
@@ -153,38 +168,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           ;; http://www.paulgraham.com/popular.html
           op)))))
 
-   ((and ch-for-us?
-         (= 1 (length (PRIVMSG-text-words message))))
-    (reply "Eh?  Speak up.")
-    )
-
-   ((and ch-for-us?
-         (string-ci=? "seen" (second (PRIVMSG-text-words message))))
+   ((equal? "seen" gist-for-us)
     (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
            (poop (hash-table-get *appearances-by-nick* who #f)))
       (reply (or poop (format "I haven't seen ~a" who)))))
 
-   ((and ch-for-us?
-         (string-ci=? "quote" (second (PRIVMSG-text-words message)))
+   ((and (equal? "quote" gist-for-us)
          (reply (one-quote))))
 
-   ((and ch-for-us?
-         (string-ci=? "news" (second (PRIVMSG-text-words message))))
+   ((and (equal? "news" gist-for-us))
     (reply (or (let ((entry (async-channel-try-get *planet-emacs-newsfeed*)))
                  (and entry (entry->string entry)))
                "Sorry, no news yet.")))
 
    ((or (VERSION? message)
-        (and ch-for-us?
-             (string-ci=? "version" (second (PRIVMSG-text-words message)))))
+        (equal? "version" gist-for-us))
     (if (VERSION? message)
         (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
              (PRIVMSG-speaker message)
              (long-version-string))
       (reply (long-version-string))))
    ((or (SOURCE? message)
-        (and ch-for-us?
-             (string-ci=? "source" (second (PRIVMSG-text-words message)))))
+        (equal? "source" gist-for-us))
     (let ((source-string
            "http://offby1.ath.cx/~erich/bot/"
            ))
@@ -194,7 +199,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                source-string)
         (reply source-string))))
 
-   (ch-for-us?
+   ((and for-us? (not gist-for-us))
+    (reply "Eh?  Speak up."))
+
+   (for-us?
     (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
    (else
     (case (message-command message)
@@ -281,6 +289,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       ))))
 
+
 ;(trace respond)
 
 (define (start)
@@ -312,11 +321,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (when (*nickserv-password*)
       (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
 
-    ;; TODO -- wait for
-
-
-    (vtprintf "Sent NICK and USER~%")
-
     (parameterize-break
      #t
      (with-handlers
@@ -333,9 +337,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (with-handlers
                    ([exn:fail:irc-parse?
                      (lambda (e)
-                       (vtprintf "malformed line from server: ~s => ~s~%"
-                                 (exn:fail:irc-parse-string e)
-                                 e))])
+                       (vtprintf "couldn't parse line from server: ~s~%" e))])
                  (respond (parse-irc-message line) op))
                (loop)))))))))
 
