@@ -74,8 +74,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (fprintf (current-error-port)
              "WARNING: you're connecting to IRC server ~s but using a ~a Atom feed~%"
              (*irc-server-name*)
-             feed-description)
-    (sleep 10))
+             feed-description))
+
 
   ;; if we're talking to a remote server, let's take some time to
   ;; identify as best we can.
