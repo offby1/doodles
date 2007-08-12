@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
 |#
 (module run-all-tests mzscheme
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
@@ -14,15 +14,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "tinyurl-task.ss"
          "tinyurl.ss"
          )
-(exit (if (positive? (test/text-ui
-                      (test-suite
-                       "eva thang"
-                       alarm-with-snooze-tests
-                       bot-tests
-                       channel-idle-event-tests
-                       parse-tests
-                       planet-tests
-                       tinyurl-task-tests
-                       tinyurl-tests)))
-          1 0))
+(define eva-thang (test-suite
+                   "eva thang"
+                   alarm-with-snooze-tests
+                   bot-tests
+                   channel-idle-event-tests
+                   parse-tests
+                   planet-tests
+                   tinyurl-task-tests
+                   tinyurl-tests))
+
+(define (run-and-exit)
+  (printf "running~%")
+  (exit
+   (if (positive? (test/text-ui eva-thang))
+       1
+     0)))
+
+(provide (all-defined))
 )

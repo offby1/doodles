@@ -14,7 +14,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (profiling-enabled #t)
 (profiling-record-enabled #t)
 
-(require "../pe-tests.ss")
+(require "../run-all-tests.ss")
+(test/text-ui eva-thang)
 
 (define *file-of-interest*
   (simplify-path (build-path
