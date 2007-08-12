@@ -8,7 +8,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (lib "cmdline.ss")
-         (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
+         (all-except (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
+                     exn:delicious:auth?)
+         (rename (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
+                 auth-exn exn:delicious:auth?)
          (only (lib "19.ss" "srfi")
                date->string
                date->time-utc)
@@ -23,6 +26,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; return all items with the tag "moviestowatchfor"
 
 ;;(dump-sxml-responses? #t)
+
+;; this is less pointless than it looks -- it lets me export the
+;; identifier without having to say (provide all-from (planet
+;; "delicious.ss" ...)), which I don't wanna do, because who knows
+;; what all is in there.
+(define exn:delicious:auth? auth-exn)
 
 (define (snarf-some-recent-posts)
   (parameterize

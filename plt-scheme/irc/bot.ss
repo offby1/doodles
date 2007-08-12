@@ -244,9 +244,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (thread
               (lambda ()
                 (let loop ()
-                  (set! posts (snarf-some-recent-posts))
-                  (sleep  (* 7 24 3600))
-                  (loop))))
+                  (with-handlers
+                      ([exn:delicious:auth?
+                        (lambda (e)
+                          (vtprintf
+                           "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                    (set! posts (snarf-some-recent-posts))
+                    (sleep  (* 7 24 3600))
+                    (loop)))))
 
              (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
 
