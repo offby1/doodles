@@ -44,7 +44,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (string->url "http://planet.emacsen.org/atom.xml")
                    (list))))))
 
-(define/kw (respond message op)
+(define (respond message op)
 
   (define (out . args)
     (apply fprintf op args)
@@ -259,10 +259,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (if (*irc-server-name*)
                     (tcp-connect (*irc-server-name*) 6667)
                   (values (current-input-port)
-                            (current-output-port)))))
+                          (current-output-port)))))
 
     ;; so we don't have to call flush-output all the time
-    (file-stream-buffer-mode (*log-output-port*) 'line)
+    (for-each (lambda (p)
+                (file-stream-buffer-mode p 'line))
+              (list op (*log-output-port*)))
 
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
@@ -298,7 +300,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                        (vtprintf "malformed line from server: ~s => ~s~%"
                                  (exn:fail:irc-parse-string e)
                                  e))])
-               (respond (parse-irc-message line) op))
+                 (respond (parse-irc-message line) op))
                (loop)))))))))
 
 (provide
