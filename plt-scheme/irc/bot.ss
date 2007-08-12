@@ -82,6 +82,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            #f))
          ))
 
+  (set! gist-for-us
+        (and gist-for-us
+             (regexp-replace (pregexp "[^[:alpha:]]+$") gist-for-us "")))
+
   (vtprintf " <= ~s~%" message)
 
   (for-each (lambda (proc)
