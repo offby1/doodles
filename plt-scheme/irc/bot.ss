@@ -261,6 +261,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (values (current-input-port)
                           (current-output-port)))))
 
+    (when (*irc-server-name*)
+      (*log-output-port*
+       (open-output-file
+        (format "~a~a"
+                (*irc-server-name*)
+                (zdate)))))
+
     ;; so we don't have to call flush-output all the time
     (for-each (lambda (p)
                 (file-stream-buffer-mode p 'line))

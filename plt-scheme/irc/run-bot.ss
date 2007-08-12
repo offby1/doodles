@@ -38,8 +38,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*nickserv-password* pw))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t))
-  (("-l" "--logfile") lfn "Name of file to log to.  Default is stdout"
-   (*log-output-port* (open-output-file lfn 'truncate/replace)))
   (("-v" "--verbose")
     "Spew debug stuff to logfile"
     (verbose!))
@@ -48,16 +46,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (multi
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
-
-(printf "*irc-server-name*             :~s~%" (*irc-server-name*))
-(printf "*timeout-seconds*             :~s~%" (*timeout-seconds*))
-(printf "*passive?*                    :~s~%" (*passive?*))
-(printf "*my-nick*                     :~s~%" (*my-nick*))
-(printf "*quote-and-headline-interval* :~s~%" (*quote-and-headline-interval*))
-(printf "*nickserv-password*           :~s~%" (*nickserv-password*))
-(printf "*use-real-atom-feed?*         :~s~%" (*use-real-atom-feed?*))
-(printf "*log-output-port*             :~s~%" (*log-output-port*))
-(printf "*initial-channel-names*       :~s~%" (*initial-channel-names*)       )
 
 (let ((remote-irc? (and (*irc-server-name*)
                    (not (equal? "localhost" (*irc-server-name*)))))

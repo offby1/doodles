@@ -9,9 +9,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
          "bot-tests.ss"
-         (only "globals.ss"
-               *log-output-port*
-               verbose!)
          "globals.ss"
          "tinyurl.ss")
 
