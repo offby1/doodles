@@ -2,11 +2,6 @@
 
 -- High priority
 
-* give log files unique names
-  like, combine the IRC server's name with the time we started up.
-  This way we can have multiple instances running in the same
-  directory without clobbering each other.
-
 * NOTICE instead of PRIVMSG
   VERSION and SOURCE commands, perhaps
 

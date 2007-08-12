@@ -9,6 +9,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
+;; Like an alarm event, but you can "hit the snooze" button _before_
+;; it goes off (unlike a real alarm clock, whose snooze button is for
+;; _after_it buzzes), which causes the alarm to reset.  I.e., if you
+;; set the alarm to go off five seconds from now, wait four seconds,
+;; then hit the snooze button, the alarm will eventually go off nine
+;; seconds after you set it.
+
+;; You can control whether it's periodic or not, which simply means:
+;; will it go off just once, N seconds from now; or will it instead go
+;; off -every- N seconds (subject to snoozage delays, of course).
+
 (define-values (struct:alarm-with-snooze make-alarm-with-snooze alarm-with-snooze? alarm-with-snooze-ref alarm-with-snooze-set!)
     (make-struct-type 'alarm-with-snooze #f 3 0
                       #f (list (cons prop:evt 0))
@@ -26,6 +37,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             [id 'unknown]
             [periodic? #f])
   (let* ((s (make-semaphore))
+         ;; This seems like an expensive way to go about this -- every
+         ;; time they hit the snooze button, we kill one thread and
+         ;; create another.  It works, though :-)
          (sleeper (lambda ()
                     (let loop ()
                       (sleep interval)
@@ -39,6 +53,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (when (not fatal?)
            (set! t (thread sleeper))))
        id))))
+
+
 
 (define alarm-with-snooze-tests
 
