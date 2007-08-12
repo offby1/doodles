@@ -7,6 +7,9 @@
 
 * bugs
 
+** "source?" doesn't work
+   and probably "news?" doesn't, either; strip trailing punctuation.
+
 ** unprompted news
    see bug/unprompted-news
 
