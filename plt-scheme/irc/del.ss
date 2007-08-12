@@ -1,37 +1,65 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui del.icio.us-tests 'verbose))"
 |#
 
 (module del mzscheme
-(require (lib "cmdline.ss")
+(require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (lib "cmdline.ss")
          (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
          (only (lib "19.ss" "srfi")
                date->string)
          (only (lib "1.ss" "srfi")
+               every
                take)
          (lib "pretty.ss")
-         (lib "trace.ss"))
+         (lib "trace.ss")
+         "globals.ss"
+         "headline.ss")
 
 ;; return all items with the tag "moviestowatchfor"
 
 ;;(dump-sxml-responses? #t)
 
-(command-line
- "del.icio.us"
- (current-command-line-arguments)
- (once-each
-  (("-p" "--password") p "Your password on del.icio.us"
-   (current-password p))))
+(define (snarf-em-all)
+  (parameterize
+      ((current-password
+        (or (*del.icio.us-password*)
 
-(current-username "tucumcari")
+            ;; more convenient for testing
+            (getenv "DELICIOUS_PASSWORD")
 
-(let ((gotten (recent-posts "moviestowatchfor")))
-  (display "GOt these:")
-  (pretty-print (map (lambda (p)
-                       (list (post-description p)
-                             (post-url p)))
-                     gotten)))
+            "unknown")
+        )
+       (current-username "tucumcari"))
 
+    (let ((gotten (recent-posts "moviestowatchfor")))
+      (display "Got these:")
+      (pretty-print gotten)
+      (map (lambda (post)
+             (make-entry (post-date post)
+                         (post-description post)
+                         (post-url post))
+             ) gotten))))
+
+(define del.icio.us-tests
+
+  (test-suite
+   "del.icio.us"
+
+   (test-not-false
+    "gets some movies, and they're all entries"
+    (with-handlers ([exn:delicious:auth?
+                     (lambda (e)
+                       (fprintf
+                        (current-error-port)
+                        "wrong delicious password; skipping the test~%")
+                       #t)])
+      (let ((snarfage (snarf-em-all)))
+        (check-false     (null? snarfage) "didn't return any entries")
+        (check-not-false (every entry? snarfage) "They're not all entries")))
+    )))
+(provide (all-defined))
 )

@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          "alarm-with-snooze.ss"
          "bot-tests.ss"
          "channel-idle-event.ss"
+         "del.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "tinyurl-task.ss"
@@ -19,13 +20,13 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
                    alarm-with-snooze-tests
                    bot-tests
                    channel-idle-event-tests
+                   del.icio.us-tests
                    parse-tests
                    planet-tests
                    tinyurl-task-tests
                    tinyurl-tests))
 
 (define (run-and-exit)
-  (printf "running~%")
   (exit
    (if (positive? (test/text-ui eva-thang))
        1

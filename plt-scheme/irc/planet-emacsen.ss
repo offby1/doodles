@@ -51,15 +51,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                date->string
                zdate)
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
-
+         "headline.ss"
          "globals.ss"
          "vprintf.ss")
 
 ;; how often (in seconds) do we re-create and read the input port
 (define *planet-poll-interval* (make-parameter 3600))
-
-;; this is what our queue returns.
-(define-struct entry (timestamp title link) (make-inspector))
 
 ;; returned entries are sorted oldest first.
 
@@ -284,5 +281,5 @@ op)
  queue-of-entries
  *planet-poll-interval*
  )
-(verbose!))
+)
 
