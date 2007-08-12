@@ -49,6 +49,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("-c" "--channel") channel "A channel to join when starting"
    (*initial-channel-names* (cons channel (*initial-channel-names*))))))
 
+(printf "*irc-server-name*             :~s~%" (*irc-server-name*))
+(printf "*timeout-seconds*             :~s~%" (*timeout-seconds*))
+(printf "*passive?*                    :~s~%" (*passive?*))
+(printf "*my-nick*                     :~s~%" (*my-nick*))
+(printf "*quote-and-headline-interval* :~s~%" (*quote-and-headline-interval*))
+(printf "*nickserv-password*           :~s~%" (*nickserv-password*))
+(printf "*use-real-atom-feed?*         :~s~%" (*use-real-atom-feed?*))
+(printf "*log-output-port*             :~s~%" (*log-output-port*))
+(printf "*initial-channel-names*       :~s~%" (*initial-channel-names*)       )
+
 (let ((remote-irc? (and (*irc-server-name*)
                    (not (equal? "localhost" (*irc-server-name*)))))
       (feed-description (if (*use-real-atom-feed?*) "real" "fake")))
