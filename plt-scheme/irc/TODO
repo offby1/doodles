@@ -7,11 +7,6 @@
 
 * bugs
 
-** "source?" doesn't work
-   and probably "news?" doesn't, either; strip trailing punctuation.
-   Related to that: parse.ss is a baroque nightmare.  Find a better
-   way.
-
 ** unprompted news
    see bug/unprompted-news
 
