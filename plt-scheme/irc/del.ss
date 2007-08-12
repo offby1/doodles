@@ -10,7 +10,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "cmdline.ss")
          (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
          (only (lib "19.ss" "srfi")
-               date->string)
+               date->string
+               date->time-utc)
          (only (lib "1.ss" "srfi")
                every
                take)
@@ -23,7 +24,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;;(dump-sxml-responses? #t)
 
-(define (snarf-em-all)
+(define (snarf-some-recent-posts)
   (parameterize
       ((current-password
         (or (*del.icio.us-password*)
@@ -39,10 +40,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (display "Got these:")
       (pretty-print gotten)
       (map (lambda (post)
-             (make-entry (post-date post)
+             (make-entry (date->time-utc (post-date post))
                          (post-description post)
-                         (post-url post))
-             ) gotten))))
+                         (post-url post)))
+           gotten))))
 
 (define del.icio.us-tests
 
@@ -57,7 +58,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                         (current-error-port)
                         "wrong delicious password; skipping the test~%")
                        #t)])
-      (let ((snarfage (snarf-em-all)))
+      (let ((snarfage (snarf-some-recent-posts)))
         (check-false     (null? snarfage) "didn't return any entries")
         (check-not-false (every entry? snarfage) "They're not all entries")))
     )))

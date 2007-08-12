@@ -9,6 +9,8 @@
 
 ** "source?" doesn't work
    and probably "news?" doesn't, either; strip trailing punctuation.
+   Related to that: parse.ss is a baroque nightmare.  Find a better
+   way.
 
 ** unprompted news
    see bug/unprompted-news
@@ -176,10 +178,6 @@ ERC> /ctcp rudybot source
   reviews" link; find Ebert's name.  (I honestly think this would be
   as reliable as searching on rogerebert.com; that site's design is as
   lame as its content is excellent)
-
-** my del.icio.us "moviestowatchfor" ...
-  maybe, somehow, spam ##cinema with one of those.  This would
-  effectively be another news feed, just like planet.emacsen.org.
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot

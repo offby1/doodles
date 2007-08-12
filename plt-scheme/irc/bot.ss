@@ -22,6 +22,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          "channel-idle-event.ss"
+         "del.ss"
          "globals.ss"
          "parse.ss"
          "planet-emacsen.ss"
@@ -236,8 +237,31 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     (when headline
                       (sync idle-evt)
                       (pm this-channel
-                          (format "~a" (entry->string headline))))
-                    (loop)))))))))
+                          (entry->string headline)))
+                    (loop)))))))
+         (when (equal? this-channel "##cinema")
+           (let ((posts #f))
+             (thread
+              (lambda ()
+                (let loop ()
+                  (set! posts (snarf-some-recent-posts))
+                  (sleep  (* 7 24 3600))
+                  (loop))))
+
+             (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
+
+               (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+
+               (thread
+                (lambda ()
+                  (let loop ()
+                    (sync idle)
+                    (when posts
+                      (notice this-channel
+                              (entry->string
+                               (list-ref posts (random (length posts))))))
+                    (loop))
+                  )))))))
 
       ((433)
        (error 'respond "Nick already in use!")
