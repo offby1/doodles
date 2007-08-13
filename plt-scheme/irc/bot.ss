@@ -37,13 +37,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (define (subscribe-proc-to-server-messages! proc)
   (set! *message-subscriptions* (cons proc *message-subscriptions*)))
 
-(define *planet-emacs-newsfeed* (queue-of-entries
-           #:whence
-           (and (*use-real-atom-feed?*)
-                (lambda ()
-                  (get-pure-port
-                   (string->url "http://planet.emacsen.org/atom.xml")
-                   (list))))))
+(define *planet-emacs-newsfeed* #f)
 
 (define (respond message op)
 
@@ -242,10 +236,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
              (thread
               (lambda ()
+                 (set! *planet-emacs-newsfeed*
+                       (queue-of-entries
+                        #:whence
+                        (and (*use-real-atom-feed?*)
+                             (lambda ()
+                               (get-pure-port
+                                (string->url "http://planet.emacsen.org/atom.xml")
+                                (list))))))
                 ;; re-spew the most recent headline if there's no
                 ;; new news.
                 (let loop ()
-                  (let ((headline (sync/timeout 3600 *planet-emacs-newsfeed*)))
+                  (let ((headline (sync/timeout (*planet-poll-interval*)
+                                                *planet-emacs-newsfeed*)))
                     (when headline
                       (sync idle-evt)
                       (pm this-channel

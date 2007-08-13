@@ -85,6 +85,15 @@ ERC> /ctcp rudybot source
   irrelevant, though, since if there's any real chatter in the
   channel, each will get delayed by more-or-less random amounts.
 
+** preference timestamp
+   I update this every time the news producer puts something onto the
+   async, but I think it should instead be updated whenever the
+   consumer takes something off.  The way it stands now, if I start
+   the bot, it then snarfs lots of news from Atom and puts it on the
+   queue; if I then kill the bot before it has had a chance to spew
+   any of those items, they are all lost: the next time the bot
+   starts, it won't even bother enqueueing them.
+
 ** <j85wilson> 
 
    offby1: suggestion for rudybot: only have him spew news in a

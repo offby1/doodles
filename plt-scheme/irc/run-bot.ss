@@ -28,12 +28,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*timeout-seconds* (string->number timeout)))
   (("--passive") "Never say anything more than necessary -- in effect just log traffic to stdout"
    (*passive?* #t))
+  (("--delicious") del "del.icio.us password"
+   (*del.icio.us-password* del))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
   (("-q" "--quote-and-headline-interval")
    secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
    (*quote-and-headline-interval* (string->number secs)))
-  (("-p" "--password")
+  (("--nickserv")
    pw "Password for NICKSERV"
    (*nickserv-password* pw))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"

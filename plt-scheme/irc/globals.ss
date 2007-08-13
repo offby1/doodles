@@ -31,7 +31,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (version)
           (system-type 'os)))
 
-(define *verbose* #f)
+(define *verbose* #t)
 (define (verbose!) (set! *verbose* #t))
 
 ;; #f means read from stdin, write to stdout
