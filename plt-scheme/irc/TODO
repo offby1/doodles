@@ -243,3 +243,8 @@ essentially a full-blown IRC client with a scheme syntax.
   message), and other terms.  Try to use the same terms that the RFC
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
+
+* events
+  Maybe go back to all-events-all the time, and have each task signal
+  that it handled a particular event by -- *gasp* -- setting a bit in
+  the event.
