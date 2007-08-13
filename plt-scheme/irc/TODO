@@ -22,6 +22,15 @@ ERC> /ctcp rudybot source
     http://offby1.ath.cx/~erich/bot/
 <offby1> D'oh
 
+** finer control of logging
+   Right now I have a single boolean -- *verbose* -- which controls
+   logging.  But it might be nice to have that be a list instead; each
+   module would log if and only if it finds on that list a symbol
+   assoicated with that module.  That way I could start with the list
+   empty, but if I suspected that (say) the moviestowatchfor thread
+   was acting funny, I could do, at the repl, something like
+   (add-to-list! (*things-to-log*) 'moviestowatchfor)
+
 
 -- Low priority
 
@@ -49,6 +58,14 @@ ERC> /ctcp rudybot source
   "semaphore-peek-evt" might help if the main thread were merely
   posting a semaphore.  I wonder if there's some equivalent for
   async-channels...
+
+  Maybe go back to all-events-all the time, and have each task signal
+  that it handled a particular event by -- *gasp* -- setting a bit in
+  the event.
+
+** "short streams"
+  j85wilson has an interesting solution; see
+  http://bzr.wilsonjc.us/sibyl/short-stream.scm
 
 * ack "MODE" at startup
   after we do "/msg nickserv identify" (so that we can send private
@@ -98,6 +115,13 @@ ERC> /ctcp rudybot source
 
    offby1: suggestion for rudybot: only have him spew news in a
    channel if there has been speech since the last time he spewed news
+
+** keep the latest headline ...
+   Instead of having queue-of-entries return a raw async-channel, have
+   it instead return a pair (or a structure or whatever) that includes
+   the channel _and_ a "latest" field: basically a cache of the last
+   item gotten from the async-channel.  That way anyone can
+   non-destructively look at the latest headlines at any time.
 
 * Windows
 
@@ -252,8 +276,3 @@ essentially a full-blown IRC client with a scheme syntax.
   message), and other terms.  Try to use the same terms that the RFC
   uses, so that someone who's familiar with the RFC, when reading this
   code, will feel right at home.
-
-* events
-  Maybe go back to all-events-all the time, and have each task signal
-  that it handled a particular event by -- *gasp* -- setting a bit in
-  the event.
