@@ -7,21 +7,6 @@
 
 * bugs
 
-** unprompted news
-   see bug/unprompted-news
-
-** mangles "CTCP source"
-in 4625:4626M:
-
-ERC> /ctcp rudybot version
-*** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4541:PLT scheme
-    version 370.6 on unix
-<offby1> yay, rudybot now answers ctcp version                                             [06:48]
-ERC> /ctcp rudybot source
-*** Unknown CTCP message from rudybot (n=erich@q-static-138-125.avvanta.com): SOURCE
-    http://offby1.ath.cx/~erich/bot/
-<offby1> D'oh
-
 ** finer control of logging
    Right now I have a single boolean -- *verbose* -- which controls
    logging.  But it might be nice to have that be a list instead; each
@@ -37,7 +22,6 @@ ERC> /ctcp rudybot source
 * read memos?
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "Type \u0002/msg MemoServ READ 2\u0002 to read it"))
-
 
 * Events
   It still bothers me that each task thread has to 'subscribe' to the
@@ -62,6 +46,8 @@ ERC> /ctcp rudybot source
   Maybe go back to all-events-all the time, and have each task signal
   that it handled a particular event by -- *gasp* -- setting a bit in
   the event.
+
+  See the "ideas" file in this directory.
 
 ** "short streams"
   j85wilson has an interesting solution; see
@@ -94,6 +80,17 @@ ERC> /ctcp rudybot source
    r4530.  Probably because I passed a few channel names on the
    command line which were also in the default list, and it's too dumb
    to uniquify the resulting list.
+
+
+** mangles "CTCP source"
+
+- we don't return a real file name, since it'd be tedious figuring out
+  the exact right one (the real file's name contains the output of
+  svnversion)
+
+- http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the
+  source should be hosted on an FTP server, which I don't care to run,
+  so ...
 
 * quotes and news headlines
 

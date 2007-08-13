@@ -188,14 +188,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (reply (long-version-string))))
    ((or (SOURCE? message)
         (equal? "source" gist-for-us))
-    (let ((source-string
-           "http://offby1.ath.cx/~erich/bot/"
-           ))
+    (let ((source-host "offby1.ath.cx")
+          (source-directory "/~erich/bot/")
+          (source-file-names "rudybot-something.tar.gz"))
       (if (SOURCE? message)
-          (out "NOTICE ~a :\u0001SOURCE ~a\0001~%"
+          (out "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
                (PRIVMSG-speaker message)
-               source-string)
-        (reply source-string))))
+               source-host
+               source-directory
+               source-file-names)
+        (reply (format "http://~a~a~a" source-host source-directory source-file-names)))))
 
    ((and for-us? (not gist-for-us))
     (reply "Eh?  Speak up."))
