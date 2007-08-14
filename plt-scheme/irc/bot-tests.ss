@@ -93,7 +93,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         (before
          (begin
-           (printf "Doin' some prep work.~%"))
+           (printf "Doin' some prep work.~%")
+           (custodian-shutdown-all (irc-session-custodian sess))
+           (set-irc-session-custodian! sess (make-custodian)))
          (fail
           "I really need to write this test."))
         )

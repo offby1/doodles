@@ -37,4 +37,13 @@ check:
 clean:
 	rm -rf $(plt-file) $(tarball)
 
+tags: TAGS
+
+# This tags file is almost useless -- it just contains the names of
+# the scheme files, but doesn't contain any actual tags.  But it's
+# useful for emacs commands that work on all the files in it, such as
+# tags-query-replace.
+TAGS: $(wildcard *.ss)
+	etags $^
+
 .PHONY: clean all plt tar check
