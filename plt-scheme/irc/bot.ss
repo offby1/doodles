@@ -36,8 +36,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   (
    appearances-by-nick
 
-   ;; a list of procedures who want to be called whenever a new
-   ;; message arrives.  They're likely channel-idle-events.
+   ;; Procedures who want to be called whenever a new message arrives.
+   ;; They're likely channel-idle-events.  Conceptually it's a list,
+   ;; but actually it's a weak hash table whose keys are the
+   ;; procedures, and whose values are ignored.  This way, in theory,
+   ;; if we drop references to the procedures, they'll get
+   ;; garbage-collected.  Otherwise they'd accumulate here.  (As it
+   ;; happens the current code -doesn't- drop references to those
+   ;; procedures, but I might later make it do so.)
    message-subscriptions
 
    ;; where we get news headlines from.  #f means we get 'em from a
@@ -55,7 +61,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (define/kw (public-make-irc-session op #:key [feed #f] )
   (make-irc-session
     (make-hash-table 'equal)
-    '()
+    (make-hash-table 'equal 'weak)
     feed
     op
     (make-custodian)
@@ -67,9 +73,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   (parameterize ((current-custodian (irc-session-custodian s)))
 
     (define (subscribe-proc-to-server-messages! proc)
-      (set-irc-session-message-subscriptions!
-       s
-       (cons proc (irc-session-message-subscriptions s))))
+      (hash-table-put!
+       (irc-session-message-subscriptions s)
+       proc
+       #t))
 
     (define (out . args)
       (apply fprintf (irc-session-op s) args)
@@ -117,9 +124,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (vtprintf " <= ~s~%" message)
 
     ;; notify each subscriber that we got a message.
-    (for-each (lambda (proc)
-                (proc message))
-              (irc-session-message-subscriptions s))
+    (hash-table-for-each
+     (irc-session-message-subscriptions s)
+     (lambda (proc ignored)
+       (proc message)))
 
     ;; note who did what, when, where, how, and wearing what kind of
     ;; skirt; so that later we can respond to "seen Ted?"
@@ -387,7 +395,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (lambda (e)
              (fprintf op "QUIT :unexpected failure~%")
              (close-output-port op)
-             (vtprintf "Caught an exception: ~s~%" e))])
+             (let ((whine (format  "Caught an exception: ~s~%" e)))
+               (vtprintf whine)
+               (fprintf (current-error-port)
+                         whine)))])
 
        (let get-one-line ()
          (let ((line (read-line ip 'return-linefeed)))
