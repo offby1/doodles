@@ -9,7 +9,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
-         (only "globals.ss" *initial-channel-names*)
+         "globals.ss"
          (only "parse.ss"
                parse-irc-message)
          "vprintf.ss")
@@ -66,9 +66,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     "short semi-private message"
     (check-not-false
      (got-response?
-      ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs :rudybot: "
-      (pregexp-quote "PRIVMSG #emacs :Eh?  Speak up."))
+      (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
+      (pregexp-quote "PRIVMSG #d :Eh?  Speak up."))
      ))
+
+   (test-case
+    "backed-up idle events"
+
+    ;; ensure there is no news available.
+
+    ;; let the channel go idle.
+
+    ;; have someone say something on the channel.
+
+    ;; now QUICKLY provide some news.
+
+    ;; we should not see the bot spew the news, because the channel is
+    ;; no longer idle.
+
+    (fail
+     "I really need to write this test.")
+    )
      ))
 
 (provide (all-defined))
