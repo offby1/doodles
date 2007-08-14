@@ -190,7 +190,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         (equal? "source" gist-for-us))
     (let ((source-host "offby1.ath.cx")
           (source-directory "/~erich/bot/")
-          (source-file-names "rudybot-something.tar.gz"))
+          (source-file-names "rudybot.tar.gz"))
       (if (SOURCE? message)
           (out "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
                (PRIVMSG-speaker message)

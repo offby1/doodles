@@ -1,6 +1,7 @@
 basename := $(shell echo rudybot-$$(svnversion -n . | sed s,:,-,))
 plt-file := $(basename).plt
 tarball  := $(basename).tar.gz
+distdir  := $(HOME)/public_html/bot
 
 all: plt tar
 plt: $(plt-file)
@@ -25,6 +26,10 @@ $(tarball):
 	$(make-export-dir) && \
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
+
+install: $(tarball)
+	mv -v $^ $(distdir)
+	ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
 
 check:
 	./run-all-tests.ss
