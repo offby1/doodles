@@ -4,7 +4,7 @@
  (wrap (message-fromserver-evt server-a)
        (lambda (message)
          ...))
- (wrap (message-fromserver-evt server-a)
+ (wrap (message-fromserver-evt server-b)
        (lambda (message)
          ...))
  )
