@@ -2,22 +2,30 @@
 
 -- High priority
 
-* NOTICE instead of PRIVMSG
-  VERSION and SOURCE commands, perhaps
-
 * bugs
 
-** finer control of logging
-   Right now I have a single boolean -- *verbose* -- which controls
-   logging.  But it might be nice to have that be a list instead; each
-   module would log if and only if it finds on that list a symbol
-   assoicated with that module.  That way I could start with the list
-   empty, but if I suspected that (say) the moviestowatchfor thread
-   was acting funny, I could do, at the repl, something like
-   (add-to-list! (*things-to-log*) 'moviestowatchfor)
+** queued channel-idle events?
+   I saw rudybot r4674 spew news in a channel that wasn't idle, or at
+   least, not idle at the time he spewed.  My theory -- for which I
+   have no evidence -- is that at some point, there was no news in the
+   queue, and the channel went idle.  Then people resumed chattering.
+   Then much later some news arrived, so the sync/timeout
+   on *planet-emacs-newsfeed* unblocked, and the idle event was still
+   signaled, so the (sync idle-evt) didn't block, and we got
+   apparently-unbidden news.  (I had the exact same problem recently
+   with the "news" command).
 
 
 -- Low priority
+
+* finer control of logging
+  Right now I have a single boolean -- *verbose* -- which controls
+  logging.  But it might be nice to have that be a list instead; each
+  module would log if and only if it finds on that list a symbol
+  assoicated with that module.  That way I could start with the list
+  empty, but if I suspected that (say) the moviestowatchfor thread was
+  acting funny, I could do, at the repl, something like (add-to-list!
+  (*things-to-log*) 'moviestowatchfor)
 
 * read memos?
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
@@ -33,12 +41,13 @@
   line was the kind it was interested in.  The problem is that I
   haven't found a synchronizable event which will unblock _multiple_
   threads.  Ideally I'd have an async-channel which the main thread
-  would put the line into, and then each task would have a clone of,
+  would put the line into, and which each task would have a clone of,
   from which it could remove lines without disturbing the other
   clones.  (But then what about the lines that no thread is interested
   in?  They'd need to be cleared out lest the async get fuller and
-  fuller and suck up all available memory)
-         
+  fuller and suck up all available memory; that implies a "none of the
+  above" task)
+
   "semaphore-peek-evt" might help if the main thread were merely
   posting a semaphore.  I wonder if there's some equivalent for
   async-channels...
