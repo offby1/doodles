@@ -16,7 +16,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (list strong-ht weak-ht)))
 
 (define strong-string "I'm a strong string")
-(define weak-string   "I'm a weak string")
+(define weak-string   (string-copy "I'm a weak string"))
 (hash-table-put! strong-ht strong-string 'foo)
 (hash-table-put! weak-ht   weak-string 'foo)
 
