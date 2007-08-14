@@ -35,9 +35,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (define-struct irc-session
   (
    appearances-by-nick
+
+   ;; a list of procedures who want to be called whenever a new
+   ;; message arrives.  They're likely channel-idle-events.
    message-subscriptions
+
+   ;; where we get news headlines from.  #f means we get 'em from a
+   ;; little stub, for testing.
    async-for-news
+
+   ;; the IRC server is at the other end of this port.
    op
+
+   ;; this is just for testing, so that we can easily ensure none of
+   ;; the background threads are running.
    custodian
    ) #f)
 
@@ -47,9 +58,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     '()
     feed
     op
-    (make-custodian)))
+    (make-custodian)
+    ))
 
 (define (respond message s)
+
+  ;; so that any threads we make will be easily killable
   (parameterize ((current-custodian (irc-session-custodian s)))
 
     (define (subscribe-proc-to-server-messages! proc)
@@ -67,9 +81,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (out "NOTICE ~a :~a~%" target msg))
 
     (define/kw (reply response #:key [proc pm])
-      (proc (if (PRIVMSG-is-for-channel? message)
-                (PRIVMSG-destination message)
-              (PRIVMSG-speaker message))
+      (proc ((if (PRIVMSG-is-for-channel? message) PRIVMSG-destination PRIVMSG-speaker)
+             message)
             response))
 
     (define for-us?
@@ -79,6 +92,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                ((if (PRIVMSG-is-for-channel? message)
                     PRIVMSG-approximate-recipient
                   PRIVMSG-destination) message))))
+
     (define gist-for-us
       (and for-us?
            (cond
@@ -92,29 +106,35 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              #f))
            ))
 
-    (check-type 'respond irc-session? s)
-    (check-type 'respond message? message)
+    (define (gist-equal? str)
+      (equal? str gist-for-us))
 
+    ;; trim trailing punctuation
     (set! gist-for-us
           (and gist-for-us
                (regexp-replace (pregexp "[^[:alpha:]]+$") gist-for-us "")))
 
     (vtprintf " <= ~s~%" message)
 
+    ;; notify each subscriber that we got a message.
     (for-each (lambda (proc)
                 (proc message))
               (irc-session-message-subscriptions s))
 
+    ;; note who did what, when, where, how, and wearing what kind of
+    ;; skirt; so that later we can respond to "seen Ted?"
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
       (let ((who         (PRIVMSG-speaker     message))
             (where       (PRIVMSG-destination message))
             (what        (PRIVMSG-text        message))
+
+            ;; don't name this variable "when"; that would shadow some
+            ;; rather useful syntax :-)
             (time        (current-seconds))
+
             (was-action? (ACTION?             message)))
 
-        ;; note who did what, when, where, how, and wearing what kind
-        ;; of skirt; so that later we can respond to "seen Ted?"
         (hash-table-put!
          (irc-session-appearances-by-nick s)
          who
@@ -128,6 +148,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      (format ": ~a ~a" who what)
                    (format ", saying \"~a\"" what))))))
 
+    ;; if someone other than a bot uttered a long URL, run it through
+    ;; tinyurl.com and spew the result.
+
     ;; might be worth doing this in a separate thread, since it can
     ;; take a while.
     (cond
@@ -138,8 +161,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       =>
       (lambda (match-data)
         (let ((url (car match-data)))
-          ;; tiny URLs are about 25 characters, so it seems reasonable
-          ;; to ignore URLs that are shorter than twice that.
           (when (< (*tinyurl-url-length-threshold*) (string-length url))
             (reply (make-tiny-url url #:user-agent (long-version-string))
                    #:proc notice))))))
@@ -178,35 +199,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (PRIVMSG-approximate-recipient message)
              command
              parsed-command)
-
-
-            ;; *groan* how un-Lispy that I have to spell out all
-            ;; these identifiers!
-            ;; http://www.paulgraham.com/popular.html
             (irc-session-op s))))))
 
-     ((equal? "seen" gist-for-us)
+     ((and (gist-equal? "seen")
+           (< 2 (length (PRIVMSG-text-words message))))
       (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
-             (poop (hash-table-get (irc-session-appearances-by-nick s) who #f)))
-        (reply (or poop (format "I haven't seen ~a" who)))))
+             (sighting (hash-table-get (irc-session-appearances-by-nick s) who #f)))
+        (reply (or sighting (format "I haven't seen ~a" who)))))
 
-     ((and (equal? "quote" gist-for-us)
-           (reply (one-quote))))
+     ((gist-equal? "quote")
+      (reply (one-quote)))
 
-     ((and (equal? "news" gist-for-us))
+     ((and (gist-equal? "news"))
       (reply (or (let ((entry (async-channel-try-get (irc-session-async-for-news s))))
                    (and entry (entry->string entry)))
                  "Sorry, no news yet.")))
 
      ((or (VERSION? message)
-          (equal? "version" gist-for-us))
+          (gist-equal? "version"))
       (if (VERSION? message)
           (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
                (PRIVMSG-speaker message)
                (long-version-string))
         (reply (long-version-string))))
+
      ((or (SOURCE? message)
-          (equal? "source" gist-for-us))
+          (gist-equal? "source"))
       (let ((source-host "offby1.ath.cx")
             (source-directory "/~erich/bot/")
             (source-file-names "rudybot.tar.gz"))
@@ -223,6 +241,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
      (for-us?
       (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
+
      (else
       (case (message-command message)
         ((001)
@@ -232,83 +251,87 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (*initial-channel-names*)))
 
         ((366)
-         (let ((this-channel (second (message-params message))))
-           (when (member this-channel '("#emacs" "#bots" ))
-             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
+         (when (< 1 (length  (message-params message)))
+           (let ((this-channel (second (message-params message))))
+             (when (member this-channel '("#emacs" "#bots" ))
+               (let ((idle-evt
+                      (make-channel-idle-event
+                       this-channel
+                       (*quote-and-headline-interval*))))
 
-               (for-each
-                subscribe-proc-to-server-messages!
-                (list (channel-idle-event-input-examiner idle-evt)))
-
-               (thread
-                (lambda ()
-                  (let loop ()
-                    (let ((q (one-quote)))
-                      (sync idle-evt)
-                      (pm this-channel q)
-                      (loop)))))))
-
-           (when (equal? this-channel "#emacs")
-             (let ((idle-evt (make-channel-idle-event this-channel (*quote-and-headline-interval*))))
-
-               (for-each
-                subscribe-proc-to-server-messages!
-                (list (channel-idle-event-input-examiner idle-evt)))
-
-               (thread
-                (lambda ()
-                  ;; re-spew the most recent headline if there's no
-                  ;; new news.
-                  (let loop ()
-                    (let ((headline (sync/timeout (*planet-poll-interval*)
-                                                  (irc-session-async-for-news s))))
-                      (when headline
-                        (sync idle-evt)
-                        (pm this-channel
-                            (entry->string headline)))
-                      (loop)))))))
-           (when (equal? this-channel "##cinema")
-             (let ((posts #f))
-               (thread
-                (lambda ()
-                  (let loop ()
-                    (with-handlers
-                        ([exn:delicious:auth?
-                          (lambda (e)
-                            (vtprintf
-                             "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                      (set! posts (snarf-some-recent-posts))
-                      (sleep  (* 7 24 3600))
-                      (loop)))))
-
-               (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
-
-                 (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+                 (subscribe-proc-to-server-messages!
+                  (channel-idle-event-input-examiner idle-evt))
 
                  (thread
                   (lambda ()
                     (let loop ()
-                      (sync idle)
-                      (when posts
-                        (notice this-channel
-                                (entry->string
-                                 (list-ref posts (random (length posts))))))
-                      (loop))
-                    )))))))
+                      (let ((q (one-quote)))
+                        (sync idle-evt)
+                        (pm this-channel q)
+                        (loop)))))))
+
+             (when (equal? this-channel "#emacs")
+               (let ((idle-evt
+                      (make-channel-idle-event
+                       this-channel
+                       (*quote-and-headline-interval*))))
+
+                 (subscribe-proc-to-server-messages!
+                  (channel-idle-event-input-examiner idle-evt))
+
+                 (thread
+                  (lambda ()
+                    ;; re-spew the most recent headline if there's no
+                    ;; new news.
+                    (let loop ()
+                      (let ((headline (sync/timeout (*planet-poll-interval*)
+                                                    (irc-session-async-for-news s))))
+                        (when headline
+                          (sync idle-evt)
+                          (pm this-channel
+                              (entry->string headline)))
+                        (loop)))))))
+
+             (when (equal? this-channel "##cinema")
+               (let ((posts #f))
+                 (thread
+                  (lambda ()
+                    (let loop ()
+                      (with-handlers
+                          ([exn:delicious:auth?
+                            (lambda (e)
+                              (vtprintf
+                               "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                        (set! posts (snarf-some-recent-posts))
+                        (sleep  (* 7 24 3600))
+                        (loop)))))
+
+                 (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
+
+                   (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+
+                   (thread
+                    (lambda ()
+                      (let loop ()
+                        (sync idle)
+                        (when posts
+                          (notice this-channel
+                                  (entry->string
+                                   (list-ref posts (random (length posts))))))
+                        (loop))
+                      ))))))))
 
         ((433)
-         (error 'respond "Nick already in use!")
-         )
+         (error 'respond "Nick already in use!"))
+
         ((NOTICE)
          #t ;; if it's a whine about identd, warn that it's gonna be slow.
          )
+
         ((PING)
-         #t ;; send a PONG
+         #t
          (out "PONG :~a~%" (car (message-params message))))
-
-
         )))))
-
 
 ;(trace respond)
 
@@ -359,19 +382,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          ([exn:break?
            (lambda (x)
              (fprintf op "QUIT :Ah been shot!~%")
-             (close-output-port op))])
-       (let loop ()
+             (close-output-port op))]
+          [exn:fail?
+           (lambda (e)
+             (fprintf op "QUIT :unexpected failure~%")
+             (close-output-port op)
+             (vtprintf "Caught an exception: ~s~%" e))])
+
+       (let get-one-line ()
          (let ((line (read-line ip 'return-linefeed)))
            (if (eof-object? line)
-               ;; TODO: maybe reconnect
-               (vtprintf "eof on server~%")
+               (begin
+                 (vtprintf "eof on server; reconnecting~%")
+                 (sleep 10)
+                 (start))
              (begin
                (with-handlers
                    ([exn:fail:irc-parse?
                      (lambda (e)
                        (vtprintf "couldn't parse line from server: ~s~%" e))])
                  (respond (parse-irc-message line) sess))
-               (loop)))))))))
+               (get-one-line)))))))))
 
 (provide (all-defined-except make-irc-session)
          (rename public-make-irc-session make-irc-session))
