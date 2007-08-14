@@ -5,5 +5,9 @@ Anyway, here are some other Scheme bots I know of:
 * https://svn.bountysource.com/scm-irc/trunk
 
 * http://www.call-with-current-continuation.org/eggs/irc.html
+  (not a bot, really; just a library)
 
 * http://monkeyboy.td.org.uit.no/~cin/feckbot
+
+CIA isn't scheme, but it's a pretty serious bot, and probably has been
+designed carefully: http://svn.navi.cx/misc/trunk/cia/
