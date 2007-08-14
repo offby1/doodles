@@ -141,6 +141,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sleep (/ (add1 (random 10)) 10))
        (retry)))))
 
+;; idea -- don't just return this queue; instad, return a structure
+;; that contains the queue _and_ a "cache" (just one entry) of the
+;; most-recently-gotten entry.  Thus we'd have to write a little
+;; replacement for async-channel-get that would fill the cache when
+;; needed, and return values from it when asked.
 (define/kw (queue-of-entries
             #:key
             [whence])
@@ -155,15 +160,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                         fn)
 
               (open-input-file fn)))))
+
   ;; It's not clear that there's any point to limiting the size of the
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
   (let ((the-channel (make-async-channel #f))
+
+        ;; keep track of each entry we put on the async-channel, so
+        ;; that we never put the same entry on twice.
         (entries-put (make-hash-table 'equal)))
     (thread
      (lambda ()
        (let loop ()
+
+         ;; keep track of the time of each entry, too.  This plus the
+         ;; hash table seem like overkill, but note that the
+         ;; preference persists on disk even after our process exits,
+         ;; whereas the hash table doesn't (because I'm too lazy to
+         ;; bother saving it).
          (let ((time-of-last-entry-put
                 (or (get-preference (*atom-timestamp-preference-name*))
                     0)))
