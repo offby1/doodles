@@ -207,7 +207,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (PRIVMSG-approximate-recipient message)
              command
              parsed-command)
-            (irc-session-op s))))))
+            s)))))
 
      ((and (gist-equal? "seen")
            (< 2 (length (PRIVMSG-text-words message))))
