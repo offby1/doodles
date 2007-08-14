@@ -89,15 +89,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         (before
          (begin
-           (printf "Doin' some prep work.~%")
            (custodian-shutdown-all (irc-session-custodian sess))
            (set-irc-session-custodian! sess (make-custodian))
+
+           ;; start the news thread
+           (*planet-poll-interval* 1)
+           (*quote-and-headline-interval* 1)
+           (respond (parse-irc-message ":x 366 rudybot #emacs :get crackin'") sess)
            )
 
          ;; ensure there is no news available.
          (set-irc-session-async-for-news! sess (make-async-channel #f))
-         (*planet-poll-interval* 1)
-         (*quote-and-headline-interval* 1)
+
 
          ;; let the channel go idle.
          (sleep 1)
