@@ -15,6 +15,32 @@
    apparently-unbidden news.  (I had the exact same problem recently
    with the "news" command).
 
+   Ideas to fix this:
+
+*** recreate idle-event
+    We currently have one, effectively global, idle event for a
+    channel, which gets signaled _every time_ the channel goes idle.
+    But change that to creating an event _inside_ the thread's loop,
+    _after_ we've gotten a news item; this event will only trigger
+    once, the -first- time the channel goes idle.  Then we will simply
+    let the event go out of scope, and the next time we go through the
+    loop, we create a new one, and wait on _it_.  I was hoping that
+    the garbage collector would cull the old event
+    from *message-subscriptions*, if we were to make that a weak hash
+    table instead of a list; but as the file "weak.ss" in this
+    directory shows, I don't understand weak hash tables.  Maybe I can
+    just let 'em pile up in *message-subscriptions*, since the bot
+    rarely stays up more than a few days anyway (due to "netsplits",
+    maybe?)
+
+*** keep track of the arrival time of each message ...
+    ... and only spew news if the most recent message arrived _before_
+    the channel went idle (i.e., longer
+    than *quote-and-headline-interval* ago, measured from the time
+    when we unblock on the idle event).  I hate this idea because
+    every time I think about it I have to draw little timeline
+    diagrams in my head, and I get all confused.
+
 
 -- Low priority
 
