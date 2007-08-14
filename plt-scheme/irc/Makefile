@@ -28,8 +28,8 @@ $(tarball):
 	$(cleanup)
 
 install: $(tarball)
-	mv -v $^ $(distdir)
-	ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
+	@mv -v $^ $(distdir)
+	@ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
 
 check:
 	./run-all-tests.ss
