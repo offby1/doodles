@@ -20,7 +20,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; will it go off just once, N seconds from now; or will it instead go
 ;; off -every- N seconds (subject to snoozage delays, of course).
 
-(define-values (struct:alarm-with-snooze make-alarm-with-snooze alarm-with-snooze? alarm-with-snooze-ref alarm-with-snooze-set!)
+
+;; I'm sorry, but _every_ time I read the name "alarm-with-snooze", I
+;; think "Royale with Cheese".  I just can't help it.
+
+(define-values (struct:alarm-with-snooze
+                make-alarm-with-snooze
+                alarm-with-snooze?
+                alarm-with-snooze-ref
+                alarm-with-snooze-set!)
     (make-struct-type 'alarm-with-snooze #f 3 0
                       #f (list (cons prop:evt 0))
                       (make-inspector) #f '(0 1 2)))
