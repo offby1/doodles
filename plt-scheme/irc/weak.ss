@@ -7,18 +7,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
 
-(define strong (make-hash-table 'equal ))
-(define weak   (make-hash-table 'equal  'weak))
+(define strong-ht (make-hash-table 'equal ))
+(define weak-ht   (make-hash-table 'equal  'weak))
 
 (define (dump-em)
   (for-each (lambda (ht)
               (printf "~s~%" (hash-table-map ht cons)))
-            (list strong weak)))
+            (list strong-ht weak-ht)))
 
 (define strong-string "I'm a strong string")
 (define weak-string   "I'm a weak string")
-(hash-table-put! strong strong-string 'foo)
-(hash-table-put! weak   weak-string 'foo)
+(hash-table-put! strong-ht strong-string 'foo)
+(hash-table-put! weak-ht   weak-string 'foo)
+
+(define strongbox (box strong-string))
+(define weakbox   (make-weak-box weak-string))
 
 (define weak-tests
 
@@ -30,12 +33,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-equal?
     "strong table holds what we put in it"
-    (hash-table-count strong)
+    (hash-table-count strong-ht)
     1)
    (test-equal?
     "weak table holds what we put in it"
-    (hash-table-count weak)
+    (hash-table-count weak-ht)
     1)
+   (test-equal?
+    "strong box"
+    (unbox strongbox)
+    strong-string)
+   (test-equal?
+    "weak box"
+    (weak-box-value weakbox)
+    weak-string)
 
    (test-suite
     "after clobbering the weak key"
@@ -43,19 +54,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (lambda ()
       (dump-em)
       (set! weak-string #f)
-      (collect-garbage)))
+      (collect-garbage)
+      (dump-em)))
 
    (test-equal?
     "strong table still holds what we put in it"
-    (hash-table-count strong)
+    (hash-table-count strong-ht)
     1)
    (test-equal?
     "weak table is now empty"
-    (hash-table-count weak)
+    (hash-table-count weak-ht)
     0)
-   )
 
-  )
+   (test-equal?
+    "strong box"
+    (unbox strongbox)
+    strong-string)
+   (test-false
+    "weak box"
+    (weak-box-value weakbox))))
 
 (provide (all-defined))
 )
