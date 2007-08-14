@@ -4,12 +4,18 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot-tests mzscheme
-(require (only (lib "pregexp.ss") pregexp-quote)
+(require (lib "async-channel.ss")
+         (only (lib "pregexp.ss") pregexp-quote)
          (lib "trace.ss")
+         (only (lib "19.ss" "srfi")
+               current-time)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
          "globals.ss"
+         "headline.ss"
+         (only "planet-emacsen.ss"
+               *planet-poll-interval*)
          (only "parse.ss"
                parse-irc-message)
          "vprintf.ss")
@@ -80,26 +86,37 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (test-case
         "backed-up idle events"
 
-        ;; ensure there is no news available.
-
-        ;; let the channel go idle.
-
-        ;; have someone say something on the channel.
-
-        ;; now QUICKLY provide some news.
-
-        ;; we should not see the bot spew the news, because the channel is
-        ;; no longer idle.
 
         (before
          (begin
            (printf "Doin' some prep work.~%")
            (custodian-shutdown-all (irc-session-custodian sess))
-           (set-irc-session-custodian! sess (make-custodian)))
-         (fail
-          "I really need to write this test."))
-        )
-       ))))
+           (set-irc-session-custodian! sess (make-custodian))
+           )
+
+         ;; ensure there is no news available.
+         (set-irc-session-async-for-news! sess (make-async-channel #f))
+         (*planet-poll-interval* 1)
+         (*quote-and-headline-interval* 1)
+
+         ;; let the channel go idle.
+         (sleep 1)
+
+         ;; have someone say something on the channel.
+         (respond (parse-irc-message ":a!b@c PRIVMSG #emacs :yo") sess)
+
+         ;; now QUICKLY provide some news.
+         (async-channel-put
+          (irc-session-async-for-news sess)
+          (make-entry (current-time)
+                      "JAPS BOMB PERL HARBOR"
+                      "http://ruby-lang.org/mua/ha/ha"))
+
+         ;; we should not see the bot spew the news, because the channel is
+         ;; no longer idle.
+
+         (check-false
+          (expect/timeout ip #rx"JAPS" 2))))))))
 
 (provide (all-defined))
 )
