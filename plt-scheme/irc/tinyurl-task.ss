@@ -20,30 +20,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define tinyurl-task-tests
 
-  (test-suite
-   "tinyurl-task"
-   (test-case
-    "no response for a short URL"
-    (check-false
-     (got-response?
-      ":x!y@z PRIVMSG #duh :http://foo.bar"
-      #rx""))
-   )
+  (let-values (((ip op) (make-pipe #f "bot-tests")))
+    (let ((sess (make-irc-session op)))
+      (test-suite
+       "tinyurl-task"
+       (test-case
+        "no response for a short URL"
+        (check-false
+         (got-response? sess ip
+          ":x!y@z PRIVMSG #duh :http://foo.bar"
+          #rx""))
+        )
 
-   (test-case
-    "uses NOTICE, not PRIVMSG"
-    (check-not-false
-     (got-response?
-      (format ":x!y@z PRIVMSG #duh :~a" long-url)
-      #rx"NOTICE #duh :http://tinyurl.com/")
-     ))
+       (test-case
+        "uses NOTICE, not PRIVMSG"
+        (check-not-false
+         (got-response? sess ip
+          (format ":x!y@z PRIVMSG #duh :~a" long-url)
+          #rx"NOTICE #duh :http://tinyurl.com/")
+         ))
 
-   (test-case
-    "no response to a bot"
-    (check-false
-     (got-response?
-      (format ":botbot!botbot@z PRIVMSG #duh :~a" long-url)
-      #rx"")
-     ))))
+       (test-case
+        "no response to a bot"
+        (check-false
+         (got-response? sess ip
+          (format ":botbot!botbot@z PRIVMSG #duh :~a" long-url)
+          #rx"")
+         ))))))
 (provide (all-defined))
 )

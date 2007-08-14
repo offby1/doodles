@@ -47,7 +47,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
  (multi
   (("-c" "--channel") channel "A channel to join when starting"
-   (*initial-channel-names* (cons channel (*initial-channel-names*))))))
+   (when (not (member channel (*initial-channel-names*)))
+     (*initial-channel-names* (cons channel (*initial-channel-names*))))
+   )))
 
 (let ((remote-irc? (and (*irc-server-name*)
                    (not (equal? "localhost" (*irc-server-name*)))))

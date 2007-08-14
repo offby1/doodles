@@ -21,6 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
+         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
          "channel-idle-event.ss"
          "del.ss"
          "globals.ss"
@@ -31,18 +32,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "tinyurl.ss"
          "vprintf.ss")
 
-(define *appearances-by-nick* (make-hash-table 'equal))
+(define-struct irc-session
+  (
+   appearances-by-nick
+   message-subscriptions
+   planet-emacs-newsfeed
+   op
+   custodian
+   ) #f)
 
-(define *message-subscriptions* '())
-(define (subscribe-proc-to-server-messages! proc)
-  (set! *message-subscriptions* (cons proc *message-subscriptions*)))
+(define/kw (public-make-irc-session op #:key [feed #f] )
+  (make-irc-session
+    (make-hash-table 'equal)
+    '()
+    feed
+    op
+    (make-custodian)))
 
-(define *planet-emacs-newsfeed* #f)
+(define (respond message s)
 
-(define (respond message op)
+  (define (subscribe-proc-to-server-messages! proc)
+    (set-irc-session-message-subscriptions!
+     s
+     (cons proc (irc-session-message-subscriptions s))))
 
   (define (out . args)
-    (apply fprintf op args)
+    (apply fprintf (irc-session-op s) args)
     (vtprintf " => ~s~%" (apply format args)))
 
   (define (pm target msg)
@@ -76,6 +91,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            #f))
          ))
 
+  (check-type 'respond irc-session? s)
+  (check-type 'respond message? message)
+
   (set! gist-for-us
         (and gist-for-us
              (regexp-replace (pregexp "[^[:alpha:]]+$") gist-for-us "")))
@@ -84,7 +102,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
   (for-each (lambda (proc)
               (proc message))
-            *message-subscriptions*)
+            (irc-session-message-subscriptions s))
 
   (when (and (PRIVMSG? message)
              (PRIVMSG-is-for-channel? message))
@@ -97,7 +115,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       ;; note who did what, when, where, how, and wearing what kind
       ;; of skirt; so that later we can respond to "seen Ted?"
       (hash-table-put!
-       *appearances-by-nick*
+       (irc-session-appearances-by-nick s)
        who
        (format "~a~a in ~a~a ~a~a"
                who
@@ -164,18 +182,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           ;; *groan* how un-Lispy that I have to spell out all
           ;; these identifiers!
           ;; http://www.paulgraham.com/popular.html
-          op)))))
+          (irc-session-op s))))))
 
    ((equal? "seen" gist-for-us)
     (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
-           (poop (hash-table-get *appearances-by-nick* who #f)))
+           (poop (hash-table-get (irc-session-appearances-by-nick s) who #f)))
       (reply (or poop (format "I haven't seen ~a" who)))))
 
    ((and (equal? "quote" gist-for-us)
          (reply (one-quote))))
 
    ((and (equal? "news" gist-for-us))
-    (reply (or (let ((entry (async-channel-try-get *planet-emacs-newsfeed*)))
+    (reply (or (let ((entry (async-channel-try-get (irc-session-planet-emacs-newsfeed s))))
                  (and entry (entry->string entry)))
                "Sorry, no news yet.")))
 
@@ -238,19 +256,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
              (thread
               (lambda ()
-                 (set! *planet-emacs-newsfeed*
-                       (queue-of-entries
-                        #:whence
-                        (and (*use-real-atom-feed?*)
-                             (lambda ()
-                               (get-pure-port
-                                (string->url "http://planet.emacsen.org/atom.xml")
-                                (list))))))
                 ;; re-spew the most recent headline if there's no
                 ;; new news.
                 (let loop ()
                   (let ((headline (sync/timeout (*planet-poll-interval*)
-                                                *planet-emacs-newsfeed*)))
+                                                (irc-session-planet-emacs-newsfeed s))))
                     (when headline
                       (sync idle-evt)
                       (pm this-channel
@@ -308,6 +318,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (values (current-input-port)
                           (current-output-port)))))
 
+    (define sess
+      (public-make-irc-session
+       op
+       #:feed
+       (queue-of-entries
+        #:whence
+        (and (*use-real-atom-feed?*)
+             (lambda ()
+               (get-pure-port
+                (string->url "http://planet.emacsen.org/atom.xml")
+                (list)))))))
+
     (when (*irc-server-name*)
       (*log-output-port*
        (open-output-file
@@ -347,10 +369,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    ([exn:fail:irc-parse?
                      (lambda (e)
                        (vtprintf "couldn't parse line from server: ~s~%" e))])
-                 (respond (parse-irc-message line) op))
+                 (respond (parse-irc-message line) sess))
                (loop)))))))))
 
-(provide
- respond
- start)
+(provide (all-defined-except make-irc-session)
+         (rename public-make-irc-session make-irc-session))
 )
