@@ -52,8 +52,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       'rudybot-planet-emacs-last-headline
     'rudybot-test-planet-emacs-last-headline))
 
-;; the bot will "tiny-ify" URLs this long and longer.
+;; The bot will "tiny-ify" URLs longer than this.  Tiny URLs are about
+;; 25 characters, so it seems reasonable to ignore URLs that are
+;; shorter than triple that.
 (define *tinyurl-url-length-threshold* (make-parameter 75))
+
 (define *del.icio.us-password* (make-parameter #f))
 (define *log-output-port* (make-parameter (current-output-port)))
 (provide (all-defined))
