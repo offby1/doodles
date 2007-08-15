@@ -1,0 +1,264 @@
+-*-outline-*-
+
+-- High priority
+
+* bugs
+
+
+-- Low priority
+
+* finer control of logging
+  Right now I have a single boolean -- *verbose* -- which controls
+  logging.  But it might be nice to have that be a list instead; each
+  module would log if and only if it finds on that list a symbol
+  assoicated with that module.  That way I could start with the list
+  empty, but if I suspected that (say) the moviestowatchfor thread was
+  acting funny, I could do, at the repl, something like (add-to-list!
+  (*things-to-log*) 'moviestowatchfor)
+
+* read memos?
+2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
+2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "Type \u0002/msg MemoServ READ 2\u0002 to read it"))
+
+* Events
+  It still bothers me that each task thread has to 'subscribe' to the
+  lines coming from the server ... which means that the main thread
+  has to go and poke each task every time a line comes in, which means
+  it needs to keep all the subscriptions in a global.  I'd prefer
+  if the main thread could simply "broadcast" the arrived line, and
+  each task would "examine" the line, and perhaps do its thing if the
+  line was the kind it was interested in.  The problem is that I
+  haven't found a synchronizable event which will unblock _multiple_
+  threads.  Ideally I'd have an async-channel which the main thread
+  would put the line into, and which each task would have a clone of,
+  from which it could remove lines without disturbing the other
+  clones.  (But then what about the lines that no thread is interested
+  in?  They'd need to be cleared out lest the async get fuller and
+  fuller and suck up all available memory; that implies a "none of the
+  above" task)
+
+  "semaphore-peek-evt" might help if the main thread were merely
+  posting a semaphore.  I wonder if there's some equivalent for
+  async-channels...
+
+  Maybe go back to all-events-all the time, and have each task signal
+  that it handled a particular event by -- *gasp* -- setting a bit in
+  the event.
+
+  See the "ideas" file in this directory.
+
+** "short streams"
+  j85wilson has an interesting solution; see
+  http://bzr.wilsonjc.us/sibyl/short-stream.scm
+
+* ack "MODE" at startup
+  after we do "/msg nickserv identify" (so that we can send private
+  messages on freenode), the server responds with <<:services. MODE
+  rudebot :+e>> .  We should note receipt of that message, in case it
+  _doesn't_ come and we're wondering why we can't sent private
+  messages.
+
+** don't log in everywhere?
+   I imagine that other IRC networks, besides freenode, either don't
+   require logging in, or have a different way of doing it.  We should
+   really log in only if we clearly need it
+
+* unify atom getting (planet emacs) with getting moviestowatchfor
+
+* low-priority bugs
+
+** joins channels twice
+   r4530.  Probably because I passed a few channel names on the
+   command line which were also in the default list, and it's too dumb
+   to uniquify the resulting list.
+
+
+** mangles "CTCP source"
+
+- http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the
+  source should be hosted on an FTP server, which I don't care to run,
+  so ...
+
+* quotes and news headlines
+
+  I should make the silly quotes have a different period than the news
+  headlines, so they don't always arrive together.  This is mostly
+  irrelevant, though, since if there's any real chatter in the
+  channel, each will get delayed by more-or-less random amounts.
+
+** preference timestamp
+   I update this every time the news producer puts something onto the
+   async, but I think it should instead be updated whenever the
+   consumer takes something off.  The way it stands now, if I start
+   the bot, it then snarfs lots of news from Atom and puts it on the
+   queue; if I then kill the bot before it has had a chance to spew
+   any of those items, they are all lost: the next time the bot
+   starts, it won't even bother enqueueing them.
+
+** <j85wilson> 
+
+   offby1: suggestion for rudybot: only have him spew news in a
+   channel if there has been speech since the last time he spewed news
+
+** keep the latest headline ...
+   Instead of having queue-of-entries return a raw async-channel, have
+   it instead return a pair (or a structure or whatever) that includes
+   the channel _and_ a "latest" field: basically a cache of the last
+   item gotten from the async-channel.  That way anyone can
+   non-destructively look at the latest headlines at any time.
+
+* Windows
+
+** Test regularly
+   I'd have expected that the repl won't work there, since I try to
+   use "readline", and yet it seems ok
+
+* write our own identd server
+  like every other IRC client out there.
+
+* Deal with netsplits, or whatever the hell it is
+  ... that makes the bot not work even though /whois says it's still
+  there.  Also, what do I do if it connects and the server says that
+  the nick is already registered?  (Answer: try again, specifying some
+  other nick via the --nick command-line flag.)
+
+** Now that I've registered some nicks on freenode ...
+   (namely "rudybot" and "rudebot"; they're "linked"), maybe that'll
+   help.  Perhaps it should do something like "/msg nickserv identify
+   <password>" when it starts up.  It should thus take a new
+   command-line flag for specifying the password.
+
+** Maybe simply detecting them
+   ... and then exiting, is better than doing nothing
+
+* reset terminal state on abort
+  I notice that, when I abort the terminal in which the bot (and, in
+  particular, its repl) is running, I need to type "reset" at the
+  shell in order to see characters echo.  This is a bug in mzscheme
+  itself
+  (http://bugs.plt-scheme.org/query/gnatsweb.pl?cmd=view%20audit-trail&database=default&pr=8836),
+  but I should at least work around it.  (elibarzilay says it can't be
+  done but I don't believe him)
+
+* persistence
+  It'd be nice to save stuff to disk.  Currently I save the date of
+  the last planet.emacsen.org headline that we spewed in the the PLT
+  "preferences" file ...  But I dunno if simply "write"ing an
+  sexpression will suffice for more complex data ... it'd be nice to
+  have bindings to Berkeley DB.
+
+  On the other hand, I can't think of much that I need to persist
+  ... maybe the appearances-by-nick data for the "seen" command.
+
+* Find some way to deal with exceptions in threads
+  e.g., "procedure internal-entries-newer-than: expects 3 arguments,
+  given 2 ...".  That procedure application is happening in a thread
+  other than the main one, and so rather than the whole app dying, it
+  just hangs.  This is annoying during development (but might turn out
+  to be nice in "production").
+
+* Convert from strings to bytes
+  Wherever possible, change from using "string" procedures to "bytes"
+  procedures -- since IRC doesn't specify any character encoding.  As
+  things stand now, we're implicitly using UTF-8 everywhere; it'd be
+  better for the encoding to be explicit.  That way, eventually I
+  could have per-channel encodings.
+
+* maybe periodically see what channels _I'm_ in ...
+  (where "I" means "someone with the nick 'offby1'") and have the bot
+  join them if it's not already in them.  Like a little puppy dog.
+  This is harder than it sounds, since it's not blindingly clear who
+  "I" am -- sometimes my nick changes.  It would probably be best to
+  find me by host name, not nick.
+
+** brx suggests a "stalk" function
+   which takes the name of a victim.  Like the above but oh so
+   sinister.
+
+* Catch Control-C so that we don't spew an ugly stack trace when we're killed.
+  Maybe even do a nice PART and QUIT while we're at it.
+
+* movies
+** Do buubot's job...
+  ... find Ebert reviews of movies.  Use IMDB; find the "external
+  reviews" link; find Ebert's name.  (I honestly think this would be
+  as reliable as searching on rogerebert.com; that site's design is as
+  lame as its content is excellent)
+
+** tiny-ify the URLs in moviestowatchfor
+
+* emacschannelquotes
+  <e1f> offby1: you need to include emacschannelquotes in rudebot
+  He means snag stuff from
+  http://www.emacswiki.org/cgi-bin/wiki?EmacsChannelQuotes, but I'd
+  rather not do that since most of those quotes are multi-line, and
+  wouldn't look good if collapsed.
+
+* new commands
+
+** "eval"
+   sandbox.ss is a safe way of doing "eval" -- i.e., they can't call
+   "exit", can't mess with the filesystem, etc.
+
+** "you suck"
+   to emit some TODO list entries, or just a URL to the TODO file
+
+** "help"
+
+** "uptime"
+   since I'm occasionally curious
+
+** auto shakespeare insults
+   I've got scheme code to do that around here somewhere.
+
+* repl commands
+
+I wonder if I should make a new module that contains stuff
+specifically for interacting with the bot via the REPL.  It'd be
+essentially a full-blown IRC client with a scheme syntax.
+
+** join and part
+   so that I can change which channels it's on without restarting it
+
+** privmsg
+   since I clearly enjoy putting words in its mouth.  Such a command
+   would save a few keystrokes; as it now stands I have to type
+   something like
+
+        (put "PRIVMSG ##cinema :\u0001ACTION casually moves in front of offby1\u0001")
+
+   Be nice to abbreviate that to (PRIVMSG/ACTION "casually moves in
+   front of offby1")
+
+   Note that the REPL uses readline, and has completion, so the
+   rather long identifier PRIVMSG/ACTION wouldn't actually be hard to
+   type.
+
+   Note also that this idea suggests that the bot, or at least the
+   repl, have the notion of a "current channel", just like any other
+   IRC client; and thus there ought to be a command that changes the
+   channel.  Also obviously there should be a way to find out what
+   channel you're in; I suspect the REPL prompt can easily be made to
+   include that.
+
+** examine a timer
+   Maybe have the timers constantly visible in the repl (it'd be nice
+   to have curses support to do this).  So I could watch them count
+   down.
+
+* truncate output from "seen" command
+  because it can be annoyingly long, if the last thing they said was
+  annoyingly long.
+
+* 
+  <fledermaus> every time jordanb chips in with a "Let's..."
+  statement, rudebot should reciprocate.
+
+  Or at least it should squirrel away the quip.
+
+* Terminology
+  I suspect there is one RFC-1149-ly correct term for what I variously
+  call "requester" and "source" (i.e., the guy who sends an IRC
+  message), and other terms.  Try to use the same terms that the RFC
+  uses, so that someone who's familiar with the RFC, when reading this
+  code, will feel right at home.
