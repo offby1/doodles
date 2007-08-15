@@ -35,7 +35,7 @@ $(tarball): version.ss
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
-release: $(tarball)
+dist: $(tarball)
 	@mv -v $^ $(distdir)
 	@ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
 
@@ -54,4 +54,4 @@ tags: TAGS
 TAGS: $(wildcard *.ss)
 	etags $^
 
-.PHONY: clean all plt tar check
+.PHONY: clean all dist plt tar check
