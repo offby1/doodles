@@ -27,7 +27,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (set! register-version-string
         (lambda ( str)
           (set! version-string-registry (cons str version-string-registry)))))
-(register-version-string "$Id$")
 
 (define (long-version-string) (format
                                "~a (offby1@blarg.net):~a:~a"
