@@ -4,38 +4,6 @@
 
 * bugs
 
-** queued channel-idle events?
-   I saw rudybot r4674 spew news in a channel that wasn't idle, or at
-   least, not idle at the time he spewed.  My theory -- for which I
-   have no evidence -- is that at some point, there was no news in the
-   queue, and the channel went idle.  Then people resumed chattering.
-   Then much later some news arrived, so the sync/timeout
-   on *planet-emacs-newsfeed* unblocked, and the idle event was still
-   signaled, so the (sync idle-evt) didn't block, and we got
-   apparently-unbidden news.  (I had the exact same problem recently
-   with the "news" command).
-
-   Ideas to fix this:
-
-*** recreate idle-event
-    We currently have one, effectively global, idle event for a
-    channel, which gets signaled _every time_ the channel goes idle.
-    But change that to creating an event _inside_ the thread's loop,
-    _after_ we've gotten a news item; this event will only trigger
-    once, the -first- time the channel goes idle.  Then we will simply
-    let the event go out of scope, and the next time we go through the
-    loop, we create a new one, and wait on _it_.  The garbage
-    collector would cull the old event from *message-subscriptions*,
-    if we were to make that a weak hash table instead of a list.
-    
-*** keep track of the arrival time of each message ...
-    ... and only spew news if the most recent message arrived _before_
-    the channel went idle (i.e., longer
-    than *quote-and-headline-interval* ago, measured from the time
-    when we unblock on the idle event).  I hate this idea because
-    every time I think about it I have to draw little timeline
-    diagrams in my head, and I get all confused.
-
 
 -- Low priority
 

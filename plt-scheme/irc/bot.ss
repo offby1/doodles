@@ -261,44 +261,45 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         ((366)
          (when (< 1 (length  (message-params message)))
            (let ((this-channel (second (message-params message))))
-             (when (member this-channel '("#emacs" "#bots" ))
-               (let ((idle-evt
-                      (make-channel-idle-event
-                       this-channel
-                       (*quote-and-headline-interval*))))
 
-                 (subscribe-proc-to-server-messages!
-                  (channel-idle-event-input-examiner idle-evt))
+                          (when (member this-channel '("#emacs" "#bots" ))
+                            (let ((idle-evt
+                                   (make-channel-idle-event
+                                    this-channel
+                                    (*quote-and-headline-interval*))))
 
-                 (thread
-                  (lambda ()
-                    (let loop ()
-                      (let ((q (one-quote)))
-                        (sync idle-evt)
-                        (pm this-channel q)
-                        (loop)))))))
+                              (subscribe-proc-to-server-messages!
+                               (channel-idle-event-input-examiner idle-evt))
+
+                              (thread
+                               (lambda ()
+                                 (let loop ()
+                                   (let ((q (one-quote)))
+                                     (sync idle-evt)
+                                     (pm this-channel q)
+                                     (loop)))))))
 
              (when (equal? this-channel "#emacs")
-               (let ((idle-evt
-                      (make-channel-idle-event
-                       this-channel
-                       (*quote-and-headline-interval*))))
-
-                 (subscribe-proc-to-server-messages!
-                  (channel-idle-event-input-examiner idle-evt))
-
-                 (thread
-                  (lambda ()
-                    ;; re-spew the most recent headline if there's no
-                    ;; new news.
-                    (let loop ()
-                      (let ((headline (sync/timeout (*planet-poll-interval*)
-                                                    (irc-session-async-for-news s))))
-                        (when headline
+               (thread
+                (lambda ()
+                  (vtprintf "Hi!  I'd have expected to be a new thread, but you never know.~%")
+                  (let loop ()
+                    (vtprintf "Waiting for a headline.~%")
+                    (let ((headline (sync/timeout (*planet-poll-interval*)
+                                                  (irc-session-async-for-news s))))
+                      (vtprintf "got ~s~%" headline)
+                      (when headline
+                        (let ((idle-evt
+                               (make-channel-idle-event
+                                this-channel
+                                (*quote-and-headline-interval*))))
+                          (subscribe-proc-to-server-messages!
+                           (channel-idle-event-input-examiner idle-evt))
+                          (vtprintf "Waiting for the channel to idle.~%")
                           (sync idle-evt)
                           (pm this-channel
-                              (entry->string headline)))
-                        (loop)))))))
+                              (entry->string headline))))
+                      (loop))))))
 
              (when (equal? this-channel "##cinema")
                (let ((posts #f))

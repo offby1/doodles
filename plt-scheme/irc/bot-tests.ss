@@ -28,19 +28,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (thread
            (lambda ()
              (let loop ()
-               (vprintf "expect/timeout about to look for ~s from ~s ...~%"
+               (vtprintf "expect/timeout about to look for ~s from ~s ...~%"
                         regex
                         (object-name ip))
                (let ((line (read-line ip)))
                  (cond
                   ((eof-object? line)
-                   (vprintf "expect/timeout: eof~%")
+                   (vtprintf "expect/timeout: eof~%")
                    (channel-put ch #f))
                   ((regexp-match regex line)
-                   (vprintf "expect/timeout: Got match!~%")
+                   (vtprintf "expect/timeout: Got match!~%")
                    (channel-put ch #t))
                   (else
-                   (vprintf "expect/timeout: nope; retrying~%")
+                   (vtprintf "expect/timeout: nope; retrying~%")
                    (loop)))
 
                  ))))))
@@ -92,8 +92,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (set-irc-session-custodian! sess (make-custodian))
 
            ;; start the news thread
-           (*planet-poll-interval* 1)
-           (*quote-and-headline-interval* 1)
+           (*planet-poll-interval* 2)
+           (*quote-and-headline-interval* 1/10)
            (respond (parse-irc-message ":x 366 rudybot #emacs :get crackin'") sess)
            )
 
@@ -103,7 +103,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
          ;; let the channel go idle.
-         (sleep 1)
+         (vtprintf "Test is sleeping~%")
+         (sleep (* 2 (*quote-and-headline-interval*)))
 
          ;; have someone say something on the channel.
          (respond (parse-irc-message ":a!b@c PRIVMSG #emacs :yo") sess)
@@ -119,8 +120,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; no longer idle.
 
          (check-false
-          (and (not (printf "This test is disabled, since I know it fails~%"))
-          (expect/timeout ip #rx"JAPS" 2)))))
+          (expect/timeout ip #rx"JAPS" (* 3/4 (*quote-and-headline-interval*))))))
        ))))
 
 (provide (all-defined))

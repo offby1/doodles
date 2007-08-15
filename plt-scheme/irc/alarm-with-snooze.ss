@@ -7,7 +7,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (lib "kw.ss")
          (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         "vprintf.ss")
 
 ;; Like an alarm event, but you can "hit the snooze" button _before_
 ;; it goes off (unlike a real alarm clock, whose snooze button is for
@@ -50,16 +51,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; create another.  It works, though :-)
          (sleeper (lambda ()
                     (let loop ()
+                      ;; (vtprintf "snooze sleeper ~a sleeping for ~a seconds~%"
+;;                                 id interval)
                       (sleep interval)
                       (semaphore-post s)
+                      ;; (vtprintf "snooze sleeper ~a posted~%"
+;;                                 id)
                       (when periodic? (loop))))))
     (let ((t (thread sleeper)))
       (make-alarm-with-snooze
        s
        (lambda/kw (#:key [fatal? #f])
          (kill-thread t)
+;;          (vtprintf "snooze button for ~a killed thread ~a~%"
+;;                    id (eq-hash-code t))
          (when (not fatal?)
-           (set! t (thread sleeper))))
+           (set! t (thread sleeper))
+;;            (vtprintf "snooze button for ~a made fresh sleeper ~a~%"
+;;                    id (eq-hash-code t))
+           ))
        id))))
 
 
