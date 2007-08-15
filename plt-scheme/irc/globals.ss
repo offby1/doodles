@@ -15,7 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
-(define *client-version* (make-parameter "$Rev: 4693 $")) ;better than nothing
+(define *client-version* (make-parameter "$Rev$")) ;better than nothing
 
 (define version-strings #f)
 (define register-version-string #f)
