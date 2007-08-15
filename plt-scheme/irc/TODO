@@ -67,17 +67,10 @@
 
 * low-priority bugs
 
-** joins channels twice
-   r4530.  Probably because I passed a few channel names on the
-   command line which were also in the default list, and it's too dumb
-   to uniquify the resulting list.
+** "CTCP source" doesn't return an FTP site :-)
 
-
-** mangles "CTCP source"
-
-- http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the
-  source should be hosted on an FTP server, which I don't care to run,
-  so ...
+http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the source
+should be hosted on an FTP server, which I don't care to run, so ...
 
 * quotes and news headlines
 
@@ -99,13 +92,6 @@
 
    offby1: suggestion for rudybot: only have him spew news in a
    channel if there has been speech since the last time he spewed news
-
-** keep the latest headline ...
-   Instead of having queue-of-entries return a raw async-channel, have
-   it instead return a pair (or a structure or whatever) that includes
-   the channel _and_ a "latest" field: basically a cache of the last
-   item gotten from the async-channel.  That way anyone can
-   non-destructively look at the latest headlines at any time.
 
 * Windows
 
