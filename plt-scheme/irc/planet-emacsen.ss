@@ -142,6 +142,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sleep (/ (add1 (random 10)) 10))
        (retry)))))
 
+(define-struct cached-channel (async cache) #f)
+(define (cached-channel-apply cc . args)
+  (let ((datum (apply (car args)
+                      (append (cdr args) (list (cached-channel-async cc))))))
+    (set-cached-channel-cache! cc datum)
+    datum))
+
 ;; idea -- don't just return this queue; instad, return a structure
 ;; that contains the queue _and_ a "cache" (just one entry) of the
 ;; most-recently-gotten entry.  Thus we'd have to write a little
@@ -202,7 +209,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (sleep (*planet-poll-interval*))
          (loop))))
 
-    the-channel)  )
+    (make-cached-channel the-channel #f))  )
 
 ;;(trace queue-of-entries)
 
@@ -210,7 +217,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (async->list as)
   (let loop ((what-we-found '()))
-    (let ((datum (sync/timeout 1/10 as)))
+    (let ((datum (cached-channel-apply as sync/timeout 1/10)))
 
       (if datum
           (loop (cons datum what-we-found))
@@ -283,7 +290,7 @@ op)
        (put-preferences (list (*atom-timestamp-preference-name*))
                         (list #f)))
      (let ((q (queue-of-entries #:whence #f)))
-       (let ((first-entry (sync q))
+       (let ((first-entry (cached-channel-apply q sync))
              (time-of-last-entry-put (get-preference (*atom-timestamp-preference-name*))))
 
          (check-pred entry? first-entry "It's not an entry!!")
@@ -291,6 +298,8 @@ op)
 
 
 (provide
+ cached-channel-apply
+ cached-channel-cache
  entry->string
  entry-timestamp
  planet-tests
