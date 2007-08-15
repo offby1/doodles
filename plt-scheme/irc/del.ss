@@ -41,18 +41,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             ;; more convenient for testing
             (getenv "DELICIOUS_PASSWORD")
 
-            "unknown")
-        )
+            "unknown"))
+
        (current-username "tucumcari"))
 
-    (let ((gotten (recent-posts "moviestowatchfor")))
-      (display "Got these:")
-      (pretty-print gotten)
-      (map (lambda (post)
-             (make-entry (date->time-utc (post-date post))
-                         (post-description post)
-                         (post-url post)))
-           gotten))))
+
+    (map (lambda (post)
+           (make-entry (date->time-utc (post-date post))
+                       (post-description post)
+                       (post-url post)))
+         (recent-posts "moviestowatchfor"))))
+
+
 
 (define del.icio.us-tests
 
@@ -71,5 +71,4 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (check-false     (null? snarfage) "didn't return any entries")
         (check-not-false (every entry? snarfage) "They're not all entries")))
     )))
-(provide (all-defined))
-)
+(provide (all-defined)))
