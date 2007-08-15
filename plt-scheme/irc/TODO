@@ -16,6 +16,9 @@
   acting funny, I could do, at the repl, something like (add-to-list!
   (*things-to-log*) 'moviestowatchfor)
 
+  If modules were first-class, we could put _them_ on the list
+  directly, instead of each module having to create its own symbol
+  just for that purpose.
 * read memos?
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "Type \u0002/msg MemoServ READ 2\u0002 to read it"))
