@@ -4,14 +4,14 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot-tests mzscheme
-(require (lib "async-channel.ss")
-         (only (lib "pregexp.ss") pregexp-quote)
+(require (only (lib "pregexp.ss") pregexp-quote)
          (lib "trace.ss")
          (only (lib "19.ss" "srfi")
                current-time)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "bot.ss"
+         "cached-channel.ss"
          "globals.ss"
          "headline.ss"
          (only "planet-emacsen.ss"
@@ -21,8 +21,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                parse-irc-message)
          "vprintf.ss")
 (register-version-string "$Id$")
-
-(require/expose "planet-emacsen.ss" (cached-channel-async))
 
 ;; returns #f if we didn't find what we're looking for.
 
@@ -103,7 +101,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
          ;; ensure there is no news available.
-         (set-irc-session-async-for-news! sess (make-cached-channel (make-async-channel #f) #f))
+         (set-irc-session-async-for-news! sess (make-cached-channel))
 
          ;; let the channel go idle.
          (vtprintf "Test is sleeping~%")
@@ -113,8 +111,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (respond (parse-irc-message ":a!b@c PRIVMSG #emacs :yo") sess)
 
          ;; now QUICKLY provide some news.
-         (async-channel-put
-          (cached-channel-async (irc-session-async-for-news sess))
+         (cached-channel-put
+          (irc-session-async-for-news sess)
           (make-entry (current-time)
                       "JAPS BOMB PERL HARBOR"
                       "http://ruby-lang.org/mua/ha/ha"))

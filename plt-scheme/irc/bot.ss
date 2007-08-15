@@ -4,8 +4,7 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot-tests.ss -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot mzscheme
-(require (lib "async-channel.ss")
-         (lib "kw.ss")
+(require (lib "kw.ss")
          (only (lib "1.ss" "srfi")
                first second third
                filter)
@@ -22,6 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
+         "cached-channel.ss"
          "channel-idle-event.ss"
          "del.ss"
          "globals.ss"
@@ -294,9 +294,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (lambda ()
                   (let loop ()
                     (vtprintf "Waiting for a headline.~%")
-                    (let ((headline (cached-channel-apply
-                                     (irc-session-async-for-news s)
-                                     sync/timeout (*planet-poll-interval*)
+                    (let ((headline (sync/timeout
+                                     (*planet-poll-interval*) (irc-session-async-for-news s)
                                      )))
                       (vtprintf "got ~s~%" headline)
                       (when headline
