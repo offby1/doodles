@@ -69,24 +69,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (*irc-server-name*)
              feed-description))
 
-
-  ;; if we're talking to a remote server, let's take some time to
-  ;; identify as best we can.
-  (let* ((svnversion (find-executable-path "svnversion"))
-         (version-string
-          (and
-           svnversion
-           (regexp-replace
-            #rx"\n$"
-            (system-args->string
-             svnversion
-             (path->string (this-expression-source-directory)))
-            ""))))
-    (when version-string
-      (*client-version*
-       version-string))
-    (vtprintf "Our version string is ~s~%" (*client-version*)))
-  )
+  (vtprintf "Our version string is ~s~%" *svnversion-string*))
 
 (print-hash-table #t)
 

@@ -5,17 +5,22 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module globals mzscheme
-(require (only (lib "etc.ss") this-expression-source-directory)
+(require (lib "include.ss")
+         (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                second)
          (only (lib "13.ss" "srfi")
-               string-tokenize))
+               string-tokenize)
+         (only (lib "14.ss" "srfi")
+               char-set
+               char-set-complement
+               ))
+(include "version.ss")
 
 (define *my-nick* (make-parameter "rudybot"))
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
-(define *client-version* (make-parameter "$Rev$")) ;better than nothing
 
 (define version-strings #f)
 (define register-version-string #f)
@@ -28,21 +33,24 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (lambda ( str)
           (set! version-string-registry (cons str version-string-registry)))))
 
-(define (long-version-string) (format
-                               "~a (offby1@blarg.net):~a:~a"
+(define (long-version-string) (apply
+                               format
+                               "~a (offby1@blarg.net):v2.~a-~a:PLT scheme version ~a on ~a"
                                *client-name*
-                               *client-version-number*
-                               *client-environment*))
 
-;; *sigh*.  The version string with which we reply to CTCP can't have
-;; a colon, but of course Subversion's keyword expansion inserted a
-;; colon into *client-version*, so we have to parse out the number.
-(define *client-version-number* (format "v2.~a" (second (string-tokenize (*client-version*)) )))
+                               ;; *sigh*.  The version string with
+                               ;; which we reply to CTCP can't have a
+                               ;; colon, but of course Subversion's
+                               ;; keyword expansion inserted a colon
+                               ;; into *client-version*, so we have to
+                               ;; parse out the numbers.
 
-(define *client-environment*
-  (format "PLT scheme version ~a on ~a"
-          (version)
-          (system-type 'os)))
+                               (append
+                                (string-tokenize
+                                 *svnversion-string*
+                                 (char-set-complement (char-set #\:)))
+                                (list (version)
+                                      (system-type 'os)))))
 
 (define *verbose* #t)
 (define (verbose!) (set! *verbose* #t))

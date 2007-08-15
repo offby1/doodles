@@ -389,13 +389,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (for-each (lambda (s)
                 (vprintf "~a~%" s))
               (version-strings))
+    (vprintf "~a~%" (long-version-string))
 
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
              (or (getenv "USER") "unknown")
              (*irc-server-name*)
              *client-name*
-             (*client-version*))
+             *svnversion-string*)
 
     (when (*nickserv-password*)
       (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))

@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          "bot-tests.ss"
          "channel-idle-event.ss"
          "del.ss"
+         (only "globals.ss" register-version-string)
          "parse.ss"
          "planet-emacsen.ss"
          "tinyurl-task.ss"

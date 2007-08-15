@@ -1,7 +1,8 @@
-basename := $(shell echo rudybot-$$(svnversion -n . | sed s,:,-,))
-plt-file := $(basename).plt
-tarball  := $(basename).tar.gz
-distdir  := $(HOME)/public_html/bot
+svnversion:= $(shell svnversion -n .)
+basename  := $(shell echo rudybot-$(svnversion) | sed s,:,-,)
+plt-file  := $(basename).plt
+tarball   := $(basename).tar.gz
+distdir   := $(HOME)/public_html/bot
 
 all: plt tar
 plt: $(plt-file)
@@ -17,13 +18,20 @@ define cleanup
 rm -rf $${tempdir}
 endef
 
-$(plt-file):
+version.ss: $(filter-out version.ss,$(wildcard *.ss))
+	echo -n '(define *svnversion-string* "' > $@
+	echo -n $(svnversion) >> $@
+	echo    '")' >> $@
+
+$(plt-file): version.ss
 	$(make-export-dir) && \
+	cp $^ $${expdir} && \
 	planet --create-archive $${expdir} && \
 	$(cleanup)
 
-$(tarball):
+$(tarball): version.ss
 	$(make-export-dir) && \
+	cp $^ $${expdir} && \
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
