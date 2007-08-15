@@ -53,6 +53,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
          "headline.ss"
          "globals.ss"
+         "thread.ss"
          "vprintf.ss")
 
 ;; how often (in seconds) do we re-create and read the input port
@@ -170,7 +171,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ;; keep track of each entry we put on the async-channel, so
         ;; that we never put the same entry on twice.
         (entries-put (make-hash-table 'equal)))
-    (thread
+    (my-thread
      (lambda ()
        (let loop ()
 

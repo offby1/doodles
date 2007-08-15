@@ -29,6 +29,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "planet-emacsen.ss"
          "quotes.ss"
          "alarm-with-snooze.ss"
+         "thread.ss"
          "tinyurl.ss"
          "vprintf.ss")
 
@@ -194,7 +195,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (command (string-join parsed-command))
              (params  (list (PRIVMSG-destination message)
                             command)))
-        (thread
+        (my-thread
          (lambda ()
            (sleep 10)
            (respond
@@ -271,7 +272,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                               (subscribe-proc-to-server-messages!
                                (channel-idle-event-input-examiner idle-evt))
 
-                              (thread
+                              (my-thread
                                (lambda ()
                                  (let loop ()
                                    (let ((q (one-quote)))
@@ -280,7 +281,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                      (loop)))))))
 
              (when (equal? this-channel "#emacs")
-               (thread
+               (my-thread
                 (lambda ()
                   (vtprintf "Hi!  I'd have expected to be a new thread, but you never know.~%")
                   (let loop ()
@@ -303,7 +304,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
              (when (equal? this-channel "##cinema")
                (let ((posts #f))
-                 (thread
+                 (my-thread
                   (lambda ()
                     (let loop ()
                       (with-handlers
@@ -319,7 +320,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                    (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
 
-                   (thread
+                   (my-thread
                     (lambda ()
                       (let loop ()
                         (sync idle)

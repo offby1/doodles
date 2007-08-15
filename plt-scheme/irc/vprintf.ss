@@ -6,6 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module vprintf mzscheme
 (require "globals.ss"
+         "thread.ss"
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only (lib "19.ss" "srfi")
                current-date))
@@ -15,7 +16,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (parameterize ((current-output-port (*log-output-port*)))
       (apply printf
              (string-append "thread ~a: " (car args))
-             (eq-hash-code (current-thread))
+             (*current-thread-id*)
              (cdr args))
       (flush-output))))
 (define (vtprintf . args)
