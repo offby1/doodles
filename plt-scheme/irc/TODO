@@ -63,13 +63,6 @@
    require logging in, or have a different way of doing it.  We should
    really log in only if we clearly need it
 
-* version registry
-
-  Each module exports a value that contains its Subversion $Id$ info.
-  At load time, it pushes that value into some global list.  That way
-  the "version" command can get very complete (albeit voluminous)
-  info, which is nicer than the output of "svnversion"
-
 * unify atom getting (planet emacs) with getting moviestowatchfor
 
 * low-priority bugs
@@ -81,10 +74,6 @@
 
 
 ** mangles "CTCP source"
-
-- we don't return a real file name, since it'd be tedious figuring out
-  the exact right one (the real file's name contains the output of
-  svnversion)
 
 - http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the
   source should be hosted on an FTP server, which I don't care to run,
