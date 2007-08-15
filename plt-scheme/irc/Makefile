@@ -35,7 +35,7 @@ $(tarball): version.ss
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
-install: $(tarball)
+release: $(tarball)
 	@mv -v $^ $(distdir)
 	@ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
 
