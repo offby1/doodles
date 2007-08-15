@@ -160,7 +160,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-cached-channel))
+  (let ((the-channel (make-cached-channel #f))
 
         ;; keep track of each entry we put on the async-channel, so
         ;; that we never put the same entry on twice.

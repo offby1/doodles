@@ -14,9 +14,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;; This is roughly like an async-channel, except:
 
-;; * you can't control the size -- it's always unlimited (but now that
-;;   I think about it, there's no good reason for this limitation);
-
 ;; * you must call cached-channel-put to store stuff, instead of
 ;;   async-channel-put;
 
@@ -35,8 +32,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (cached-channel-cache cc)
   (cached-channel-ref cc 2))
 
-(define (public-make-cached-channel )
-  (letrec ((async (make-async-channel #f))
+(define (public-make-cached-channel . args)
+  (letrec ((async (apply make-async-channel args))
            (rv (make-cached-channel
                 (wrap-evt
                  async

@@ -101,7 +101,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
          ;; ensure there is no news available.
-         (set-irc-session-async-for-news! sess (make-cached-channel))
+         (set-irc-session-async-for-news! sess (make-cached-channel #f))
 
          ;; let the channel go idle.
          (vtprintf "Test is sleeping~%")
