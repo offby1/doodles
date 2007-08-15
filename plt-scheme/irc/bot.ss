@@ -263,27 +263,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (when (< 1 (length  (message-params message)))
            (let ((this-channel (second (message-params message))))
 
-                          (when (member this-channel '("#emacs" "#bots" ))
-                            (let ((idle-evt
-                                   (make-channel-idle-event
-                                    this-channel
-                                    (*quote-and-headline-interval*))))
+             (when (member this-channel '("#emacs" "#bots" ))
+               (let ((idle-evt
+                      (make-channel-idle-event
+                       this-channel
+                       (*quote-and-headline-interval*))))
 
-                              (subscribe-proc-to-server-messages!
-                               (channel-idle-event-input-examiner idle-evt))
+                 (subscribe-proc-to-server-messages!
+                  (channel-idle-event-input-examiner idle-evt))
 
-                              (my-thread
-                               (lambda ()
-                                 (let loop ()
-                                   (let ((q (one-quote)))
-                                     (sync idle-evt)
-                                     (pm this-channel q)
-                                     (loop)))))))
+                 (my-thread
+                  (lambda ()
+                    (let loop ()
+                      (let ((q (one-quote)))
+                        (sync idle-evt)
+                        (pm this-channel q)
+                        (loop)))))))
 
              (when (equal? this-channel "#emacs")
                (my-thread
                 (lambda ()
-                  (vtprintf "Hi!  I'd have expected to be a new thread, but you never know.~%")
                   (let loop ()
                     (vtprintf "Waiting for a headline.~%")
                     (let ((headline (sync/timeout (*planet-poll-interval*)
@@ -392,6 +391,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          ([exn:break?
            (lambda (x)
              (fprintf op "QUIT :Ah been shot!~%")
+             (flush-output op)
              (close-output-port op))]
           [exn:fail?
            (lambda (e)
