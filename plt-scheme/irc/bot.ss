@@ -32,6 +32,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "thread.ss"
          "tinyurl.ss"
          "vprintf.ss")
+(register-version-string "$Id$")
 
 (define-struct irc-session
   (
@@ -385,7 +386,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (file-stream-buffer-mode p 'line))
               (list op (*log-output-port*)))
 
-    (vprintf "~a~%" (long-version-string))
+    (for-each (lambda (s)
+                (vprintf "~a~%" s))
+              (version-strings))
 
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"

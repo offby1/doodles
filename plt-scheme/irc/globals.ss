@@ -14,7 +14,19 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
-(define *client-version* (make-parameter "$Rev$")) ;better than nothing
+(define *client-version* (make-parameter "$Rev: 4693 $")) ;better than nothing
+
+(define version-strings #f)
+(define register-version-string #f)
+
+(let ((version-string-registry '("$Id$")))
+
+  (set! version-strings
+        (lambda () version-string-registry))
+  (set! register-version-string
+        (lambda ( str)
+          (set! version-string-registry (cons str version-string-registry)))))
+
 (define (long-version-string) (format
                                "~a (offby1@blarg.net):~a:~a"
                                *client-name*
