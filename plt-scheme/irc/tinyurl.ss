@@ -17,7 +17,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (only (planet "port.ss" ("schematics" "port.plt"))
                port->string)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only "globals.ss" register-version-string))
+
+(register-version-string "$Id$")
 
 ;; stolen from erc-button.el in Emacs 22
 (define url-regexp (pregexp "http(s)?(//[-a-zA-Z0-9_.]+:[0-9]*)?[-a-zA-Z0-9_=!?#$@~`%&*+\\/:;.,]+[-a-zA-Z0-9_=#$@~`%&*+\\/]"))

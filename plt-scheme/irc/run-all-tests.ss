@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          "tinyurl-task.ss"
          "tinyurl.ss"
          )
+(register-version-string "$Id$")
 (define eva-thang (test-suite
                    "eva thang"
                    alarm-with-snooze-tests

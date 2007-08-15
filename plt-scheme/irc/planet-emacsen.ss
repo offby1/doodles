@@ -55,6 +55,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "globals.ss"
          "thread.ss"
          "vprintf.ss")
+(register-version-string "$Id$")
+
 
 ;; how often (in seconds) do we re-create and read the input port
 (define *planet-poll-interval* (make-parameter 3600))

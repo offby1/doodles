@@ -9,6 +9,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "globals.ss"
          "vprintf.ss"
          "../web/quote-of-the-day.ss")
+(register-version-string "$Id$")
 
 (provide one-quote)
 

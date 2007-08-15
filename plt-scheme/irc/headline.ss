@@ -8,7 +8,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (lib "19.ss" "srfi") time?)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "assert.ss"  ("offby1"     "offby1.plt")))
+         (planet "assert.ss"  ("offby1"     "offby1.plt"))
+         (only "globals.ss" register-version-string))
+
+(register-version-string "$Id$")
 
 ;; this is what our queue returns.
 (define-struct entry (timestamp title link) (make-inspector))

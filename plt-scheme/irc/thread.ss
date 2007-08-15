@@ -9,6 +9,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; thread.  Thanks to Eli Barzilay for the suggestion.
 
 (define threads-created 0)
+(require (only "globals.ss" register-version-string))
+(register-version-string "$Id$")
 (define *current-thread-id* (make-parameter 0))
 (define (my-thread thunk)
   (set! threads-created (add1 threads-created))

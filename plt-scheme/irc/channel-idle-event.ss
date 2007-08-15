@@ -8,7 +8,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "alarm-with-snooze.ss"
+         (only "globals.ss" register-version-string)
          "parse.ss")
+(register-version-string "$Id$")
 
 (define-values (struct:channel-idle-event make-channel-idle-event channel-idle-event? channel-idle-event-ref channel-idle-event-set!)
     (make-struct-type 'channel-idle-event #f 2 0

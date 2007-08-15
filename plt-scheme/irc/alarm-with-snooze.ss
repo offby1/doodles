@@ -8,7 +8,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only "globals.ss" register-version-string)
          "vprintf.ss")
+(register-version-string "$Id$")
 
 ;; Like an alarm event, but you can "hit the snooze" button _before_
 ;; it goes off (unlike a real alarm clock, whose snooze button is for

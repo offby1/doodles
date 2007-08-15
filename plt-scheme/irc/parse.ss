@@ -26,8 +26,9 @@
                char-set:whitespace
                )
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2)))
-
+         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only "globals.ss" register-version-string))
+(register-version-string "$Id$")
 (define-struct (exn:fail:irc-parse exn:fail:contract) (string original-exception))
 (define-struct message (prefix command params) (make-inspector))
 

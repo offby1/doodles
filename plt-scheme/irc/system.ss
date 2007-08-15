@@ -10,7 +10,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; it's entirely possible that I don't need process.ss, and could
 ;; instead use "subprocess"; I just haven't read the docs carefully
 ;; enough to tell which is best.  This works, anyway.
-(require (lib "process.ss"))
+(require (lib "process.ss")
+         (only "globals.ss" register-version-string))
+
+(register-version-string "$Id$")
 
 ;; (listof string?) -> string?
 (provide (all-defined))

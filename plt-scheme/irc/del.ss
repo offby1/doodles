@@ -22,6 +22,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "trace.ss")
          "globals.ss"
          "headline.ss")
+(register-version-string "$Id$")
 
 ;; return all items with the tag "moviestowatchfor"
 

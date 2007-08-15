@@ -20,6 +20,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only "parse.ss"
                parse-irc-message)
          "vprintf.ss")
+(register-version-string "$Id$")
 
 (require/expose "planet-emacsen.ss" (cached-channel-async))
 

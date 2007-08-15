@@ -11,6 +11,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "bot-tests.ss"
          "globals.ss"
          "tinyurl.ss")
+(register-version-string "$Id$")
 
 (define long-url
   (let loop ((kinda-long "http://foo.bar/baz/i/hope/this/is/long/enough"))

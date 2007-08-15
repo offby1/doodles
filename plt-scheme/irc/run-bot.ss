@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "system.ss"
           "vprintf.ss"
           )
+(register-version-string "$Id$")
 
 (command-line
  "bot"

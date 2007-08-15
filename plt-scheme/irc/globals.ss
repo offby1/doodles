@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                second)
          (only (lib "13.ss" "srfi")
                string-tokenize))
+
 (define *my-nick* (make-parameter "rudybot"))
 (define *passive?* (make-parameter #f))
 (define *timeout-seconds* (make-parameter #f))
@@ -26,6 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (set! register-version-string
         (lambda ( str)
           (set! version-string-registry (cons str version-string-registry)))))
+(register-version-string "$Id$")
 
 (define (long-version-string) (format
                                "~a (offby1@blarg.net):~a:~a"

@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only (lib "19.ss" "srfi")
                current-date))
+(register-version-string "$Id$")
 
 (define (vprintf . args)
   (when *verbose*
