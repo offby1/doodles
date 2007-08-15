@@ -60,6 +60,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
    ) #f)
 
 (define/kw (public-make-irc-session op #:key [feed #f] )
+  (when feed
+    (check-type 'make-irc-session cached-channel? feed))
   (make-irc-session
     (make-hash-table 'equal)
     (make-hash-table 'equal 'weak)
@@ -67,6 +69,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     op
     (make-custodian)
     ))
+
+(define (public-set-irc-session-async-for-news! sess thing)
+  (when thing
+    (check-type 'set-irc-session-async-for-news! cached-channel? thing))
+  (set-irc-session-async-for-news! sess thing))
 
 (define (respond message s)
 
@@ -220,7 +227,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (reply (one-quote)))
 
      ((and (gist-equal? "news"))
-      (reply (or (let ((entry (async-channel-try-get (irc-session-async-for-news s))))
+      (reply (or (let ((entry (cached-channel-cache
+                               (irc-session-async-for-news s))))
                    (and entry (entry->string entry)))
                  "Sorry, no news yet.")))
 
@@ -285,8 +293,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (lambda ()
                   (let loop ()
                     (vtprintf "Waiting for a headline.~%")
-                    (let ((headline (sync/timeout (*planet-poll-interval*)
-                                                  (irc-session-async-for-news s))))
+                    (let ((headline (cached-channel-apply
+                                     (irc-session-async-for-news s)
+                                     sync/timeout (*planet-poll-interval*)
+                                     )))
                       (vtprintf "got ~s~%" headline)
                       (when headline
                         (let ((idle-evt
@@ -375,6 +385,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (file-stream-buffer-mode p 'line))
               (list op (*log-output-port*)))
 
+    (vprintf "~a~%" (long-version-string))
+
     (fprintf op "NICK ~a~%" (*my-nick*))
     (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
              (or (getenv "USER") "unknown")
@@ -417,6 +429,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (respond (parse-irc-message line) sess))
                (get-one-line)))))))))
 
-(provide (all-defined-except make-irc-session)
-         (rename public-make-irc-session make-irc-session))
+(provide (all-defined-except make-irc-session set-irc-session-async-for-news!)
+         (rename public-make-irc-session make-irc-session)
+         (rename public-set-irc-session-async-for-news! set-irc-session-async-for-news!))
 )

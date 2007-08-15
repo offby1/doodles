@@ -15,10 +15,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "globals.ss"
          "headline.ss"
          (only "planet-emacsen.ss"
+               make-cached-channel
                *planet-poll-interval*)
          (only "parse.ss"
                parse-irc-message)
          "vprintf.ss")
+
+(require/expose "planet-emacsen.ss" (cached-channel-async))
 
 ;; returns #f if we didn't find what we're looking for.
 
@@ -99,8 +102,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
          ;; ensure there is no news available.
-         (set-irc-session-async-for-news! sess (make-async-channel #f))
-
+         (set-irc-session-async-for-news! sess (make-cached-channel (make-async-channel #f) #f))
 
          ;; let the channel go idle.
          (vtprintf "Test is sleeping~%")
@@ -111,7 +113,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          ;; now QUICKLY provide some news.
          (async-channel-put
-          (irc-session-async-for-news sess)
+          (cached-channel-async (irc-session-async-for-news sess))
           (make-entry (current-time)
                       "JAPS BOMB PERL HARBOR"
                       "http://ruby-lang.org/mua/ha/ha"))

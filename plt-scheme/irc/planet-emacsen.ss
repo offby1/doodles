@@ -149,11 +149,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (set-cached-channel-cache! cc datum)
     datum))
 
-;; idea -- don't just return this queue; instad, return a structure
-;; that contains the queue _and_ a "cache" (just one entry) of the
-;; most-recently-gotten entry.  Thus we'd have to write a little
-;; replacement for async-channel-get that would fill the cache when
-;; needed, and return values from it when asked.
 (define/kw (queue-of-entries
             #:key
             [whence])
@@ -298,8 +293,10 @@ op)
 
 
 (provide
+ cached-channel?
  cached-channel-apply
  cached-channel-cache
+ make-cached-channel
  entry->string
  entry-timestamp
  planet-tests
