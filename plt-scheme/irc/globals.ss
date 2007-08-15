@@ -8,13 +8,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "include.ss")
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "1.ss" "srfi")
-               second)
-         (only (lib "13.ss" "srfi")
-               string-tokenize)
-         (only (lib "14.ss" "srfi")
-               char-set
-               char-set-complement
-               ))
+               second))
+
 (include "version.ss")
 
 (define *my-nick* (make-parameter "rudybot"))
@@ -33,9 +28,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (lambda ( str)
           (set! version-string-registry (cons str version-string-registry)))))
 
-(define (long-version-string) (apply
-                               format
-                               "~a (offby1@blarg.net):v2.~a-~a:PLT scheme version ~a on ~a"
+(define (long-version-string) (format
+                               "~a (offby1@blarg.net):v2.~a:PLT scheme version ~a on ~a"
                                *client-name*
 
                                ;; *sigh*.  The version string with
@@ -45,12 +39,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                ;; into *client-version*, so we have to
                                ;; parse out the numbers.
 
-                               (append
-                                (string-tokenize
-                                 *svnversion-string*
-                                 (char-set-complement (char-set #\:)))
-                                (list (version)
-                                      (system-type 'os)))))
+                               (regexp-replace #rx":" *svnversion-string* "-")
+                               (version)
+                               (system-type 'os)))
 
 (define *verbose* #t)
 (define (verbose!) (set! *verbose* #t))
