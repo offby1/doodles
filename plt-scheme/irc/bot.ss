@@ -366,7 +366,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (when (*irc-server-name*)
       (*log-output-port*
        (open-output-file
-        (format "~a~a"
+        (format "~a-~a"
                 (*irc-server-name*)
                 (zdate)))))
 

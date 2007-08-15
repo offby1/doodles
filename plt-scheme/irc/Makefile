@@ -10,7 +10,7 @@ tar: $(tarball)
 define make-export-dir
 tempdir=`mktemp -d botXXXXXX` ; \
 expdir=$${tempdir}/$(basename) ; \
-svn export . $${expdir}
+svn export -rbase . $${expdir}
 endef
 
 define cleanup
