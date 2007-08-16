@@ -47,8 +47,10 @@
 ;; (trace make-PRIVMSG)
 ;; (trace make-CTCP)
 (define (PRIVMSG-is-for-channel? m)
-  (regexp-match #rx"^#" (PRIVMSG-destination m)))
-
+  (and (PRIVMSG? m)
+       (regexp-match #rx"^#" (PRIVMSG-destination m))))
+;; (trace PRIVMSG-is-for-channel?)
+;; (trace PRIVMSG-destination)
 (define (parse-irc-message string)
   (with-handlers
       ([exn:fail:contract?
@@ -101,13 +103,12 @@
                      (req/x (and ctcp-match (second ctcp-match)))
                      (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
                 (apply
-                 (if ctcp-match
-                     (cond
-                      ((equal? req/x "ACTION" ) make-ACTION)
-                      ((equal? req/x "VERSION") make-VERSION)
-                      ((equal? req/x "SOURCE" ) make-SOURCE)
-                      (else make-CTCP))
-                   make-PRIVMSG)
+                 (cond
+                  ((not ctcp-match)         make-PRIVMSG)
+                  ((equal? req/x "ACTION" ) make-ACTION)
+                  ((equal? req/x "VERSION") make-VERSION)
+                  ((equal? req/x "SOURCE" ) make-SOURCE)
+                  (else make-CTCP))
                  prefix command (append middle-params (list text))
                  (second prefix-match)
                  (first middle-params)
@@ -123,7 +124,8 @@
               middle-params
               (if trailing-parameter
                   (list trailing-parameter)
-                '())))))))))
+                '()))
+             )))))))
 ;(trace parse-irc-message)
 
 

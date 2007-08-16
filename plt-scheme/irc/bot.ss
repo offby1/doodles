@@ -22,7 +22,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
          "cached-channel.ss"
-         "channel-idle-event.ss"
+         "channel-events.ss"
          "del.ss"
          "globals.ss"
          "parse.ss"
@@ -101,7 +101,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              message)
             response))
 
-    (define for-us?
+    (define (for-us? message)
+      (check-type 'for-us? message? message)
       (and
        (PRIVMSG? message)
        (equal? (*my-nick*)
@@ -109,34 +110,45 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     PRIVMSG-approximate-recipient
                   PRIVMSG-destination) message))))
 
-    (define gist-for-us
-      (and for-us?
-           (cond
-            ((and (PRIVMSG-is-for-channel? message)
-                  (< 1 (length (PRIVMSG-text-words message))))
-             (second (PRIVMSG-text-words message)))
-            ((and (not (PRIVMSG-is-for-channel? message))
-                  (< 0 (length (PRIVMSG-text-words message))))
-             (first (PRIVMSG-text-words message)))
-            (else
-             #f))
-           ))
+    (define (gist-for-us message)
+      (check-type 'gist-for-us message? message)
+      (let ((relevant-word
+             (and (for-us? message)
+                  (cond
+                   ((and (PRIVMSG-is-for-channel? message)
+                         (< 1 (length (PRIVMSG-text-words message))))
+                    (second (PRIVMSG-text-words message)))
+                   ((and (not (PRIVMSG-is-for-channel? message))
+                         (< 0 (length (PRIVMSG-text-words message))))
+                    (first (PRIVMSG-text-words message)))
+                   (else
+                    #f))
+                  )))
+        ;; trim trailing punctuation
+        (and relevant-word
+             (regexp-replace (pregexp "[^[:alpha:]]+$") relevant-word ""))))
 
-    (define (gist-equal? str)
-      (equal? str gist-for-us))
+    (define (gist-equal? str message)
+      (check-type 'gist-equal? message? message)
+      (equal? str (gist-for-us message)))
 
-    ;; trim trailing punctuation
-    (set! gist-for-us
-          (and gist-for-us
-               (regexp-replace (pregexp "[^[:alpha:]]+$") gist-for-us "")))
-
+    ;; (trace for-us?)
+;;     (trace gist-for-us)
+;;     (trace gist-equal?)
+    (define claimed-by-background-task? #f)
+    (trace subscribe-proc-to-server-messages!)
     (vtprintf " <= ~s~%" message)
 
     ;; notify each subscriber that we got a message.
     (hash-table-for-each
      (irc-session-message-subscriptions s)
      (lambda (proc ignored)
-       (proc message)))
+       (trace proc)
+       (printf "proc is ~s; value is ~s~%"
+               proc ignored)
+       (set! claimed-by-background-task?
+             (or claimed-by-background-task?
+                 (proc message)))))
 
     ;; note who did what, when, where, how, and wearing what kind of
     ;; skirt; so that later we can respond to "seen Ted?"
@@ -182,175 +194,200 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (reply (make-tiny-url url #:user-agent (long-version-string))
                    #:proc notice))))))
 
-    (cond
-     ((and (ACTION? message)
-           (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
-      (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
+    (when (not claimed-by-background-task?)
+      (cond
+       ((and (ACTION? message)
+             (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
+        (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
 
-     ;; "later do foo".  We kludge up a new message that is similar to
-     ;; the one that we just received, but with the words "later do"
-     ;; hacked out, and then call ourselves recursively with that new
-     ;; message.
-     ((and for-us?
-           (let ((w  (PRIVMSG-text-words message)))
-             (and
-              (< 2 (length w))
-              (string-ci=? "later" (second w))
-              (string-ci=? "do"    (third w)))))
-      (let* ((parsed-command (cons
-                              (format "~a:" (*my-nick*))
-                              (cdddr (PRIVMSG-text-words message))))
-             (command (string-join parsed-command))
-             (params  (list (PRIVMSG-destination message)
-                            command)))
-        (my-thread
-         (lambda ()
-           (sleep 10)
-           (respond
-            (make-PRIVMSG
-             (message-prefix message)
-             (symbol->string (message-command message))
-             params
-             (PRIVMSG-speaker message)
-             (PRIVMSG-destination message)
-             (PRIVMSG-approximate-recipient message)
-             command
-             parsed-command)
-            s)))))
-
-     ((and (gist-equal? "seen")
-           (< 2 (length (PRIVMSG-text-words message))))
-      (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
-             (sighting (hash-table-get (irc-session-appearances-by-nick s) who #f)))
-        (reply (or sighting (format "I haven't seen ~a" who)))))
-
-     ((gist-equal? "quote")
-      (reply (one-quote)))
-
-     ((and (gist-equal? "news"))
-      (reply (or (let ((entry (cached-channel-cache
-                               (irc-session-async-for-news s))))
-                   (and entry (entry->string entry)))
-                 "Sorry, no news yet.")))
-
-     ((or (VERSION? message)
-          (gist-equal? "version"))
-      (if (VERSION? message)
-          (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
+       ;; "later do foo".  We kludge up a new message that is similar to
+       ;; the one that we just received, but with the words "later do"
+       ;; hacked out, and then call ourselves recursively with that new
+       ;; message.
+       ((and (for-us? message)
+             (let ((w  (PRIVMSG-text-words message)))
+               (and
+                (< 2 (length w))
+                (string-ci=? "later" (second w))
+                (string-ci=? "do"    (third w)))))
+        (let* ((parsed-command (cons
+                                (format "~a:" (*my-nick*))
+                                (cdddr (PRIVMSG-text-words message))))
+               (command (string-join parsed-command))
+               (params  (list (PRIVMSG-destination message)
+                              command)))
+          (thread-with-id
+           (lambda ()
+             (sleep 10)
+             (respond
+              (make-PRIVMSG
+               (message-prefix message)
+               (symbol->string (message-command message))
+               params
                (PRIVMSG-speaker message)
-               (long-version-string))
-        (reply (long-version-string))))
+               (PRIVMSG-destination message)
+               (PRIVMSG-approximate-recipient message)
+               command
+               parsed-command)
+              s)))))
 
-     ((or (SOURCE? message)
-          (gist-equal? "source"))
-      (let ((source-host "offby1.ath.cx")
-            (source-directory "/~erich/bot/")
-            (source-file-names "rudybot.tar.gz"))
-        (if (SOURCE? message)
-            (out "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
+       ((and (gist-equal? "seen" message)
+             (< 2 (length (PRIVMSG-text-words message))))
+        (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
+               (sighting (hash-table-get (irc-session-appearances-by-nick s) who #f)))
+          (reply (or sighting (format "I haven't seen ~a" who)))))
+
+       ((gist-equal? "quote" message)
+        (reply (one-quote)))
+
+       ((or (VERSION? message)
+            (gist-equal? "version" message))
+        (if (VERSION? message)
+            (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
                  (PRIVMSG-speaker message)
-                 source-host
-                 source-directory
-                 source-file-names)
-          (reply (format "http://~a~a~a" source-host source-directory source-file-names)))))
+                 (long-version-string))
+          (reply (long-version-string))))
 
-     ((and for-us? (not gist-for-us))
-      (reply "Eh?  Speak up."))
+       ((or (SOURCE? message)
+            (gist-equal? "source" message))
+        (let ((source-host "offby1.ath.cx")
+              (source-directory "/~erich/bot/")
+              (source-file-names "rudybot.tar.gz"))
+          (if (SOURCE? message)
+              (out "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
+                   (PRIVMSG-speaker message)
+                   source-host
+                   source-directory
+                   source-file-names)
+            (reply (format "http://~a~a~a" source-host source-directory source-file-names)))))
 
-     (for-us?
-      (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
+       ((and (for-us? message) (not (gist-for-us message)))
+        (reply "Eh?  Speak up."))
 
-     (else
-      (case (message-command message)
-        ((001)
-         (for-each (lambda (cn)
-                     (vtprintf "Joining ~a~%" cn)
-                     (out "JOIN ~a~%" cn))
-                   (*initial-channel-names*)))
+       ((and
+         (for-us? message))
 
-        ((366)
-         (when (< 1 (length  (message-params message)))
-           (let ((this-channel (second (message-params message))))
+        (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
 
-             (when (member this-channel '("#emacs" "#bots" ))
-               (let ((idle-evt
-                      (make-channel-idle-event
-                       this-channel
-                       (*quote-and-headline-interval*))))
+       (else
+        (case (message-command message)
+          ((001)
+           (for-each (lambda (cn)
+                       (vtprintf "Joining ~a~%" cn)
+                       (out "JOIN ~a~%" cn))
+                     (*initial-channel-names*)))
 
-                 (subscribe-proc-to-server-messages!
-                  (channel-idle-event-input-examiner idle-evt))
+          ((366)
+           (when (< 1 (length  (message-params message)))
+             (let ((this-channel (second (message-params message))))
 
-                 (my-thread
-                  (lambda ()
-                    (let loop ()
-                      (let ((q (one-quote)))
-                        (sync idle-evt)
-                        (pm this-channel q)
-                        (loop)))))))
+               (when (member this-channel '("#emacs" "#bots" ))
+                 (let ((idle-evt
+                        (make-channel-idle-event
+                         this-channel
+                         (*quote-and-headline-interval*))))
 
-             (when (equal? this-channel "#emacs")
-               (my-thread
-                (lambda ()
-                  (let loop ()
-                    (vtprintf "Waiting for a headline.~%")
-                    (let ((headline (sync/timeout
-                                     (*planet-poll-interval*) (irc-session-async-for-news s)
-                                     )))
-                      (vtprintf "got ~s~%" headline)
-                      (when headline
-                        (let ((idle-evt
-                               (make-channel-idle-event
-                                this-channel
-                                (*quote-and-headline-interval*))))
-                          (subscribe-proc-to-server-messages!
-                           (channel-idle-event-input-examiner idle-evt))
-                          (vtprintf "Waiting for the channel to idle.~%")
-                          (sync idle-evt)
-                          (pm this-channel
-                              (entry->string headline))))
-                      (loop))))))
+                   (subscribe-proc-to-server-messages!
+                    (channel-idle-event-input-examiner idle-evt))
 
-             (when (equal? this-channel "##cinema")
-               (let ((posts #f))
-                 (my-thread
-                  (lambda ()
-                    (let loop ()
-                      (with-handlers
-                          ([exn:delicious:auth?
-                            (lambda (e)
-                              (vtprintf
-                               "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                        (set! posts (snarf-some-recent-posts))
-                        (sleep  (* 7 24 3600))
-                        (loop)))))
-
-                 (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
-
-                   (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
-
-                   (my-thread
+                   (thread-with-id
                     (lambda ()
                       (let loop ()
-                        (sync idle)
-                        (when posts
-                          (notice this-channel
-                                  (entry->string
-                                   (list-ref posts (random (length posts))))))
-                        (loop))
-                      ))))))))
+                        (let ((q (one-quote)))
+                          (sync idle-evt)
+                          (pm this-channel q)
+                          (loop)))))))
 
-        ((433)
-         (error 'respond "Nick already in use!"))
+               (when (equal? this-channel "#emacs")
+                 (thread-with-id
+                  (lambda ()
+                    (let loop ()
+                      (let* ((input-examiner
+                              (lambda (message)
+                                (and (PRIVMSG-is-for-channel? message)
+                                     (equal? (PRIVMSG-destination message) this-channel)
+                                     (gist-equal?  "news" message))))
+                             (news-request-event
+                              (make-channel-request-event input-examiner)))
 
-        ((NOTICE)
-         #t ;; if it's a whine about identd, warn that it's gonna be slow.
-         )
+                        (trace input-examiner)
+                        (subscribe-proc-to-server-messages!
+                         (channel-request-event-input-examiner news-request-event))
 
-        ((PING)
-         #t
-         (out "PONG :~a~%" (car (message-params message))))
-        )))))
+                        (let ((why (sync news-request-event)))
+                          (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
+                            (pm this-channel
+                                (if headline
+                                    (format "~s asked for news, so: ~a"
+                                            why
+                                            (entry->string headline))
+                                  "No news yet.")))
+                          (loop)))
+
+                      )))
+
+                 (thread-with-id
+                  (lambda ()
+                    (let loop ()
+                      (vtprintf "Waiting for a headline.~%")
+                      (let ((headline (sync (irc-session-async-for-news s))))
+                        (vtprintf "got ~s~%" headline)
+                        (when headline
+                          (let ((idle-evt
+                                 (make-channel-idle-event
+                                  this-channel
+                                  (*quote-and-headline-interval*))))
+
+                            (subscribe-proc-to-server-messages!
+                             (channel-idle-event-input-examiner idle-evt))
+
+                            (vtprintf "Waiting for the channel to idle.~%")
+                            (sync idle-evt)
+                            (pm this-channel
+                                (entry->string headline))))
+
+                        (loop))))))
+
+               (when (equal? this-channel "##cinema")
+                 (let ((posts #f))
+                   (thread-with-id
+                    (lambda ()
+                      (let loop ()
+                        (with-handlers
+                            ([exn:delicious:auth?
+                              (lambda (e)
+                                (vtprintf
+                                 "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                          (set! posts (snarf-some-recent-posts))
+                          (sleep  (* 7 24 3600))
+                          (loop)))))
+
+                   (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
+
+                     (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+
+                     (thread-with-id
+                      (lambda ()
+                        (let loop ()
+                          (sync idle)
+                          (when posts
+                            (notice this-channel
+                                    (entry->string
+                                     (list-ref posts (random (length posts))))))
+                          (loop))
+                        ))))))))
+
+          ((433)
+           (error 'respond "Nick already in use!"))
+
+          ((NOTICE)
+           #t ;; if it's a whine about identd, warn that it's gonna be slow.
+           )
+
+          ((PING)
+           #t
+           (out "PONG :~a~%" (car (message-params message))))
+          ))))))
 
 ;(trace respond)
 
@@ -411,11 +448,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           [exn:fail?
            (lambda (e)
              (fprintf op "QUIT :unexpected failure~%")
+             (flush-output op)
              (close-output-port op)
              (let ((whine (format  "Caught an exception: ~s~%" e)))
-               (vtprintf whine)
-               (fprintf (current-error-port)
-                         whine)))])
+               (display whine (*log-output-port*))
+               (display whine (current-error-port)))
+             (raise e))])
 
        (let get-one-line ()
          (let ((line (read-line ip 'return-linefeed)))

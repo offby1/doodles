@@ -3,7 +3,7 @@
 #$Id$
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui channel-idle-event-tests 'verbose))"
 |#
-(module channel-idle-event mzscheme
+(module channel-events mzscheme
 (require (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
@@ -36,14 +36,35 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (when (and (PRIVMSG? irc-message)
                   (equal? (PRIVMSG-destination irc-message)
                           channel-name))
-         ((alarm-with-snooze-snooze-button alarm)))))))
+         ((alarm-with-snooze-snooze-button alarm)))
+       #f                               ;so that the main loop doesn't
+                                        ;think we've handled the
+                                        ;current message
+       ))))
+
+(define-values (struct:channel-request-event make-channel-request-event channel-request-event? channel-request-event-ref channel-request-event-set!)
+    (make-struct-type 'channel-request-event #f 2 0
+                      #f (list (cons prop:evt 0))
+                      (make-inspector) #f '(0 1)))
+
+(define (channel-request-event-input-examiner c)
+  (channel-request-event-ref c 1))
+
+(define (public-make-channel-request-event input-examiner)
+  (let ((s (make-semaphore)))
+    (make-channel-request-event
+     s
+     (lambda (message)
+       (and (input-examiner message)
+            (semaphore-post s))
+       ))))
 
 
 
-(define channel-idle-event-tests
+(define channel-events-tests
 
   (test-suite
-   "channel-idle-event"
+   "channel-events"
    (test-case
     "channel goes idle when we're not yammering at it"
     (let* ((channel-idle-event (public-make-channel-idle-event "#snooze" 1/10)))
@@ -71,6 +92,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     )
    ))
 
-(provide (all-defined-except make-channel-idle-event channel-idle-event-ref channel-idle-event-set!)
-         (rename public-make-channel-idle-event make-channel-idle-event))
-)
+(provide
+ channel-events-tests
+
+ channel-idle-event? channel-idle-event-input-examiner
+ (rename public-make-channel-idle-event make-channel-idle-event)
+
+ channel-request-event? channel-request-event-input-examiner
+ (rename public-make-channel-request-event make-channel-request-event)))
+

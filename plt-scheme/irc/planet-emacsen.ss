@@ -165,7 +165,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         ;; keep track of each entry we put on the async-channel, so
         ;; that we never put the same entry on twice.
         (entries-put (make-hash-table 'equal)))
-    (my-thread
+    (thread-with-id
      (lambda ()
        (let loop ()
 
