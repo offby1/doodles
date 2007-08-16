@@ -317,15 +317,54 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                          (channel-request-event-input-examiner news-request-event))
 
                         (let ((why (sync news-request-event)))
+
+                          ;; Drain _all_ the pending news requests,
+                          ;; because if we don't, they'll "back up",
+                          ;; causing us to emit news apparently
+                          ;; unbidden.
+
+                          ;; Actually I doubt this helps any; it's
+                          ;; possible that stuff will still "back up"
+                          ;; because the input port, from the IRC
+                          ;; server, may in effect have a bunch of
+                          ;; backed-up requests.  If that's the case,
+                          ;; there's no way, when we process one
+                          ;; "news" request, for us to know that there
+                          ;; are other identical ones sitting in the
+                          ;; input port.  So to do this right, we'll
+                          ;; either have to pause for a short time
+                          ;; before honoring news requests,
+                          ;; (effectively ignoring any others that
+                          ;; show up while we're paused), or else
+                          ;; we'll have to make the main loop put them
+                          ;; into a queue for this thread, and somehow
+                          ;; someone must remove duplicates from that
+                          ;; queue before this thread processes them.
+                          (let loop ()
+                            (when (sync/timeout 0 news-request-event)
+                              (vtprintf "Drained a backed-up news request~%")
+                              (loop)))
+
                           (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
                             (pm this-channel
                                 (if headline
-                                    (format "~s asked for news, so: ~a"
-                                            why
+                                    (format "~a, news: ~a"
+                                            (PRIVMSG-speaker why)
                                             (entry->string headline))
-                                  "No news yet.")))
+                                  "~a: Sorry, no news yet."
+                                  (PRIVMSG-speaker why))))
+
+                          ;; once we loop, our news-request-event will
+                          ;; go out of scope, and nobody will ever
+                          ;; sync on it again.  If we don't yank its
+                          ;; input-examiner from the subscription
+                          ;; list, it will continue to tell the main
+                          ;; loop that its corresponding thread will
+                          ;; handle the message, and thus it will
+                          ;; never get processed.
                           (unsubscribe-proc-to-server-messages!
                            (channel-request-event-input-examiner news-request-event))
+
                           (loop)))
 
                       )))
