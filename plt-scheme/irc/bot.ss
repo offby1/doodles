@@ -462,7 +462,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (when (*irc-server-name*)
       (*log-output-port*
        (open-output-file
-        (format "~a-~a"
+        ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
+        ;; directory doesn't exist
+        (format "/var/log/irc-bot/~a-~a"
                 (*irc-server-name*)
                 (zdate)))))
 
