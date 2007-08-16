@@ -94,6 +94,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        #t))
 
     (define (unsubscribe-proc-to-server-messages! proc)
+      ;; the hash-table-get has no effect, _except_ that it'll raise
+      ;; an exception if PROC isn't already in the table, which is a
+      ;; Good Thing to know.  Since that'd be, like, a bug.
+      (hash-table-get
+       (irc-session-message-subscriptions s)
+       proc)
+
       (hash-table-remove!
        (irc-session-message-subscriptions s)
        proc))
@@ -393,7 +400,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             (subscribe-proc-to-server-messages!
                              (channel-idle-event-input-examiner idle-evt))
 
-                            (vtprintf "Waiting for the channel to idle.~%")
+                            (vtprintf "Waiting for channel ~s to idle.~%"
+                                      this-channel)
                             (sync idle-evt)
                             (pm this-channel
                                 (entry->string headline))
