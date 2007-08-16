@@ -136,16 +136,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;;     (trace gist-for-us)
 ;;     (trace gist-equal?)
     (define claimed-by-background-task? #f)
-    (trace subscribe-proc-to-server-messages!)
+
     (vtprintf " <= ~s~%" message)
 
     ;; notify each subscriber that we got a message.
     (hash-table-for-each
      (irc-session-message-subscriptions s)
      (lambda (proc ignored)
-       (trace proc)
-       (printf "proc is ~s; value is ~s~%"
-               proc ignored)
        (set! claimed-by-background-task?
              (or claimed-by-background-task?
                  (proc message)))))
@@ -302,6 +299,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (thread-with-id
                   (lambda ()
                     (let loop ()
+
+                      ;; Oy vey.
+                      (collect-garbage)
+
                       (let* ((input-examiner
                               (lambda (message)
                                 (and (PRIVMSG-is-for-channel? message)
@@ -310,7 +311,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                              (news-request-event
                               (make-channel-request-event input-examiner)))
 
-                        (trace input-examiner)
                         (subscribe-proc-to-server-messages!
                          (channel-request-event-input-examiner news-request-event))
 
