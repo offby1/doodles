@@ -44,12 +44,6 @@
   posting a semaphore.  I wonder if there's some equivalent for
   async-channels...
 
-  Maybe go back to all-events-all the time, and have each task signal
-  that it handled a particular event by -- *gasp* -- setting a bit in
-  the event.
-
-  See the "ideas" file in this directory.
-
 ** "short streams"
   j85wilson has an interesting solution; see
   http://bzr.wilsonjc.us/sibyl/short-stream.scm

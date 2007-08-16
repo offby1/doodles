@@ -35,9 +35,8 @@ $(tarball): version.ss
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
-svnup: $(wildcard *.ss)
+svnup: 
 	svn up
-	touch $@
 
 dist: svnup $(tarball)
 	@mv -v $(tarball) $(distdir)
@@ -58,4 +57,4 @@ tags: TAGS
 TAGS: $(wildcard *.ss)
 	etags $^
 
-.PHONY: clean all dist plt tar check
+.PHONY: clean all dist plt tar check svnup

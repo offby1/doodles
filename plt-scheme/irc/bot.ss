@@ -360,8 +360,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                           ;; input-examiner from the subscription
                           ;; list, it will continue to tell the main
                           ;; loop that its corresponding thread will
-                          ;; handle the message, and thus it will
-                          ;; never get processed.
+                          ;; handle the message, and thus that message
+                          ;; will never actually get processed.
                           (unsubscribe-proc-to-server-messages!
                            (channel-request-event-input-examiner news-request-event))
 
@@ -387,7 +387,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             (vtprintf "Waiting for the channel to idle.~%")
                             (sync idle-evt)
                             (pm this-channel
-                                (entry->string headline))))
+                                (entry->string headline))
+
+                            ;; I wonder if I should
+                            ;; unsubscribe-proc-to-server-messages!
+                            ;; here.
+                            ))
 
                         (loop))))))
 
