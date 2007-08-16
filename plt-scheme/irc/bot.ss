@@ -509,6 +509,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      (with-handlers
          ([exn:break?
            (lambda (x)
+             ;; I often see               rudybot [~erich@127.0.0.1] has quit [Client Quit]
+             ;; rather than the expected  rudybot [~erich@127.0.0.1] has quit [Ah been shot!]
+
+             ;; http://poe.perl.org/?POE_Cookbook/IRC_Bots suggests
+             ;; this may be because the server ignores custom QUIT
+             ;; messages from clients that haven't been connected for
+             ;; very long.
              (fprintf op "QUIT :Ah been shot!~%")
              (flush-output op)
              (close-output-port op))]
