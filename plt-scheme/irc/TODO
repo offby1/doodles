@@ -147,7 +147,10 @@ should be hosted on an FTP server, which I don't care to run, so ...
 
   http://www.elemental-programming.org/Bigloo%20SQLI.html and
   http://planet.plt-scheme.org/package-source/jaymccarthy/sqlite.plt/3/1/doc.txt
-  both seem like they might do it; the former seems slightly more up-to-date.
+  both seem like they might do it; the former seems slightly more
+  up-to-date.
+  http://planet.plt-scheme.org/package-source/dfisher/sql-table.plt/1/1/doc.txt
+  looks particularly pleasant.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
