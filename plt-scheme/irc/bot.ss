@@ -87,6 +87,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        proc
        #t))
 
+    (define (unsubscribe-proc-to-server-messages! proc)
+      (hash-table-remove!
+       (irc-session-message-subscriptions s)
+       proc))
+
     (define (out . args)
       (apply fprintf (irc-session-op s) args)
       (vtprintf " => ~s~%" (apply format args)))
@@ -300,9 +305,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (lambda ()
                     (let loop ()
 
-                      ;; Oy vey.
-                      (collect-garbage)
-
                       (let* ((input-examiner
                               (lambda (message)
                                 (and (PRIVMSG-is-for-channel? message)
@@ -322,6 +324,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                             why
                                             (entry->string headline))
                                   "No news yet.")))
+                          (unsubscribe-proc-to-server-messages!
+                           (channel-request-event-input-examiner news-request-event))
                           (loop)))
 
                       )))
