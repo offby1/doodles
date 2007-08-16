@@ -6,6 +6,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (module bot mzscheme
 (require (lib "kw.ss")
          (only (lib "1.ss" "srfi")
+               any
                first second third
                filter)
          (only (lib "13.ss" "srfi")
@@ -84,6 +85,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 (define (respond message s)
 
+  (let* ((threads (filter
+                   thread?
+                   (custodian-managed-list
+                    (irc-session-custodian s)
+                    (current-custodian))))
+         (corpses (filter thread-dead? threads)))
+    (when (not (null? corpses))
+      (error 'respond "Gaah! Some threads died: ~s"
+             corpses)))
+
+  (vtprintf " <= ~s~%" message)
+
   ;; so that any threads we make will be easily killable
   (parameterize ((current-custodian (irc-session-custodian s)))
 
@@ -101,9 +114,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (irc-session-message-subscriptions s)
        proc)
 
-      (hash-table-remove!
-       (irc-session-message-subscriptions s)
-       proc))
+      (let ((before (hash-table-count (irc-session-message-subscriptions s))))
+        (hash-table-remove!
+         (irc-session-message-subscriptions s)
+         proc)
+        (let ((after (hash-table-count (irc-session-message-subscriptions s))))
+          (when (not (equal? after (sub1 before)))
+            (error 'unsubscribe-proc-to-server-messages!
+                   "Expected ~a subscriptions, but there are instead ~a"
+                   (sub1 before)
+                   after)))))
 
     (define (out . args)
       (apply fprintf (irc-session-op s) args)
@@ -151,11 +171,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (equal? str (gist-for-us message)))
 
     ;; (trace for-us?)
-;;     (trace gist-for-us)
-;;     (trace gist-equal?)
+    ;;     (trace gist-for-us)
+    ;;     (trace gist-equal?)
     (define claimed-by-background-task? #f)
-
-    (vtprintf " <= ~s~%" message)
 
     ;; notify each subscriber that we got a message.
     (hash-table-for-each
@@ -331,44 +349,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                         (subscribe-proc-to-server-messages!
                          (channel-request-event-input-examiner news-request-event))
 
-                        (let ((why (sync news-request-event)))
+                        (let ((why (sync news-request-event))
+                              (headline (cached-channel-cache (irc-session-async-for-news s))))
 
-                          ;; Drain _all_ the pending news requests,
-                          ;; because if we don't, they'll "back up",
-                          ;; causing us to emit news apparently
-                          ;; unbidden.
-
-                          ;; Actually I doubt this helps any; it's
-                          ;; possible that stuff will still "back up"
-                          ;; because the input port, from the IRC
-                          ;; server, may in effect have a bunch of
-                          ;; backed-up requests.  If that's the case,
-                          ;; there's no way, when we process one
-                          ;; "news" request, for us to know that there
-                          ;; are other identical ones sitting in the
-                          ;; input port.  So to do this right, we'll
-                          ;; either have to pause for a short time
-                          ;; before honoring news requests,
-                          ;; (effectively ignoring any others that
-                          ;; show up while we're paused), or else
-                          ;; we'll have to make the main loop put them
-                          ;; into a queue for this thread, and somehow
-                          ;; someone must remove duplicates from that
-                          ;; queue before this thread processes them.
-                          (let loop ()
-                            (when (sync/timeout 0 news-request-event)
-                              (vtprintf "Drained a backed-up news request~%")
-                              (loop)))
-
-                          (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
-                            (pm this-channel
-                                (if headline
-                                    (format "~a, news: ~a"
-                                            (PRIVMSG-speaker why)
-                                            (entry->string headline))
-                                  (format
-                                   "~a: Sorry, no news yet."
-                                   (PRIVMSG-speaker why)))))
+                          (pm this-channel
+                              (if headline
+                                  (format "~a, news: ~a"
+                                          (PRIVMSG-speaker why)
+                                          (entry->string headline))
+                                (format
+                                 "~a: Sorry, no news yet."
+                                 (PRIVMSG-speaker why))))
 
                           ;; once we loop, our news-request-event will
                           ;; go out of scope, and nobody will ever
@@ -475,7 +466,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (string->url "http://planet.emacsen.org/atom.xml")
                 (list)))))))
 
-    (when (*irc-server-name*)
+    (when (and #f (*irc-server-name*))
       (*log-output-port*
        (open-output-file
         ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
