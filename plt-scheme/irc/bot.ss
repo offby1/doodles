@@ -193,8 +193,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (lambda (match-data)
         (let ((url (car match-data)))
           (when (< (*tinyurl-url-length-threshold*) (string-length url))
-            (reply (make-tiny-url url #:user-agent (long-version-string))
-                   #:proc notice))))))
+
+            ;; I used to send these out as NOTICEs, since the RFC says
+            ;; to do so, but people complained.
+            (reply (make-tiny-url url #:user-agent (long-version-string))))))))
 
     (when (not claimed-by-background-task?)
       (cond
