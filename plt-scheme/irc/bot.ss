@@ -64,12 +64,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   (when feed
     (check-type 'make-irc-session cached-channel? feed))
   (make-irc-session
-    (make-hash-table 'equal)
-    (make-hash-table 'equal 'weak)
-    feed
-    op
-    (make-custodian)
-    ))
+
+   ;; find some PLT equivalent of Perl's tied hashes, so that this
+   ;; table will persist to disk.  Name the disk file after the IRC
+   ;; server.  Put it in /var/something on *nix, and %APPDATA%\rudybot
+   ;; on Winders.
+   (make-hash-table 'equal)
+
+   (make-hash-table 'equal 'weak)
+   feed
+   op
+   (make-custodian)
+   ))
 
 (define (public-set-irc-session-async-for-news! sess thing)
   (when thing
