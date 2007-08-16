@@ -13,8 +13,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (include "version.ss")
 
 (define *my-nick* (make-parameter "rudybot"))
-(define *passive?* (make-parameter #f))
-(define *timeout-seconds* (make-parameter #f))
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
 
 (define version-strings #f)

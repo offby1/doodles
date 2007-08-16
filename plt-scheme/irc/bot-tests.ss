@@ -34,9 +34,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                         regex
                         (object-name ip))
                (let ((line (read-line ip)))
+                 (vtprintf "expect/timeout got ~s~%" line)
                  (cond
                   ((eof-object? line)
-                   (vtprintf "expect/timeout: eof~%")
                    (channel-put ch #f))
                   ((regexp-match regex line)
                    (vtprintf "expect/timeout: Got match!~%")
@@ -53,7 +53,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; spew when it fails
 (define (got-response? sess ip input regexp)
   (respond (parse-irc-message input) sess)
-  (expect/timeout ip regexp 1))
+  (expect/timeout ip regexp 3/2))
 
 (define bot-tests
 

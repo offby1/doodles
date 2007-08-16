@@ -24,11 +24,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   (("-s" "--host") host "Name of the IRC server to connect to"
    (*irc-server-name* host))
-
-  (("-t" "--timeout") timeout "Wait this many seconds before exiting; infinite by default"
-   (*timeout-seconds* (string->number timeout)))
-  (("--passive") "Never say anything more than necessary -- in effect just log traffic to stdout"
-   (*passive?* #t))
   (("--delicious") del "del.icio.us password"
    (*del.icio.us-password* del))
   (("-n" "--nick") nick "The nick I will be known by"
