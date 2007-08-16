@@ -131,14 +131,22 @@ should be hosted on an FTP server, which I don't care to run, so ...
   have bindings to Berkeley DB.
 
   On the other hand, I can't think of much that I need to persist
-  ... maybe the appearances-by-nick data for the "seen" command.
+  ... maybe the appearances-by-nick data for the "seen" command.  That
+  seems a perfect application for sqlite, which I seem to have an urge
+  to play with ...
+
+  http://www.elemental-programming.org/Bigloo%20SQLI.html and
+  http://planet.plt-scheme.org/package-source/jaymccarthy/sqlite.plt/3/1/doc.txt
+  both seem like they might do it; the former seems slightly more up-to-date.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
   given 2 ...".  That procedure application is happening in a thread
   other than the main one, and so rather than the whole app dying, it
-  just hangs.  This is annoying during development (but might turn out
-  to be nice in "production").
+  just hangs.  This is annoying when I'm running tests -- the tests
+  will sometimes pass despite the thread puking.  Naturally I want the
+  process to exit with a non-zero status, to ensure that I notice the
+  thread dying.
 
 * Convert from strings to bytes
   Wherever possible, change from using "string" procedures to "bytes"
