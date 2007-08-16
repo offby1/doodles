@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui channel-idle-event-tests 'verbose))"
 |#
 (module channel-events mzscheme
-(require (lib "trace.ss")
+(require (lib "async-channel.ss")
+         (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "alarm-with-snooze.ss"
@@ -51,12 +52,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (channel-request-event-ref c 1))
 
 (define (public-make-channel-request-event input-examiner)
-  (let ((s (make-semaphore)))
+  (let ((c (make-async-channel)))
     (make-channel-request-event
-     s
+     c
      (lambda (message)
        (and (input-examiner message)
-            (semaphore-post s))
+            (async-channel-put c message))
        ))))
 
 
