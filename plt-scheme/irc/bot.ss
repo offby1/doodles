@@ -351,8 +351,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                     (format "~a, news: ~a"
                                             (PRIVMSG-speaker why)
                                             (entry->string headline))
-                                  "~a: Sorry, no news yet."
-                                  (PRIVMSG-speaker why))))
+                                  (format
+                                   "~a: Sorry, no news yet."
+                                   (PRIVMSG-speaker why)))))
 
                           ;; once we loop, our news-request-event will
                           ;; go out of scope, and nobody will ever
