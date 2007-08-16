@@ -35,9 +35,13 @@ $(tarball): version.ss
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
-dist: $(tarball)
-	@mv -v $^ $(distdir)
-	@ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
+svnup: $(wildcard *.ss)
+	svn up
+	touch $@
+
+dist: svnup $(tarball)
+	@mv -v $(tarball) $(distdir)
+	@ln -svf $(distdir)/$(tarball) $(distdir)/rudybot.tar.gz
 
 check:
 	./run-all-tests.ss
