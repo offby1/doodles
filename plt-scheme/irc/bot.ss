@@ -179,9 +179,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (hash-table-for-each
      (irc-session-message-subscriptions s)
      (lambda (proc ignored)
-       (set! claimed-by-background-task?
-             (or claimed-by-background-task?
-                 (proc message)))))
+       (let ((claimed-by-this-proc? (proc message)))
+         (when claimed-by-this-proc?
+           (vtprintf "Proc ~s has claimed message ~s~%"
+                     proc message))
+         (set! claimed-by-background-task?
+               (or claimed-by-background-task?
+                   claimed-by-this-proc?)))))
 
     ;; note who did what, when, where, how, and wearing what kind of
     ;; skirt; so that later we can respond to "seen Ted?"
@@ -418,7 +422,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                           (sleep  (* 7 24 3600))
                           (loop)))))
 
-                   (let ((idle (make-channel-idle-event this-channel (* 3600 4))))
+                   (let ((idle (make-channel-idle-event this-channel 3600)))
 
                      (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
 
@@ -466,7 +470,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (string->url "http://planet.emacsen.org/atom.xml")
                 (list)))))))
 
-    (when (and #f (*irc-server-name*))
+    (when (*irc-server-name*)
       (*log-output-port*
        (open-output-file
         ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
