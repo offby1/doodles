@@ -89,9 +89,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (out "NOTICE ~a :~a~%" target msg))
 
     (define/kw (reply response #:key [proc pm])
-      (proc ((if (PRIVMSG-is-for-channel? message) PRIVMSG-destination PRIVMSG-speaker)
-             message)
-            response))
+      (for-each
+       (lambda (r)
+         (proc r response))
+
+       (PRIVMSG-receivers message)))
+
 
     ;; (trace for-us?)
     ;;     (trace gist-for-us)
@@ -115,7 +118,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (when (and (PRIVMSG? message)
                (PRIVMSG-is-for-channel? message))
       (let ((who         (PRIVMSG-speaker     message))
-            (where       (PRIVMSG-destination message))
+            (where       (car (PRIVMSG-receivers message)))
             (what        (PRIVMSG-text        message))
 
             ;; don't name this variable "when"; that would shadow some
@@ -175,8 +178,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                               (format "~a:" (*my-nick*))
                               (cdddr (PRIVMSG-text-words message))))
              (command (string-join parsed-command))
-             (params  (list (PRIVMSG-destination message)
-                            command)))
+             (params  (append (PRIVMSG-receivers message)
+                              (list command))))
         (thread-with-id
          (lambda ()
            (sleep 10)
@@ -186,7 +189,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (symbol->string (message-command message))
              params
              (PRIVMSG-speaker message)
-             (PRIVMSG-destination message)
+             (PRIVMSG-receivers message)
              (PRIVMSG-approximate-recipient message)
              command
              parsed-command)
@@ -261,7 +264,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                         (loop)))))))
 
              (when (equal? this-channel "#emacs")
-               (news-service)
 
                (thread-with-id
                 (lambda ()
@@ -332,6 +334,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (out "PONG :~a~%" (car (message-params message))))
         )))))
 
+
 ;(trace respond)
 
 (define (start)
@@ -342,7 +345,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                           (current-output-port)))))
 
     (define sess
-      (public-make-irc-session
+      (make-irc-session
        op
        #:feed
        (queue-of-entries
@@ -427,8 +430,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                        (vtprintf "couldn't parse line from server: ~s~%" e))])
                  (respond (parse-irc-message line) sess))
                (get-one-line)))))))))
-
-(provide (all-defined-except make-irc-session set-irc-session-async-for-news!)
-         (rename public-make-irc-session make-irc-session)
-         (rename public-set-irc-session-async-for-news! set-irc-session-async-for-news!))
+(provide respond)
 )

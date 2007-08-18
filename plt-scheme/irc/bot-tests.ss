@@ -14,6 +14,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "cached-channel.ss"
          "globals.ss"
          "headline.ss"
+         "session.ss"
+         "test-utils.ss"
          (only "planet-emacsen.ss"
                make-cached-channel
                *planet-poll-interval*)

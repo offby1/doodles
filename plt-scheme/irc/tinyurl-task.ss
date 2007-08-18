@@ -10,6 +10,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "bot.ss"
          "bot-tests.ss"
          "globals.ss"
+         "session.ss"
          "tinyurl.ss")
 (register-version-string "$Id$")
 

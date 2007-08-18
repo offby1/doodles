@@ -30,7 +30,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (make-channel-request-event
           (lambda (message)
             (and (PRIVMSG-is-for-channel? message)
-                 (equal? (PRIVMSG-destination message) channel-name)
+                 (any (lambda (r)
+                        (equal? r channel-name))
+                      (PRIVMSG-receivers message))
                  (gist-equal?  "news" message))))))
 
     (thread
