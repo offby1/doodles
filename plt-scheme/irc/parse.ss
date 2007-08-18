@@ -27,7 +27,11 @@
                )
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         (only "globals.ss" register-version-string))
+         (only "globals.ss"
+               register-version-string
+               *my-nick*)
+         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type))
+
 (register-version-string "$Id$")
 (define-struct (exn:fail:irc-parse exn:fail:contract) (string original-exception))
 (define-struct message (prefix command params) (make-inspector))
@@ -126,6 +130,38 @@
                   (list trailing-parameter)
                 '()))
              )))))))
+
+(define (for-us? message)
+  (check-type 'for-us? message? message)
+  (and
+   (PRIVMSG? message)
+   (equal? (*my-nick*)
+           ((if (PRIVMSG-is-for-channel? message)
+                PRIVMSG-approximate-recipient
+              PRIVMSG-destination) message))))
+
+(define (gist-for-us message)
+  (check-type 'gist-for-us message? message)
+  (let ((relevant-word
+         (and (for-us? message)
+              (cond
+               ((and (PRIVMSG-is-for-channel? message)
+                     (< 1 (length (PRIVMSG-text-words message))))
+                (second (PRIVMSG-text-words message)))
+               ((and (not (PRIVMSG-is-for-channel? message))
+                     (< 0 (length (PRIVMSG-text-words message))))
+                (first (PRIVMSG-text-words message)))
+               (else
+                #f))
+              )))
+    ;; trim trailing punctuation
+    (and relevant-word
+         (regexp-replace (pregexp "[^[:alpha:]]+$") relevant-word ""))))
+
+(define (gist-equal? str message)
+  (check-type 'gist-equal? message? message)
+  (equal? str (gist-for-us message)))
+
 ;(trace parse-irc-message)
 
 
@@ -257,7 +293,25 @@
        (parse-irc-message ":X!X@Y PRIVMSG sam :well, I think you smell"))
       "well"))
 
-    )))
+    )
+   (test-suite
+    "gists"
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*my-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*my-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*my-nick*)))))
+
+    (test-not-false
+     "gist-equal?"
+     (gist-equal?
+      "yow"
+      (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
+
+    (test-not-false
+     "gist-equal?"
+     (gist-equal?
+      "yow"
+      (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*my-nick*))))))))
 
 (provide (all-defined-except message-command)
          (rename public-message-command message-command))

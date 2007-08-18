@@ -22,33 +22,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "vprintf.ss")
 (register-version-string "$Id$")
 
-;; returns #f if we didn't find what we're looking for.
-
-(define (expect/timeout ip regex seconds)
-  (let* ((ch (make-channel))
-         (reader
-          (thread
-           (lambda ()
-             (let loop ()
-               (vtprintf "expect/timeout about to look for ~s from ~s ...~%"
-                        regex
-                        (object-name ip))
-               (let ((line (read-line ip)))
-                 (vtprintf "expect/timeout got ~s~%" line)
-                 (cond
-                  ((eof-object? line)
-                   (channel-put ch #f))
-                  ((regexp-match regex line)
-                   (vtprintf "expect/timeout: Got match!~%")
-                   (channel-put ch #t))
-                  (else
-                   (vtprintf "expect/timeout: nope; retrying~%")
-                   (loop)))
-
-                 ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
-
 ;; TODO -- write proper "check-response", so that it gives meaningful
 ;; spew when it fails
 (define (got-response? sess ip input regexp)

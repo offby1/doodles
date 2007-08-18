@@ -22,6 +22,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
+         "alarm-with-snooze.ss"
          "cached-channel.ss"
          "channel-events.ss"
          "del.ss"
@@ -29,10 +30,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "parse.ss"
          "planet-emacsen.ss"
          "quotes.ss"
-         "alarm-with-snooze.ss"
+         "session.ss"
          "thread.ss"
          "tinyurl.ss"
-         "vprintf.ss")
+         "vprintf.ss"
+                     )
 (register-version-string "$Id$")
 
 (define (respond message s)
@@ -90,37 +92,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (proc ((if (PRIVMSG-is-for-channel? message) PRIVMSG-destination PRIVMSG-speaker)
              message)
             response))
-
-    (define (for-us? message)
-      (check-type 'for-us? message? message)
-      (and
-       (PRIVMSG? message)
-       (equal? (*my-nick*)
-               ((if (PRIVMSG-is-for-channel? message)
-                    PRIVMSG-approximate-recipient
-                  PRIVMSG-destination) message))))
-
-    (define (gist-for-us message)
-      (check-type 'gist-for-us message? message)
-      (let ((relevant-word
-             (and (for-us? message)
-                  (cond
-                   ((and (PRIVMSG-is-for-channel? message)
-                         (< 1 (length (PRIVMSG-text-words message))))
-                    (second (PRIVMSG-text-words message)))
-                   ((and (not (PRIVMSG-is-for-channel? message))
-                         (< 0 (length (PRIVMSG-text-words message))))
-                    (first (PRIVMSG-text-words message)))
-                   (else
-                    #f))
-                  )))
-        ;; trim trailing punctuation
-        (and relevant-word
-             (regexp-replace (pregexp "[^[:alpha:]]+$") relevant-word ""))))
-
-    (define (gist-equal? str message)
-      (check-type 'gist-equal? message? message)
-      (equal? str (gist-for-us message)))
 
     ;; (trace for-us?)
     ;;     (trace gist-for-us)
@@ -290,7 +261,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                         (loop)))))))
 
              (when (equal? this-channel "#emacs")
-               (thread-with-id news-service)
+               (news-service)
 
                (thread-with-id
                 (lambda ()
