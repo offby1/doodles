@@ -49,8 +49,9 @@
   (read-from-string (message-command x)))
 
 (define-struct (PRIVMSG message)
-  (speaker destination approximate-recipient text text-words)
+  (speaker receivers approximate-recipient text text-words)
   #f)
+;(trace PRIVMSG-approximate-recipient)
 
 ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
@@ -60,13 +61,15 @@
 ;; (trace make-message)
 ;; (trace make-PRIVMSG)
 ;; (trace make-CTCP)
+(define (is-channel-name? x)
+   (regexp-match #rx"^#" x))
+
 (define (PRIVMSG-is-for-channel? m)
   (and (PRIVMSG? m)
-       (any (lambda (d)
-              (regexp-match #rx"^#" d))
-            (PRIVMSG-destination m))))
+       (any is-channel-name?
+            (PRIVMSG-receivers m))))
 ;; (trace PRIVMSG-is-for-channel?)
-;; (trace PRIVMSG-destination)
+;; (trace PRIVMSG-receivers)
 
 (define (parse-irc-message string)
   (let ((m ;; http://tools.ietf.org/html/rfc1459#page-8
@@ -97,7 +100,7 @@
     (or (maybe-make-PRIVMSG m)
         m)))
 
-(trace parse-irc-message)
+;(trace parse-irc-message)
 
 (define (maybe-make-PRIVMSG m)
   (define speaker
@@ -132,7 +135,7 @@
     (or (maybe-make-CTCP p)
         p)
     ))
-(trace maybe-make-PRIVMSG)
+;(trace maybe-make-PRIVMSG)
 
 (define (maybe-make-CTCP p)
   (and (PRIVMSG? p)
@@ -145,16 +148,19 @@
            ((SOURCE ) (make-sub-struct p make-SOURCE  req/extended-data     ))
            (else (make-sub-struct p make-CTCP req/extended-data))))
         (else #f))))
-(trace maybe-make-CTCP)
+;(trace maybe-make-CTCP)
 
 (define (for-us? message)
   (check-type 'for-us? message? message)
   (and
    (PRIVMSG? message)
-   (equal? (*my-nick*)
-           ((if (PRIVMSG-is-for-channel? message)
-                PRIVMSG-approximate-recipient
-              PRIVMSG-destination) message))))
+   (any (lambda (r)
+          (if (is-channel-name? r)
+              (equal? (PRIVMSG-approximate-recipient message)
+                      (*my-nick*))
+            (equal? (*my-nick*)
+                    r)))
+        (PRIVMSG-receivers message))))
 
 (define (gist-for-us message)
   (check-type 'gist-for-us message? message)
@@ -177,6 +183,8 @@
 (define (gist-equal? str message)
   (check-type 'gist-equal? message? message)
   (equal? str (gist-for-us message)))
+;(trace for-us?)
+;(trace gist-for-us)
 
 ;(trace parse-irc-message)
 
@@ -252,7 +260,7 @@
      (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
     (test-case
      "PRIVMSGs get properly parsed"
-     (check-equal? (PRIVMSG-destination (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
+     (check-equal? (PRIVMSG-receivers (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
                    '("poo"))
      (check-equal? (PRIVMSG-text (parse-irc-message ":X!X@Y PRIVMSG poopoo :platter puss"))
                    "platter puss")
@@ -306,24 +314,24 @@
       "well"))
 
     )
-;;    (test-suite
-;;     "gists"
-;;     (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
-;;     (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*my-nick*)))))
-;;     (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*my-nick*)))))
-;;     (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*my-nick*)))))
+   (test-suite
+    "gists"
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*my-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*my-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*my-nick*)))))
 
-;;     (test-not-false
-;;      "gist-equal?"
-;;      (gist-equal?
-;;       "yow"
-;;       (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
+    (test-not-false
+     "gist-equal?"
+     (gist-equal?
+      "yow"
+      (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
 
-;;     (test-not-false
-;;      "gist-equal?"
-;;      (gist-equal?
-;;       "yow"
-;;       (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*my-nick*))))))
+    (test-not-false
+     "gist-equal?"
+     (gist-equal?
+      "yow"
+      (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*my-nick*))))))
    ))
 
 (provide (all-defined-except message-command)
