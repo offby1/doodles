@@ -54,7 +54,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          channel-name
          irc-session
          pm)
-  (let ((cie (make-channel-idle-event "#emacs" 2)))
+  (let ((cie (make-channel-idle-event
+              channel-name
+              (*quote-and-headline-interval*))))
     (thread
      (lambda ()
        (let loop ()
@@ -117,18 +119,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-case
     "periodic"
-    (call-with-stuff
-     (lambda (sess feed ip op)
-       (let ((pns
-              (periodic-news-service
-               "#emacs"
-               sess
-               (lambda (channel text)
-                 (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
-                          channel text)
-                 (newline op)))))
-         (check-pred procedure?             pns "right type")))))))
+    (parameterize ((*quote-and-headline-interval* 1))
+      (call-with-stuff
+       (lambda (sess feed ip op)
+         (let ((pns
+                (periodic-news-service
+                 "#emacs"
+                 sess
+                 (lambda (channel text)
+                   (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
+                            channel text)
+                   (newline op)))))
 
+           (check-pred procedure?             pns "right type")
+
+           (cached-channel-put
+            feed
+            (make-entry
+             (current-time)
+             "JAPS BOMB PERL HARBOR!!"
+             "http://ruby-lang.org"))
+
+           (sleep (*quote-and-headline-interval*))
+           (check-not-false
+            (expect/timeout
+             ip
+             "JAPS BOMB PERL HARBOR!!"
+             (* 1/10
+                (*quote-and-headline-interval*)))
+            "request event supplies news")
+           (check-false
+            (expect/timeout ip "." (* 2 (*quote-and-headline-interval*)))
+            "request event is silent when there's no news"))))))))
 
 (provide (all-defined)))
 
