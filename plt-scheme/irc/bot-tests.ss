@@ -97,12 +97,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          (check-false
           (expect/timeout ip #rx"JAPS" (* 3/4 (*quote-and-headline-interval*))))))
+
        (test-case
         "keeps saying 'no news'"
         (before
          (begin
            (custodian-shutdown-all (irc-session-custodian sess))
-           (set-irc-session-custodian! sess (make-custodian))
+           (set! sess (make-irc-session op))
 
            ;; start the news thread
            (*planet-poll-interval* 2)

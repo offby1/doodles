@@ -159,6 +159,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (reply (make-tiny-url url #:user-agent (long-version-string)))))))
 
      ((RPL_ENDOFNAMES? message)
+
+      ;; periodic jordanb quotes
       (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#bots" ))
         (let ((idle-evt
                (make-channel-idle-event
@@ -227,7 +229,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 
                (loop))))))
-
 
       (when (equal? (RPL_ENDOFNAMES-channel-name message) "##cinema")
         (let ((posts #f))
