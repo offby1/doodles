@@ -50,6 +50,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (loop)))))
     news-request-event))
 
+(define (periodic-news-service
+         channel-name
+         irc-session
+         pm)
+  'golly)
+
 
 
 (verbose!)
@@ -65,20 +71,28 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (sess (make-irc-session
                     op
                     #:feed feed))
-             (service
+             (ods
               (on-demand-news-service
                "#emacs"
                sess
                (lambda (channel text)
-                 (fprintf op "PRIVMSG ~a :~a~%"
+                 (fprintf op "PRIVMSG ~a :someone asked for news, so: ~a~%"
+                          channel text)
+                 (newline op))))
+             (pns
+              (periodic-news-service
+               "#emacs"
+               sess
+               (lambda (channel text)
+                 (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
                           channel text)
                  (newline op)))))
 
         (define (ask-for-news)
-          ((channel-request-event-input-examiner service)
+          ((channel-request-event-input-examiner ods)
            (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*)))))
 
-        (check-pred channel-request-event? service)
+        (check-pred channel-request-event? ods)
 
         (ask-for-news)
 
@@ -94,4 +108,3 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (provide (all-defined))
 )
-
