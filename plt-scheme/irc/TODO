@@ -5,14 +5,13 @@
 * bugs
 
 ** DAMN!!
-Thu Aug 16 13:38:04 2007 PDT
-<aadis> TMTOWTODI!                                                                                       [13:22]
-<offby1> rudybot: news                                                                                   [13:33]
-* rudybot is at a loss for words, as usual
-ERC> /ctcp rudybot version                                                                               [13:36]
-*** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4734M:PLT scheme version
-    370.6 on unix
-
+ Thu Aug 16 13:38:04 2007 PDT
+ <aadis> TMTOWTODI!                                                                                       [13:22]
+ <offby1> rudybot: news                                                                                   [13:33]
+ * rudybot is at a loss for words, as usual
+ ERC> /ctcp rudybot version                                                                               [13:36]
+ *** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4734M:PLT scheme version
+     370.6 on unix
 
 
 -- Low priority
@@ -123,6 +122,11 @@ should be hosted on an FTP server, which I don't care to run, so ...
 
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
+
+** timeout?
+   The server PINGs us peridodically; perhaps, if we don't hear
+   anything at all after, say, 200 seconds, we assume we've been
+   disonnceted, and try to reconnect.
 
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
