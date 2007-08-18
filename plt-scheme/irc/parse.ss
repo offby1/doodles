@@ -53,6 +53,9 @@
   #f)
 ;(trace PRIVMSG-approximate-recipient)
 
+;; aka 366
+(define-struct (RPL_ENDOFNAMES message) (channel-name) #f)
+
 ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
 (define-struct (ACTION CTCP) (text) #f)
@@ -68,6 +71,7 @@
   (and (PRIVMSG? m)
        (any is-channel-name?
             (PRIVMSG-receivers m))))
+
 ;; (trace PRIVMSG-is-for-channel?)
 ;; (trace PRIVMSG-receivers)
 
@@ -97,10 +101,18 @@
               "Can't parse string from server"
               (current-continuation-marks)
               string)))
-    (or (maybe-make-PRIVMSG m)
+    (or (maybe-make-RPL_ENDOFNAMES m)
+        (maybe-make-PRIVMSG m)
         m)))
 
 ;(trace parse-irc-message)
+
+(define (maybe-make-RPL_ENDOFNAMES m)
+  (and (string=? "366" (message-command m))
+       (make-sub-struct
+        m
+        make-RPL_ENDOFNAMES
+        (first (message-params m)))))
 
 (define (maybe-make-PRIVMSG m)
   (define speaker

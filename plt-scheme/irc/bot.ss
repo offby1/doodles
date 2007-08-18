@@ -140,12 +140,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      (format ": ~a ~a" who what)
                    (format ", saying \"~a\"" what))))))
 
-    ;; if someone other than a bot uttered a long URL, run it through
-    ;; tinyurl.com and spew the result.
-
-    ;; might be worth doing this in a separate thread, since it can
-    ;; take a while.
     (cond
+     ;; if someone other than a bot uttered a long URL, run it through
+     ;; tinyurl.com and spew the result.
+
+     ;; might be worth doing this in a separate thread, since it can
+     ;; take a while.
      ((and
        (PRIVMSG? message)
        (not (regexp-match #rx"bot$" (PRIVMSG-speaker message)))
@@ -157,9 +157,84 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
             ;; I used to send these out as NOTICEs, since the RFC says
             ;; to do so, but people complained.
-            (reply (make-tiny-url url #:user-agent (long-version-string))))))))
+            (reply (make-tiny-url url #:user-agent (long-version-string)))))))
 
-    (cond
+     ((RPL_ENDOFNAMES? message)
+      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#bots" ))
+        (let ((idle-evt
+               (make-channel-idle-event
+                (RPL_ENDOFNAMES-channel-name message)
+                (*quote-and-headline-interval*))))
+
+          (subscribe-proc-to-server-messages!
+           (channel-idle-event-input-examiner idle-evt))
+
+          (thread-with-id
+           (lambda ()
+             (let loop ()
+               (let ((q (one-quote)))
+                 (sync idle-evt)
+                 (pm (RPL_ENDOFNAMES-channel-name message) q)
+                 (loop)))))))
+
+      (when (equal? (RPL_ENDOFNAMES-channel-name message) "#emacs")
+
+        (thread-with-id
+         (lambda ()
+           (let loop ()
+             (vtprintf "Waiting for a headline.~%")
+             (let ((headline (sync (irc-session-async-for-news s))))
+               (vtprintf "got ~s~%" headline)
+               (when headline
+                 (let ((idle-evt
+                        (make-channel-idle-event
+                         (RPL_ENDOFNAMES-channel-name message)
+                         (*quote-and-headline-interval*))))
+
+                   (subscribe-proc-to-server-messages!
+                    (channel-idle-event-input-examiner idle-evt))
+
+                   (vtprintf "Waiting for channel ~s to idle.~%"
+                             (RPL_ENDOFNAMES-channel-name message))
+                   (sync idle-evt)
+                   (pm (RPL_ENDOFNAMES-channel-name message)
+                       (entry->string headline))
+
+                   ;; I wonder if I should
+                   ;; unsubscribe-proc-to-server-messages!
+                   ;; here.
+                   ))
+
+               (loop))))))
+
+      (when (equal? (RPL_ENDOFNAMES-channel-name message) "##cinema")
+        (let ((posts #f))
+          (thread-with-id
+           (lambda ()
+             (let loop ()
+               (with-handlers
+                   ([exn:delicious:auth?
+                     (lambda (e)
+                       (vtprintf
+                        "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                 (set! posts (snarf-some-recent-posts))
+                 (sleep  (* 7 24 3600))
+                 (loop)))))
+
+          (let ((idle (make-channel-idle-event (RPL_ENDOFNAMES-channel-name message) 3600)))
+
+            (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+
+            (thread-with-id
+             (lambda ()
+               (let loop ()
+                 (sync idle)
+                 (when posts
+                   (notice (RPL_ENDOFNAMES-channel-name message)
+                           (entry->string
+                            (list-ref posts (random (length posts))))))
+                 (loop))
+               ))))))
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
@@ -241,86 +316,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      (vtprintf "Joining ~a~%" cn)
                      (out "JOIN ~a~%" cn))
                    (*initial-channel-names*)))
-
-        ((366)
-         (when (< 1 (length  (message-params message)))
-           (let ((this-channel (second (message-params message))))
-
-             (when (member this-channel '("#emacs" "#bots" ))
-               (let ((idle-evt
-                      (make-channel-idle-event
-                       this-channel
-                       (*quote-and-headline-interval*))))
-
-                 (subscribe-proc-to-server-messages!
-                  (channel-idle-event-input-examiner idle-evt))
-
-                 (thread-with-id
-                  (lambda ()
-                    (let loop ()
-                      (let ((q (one-quote)))
-                        (sync idle-evt)
-                        (pm this-channel q)
-                        (loop)))))))
-
-             (when (equal? this-channel "#emacs")
-
-               (thread-with-id
-                (lambda ()
-                  (let loop ()
-                    (vtprintf "Waiting for a headline.~%")
-                    (let ((headline (sync (irc-session-async-for-news s))))
-                      (vtprintf "got ~s~%" headline)
-                      (when headline
-                        (let ((idle-evt
-                               (make-channel-idle-event
-                                this-channel
-                                (*quote-and-headline-interval*))))
-
-                          (subscribe-proc-to-server-messages!
-                           (channel-idle-event-input-examiner idle-evt))
-
-                          (vtprintf "Waiting for channel ~s to idle.~%"
-                                    this-channel)
-                          (sync idle-evt)
-                          (pm this-channel
-                              (entry->string headline))
-
-                          ;; I wonder if I should
-                          ;; unsubscribe-proc-to-server-messages!
-                          ;; here.
-                          ))
-
-                      (loop))))))
-
-             (when (equal? this-channel "##cinema")
-               (let ((posts #f))
-                 (thread-with-id
-                  (lambda ()
-                    (let loop ()
-                      (with-handlers
-                          ([exn:delicious:auth?
-                            (lambda (e)
-                              (vtprintf
-                               "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                        (set! posts (snarf-some-recent-posts))
-                        (sleep  (* 7 24 3600))
-                        (loop)))))
-
-                 (let ((idle (make-channel-idle-event this-channel 3600)))
-
-                   (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
-
-                   (thread-with-id
-                    (lambda ()
-                      (let loop ()
-                        (sync idle)
-                        (when posts
-                          (notice this-channel
-                                  (entry->string
-                                   (list-ref posts (random (length posts))))))
-                        (loop))
-                      ))))))))
 
         ((433)
          (error 'respond "Nick already in use!"))
