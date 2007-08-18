@@ -51,8 +51,10 @@
 (define-struct (PRIVMSG message)
   (speaker destination approximate-recipient text text-words)
   #f)
+
+;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
-(define-struct (ACTION CTCP) () #f)
+(define-struct (ACTION CTCP) (text) #f)
 (define-struct (VERSION CTCP) () #f)
 (define-struct (SOURCE CTCP) () #f)
 ;; (trace make-message)
@@ -77,16 +79,13 @@
 
              (let loop ((params '())
                         (param-string param-string))
-               (printf "loop: ~s; ~s~%" params param-string)
                (if (zero? (string-length param-string))
                    (make-message prefix command (reverse params))
                  (regexp-case
                   param-string
                   ((#rx"^ :(.*)" trail)
-                   (printf "trail is ~s~%" trail)
                    (make-message prefix command (reverse (cons trail params))))
                   (((pregexp "^ ([^[:space:]]+)") one)
-                   (printf "one is ~s~%" one)
                    (loop (cons one params)
                          (substring param-string (string-length match)))))))))))))
 
@@ -108,29 +107,46 @@
           ((#rx"(.*)!(.*)@(.*)" nick user host)
            nick))))
 
-  (and (string=? "PRIVMSG" (message-command m))
-       (let ((receivers (string-tokenize
-                         (first (message-params m))
-                         (char-set-complement (char-set #\,))))
-             (text (second (message-params m))))
-         (let ((text-tokens
-                (string-tokenize
-                 text
-                 (char-set-complement char-set:whitespace))))
-           (make-sub-struct
-            m
-            make-PRIVMSG
-            speaker
-            receivers
-            (and (not (null? text-tokens))
-                 (regexp-case
-                  (car text-tokens)
-                  ((pregexp "^([[:alnum:]]+)[:,]")
-                   => (lambda args (second args)))
-                  (else #f)))
-            text
-            text-tokens)))))
+  (let ((p (and (string=? "PRIVMSG" (message-command m))
+                (let ((receivers (string-tokenize
+                                  (first (message-params m))
+                                  (char-set-complement (char-set #\,))))
+                      (text (second (message-params m))))
+                  (let ((text-tokens
+                         (string-tokenize
+                          text
+                          (char-set-complement char-set:whitespace))))
+                    (make-sub-struct
+                     m
+                     make-PRIVMSG
+                     speaker
+                     receivers
+                     (and (not (null? text-tokens))
+                          (regexp-case
+                           (car text-tokens)
+                           ((pregexp "^([[:alnum:]]+)[:,]")
+                            => (lambda args (second args)))
+                           (else #f)))
+                     text
+                     text-tokens))))))
+    (or (maybe-make-CTCP p)
+        p)
+    ))
 (trace maybe-make-PRIVMSG)
+
+(define (maybe-make-CTCP p)
+  (and (PRIVMSG? p)
+       (regexp-case
+        (PRIVMSG-text p)
+        (((pregexp "\u0001([[:alpha:]]+)(?: (.*))?\u0001$") req/extended-data rest)
+         (case (string->symbol req/extended-data)
+           ((ACTION ) (make-sub-struct p make-ACTION  req/extended-data rest))
+           ((VERSION) (make-sub-struct p make-VERSION req/extended-data     ))
+           ((SOURCE ) (make-sub-struct p make-SOURCE  req/extended-data     ))
+           (else (make-sub-struct p make-CTCP req/extended-data))))
+        (else #f))))
+(trace maybe-make-CTCP)
+
 (define (for-us? message)
   (check-type 'for-us? message? message)
   (and
@@ -243,29 +259,29 @@
      (check-equal? (PRIVMSG-speaker (parse-irc-message ":fsbot!n=user@batfish.pepperfish.net PRIVMSG #emacs :yow!"))
                    "fsbot")
      )
-;;     (test-suite
-;;      "CTCP"
-;;      (test-false
-;;       "rejects non-actions"
-;;       (ACTION?
-;;        (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001UNDERWEAR eats cornflakes\u0001")))
-;;      (test-case
-;;       "recognizes and parses ACTION"
-;;       (let ((m (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
-;;         (check-pred PRIVMSG? m)
-;;         (check-pred CTCP? m)
-;;         (check-equal? (PRIVMSG-text m) "eats cornflakes")))
-;;      (test-case
-;;       "recognizes VERSION"
-;;       (check-pred
-;;        VERSION?
-;;        (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001VERSION\u0001")))
+    (test-suite
+     "CTCP"
+     (test-false
+      "rejects non-actions"
+      (ACTION?
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001UNDERWEAR eats cornflakes\u0001")))
+     (test-case
+      "recognizes and parses ACTION"
+      (let ((m (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001")))
+        (check-pred PRIVMSG? m)
+        (check-pred CTCP? m)
+        (check-equal? (ACTION-text m) "eats cornflakes")))
+     (test-case
+      "recognizes VERSION"
+      (check-pred
+       VERSION?
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001VERSION\u0001")))
 
-;;      (test-case
-;;       "recognizes SOURCE"
-;;       (check-pred
-;;        SOURCE?
-;;        (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001SOURCE\u0001"))))
+     (test-case
+      "recognizes SOURCE"
+      (check-pred
+       SOURCE?
+       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001SOURCE\u0001"))))
 
     (test-case
      "channel versus truly private message"
