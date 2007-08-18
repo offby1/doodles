@@ -68,58 +68,66 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (verbose!)
 
+(define (call-with-stuff proc)
+  (let-values (((ip op) (make-pipe)))
+    (let* ((feed (make-cached-channel #f))
+           (sess (make-irc-session
+                  op
+                  #:feed feed)))
+      (proc sess feed ip op))))
+
 (define news-service-tests
 
   (test-suite
    "news-service"
    (test-case
-    "yow"
-    (let-values (((ip op) (make-pipe)))
-      (let* ((feed (make-cached-channel #f))
-             (sess (make-irc-session
-                    op
-                    #:feed feed))
-             (ods
+    "on-demand"
+    (call-with-stuff
+     (lambda (sess feed ip op)
+       (let ((ods
               (on-demand-news-service
                "#emacs"
                sess
                (lambda (channel text)
                  (fprintf op "PRIVMSG ~a :someone asked for news, so: ~a~%"
                           channel text)
-                 (newline op))))
-             (pns
-              (periodic-news-service
-               "#emacs"
-               sess
-               (lambda (channel text)
-                 (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
-                          channel text)
                  (newline op)))))
 
-        (define (ask-for-news)
-          ((channel-request-event-input-examiner ods)
-           (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*)))))
+         (define (ask-for-news)
+           ((channel-request-event-input-examiner ods)
+            (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*)))))
 
-        (check-pred channel-request-event? ods "right type")
-        (check-pred procedure?             pns "right type")
+         (check-pred channel-request-event? ods "right type")
 
-        (ask-for-news)
+         (ask-for-news)
 
-        (check-not-false
-         (expect/timeout ip "no news yet" 1/10)
-         "no news yet")
+         (check-not-false
+          (expect/timeout ip "no news yet" 1/10)
+          "no news yet")
 
-        (cached-channel-put feed (make-entry (current-time)
-                                             "JAPS BOMB PERL HARBOR!!"
-                                             "http://ruby-lang.org"))
+         (cached-channel-put feed (make-entry (current-time)
+                                              "JAPS BOMB PERL HARBOR!!"
+                                              "http://ruby-lang.org"))
 
-        (check-not-false
-         (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
-         "periodic event supplies news")
-        (ask-for-news)
-        (check-not-false
-         (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
-         "request event supplies news"))))))
+         (sync/timeout 0 feed)
+         (ask-for-news)
+         (check-not-false
+          (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
+          "request event supplies news")))))
+
+   ;; (test-case
+;;     "periodic"
+;;     (let ((pns
+;;            (periodic-news-service
+;;             "#emacs"
+;;             sess
+;;             (lambda (channel text)
+;;               (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
+;;                        channel text)
+;;               (newline op)))))
+;;       (check-pred procedure?             pns "right type")
+;;       'yow))
+   ))
 
 (provide (all-defined))
 )
