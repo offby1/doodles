@@ -115,19 +115,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
           "request event supplies news")))))
 
-   ;; (test-case
-;;     "periodic"
-;;     (let ((pns
-;;            (periodic-news-service
-;;             "#emacs"
-;;             sess
-;;             (lambda (channel text)
-;;               (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
-;;                        channel text)
-;;               (newline op)))))
-;;       (check-pred procedure?             pns "right type")
-;;       'yow))
-   ))
+   (test-case
+    "periodic"
+    (call-with-stuff
+     (lambda (sess feed ip op)
+       (let ((pns
+              (periodic-news-service
+               "#emacs"
+               sess
+               (lambda (channel text)
+                 (fprintf op "PRIVMSG ~a :Hear ye, hear ye: ~a~%"
+                          channel text)
+                 (newline op)))))
+         (check-pred procedure?             pns "right type")))))))
 
-(provide (all-defined))
-)
+
+(provide (all-defined)))
+
