@@ -185,8 +185,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         (thread-with-id
          (lambda ()
            (let ((cre
-                  (make-channel-request-event (lambda (message)
-                                               #t))))
+                  (make-channel-request-event
+                   (lambda (message)
+                     (gist-equal? "news" message)))))
              (subscribe-proc-to-server-messages!
               (channel-request-event-input-examiner cre))
 
@@ -448,5 +449,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                        (vtprintf "couldn't parse line from server: ~s~%" e))])
                  (respond (parse-irc-message line) sess))
                (get-one-line)))))))))
-(provide respond)
+(provide
+ respond
+ start)
 )
