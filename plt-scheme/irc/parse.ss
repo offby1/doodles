@@ -16,6 +16,7 @@
          (only (planet "port.ss" ("schematics" "port.plt" 1 0))
                port->string-list)
          (only (lib "1.ss" "srfi")
+               any
                first second third fourth fifth)
          (only (lib "13.ss" "srfi")
                string-tokenize
@@ -35,23 +36,20 @@
 
 (register-version-string "$Id$")
 
+(define (make-sub-struct x sub-constructor . more-args)
+  (apply sub-constructor
+         (append (cdr (vector->list (struct->vector x)))
+                 more-args)))
+
 (define-struct (exn:fail:irc-parse exn:fail) (string))
 (define-struct message (prefix command params) #f)
-(define (message-speaker m)
-  (or (regexp-case
-       (message-prefix m)
-       ((#rx"(.*)!(.*)@(.*)" nick user host)
-        nick)
-       (else
-        #f))
-      (message-prefix m)))
 
 ;; turn "NOTICE", e.g., into 'NOTICE
 (define (public-message-command x)
   (read-from-string (message-command x)))
 
 (define-struct (PRIVMSG message)
-  (destination approximate-recipient text text-words)
+  (speaker destination approximate-recipient text text-words)
   #f)
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
 (define-struct (ACTION CTCP) () #f)
@@ -62,9 +60,12 @@
 ;; (trace make-CTCP)
 (define (PRIVMSG-is-for-channel? m)
   (and (PRIVMSG? m)
-       (regexp-match #rx"^#" (PRIVMSG-destination m))))
+       (any (lambda (d)
+              (regexp-match #rx"^#" d))
+            (PRIVMSG-destination m))))
 ;; (trace PRIVMSG-is-for-channel?)
 ;; (trace PRIVMSG-destination)
+
 (define (parse-irc-message string)
   (let ((m ;; http://tools.ietf.org/html/rfc1459#page-8
          (regexp-case
@@ -94,38 +95,42 @@
               "Can't parse string from server"
               (current-continuation-marks)
               string)))
-    m))
+    (or (maybe-make-PRIVMSG m)
+        m)))
 
 (trace parse-irc-message)
 
-;; (define (maybe-upgrade-to-PRIVMSG m)
+(define (maybe-make-PRIVMSG m)
+  (define speaker
+    (and (message-prefix m)
+         (regexp-case
+          (message-prefix m)
+          ((#rx"(.*)!(.*)@(.*)" nick user host)
+           nick))))
 
-;;   (if (string=? "PRIVMSG" (message-command m))
-
-;;       (let* ((ctcp-match (regexp-match
-;;                           (pregexp "^\u0001([[:alpha:]]+) ?(.*)\u0001$")
-;;                           trailing-parameter))
-;;              (text (if ctcp-match (third ctcp-match)
-;;                      trailing-parameter))
-;;              (req/x (and ctcp-match (second ctcp-match)))
-;;              (prefix-match (regexp-match "^(.*)!(.*)@(.*)$" prefix)))
-;;         (apply
-;;          (cond
-;;           ((not ctcp-match)         make-PRIVMSG)
-;;           ((equal? req/x "ACTION" ) make-ACTION)
-;;           ((equal? req/x "VERSION") make-VERSION)
-;;           ((equal? req/x "SOURCE" ) make-SOURCE)
-;;           (else make-CTCP))
-;;          prefix command (append middle-params (list text))
-;;          (second prefix-match)
-;;          (first middle-params)
-;;          addressee
-;;          text
-;;          (string-tokenize
-;;           text
-;;           (char-set-complement char-set:whitespace))
-;;          (if ctcp-match (list (first ctcp-match)) '())))))
-
+  (and (string=? "PRIVMSG" (message-command m))
+       (let ((receivers (string-tokenize
+                         (first (message-params m))
+                         (char-set-complement (char-set #\,))))
+             (text (second (message-params m))))
+         (let ((text-tokens
+                (string-tokenize
+                 text
+                 (char-set-complement char-set:whitespace))))
+           (make-sub-struct
+            m
+            make-PRIVMSG
+            speaker
+            receivers
+            (and (not (null? text-tokens))
+                 (regexp-case
+                  (car text-tokens)
+                  ((pregexp "^([[:alnum:]]+)[:,]")
+                   => (lambda args (second args)))
+                  (else #f)))
+            text
+            text-tokens)))))
+(trace maybe-make-PRIVMSG)
 (define (for-us? message)
   (check-type 'for-us? message? message)
   (and
@@ -216,28 +221,28 @@
     "trailing params (not ust trailing)"
     (message-params (parse-irc-message "COMMAND poo poo :platter puss"))
     (list "poo" "poo" "platter puss"))
-;;    (test-suite
-;;     "PRIVMSGs"
-;;     (test-not-exn
-;;      "No puke on a single-space"
-;;      (lambda ()
-;;        (parse-irc-message ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs : ")))
-;;     (test-false
-;;      "average command isn't a PRIVMSG"
-;;      (PRIVMSG? (parse-irc-message "COMMAND poo poo :platter puss")))
-;;     (test-pred
-;;      "PRIVMSGs are indeed PRIVMSGs"
-;;      PRIVMSG?
-;;      (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
-;;     (test-case
-;;      "PRIVMSGs get properly parsed"
-;;      (check-equal? (PRIVMSG-destination (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
-;;                    "poo")
-;;      (check-equal? (PRIVMSG-text (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
-;;                    "platter puss")
-;;      (check-equal? (PRIVMSG-speaker (parse-irc-message ":fsbot!n=user@batfish.pepperfish.net PRIVMSG #emacs :yow!"))
-;;                    "fsbot")
-;;      )
+   (test-suite
+    "PRIVMSGs"
+    (test-not-exn
+     "No puke on a single-space"
+     (lambda ()
+       (parse-irc-message ":fledermaus!n=vivek@pdpc/supporter/active/fledermaus PRIVMSG #emacs : ")))
+    (test-false
+     "average command isn't a PRIVMSG"
+     (PRIVMSG? (parse-irc-message "COMMAND poo poo :platter puss")))
+    (test-pred
+     "PRIVMSGs are indeed PRIVMSGs"
+     PRIVMSG?
+     (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
+    (test-case
+     "PRIVMSGs get properly parsed"
+     (check-equal? (PRIVMSG-destination (parse-irc-message ":X!X@Y PRIVMSG poo poo :platter puss"))
+                   '("poo"))
+     (check-equal? (PRIVMSG-text (parse-irc-message ":X!X@Y PRIVMSG poopoo :platter puss"))
+                   "platter puss")
+     (check-equal? (PRIVMSG-speaker (parse-irc-message ":fsbot!n=user@batfish.pepperfish.net PRIVMSG #emacs :yow!"))
+                   "fsbot")
+     )
 ;;     (test-suite
 ;;      "CTCP"
 ;;      (test-false
@@ -262,29 +267,29 @@
 ;;        SOURCE?
 ;;        (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001SOURCE\u0001"))))
 
-;;     (test-case
-;;      "channel versus truly private message"
-;;      (check-pred
-;;       PRIVMSG-is-for-channel?
-;;       (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
-;;      (check-false
-;;       (PRIVMSG-is-for-channel?
-;;        (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
+    (test-case
+     "channel versus truly private message"
+     (check-pred
+      PRIVMSG-is-for-channel?
+      (parse-irc-message ":X!X@Y PRIVMSG #playroom :\u0001ACTION eats cornflakes\u0001"))
+     (check-false
+      (PRIVMSG-is-for-channel?
+       (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001"))))
 
-;;     (test-case
-;;      "approximate recipient"
-;;      (check-false
-;;       (PRIVMSG-approximate-recipient
-;;        (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001")))
-;;      (check-false
-;;       (PRIVMSG-approximate-recipient
-;;        (parse-irc-message ":X!X@Y PRIVMSG sam :well I think you smell")))
-;;      (check-equal?
-;;       (PRIVMSG-approximate-recipient
-;;        (parse-irc-message ":X!X@Y PRIVMSG sam :well, I think you smell"))
-;;       "well"))
+    (test-case
+     "approximate recipient"
+     (check-false
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :\u0001ACTION eats cornflakes\u0001")))
+     (check-false
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :well I think you smell")))
+     (check-equal?
+      (PRIVMSG-approximate-recipient
+       (parse-irc-message ":X!X@Y PRIVMSG sam :well, I think you smell"))
+      "well"))
 
-;;     )
+    )
 ;;    (test-suite
 ;;     "gists"
 ;;     (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
