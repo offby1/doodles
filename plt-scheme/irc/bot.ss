@@ -161,7 +161,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      ((RPL_ENDOFNAMES? message)
 
       ;; periodic jordanb quotes
-      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#bots" ))
+      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#bots" "#scheme-bots"))
         (let ((idle-evt
                (make-channel-idle-event
                 (RPL_ENDOFNAMES-channel-name message)
@@ -178,7 +178,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (pm (RPL_ENDOFNAMES-channel-name message) q)
                  (loop)))))))
 
-      (when (equal? (RPL_ENDOFNAMES-channel-name message) "#emacs")
+      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#scheme-bots"))
 
         ;; on-demand news spewage.
         (vtprintf "Creating the on-demand service~%")
@@ -231,7 +231,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                (loop))))))
 
-      (when (equal? (RPL_ENDOFNAMES-channel-name message) "##cinema")
+      (when (member (RPL_ENDOFNAMES-channel-name message) '("##cinema" "#scheme-bots"))
         (let ((posts #f))
           (thread-with-id
            (lambda ()
