@@ -4,19 +4,22 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui news-service-tests 'verbose))"
 |#
 (module news-service mzscheme
-(require (lib "kw.ss")
+(require (only (lib "19.ss" "srfi")
+               current-time)
+         (lib "kw.ss")
          (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "cached-channel.ss"
          "channel-events.ss"
          "globals.ss"
+         "headline.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "session.ss"
          "test-utils.ss"
          "vprintf.ss"
-                     )
+         )
 
 (define (on-demand-news-service
          channel-name
@@ -50,6 +53,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
 (verbose!)
+
 (define news-service-tests
 
   (test-suite
@@ -57,25 +61,36 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "yow"
     (let-values (((ip op) (make-pipe)))
-      (let ((sess (make-irc-session
-                   op
-                   #:feed (make-cached-channel #f))))
-        (let ((service
-               (on-demand-news-service
-                "#emacs"
-                sess
-                (lambda (channel text)
-                  (fprintf op "PRIVMSG ~a :~a~%"
-                           channel text)
-                  (newline op)))))
+      (let* ((feed (make-cached-channel #f))
+             (sess (make-irc-session
+                    op
+                    #:feed feed))
+             (service
+              (on-demand-news-service
+               "#emacs"
+               sess
+               (lambda (channel text)
+                 (fprintf op "PRIVMSG ~a :~a~%"
+                          channel text)
+                 (newline op)))))
 
-
-          (check-pred channel-request-event? service)
-
+        (define (ask-for-news)
           ((channel-request-event-input-examiner service)
-           (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*))))
+           (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*)))))
 
-          (check-not-false (expect/timeout ip "no news yet" 1/10)))  )))))
+        (check-pred channel-request-event? service)
+
+        (ask-for-news)
+
+        (check-not-false (expect/timeout ip "no news yet" 1/10))
+
+        (cached-channel-put feed (make-entry (current-time)
+                                             "JAPS BOMB PERL HARBOR!!"
+                                             "http://ruby-lang.org"))
+
+        (sync/timeout 0 feed)
+        (ask-for-news)
+        (check-not-false (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)))))))
 
 (provide (all-defined))
 )
