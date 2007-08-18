@@ -112,7 +112,7 @@
        (make-sub-struct
         m
         make-RPL_ENDOFNAMES
-        (first (message-params m)))))
+        (second (message-params m)))))
 
 (define (maybe-make-PRIVMSG m)
   (define speaker

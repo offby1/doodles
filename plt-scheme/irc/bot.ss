@@ -88,13 +88,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (define (notice target msg)
       (out "NOTICE ~a :~a~%" target msg))
 
-    (define/kw (reply response #:key [proc pm])
+    (define/kw (reply response #:key [proc pm] [message message])
       (for-each
        (lambda (r)
          (proc r response))
 
        (PRIVMSG-receivers message)))
-
 
     ;; (trace for-us?)
     ;;     (trace gist-for-us)
@@ -179,6 +178,29 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (when (equal? (RPL_ENDOFNAMES-channel-name message) "#emacs")
 
+        ;; on-demand news spewage.
+        (vtprintf "Creating the on-demand service~%")
+        (thread-with-id
+         (lambda ()
+           (let ((cre
+                  (make-channel-request-event (lambda (message)
+                                               #t))))
+             (subscribe-proc-to-server-messages!
+              (channel-request-event-input-examiner cre))
+
+             (let loop ()
+               (vtprintf "on-demand service waiting for request~%")
+               (let ((req (sync cre)))
+                 (vtprintf "on-demand service got request: ~s~%" req)
+                 (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
+                   (reply (if headline
+                              (entry->string headline)
+                            "no news yet.")
+                          #:message req))
+                 (loop))
+               ))))
+
+        ;; periodic news spewage.
         (thread-with-id
          (lambda ()
            (let loop ()
@@ -200,12 +222,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (pm (RPL_ENDOFNAMES-channel-name message)
                        (entry->string headline))
 
-                   ;; I wonder if I should
-                   ;; unsubscribe-proc-to-server-messages!
-                   ;; here.
-                   ))
+                   (unsubscribe-proc-to-server-messages!
+                    (channel-idle-event-input-examiner idle-evt))))
+
 
                (loop))))))
+
 
       (when (equal? (RPL_ENDOFNAMES-channel-name message) "##cinema")
         (let ((posts #f))
@@ -235,6 +257,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             (list-ref posts (random (length posts))))))
                  (loop))
                ))))))
+
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
       (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
@@ -328,7 +351,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          #t
          (out "PONG :~a~%" (car (message-params message))))
         )))))
-
 
 ;(trace respond)
 
