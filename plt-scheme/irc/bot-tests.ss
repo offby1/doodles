@@ -96,7 +96,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            ;; start the news thread
            (*planet-poll-interval* 2)
            (*quote-and-headline-interval* 1/10)
-           (respond (parse-irc-message ":x 366 rudybot #emacs :get crackin'") sess)
+           (respond (parse-irc-message ":x 366 rudybot #emacs :backed-up idle events'") sess)
            )
 
 
@@ -122,6 +122,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          (check-false
           (expect/timeout ip #rx"JAPS" (* 3/4 (*quote-and-headline-interval*))))))
+       (test-case
+        "keeps saying 'no news'"
+        (before
+         (begin
+           (custodian-shutdown-all (irc-session-custodian sess))
+           (set-irc-session-custodian! sess (make-custodian))
+
+           ;; start the news thread
+           (*planet-poll-interval* 2)
+           (*quote-and-headline-interval* 1/2)
+           (respond (parse-irc-message ":x 366 rudybot #emacs :keeps saying 'no news'") sess)
+           )
+
+         ;; ensure there is no news available.
+         (set-irc-session-async-for-news! sess (make-cached-channel #f))
+
+         ;; wait a smidge for the input-examiner proc to get
+         ;; subscribed.
+         (sleep 1/2)
+
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news"))
+
+         )
+        )
        ))))
 
 (provide (all-defined))
