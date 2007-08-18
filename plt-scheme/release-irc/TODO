@@ -4,6 +4,16 @@
 
 * bugs
 
+** DAMN!!
+Thu Aug 16 13:38:04 2007 PDT
+<aadis> TMTOWTODI!                                                                                       [13:22]
+<offby1> rudybot: news                                                                                   [13:33]
+* rudybot is at a loss for words, as usual
+ERC> /ctcp rudybot version                                                                               [13:36]
+*** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4734M:PLT scheme version
+    370.6 on unix
+
+
 
 -- Low priority
 
@@ -16,6 +26,9 @@
   acting funny, I could do, at the repl, something like (add-to-list!
   (*things-to-log*) 'moviestowatchfor)
 
+  If modules were first-class, we could put _them_ on the list
+  directly, instead of each module having to create its own symbol
+  just for that purpose.
 * read memos?
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "Type \u0002/msg MemoServ READ 2\u0002 to read it"))
@@ -41,12 +54,6 @@
   posting a semaphore.  I wonder if there's some equivalent for
   async-channels...
 
-  Maybe go back to all-events-all the time, and have each task signal
-  that it handled a particular event by -- *gasp* -- setting a bit in
-  the event.
-
-  See the "ideas" file in this directory.
-
 ** "short streams"
   j85wilson has an interesting solution; see
   http://bzr.wilsonjc.us/sibyl/short-stream.scm
@@ -67,17 +74,10 @@
 
 * low-priority bugs
 
-** joins channels twice
-   r4530.  Probably because I passed a few channel names on the
-   command line which were also in the default list, and it's too dumb
-   to uniquify the resulting list.
+** "CTCP source" doesn't return an FTP site :-)
 
-
-** mangles "CTCP source"
-
-- http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the
-  source should be hosted on an FTP server, which I don't care to run,
-  so ...
+http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the source
+should be hosted on an FTP server, which I don't care to run, so ...
 
 * quotes and news headlines
 
@@ -99,13 +99,6 @@
 
    offby1: suggestion for rudybot: only have him spew news in a
    channel if there has been speech since the last time he spewed news
-
-** keep the latest headline ...
-   Instead of having queue-of-entries return a raw async-channel, have
-   it instead return a pair (or a structure or whatever) that includes
-   the channel _and_ a "latest" field: basically a cache of the last
-   item gotten from the async-channel.  That way anyone can
-   non-destructively look at the latest headlines at any time.
 
 * Windows
 
@@ -148,14 +141,25 @@
   have bindings to Berkeley DB.
 
   On the other hand, I can't think of much that I need to persist
-  ... maybe the appearances-by-nick data for the "seen" command.
+  ... maybe the appearances-by-nick data for the "seen" command.  That
+  seems a perfect application for sqlite, which I seem to have an urge
+  to play with ...
+
+  http://www.elemental-programming.org/Bigloo%20SQLI.html and
+  http://planet.plt-scheme.org/package-source/jaymccarthy/sqlite.plt/3/1/doc.txt
+  both seem like they might do it; the former seems slightly more
+  up-to-date.
+  http://planet.plt-scheme.org/package-source/dfisher/sql-table.plt/1/1/doc.txt
+  looks particularly pleasant.
 
 * Find some way to deal with exceptions in threads
   e.g., "procedure internal-entries-newer-than: expects 3 arguments,
   given 2 ...".  That procedure application is happening in a thread
   other than the main one, and so rather than the whole app dying, it
-  just hangs.  This is annoying during development (but might turn out
-  to be nice in "production").
+  just hangs.  This is annoying when I'm running tests -- the tests
+  will sometimes pass despite the thread puking.  Naturally I want the
+  process to exit with a non-zero status, to ensure that I notice the
+  thread dying.
 
 * Convert from strings to bytes
   Wherever possible, change from using "string" procedures to "bytes"

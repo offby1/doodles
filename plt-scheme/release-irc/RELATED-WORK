@@ -1,6 +1,7 @@
 Doesn't "related work" sound grandly academic?
 
-Anyway, here are some other Scheme bots I know of:
+Anyway, here are some other bots, and bot-related code, that I know
+of:
 
 * https://svn.bountysource.com/scm-irc/trunk
 
@@ -9,5 +10,7 @@ Anyway, here are some other Scheme bots I know of:
 
 * http://monkeyboy.td.org.uit.no/~cin/feckbot
 
-CIA isn't scheme, but it's a pretty serious bot, and probably has been
-designed carefully: http://svn.navi.cx/misc/trunk/cia/
+* http://svn.navi.cx/misc/trunk/cia/ -- CIA.  A pretty serious bot,
+  probably carefully designed
+
+* http://poe.perl.org/?POE_Cookbook/IRC_Bots

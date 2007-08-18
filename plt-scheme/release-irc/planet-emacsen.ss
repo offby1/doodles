@@ -5,8 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "async-channel.ss")
-         (lib "trace.ss")
+(require (lib "trace.ss")
          (only  (lib "file.ss")
                 get-preference
                 put-preferences)
@@ -18,9 +17,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (lib "list.ss")
                last-pair
                sort)
-         (only (lib "async-channel.ss")
-               async-channel-put
-               make-async-channel)
          (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                first second third fourth
@@ -51,6 +47,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                date->string
                zdate)
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
+         "cached-channel.ss"
          "headline.ss"
          "globals.ss"
          "thread.ss"
@@ -144,13 +141,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sleep (/ (add1 (random 10)) 10))
        (retry)))))
 
-(define-struct cached-channel (async cache) #f)
-(define (cached-channel-apply cc . args)
-  (let ((datum (apply (car args)
-                      (append (cdr args) (list (cached-channel-async cc))))))
-    (set-cached-channel-cache! cc datum)
-    datum))
-
 (define/kw (queue-of-entries
             #:key
             [whence])
@@ -170,12 +160,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   ;; channel ... I suppose it ensures that, in case people write blog
   ;; posts at a furious clip, and people are contantly yammering in
   ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-async-channel #f))
+  (let ((the-channel (make-cached-channel #f))
 
         ;; keep track of each entry we put on the async-channel, so
         ;; that we never put the same entry on twice.
         (entries-put (make-hash-table 'equal)))
-    (my-thread
+    (thread-with-id
      (lambda ()
        (let loop ()
 
@@ -199,14 +189,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                   (begin
                     (reliably-put-pref (time-second (entry-timestamp e)))
                     (hash-table-put! entries-put e #t)
-                    (async-channel-put the-channel e))))
+                    (cached-channel-put the-channel e))))
 
             (snarf-em-all (whence))))
 
          (sleep (*planet-poll-interval*))
          (loop))))
 
-    (make-cached-channel the-channel #f))  )
+    the-channel)  )
 
 ;;(trace queue-of-entries)
 
@@ -214,7 +204,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (async->list as)
   (let loop ((what-we-found '()))
-    (let ((datum (cached-channel-apply as sync/timeout 1/10)))
+    (let ((datum (sync/timeout 1/10 as)))
 
       (if datum
           (loop (cons datum what-we-found))
@@ -287,7 +277,7 @@ op)
        (put-preferences (list (*atom-timestamp-preference-name*))
                         (list #f)))
      (let ((q (queue-of-entries #:whence #f)))
-       (let ((first-entry (cached-channel-apply q sync))
+       (let ((first-entry (sync q))
              (time-of-last-entry-put (get-preference (*atom-timestamp-preference-name*))))
 
          (check-pred entry? first-entry "It's not an entry!!")
@@ -295,9 +285,6 @@ op)
 
 
 (provide
- cached-channel?
- cached-channel-apply
- cached-channel-cache
  make-cached-channel
  entry->string
  entry-timestamp

@@ -34,11 +34,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         )
 
        (test-case
-        "uses NOTICE, not PRIVMSG"
+        "uses PRIVMSG, not NOTICE"
         (check-not-false
          (got-response? sess ip
           (format ":x!y@z PRIVMSG #duh :~a" long-url)
-          #rx"NOTICE #duh :http://tinyurl.com/")
+          #rx"PRIVMSG #duh :http://tinyurl.com/")
          ))
 
        (test-case

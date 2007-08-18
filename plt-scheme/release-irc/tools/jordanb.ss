@@ -192,7 +192,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; only keeps amusing quotes from jordanb.
 (define (funny-filter ip)
   (define (is-screamingly-funny? line)
-    (regexp-match #rx"^(?i:<jordanb> +((let.?s|we should|i love it how).*)$)" line))
+    (or
+     (regexp-match #rx"^(?i:<jordanb> +(.*taken out back.*)$)" line)
+     (regexp-match #rx"^(?i:<jordanb> +((let.?s|we should|i love it how|I'll .* you).*)$)" line)))
   (make-filter
    (lambda (op)
      (let loop ()

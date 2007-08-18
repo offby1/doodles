@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          (planet "text-ui.ss"    ("schematics" "schemeunit.plt" 2))
          "alarm-with-snooze.ss"
          "bot-tests.ss"
-         "channel-idle-event.ss"
+         "channel-events.ss"
          "del.ss"
          (only "globals.ss" register-version-string)
          "parse.ss"
@@ -21,7 +21,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
                    "eva thang"
                    alarm-with-snooze-tests
                    bot-tests
-                   channel-idle-event-tests
+                   channel-events-tests
                    del.icio.us-tests
                    parse-tests
                    planet-tests

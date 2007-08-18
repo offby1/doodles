@@ -35,9 +35,12 @@ $(tarball): version.ss
 	tar -C $${tempdir} --create --gzip --file=$@ $(basename) && \
 	$(cleanup)
 
-dist: $(tarball)
-	@mv -v $^ $(distdir)
-	@ln -svf $(distdir)/$^ $(distdir)/rudybot.tar.gz
+svnup: 
+	svn up
+
+dist: svnup $(tarball)
+	@mv -v $(tarball) $(distdir)
+	@ln -svf $(distdir)/$(tarball) $(distdir)/rudybot.tar.gz
 
 check:
 	./run-all-tests.ss
@@ -54,4 +57,4 @@ tags: TAGS
 TAGS: $(wildcard *.ss)
 	etags $^
 
-.PHONY: clean all dist plt tar check
+.PHONY: clean all dist plt tar check svnup
