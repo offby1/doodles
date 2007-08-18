@@ -8,14 +8,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         "test-utils.ss"
          "cached-channel.ss"
          "channel-events.ss"
-         (only "globals.ss" *my-nick*)
+         "globals.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "session.ss"
-         "vprintf.ss")
+         "test-utils.ss"
+         "vprintf.ss"
+                     )
 
 (define (on-demand-news-service
          channel-name
@@ -48,6 +49,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
 
+(verbose!)
 (define news-service-tests
 
   (test-suite
@@ -55,19 +57,23 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-case
     "yow"
     (let-values (((ip op) (make-pipe)))
-      (let ((sess (make-irc-session op)))
+      (let ((sess (make-irc-session
+                   op
+                   #:feed (make-cached-channel #f))))
         (let ((service
                (on-demand-news-service
                 "#emacs"
                 sess
-                (lambda (str)
-                  (display str op)
+                (lambda (channel text)
+                  (fprintf op "PRIVMSG ~a :~a~%"
+                           channel text)
                   (newline op)))))
 
 
           (check-pred channel-request-event? service)
 
-          (fprintf op ":a@b!x PRIVMSG #emacs ~a :news" (*my-nick*))
+          ((channel-request-event-input-examiner service)
+           (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*))))
 
           (check-not-false (expect/timeout ip "no news yet" 1/10)))  )))))
 
