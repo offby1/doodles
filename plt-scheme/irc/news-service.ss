@@ -54,7 +54,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          channel-name
          irc-session
          pm)
-  'golly)
+  (let ((cie (make-channel-idle-event "#emacs" 2)))
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((headline (sync (irc-session-async-for-news irc-session))))
+           (sync cie)
+           (pm channel-name (format "Hear ye! ~a" headline))
+           (loop)))))
+    (channel-idle-event-input-examiner cie)))
 
 
 
@@ -92,19 +100,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ((channel-request-event-input-examiner ods)
            (parse-irc-message (format ":a!b@x PRIVMSG #emacs :~a: news~%" (*my-nick*)))))
 
-        (check-pred channel-request-event? ods)
+        (check-pred channel-request-event? ods "right type")
+        (check-pred procedure?             pns "right type")
 
         (ask-for-news)
 
-        (check-not-false (expect/timeout ip "no news yet" 1/10))
+        (check-not-false
+         (expect/timeout ip "no news yet" 1/10)
+         "no news yet")
 
         (cached-channel-put feed (make-entry (current-time)
                                              "JAPS BOMB PERL HARBOR!!"
                                              "http://ruby-lang.org"))
 
-        (sync/timeout 0 feed)
+        (check-not-false
+         (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
+         "periodic event supplies news")
         (ask-for-news)
-        (check-not-false (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)))))))
+        (check-not-false
+         (expect/timeout ip "JAPS BOMB PERL HARBOR!!" 1/10)
+         "request event supplies news"))))))
 
 (provide (all-defined))
 )
