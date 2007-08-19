@@ -382,94 +382,94 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;(trace respond)
 
 (define (start)
-  (let-values (((ip op)
-                (if (*irc-server-name*)
-                    (tcp-connect (*irc-server-name*) 6667)
-                  (values (current-input-port)
-                          (current-output-port)))))
+  (with-handlers
+      ([exn:fail:network?
+        (lambda (e)
+          (vtprintf "exception (~s); reconnecting~%"
+                    e)
 
-    (define sess
-      (make-irc-session
-       op
-       #:feed
-       (queue-of-entries
-        #:whence
-        (and (*use-real-atom-feed?*)
-             (lambda ()
-               (get-pure-port
-                (string->url "http://planet.emacsen.org/atom.xml")
-                (list)))))))
+          (sleep 10)
+          (start))])
 
-    (when (*log-to-file*)
-      (*log-output-port*
-       (open-output-file
-        ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
-        ;; directory doesn't exist
-        (format "/var/log/irc-bot/~a-~a"
-                (*irc-server-name*)
-                (zdate)))))
-    (fprintf (current-error-port)
-             "Logging to ~s~%" (object-name (*log-output-port*)))
+    (let-values (((ip op)
+                  (if (*irc-server-name*)
+                      (tcp-connect (*irc-server-name*) 6667)
+                    (values (current-input-port)
+                            (current-output-port)))))
 
-    ;; so we don't have to call flush-output all the time
-    (for-each (lambda (p)
-                (file-stream-buffer-mode p 'line))
-              (list op (*log-output-port*)))
+      (define sess
+        (make-irc-session
+         op
+         #:feed
+         (queue-of-entries
+          #:whence
+          (and (*use-real-atom-feed?*)
+               (lambda ()
+                 (get-pure-port
+                  (string->url "http://planet.emacsen.org/atom.xml")
+                  (list)))))))
 
-    (for-each (lambda (s)
-                (vprintf "~a~%" s))
-              (version-strings))
-    (vprintf "~a~%" (long-version-string))
+      (when (*log-to-file*)
+        (*log-output-port*
+         (open-output-file
+          ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
+          ;; directory doesn't exist
+          (format "/var/log/irc-bot/~a-~a"
+                  (*irc-server-name*)
+                  (zdate)))))
+      (fprintf (current-error-port)
+               "Logging to ~s~%" (object-name (*log-output-port*)))
 
-    (fprintf op "NICK ~a~%" (*my-nick*))
-    (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
-             (or (getenv "USER") "unknown")
-             (*irc-server-name*)
-             *client-name*
-             *svnversion-string*)
+      ;; so we don't have to call flush-output all the time
+      (for-each (lambda (p)
+                  (file-stream-buffer-mode p 'line))
+                (list op (*log-output-port*)))
 
-    (when (*nickserv-password*)
-      (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
+      (for-each (lambda (s)
+                  (vprintf "~a~%" s))
+                (version-strings))
+      (vprintf "~a~%" (long-version-string))
 
-    (parameterize-break
-     #t
-     (with-handlers
-         ([exn:break?
-           (lambda (x)
-             ;; I often see               rudybot [~erich@127.0.0.1] has quit [Client Quit]
-             ;; rather than the expected  rudybot [~erich@127.0.0.1] has quit [Ah been shot!]
+      (fprintf op "NICK ~a~%" (*my-nick*))
+      (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
+               (or (getenv "USER") "unknown")
+               (*irc-server-name*)
+               *client-name*
+               *svnversion-string*)
 
-             ;; http://poe.perl.org/?POE_Cookbook/IRC_Bots suggests
-             ;; this may be because the server ignores custom QUIT
-             ;; messages from clients that haven't been connected for
-             ;; very long.
-             (fprintf op "QUIT :Ah been shot!~%")
-             (flush-output op)
-             (close-output-port op))]
-          [exn:fail?
-           (lambda (e)
-             (let ((whine (format  "Caught an exception: ~s~%" e)))
-               (display whine (*log-output-port*))
-               (display whine (current-error-port)))
+      (when (*nickserv-password*)
+        (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
 
-             (with-handlers
-                 ([exn:fail?
-                   (lambda (e)
-                     (vtprintf "oh hell, I can't send a quit message~%"))])
-               (fprintf op "QUIT :unexpected failure~%")
-               (flush-output op)
-               (close-output-port op))
-
-             (raise e))])
-
+      (parameterize-break
+       #t
        (with-handlers
-           ([exn:fail:network?
-             (lambda (e)
-               (vtprintf "exception (~s) reading from input port; reconnecting~%"
-                         e)
+           ([exn:break?
+             (lambda (x)
+               ;; I often see               rudybot [~erich@127.0.0.1] has quit [Client Quit]
+               ;; rather than the expected  rudybot [~erich@127.0.0.1] has quit [Ah been shot!]
 
-               (sleep 10)
-               (start))])
+               ;; http://poe.perl.org/?POE_Cookbook/IRC_Bots suggests
+               ;; this may be because the server ignores custom QUIT
+               ;; messages from clients that haven't been connected for
+               ;; very long.
+               (fprintf op "QUIT :Ah been shot!~%")
+               (flush-output op)
+               (close-output-port op))]
+            [exn:fail?
+             (lambda (e)
+               (let ((whine (format  "Caught an exception: ~s~%" e)))
+                 (display whine (*log-output-port*))
+                 (display whine (current-error-port)))
+
+               (with-handlers
+                   ([exn:fail?
+                     (lambda (e)
+                       (vtprintf "oh hell, I can't send a quit message~%"))])
+                 (fprintf op "QUIT :unexpected failure~%")
+                 (flush-output op)
+                 (close-output-port op))
+
+               (raise e))])
 
          (let get-one-line ()
            (let ((line (read-line ip 'return-linefeed)))
