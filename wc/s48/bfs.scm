@@ -11,7 +11,7 @@
 
 (define (bfs start-node goal-node nodes-equal? node-neighbors)
 
-  (define *already-seen* (make-set))
+  (define *already-seen* (make-set '()))
 
   (define (already-seen? thing)
     (is-present? thing *already-seen*))
