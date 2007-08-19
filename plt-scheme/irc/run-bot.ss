@@ -36,9 +36,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*nickserv-password* pw))
   (("--planet") "Actually hit planet.emacsen.org, rather than using test data"
    (*use-real-atom-feed?* #t))
-  (("-v" "--verbose")
-    "Spew debug stuff to logfile"
-    (verbose!))
+  (("-l" "--log") "Spew to log file as opposed to stderr"
+   (*log-to-file* #t))
   )
 
  (multi

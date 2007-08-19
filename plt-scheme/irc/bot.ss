@@ -181,7 +181,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         ;; news spewage.
         (when (member ch '("#emacs" "#scheme-bots"))
 
-          (vtprintf "Creating the on-demand service~%")
+          (vtprintf "Creating the news spewage on-demand service~%")
           (thread-with-id
            (lambda ()
              (let ((cre
@@ -248,8 +248,29 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (set! posts (snarf-some-recent-posts))
                    (sleep  (* 7 24 3600))
                    (loop)))))
+            (thread-with-id
+             (lambda ()
+               (let ((cre (make-channel-request-event
+                           (lambda (m)
+                             (and (PRIVMSG? m)
+                                  (member ch (PRIVMSG-receivers m))
+                                  (gist-equal? "movie" m))))))
 
-            (let ((idle (make-channel-idle-event ch 3600)))
+                 (subscribe-proc-to-server-messages!
+                  (channel-request-event-input-examiner cre))
+
+                 (let loop ()
+                   (let ((req (sync cre)))
+                     (reply
+                      (if posts
+                          (entry->string
+                           (list-ref posts (random (length posts))))
+                        "hmm, no movie recommendations yet")
+                      #:message req)
+
+                     (loop)))(thread-with-id))))
+
+            (let ((idle (make-channel-idle-event ch (*quote-and-headline-interval*))))
 
               (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
 
@@ -379,7 +400,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (string->url "http://planet.emacsen.org/atom.xml")
                 (list)))))))
 
-    (when (*irc-server-name*)
+    (when (*log-to-file*)
       (*log-output-port*
        (open-output-file
         ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
@@ -446,8 +467,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (lambda (e)
                (vtprintf "exception (~s) reading from input port; reconnecting~%"
                          e)
+
                (sleep 10)
                (start))])
+
          (let get-one-line ()
            (let ((line (read-line ip 'return-linefeed)))
              (if (eof-object? line)

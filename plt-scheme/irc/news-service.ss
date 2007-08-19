@@ -70,8 +70,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
 
-(verbose!)
-
 (define (call-with-stuff proc)
   (let-values (((ip op) (make-pipe)))
     (let* ((feed (make-cached-channel #f))

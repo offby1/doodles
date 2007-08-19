@@ -36,7 +36,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let ((sess (make-irc-session op)))
 
-      (verbose!)
       (test-suite
        "crap"
        #:before
