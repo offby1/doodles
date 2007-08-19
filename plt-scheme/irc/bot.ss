@@ -159,107 +159,109 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (reply (make-tiny-url url #:user-agent (long-version-string)))))))
 
      ((RPL_ENDOFNAMES? message)
+      (let ((ch (RPL_ENDOFNAMES-channel-name message)))
+        ;; periodic jordanb quotes
+        (when (member ch '("#emacs" "#bots" "#scheme-bots"))
+          (let ((idle-evt
+                 (make-channel-idle-event
+                  ch
+                  (*quote-and-headline-interval*))))
 
-      ;; periodic jordanb quotes
-      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#bots" "#scheme-bots"))
-        (let ((idle-evt
-               (make-channel-idle-event
-                (RPL_ENDOFNAMES-channel-name message)
-                (*quote-and-headline-interval*))))
-
-          (subscribe-proc-to-server-messages!
-           (channel-idle-event-input-examiner idle-evt))
-
-          (thread-with-id
-           (lambda ()
-             (let loop ()
-               (let ((q (one-quote)))
-                 (sync idle-evt)
-                 (pm (RPL_ENDOFNAMES-channel-name message) q)
-                 (loop)))))))
-
-      ;; news spewage.
-      (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#scheme-bots"))
-
-        (vtprintf "Creating the on-demand service~%")
-        (thread-with-id
-         (lambda ()
-           (let ((cre
-                  (make-channel-request-event
-                   (lambda (message)
-                     (gist-equal? "news" message)))))
-             (subscribe-proc-to-server-messages!
-              (channel-request-event-input-examiner cre))
-
-             (let loop ()
-               (vtprintf "on-demand service waiting for request~%")
-               (let ((req (sync cre)))
-                 (vtprintf "on-demand service got request: ~s~%" req)
-                 (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
-                   (reply (if headline
-                              (entry->string headline)
-                            "no news yet.")
-                          #:message req))
-                 (loop))
-               ))))
-
-        ;; periodic news spewage.
-        (thread-with-id
-         (lambda ()
-           (let loop ()
-             (vtprintf "Waiting for a headline.~%")
-             (let ((headline (sync (irc-session-async-for-news s))))
-               (vtprintf "got ~s~%" headline)
-               (when headline
-                 (let ((idle-evt
-                        (make-channel-idle-event
-                         (RPL_ENDOFNAMES-channel-name message)
-                         (*quote-and-headline-interval*))))
-
-                   (subscribe-proc-to-server-messages!
-                    (channel-idle-event-input-examiner idle-evt))
-
-                   (vtprintf "Waiting for channel ~s to idle.~%"
-                             (RPL_ENDOFNAMES-channel-name message))
-                   (sync idle-evt)
-                   (pm (RPL_ENDOFNAMES-channel-name message)
-                       (entry->string headline))
-
-                   (unsubscribe-proc-to-server-messages!
-                    (channel-idle-event-input-examiner idle-evt))))
-
-
-               (loop))))))
-
-      ;; moviestowatchfor
-      (when (member (RPL_ENDOFNAMES-channel-name message) '("##cinema" "#scheme-bots"))
-        (let ((posts #f))
-          (thread-with-id
-           (lambda ()
-             (let loop ()
-               (with-handlers
-                   ([exn:delicious:auth?
-                     (lambda (e)
-                       (vtprintf
-                        "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                 (set! posts (snarf-some-recent-posts))
-                 (sleep  (* 7 24 3600))
-                 (loop)))))
-
-          (let ((idle (make-channel-idle-event (RPL_ENDOFNAMES-channel-name message) 3600)))
-
-            (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+            (subscribe-proc-to-server-messages!
+             (channel-idle-event-input-examiner idle-evt))
 
             (thread-with-id
              (lambda ()
                (let loop ()
-                 (sync idle)
-                 (when posts
-                   (notice (RPL_ENDOFNAMES-channel-name message)
-                           (entry->string
-                            (list-ref posts (random (length posts))))))
-                 (loop))
-               ))))))
+                 (let ((q (one-quote)))
+                   (sync idle-evt)
+                   (pm ch q)
+                   (loop)))))))
+
+        ;; news spewage.
+        (when (member ch '("#emacs" "#scheme-bots"))
+
+          (vtprintf "Creating the on-demand service~%")
+          (thread-with-id
+           (lambda ()
+             (let ((cre
+                    (make-channel-request-event
+                     (lambda (message)
+                       (and (member ch
+                                    (PRIVMSG-receivers message))
+                            (gist-equal? "news" message))))))
+               (subscribe-proc-to-server-messages!
+                (channel-request-event-input-examiner cre))
+
+               (let loop ()
+                 (vtprintf "on-demand service waiting for request~%")
+                 (let ((req (sync cre)))
+                   (vtprintf "on-demand service got request: ~s~%" req)
+                   (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
+                     (reply (if headline
+                                (entry->string headline)
+                              "no news yet.")
+                            #:message req))
+                   (loop))
+                 ))))
+
+          ;; periodic news spewage.
+          (thread-with-id
+           (lambda ()
+             (let loop ()
+               (vtprintf "Waiting for a headline.~%")
+               (let ((headline (sync (irc-session-async-for-news s))))
+                 (vtprintf "got ~s~%" headline)
+                 (when headline
+                   (let ((idle-evt
+                          (make-channel-idle-event
+                           ch
+                           (*quote-and-headline-interval*))))
+
+                     (subscribe-proc-to-server-messages!
+                      (channel-idle-event-input-examiner idle-evt))
+
+                     (vtprintf "Waiting for channel ~s to idle.~%"
+                               ch)
+                     (sync idle-evt)
+                     (pm ch
+                         (entry->string headline))
+
+                     (unsubscribe-proc-to-server-messages!
+                      (channel-idle-event-input-examiner idle-evt))))
+
+
+                 (loop))))))
+
+        ;; moviestowatchfor
+        (when (member ch '("##cinema" "#scheme-bots"))
+          (let ((posts #f))
+            (thread-with-id
+             (lambda ()
+               (let loop ()
+                 (with-handlers
+                     ([exn:delicious:auth?
+                       (lambda (e)
+                         (vtprintf
+                          "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                   (set! posts (snarf-some-recent-posts))
+                   (sleep  (* 7 24 3600))
+                   (loop)))))
+
+            (let ((idle (make-channel-idle-event ch 3600)))
+
+              (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+
+              (thread-with-id
+               (lambda ()
+                 (let loop ()
+                   (sync idle)
+                   (when posts
+                     (notice ch
+                             (entry->string
+                              (list-ref posts (random (length posts))))))
+                   (loop))
+                 )))))))
 
      ((and (ACTION? message)
            (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
