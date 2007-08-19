@@ -178,9 +178,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (pm (RPL_ENDOFNAMES-channel-name message) q)
                  (loop)))))))
 
+      ;; news spewage.
       (when (member (RPL_ENDOFNAMES-channel-name message) '("#emacs" "#scheme-bots"))
 
-        ;; on-demand news spewage.
         (vtprintf "Creating the on-demand service~%")
         (thread-with-id
          (lambda ()
@@ -231,6 +231,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                (loop))))))
 
+      ;; moviestowatchfor
       (when (member (RPL_ENDOFNAMES-channel-name message) '("##cinema" "#scheme-bots"))
         (let ((posts #f))
           (thread-with-id
@@ -383,6 +384,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         (format "/var/log/irc-bot/~a-~a"
                 (*irc-server-name*)
                 (zdate)))))
+    (fprintf (current-error-port)
+             "Logging to ~s~%" (object-name (*log-output-port*)))
 
     ;; so we don't have to call flush-output all the time
     (for-each (lambda (p)
