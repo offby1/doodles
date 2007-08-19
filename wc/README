@@ -1,13 +1,14 @@
-given two words of the same length, such as "giant" and "raven",
+Given two words of the same length, such as "giant" and "raven",
 see how few "steps" it takes to transform one into the other.  A
 "step" consists of modifying one letter, such that the result is a
 real word.  e.g.,
 
 (giant grant grand grind grins grits writs waits wants wanes waves raves raven)
 
-inspired by the puzzle on NPR's "Weekend Edition", 27 January 2001
+Inspired by the puzzle on NPR's "Weekend Edition", 27 January 2001
 
-http://search1.npr.org/opt/collections/torched/wesu/data_wesu/seg_117717.htm
+I've also heard this puzzle called a "word ladder" and "word golf"
+(http://en.wikipedia.org/wiki/Word_golf).
 
 I think NPR's solution was 
 

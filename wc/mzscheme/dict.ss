@@ -2,7 +2,7 @@
   (require
    (lib "file.ss")
    (only (lib "1.ss" "srfi") filter iota)
-   (planet "set.ss"  ("offby1" "my-plt-collects.plt"))
+   (planet "set.ss"  ("offby1" "offby1.plt"))
    "persist.ss")
 
   (provide all-neighbors
@@ -95,5 +95,5 @@
         (thunk)
         (fprintf (*graphis-output-port*) "}~n")
         (close-output-port (*graphis-output-port*)))))
-  
+
   )

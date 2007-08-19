@@ -8,9 +8,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (require
    (lib "trace.ss")
    (only (lib "13.ss" "srfi") string-join)
-   (planet "bfs.ss"  ("offby1" "my-plt-collects.plt"))
-   (planet "set.ss"  ("offby1" "my-plt-collects.plt"))
-   (planet "q.ss"    ("offby1" "my-plt-collects.plt"))
+   (planet "bfs.ss"  ("offby1" "offby1.plt"))
+   (planet "set.ss"  ("offby1" "offby1.plt"))
+   (planet "q.ss"    ("offby1" "offby1.plt"))
    "dict.ss")
 
   (define (display-result chain say-bummer?)
