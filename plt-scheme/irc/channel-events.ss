@@ -31,7 +31,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 #:id (format "signals when channel ~s has been idle for ~a seconds"
                              channel-name
                              interval)
-                #:periodic? #f)))
+                #:periodic? #t)))
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
