@@ -187,7 +187,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (let ((cre
                     (make-channel-request-event
                      (lambda (message)
-                       (and (member ch
+                       (and (PRIVMSG? message)
+                            (member ch
                                     (PRIVMSG-receivers message))
                             (gist-equal? "news" message))))))
                (subscribe-proc-to-server-messages!
@@ -440,20 +441,27 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
              (raise e))])
 
-       (let get-one-line ()
-         (let ((line (read-line ip 'return-linefeed)))
-           (if (eof-object? line)
+       (with-handlers
+           ([exn:fail:network?
+             (lambda (e)
+               (vtprintf "exception (~s) reading from input port; reconnecting~%"
+                         e)
+               (sleep 10)
+               (start))])
+         (let get-one-line ()
+           (let ((line (read-line ip 'return-linefeed)))
+             (if (eof-object? line)
+                 (begin
+                   (vtprintf "eof on server; reconnecting~%")
+                   (sleep 10)
+                   (start))
                (begin
-                 (vtprintf "eof on server; reconnecting~%")
-                 (sleep 10)
-                 (start))
-             (begin
-               (with-handlers
-                   ([exn:fail:irc-parse?
-                     (lambda (e)
-                       (vtprintf "couldn't parse line from server: ~s~%" e))])
-                 (respond (parse-irc-message line) sess))
-               (get-one-line)))))))))
+                 (with-handlers
+                     ([exn:fail:irc-parse?
+                       (lambda (e)
+                         (vtprintf "couldn't parse line from server: ~s~%" e))])
+                   (respond (parse-irc-message line) sess))
+                 (get-one-line))))))))))
 (provide
  respond
  start)
