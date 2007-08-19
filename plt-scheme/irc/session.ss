@@ -47,7 +47,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    ;; on Winders.
    (make-hash-table 'equal)
 
-   (make-hash-table 'equal 'weak)
+   (make-hash-table 'equal)
    feed
    op
    (make-custodian)
