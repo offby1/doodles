@@ -78,8 +78,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (current-error-port)
         "Welcome to the ~a namespace.  Use your power only for good.~%"
         (object-name (current-namespace)))
-       (when (not (eq? 'macosx (system-type)))
-		(dynamic-require '(lib "rep.ss" "readline") #f))
+       (with-handlers
+           ([exn:fail:filesystem?
+             (lambda (e)
+               (fprintf "Can't load readline.  Bummer.~%"))])
+         (dynamic-require '(lib "rep.ss" "readline") #f))
        (read-eval-print-loop)))))
 
 (start)
