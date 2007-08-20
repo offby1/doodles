@@ -7,6 +7,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;;; the ability to save and restore images.  I used that technique
 ;;; with scheme48, and it was _way_ easier than this was.
 
+;;; I further notice that mzscheme 371 on my Thinkpad T60 is plenty
+;;; fast enough not to need this at all.
+
 ;;; Thanks to `foof' (aka `ashinn') for guidance and inspiration
 
 (module persist mzscheme
@@ -20,7 +23,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;;; I suspect there are subtle problems when the value that you save
 ;;; contains cycles.
-  
+
   (define (ep . args)
     (apply fprintf (cons (current-error-port)
                          args)))
