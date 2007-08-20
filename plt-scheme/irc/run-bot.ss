@@ -81,7 +81,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (with-handlers
            ([exn:fail:filesystem?
              (lambda (e)
-               (fprintf "Can't load readline.  Bummer.~%"))])
+               (fprintf
+                (current-error-port)
+                "Can't load readline.  Bummer.~%"))])
          (dynamic-require '(lib "rep.ss" "readline") #f))
        (read-eval-print-loop)))))
 
