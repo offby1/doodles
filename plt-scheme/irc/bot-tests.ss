@@ -40,7 +40,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        "crap"
        #:before
        (lambda ()
-         (*initial-channel-names* (list "#bots")))
+         (*initial-channel-names* (list "#bots"))
+         (register-usual-services! sess))
        (test-case
         "join"
         (respond
@@ -56,7 +57,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           sess
           ip
           (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
-          (pregexp-quote "PRIVMSG #d :Eh?  Speak up."))
+          (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
          ))
 
        (test-case

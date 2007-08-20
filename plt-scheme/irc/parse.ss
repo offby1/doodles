@@ -195,6 +195,7 @@
 (define (gist-equal? str message)
   (check-type 'gist-equal? message? message)
   (equal? str (gist-for-us message)))
+;(trace gist-equal?)
 ;(trace for-us?)
 ;(trace gist-for-us)
 

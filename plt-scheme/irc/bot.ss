@@ -35,12 +35,33 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "thread.ss"
          "tinyurl.ss"
          "vprintf.ss"
-                     )
+         )
 (register-version-string "$Id$")
 
 (define (on-channel? c m)
   (and (PRIVMSG? m)
        (member c (PRIVMSG-receivers m))))
+
+(define out
+  (lambda (s . args)
+    (apply fprintf (irc-session-op s) args)
+    (vtprintf " => ~s~%" (apply format args))))
+
+(define pm
+  (lambda (s target msg)
+    (out  s "PRIVMSG ~a :~a~%" target msg)))
+
+(define  notice
+  (lambda (s target msg)
+    (out  s "NOTICE ~a :~a~%" target msg)))
+
+(define reply
+  (lambda/kw (s response receivers #:key [proc pm] )
+             (for-each
+              (lambda (r)
+                (proc s r response))
+
+              receivers)))
 
 (define (respond message s)
 
@@ -59,80 +80,173 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   ;; so that any threads we make will be easily killable
   (parameterize ((current-custodian (irc-session-custodian s)))
 
-    (define (subscribe-proc-to-server-messages! proc)
-      (hash-table-put!
-       (irc-session-message-subscriptions s)
-       proc
-       #t))
-
-    (define (unsubscribe-proc-to-server-messages! proc)
-      ;; the hash-table-get has no effect, _except_ that it'll raise
-      ;; an exception if PROC isn't already in the table, which is a
-      ;; Good Thing to know.  Since that'd be, like, a bug.
-      (hash-table-get
-       (irc-session-message-subscriptions s)
-       proc)
-
-      (let ((before (hash-table-count (irc-session-message-subscriptions s))))
-        (hash-table-remove!
-         (irc-session-message-subscriptions s)
-         proc)
-        (let ((after (hash-table-count (irc-session-message-subscriptions s))))
-          (when (not (equal? after (sub1 before)))
-            (error 'unsubscribe-proc-to-server-messages!
-                   "Expected ~a subscriptions, but there are instead ~a"
-                   (sub1 before)
-                   after)))))
-
-    (define (out . args)
-      (apply fprintf (irc-session-op s) args)
-      (vtprintf " => ~s~%" (apply format args)))
-
-    (define (pm target msg)
-      (out "PRIVMSG ~a :~a~%" target msg))
-    (define (notice target msg)
-      (out "NOTICE ~a :~a~%" target msg))
-
-    (define/kw (reply response #:key [proc pm] [message message])
-      (for-each
-       (lambda (r)
-         (proc r response))
-
-       (PRIVMSG-receivers message)))
-
     ;; (trace for-us?)
     ;;     (trace gist-for-us)
     ;;     (trace gist-equal?)
-    (define claimed-by-background-task? #f)
+
+    (subscribe-proc-to-server-messages!
+     (make-channel-action
+      RPL_ENDOFNAMES?
+      (lambda (m)
+        (let ((ch (RPL_ENDOFNAMES-channel-name m)))
+
+          ;; periodic jordanb quotes
+          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
+            (subscribe-proc-to-server-messages!
+             (make-channel-action
+              (lambda (m) (and (on-channel? ch m)
+                               (gist-equal? "quote" m)))
+              (lambda (m)
+                (for-each
+                 (lambda (r)
+                   (notice s (one-quote)))
+                 (PRIVMSG-receivers m))))
+             s))
+
+          ;; on-demand news spewage.
+          (when (member ch '("#emacs" "#scheme-bots"))
+            (subscribe-proc-to-server-messages!
+             (make-channel-action
+              (lambda (m) (and (on-channel? ch m)
+                               (gist-equal? "news" m)))
+              (lambda (m)
+                (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
+                  (reply s (if headline
+                               (entry->string headline)
+                             "no news yet.")
+                          (PRIVMSG-receivers m)))))
+             s)
+
+            ;; periodic news spewage.
+            (thread
+             (lambda ()
+               (when (irc-session-async-for-news s)
+                 (let ((headline (sync (irc-session-async-for-news s))))
+                   (vtprintf "got ~s~%" headline)
+                   (when headline
+                     (letrec ((responder
+                               (make-channel-action
+                                (lambda (m) (on-channel? ch m))
+                                (lambda (m)
+                                  (pm s ch
+                                      (entry->string headline))
+                                  (unsubscribe-proc-to-server-messages!
+                                   responder
+                                   s))
+                                #:timeout (*quote-and-headline-interval*))))
+                       (subscribe-proc-to-server-messages!
+                        responder
+                        s))))))))
+
+          ;; moviestowatchfor
+          (when (member ch '("##cinema" "#scheme-bots"))
+            (let ((posts #f))
+              (thread-with-id
+               (lambda ()
+                 (let loop ()
+                   (with-handlers
+                       ([exn:delicious:auth?
+                         (lambda (e)
+                           (vtprintf
+                            "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
+                     (set! posts (map maybe-make-URL-tiny (snarf-some-recent-posts)))
+                     (sleep  (* 7 24 3600))
+                     (loop)))))
+              (subscribe-proc-to-server-messages!
+               (make-channel-action
+                (lambda (m) (and (on-channel? ch m)
+                                 (gist-equal? "movie" m)))
+                (lambda (m)
+                  (reply s
+                         (if posts
+                             (entry->string
+                              (list-ref posts (random (length posts))))
+                           "hmm, no movie recommendations yet")
+                          (PRIVMSG-receivers m))))
+               s)
+              (subscribe-proc-to-server-messages!
+               (make-channel-action
+                (lambda (m) (on-channel? ch m))
+                (lambda (m)
+                  (reply s
+                         (when posts
+                           (entry->string
+                            (list-ref posts (random (length posts)))))
+                          (PRIVMSG-receivers m)))
+                #:timeout (*quote-and-headline-interval*)
+                )
+               s))))))
+     s)
 
     ;; notify each subscriber that we got a message.
-    (hash-table-for-each
-     (irc-session-message-subscriptions s)
-     (lambda (proc ignored)
-       (let ((claimed-by-this-proc? (proc message)))
-         (when claimed-by-this-proc?
+    (let ((handled? #f))
+      (hash-table-for-each
+       (irc-session-message-subscriptions s)
+       (lambda (proc ignored)
+         (when (proc message)
            (vtprintf "Proc ~s has claimed message ~s~%"
-                     proc message))
-         (set! claimed-by-background-task?
-               (or claimed-by-background-task?
-                   claimed-by-this-proc?)))))
+                     proc message)
+           (set! handled? #t))))
 
-    ;; note who did what, when, where, how, and wearing what kind of
-    ;; skirt; so that later we can respond to "seen Ted?"
-    (when (and (PRIVMSG? message)
-               (PRIVMSG-is-for-channel? message))
-      (let ((who         (PRIVMSG-speaker     message))
-            (where       (car (PRIVMSG-receivers message)))
-            (what        (PRIVMSG-text        message))
+      (when (and
+             (for-us? message)
+             (not handled?))
+
+        (reply s "\u0001ACTION is at a loss for words, as usual\u0001"
+               (PRIVMSG-receivers message))))))
+
+                                        ;(trace respond)
+
+(define *sess* #f)
+
+(define (subscribe-proc-to-server-messages! proc s)
+  (hash-table-put!
+   (irc-session-message-subscriptions s)
+   proc
+   #t))
+
+(define (unsubscribe-proc-to-server-messages! proc s)
+  ;; the hash-table-get has no effect, _except_ that it'll raise
+  ;; an exception if PROC isn't already in the table, which is a
+  ;; Good Thing to know.  Since that'd be, like, a bug.
+  (hash-table-get
+   (irc-session-message-subscriptions s)
+   proc)
+
+  (let ((before (hash-table-count (irc-session-message-subscriptions s))))
+    (hash-table-remove!
+     (irc-session-message-subscriptions *sess*)
+     proc)
+    (let ((after (hash-table-count (irc-session-message-subscriptions s))))
+      (when (not (equal? after (sub1 before)))
+        (error 'unsubscribe-proc-to-server-messages!
+               "Expected ~a subscriptions, but there are instead ~a"
+               (sub1 before)
+               after)))))
+
+(define (register-usual-services! session)
+
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (and (PRIVMSG? m)
+           (PRIVMSG-is-for-channel? m)))
+    (lambda (m)
+
+      ;; note who did what, when, where, how, and wearing what kind
+      ;; of skirt; so that later we can respond to "seen Ted?"
+      (let ((who         (PRIVMSG-speaker     m))
+            (where       (car (PRIVMSG-receivers m)))
+            (what        (PRIVMSG-text        m))
 
             ;; don't name this variable "when"; that would shadow some
             ;; rather useful syntax :-)
             (time        (current-seconds))
 
-            (was-action? (ACTION?             message)))
+            (was-action? (ACTION?             m)))
 
         (hash-table-put!
-         (irc-session-appearances-by-nick s)
+         (irc-session-appearances-by-nick session)
          who
          (format "~a~a in ~a~a ~a~a"
                  who
@@ -142,253 +256,120 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (zdate (seconds->date time))
                  (if was-action?
                      (format ": ~a ~a" who what)
-                   (format ", saying \"~a\"" what))))))
-
-    (cond
-     ;; if someone other than a bot uttered a long URL, run it through
-     ;; tinyurl.com and spew the result.
-
-     ;; might be worth doing this in a separate thread, since it can
-     ;; take a while.
-     ((and
-       (PRIVMSG? message)
-       (not (regexp-match #rx"bot$" (PRIVMSG-speaker message)))
-       (regexp-match url-regexp (PRIVMSG-text message)))
-      =>
-      (lambda (match-data)
-        (let ((url (car match-data)))
-          (when (< (*tinyurl-url-length-threshold*) (string-length url))
-
-            ;; I used to send these out as NOTICEs, since the RFC says
-            ;; to do so, but people complained.
-            (reply (make-tiny-url url #:user-agent (long-version-string)))))))
-
-     ((RPL_ENDOFNAMES? message)
-      (let ((ch (RPL_ENDOFNAMES-channel-name message)))
-        ;; periodic jordanb quotes
-        (when (member ch '("#emacs" "#bots" "#scheme-bots"))
-          (let ((idle-evt
-                 (make-channel-message-event
-                  (lambda (m) (on-channel? ch m))
-                  #:timeout (*quote-and-headline-interval*))))
-
-            (subscribe-proc-to-server-messages!
-             (channel-message-event-input-examiner idle-evt))
-
-            (thread-with-id
-             (lambda ()
-               (let loop ()
-                 (let ((q (one-quote)))
-                   (sync idle-evt)
-                   (notice ch q)
-                   (loop)))))))
-
-        ;; news spewage.
-        (when (member ch '("#emacs" "#scheme-bots"))
-
-          (vtprintf "Creating the news spewage on-demand service~%")
-          (thread-with-id
-           (lambda ()
-             (let ((e
-                    (make-channel-message-event
-                     (lambda (m)
-                       (and (on-channel? ch m)
-                            (gist-equal? "news" m))))))
-               (subscribe-proc-to-server-messages!
-                (channel-message-event-input-examiner e))
-
-               (let loop ()
-                 (vtprintf "on-demand service waiting for request~%")
-                 (let ((req (sync e)))
-                   (vtprintf "on-demand service got request: ~s~%" req)
-                   (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
-                     (reply (if headline
-                                (entry->string headline)
-                              "no news yet.")
-                            #:message req))
-                   (loop))
-                 ))))
-
-          ;; periodic news spewage.
-          (thread-with-id
-           (lambda ()
-             (let loop ()
-               (vtprintf "Waiting for a headline.~%")
-               (let ((headline (sync (irc-session-async-for-news s))))
-                 (vtprintf "got ~s~%" headline)
-                 (when headline
-                   (let ((idle-evt
-                          (make-channel-message-event
-                           (lambda (m) (on-channel? ch m))
-                           #:timeout
-                           (*quote-and-headline-interval*))))
-
-                     (subscribe-proc-to-server-messages!
-                      (channel-message-event-input-examiner idle-evt))
-
-                     (vtprintf "Waiting for channel ~s to idle.~%"
-                               ch)
-                     (sync idle-evt)
-                     (pm ch
-                         (entry->string headline))
-
-                     (unsubscribe-proc-to-server-messages!
-                      (channel-message-event-input-examiner idle-evt))))
+                   (format ", saying \"~a\"" what)))))))
+   session)
 
 
-                 (loop))))))
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (and
+       (PRIVMSG? m)
+       (not (regexp-match #rx"bot$" (PRIVMSG-speaker m)))
+       (regexp-match url-regexp (PRIVMSG-text m))))
+    (lambda (m)
+      ;; if someone other than a bot uttered a long URL, run it
+      ;; through tinyurl.com and spew the result.
 
-        ;; moviestowatchfor
-        (when (member ch '("##cinema" "#scheme-bots"))
-          (let ((posts #f))
-            (thread-with-id
-             (lambda ()
-               (let loop ()
-                 (with-handlers
-                     ([exn:delicious:auth?
-                       (lambda (e)
-                         (vtprintf
-                          "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                   (set! posts (map maybe-make-URL-tiny (snarf-some-recent-posts)))
-                   (sleep  (* 7 24 3600))
-                   (loop)))))
+      ;; might be worth doing this in a separate thread, since it
+      ;; can take a while.
+      (let ((url (car (regexp-match url-regexp (PRIVMSG-text m)))))
+        (when (< (*tinyurl-url-length-threshold*) (string-length url))
 
-            (thread-with-id
-             (lambda ()
-               (let ((e (make-channel-message-event
-                           (lambda (m)
-                             (and (on-channel? ch m)
-                                  (gist-equal? "movie" m))))))
+          ;; I used to send these out as NOTICEs, since the RFC says
+          ;; to do so, but people complained.
+          (reply session
+                 (make-tiny-url url #:user-agent (long-version-string))
+                 (PRIVMSG-receivers m))))))
+   session)
 
-                 (subscribe-proc-to-server-messages!
-                  (channel-message-event-input-examiner e))
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (and
+       (ACTION? m)
+       (regexp-match #rx"glances around nervously" (PRIVMSG-text m))))
+    (lambda (m)
+      (reply session
+             "\u0001ACTION loosens his collar with his index finger\u0001"
+             (PRIVMSG-receivers m))))
+   session)
 
-                 (let loop ()
-                   (let ((req (sync e)))
-                     (reply
-                      (if posts
-                          (entry->string
-                           (list-ref posts (random (length posts))))
-                        "hmm, no movie recommendations yet")
-                      #:message req)
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (and (gist-equal? "seen" m)
+           (< 2 (length (PRIVMSG-text-words m)))))
+    (lambda (m)
+      (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words m)) ""))
+             (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
+        (reply session
+               (or sighting (format "I haven't seen ~a" who))
+               (PRIVMSG-receivers m)))))
+   session)
 
-                     (loop)))(thread-with-id))))
-
-            (let ((idle (make-channel-message-event
-                         (lambda (m) (on-channel? ch m))
-                         #:timeout
-                         (*quote-and-headline-interval*))))
-
-              (subscribe-proc-to-server-messages! (channel-message-event-input-examiner idle))
-
-              (thread-with-id
-               (lambda ()
-                 (let loop ()
-                   (sync idle)
-                   (when posts
-                     (notice ch
-                             (entry->string
-                              (list-ref posts (random (length posts))))))
-                   (loop))
-                 )))))))
-
-     ((and (ACTION? message)
-           (regexp-match #rx"glances around nervously" (PRIVMSG-text message)))
-      (reply "\u0001ACTION loosens his collar with his index finger\u0001"))
-
-     ;; "later do foo".  We kludge up a new message that is similar to
-     ;; the one that we just received, but with the words "later do"
-     ;; hacked out, and then call ourselves recursively with that new
-     ;; message.
-     ((and (for-us? message)
-           (let ((w  (PRIVMSG-text-words message)))
-             (and
-              (< 2 (length w))
-              (string-ci=? "later" (second w))
-              (string-ci=? "do"    (third w)))))
-      (let* ((parsed-command (cons
-                              (format "~a:" (*my-nick*))
-                              (cdddr (PRIVMSG-text-words message))))
-             (command (string-join parsed-command))
-             (params  (append (PRIVMSG-receivers message)
-                              (list command))))
-        (thread-with-id
-         (lambda ()
-           (sleep 10)
-           (respond
-            (make-PRIVMSG
-             (message-prefix message)
-             (symbol->string (message-command message))
-             params
-             (PRIVMSG-speaker message)
-             (PRIVMSG-receivers message)
-             (PRIVMSG-approximate-recipient message)
-             command
-             parsed-command)
-            s)))))
-
-     ((and (gist-equal? "seen" message)
-           (< 2 (length (PRIVMSG-text-words message))))
-      (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words message)) ""))
-             (sighting (hash-table-get (irc-session-appearances-by-nick s) who #f)))
-        (reply (or sighting (format "I haven't seen ~a" who)))))
-
-     ((gist-equal? "quote" message)
-      (reply (one-quote)))
-
-     ((or (VERSION? message)
-          (gist-equal? "version" message))
-      (if (VERSION? message)
-          (out "NOTICE ~a :\u0001VERSION ~a\0001~%"
-               (PRIVMSG-speaker message)
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m) (or (VERSION? m)
+                    (gist-equal? "version" m)))
+    (lambda (m)
+      (if (VERSION? m)
+          (out session "NOTICE ~a :\u0001VERSION ~a\0001~%"
+               (PRIVMSG-speaker m)
                (long-version-string))
-        (reply (long-version-string))))
+        (reply session (long-version-string) (PRIVMSG-receivers m)))))
+   session)
 
-     ((or (SOURCE? message)
-          (gist-equal? "source" message))
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (or (SOURCE? m)
+          (gist-equal? "source" m)))
+    (lambda (m)
       (let ((source-host "offby1.ath.cx")
             (source-directory "/~erich/bot/")
             (source-file-names "rudybot.tar.gz"))
-        (if (SOURCE? message)
-            (out "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
-                 (PRIVMSG-speaker message)
+        (if (SOURCE? m)
+            (out session "NOTICE ~a :\u0001SOURCE ~a:~a:~a\0001~%"
+                 (PRIVMSG-speaker m)
                  source-host
                  source-directory
                  source-file-names)
-          (reply (format "http://~a~a~a" source-host source-directory source-file-names)))))
+          (reply session (format "http://~a~a~a" source-host source-directory source-file-names)
+                 (PRIVMSG-receivers m))))))
+   session)
 
-     ((and (for-us? message) (not (gist-for-us message)))
-      (reply "Eh?  Speak up."))
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (equal? 001 (message-command m)))
+    (lambda (m)
+      (for-each (lambda (cn)
+                  (vtprintf "Joining ~a~%" cn)
+                  (out session "JOIN ~a~%" cn))
+                (*initial-channel-names*))))
+   session)
 
-     ((and
-       (for-us? message)
-       (not claimed-by-background-task?))
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (equal? 'PING (message-command m)))
+    (lambda (m)
+      (out session "PONG :~a~%" (car (message-params m)))))
+   session)
 
-      (reply "\u0001ACTION is at a loss for words, as usual\u0001"))
-
-     (else
-      (case (message-command message)
-        ((001)
-         (for-each (lambda (cn)
-                     (vtprintf "Joining ~a~%" cn)
-                     (out "JOIN ~a~%" cn))
-                   (*initial-channel-names*)))
-
-        ((433)
-         (error 'respond "Nick already in use!"))
-
-        ((NOTICE)
-         #t ;; if it's a whine about identd, warn that it's gonna be slow.
-         )
-
-        ((PING)
-         #t
-         (out "PONG :~a~%" (car (message-params message))))
-        )))))
-
-;(trace respond)
+  (subscribe-proc-to-server-messages!
+   (make-channel-action
+    (lambda (m)
+      (vtprintf "is ~s empty?~%" m)
+      (and (PRIVMSG? m)
+           (not (gist-for-us m))))
+    (lambda (m)
+      (reply session "Eh? Speak up, sonny." (PRIVMSG-receivers m))))
+   session))
 
 (define (start)
+
   (with-handlers
       ([exn:fail:network?
         (lambda (e)
@@ -404,17 +385,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     (values (current-input-port)
                             (current-output-port)))))
 
-      (define sess
-        (make-irc-session
-         op
-         #:feed
-         (queue-of-entries
-          #:whence
-          (and (*use-real-atom-feed?*)
-               (lambda ()
-                 (get-pure-port
-                  (string->url "http://planet.emacsen.org/atom.xml")
-                  (list)))))))
+      (set! *sess* (make-irc-session
+                    op
+                    #:feed
+                    (queue-of-entries
+                     #:whence
+                     (and (*use-real-atom-feed?*)
+                          (lambda ()
+                            (get-pure-port
+                             (string->url "http://planet.emacsen.org/atom.xml")
+                             (list)))))))
+
+      (register-usual-services! *sess*)
 
       (when (*log-to-file*)
         (*log-output-port*
@@ -490,9 +472,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      ([exn:fail:irc-parse?
                        (lambda (e)
                          (vtprintf "couldn't parse line from server: ~s~%" e))])
-                   (respond (parse-irc-message line) sess))
+                   (respond (parse-irc-message line) *sess*))
                  (get-one-line))))))))))
 (provide
+ register-usual-services!
  respond
  start)
 )

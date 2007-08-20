@@ -56,17 +56,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      c
      (lambda (message)
        (and (criterion message)
-            (async-channel-put c message))
-       ))))
+            (async-channel-put c message))))))
 
-(define/kw (make-channel-message-event criterion #:key [timeout #f])
+(define/kw (make-channel-message-event
+            criterion
+            #:key
+            [timeout #f]
+            )
   (check-type 'make-channel-message-event procedure? criterion)
   (when timeout
     (check-type 'make-channel-message-event real? timeout)
     (check-type 'make-channel-message-event positive? timeout))
   (if timeout
       (internal-make-channel-idle-event criterion timeout)
-    (internal-make-channel-request-event criterion)))
+    (internal-make-channel-request-event criterion )))
 
 (define (channel-message-event? thing)
   (or (channel-idle-event? thing)
@@ -78,6 +81,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (channel-idle-event-input-examiner e)
     (channel-request-event-input-examiner e)))
 
+;; there's no way to kill this thread ...
+(define/kw (make-channel-action
+            criterion action
+            #:key
+            [timeout #f]
+            )
+  (let ((cme (make-channel-message-event
+              criterion
+              #:timeout timeout
+              )))
+    (thread
+     (lambda ()
+       (let loop ()
+         (let ((why (sync cme)))
+           (when why
+             (action why))
+           (loop)))))
+    (channel-message-event-input-examiner cme)))
+
 
 (define (on-snooze? m)
   (and (PRIVMSG? m)
@@ -87,10 +109,48 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
   (test-suite
    "channel-events"
+
+   (test-suite
+    "actions"
    (test-case
     "channel goes idle when we're not yammering at it"
-    (let* ((e (make-channel-message-event on-snooze? #:timeout 1/10)))
-      (check-not-false (sync/timeout 2/10 e))))
+     (let* ((evidence (make-channel))
+            (e
+             (make-channel-action
+              on-snooze?
+              (lambda (thing)
+                (printf "channel action got 'thing' ~s~%"
+                        thing)
+                (channel-put evidence #t))
+              #:timeout 1/10))
+            (make-yammerer
+             (lambda (string)
+               (thread (lambda ()
+                         (let loop ((x 10))
+                           (when (positive? x)
+                             (e (parse-irc-message string))
+                             (sleep 1/20)
+                             (loop (sub1 x))))
+                         )))))
+
+       (check-not-false (sync/timeout 2/10 evidence) "uh oh, the action didn't trigger.")
+       (check-not-false (sync/timeout 2/10 evidence) "uh oh, the action didn't trigger the second time.")
+       (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")
+
+       (check-false (sync/timeout 2/10 evidence) "idle action triggered when channel wasn't idle!")
+       ))
+    (test-case
+     "action triggers when we do yammer"
+     (let* ((evidence (make-channel))
+            (e (make-channel-action
+                on-snooze?
+                (lambda (thing)
+                  (printf "channel action got 'thing' ~s~%"
+                          thing)
+                  (channel-put evidence #t)))))
+       (let ((handled? (e (parse-irc-message ":x!x@z PRIVMSG #snooze :wakey wakey"))))
+         (check-not-false handled? "uh oh, our message didn't get handled")
+         (check-true (sync/timeout 1/10 evidence) "uh oh, our action didn't trigger"))))
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
@@ -110,13 +170,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (kill-thread relevant)
         (let ((irrelevant (make-yammerer ":x!x@z PRIVMSG #other-channel :wakey wakey")))
           (check-not-false (sync/timeout 2/10 e))
-          (kill-thread irrelevant)))))))
+           (kill-thread irrelevant))))))))
+
 
 (provide
  channel-events-tests
-
- channel-message-event?
- channel-message-event-input-examiner
- make-channel-message-event
+ make-channel-action
 ))
-
