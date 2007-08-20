@@ -13,6 +13,7 @@
  *** Version for rudybot is Eric Hanchrow (aka offby1)'s bot (offby1@blarg.net):v2.4734M:PLT scheme version
      370.6 on unix
 
+* tiny-ify the URLs in moviestowatchfor
 
 -- Low priority
 
@@ -28,6 +29,13 @@
   If modules were first-class, we could put _them_ on the list
   directly, instead of each module having to create its own symbol
   just for that purpose.
+
+** open log file before threads start
+   I often see messages going to stderr even though I've specified
+   that they should go to the log file; I assume these messages are
+   coming from threads that are running before *log-output-port* gets
+   set to the log file.
+
 * read memos?
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "You have a new memo from \u0002offby1\u0002 (#2)"))
 2007-08-10T15:35:01-0700:  <= #4(struct:message "MemoServ!MemoServ@services." "NOTICE" ("rudybot" "Type \u0002/msg MemoServ READ 2\u0002 to read it"))
@@ -192,8 +200,6 @@ should be hosted on an FTP server, which I don't care to run, so ...
   reviews" link; find Ebert's name.  (I honestly think this would be
   as reliable as searching on rogerebert.com; that site's design is as
   lame as its content is excellent)
-
-** tiny-ify the URLs in moviestowatchfor
 
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
