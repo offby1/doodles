@@ -176,7 +176,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (let loop ()
                  (let ((q (one-quote)))
                    (sync idle-evt)
-                   (pm ch q)
+                   (notice ch q)
                    (loop)))))))
 
         ;; news spewage.
