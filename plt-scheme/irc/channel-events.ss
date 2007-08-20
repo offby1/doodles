@@ -4,11 +4,13 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui channel-events-tests 'verbose))"
 |#
 (module channel-events mzscheme
-(require (lib "async-channel.ss")
+(require (lib "kw.ss")
+         (lib "async-channel.ss")
          (lib "trace.ss")
          (only (lib "1.ss" "srfi") any)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
          "alarm-with-snooze.ss"
          (only "globals.ss" register-version-string)
          "parse.ss")
@@ -25,19 +27,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;(trace channel-idle-event-input-examiner)
 
-(define (public-make-channel-idle-event channel-name interval)
+(define (internal-make-channel-idle-event criterion interval)
   (let ((alarm (make-alarm-with-snooze
                 interval
-                #:id (format "signals when channel ~s has been idle for ~a seconds"
-                             channel-name
-                             interval)
                 #:periodic? #t)))
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
-       (when (and (PRIVMSG? irc-message)
-                  (any (lambda (r)(equal? r channel-name))
-                       (PRIVMSG-receivers irc-message)))
+       (when (criterion irc-message)
 
          ((alarm-with-snooze-snooze-button alarm)))
        #f                               ;so that the main loop doesn't
@@ -53,16 +50,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (channel-request-event-input-examiner c)
   (channel-request-event-ref c 1))
 
-(define (public-make-channel-request-event input-examiner)
+(define (internal-make-channel-request-event criterion)
   (let ((c (make-async-channel)))
     (make-channel-request-event
      c
      (lambda (message)
-       (and (input-examiner message)
+       (and (criterion message)
             (async-channel-put c message))
        ))))
 
+(define/kw (make-channel-message-event criterion #:key [timeout #f])
+  (check-type 'make-channel-message-event procedure? criterion)
+  (when timeout
+    (check-type 'make-channel-message-event real? timeout)
+    (check-type 'make-channel-message-event positive? timeout))
+  (if timeout
+      (internal-make-channel-idle-event criterion timeout)
+    (internal-make-channel-request-event criterion)))
+
+(define (channel-message-event? thing)
+  (or (channel-idle-event? thing)
+      (channel-request-event? thing)))
+
+(define (channel-message-event-input-examiner e)
+  (check-type 'channel-message-event-input-examiner channel-message-event? e)
+  (if (channel-idle-event? e)
+      (channel-idle-event-input-examiner e)
+    (channel-request-event-input-examiner e)))
 
+
+(define (on-snooze? m)
+  (and (PRIVMSG? m)
+       (member "#snooze" (PRIVMSG-receivers m))))
 
 (define channel-events-tests
 
@@ -70,37 +89,34 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "channel-events"
    (test-case
     "channel goes idle when we're not yammering at it"
-    (let* ((channel-idle-event (public-make-channel-idle-event "#snooze" 1/10)))
-      (check-not-false (sync/timeout 2/10 channel-idle-event))))
+    (let* ((e (make-channel-message-event on-snooze? #:timeout 1/10)))
+      (check-not-false (sync/timeout 2/10 e))))
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
-    (let* ((cie (public-make-channel-idle-event "#snooze" 1/10))
+    (let* ((e (make-channel-message-event on-snooze? #:timeout 1/10))
            (make-yammerer
             (lambda (string)
               (thread (lambda ()
                         (let loop ((x 10))
                           (when (positive? x)
-                            ((channel-idle-event-input-examiner cie)
+                            ((channel-idle-event-input-examiner e)
                              (parse-irc-message string))
                             (sleep 1/20)
                             (loop (sub1 x))))
                         )))))
       (let ((relevant (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")))
-        (check-false (sync/timeout 2/10 cie))
+        (check-false (sync/timeout 2/10 e))
         (kill-thread relevant)
         (let ((irrelevant (make-yammerer ":x!x@z PRIVMSG #other-channel :wakey wakey")))
-          (check-not-false (sync/timeout 2/10 cie))
-          (kill-thread irrelevant))))
-    )
-   ))
+          (check-not-false (sync/timeout 2/10 e))
+          (kill-thread irrelevant)))))))
 
 (provide
  channel-events-tests
 
- channel-idle-event? channel-idle-event-input-examiner
- (rename public-make-channel-idle-event make-channel-idle-event)
-
- channel-request-event? channel-request-event-input-examiner
- (rename public-make-channel-request-event make-channel-request-event)))
+ channel-message-event?
+ channel-message-event-input-examiner
+ make-channel-message-event
+))
 

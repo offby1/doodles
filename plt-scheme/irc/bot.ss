@@ -38,6 +38,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      )
 (register-version-string "$Id$")
 
+(define (on-channel? c m)
+  (and (PRIVMSG? m)
+       (member c (PRIVMSG-receivers m))))
+
 (define (respond message s)
 
   (let* ((threads (filter
@@ -164,19 +168,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         ;; periodic jordanb quotes
         (when (member ch '("#emacs" "#bots" "#scheme-bots"))
           (let ((idle-evt
-                 (make-channel-idle-event
-                  ch
-                  (*quote-and-headline-interval*))))
+                 (make-channel-message-event
+                  (lambda (m) (on-channel? ch m))
+                  #:timeout (*quote-and-headline-interval*))))
 
             (subscribe-proc-to-server-messages!
-             (channel-idle-event-input-examiner idle-evt))
+             (channel-message-event-input-examiner idle-evt))
 
             (thread-with-id
              (lambda ()
                (let loop ()
                  (let ((q (one-quote)))
                    (sync idle-evt)
-                   (pm ch q)
+                   (notice ch q)
                    (loop)))))))
 
         ;; news spewage.
@@ -185,19 +189,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           (vtprintf "Creating the news spewage on-demand service~%")
           (thread-with-id
            (lambda ()
-             (let ((cre
-                    (make-channel-request-event
-                     (lambda (message)
-                       (and (PRIVMSG? message)
-                            (member ch
-                                    (PRIVMSG-receivers message))
-                            (gist-equal? "news" message))))))
+             (let ((e
+                    (make-channel-message-event
+                     (lambda (m)
+                       (and (on-channel? ch m)
+                            (gist-equal? "news" m))))))
                (subscribe-proc-to-server-messages!
-                (channel-request-event-input-examiner cre))
+                (channel-message-event-input-examiner e))
 
                (let loop ()
                  (vtprintf "on-demand service waiting for request~%")
-                 (let ((req (sync cre)))
+                 (let ((req (sync e)))
                    (vtprintf "on-demand service got request: ~s~%" req)
                    (let ((headline (cached-channel-cache (irc-session-async-for-news s))))
                      (reply (if headline
@@ -216,12 +218,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (vtprintf "got ~s~%" headline)
                  (when headline
                    (let ((idle-evt
-                          (make-channel-idle-event
-                           ch
+                          (make-channel-message-event
+                           (lambda (m) (on-channel? ch m))
+                           #:timeout
                            (*quote-and-headline-interval*))))
 
                      (subscribe-proc-to-server-messages!
-                      (channel-idle-event-input-examiner idle-evt))
+                      (channel-message-event-input-examiner idle-evt))
 
                      (vtprintf "Waiting for channel ~s to idle.~%"
                                ch)
@@ -230,7 +233,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                          (entry->string headline))
 
                      (unsubscribe-proc-to-server-messages!
-                      (channel-idle-event-input-examiner idle-evt))))
+                      (channel-message-event-input-examiner idle-evt))))
 
 
                  (loop))))))
@@ -252,17 +255,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
             (thread-with-id
              (lambda ()
-               (let ((cre (make-channel-request-event
+               (let ((e (make-channel-message-event
                            (lambda (m)
-                             (and (PRIVMSG? m)
-                                  (member ch (PRIVMSG-receivers m))
+                             (and (on-channel? ch m)
                                   (gist-equal? "movie" m))))))
 
                  (subscribe-proc-to-server-messages!
-                  (channel-request-event-input-examiner cre))
+                  (channel-message-event-input-examiner e))
 
                  (let loop ()
-                   (let ((req (sync cre)))
+                   (let ((req (sync e)))
                      (reply
                       (if posts
                           (entry->string
@@ -272,9 +274,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                      (loop)))(thread-with-id))))
 
-            (let ((idle (make-channel-idle-event ch (*quote-and-headline-interval*))))
+            (let ((idle (make-channel-message-event
+                         (lambda (m) (on-channel? ch m))
+                         #:timeout
+                         (*quote-and-headline-interval*))))
 
-              (subscribe-proc-to-server-messages! (channel-idle-event-input-examiner idle))
+              (subscribe-proc-to-server-messages! (channel-message-event-input-examiner idle))
 
               (thread-with-id
                (lambda ()
