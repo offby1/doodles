@@ -2,8 +2,7 @@
   (require
    (lib "file.ss")
    (only (lib "1.ss" "srfi") filter iota)
-   (planet "set.ss"  ("offby1" "offby1.plt"))
-   "persist.ss")
+   (planet "set.ss"  ("offby1" "offby1.plt")))
 
   (provide all-neighbors
            with-neato-output
@@ -14,7 +13,7 @@
       (or (and t (bytes->path t))
           (string->path "/usr/share/dict/words"))))
 
-  (define-persistent *words-by-length* "word-list.dat"
+  (define *words-by-length*
     (let ((w-b-l  (make-hash-table)))
       (define (note word)
         (let* ((l (string-length word))
