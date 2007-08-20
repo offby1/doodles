@@ -8,7 +8,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
          "globals.ss"
          "vprintf.ss"
-         "../web/quote-of-the-day.ss")
+         "quote-of-the-day.ss")
 (register-version-string "$Id$")
 
 (provide one-quote)
