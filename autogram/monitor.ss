@@ -7,7 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module monitor mzscheme
 ;; this seems overly complex.
 (provide monitor once-more-and-then-quit)
-(require (lib "round.scm" "offby1")
+(require (planet "round.scm" ("offby1" "offby1.plt"))
          (lib "date.ss")
          "globals.ss"
          "num-string-commas.ss")

@@ -15,7 +15,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
        iota)
  (lib "date.ss")
  (lib "trace.ss")
- (lib "round.scm" "offby1")
+ (planet "round.scm" ("offby1" "offby1.plt"))
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "byte-vector-counter.ss"
