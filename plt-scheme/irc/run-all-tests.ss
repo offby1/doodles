@@ -11,6 +11,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          "channel-events.ss"
          "del.ss"
          (only "globals.ss" register-version-string)
+         "headline.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "tinyurl-task.ss"
@@ -23,6 +24,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
                    bot-tests
                    channel-events-tests
                    del.icio.us-tests
+                   headline-tests
                    parse-tests
                    planet-tests
                    tinyurl-task-tests

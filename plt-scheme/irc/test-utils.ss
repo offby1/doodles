@@ -22,7 +22,8 @@
                    (vtprintf "expect/timeout: Got match!~%")
                    (channel-put ch #t))
                   (else
-                   (vtprintf "expect/timeout: nope; retrying~%")
+                   (vtprintf "expect/timeout: nope ~s != ~s; retrying~%"
+                             line regex)
                    (loop)))
 
                  ))))))

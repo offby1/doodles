@@ -27,6 +27,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "channel-events.ss"
          "del.ss"
          "globals.ss"
+         (only "headline.ss" maybe-make-URL-tiny)
          "parse.ss"
          "planet-emacsen.ss"
          "quotes.ss"
@@ -245,9 +246,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                        (lambda (e)
                          (vtprintf
                           "wrong delicious password; won't snarf moviestowatchfor posts~%"))])
-                   (set! posts (snarf-some-recent-posts))
+                   (set! posts (map maybe-make-URL-tiny (snarf-some-recent-posts)))
                    (sleep  (* 7 24 3600))
                    (loop)))))
+
             (thread-with-id
              (lambda ()
                (let ((cre (make-channel-request-event
