@@ -27,8 +27,10 @@
                    (loop)))
 
                  ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
+    (begin0
+      (and (sync/timeout seconds ch)
+           ch)
+      (kill-thread reader))))
 
 (provide (all-defined))
 )
