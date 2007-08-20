@@ -249,13 +249,11 @@ op)
     (before
      (begin
        (*use-real-atom-feed?* #f)
-     (put-preferences (list (*atom-timestamp-preference-name*))
-                      (list #f)))
+     (reliably-put-pref  #f))
      ;; create two entries with identical times but different content.
 
     ;; delete the preference
-    (put-preferences (list (*atom-timestamp-preference-name*))
-                     (list #f))
+    (reliably-put-pref  #f)
 
     ;; create a fake atom feed for queue-of-entries to read
 
@@ -277,8 +275,7 @@ op)
     (before
      (begin
        (*use-real-atom-feed?* #f)
-       (put-preferences (list (*atom-timestamp-preference-name*))
-                        (list #f)))
+       (reliably-put-pref  #f))
      (let ((q (queue-of-entries #:whence #f)))
        (let ((first-entry (sync q))
              (time-of-last-entry-put (get-preference (*atom-timestamp-preference-name*))))
