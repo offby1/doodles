@@ -10,14 +10,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "bot.ss"
          "bot-tests.ss"
          "globals.ss"
+         "session.ss"
          "tinyurl.ss")
 (register-version-string "$Id$")
-
-(define long-url
-  (let loop ((kinda-long "http://foo.bar/baz/i/hope/this/is/long/enough"))
-    (if (< (string-length kinda-long) (*tinyurl-url-length-threshold*))
-        (loop (string-append kinda-long (format "/geez-louise~a" (string-length kinda-long))))
-      kinda-long)))
 
 (define tinyurl-task-tests
 

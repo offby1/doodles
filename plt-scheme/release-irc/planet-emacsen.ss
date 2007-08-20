@@ -46,6 +46,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (planet "zdate.ss" ("offby1" "offby1.plt"))
                date->string
                zdate)
+         (only (planet "assert.ss" ("offby1" "offby1.plt"))
+               check-type)
          (planet "sxml.ss" ("lizorkin" "sxml.plt"))
          "cached-channel.ss"
          "headline.ss"
@@ -102,6 +104,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (entry->string entry)
   (define (de-html str)
     (apply string-append ((sxpath '(// *text*)) (html->shtml str))))
+  (check-type 'entry->string entry? entry)
   (format "(~a) ~a: ~a"
           (date->string
            (time-utc->date (entry-timestamp entry) 0)

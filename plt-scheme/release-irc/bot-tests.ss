@@ -14,6 +14,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "cached-channel.ss"
          "globals.ss"
          "headline.ss"
+         "session.ss"
+         "test-utils.ss"
          (only "planet-emacsen.ss"
                make-cached-channel
                *planet-poll-interval*)
@@ -21,33 +23,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                parse-irc-message)
          "vprintf.ss")
 (register-version-string "$Id$")
-
-;; returns #f if we didn't find what we're looking for.
-
-(define (expect/timeout ip regex seconds)
-  (let* ((ch (make-channel))
-         (reader
-          (thread
-           (lambda ()
-             (let loop ()
-               (vtprintf "expect/timeout about to look for ~s from ~s ...~%"
-                        regex
-                        (object-name ip))
-               (let ((line (read-line ip)))
-                 (vtprintf "expect/timeout got ~s~%" line)
-                 (cond
-                  ((eof-object? line)
-                   (channel-put ch #f))
-                  ((regexp-match regex line)
-                   (vtprintf "expect/timeout: Got match!~%")
-                   (channel-put ch #t))
-                  (else
-                   (vtprintf "expect/timeout: nope; retrying~%")
-                   (loop)))
-
-                 ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
 
 ;; TODO -- write proper "check-response", so that it gives meaningful
 ;; spew when it fails
@@ -61,7 +36,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let ((sess (make-irc-session op)))
 
-      (verbose!)
       (test-suite
        "crap"
        #:before
@@ -96,7 +70,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            ;; start the news thread
            (*planet-poll-interval* 2)
            (*quote-and-headline-interval* 1/10)
-           (respond (parse-irc-message ":x 366 rudybot #emacs :get crackin'") sess)
+           (respond (parse-irc-message ":x 366 rudybot #emacs :backed-up idle events'") sess)
            )
 
 
@@ -122,6 +96,39 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          (check-false
           (expect/timeout ip #rx"JAPS" (* 3/4 (*quote-and-headline-interval*))))))
+
+       (test-case
+        "keeps saying 'no news'"
+        (before
+         (begin
+           (custodian-shutdown-all (irc-session-custodian sess))
+           (set! sess (make-irc-session op))
+
+           ;; start the news thread
+           (*planet-poll-interval* 2)
+           (*quote-and-headline-interval* 1/2)
+           (respond (parse-irc-message ":x 366 rudybot #emacs :keeps saying 'no news'") sess)
+           )
+
+         ;; ensure there is no news available.
+         (set-irc-session-async-for-news! sess (make-cached-channel #f))
+
+         ;; wait a smidge for the input-examiner proc to get
+         ;; subscribed.
+         (sleep 1/2)
+
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news"))
+
+         )
+        )
        ))))
 
 (provide (all-defined))

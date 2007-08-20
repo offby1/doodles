@@ -9,7 +9,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "assert.ss"  ("offby1"     "offby1.plt"))
-         (only "globals.ss" register-version-string))
+         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
+         "globals.ss"
+         "tinyurl.ss")
 
 (register-version-string "$Id$")
 
@@ -20,16 +22,30 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (check-type 'make-entry string? title)
   (check-type 'make-entry string? link)
   (make-entry time title link))
+
+;; memoize this so that we don't hit tinyurl.com more than we have to.
+(define/memo* (maybe-make-URL-tiny e)
+  (let ((new-entry (apply make-entry (cdr (vector->list (struct->vector e))))))
+    (let ((original-url (entry-link new-entry)))
+      (when (< (*tinyurl-url-length-threshold*) (string-length original-url))
+          (set-entry-link! new-entry (make-tiny-url original-url)))
+      new-entry)))
 
 (define headline-tests
 
-  (test-suite
-   "headline"
-   (test-case
-    "yow"
-    (check-regexp-match
-     #rx"bar"
-     "foo"))))
+  (let ((short (make-entry 'irrelevant "irrelevant" "http://short.com"))
+        (long  (make-entry 'irrelevant "irrelevant" long-url)))
+    (test-suite
+     "headline"
+     (test-case
+      "maybe-make-URL-tiny"
+      (check-regexp-match  #rx"http://tinyurl.com/....."
+                           (entry-link (maybe-make-URL-tiny long))))
+     (test-case
+      "leaves short ones alone"
+      (check-equal? (entry-link (maybe-make-URL-tiny short))
+                    "http://short.com"))
+     )))
 
 (provide (all-defined-except make-entry)
          (rename public-make-entry make-entry))

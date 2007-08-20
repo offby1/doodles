@@ -9,7 +9,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
-         "globals.ss")
+         "globals.ss"
+         "vprintf.ss")
 (register-version-string "$Id$")
 
 ;; This is roughly like an async-channel, except:
@@ -38,6 +39,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (wrap-evt
                  async
                  (lambda (result)
+                   (vtprintf "cached-channel yielded ~s~%" result)
                    (cached-channel-set! rv 2 result)
                    result))
                 async

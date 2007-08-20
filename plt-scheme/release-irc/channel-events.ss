@@ -1,11 +1,12 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui channel-idle-event-tests 'verbose))"
+exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui channel-events-tests 'verbose))"
 |#
 (module channel-events mzscheme
 (require (lib "async-channel.ss")
          (lib "trace.ss")
+         (only (lib "1.ss" "srfi") any)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "alarm-with-snooze.ss"
@@ -30,13 +31,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 #:id (format "signals when channel ~s has been idle for ~a seconds"
                              channel-name
                              interval)
-                #:periodic? #f)))
+                #:periodic? #t)))
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
        (when (and (PRIVMSG? irc-message)
-                  (equal? (PRIVMSG-destination irc-message)
-                          channel-name))
+                  (any (lambda (r)(equal? r channel-name))
+                       (PRIVMSG-receivers irc-message)))
+
          ((alarm-with-snooze-snooze-button alarm)))
        #f                               ;so that the main loop doesn't
                                         ;think we've handled the

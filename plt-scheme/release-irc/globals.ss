@@ -42,7 +42,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                (system-type 'os)))
 
 (define *verbose* #t)
-(define (verbose!) (set! *verbose* #t))
 
 ;; #f means read from stdin, write to stdout
 (define *irc-server-name* (make-parameter #f))
@@ -69,5 +68,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *del.icio.us-password* (make-parameter #f))
 (define *log-output-port* (make-parameter (current-output-port)))
+(define *log-to-file* (make-parameter #f))
 (provide (all-defined))
 )
