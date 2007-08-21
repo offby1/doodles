@@ -12,11 +12,13 @@
     
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: news\\r"
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: quote\\r"
+    echo ":a!b@c PRIVMSG rudybot :\001VERSION\001\\r"
+    echo ":a!b@c PRIVMSG rudybot :what ho, my good man\\r"
 
-    sleep 10
-#     while true
-#     do
-#         sleep 120
-#     done
+    sleep 1
+    while true
+    do
+        sleep 120
+    done
 
     ) | ./run-bot.ss -c '#scheme-bots' -n rudybot -q 1

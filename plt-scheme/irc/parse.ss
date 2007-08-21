@@ -135,7 +135,7 @@
            (let ((p (make-sub-struct
                      m
                      make-PRIVMSG
-                     (first
+                     (second
                       (regexp-match
                        #rx"(.*)!(.*)@(.*)"
                        (message-prefix m)))

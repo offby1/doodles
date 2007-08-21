@@ -92,7 +92,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (not handled?))
 
       (reply s "\u0001ACTION is at a loss for words, as usual\u0001"
-             (PRIVMSG-receivers message)))))
+             (list (PRIVMSG-speaker message))))))
 
 
                                         ;(trace respond)
@@ -348,7 +348,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (out session "NOTICE ~a :\u0001VERSION ~a\0001~%"
                  (PRIVMSG-speaker m)
                  (long-version-string))
-          (reply session (long-version-string) (PRIVMSG-receivers m)))))
+          (reply session (long-version-string) (PRIVMSG-receivers m))))
+      #:terminal? #t)
      session)
 
     (subscribe-proc-to-server-messages!
@@ -367,7 +368,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    source-directory
                    source-file-names)
             (reply session (format "http://~a~a~a" source-host source-directory source-file-names)
-                   (PRIVMSG-receivers m))))))
+                   (PRIVMSG-receivers m)))))
+      #:terminal? #t)
      session)
 
     (subscribe-proc-to-server-messages!
