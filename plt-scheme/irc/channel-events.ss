@@ -13,7 +13,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
          "alarm-with-snooze.ss"
          (only "globals.ss" register-version-string)
-         "parse.ss")
+         "parse.ss"
+         "thread.ss")
 (register-version-string "$Id$")
 
 (define-values (struct:channel-idle-event make-channel-idle-event channel-idle-event? channel-idle-event-ref channel-idle-event-set!)
@@ -89,16 +90,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             )
   (let ((cme (make-channel-message-event
               criterion
-              #:timeout timeout
-              )))
-    (thread
+              #:timeout timeout)))
+
+    (thread-with-id
      (lambda ()
        (let loop ()
          (let ((why (sync cme)))
            (when why
              (action why))
            (loop)))))
+
     (channel-message-event-input-examiner cme)))
+
 
 
 (define (on-snooze? m)

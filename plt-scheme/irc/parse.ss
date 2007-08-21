@@ -55,7 +55,7 @@
 
 ;; aka 366
 (define-struct (RPL_ENDOFNAMES message) (channel-name) #f)
-
+;(trace RPL_ENDOFNAMES?)
 ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
 (define-struct (ACTION CTCP) (text) #f)
