@@ -52,6 +52,7 @@
   (speaker receivers approximate-recipient text text-words)
   #f)
 ;(trace PRIVMSG-approximate-recipient)
+;(trace PRIVMSG-text-words)
 
 ;; aka 366
 (define-struct (RPL_ENDOFNAMES message) (channel-name) #f)

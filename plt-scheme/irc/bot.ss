@@ -170,7 +170,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      RPL_ENDOFNAMES?
      (lambda (366-channel)
        (let ((ch (RPL_ENDOFNAMES-channel-name 366-channel)))
-
+         (define (chatter? m) (on-channel? ch m))
+         (define (command=? str m) (and (chatter? m) (gist-equal? str m)))
          ;; jordanb quotes
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
 
@@ -186,15 +187,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             #:terminal? #t)
 
            (add-periodic!
-            (lambda (m) (on-channel? ch m))
+            chatter?
             always-evt
             (lambda (ignored) (pm session ch (one-quote)))))
 
          ;; on-demand news spewage.
          (when (member ch '("#emacs" "#scheme-bots"))
            (add!
-            (lambda (m) (and (on-channel? ch m)
-                             (gist-equal? "news" m)))
+            (lambda (m) (command=? "news" m))
             (lambda (m)
               (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
                 (reply session (if headline
@@ -206,7 +206,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
            ;; periodic news spewage.
            (add-periodic!
-            (lambda (m) (on-channel? ch m))
+            chatter?
             (irc-session-async-for-news session)
             (lambda (headline)
               (pm session ch
@@ -237,8 +237,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #:descr "moviestowatchfor")
 
              (add!
-              (lambda (m) (and (on-channel? ch m)
-                               (gist-equal? "movie" m)))
+              (lambda (m) (command=? "movie" m))
               (lambda (m)
                 (reply session
                        (if posts
@@ -249,7 +248,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #:terminal? #t)
 
              (add-periodic!
-              (lambda (m) (on-channel? ch m))
+              chatter?
               always-evt
               (lambda (ignored)
                 (when posts
@@ -334,6 +333,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (reply session
                 (or sighting (format "I haven't seen ~a" who))
                 (PRIVMSG-receivers m))))
+     #:terminal? #t
      #:descr "'seen' command")
 
     (add!
