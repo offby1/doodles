@@ -366,6 +366,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      (make-channel-action
       (lambda (m)
         (and (PRIVMSG? m)
+             (for-us? m)
              (not (gist-for-us m))))
       (lambda (m)
         (reply session "Eh? Speak up, sonny." (PRIVMSG-receivers m))))
@@ -467,11 +468,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (let get-one-line ()
            (let ((line (read-line ip 'return-linefeed)))
              (if (eof-object? line)
-                 (begin
-                   (vtprintf "eof on server; not reconnecting~%")
-                   (sleep 10)
-;;                    (start)
-                   )
+                 (if #t
+                     (begin
+                       (vtprintf "eof on server; not reconnecting~%")
+                       (custodian-shutdown-all (irc-session-custodian *sess*)))
+                   (begin
+                     (vtprintf "eof on server; reconnecting~%")
+                     (sleep 10)
+                     (start)))
                (begin
                  (with-handlers
                      ([exn:fail:irc-parse?
@@ -479,7 +483,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                          (vtprintf
                           "~a: ~s~%"
                           (exn-message e)
-                          (exn:fail:irc-parse-string e)))])
+                          (exn:fail:irc-parse-string e)))]
+                      )
                    (respond (parse-irc-message line) *sess*))
                  (get-one-line))))))))))
 (provide

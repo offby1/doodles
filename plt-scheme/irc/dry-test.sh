@@ -5,7 +5,7 @@
     echo  ":localhost. 001 rudybot :Welcome to the Debian dancer-ircd Network rudybot \\r"
     echo  ":localhost 366 rudybot #scheme-bots :what's up, homes? \\r"
 
-    echo ":localhost PRIVMSG #scheme-bots :hey buddy"
+    echo ":a!b@c PRIVMSG #scheme-bots :hey buddy"
 #     while true
 #     do
 #         sleep 120

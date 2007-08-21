@@ -102,12 +102,13 @@
               (current-continuation-marks)
               string)))
     (with-handlers
-        ([exn:fail:contract?
-          (lambda (e)
-            (raise (make-exn:fail:irc-parse
-                    "Can't parse string from server"
-                    (current-continuation-marks)
-                    string)))])
+        (;; [exn:fail:contract?
+;;           (lambda (e)
+;;             (raise (make-exn:fail:irc-parse
+;;                     "Can't parse string from server"
+;;                     (current-continuation-marks)
+;;                     string)))]
+         )
       (or (maybe-make-RPL_ENDOFNAMES m)
           (maybe-make-PRIVMSG m)
           m))))
@@ -136,8 +137,8 @@
                      make-PRIVMSG
                      (first
                       (regexp-match
-                       (message-prefix m)
-                       #rx"(.*)!(.*)@(.*)"))
+                       #rx"(.*)!(.*)@(.*)"
+                       (message-prefix m)))
                      receivers
                      (and (not (null? text-tokens))
                           (regexp-case
