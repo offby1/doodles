@@ -9,6 +9,10 @@
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: hey buddy\\r"
 
     sleep 10
+    
+    echo ":a!b@c PRIVMSG #scheme-bots :rudybot: news\\r"
+
+    sleep 10
 #     while true
 #     do
 #         sleep 120

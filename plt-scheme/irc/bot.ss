@@ -124,6 +124,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (sub1 before)
                after)))))
 
+(define (p val)
+  (vtprintf "~s~%" val)
+  val)
+
 (define (register-usual-services! session)
 
   ;; so that these threads will be easily killable
@@ -144,17 +148,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda (m)
                 (for-each
                  (lambda (r)
-                   (notice session (one-quote)))
+                   (notice session r (one-quote)))
                  (PRIVMSG-receivers m)))
               #:terminal? #t)
              session))
 
           ;; on-demand news spewage.
+          (vtprintf "Shall I subscribe the on-demand news spewer?  ch is ~s...~%"
+                    ch)
           (when (member ch '("#emacs" "#scheme-bots"))
             (subscribe-proc-to-server-messages!
              (make-channel-action
-              (lambda (m) (and (on-channel? ch m)
-                               (gist-equal? "news" m)))
+              (lambda (m) (vtprintf "lessee ... is it a 'news' command?!~%")
+                          (p (and (on-channel? ch m)
+                                  (gist-equal? "news" m))))
               (lambda (m)
                 (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
                   (reply session (if headline
