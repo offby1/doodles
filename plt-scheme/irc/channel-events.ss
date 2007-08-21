@@ -83,11 +83,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (channel-request-event-input-examiner e)))
 
 ;; there's no way to kill this thread ...
+
+;; the returned procedure returns #t if and only if the action has
+;; handled the message -- meaning the bot shouldn't say "golly, I have
+;; no idea what that message means".
 (define/kw (make-channel-action
             criterion action
             #:key
             [timeout #f]
+            [terminal? #f]
             )
+  (when (and timeout terminal?)
+    (raise (make-exn:fail:contract
+            "make-channel-action: neither timeout nor terminal? are #f"
+            (current-continuation-marks))))
   (let ((cme (make-channel-message-event
               criterion
               #:timeout timeout)))
@@ -100,7 +109,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (action why))
            (loop)))))
 
-    (channel-message-event-input-examiner cme)))
+    (lambda args
+      (let ((interested? (apply (channel-message-event-input-examiner cme) args)))
+        (and terminal?
+             interested?)))))
+
 
 
 

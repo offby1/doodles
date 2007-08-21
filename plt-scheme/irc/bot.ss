@@ -145,7 +145,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (for-each
                  (lambda (r)
                    (notice session (one-quote)))
-                 (PRIVMSG-receivers m))))
+                 (PRIVMSG-receivers m)))
+              #:terminal? #t)
              session))
 
           ;; on-demand news spewage.
@@ -159,7 +160,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (reply session (if headline
                                      (entry->string headline)
                                    "no news yet.")
-                         (PRIVMSG-receivers m)))))
+                         (PRIVMSG-receivers m))))
+              #:terminal? #t)
              session)
 
             ;; periodic news spewage.
@@ -172,7 +174,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      (letrec ((responder
                                (make-channel-action
                                 (lambda (m) (on-channel? ch m))
-                                (lambda (m)
+                                (lambda (ignored)
                                   (pm session ch
                                       (entry->string headline))
                                   (unsubscribe-proc-to-server-messages!
@@ -214,17 +216,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                              (entry->string
                               (list-ref posts (random (length posts))))
                            "hmm, no movie recommendations yet")
-                         (PRIVMSG-receivers m))))
+                         (PRIVMSG-receivers m)))
+                #:terminal? #t)
                session)
               (subscribe-proc-to-server-messages!
                (make-channel-action
                 (lambda (m) (on-channel? ch m))
-                (lambda (m)
+                (lambda (ignored)
                   (reply session
                          (when posts
                            (entry->string
                             (list-ref posts (random (length posts)))))
-                         (PRIVMSG-receivers m)))
+                         (PRIVMSG-receivers ch)))
                 #:timeout (*quote-and-headline-interval*)
                 )
                session))))))
