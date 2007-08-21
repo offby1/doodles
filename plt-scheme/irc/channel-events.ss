@@ -92,6 +92,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             #:key
             [timeout #f]
             [terminal? #f]
+            [descr (format "~a:~a"
+                           (object-name criterion)
+                           (object-name action))]
             )
   (when (and timeout terminal?)
     (raise (make-exn:fail:contract
@@ -107,7 +110,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (let ((why (sync cme)))
            (when why
              (action why))
-           (loop)))))
+           (loop))))
+     #:descr descr)
 
     (lambda args
       (let ((interested? (apply (channel-message-event-input-examiner cme) args)))

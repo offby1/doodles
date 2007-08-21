@@ -11,6 +11,7 @@
     sleep 10
     
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: news\\r"
+    echo ":a!b@c PRIVMSG #scheme-bots :rudybot: quote\\r"
 
     sleep 10
 #     while true
@@ -18,4 +19,4 @@
 #         sleep 120
 #     done
 
-    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot
+    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot -q 1

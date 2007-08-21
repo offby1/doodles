@@ -9,12 +9,16 @@ echo Nothing to see here\; move along; exit 0
 ;; thread.  Thanks to Eli Barzilay for the suggestion.
 
 (define threads-created 0)
-(require (only "globals.ss" register-version-string))
+(require (lib "kw.ss")
+         (only "globals.ss" register-version-string))
 (register-version-string "$Id$")
 (define *current-thread-id* (make-parameter 0))
-(define (thread-with-id thunk)
+(define/kw (thread-with-id thunk #:key [descr])
   (set! threads-created (add1 threads-created))
-  (parameterize ((*current-thread-id* threads-created))
+  (parameterize ((*current-thread-id*
+                  (format "~a:~a"
+                          threads-created
+                          descr)))
     (thread thunk)))
 
 

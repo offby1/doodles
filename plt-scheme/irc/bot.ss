@@ -103,26 +103,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   (hash-table-put!
    (irc-session-message-subscriptions s)
    proc
-   #t))
+   #t)
+  (vtprintf "~a subscriptions~%"
+            (hash-table-count (irc-session-message-subscriptions s))))
 
 (define (unsubscribe-proc-to-server-messages! proc s)
-  ;; the hash-table-get has no effect, _except_ that it'll raise
-  ;; an exception if PROC isn't already in the table, which is a
-  ;; Good Thing to know.  Since that'd be, like, a bug.
-  (hash-table-get
-   (irc-session-message-subscriptions s)
-   proc)
-
-  (let ((before (hash-table-count (irc-session-message-subscriptions s))))
-    (hash-table-remove!
+  (hash-table-remove!
      (irc-session-message-subscriptions *sess*)
      proc)
-    (let ((after (hash-table-count (irc-session-message-subscriptions s))))
-      (when (not (equal? after (sub1 before)))
-        (error 'unsubscribe-proc-to-server-messages!
-               "Expected ~a subscriptions, but there are instead ~a"
-               (sub1 before)
-               after)))))
+
+  (vtprintf "~a subscriptions~%"
+            (hash-table-count (irc-session-message-subscriptions s))))
 
 (define (p val)
   (vtprintf "~s~%" val)
@@ -139,8 +130,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (lambda (366-channel)
         (let ((ch (RPL_ENDOFNAMES-channel-name 366-channel)))
 
-          ;; periodic jordanb quotes
+          ;; jordanb quotes
           (when (member ch '("#emacs" "#bots" "#scheme-bots"))
+
+            ;; on-demand ...
             (subscribe-proc-to-server-messages!
              (make-channel-action
               (lambda (m) (and (on-channel? ch m)
@@ -151,24 +144,40 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (notice session r (one-quote)))
                  (PRIVMSG-receivers m)))
               #:terminal? #t)
-             session))
+             session)
+
+            ;; periodic
+            (thread-with-id
+             (lambda ()
+               (letrec ((responder
+                         (make-channel-action
+                          (lambda (m) (on-channel? ch m))
+                          (lambda (ignored)
+                            (pm session ch (one-quote))
+                            (unsubscribe-proc-to-server-messages!
+                             responder
+                             session))
+                          #:timeout (*quote-and-headline-interval*)
+                          #:descr "idle watcher for jordanb")))
+                 (subscribe-proc-to-server-messages!
+                  responder
+                  session)))
+             #:descr "periodic jordanb comedy gold"))
 
           ;; on-demand news spewage.
-          (vtprintf "Shall I subscribe the on-demand news spewer?  ch is ~s...~%"
-                    ch)
           (when (member ch '("#emacs" "#scheme-bots"))
             (subscribe-proc-to-server-messages!
              (make-channel-action
-              (lambda (m) (vtprintf "lessee ... is it a 'news' command?!~%")
-                          (p (and (on-channel? ch m)
-                                  (gist-equal? "news" m))))
+              (lambda (m) (and (on-channel? ch m)
+                               (gist-equal? "news" m)))
               (lambda (m)
                 (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
                   (reply session (if headline
                                      (entry->string headline)
                                    "no news yet.")
                          (PRIVMSG-receivers m))))
-              #:terminal? #t)
+              #:terminal? #t
+              #:descr "on-demand news")
              session)
 
             ;; periodic news spewage.
@@ -187,10 +196,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                   (unsubscribe-proc-to-server-messages!
                                    responder
                                    session))
-                                #:timeout (*quote-and-headline-interval*))))
+                                #:timeout (*quote-and-headline-interval*)
+                                #:descr "idle watcher for news")))
                        (subscribe-proc-to-server-messages!
                         responder
-                        session))))))))
+                        session))))))
+             #:descr "periodic news spewage"))
 
           ;; moviestowatchfor
           (when (member ch '("##cinema" "#scheme-bots"))
@@ -211,7 +222,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (let loop ()
                      (set! posts (map maybe-make-URL-tiny (snarf-some-recent-posts)))
                      (sleep  (* 7 24 3600))
-                     (loop)))))
+                     (loop))))
+               #:descr "moviestowatchfor")
 
               (subscribe-proc-to-server-messages!
                (make-channel-action
@@ -230,12 +242,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (make-channel-action
                 (lambda (m) (on-channel? ch m))
                 (lambda (ignored)
-                  (reply session
-                         (when posts
+                  (when posts
+                    (reply session
                            (entry->string
-                            (list-ref posts (random (length posts)))))
-                         (PRIVMSG-receivers ch)))
+                            (list-ref posts (random (length posts))))
+                           (list ch))))
                 #:timeout (*quote-and-headline-interval*)
+                #:descr "periodic moviestowatchfor spewage"
                 )
                session))))))
      session)
@@ -270,7 +283,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    (zdate (seconds->date time))
                    (if was-action?
                        (format ": ~a ~a" who what)
-                     (format ", saying \"~a\"" what)))))))
+                     (format ", saying \"~a\"" what))))))
+      #:descr "fingerprint file")
      session)
 
 
@@ -294,7 +308,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             ;; to do so, but people complained.
             (reply session
                    (make-tiny-url url #:user-agent (long-version-string))
-                   (PRIVMSG-receivers m))))))
+                   (PRIVMSG-receivers m)))))
+      #:descr "tinyurl")
      session)
 
     (subscribe-proc-to-server-messages!
@@ -306,7 +321,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (lambda (m)
         (reply session
                "\u0001ACTION loosens his collar with his index finger\u0001"
-               (PRIVMSG-receivers m))))
+               (PRIVMSG-receivers m)))
+      #:descr "loosens collar")
      session)
 
     (subscribe-proc-to-server-messages!
@@ -319,7 +335,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
           (reply session
                  (or sighting (format "I haven't seen ~a" who))
-                 (PRIVMSG-receivers m)))))
+                 (PRIVMSG-receivers m))))
+      #:descr "'seen' command")
      session)
 
     (subscribe-proc-to-server-messages!
@@ -411,8 +428,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                              (string->url "http://planet.emacsen.org/atom.xml")
                              (list)))))))
 
-      (register-usual-services! *sess*)
-
       (when (*log-to-file*)
         (*log-output-port*
          (open-output-file
@@ -421,6 +436,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           (format "/var/log/irc-bot/~a-~a"
                   (*irc-server-name*)
                   (zdate)))))
+
       (fprintf (current-error-port)
                "Logging to ~s~%" (object-name (*log-output-port*)))
 
@@ -433,6 +449,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (vprintf "~a~%" s))
                 (version-strings))
       (vprintf "~a~%" (long-version-string))
+
+      (register-usual-services! *sess*)
 
       (fprintf op "NICK ~a~%" (*my-nick*))
       (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"

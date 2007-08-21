@@ -197,7 +197,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (snarf-em-all (whence))))
 
          (sleep (*planet-poll-interval*))
-         (loop))))
+         (loop)))
+     #:descr "planet emacs producer")
 
     the-channel)  )
 
