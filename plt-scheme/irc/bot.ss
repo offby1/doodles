@@ -476,7 +476,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (with-handlers
                      ([exn:fail:irc-parse?
                        (lambda (e)
-                         (vtprintf "couldn't parse line from server: ~s~%" e))])
+                         (vtprintf
+                          "~a: ~s~%"
+                          (exn-message e)
+                          (exn:fail:irc-parse-string e)))])
                    (respond (parse-irc-message line) *sess*))
                  (get-one-line))))))))))
 (provide
