@@ -91,14 +91,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             criterion action
             #:key
             [timeout #f]
-            [terminal? #f]
+            [responds? #f]
             [descr (format "~a:~a"
                            (object-name criterion)
                            (object-name action))]
             )
-  (when (and timeout terminal?)
+  (when (and timeout responds?)
     (raise (make-exn:fail:contract
-            "make-channel-action: neither timeout nor terminal? are #f"
+            "make-channel-action: neither timeout nor responds? are #f"
             (current-continuation-marks))))
   (let ((cme (make-channel-message-event
               criterion
@@ -115,7 +115,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (lambda args
       (let ((interested? (apply (channel-message-event-input-examiner cme) args)))
-        (and terminal?
+        (and responds?
              interested?)))))
 
 
@@ -168,7 +168,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                   (printf "channel action got 'thing' ~s~%"
                           thing)
                   (channel-put evidence #t))
-                #:terminal? #t)))
+                #:responds? #t)))
        (let ((handled? (e (parse-irc-message ":x!x@z PRIVMSG #snooze :wakey wakey"))))
          (check-not-false handled? "uh oh, our message didn't get handled")
          (check-true (sync/timeout 1/10 evidence) "uh oh, our action didn't trigger"))))

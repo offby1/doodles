@@ -131,14 +131,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 discriminator
                 action
                 #:key
-                [terminal? #f]
+                [responds? #f]
                 [timeout #f]
                 [descr "unknown"])
       (subscribe-proc-to-server-messages!
        (make-channel-action
         discriminator
         action
-        #:terminal? terminal?
+        #:responds? responds?
         #:timeout timeout
         #:descr descr)
        session))
@@ -186,7 +186,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (lambda (r)
                  (notice session r (one-quote)))
                (PRIVMSG-receivers m)))
-            #:terminal? #t)
+            #:responds? #t)
 
            (add-periodic!
             chatter?
@@ -203,7 +203,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                    (entry->string headline)
                                  "no news yet.")
                        (PRIVMSG-receivers m))))
-            #:terminal? #t
+            #:responds? #t
             #:descr "on-demand news")
 
            ;; periodic news spewage.
@@ -247,7 +247,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             (list-ref posts (random (length posts))))
                          "hmm, no movie recommendations yet")
                        (PRIVMSG-receivers m)))
-              #:terminal? #t)
+              #:responds? #t)
 
              (add-periodic!
               chatter?
@@ -335,7 +335,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (reply session
                 (or sighting (format "I haven't seen ~a" who))
                 (PRIVMSG-receivers m))))
-     #:terminal? #t
+     #:responds? #t
      #:descr "'seen' command")
 
     (add!
@@ -347,7 +347,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (PRIVMSG-speaker m)
                 (long-version-string))
          (reply session (long-version-string) (PRIVMSG-receivers m))))
-     #:terminal? #t)
+     #:responds? #t)
 
     (add!
      (lambda (m)
@@ -365,7 +365,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   source-file-names)
            (reply session (format "http://~a~a~a" source-host source-directory source-file-names)
                   (PRIVMSG-receivers m)))))
-     #:terminal? #t)
+     #:responds? #t)
 
     (add!
      (lambda (m)
