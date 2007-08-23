@@ -149,6 +149,13 @@ should be hosted on an FTP server, which I don't care to run, so ...
   Maybe even do a nice PART and QUIT while we're at it.
 
 * movies
+** Spew less often
+   I should probably have the movies, headlines, jordanb quotes all
+   have different intervals.  Maybe they should even depend on what
+   channel they're spewing to ...
+   <Riastradh> Perhaps exponential delays?
+   <Riastradh> Twenty minutes makes sense for the first one, but not every twenty minutes.
+
 ** Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
   reviews" link; find Ebert's name.  (I honestly think this would be
