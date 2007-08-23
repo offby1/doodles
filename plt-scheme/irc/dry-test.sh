@@ -7,6 +7,7 @@
 
     echo ":a!b@c PRIVMSG #scheme-bots :hey buddy\\r"
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: hey buddy\\r"
+    echo ":a!b@c PRIVMSG rudybot :hey buddy\\r"
     echo ":a!b@c PRIVMSG #scheme-bots :rudybot: seen a?\\r"
 
     sleep 10

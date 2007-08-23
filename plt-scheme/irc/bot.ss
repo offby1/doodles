@@ -92,7 +92,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (not handled?))
 
       (reply s "\u0001ACTION is at a loss for words, as usual\u0001"
-             (list (PRIVMSG-speaker message))))))
+             (if (PRIVMSG-is-for-channel? message)
+                 (PRIVMSG-receivers message)
+               (list (PRIVMSG-speaker message)))))))
 
 
                                         ;(trace respond)
