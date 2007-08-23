@@ -12,7 +12,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
 
-         (only (lib "etc.ss") this-expression-source-directory)
          (lib "kw.ss")
          (only (lib "list.ss")
                last-pair
@@ -114,13 +113,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define/kw (queue-of-entries
             #:key
-            [whence (lambda ()
-                      (let ((fn (build-path
-                                 (this-expression-source-directory)
-                                 "example-planet-emacsen.xml")))
-                        (vtprintf "snarfing test data from ~s~%"
-                                  fn)
-                        (open-input-file fn)))]
+            [whence]
             [filter (lambda (e) #t)])
 
   (let ((the-channel (make-cached-channel #f)))
@@ -131,11 +124,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          (for-each
           (lambda (e)
-            (when (filter e)
-              (cached-channel-put the-channel e)))
+            (vtprintf "queue-of-entries: filtering ~s...~%" e)
+            (if (filter e)
+              (begin
+                (vtprintf "queue-of-entries: it passed the filter~%")
+                (cached-channel-put the-channel e))
+              (vtprintf "queue-of-entries: nope, didn't make the cut~%")))
 
-          (or (and whence (snarf-em-all (whence)))
-              '()))
+          (snarf-em-all (whence)))
 
          (sleep (*planet-poll-interval*))
          (loop)))

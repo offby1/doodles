@@ -17,9 +17,11 @@
     echo -e ":a!b@c PRIVMSG rudybot :\001VERSION\001\\r"
     echo -e ":a!b@c PRIVMSG rudybot :what ho, my good man\\r"
 
-    while true
-    do
-        sleep 120
-    done
+    sleep 10
 
-    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot -q 1
+#     while true
+#     do
+#         sleep 120
+#     done
+
+    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot -q 1 > /dev/null

@@ -5,6 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 |#
 (module bot mzscheme
 (require (lib "kw.ss")
+         (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                any
                first second third
@@ -56,12 +57,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (out  s "NOTICE ~a :~a~%" target msg)))
 
 (define reply
-  (lambda/kw (s response receivers #:key [proc pm] )
-             (for-each
-              (lambda (r)
-                (proc s r response))
+  (lambda/kw (s message response #:key [proc pm] )
+    (check-type 'reply irc-session? s)
+    (check-type 'reply message? message)
+    (check-type 'reply string? response)
+    (check-type 'reply procedure? proc)
+    (for-each
+     (lambda (r)
+       (proc s r response))
 
-              receivers)))
+     (if (PRIVMSG-is-for-channel? message)
+         (PRIVMSG-receivers message)
+       (list (PRIVMSG-speaker message))))))
 
 (define (respond message s)
 
@@ -91,10 +98,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (for-us? message)
            (not handled?))
 
-      (reply s "\u0001ACTION is at a loss for words, as usual\u0001"
-             (if (PRIVMSG-is-for-channel? message)
-                 (PRIVMSG-receivers message)
-               (list (PRIVMSG-speaker message)))))))
+      (reply s message
+             "\u0001ACTION is at a loss for words, as usual\u0001"))))
 
 
                                         ;(trace respond)
@@ -117,6 +122,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
   (vtprintf "~a subscriptions~%"
             (hash-table-count (irc-session-message-subscriptions s))))
+;(trace unsubscribe-proc-to-server-messages!)
 
 (define (p val)
   (vtprintf "~s~%" val)
@@ -153,6 +159,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (lambda ()
          (when headline-source
            (let ((headline (sync headline-source)))
+             (vtprintf "Just got ~s from headline-source~%" headline)
              (letrec ((responder
                        (make-channel-action
                         discriminator
@@ -167,11 +174,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 responder
                 session)))))
        #:descr descr))
+    ;(trace add-periodic!)
 
     (add!
      RPL_ENDOFNAMES?
-     (lambda (366-channel)
-       (let ((ch (RPL_ENDOFNAMES-channel-name 366-channel)))
+     (lambda (366-message)
+       (let ((ch (RPL_ENDOFNAMES-channel-name 366-message)))
          (define (chatter? m) (on-channel? ch m))
          (define (command=? str m) (and (chatter? m) (gist-equal? str m)))
          ;; jordanb quotes
@@ -193,16 +201,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             always-evt
             (lambda (ignored) (pm session ch (one-quote)))))
 
-         ;; on-demand news spewage.
          (when (member ch '("#emacs" "#scheme-bots"))
+           ;; on-demand news spewage.
            (add!
             (lambda (m) (command=? "news" m))
             (lambda (m)
               (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
-                (reply session (if headline
-                                   (entry->string headline)
-                                 "no news yet.")
-                       (PRIVMSG-receivers m))))
+                (reply session m
+                       (if headline
+                           (entry->string headline)
+                         "no news yet."))))
             #:responds? #t
             #:descr "on-demand news")
 
@@ -214,6 +222,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (pm session ch
                   (entry->string headline))
               (note-spewed! headline))
+            #:descr "periodic news spewage"
             ))
 
          ;; moviestowatchfor
@@ -243,11 +252,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda (m) (command=? "movie" m))
               (lambda (m)
                 (reply session
+                       m
                        (if posts
                            (entry->string
                             (list-ref posts (random (length posts))))
-                         "hmm, no movie recommendations yet")
-                       (PRIVMSG-receivers m)))
+                         "hmm, no movie recommendations yet")))
               #:responds? #t)
 
              (add-periodic!
@@ -255,10 +264,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               always-evt
               (lambda (ignored)
                 (when posts
-                  (reply session
-                         (entry->string
-                          (list-ref posts (random (length posts))))
-                         (list ch))))
+                  (pm session
+                      (list ch)
+                      (entry->string
+                       (list-ref posts (random (length posts)))))))
               #:descr "periodic moviestowatchfor spewage"))))))
 
     (add!
@@ -311,8 +320,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            ;; I used to send these out as NOTICEs, since the RFC says
            ;; to do so, but people complained.
            (reply session
-                  (make-tiny-url url #:user-agent (long-version-string))
-                  (PRIVMSG-receivers m)))))
+                  m
+                  (make-tiny-url url #:user-agent (long-version-string))))))
      #:descr "tinyurl")
 
     (add!
@@ -322,8 +331,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         (regexp-match #rx"glances around nervously" (PRIVMSG-text m))))
      (lambda (m)
        (reply session
-              "\u0001ACTION loosens his collar with his index finger\u0001"
-              (PRIVMSG-receivers m)))
+              m
+              "\u0001ACTION loosens his collar with his index finger\u0001"))
      #:descr "loosens collar")
 
     (add!
@@ -334,8 +343,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words m)) ""))
               (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
          (reply session
-                (or sighting (format "I haven't seen ~a" who))
-                (PRIVMSG-receivers m))))
+                m
+                (or sighting (format "I haven't seen ~a" who)))))
      #:responds? #t
      #:descr "'seen' command")
 
@@ -347,7 +356,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (out session "NOTICE ~a :\u0001VERSION ~a\0001~%"
                 (PRIVMSG-speaker m)
                 (long-version-string))
-         (reply session (long-version-string) (PRIVMSG-receivers m))))
+         (reply session m (long-version-string))))
      #:responds? #t)
 
     (add!
@@ -364,8 +373,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   source-host
                   source-directory
                   source-file-names)
-           (reply session (format "http://~a~a~a" source-host source-directory source-file-names)
-                  (PRIVMSG-receivers m)))))
+           (reply session  m
+                  (format "http://~a~a~a" source-host source-directory source-file-names)))))
      #:responds? #t)
 
     (add!
@@ -390,7 +399,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (for-us? m)
             (not (gist-for-us m))))
      (lambda (m)
-       (reply session "Eh? Speak up, sonny." (PRIVMSG-receivers m))))))
+       (reply session  m "Eh? Speak up, sonny.")))))
 
 (define (start)
 
@@ -414,13 +423,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    #:feed
                    (queue-of-entries
                     #:whence
-                    (and (*use-real-atom-feed?*)
-                         (lambda ()
-                           (get-pure-port
-                            (string->url "http://planet.emacsen.org/atom.xml")
-                            (list))))
+                    (if (*use-real-atom-feed?*)
+                        (lambda ()
+                          (get-pure-port
+                           (string->url "http://planet.emacsen.org/atom.xml")
+                           (list)))
+                      (lambda ()
+                        (let ((fn (build-path
+                                   (this-expression-source-directory)
+                                   "example-planet-emacsen.xml")))
+                          (vtprintf "snarfing test data from ~s~%"
+                                    fn)
+                          (open-input-file fn)))
+                      )
                     #:filter (lambda (e)
-                               (not (already-spewed? e s)))))))
+                               (not (already-spewed? e)))))))
         (set! *sess* s))
 
       (when (*log-to-file*)

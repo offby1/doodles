@@ -55,6 +55,6 @@ tags: TAGS
 # useful for emacs commands that work on all the files in it, such as
 # tags-query-replace.
 TAGS: $(wildcard *.ss)
-	etags $^
+	PATH=/usr/local/src/emacs-cvs/lib-src:$(dir $(EMACS))../lib-src:$$PATH etags --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 .PHONY: clean all dist plt tar check svnup

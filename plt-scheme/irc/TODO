@@ -155,6 +155,10 @@ should be hosted on an FTP server, which I don't care to run, so ...
   as reliable as searching on rogerebert.com; that site's design is as
   lame as its content is excellent)
 
+** restrict to more recent reviews
+   rather than always displaying the 15 most recent, limit to, say,
+   those from the last week
+
 * emacschannelquotes
   <e1f> offby1: you need to include emacschannelquotes in rudebot
   He means snag stuff from

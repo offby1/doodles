@@ -67,7 +67,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *tinyurl-url-length-threshold* (make-parameter 75))
 
 (define *del.icio.us-password* (make-parameter #f))
-(define *log-output-port* (make-parameter (current-output-port)))
+(define *log-output-port* (make-parameter (current-error-port)))
 (define *log-to-file* (make-parameter #f))
 (provide (all-defined))
 )

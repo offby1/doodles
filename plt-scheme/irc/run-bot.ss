@@ -12,7 +12,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           "globals.ss"
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "quotes.ss"
-          "system.ss"
           "vprintf.ss"
           )
 (register-version-string "$Id$")

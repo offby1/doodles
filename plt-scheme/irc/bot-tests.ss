@@ -47,6 +47,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (lambda ()
          (*initial-channel-names* (list "#bots"))
          )
+       #:after
+       (lambda ()
+         (custodian-shutdown-all (irc-session-custodian sess)))
        (test-case
         "join"
         (before

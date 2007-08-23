@@ -98,7 +98,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (if (equal? e-secs (car last-spewed))
           (member title-link last-spewed)
         (< e-secs (car last-spewed))))))
-
+;(trace already-spewed?)
 
 (define headline-tests
 
