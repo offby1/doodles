@@ -167,7 +167,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (lambda (thing)
                   (printf "channel action got 'thing' ~s~%"
                           thing)
-                  (channel-put evidence #t)))))
+                  (channel-put evidence #t))
+                #:terminal? #t)))
        (let ((handled? (e (parse-irc-message ":x!x@z PRIVMSG #snooze :wakey wakey"))))
          (check-not-false handled? "uh oh, our message didn't get handled")
          (check-true (sync/timeout 1/10 evidence) "uh oh, our action didn't trigger"))))

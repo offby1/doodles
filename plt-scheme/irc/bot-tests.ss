@@ -30,50 +30,58 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (respond (parse-irc-message input) sess)
   (expect/timeout ip regexp 3/2))
 
+(define (fresh-session op)
+  (let ((s (make-irc-session op)))
+    (register-usual-services! s)
+    s))
+
 (define bot-tests
 
   (let-values (((ip op) (make-pipe #f "bot-tests")))
 
-    (let ((sess (make-irc-session op)))
+    (let ((sess #f))
 
       (test-suite
        "crap"
        #:before
        (lambda ()
          (*initial-channel-names* (list "#bots"))
-         (register-usual-services! sess))
+         )
        (test-case
         "join"
-        (respond
-         (parse-irc-message ":server 001 :welcome")
-         sess)
+        (before
+         (set! sess (fresh-session op))
+         (respond
+          (parse-irc-message ":server 001 :welcome")
+          sess))
+
         (check-not-false
          (expect/timeout ip #rx"JOIN #bots" 1)
          "didn't join"))
+
        (test-case
         "short semi-private message"
+        (before
+         (set! sess (fresh-session op))
+
         (check-not-false
          (got-response?
           sess
           ip
           (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
           (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
-         ))
+         )))
 
        (test-case
         "backed-up idle events"
 
         (before
          (begin
-           (custodian-shutdown-all (irc-session-custodian sess))
-           (set-irc-session-custodian! sess (make-custodian))
-
+           (set! sess (fresh-session op))
            ;; start the news thread
            (*planet-poll-interval* 2)
            (*quote-and-headline-interval* 1/10)
-           (respond (parse-irc-message ":x 366 rudybot #emacs :backed-up idle events'") sess)
-           )
-
+           (respond (parse-irc-message ":x 366 rudybot #emacs :backed-up idle events'") sess))
 
          ;; ensure there is no news available.
          (set-irc-session-async-for-news! sess (make-cached-channel #f))
@@ -102,8 +110,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         "keeps saying 'no news'"
         (before
          (begin
-           (custodian-shutdown-all (irc-session-custodian sess))
-           (set! sess (make-irc-session op))
+           (set! sess (fresh-session op))
 
            ;; start the news thread
            (*planet-poll-interval* 2)

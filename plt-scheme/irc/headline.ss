@@ -39,8 +39,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      "headline"
      (test-case
       "maybe-make-URL-tiny"
-      (check-regexp-match  #rx"http://tinyurl.com/....."
-                           (entry-link (maybe-make-URL-tiny long))))
+      (with-handlers
+          ([exn:fail:network?
+            (lambda (e)
+              (fprintf (current-error-port)
+                       "Can't contact tinyurl; skipping the test~%"))])
+        (check-regexp-match  #rx"http://tinyurl.com/....."
+                             (entry-link (maybe-make-URL-tiny long)))))
      (test-case
       "leaves short ones alone"
       (check-equal? (entry-link (maybe-make-URL-tiny short))

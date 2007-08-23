@@ -110,9 +110,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (hash-table-count (irc-session-message-subscriptions s))))
 
 (define (unsubscribe-proc-to-server-messages! proc s)
-  (hash-table-remove!
+  (when *sess*
+    (hash-table-remove!
      (irc-session-message-subscriptions *sess*)
-     proc)
+     proc))
 
   (vtprintf "~a subscriptions~%"
             (hash-table-count (irc-session-message-subscriptions s))))
@@ -166,7 +167,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 responder
                 session)))))
        #:descr descr))
-
 
     (add!
      RPL_ENDOFNAMES?

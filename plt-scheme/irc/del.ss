@@ -21,7 +21,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "pretty.ss")
          (lib "trace.ss")
          "globals.ss"
-         "headline.ss")
+         "headline.ss"
+         "vprintf.ss")
 (register-version-string "$Id$")
 
 ;; return all items with the tag "moviestowatchfor"
@@ -62,11 +63,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-not-false
     "gets some movies, and they're all entries"
-    (with-handlers ([exn:delicious:auth?
+    (with-handlers ([(lambda (e)
+                       (or (exn:delicious:auth? e)
+                           (exn:fail:network? e)))
                      (lambda (e)
                        (fprintf
                         (current-error-port)
-                        "wrong delicious password; skipping the test~%")
+                        "wrong delicious password OR can't contact del.icio.us; skipping the test~%")
                        #t)])
       (let ((snarfage (snarf-some-recent-posts)))
         (check-false     (null? snarfage) "didn't return any entries")

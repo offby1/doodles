@@ -80,14 +80,24 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
    "tinyurl"
    (test-case
     "photo.net"
-    (check-regexp-match
-     #rx"^http://tinyurl.com/.....$"
-     (make-tiny-url "http://photo.net")))
+    (with-handlers
+        ([exn:fail:network?
+          (lambda (e)
+            (fprintf (current-error-port)
+                     "Can't contact tinyurl; skipping the test~%"))])
+      (check-regexp-match
+       #rx"^http://tinyurl.com/.....$"
+       (make-tiny-url "http://photo.net"))))
    (test-case
     "including a user agent"
-    (check-regexp-match
-     #rx"^http://tinyurl.com/.....$"
-     (make-tiny-url "http://photo.net" #:user-agent "test code for Eric's bot")))
+    (with-handlers
+        ([exn:fail:network?
+          (lambda (e)
+            (fprintf (current-error-port)
+                     "Can't contact tinyurl; skipping the test~%"))])
+      (check-regexp-match
+       #rx"^http://tinyurl.com/.....$"
+       (make-tiny-url "http://photo.net" #:user-agent "test code for Eric's bot"))))
    (test-equal?
     "empty snagging"
     (snag-urls-from-bytes
