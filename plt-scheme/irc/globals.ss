@@ -58,8 +58,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *nickserv-password* (make-parameter #f))
 (define (*atom-timestamp-preference-name*)
   (if (*use-real-atom-feed?*)
-      'rudybot-planet-emacs-last-headline
-    'rudybot-test-planet-emacs-last-headline))
+      'rudybot-planet-emacs-last-headlines
+    'rudybot-test-planet-emacs-last-headlines))
 
 ;; The bot will "tiny-ify" URLs longer than this.  Tiny URLs are about
 ;; 25 characters, so it seems reasonable to ignore URLs that are

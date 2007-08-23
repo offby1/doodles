@@ -27,7 +27,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "channel-events.ss"
          "del.ss"
          "globals.ss"
-         (only "headline.ss" maybe-make-URL-tiny)
+         "headline.ss"
          "parse.ss"
          "planet-emacsen.ss"
          "quotes.ss"
@@ -145,19 +145,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (define/kw (add-periodic!
                 discriminator
-                headline-event
-                action
+                headline-source
+                headline-action
                 #:key
                 [descr "unknown"])
       (thread-with-id
        (lambda ()
-         (when headline-event
-           (let ((headline (sync headline-event)))
+         (when headline-source
+           (let ((headline (sync headline-source)))
              (letrec ((responder
                        (make-channel-action
                         discriminator
                         (lambda (ignored)
-                          (action headline)
+                          (headline-action headline)
                           (unsubscribe-proc-to-server-messages!
                            responder
                            session))
@@ -212,7 +212,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (irc-session-async-for-news session)
             (lambda (headline)
               (pm session ch
-                  (entry->string headline)))
+                  (entry->string headline))
+              (note-spewed! headline))
             ))
 
          ;; moviestowatchfor
@@ -408,16 +409,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     (values (current-input-port)
                             (current-output-port)))))
 
-      (set! *sess* (make-irc-session
-                    op
-                    #:feed
-                    (queue-of-entries
-                     #:whence
-                     (and (*use-real-atom-feed?*)
-                          (lambda ()
-                            (get-pure-port
-                             (string->url "http://planet.emacsen.org/atom.xml")
-                             (list)))))))
+      (letrec ((s (make-irc-session
+                   op
+                   #:feed
+                   (queue-of-entries
+                    #:whence
+                    (and (*use-real-atom-feed?*)
+                         (lambda ()
+                           (get-pure-port
+                            (string->url "http://planet.emacsen.org/atom.xml")
+                            (list))))
+                    #:filter (lambda (e)
+                               (not (already-spewed? e s)))))))
+        (set! *sess* s))
 
       (when (*log-to-file*)
         (*log-output-port*
