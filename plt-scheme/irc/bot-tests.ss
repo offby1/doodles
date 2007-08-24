@@ -67,13 +67,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (before
          (set! sess (fresh-session op))
 
-        (check-not-false
-         (got-response?
-          sess
-          ip
-          (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
-          (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
-         )))
+         (check-not-false
+          (got-response?
+           sess
+           ip
+           (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
+           (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
+          )))
 
        (test-case
         "backed-up idle events"
@@ -113,51 +113,58 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         "news in general"
         #:before
         (lambda ()
-          (set! sess (fresh-session op))
-
           ;; start the news thread
+
+          ;; it's important to modify these parameters _before_ we
+          ;; call fresh-session, since that call effectively makes
+          ;; copies (in the new threads) of the parameters.
           (*planet-poll-interval* 2)
+          (printf "Test is setting quote-and-headline-interval to 1/2 second~%") (flush-output)
           (*quote-and-headline-interval* 1/2)
+
+          (set! sess (fresh-session op))
           (respond (parse-irc-message ":x 366 rudybot #emacs :keeps saying 'no news'") sess))
-       (test-case
-        "keeps saying 'no news'"
+        (test-case
+         "keeps saying 'no news'"
 
-        ;; ensure there is no news available.
-        (set-irc-session-async-for-news! sess (make-cached-channel #f))
+         ;; ensure there is no news available.
+         (set-irc-session-async-for-news! sess (make-cached-channel #f))
 
-        ;; wait a smidge for the input-examiner proc to get
-        ;; subscribed.
-        (sleep 1/2)
+         ;; wait a smidge for the input-examiner proc to get
+         ;; subscribed.
+         (sleep 1/2)
 
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news")))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
+         (sleep (*quote-and-headline-interval*))
+         (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news")))
 
-       (test-case
-        "items only appear once"
+        (test-case
+         "items only appear once"
 
-        ;; now put one item out there; expect to see it exactly once.
-        (cached-channel-put
-         (irc-session-async-for-news sess)
-         (make-entry (current-time)
-                     "SPACE ALIENS CAUSE GLOBAL WARMING"
-                     "http://synasthedia.org"))
+         (before
+          (reliably-put-pref #f)
 
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip
-                                        (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*))
-                                        #rx"SPACE ALIENS"))
+          ;; now put one item out there; expect to see it exactly once.
+          (cached-channel-put
+           (irc-session-async-for-news sess)
+           (make-entry (current-time)
+                       "SPACE ALIENS CAUSE GLOBAL WARMING"
+                       "http://synasthesia.org")))
 
-        (sleep (*quote-and-headline-interval*))
-        (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news"))
+         (check-not-false
+          (expect/timeout ip #rx"SPACE ALIENS" (* 2 (*quote-and-headline-interval*)))
+          "damn, it didn't appear the first time")
+         (check-false
+          (expect/timeout ip #rx"SPACE ALIENS" (* 2 (*quote-and-headline-interval*)))
+          "damn, it appeared a second time")
+         )
         )
-       )
 
        ))))
 

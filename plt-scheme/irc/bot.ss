@@ -22,7 +22,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
-         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
+         (planet "assert.ss" ("offby1" "offby1.plt"))
          "alarm-with-snooze.ss"
          "cached-channel.ss"
          "channel-events.ss"
@@ -107,6 +107,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (define *sess* #f)
 
 (define (subscribe-proc-to-server-messages! proc s)
+  (check-type 'subscribe-proc-to-server-messages! procedure? proc)
   (hash-table-put!
    (irc-session-message-subscriptions s)
    proc
@@ -149,32 +150,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         #:descr descr)
        session))
 
-    (define/kw (add-periodic!
+    (define/kw (add-idle!
                 discriminator
-                headline-source
-                headline-action
+                action
                 #:key
-                [descr "unknown"])
-      (thread-with-id
-       (lambda ()
-         (when headline-source
-           (let ((headline (sync headline-source)))
-             (vtprintf "Just got ~s from headline-source~%" headline)
-             (letrec ((responder
-                       (make-channel-action
-                        discriminator
-                        (lambda (ignored)
-                          (headline-action headline)
-                          (unsubscribe-proc-to-server-messages!
-                           responder
-                           session))
-                        #:timeout (*quote-and-headline-interval*)
-                        )))
-               (subscribe-proc-to-server-messages!
-                responder
-                session)))))
-       #:descr descr))
-    ;(trace add-periodic!)
+                [descr "unknown"]
+                [periodic? #t])
+      (let ((action (make-channel-action
+                     discriminator
+                     action
+                     #:timeout (*quote-and-headline-interval*)
+                     #:periodic? periodic?)))
+        (subscribe-proc-to-server-messages! action session)
+        action))
+    ;(trace add-idle!)
 
     (add!
      RPL_ENDOFNAMES?
@@ -182,6 +171,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (let ((ch (RPL_ENDOFNAMES-channel-name 366-message)))
          (define (chatter? m) (on-channel? ch m))
          (define (command=? str m) (and (chatter? m) (gist-equal? str m)))
+
+         ;;(trace chatter?)
          ;; jordanb quotes
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
 
@@ -196,9 +187,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (PRIVMSG-receivers m)))
             #:responds? #t)
 
-           (add-periodic!
+           (add-idle!
             chatter?
-            always-evt
             (lambda (ignored) (pm session ch (one-quote)))))
 
          (when (member ch '("#emacs" "#scheme-bots"))
@@ -215,15 +205,34 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             #:descr "on-demand news")
 
            ;; periodic news spewage.
-           (add-periodic!
-            chatter?
-            (irc-session-async-for-news session)
-            (lambda (headline)
-              (pm session ch
-                  (entry->string headline))
-              (note-spewed! headline))
-            #:descr "periodic news spewage"
-            ))
+           (thread-with-id
+            (lambda ()
+              (let loop ()
+
+                ;; wait for something to say.
+                (let ((headline (sync (irc-session-async-for-news session))))
+                  (assert (entry? headline))
+
+                  (when (not (already-spewed? headline))
+                    ;; wait for a chance to say it.
+                    (let ((cme (make-channel-message-event
+                                chatter?
+                                #:periodic? #f
+                                #:timeout (*quote-and-headline-interval*))))
+                      (subscribe-proc-to-server-messages!
+                       (channel-idle-event-input-examiner cme)
+                       session)
+
+                      (sync cme)
+
+                      (pm session ch
+                          (entry->string headline))
+                      (note-spewed! headline)
+
+                      (unsubscribe-proc-to-server-messages! cme session)
+                      )
+                    (loop))
+                  )))))
 
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))
@@ -259,9 +268,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                          "hmm, no movie recommendations yet")))
               #:responds? #t)
 
-             (add-periodic!
+             (add-idle!
               chatter?
-              always-evt
               (lambda (ignored)
                 (when posts
                   (pm session
@@ -428,14 +436,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                           (get-pure-port
                            (string->url "http://planet.emacsen.org/atom.xml")
                            (list)))
-                      (lambda ()
-                        (let ((fn (build-path
-                                   (this-expression-source-directory)
-                                   "example-planet-emacsen.xml")))
-                          (vtprintf "snarfing test data from ~s~%"
-                                    fn)
-                          (open-input-file fn)))
-                      )
+                      fake-atom-feed)
                     #:filter (lambda (e)
                                (not (already-spewed? e)))))))
         (set! *sess* s))

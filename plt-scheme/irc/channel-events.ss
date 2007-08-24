@@ -10,11 +10,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (only (lib "1.ss" "srfi") any)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
+         (planet "assert.ss" ("offby1" "offby1.plt"))
          "alarm-with-snooze.ss"
          (only "globals.ss" register-version-string)
          "parse.ss"
-         "thread.ss")
+         "thread.ss"
+         "vprintf.ss")
 (register-version-string "$Id$")
 
 (define-values (struct:channel-idle-event make-channel-idle-event channel-idle-event? channel-idle-event-ref channel-idle-event-set!)
@@ -28,15 +29,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 ;(trace channel-idle-event-input-examiner)
 
-(define (internal-make-channel-idle-event criterion interval)
+(define/kw (internal-make-channel-idle-event
+            criterion
+            interval
+            periodic?)
   (let ((alarm (make-alarm-with-snooze
                 interval
-                #:periodic? #t)))
+                #:periodic? periodic?)))
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
+       (vtprintf "Some channel-idle event saw ~s~%" irc-message)
        (when (criterion irc-message)
-
+         (vtprintf "Some channel-idle event is resetting the alarm~%")
          ((alarm-with-snooze-snooze-button alarm)))
        #f                               ;so that the main loop doesn't
                                         ;think we've handled the
@@ -63,14 +68,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             criterion
             #:key
             [timeout #f]
+            [periodic? #f]
             )
   (check-type 'make-channel-message-event procedure? criterion)
   (when timeout
     (check-type 'make-channel-message-event real? timeout)
     (check-type 'make-channel-message-event positive? timeout))
+  (when periodic?
+    (assert timeout))
   (if timeout
-      (internal-make-channel-idle-event criterion timeout)
+      (internal-make-channel-idle-event criterion timeout periodic?)
     (internal-make-channel-request-event criterion )))
+;(trace make-channel-message-event)
 
 (define (channel-message-event? thing)
   (or (channel-idle-event? thing)
@@ -91,6 +100,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             criterion action
             #:key
             [timeout #f]
+            [periodic? #f]
             [responds? #f]
             [descr (format "~a:~a"
                            (object-name criterion)
@@ -102,12 +112,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (current-continuation-marks))))
   (let ((cme (make-channel-message-event
               criterion
-              #:timeout timeout)))
+              #:periodic? periodic?
+              #:timeout timeout )))
 
     (thread-with-id
      (lambda ()
        (let loop ()
+         (vtprintf "channel action ~a syncing ...~%"
+                   descr)
          (let ((why (sync cme)))
+           (vtprintf "channel action ~a synced and got ~s~%"
+                     descr why)
            (when why
              (action why))
            (loop))))
@@ -142,7 +157,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 (printf "channel action got 'thing' ~s~%"
                         thing)
                 (channel-put evidence #t))
-              #:timeout 1/10))
+              #:timeout 1/10
+              #:periodic? #t))
             (make-yammerer
              (lambda (string)
                (thread (lambda ()
@@ -175,7 +191,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
-    (let* ((e (make-channel-message-event on-snooze? #:timeout 1/10))
+    (let* ((e (make-channel-message-event on-snooze?
+                                          #:periodic? #f
+                                          #:timeout 1/10))
            (make-yammerer
             (lambda (string)
               (thread (lambda ()
@@ -197,4 +215,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (provide
  channel-events-tests
  make-channel-action
+ channel-idle-event-input-examiner
+ make-channel-message-event
 ))

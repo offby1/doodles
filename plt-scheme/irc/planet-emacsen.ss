@@ -5,7 +5,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "trace.ss")
+(require (only (lib "etc.ss") this-expression-source-directory)
+         (lib "trace.ss")
          (only  (lib "file.ss")
                 get-preference
                 put-preferences)
@@ -111,10 +112,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (de-html (entry-title entry))
           (entry-link entry)))
 
+;; for testing
+(define (fake-atom-feed)
+  (let ((fn (build-path
+               (this-expression-source-directory)
+               "example-planet-emacsen.xml")))
+      (vtprintf "snarfing test data from ~s~%"
+                fn)
+      (open-input-file fn)))
+
 (define/kw (queue-of-entries
             #:key
-            [whence]
+            [whence fake-atom-feed]
             [filter (lambda (e) #t)])
+
+  (check-type 'queue-of-entries procedure? whence)
 
   (let ((the-channel (make-cached-channel #f)))
 
@@ -124,12 +136,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          (for-each
           (lambda (e)
-            (vtprintf "queue-of-entries: filtering ~s...~%" e)
-            (if (filter e)
-              (begin
-                (vtprintf "queue-of-entries: it passed the filter~%")
-                (cached-channel-put the-channel e))
-              (vtprintf "queue-of-entries: nope, didn't make the cut~%")))
+            (when (filter e)
+                (cached-channel-put the-channel e)))
 
           (snarf-em-all (whence)))
 
@@ -161,6 +169,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
  make-cached-channel
  entry->string
  entry-timestamp
+ fake-atom-feed
  planet-tests
  queue-of-entries
  *planet-poll-interval*

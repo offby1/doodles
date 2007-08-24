@@ -42,8 +42,14 @@ dist: svnup $(tarball)
 	@mv -v $(tarball) $(distdir)
 	@ln -svf $(distdir)/$(tarball) $(distdir)/rudybot.tar.gz
 
+# To be blunt, run-all-tests.ss doesn't test as much as it should;
+# dry-test hits some spots that run-all-tests misses.  So we run
+# dry-tests too.  Alas, it doesn't report failures; you have to
+# carefully examine the output for runtime errors.
 check:
 	./run-all-tests.ss
+	@echo Feel free to kill the following if it runs for too long.
+	./dry-test.sh
 
 clean:
 	rm -rf $(plt-file) $(tarball)
