@@ -167,6 +167,54 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; (trace chatter?)
          ;; (trace command=?)
+
+         (define (exponentially-backing-off-spewer proc descr)
+           (thread-with-id
+            (let* ((delay (*minimum-headline-delay*)))
+              (lambda ()
+
+                (add!
+                 chatter?
+                 (lambda (m)
+                   (set! delay (*minimum-headline-delay*)))
+                 #:responds? #f
+                 #:descr descr)
+
+                (let loop ()
+                  (proc delay)
+                  (set! delay (* 2 delay))
+                  (loop))
+                ))))
+
+         ;; I haven't yet thought of a good name for this.  That's a
+         ;; bad sign.
+         (define (murgatroid
+                  news-source
+                  headline-filter
+                  proc
+                  descr)
+           (exponentially-backing-off-spewer
+            (lambda (delay)
+              ;; wait for something to say.
+              (let ((headline (sync (irc-session-async-for-news session))))
+                (when (headline-filter headline)
+                  ;; wait for a chance to say it.
+                  (let ((cme (make-channel-message-event
+                              chatter?
+                              #:periodic? #f
+                              #:timeout delay)))
+                    (subscribe-proc-to-server-messages!
+                     (channel-idle-event-input-examiner cme)
+                     session)
+
+                    (sync cme)
+
+                    (proc headline)
+
+                    (unsubscribe-proc-to-server-messages! cme session)))))
+
+            (format "delay resetter for ~a" descr)))
+
          ;; jordanb quotes
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
 
@@ -198,43 +246,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             #:descr "on-demand news")
 
            ;; periodic news spewage.
-           (when  (irc-session-async-for-news session)
-             (thread-with-id
-              (let* ((delay (*minimum-headline-delay*)))
-                (lambda ()
-                  (add!
-                   chatter?
-                   (lambda (m)
-                     (set! delay (*minimum-headline-delay*)))
-                   #:responds? #f
-                   #:descr "delay resetter")
-                  (let loop ()
-
-                    ;; wait for something to say.
-                    (let ((headline (sync (irc-session-async-for-news session))))
-                      (assert (entry? headline))
-
-                      (when (not (already-spewed? headline))
-                        ;; wait for a chance to say it.
-                        (let ((cme (make-channel-message-event
-                                    chatter?
-                                    #:periodic? #f
-                                    #:timeout delay)))
-                          (subscribe-proc-to-server-messages!
-                           (channel-idle-event-input-examiner cme)
-                           session)
-
-                          (sync cme)
-
-                          (pm session ch
-                              (entry->string headline))
-                          (note-spewed! headline)
-
-                          (unsubscribe-proc-to-server-messages! cme session)
-                          )
-                        (set! delay (* 2 delay))
-                        (loop))
-                      )))))))
+           (when (irc-session-async-for-news session)
+             (murgatroid
+              (irc-session-async-for-news session)
+              (lambda (headline)
+                 (assert (entry? headline))
+                 (not (already-spewed? headline)))
+              (lambda (headline)
+                (assert (entry? headline))
+                (pm session ch
+                    (entry->string headline))
+                (note-spewed! headline))
+              "periodic news spewage")))
 
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))
