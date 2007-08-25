@@ -48,7 +48,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *initial-channel-names* (make-parameter '()))
 (define *random?* (make-parameter #t))
-(define *quote-and-headline-interval* (make-parameter (* 20 60)))
+(define *quote-interval* (make-parameter (* 20 60)))
+(define *minimum-headline-delay* (make-parameter 60))
 (define *quotes-file-name* (make-parameter
                                     (build-path
                                      (this-expression-source-directory)

@@ -152,7 +152,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (make-channel-action
         discriminator
         action
-        #:timeout (*quote-and-headline-interval*)
+        #:timeout (*quote-interval*)
         #:periodic? periodic?)
        session))
     ;(trace add-idle!)
@@ -200,33 +200,41 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            ;; periodic news spewage.
            (when  (irc-session-async-for-news session)
              (thread-with-id
-              (lambda ()
-                (let loop ()
+              (let* ((delay (*minimum-headline-delay*)))
+                (lambda ()
+                  (add!
+                   chatter?
+                   (lambda (m)
+                     (set! delay (*minimum-headline-delay*)))
+                   #:responds? #f
+                   #:descr "delay resetter")
+                  (let loop ()
 
-                  ;; wait for something to say.
-                  (let ((headline (sync (irc-session-async-for-news session))))
-                    (assert (entry? headline))
+                    ;; wait for something to say.
+                    (let ((headline (sync (irc-session-async-for-news session))))
+                      (assert (entry? headline))
 
-                    (when (not (already-spewed? headline))
-                      ;; wait for a chance to say it.
-                      (let ((cme (make-channel-message-event
-                                  chatter?
-                                  #:periodic? #f
-                                  #:timeout (*quote-and-headline-interval*))))
-                        (subscribe-proc-to-server-messages!
-                         (channel-idle-event-input-examiner cme)
-                         session)
+                      (when (not (already-spewed? headline))
+                        ;; wait for a chance to say it.
+                        (let ((cme (make-channel-message-event
+                                    chatter?
+                                    #:periodic? #f
+                                    #:timeout delay)))
+                          (subscribe-proc-to-server-messages!
+                           (channel-idle-event-input-examiner cme)
+                           session)
 
-                        (sync cme)
+                          (sync cme)
 
-                        (pm session ch
-                            (entry->string headline))
-                        (note-spewed! headline)
+                          (pm session ch
+                              (entry->string headline))
+                          (note-spewed! headline)
 
-                        (unsubscribe-proc-to-server-messages! cme session)
-                        )
-                      (loop))
-                    ))))))
+                          (unsubscribe-proc-to-server-messages! cme session)
+                          )
+                        (set! delay (* 2 delay))
+                        (loop))
+                      )))))))
 
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))

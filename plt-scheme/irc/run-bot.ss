@@ -29,7 +29,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*my-nick* nick))
   (("-q" "--quote-and-headline-interval")
    secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
-   (*quote-and-headline-interval* (string->number secs)))
+   (*quote-interval* (string->number secs)))
   (("--nickserv")
    pw "Password for NICKSERV"
    (*nickserv-password* pw))
