@@ -73,17 +73,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (parameterize
          ((current-namespace
            (module->namespace "bot.ss")))
-       (fprintf
-        (current-error-port)
-        "Welcome to the ~a namespace.  Use your power only for good.~%"
-        (object-name (current-namespace)))
        (with-handlers
            ([exn:fail:filesystem?
              (lambda (e)
                (fprintf
                 (current-error-port)
                 "Can't load readline.  Bummer.~%"))])
-         (dynamic-require '(lib "rep.ss" "readline") #f))
+         (dynamic-require '(lib "rep.ss" "readline") #f)
+         (fprintf
+          (current-error-port)
+          "Welcome to the ~a namespace.  Use your power only for good.~%"
+          (object-name (current-namespace))))
        (read-eval-print-loop)))))
 
 (start)

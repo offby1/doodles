@@ -116,11 +116,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (thread-with-id
      (lambda ()
        (let loop ()
-         (vtprintf "channel action ~a syncing ...~%"
-                   descr)
          (let ((why (sync cme)))
-           (vtprintf "channel action ~a synced and got ~s~%"
-                     descr why)
            (when why
              (action why))
            (loop))))

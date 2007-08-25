@@ -102,7 +102,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              "\u0001ACTION is at a loss for words, as usual\u0001"))))
 
 
-                                        ;(trace respond)
+;;(trace respond)
 
 (define *sess* #f)
 
@@ -111,23 +111,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
   (hash-table-put!
    (irc-session-message-subscriptions s)
    proc
-   #t)
-  (vtprintf "~a subscriptions~%"
-            (hash-table-count (irc-session-message-subscriptions s))))
+   #t))
 
 (define (unsubscribe-proc-to-server-messages! proc s)
   (when *sess*
     (hash-table-remove!
      (irc-session-message-subscriptions *sess*)
-     proc))
+     proc)))
 
-  (vtprintf "~a subscriptions~%"
-            (hash-table-count (irc-session-message-subscriptions s))))
 ;(trace unsubscribe-proc-to-server-messages!)
-
-(define (p val)
-  (vtprintf "~s~%" val)
-  val)
 
 (define (register-usual-services! session)
 
@@ -156,30 +148,31 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 #:key
                 [descr "unknown"]
                 [periodic? #t])
-      (let ((action (make-channel-action
-                     discriminator
-                     action
-                     #:timeout (*quote-and-headline-interval*)
-                     #:periodic? periodic?)))
-        (subscribe-proc-to-server-messages! action session)
-        action))
+      (subscribe-proc-to-server-messages!
+       (make-channel-action
+        discriminator
+        action
+        #:timeout (*quote-and-headline-interval*)
+        #:periodic? periodic?)
+       session))
     ;(trace add-idle!)
 
     (add!
      RPL_ENDOFNAMES?
      (lambda (366-message)
+       (vtprintf "Got 366~%")
        (let ((ch (RPL_ENDOFNAMES-channel-name 366-message)))
          (define (chatter? m) (on-channel? ch m))
          (define (command=? str m) (and (chatter? m) (gist-equal? str m)))
 
-         ;;(trace chatter?)
+         ;; (trace chatter?)
+         ;; (trace command=?)
          ;; jordanb quotes
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
 
            ;; on-demand ...
            (add!
-            (lambda (m) (and (on-channel? ch m)
-                             (gist-equal? "quote" m)))
+            (lambda (m) (command=? "quote" m))
             (lambda (m)
               (for-each
                (lambda (r)
@@ -511,11 +504,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (let ((line (read-line ip 'return-linefeed)))
              (if (eof-object? line)
                  (if #t
-                     (begin
-                       (vtprintf "eof on server; not reconnecting~%")
-                       (custodian-shutdown-all (irc-session-custodian *sess*)))
+                     (vtprintf "eof on server; not reconnecting~%")
                    (begin
                      (vtprintf "eof on server; reconnecting~%")
+                     (custodian-shutdown-all (irc-session-custodian *sess*))
                      (sleep 10)
                      (start)))
                (begin
