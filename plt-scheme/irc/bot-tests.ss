@@ -74,6 +74,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
            (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
           )))
+       (test-case
+        "replies go to the right place"
+        (check-not-false
+         (got-response?
+          sess
+          ip
+          (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (*my-nick*))
+          #rx"PRIVMSG a :.*at a loss for words")))
 
        (test-case
         "backed-up idle events"
