@@ -27,8 +27,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*del.icio.us-password* del))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-q" "--quote-and-headline-interval")
-   secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
+  (("-q" "--quote-interval")
+   secs "Seconds of channel silence required to emit a funny quote"
    (*quote-interval* (string->number secs)))
   (("--nickserv")
    pw "Password for NICKSERV"
