@@ -205,34 +205,35 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             #:descr "on-demand news")
 
            ;; periodic news spewage.
-           (thread-with-id
-            (lambda ()
-              (let loop ()
+           (when  (irc-session-async-for-news session)
+             (thread-with-id
+              (lambda ()
+                (let loop ()
 
-                ;; wait for something to say.
-                (let ((headline (sync (irc-session-async-for-news session))))
-                  (assert (entry? headline))
+                  ;; wait for something to say.
+                  (let ((headline (sync (irc-session-async-for-news session))))
+                    (assert (entry? headline))
 
-                  (when (not (already-spewed? headline))
-                    ;; wait for a chance to say it.
-                    (let ((cme (make-channel-message-event
-                                chatter?
-                                #:periodic? #f
-                                #:timeout (*quote-and-headline-interval*))))
-                      (subscribe-proc-to-server-messages!
-                       (channel-idle-event-input-examiner cme)
-                       session)
+                    (when (not (already-spewed? headline))
+                      ;; wait for a chance to say it.
+                      (let ((cme (make-channel-message-event
+                                  chatter?
+                                  #:periodic? #f
+                                  #:timeout (*quote-and-headline-interval*))))
+                        (subscribe-proc-to-server-messages!
+                         (channel-idle-event-input-examiner cme)
+                         session)
 
-                      (sync cme)
+                        (sync cme)
 
-                      (pm session ch
-                          (entry->string headline))
-                      (note-spewed! headline)
+                        (pm session ch
+                            (entry->string headline))
+                        (note-spewed! headline)
 
-                      (unsubscribe-proc-to-server-messages! cme session)
-                      )
-                    (loop))
-                  )))))
+                        (unsubscribe-proc-to-server-messages! cme session)
+                        )
+                      (loop))
+                    ))))))
 
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))
