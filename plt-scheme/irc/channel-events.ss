@@ -39,9 +39,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
-       (vtprintf "Some channel-idle event saw ~s~%" irc-message)
        (when (criterion irc-message)
-         (vtprintf "Some channel-idle event is resetting the alarm~%")
          ((alarm-with-snooze-snooze-button alarm)))
        #f                               ;so that the main loop doesn't
                                         ;think we've handled the
