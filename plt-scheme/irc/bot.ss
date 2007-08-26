@@ -218,18 +218,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (format "delay resetter for ~a" descr)))
 
          ;; jordanb quotes
+
+         ;; on-demand ...
+         (add!
+          (lambda (m) (command=? "quote" m))
+          (lambda (m)
+            (for-each
+             (lambda (r)
+               (notice session r (one-quote)))
+             (PRIVMSG-receivers m)))
+          #:responds? #t)
+
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
-
-           ;; on-demand ...
-           (add!
-            (lambda (m) (command=? "quote" m))
-            (lambda (m)
-              (for-each
-               (lambda (r)
-                 (notice session r (one-quote)))
-               (PRIVMSG-receivers m)))
-            #:responds? #t)
-
            (let ((quote-channel (make-channel)))
              ;; producer of quotes
              (thread-with-id
@@ -246,18 +246,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (pm session ch quote))
               #:descr "periodic funny quotes")))
 
+         ;; on-demand news spewage.
+         (add!
+          (lambda (m) (command=? "news" m))
+          (lambda (m)
+            (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
+              (reply session m
+                     (if headline
+                         (entry->string headline)
+                       "no news yet."))))
+          #:responds? #t
+          #:descr "on-demand news")
+
          (when (member ch '("#emacs" "#scheme-bots"))
-           ;; on-demand news spewage.
-           (add!
-            (lambda (m) (command=? "news" m))
-            (lambda (m)
-              (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
-                (reply session m
-                       (if headline
-                           (entry->string headline)
-                         "no news yet."))))
-            #:responds? #t
-            #:descr "on-demand news")
 
            ;; periodic news spewage.
            (when (irc-session-async-for-news session)
@@ -278,55 +279,54 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #:descr "periodic news spewage")))
 
          ;; moviestowatchfor
+         (let ((posts-channel (make-cached-channel)))
+
+           ;; producer thread -- updates posts-channel
+           (thread-with-id
+            (lambda ()
+              (with-handlers
+                  ([exn:delicious:auth?
+                    (lambda (e)
+                      (vtprintf
+                       "wrong delicious password; won't snarf moviestowatchfor posts~%"))]
+                   [exn:fail:network?
+                    (lambda (e)
+                      (vtprintf
+                       "Can't seem to contact del.icio.us~%"))])
+
+                (let loop ()
+                  (for-each
+                   (lambda (post)
+                     (cached-channel-put
+                      posts-channel
+                      (maybe-make-URL-tiny post)))
+                   (shuffle-list (snarf-some-recent-posts)))
+                  (sleep (* 7 24 3600))
+                  (loop))))
+
+            #:descr "moviestowatchfor")
+
+           (add!
+            (lambda (m) (command=? "movie" m))
+            (lambda (m)
+              (reply session
+                     m
+                     (let ((post (cached-channel-cache posts-channel)))
+                       (if post
+                           (entry->string post)
+                         "hmm, no movie recommendations yet"))))
+            #:responds? #t)
+
          (when (member ch '("##cinema" "#scheme-bots"))
-           (vtprintf "moviestowatchfor: ch is ~s~%" ch)
-           (let ((posts-channel (make-cached-channel)))
 
-             ;; producer thread -- updates posts-channel
-             (thread-with-id
-              (lambda ()
-                (with-handlers
-                    ([exn:delicious:auth?
-                      (lambda (e)
-                        (vtprintf
-                         "wrong delicious password; won't snarf moviestowatchfor posts~%"))]
-                     [exn:fail:network?
-                      (lambda (e)
-                        (vtprintf
-                         "Can't seem to contact del.icio.us~%"))])
-
-                  (let loop ()
-                    (for-each
-                     (lambda (post)
-                       (cached-channel-put
-                        posts-channel
-                        (maybe-make-URL-tiny post)))
-                     (shuffle-list (snarf-some-recent-posts)))
-                    (sleep (* 7 24 3600))
-                    (loop))))
-
-              #:descr "moviestowatchfor")
-
-             (add!
-              (lambda (m) (command=? "movie" m))
-              (lambda (m)
-                (reply session
-                       m
-                       (let ((posts (cached-channel-cache posts-channel)))
-                         (if posts
-                             (entry->string
-                              (list-ref posts (random (length posts))))
-                           "hmm, no movie recommendations yet"))))
-              #:responds? #t)
-
-             (consume-and-spew
-              posts-channel
-              (lambda (post) #t)
-              (lambda (post)
-                (pm session
-                    ch
-                    (entry->string post)))
-              #:descr "periodic moviestowatchfor"))))))
+           (consume-and-spew
+            posts-channel
+            (lambda (post) #t)
+            (lambda (post)
+              (pm session
+                  ch
+                  (entry->string post)))
+            #:descr "periodic moviestowatchfor"))))))
 
     (add!
      (lambda (m)

@@ -4,6 +4,15 @@
 
 * bugs
 
+** "no movies yet" in #emacs
+   r4842: ... even though there are plenty in ##cinema.
+
+* rename "channel" to "queue"?
+  The word "channel" has two utterly different meanings in this
+  program: 1) a PLT scheme "async-channel", or a PLT scheme "channel";
+  2) an IRC channel.  Maybe I should rename variables of the former
+  type from "mumble-channel" to "mumble-queue".
+
 
 -- Low priority
 
