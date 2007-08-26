@@ -27,7 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (set! version-string-registry (cons str version-string-registry)))))
 
 (define (long-version-string) (format
-                               "~a (offby1@blarg.net):v2.~a:PLT scheme version ~a on ~a"
+                               "~a (offby1@blarg.net):v3.~a:PLT scheme version ~a on ~a"
                                *client-name*
 
                                ;; *sigh*.  The version string with
