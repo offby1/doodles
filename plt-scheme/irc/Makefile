@@ -51,7 +51,7 @@ dist: svnup $(tarball)
 # dry-test hits some spots that run-all-tests misses.  So we run
 # dry-tests too.  Alas, it doesn't report failures; you have to
 # carefully examine the output for runtime errors.
-check:
+check: version.ss
 	./run-all-tests.ss
 	@echo Feel free to kill the following if it runs for too long.
 	./dry-test.sh
