@@ -15,7 +15,6 @@ echo Nothing to see here\; move along; exit 0
 (register-version-string "$Id$")
 (define *current-thread-id* (make-parameter 0))
 (define/kw (thread-with-id thunk #:key [descr])
-  (check-type 'thread-with-id values descr)
   (set! threads-created (add1 threads-created))
   (parameterize ((*current-thread-id*
                   (format "~a:~a"

@@ -172,7 +172,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                 (let loop ()
                   (proc delay)
-                  ;; (set! delay (* 2 delay))
+                  (set! delay (* 2 delay))
                   (loop))
                 ))
             #:descr (format
