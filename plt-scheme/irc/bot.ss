@@ -33,6 +33,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "planet-emacsen.ss"
          "quotes.ss"
          "session.ss"
+         "shuffle.ss"
          "thread.ss"
          "tinyurl.ss"
          "vprintf.ss"
@@ -228,9 +229,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (PRIVMSG-receivers m)))
             #:responds? #t)
 
-           (add-idle!
-            chatter?
-            (lambda (ignored) (pm session ch (one-quote)))))
+           (let ((quote-channel (make-channel)))
+             ;; producer of quotes
+             (thread-with-id
+              (lambda ()
+                (let loop ()
+                  (channel-put quote-channel (one-quote))
+                  (loop))))
+
+             (murgatroid
+              quote-channel
+              (lambda (quote) #t)
+              (lambda (quote)
+                (pm session ch quote))
+              "periodic funny quotes")))
 
          (when (member ch '("#emacs" "#scheme-bots"))
            ;; on-demand news spewage.
@@ -262,9 +274,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))
            (vtprintf "moviestowatchfor: ch is ~s~%" ch)
-           (let ((posts #f))
+           (let ((posts-channel (make-cached-channel)))
 
-             ;; producer thread -- updates posts
+             ;; producer thread -- updates posts-channel
              (thread-with-id
               (lambda ()
                 (with-handlers
@@ -276,10 +288,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                       (lambda (e)
                         (vtprintf
                          "Can't seem to contact del.icio.us~%"))])
+
                   (let loop ()
-                    (set! posts (map maybe-make-URL-tiny (snarf-some-recent-posts)))
-                    (sleep  (* 7 24 3600))
+                    (for-each
+                     (lambda (post)
+                       (cached-channel-put
+                        posts-channel
+                        (maybe-make-URL-tiny post)))
+                     (shuffle-list (snarf-some-recent-posts)))
+                    (sleep (* 7 24 3600))
                     (loop))))
+
               #:descr "moviestowatchfor")
 
              (add!
@@ -287,21 +306,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda (m)
                 (reply session
                        m
-                       (if posts
-                           (entry->string
-                            (list-ref posts (random (length posts))))
-                         "hmm, no movie recommendations yet")))
+                       (let ((posts (cached-channel-cache posts-channel)))
+                         (if posts
+                             (entry->string
+                              (list-ref posts (random (length posts))))
+                           "hmm, no movie recommendations yet"))))
               #:responds? #t)
 
-             (add-idle!
-              chatter?
-              (lambda (ignored)
-                (when posts
-                  (pm session
-                      (list ch)
-                      (entry->string
-                       (list-ref posts (random (length posts)))))))
-              #:descr "periodic moviestowatchfor spewage"))))))
+             (murgatroid
+              posts-channel
+              (lambda (post) #t)
+              (lambda (post)
+                (pm session
+                    (list ch)
+                    (entry->string post)))
+              "periodic moviestowatchfor"))))))
 
     (add!
      (lambda (m)
