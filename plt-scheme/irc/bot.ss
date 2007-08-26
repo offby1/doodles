@@ -147,21 +147,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         #:descr descr)
        session))
 
-    (define/kw (add-idle!
-                discriminator
-                action
-                #:key
-                [descr "unknown"]
-                [periodic? #t])
-      (subscribe-proc-to-server-messages!
-       (make-channel-action
-        discriminator
-        action
-        #:timeout (*quote-interval*)
-        #:periodic? periodic?)
-       session))
-    ;(trace add-idle!)
-
     (add!
      RPL_ENDOFNAMES?
      (lambda (366-message)

@@ -88,10 +88,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         (before
          (begin
-           (set! sess (fresh-session op))
-           ;; start the news thread
+           (*minimum-headline-delay* 1/10)
            (*planet-poll-interval* 2)
-           (*quote-interval* 1/10)
+           ;; start the news thread
+           (set! sess (fresh-session op))
            (respond (parse-irc-message ":x 366 rudybot #emacs :backed-up idle events'") sess))
 
          ;; ensure there is no news available.
@@ -99,7 +99,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
          ;; let the channel go idle.
          (vtprintf "Test is sleeping~%")
-         (sleep (* 2 (*quote-interval*)))
 
          ;; have someone say something on the channel.
          (respond (parse-irc-message ":a!b@c PRIVMSG #emacs :yo") sess)
@@ -115,7 +114,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; no longer idle.
 
          (check-false
-          (expect/timeout ip #rx"JAPS" (* 3/4 (*quote-interval*))))))
+          (expect/timeout ip #rx"JAPS" (* 3/4 (*minimum-headline-delay*))))))
 
        (test-suite
         "news in general"
@@ -128,7 +127,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ;; copies (in the new threads) of the parameters.
           (*planet-poll-interval* 2)
           (printf "Test is setting quote-and-headline-interval to 1/2 second~%") (flush-output)
-          (*quote-interval* 1/2)
           (*minimum-headline-delay* 1/10)
 
           (set! sess (fresh-session op))
@@ -144,13 +142,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (sleep 1/2)
 
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
-         (sleep (*quote-interval*))
+         (sleep (*minimum-headline-delay*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
-         (sleep (*quote-interval*))
+         (sleep (*minimum-headline-delay*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
-         (sleep (*quote-interval*))
+         (sleep (*minimum-headline-delay*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
-         (sleep (*quote-interval*))
+         (sleep (*minimum-headline-delay*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news")))
 
         (test-case
