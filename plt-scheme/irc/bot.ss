@@ -51,10 +51,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 (define pm
   (lambda (s target msg)
+    (check-type 'pm string? msg)
+    (check-type 'pm string? target)
     (out  s "PRIVMSG ~a :~a~%" target msg)))
 
 (define  notice
   (lambda (s target msg)
+    (check-type 'pm string? msg)
+    (check-type 'pm string? target)
     (out  s "NOTICE ~a :~a~%" target msg)))
 
 (define reply
@@ -197,7 +201,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (exponentially-backing-off-spewer
             (lambda (delay)
               ;; wait for something to say.
-              (let ((headline (sync (irc-session-async-for-news session))))
+              (let ((headline (sync news-source)))
                 (when (headline-filter headline)
                   ;; wait for a chance to say it.
                   (let ((cme (make-channel-message-event
@@ -318,7 +322,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda (post) #t)
               (lambda (post)
                 (pm session
-                    (list ch)
+                    ch
                     (entry->string post)))
               "periodic moviestowatchfor"))))))
 
