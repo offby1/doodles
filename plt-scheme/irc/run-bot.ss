@@ -10,6 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 this-expression-source-directory)
           "bot.ss"
           "globals.ss"
+          (only "headline.ss" reliably-put-pref)
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "quotes.ss"
           "vprintf.ss"
@@ -58,6 +59,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              "WARNING: you're connecting to IRC server ~s but using a ~a Atom feed~%"
              (*irc-server-name*)
              feed-description))
+
+  ;; I generally do this by hand when testing, so ... why not do it
+  ;; automatically.
+  (when (not (*use-real-atom-feed?*))
+    (reliably-put-pref #f))
 
   (vtprintf "Our version string is ~s~%" *svnversion-string*))
 

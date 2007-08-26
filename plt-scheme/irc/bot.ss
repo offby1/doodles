@@ -172,16 +172,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                 (let loop ()
                   (proc delay)
-                  (set! delay (* 2 delay))
+                  ;; (set! delay (* 2 delay))
                   (loop))
                 ))))
 
-         ;; I haven't yet thought of a good name for this.  That's a
-         ;; bad sign.
-         (define (murgatroid
+         (define (consume-and-spew
                   news-source
                   headline-filter
-                  proc
+                  headline-proc
                   descr)
            (exponentially-backing-off-spewer
             (lambda (delay)
@@ -199,7 +197,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                     (sync cme)
 
-                    (proc headline)
+                    (headline-proc headline)
 
                     (unsubscribe-proc-to-server-messages! cme session)))))
 
@@ -226,7 +224,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (channel-put quote-channel (one-quote))
                   (loop))))
 
-             (murgatroid
+             (consume-and-spew
               quote-channel
               (lambda (quote) #t)
               (lambda (quote)
@@ -248,7 +246,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
            ;; periodic news spewage.
            (when (irc-session-async-for-news session)
-             (murgatroid
+             (consume-and-spew
               (irc-session-async-for-news session)
               (lambda (headline)
                  (assert (entry? headline))
@@ -302,7 +300,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                            "hmm, no movie recommendations yet"))))
               #:responds? #t)
 
-             (murgatroid
+             (consume-and-spew
               posts-channel
               (lambda (post) #t)
               (lambda (post)

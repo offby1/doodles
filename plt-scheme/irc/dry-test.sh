@@ -4,6 +4,7 @@
 
     echo -e ":localhost. 001 rudybot :Welcome to the Debian dancer-ircd Network rudybot \\r"
     echo -e ":localhost 366 rudybot #scheme-bots :what's up, homes? \\r"
+    echo -e ":localhost 366 rudybot #emacs :what's up, homes? \\r"
 
     echo -e ":a!b@c PRIVMSG #scheme-bots :hey buddy\\r"
     echo -e ":a!b@c PRIVMSG #scheme-bots :rudybot: hey buddy\\r"
@@ -17,11 +18,9 @@
     echo -e ":a!b@c PRIVMSG rudybot :\001VERSION\001\\r"
     echo -e ":a!b@c PRIVMSG rudybot :what ho, my good man\\r"
 
-    sleep 10
-
-#     while true
-#     do
-#         sleep 120
-#     done
+    while true
+    do
+        sleep 120
+    done
 
     ) | ./run-bot.ss -c '#scheme-bots' -n rudybot  > /dev/null

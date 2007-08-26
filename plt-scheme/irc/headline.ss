@@ -58,6 +58,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; IRC server, so that we can keep track of what we've spewed
 ;; per-server, as opposed to globally.
 (define (note-spewed! e)
+  (assert (not (already-spewed? e)))
+
   (let ((last-spewed (get-preference (*atom-timestamp-preference-name*)))
         (title-link (list (entry-title e)
                           (entry-link e))))
@@ -67,10 +69,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (reliably-put-pref (list (time-second (entry-timestamp e)) title-link))
 
       (begin
-        ;; make sure what we're noting is no older than what we
-        ;; previously noted.
-        (assert (>= (time-second (entry-timestamp e))
-                    (car last-spewed)))
 
         ;; what we're noting has the same timestamp as what we'd
         ;; previously noted, so append the title-link info to what's
@@ -85,6 +83,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (reliably-put-pref (list (time-second (entry-timestamp e)) title-link))))
       )
     ))
+(trace note-spewed!)
 
 (define (already-spewed? e)
   (let ((e-secs (time-second (entry-timestamp e)))
@@ -92,13 +91,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (title-link (list (entry-title e)
                           (entry-link e))))
 
-    ;; we've never noted anything before, so save this entry.
     (if (not last-spewed)
         #f
       (if (equal? e-secs (car last-spewed))
           (member title-link last-spewed)
         (< e-secs (car last-spewed))))))
-;(trace already-spewed?)
+(trace already-spewed?)
 
 (define headline-tests
 
