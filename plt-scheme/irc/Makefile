@@ -1,3 +1,8 @@
+# BUGBUG -- we run svnversion as soon as "make" reads this makefile,
+# but it'd be better if we could hold off until after we run 'svn up',
+# since the resulting version string would then be cleaner (e.g.,
+# "4839" versus "4837:4839")
+
 svnversion:= $(shell svnversion -n .)
 basename  := $(shell echo rudybot-$(svnversion) | sed s,:,-,)
 plt-file  := $(basename).plt
