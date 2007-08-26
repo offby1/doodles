@@ -23,4 +23,4 @@
         sleep 120
     done
 
-    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot  > /dev/null
+    ) | ./run-bot.ss -c '#scheme-bots' -n rudybot
