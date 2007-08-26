@@ -100,9 +100,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             [timeout #f]
             [periodic? #f]
             [responds? #f]
-            [descr (format "~a:~a"
-                           (object-name criterion)
-                           (object-name action))]
+            descr
             )
   (when (and timeout responds?)
     (raise (make-exn:fail:contract

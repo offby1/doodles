@@ -174,32 +174,39 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (proc delay)
                   ;; (set! delay (* 2 delay))
                   (loop))
-                ))))
+                ))
+            #:descr (format
+                     "exponentially-backing-off-spewer for ~a for channel ~a"
+                     descr ch)))
 
-         (define (consume-and-spew
+         (define/kw (consume-and-spew
                   news-source
                   headline-filter
                   headline-proc
-                  descr)
+                  #:key
+                  [wrapper (lambda ( t) ( t))]
+                  [descr "unknown, damn it"])
            (exponentially-backing-off-spewer
             (lambda (delay)
               ;; wait for something to say.
               (let ((headline (sync news-source)))
-                (when (headline-filter headline)
-                  ;; wait for a chance to say it.
-                  (let ((cme (make-channel-message-event
-                              chatter?
-                              #:periodic? #f
-                              #:timeout delay)))
-                    (subscribe-proc-to-server-messages!
-                     (channel-idle-event-input-examiner cme)
-                     session)
+                (wrapper
+                 (lambda ()
+                   (when (headline-filter headline)
+                     ;; wait for a chance to say it.
+                     (let ((cme (make-channel-message-event
+                                 chatter?
+                                 #:periodic? #f
+                                 #:timeout delay)))
+                       (subscribe-proc-to-server-messages!
+                        (channel-idle-event-input-examiner cme)
+                        session)
 
-                    (sync cme)
+                       (sync cme)
 
-                    (headline-proc headline)
+                       (headline-proc headline)
 
-                    (unsubscribe-proc-to-server-messages! cme session)))))
+                       (unsubscribe-proc-to-server-messages! cme session)))))))
 
             (format "delay resetter for ~a" descr)))
 
@@ -222,14 +229,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda ()
                 (let loop ()
                   (channel-put quote-channel (one-quote))
-                  (loop))))
+                  (loop)))
+              #:descr "quote producer")
 
              (consume-and-spew
               quote-channel
               (lambda (quote) #t)
               (lambda (quote)
                 (pm session ch quote))
-              "periodic funny quotes")))
+              #:descr "periodic funny quotes")))
 
          (when (member ch '("#emacs" "#scheme-bots"))
            ;; on-demand news spewage.
@@ -256,7 +264,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (pm session ch
                     (entry->string headline))
                 (note-spewed! headline))
-              "periodic news spewage")))
+              #:wrapper (lambda (thunk)
+                          (call-with-semaphore
+                           *prefs-file-semaphore*
+                           thunk))
+              #:descr "periodic news spewage")))
 
          ;; moviestowatchfor
          (when (member ch '("##cinema" "#scheme-bots"))
@@ -307,7 +319,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (pm session
                     ch
                     (entry->string post)))
-              "periodic moviestowatchfor"))))))
+              #:descr "periodic moviestowatchfor"))))))
 
     (add!
      (lambda (m)

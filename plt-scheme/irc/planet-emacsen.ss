@@ -7,9 +7,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (module planet-emacsen mzscheme
 (require (only (lib "etc.ss") this-expression-source-directory)
          (lib "trace.ss")
-         (only  (lib "file.ss")
-                get-preference
-                put-preferences)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
 

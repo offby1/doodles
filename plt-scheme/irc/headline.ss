@@ -44,6 +44,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (set-entry-link! new-entry (make-tiny-url original-url)))
       new-entry)))
 
+(define *prefs-file-semaphore* (make-semaphore 1))
+
 (define (reliably-put-pref value)
   (let retry ()
     (put-preferences
@@ -83,7 +85,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (reliably-put-pref (list (time-second (entry-timestamp e)) title-link))))
       )
     ))
-(trace note-spewed!)
+;(trace note-spewed!)
 
 (define (already-spewed? e)
   (let ((e-secs (time-second (entry-timestamp e)))
@@ -94,9 +96,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (if (not last-spewed)
         #f
       (if (equal? e-secs (car last-spewed))
-          (member title-link last-spewed)
+           (member title-link last-spewed)
         (< e-secs (car last-spewed))))))
-(trace already-spewed?)
+;(trace already-spewed?)
 
 (define headline-tests
 
