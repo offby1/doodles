@@ -180,12 +180,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      descr ch)))
 
          (define/kw (consume-and-spew
-                  news-source
-                  headline-filter
-                  headline-proc
-                  #:key
-                  [wrapper (lambda ( t) ( t))]
-                  [descr "unknown, damn it"])
+                     news-source
+                     headline-filter
+                     headline-proc
+                     #:key
+
+                     ;; this is basically a chance to wrap both
+                     ;; headline-filter and headline-proc in a
+                     ;; call-with-semaphore, since in at least one
+                     ;; case, those procedures need to read and write
+                     ;; the PLT preferences file.
+                     [wrapper (lambda ( t) ( t))]
+
+                     [descr "unknown, damn it"])
            (exponentially-backing-off-spewer
             (lambda (delay)
               ;; wait for something to say.
