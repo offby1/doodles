@@ -10,7 +10,8 @@
           (thread
            (lambda ()
              (let loop ()
-               (vtprintf "expect/timeout about to look for ~s from ~s ...~%"
+               (vtprintf "expect/timeout about to spend ~a seconds looking for ~s from ~s ...~%"
+                         seconds
                          regex
                          (object-name ip))
                (let ((line (read-line ip)))
@@ -28,7 +29,9 @@
 
                  ))))))
     (begin0
-      (and (sync/timeout seconds ch)
+      (and (vtprintf "expect/timeout syncing at most ~a seconds"
+                     seconds)
+           (sync/timeout seconds ch)
            ch)
       (kill-thread reader))))
 

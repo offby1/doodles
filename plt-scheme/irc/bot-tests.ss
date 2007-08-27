@@ -88,7 +88,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
         (before
          (begin
-           (*minimum-headline-delay* 1/10)
+           (*minimum-delay-for-periodic-spew* 1/10)
            (*planet-poll-interval* 2)
            ;; start the news thread
            (set! sess (fresh-session op))
@@ -114,7 +114,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; no longer idle.
 
          (check-false
-          (expect/timeout ip #rx"JAPS" (* 3/4 (*minimum-headline-delay*))))))
+          (expect/timeout ip #rx"JAPS" (* 3/4 (*minimum-delay-for-periodic-spew*))))))
 
        (test-suite
         "news in general"
@@ -127,7 +127,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           ;; copies (in the new threads) of the parameters.
           (*planet-poll-interval* 2)
           (printf "Test is setting quote-and-headline-interval to 1/2 second~%") (flush-output)
-          (*minimum-headline-delay* 1/10)
+          (*minimum-delay-for-periodic-spew* 1/10)
 
           (set! sess (fresh-session op))
           (respond (parse-irc-message ":x 366 rudybot #emacs :keeps saying 'no news'") sess))
@@ -142,13 +142,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (sleep 1/2)
 
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
-         (sleep (*minimum-headline-delay*))
+         (sleep (*minimum-delay-for-periodic-spew*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
-         (sleep (*minimum-headline-delay*))
+         (sleep (*minimum-delay-for-periodic-spew*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
-         (sleep (*minimum-headline-delay*))
+         (sleep (*minimum-delay-for-periodic-spew*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
-         (sleep (*minimum-headline-delay*))
+         (sleep (*minimum-delay-for-periodic-spew*))
          (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news")))
 
         (test-case
@@ -165,10 +165,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                        "http://synasthesia.org")))
 
          (check-not-false
-          (expect/timeout ip #rx"SPACE ALIENS" (* 2 (*minimum-headline-delay*)))
+          (expect/timeout ip #rx"SPACE ALIENS" (* 2 (*minimum-delay-for-periodic-spew*)))
           "damn, it didn't appear the first time")
          (check-false
-          (expect/timeout ip #rx"SPACE ALIENS" (* 4 (*minimum-headline-delay*)))
+          (expect/timeout ip #rx"SPACE ALIENS" (* 4 (*minimum-delay-for-periodic-spew*)))
           "damn, it appeared a second time")
          )
         )

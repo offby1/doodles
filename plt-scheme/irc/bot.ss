@@ -160,13 +160,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          (define (exponentially-backing-off-spewer proc descr)
            (thread-with-id
-            (let* ((delay (*minimum-headline-delay*)))
+            (let* ((delay (*minimum-delay-for-periodic-spew*)))
               (lambda ()
 
                 (add!
                  chatter?
                  (lambda (m)
-                   (set! delay (*minimum-headline-delay*)))
+                   (set! delay (*minimum-delay-for-periodic-spew*)))
                  #:responds? #f
                  #:descr descr)
 
