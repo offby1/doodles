@@ -265,8 +265,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (consume-and-spew
               (irc-session-async-for-news session)
               (lambda (headline)
-                 (assert (entry? headline))
-                 (not (already-spewed? headline)))
+                (assert (entry? headline))
+                (not (already-spewed? headline)))
               (lambda (headline)
                 (assert (entry? headline))
                 (pm session ch
@@ -279,54 +279,53 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #:descr "periodic news spewage")))
 
          ;; moviestowatchfor
-         (let ((posts-channel (make-cached-channel)))
 
-           ;; producer thread -- updates posts-channel
-           (thread-with-id
-            (lambda ()
-              (with-handlers
-                  ([exn:delicious:auth?
-                    (lambda (e)
-                      (vtprintf
-                       "wrong delicious password; won't snarf moviestowatchfor posts~%"))]
-                   [exn:fail:network?
-                    (lambda (e)
-                      (vtprintf
-                       "Can't seem to contact del.icio.us~%"))])
+         ;; producer thread -- updates (irc-session-movies-queue session)
+         (thread-with-id
+          (lambda ()
+            (with-handlers
+                ([exn:delicious:auth?
+                  (lambda (e)
+                    (vtprintf
+                     "wrong delicious password; won't snarf moviestowatchfor posts~%"))]
+                 [exn:fail:network?
+                  (lambda (e)
+                    (vtprintf
+                     "Can't seem to contact del.icio.us~%"))])
 
-                (let loop ()
-                  (for-each
-                   (lambda (post)
-                     (cached-channel-put
-                      posts-channel
-                      (maybe-make-URL-tiny post)))
-                   (shuffle-list (snarf-some-recent-posts)))
-                  (sleep (* 7 24 3600))
-                  (loop))))
+              (let loop ()
+                (for-each
+                 (lambda (post)
+                   (cached-channel-put
+                    (irc-session-movies-queue session)
+                    (maybe-make-URL-tiny post)))
+                 (shuffle-list (snarf-some-recent-posts)))
+                (sleep (* 7 24 3600))
+                (loop))))
 
-            #:descr "moviestowatchfor")
+          #:descr "moviestowatchfor")
 
-           (add!
-            (lambda (m) (command=? "movie" m))
-            (lambda (m)
-              (reply session
-                     m
-                     (let ((post (cached-channel-cache posts-channel)))
-                       (if post
-                           (entry->string post)
-                         "hmm, no movie recommendations yet"))))
-            #:responds? #t)
+         (add!
+          (lambda (m) (command=? "movie" m))
+          (lambda (m)
+            (reply session
+                   m
+                   (let ((post (cached-channel-cache (irc-session-movies-queue session))))
+                     (if post
+                         (entry->string post)
+                       "hmm, no movie recommendations yet"))))
+          #:responds? #t)
 
          (when (member ch '("##cinema" "#scheme-bots"))
 
            (consume-and-spew
-            posts-channel
+            (irc-session-movies-queue session)
             (lambda (post) #t)
             (lambda (post)
               (pm session
                   ch
                   (entry->string post)))
-            #:descr "periodic moviestowatchfor"))))))
+            #:descr "periodic moviestowatchfor")))))
 
     (add!
      (lambda (m)
@@ -478,7 +477,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (letrec ((s (make-irc-session
                    op
-                   #:feed
+                   #:newsfeed
                    (queue-of-entries
                     #:whence
                     (if (*use-real-atom-feed?*)

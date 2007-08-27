@@ -29,10 +29,9 @@
 
                  ))))))
     (begin0
-      (and (vtprintf "expect/timeout syncing at most ~a seconds"
-                     seconds)
-           (sync/timeout seconds ch)
+      (and (sync/timeout seconds ch)
            ch)
+
       (kill-thread reader))))
 
 (provide (all-defined))

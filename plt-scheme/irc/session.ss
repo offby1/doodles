@@ -29,6 +29,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    ;; little stub, for testing.
    async-for-news
 
+   ;; where we get "movies to watch for" headlines from.
+   movies-queue
+
    ;; the IRC server is at the other end of this port.
    op
 
@@ -38,9 +41,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    ) #f)
 
-(define/kw (public-make-irc-session op #:key [feed #f] )
-  (when feed
-    (check-type 'make-irc-session cached-channel? feed))
+(define/kw (public-make-irc-session
+            op
+            #:key
+            [newsfeed #f])
+  (when newsfeed
+    (check-type 'make-irc-session cached-channel? newsfeed))
   (letrec ((sess
             (make-irc-session
 
@@ -51,7 +57,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (make-hash-table 'equal)
 
              (make-hash-table 'equal)
-             feed
+             newsfeed
+             (make-cached-channel)
              op
              (make-custodian)
              )))

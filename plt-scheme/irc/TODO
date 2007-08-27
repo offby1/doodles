@@ -4,14 +4,6 @@
 
 * bugs
 
-** "no movies yet" in #emacs
-   r4842: ... even though there are plenty in ##cinema.  I suspect
-   I've accidentally created two async channels for movies -- one in
-   ##cinema and one in #emacs -- and the latter never gets waited on,
-   hence its cache never fills.  The solution would be to ensure
-   there's only one such async.  Not sure if it should live in the
-   session (along with the news headline thing) or not.
-
 * rename "channel" to "queue"?
   The word "channel" has two utterly different meanings in this
   program: 1) a PLT scheme "async-channel", or a PLT scheme "channel";

@@ -146,8 +146,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (make-channel-action
               on-snooze?
               (lambda (thing)
-                (printf "channel action got 'thing' ~s~%"
-                        thing)
                 (channel-put evidence #t))
               #:timeout 1/10
               #:periodic? #t))
@@ -173,8 +171,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (e (make-channel-action
                 on-snooze?
                 (lambda (thing)
-                  (printf "channel action got 'thing' ~s~%"
-                          thing)
                   (channel-put evidence #t))
                 #:responds? #t)))
        (let ((handled? (e (parse-irc-message ":x!x@z PRIVMSG #snooze :wakey wakey"))))

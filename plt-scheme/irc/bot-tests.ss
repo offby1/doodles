@@ -131,6 +131,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
           (set! sess (fresh-session op))
           (respond (parse-irc-message ":x 366 rudybot #emacs :keeps saying 'no news'") sess))
+        #:after
+        (lambda ()
+          (custodian-shutdown-all (irc-session-custodian sess)))
         (test-case
          "keeps saying 'no news'"
 
