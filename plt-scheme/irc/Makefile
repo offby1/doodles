@@ -23,7 +23,9 @@ define cleanup
 rm -rf $${tempdir}
 endef
 
-version.ss: $(filter-out version.ss,$(wildcard *.ss))
+FORCE:
+
+version.ss: FORCE
 	echo -n '(define *svnversion-string* "' > $@
 	echo -n $(svnversion) >> $@
 	echo    '")' >> $@
@@ -61,11 +63,7 @@ clean:
 
 tags: TAGS
 
-# This tags file is almost useless -- it just contains the names of
-# the scheme files, but doesn't contain any actual tags.  But it's
-# useful for emacs commands that work on all the files in it, such as
-# tags-query-replace.
-TAGS: $(wildcard *.ss)
+TAGS: $(filter-out version.ss,$(wildcard *.ss))
 	PATH=/usr/local/src/emacs-cvs/lib-src:$(dir $(EMACS))../lib-src:$$PATH etags --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 .PHONY: clean all dist plt tar check svnup
