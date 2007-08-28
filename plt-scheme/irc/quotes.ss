@@ -11,7 +11,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          "quote-of-the-day.ss")
 (register-version-string "$Id$")
 
-(provide one-quote)
+(provide one-quote
+         random-choice)
 
 ;; no need to memoize this, but what the hell.
 (define/memo* (all-quotes)

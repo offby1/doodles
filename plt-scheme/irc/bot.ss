@@ -103,8 +103,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (for-us? message)
            (not handled?))
 
-      (reply s message
-             "\u0001ACTION is at a loss for words, as usual\u0001"))))
+      (let* ((g (gist-for-us message))
+             ;; unfortunately this only searches _my_ tags; it'd be
+             ;; far better if it searched everybody's.  Alas, I don't
+             ;; know if that's possible with the delicious PLaneT
+             ;; package.
+             (posts (and g (snarf-some-recent-posts #:tag g))))
+        (if (not (null? posts))
+            (reply s message
+                   (entry->string (random-choice posts)))
+          (reply s message
+                 "\u0001ACTION is at a loss for words, as usual\u0001"))))))
 
 
 ;;(trace respond)
