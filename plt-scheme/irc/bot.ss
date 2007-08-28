@@ -103,17 +103,47 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (for-us? message)
            (not handled?))
 
-      (let* ((g (gist-for-us message))
-             ;; unfortunately this only searches _my_ tags; it'd be
-             ;; far better if it searched everybody's.  Alas, I don't
-             ;; know if that's possible with the delicious PLaneT
-             ;; package.
-             (posts (and g (snarf-some-recent-posts #:tag g))))
-        (if (not (null? posts))
-            (reply s message
-                   (entry->string (random-choice posts)))
+      (cond
+       ((and (PRIVMSG? message)
+             (regexp-match
+              #rx"!n=Hfuy@82.152.178.217"
+              (message-prefix message)))
+        (reply s message
+               (random-choice (list "purrs"
+                                    "half-closes his eyes"
+                                    "yawns and stretches"
+                                    "scratches his ear with his hind leg"
+                                    "rubs his cheek against the chair leg"
+                                    "rolls on his back"
+                                    "jumps onto the counter"
+                                    "pretends to stalk a bug"
+                                    (format "twines around ~a's feet"
+                                            (PRIVMSG-speaker message))
+                                    (format "bats at ~a's shoelaces"
+                                            (PRIVMSG-speaker message))))))
+       ((with-handlers
+            ([(lambda (e)
+                (or (exn:delicious:auth? e)
+                    (exn:fail:network?)))
+              (lambda (e)
+                #f)])
+
+          (let* ((g (gist-for-us message))
+                 ;; unfortunately this only searches _my_ tags; it'd be
+                 ;; far better if it searched everybody's.  Alas, I don't
+                 ;; know if that's possible with the delicious PLaneT
+                 ;; package.
+                 (posts (and g (snarf-some-recent-posts #:tag g))))
+            (and (not (null? posts))
+                 posts)))
+        =>
+        (lambda (posts)
           (reply s message
-                 "\u0001ACTION is at a loss for words, as usual\u0001"))))))
+                 (entry->string (random-choice posts)))))
+       (else
+        (reply s message
+               "\u0001ACTION is at a loss for words, as usual\u0001"))
+       ))))
 
 
 ;;(trace respond)
