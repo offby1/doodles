@@ -41,23 +41,31 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let ((sess #f))
 
+      (define (call-with-setup thunk)
+        (around
+         (begin
+           (set! sess (fresh-session op)))
+         (thunk)
+         (begin
+           (custodian-shutdown-all (irc-session-custodian sess)))))
+
+      (define-syntax test-with-setup
+        (syntax-rules ()
+          [(test-with-setup name body ...)
+           (test-case name (call-with-setup (lambda () body ...)))]))
+
       (test-suite
        "crap"
        #:before
        (lambda ()
-         (*initial-channel-names* (list "#bots"))
-         )
+         (*initial-channel-names* (list "#bots")))
+
        #:after
        (lambda ()
          (custodian-shutdown-all (irc-session-custodian sess)))
-       (test-case
+       (test-with-setup
         "join"
-        (before
-         (set! sess (fresh-session op))
-         (respond
-          (parse-irc-message ":server 001 :welcome")
-          sess))
-
+        (respond (parse-irc-message ":server 001 :welcome") sess)
         (check-not-false
          (expect/timeout ip #rx"JOIN #bots" 1)
          "didn't join"))
