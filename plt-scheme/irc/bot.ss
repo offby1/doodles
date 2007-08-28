@@ -309,9 +309,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     (entry->string headline))
                 (note-spewed! headline))
               #:wrapper (lambda (thunk)
+                          (vtprintf "Waiting on prefs file semaphore ...~%")
                           (call-with-semaphore
                            *prefs-file-semaphore*
-                           thunk))
+                           (lambda ()
+                             (begin0
+                               (thunk)
+                               (vtprintf "Got through prefs file semaphore; posting to it.~%")))))
               #:descr "periodic news spewage")))
 
          ;; moviestowatchfor

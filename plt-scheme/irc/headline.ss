@@ -46,6 +46,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define *prefs-file-semaphore* (make-semaphore 1))
 
+;; strictly for testing
+(define (reset-prefs-file-semaphore!)
+   (set! *prefs-file-semaphore* (make-semaphore 1)))
+
 (define (reliably-put-pref value)
   (let retry ()
     (put-preferences
@@ -158,6 +162,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       )
      )))
 
-(provide (all-defined-except make-entry)
+(provide (all-defined-except make-entry reset-prefs-file-semaphore!)
          (rename public-make-entry make-entry))
 )
