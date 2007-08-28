@@ -262,10 +262,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (add!
           (lambda (m) (command=? "quote" m))
           (lambda (m)
-            (for-each
-             (lambda (r)
-               (notice session r (one-quote)))
-             (PRIVMSG-receivers m)))
+            (reply session m (one-quote)))
           #:responds? #t)
 
          (when (member ch '("#emacs" "#bots" "#scheme-bots"))
