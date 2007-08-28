@@ -4,6 +4,9 @@
 
 * bugs
 
+* test frequently hangs
+  namely, "items only appear once" in bot-tests.ss
+
 * rename "channel" to "queue"?
   The word "channel" has two utterly different meanings in this
   program: 1) a PLT scheme "async-channel", or a PLT scheme "channel";
