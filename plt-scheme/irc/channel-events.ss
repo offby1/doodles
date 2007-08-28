@@ -132,6 +132,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (and (PRIVMSG? m)
        (member "#snooze" (PRIVMSG-receivers m))))
 
+(define *timeout* 1/5)
+
 (define channel-events-tests
 
   (test-suite
@@ -147,7 +149,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              on-snooze?
              (lambda (thing)
                (channel-put evidence #t))
-             #:timeout 1/10
+             #:timeout *timeout*
              #:periodic? #t))
            (make-yammerer
             (lambda (string)
@@ -156,14 +158,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                  (let loop ((x 10))
                    (when (positive? x)
                      (e (parse-irc-message string))
-                     (sleep 1/20)
+                     (sleep (/ *timeout* 2))
                      (loop (sub1 x))))
                  )))))
 
-      (check-not-false (sync/timeout 2/10 evidence) "uh oh, the action didn't trigger.")
-      (check-not-false (sync/timeout 2/10 evidence) "uh oh, the action didn't trigger the second time.")
+      (check-not-false (sync/timeout (* 2 *timeout*) evidence) "uh oh, the action didn't trigger.")
+      (check-not-false (sync/timeout (* 2 *timeout*) evidence) "uh oh, the action didn't trigger the second time.")
       (let ((y (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")))
-        (check-false (sync/timeout 2/10 evidence) "idle action triggered when channel wasn't idle!")
+        (check-false (sync/timeout (* 2 *timeout*) evidence) "idle action triggered when channel wasn't idle!")
         (kill-thread y))))
 
     (test-case
@@ -176,13 +178,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                 #:responds? #t)))
        (let ((handled? (e (parse-irc-message ":x!x@z PRIVMSG #snooze :wakey wakey"))))
          (check-not-false handled? "uh oh, our message didn't get handled")
-         (check-true (sync/timeout 1/10 evidence) "uh oh, our action didn't trigger"))))
+         (check-true (sync/timeout *timeout* evidence) "uh oh, our action didn't trigger"))))
 
    (test-case
     "channel doesn't go idle when we are yammering at it"
     (let* ((e (make-channel-message-event on-snooze?
                                           #:periodic? #f
-                                          #:timeout 1/10))
+                                          #:timeout *timeout*))
            (make-yammerer
             (lambda (string)
               (thread
@@ -191,14 +193,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                    (when (positive? x)
                      ((channel-idle-event-input-examiner e)
                       (parse-irc-message string))
-                     (sleep 1/20)
+                     (sleep (/ *timeout* 2))
                      (loop (sub1 x))))
                  )))))
       (let ((relevant (make-yammerer ":x!x@z PRIVMSG #snooze :wakey wakey")))
-        (check-false (sync/timeout 2/10 e))
+        (check-false (sync/timeout (* 2 *timeout*) e))
         (kill-thread relevant)
         (let ((irrelevant (make-yammerer ":x!x@z PRIVMSG #other-channel :wakey wakey")))
-          (check-not-false (sync/timeout 2/10 e))
+          (check-not-false (sync/timeout (* 2 *timeout*) e))
            (kill-thread irrelevant))))))))
 
 
