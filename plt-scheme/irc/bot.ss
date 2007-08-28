@@ -124,7 +124,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        ((with-handlers
             ([(lambda (e)
                 (or (exn:delicious:auth? e)
-                    (exn:fail:network?)))
+                    (exn:fail:network? e)))
               (lambda (e)
                 #f)])
 
