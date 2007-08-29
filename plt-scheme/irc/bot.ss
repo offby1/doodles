@@ -19,6 +19,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                string->url)
          (lib "trace.ss")
          (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
+         (only (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
+               exn:fail:delicious?)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
@@ -106,7 +108,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (cond
        ((and (PRIVMSG? message)
              (regexp-match
-              #rx"!n=Hfuy@82.152.178.217"
+              #rx"!n=Hfuy@82\\.152\\."
               (message-prefix message)))
         (reply s message
                (random-choice (list "purrs"
@@ -124,7 +126,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        ((with-handlers
             ([(lambda (e)
                 (or (exn:delicious:auth? e)
-                    (exn:fail:network? e)))
+                    (exn:fail:network? e)
+                    (exn:fail:delicious? e)))
               (lambda (e)
                 #f)])
 
@@ -320,6 +323,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; moviestowatchfor
 
+         ;; TODO -- this thread should probably get created once per
+         ;; session, as opposed to once per 366 message.
+
          ;; producer thread -- updates (irc-session-movies-queue session)
          (thread-with-id
           (lambda ()
@@ -334,13 +340,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      "Can't seem to contact del.icio.us~%"))])
 
               (let loop ()
-                (for-each
-                 (lambda (post)
-                   (cached-channel-put
-                    (irc-session-movies-queue session)
-                    (maybe-make-URL-tiny post)))
-                 (shuffle-list (snarf-some-recent-posts)))
-                (sleep (* 7 24 3600))
+                (with-handlers
+                    ([exn:fail:delicious?
+                      (lambda (e)
+                        (vtprintf
+                         "huh ... ~a~%" (exn-message e)))])
+                  (for-each
+                   (lambda (post)
+                     (cached-channel-put
+                      (irc-session-movies-queue session)
+                      (maybe-make-URL-tiny post)))
+                   (shuffle-list (snarf-some-recent-posts))))
+                (sleep 3600)
                 (loop))))
 
           #:descr "moviestowatchfor")
