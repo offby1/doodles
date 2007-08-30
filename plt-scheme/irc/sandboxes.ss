@@ -6,6 +6,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (module sandboxes mzscheme
 (require (lib "sandbox.ss")
          (lib "trace.ss")
+         (only (lib "1.ss" "srfi") iota)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "test-utils.ss")
@@ -25,10 +26,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (get-sandbox-by-name name)
   (let ((rv (hash-table-get *sandboxes-by-nick* name (lambda () (public-make-sandbox)))))
-    (hash-table-put! *sandboxes-by-nick* name rv)
+    (when (< (hash-table-count *sandboxes-by-nick*)
+             (*max-sandboxes*))
+    (hash-table-put! *sandboxes-by-nick* name rv))
     rv))
 
 (define *sandboxes-by-nick* (make-hash-table 'equal))
+
+(define *max-sandboxes* (make-parameter 3))
+
 
 (define sandboxes-tests
 
@@ -55,16 +61,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (check-exn
        exn:fail?
        (lambda () ((sandbox-evaluator ednas-sandbox "x")))
-       "edna's sandbox didn't gack when I referenced 'x' -- even though we never defined it."))
-     )
-   ))
+       "edna's sandbox didn't gack when I referenced 'x' -- even though we never defined it.")))
 
-;; (lambda ()
-;;   (and (< (hash-table-count *sandboxes-by-nick*) 10)
-;;        (parameterize ((sandbox-output       sandbox-op)
-;;                       (sandbox-error-output sandbox-ep)
-;;                       (sandbox-eval-limits '(2 200)))
-;;          (make-evaluator 'mzscheme '() '()))))
+   (test-case
+    "won't store too many"
+    (let* ((names (iota (* 2 (*max-sandboxes*))))
+           (boxes (map get-sandbox-by-name names)))
+      (check-equal? (hash-table-count *sandboxes-by-nick*)
+                    (*max-sandboxes*))))))
 
 (provide (all-defined))
 )
