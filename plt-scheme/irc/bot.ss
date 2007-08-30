@@ -35,6 +35,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "parse.ss"
          "planet-emacsen.ss"
          "quotes.ss"
+         "sandboxes.ss"
          "session.ss"
          "shuffle.ss"
          "thread.ss"
@@ -520,22 +521,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                            (reply session m (exn-message e)))))
 
            ;; TODO -- prune oldest sandboxes
-           (let ((sandbox (hash-table-get
-                           *sandboxes-by-nick*
-                           (PRIVMSG-speaker m)
-                           (lambda ()
-                             (parameterize ((sandbox-output       sandbox-op)
-                                            (sandbox-error-output sandbox-ep)
-                                            (sandbox-eval-limits '(2 200)))
-                               (make-evaluator 'mzscheme '() '()))))))
+           (let ((s (get-sandbox-by-name
+                     (PRIVMSG-speaker m))))
 
              (reply session m
-                    (format "~s:~s:~s"
-                            (sandbox (string-join
-                                      (cdr (PRIVMSG-text-words m))
-                                      " "))
-                            (get-output-string sandbox-op)
-                            (get-output-string sandbox-ep)))))))
+                    (let* ((value (sandbox-eval
+                                  s
+                                  (string-join
+                                   (cdr (PRIVMSG-text-words m))
+                                   " ")))
+                           (output (sandbox-get-stdout s)))
+                    (format "~s:~s"
+                            value output)))))))
 
      #:responds? #t)
 
