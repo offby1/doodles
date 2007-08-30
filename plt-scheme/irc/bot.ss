@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot-tests.ss -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui bot-tests 'verbose))"
 |#
 (module bot mzscheme
-(require (lib "kw.ss")
+(require (lib "sandbox.ss")
+         (lib "kw.ss")
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                any
@@ -500,6 +501,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (equal? 'PING (message-command m)))
      (lambda (m)
        (out session "PONG :~a~%" (car (message-params m)))))
+
+    (add!
+     (lambda (m)
+       (gist-equal? "eval" m))
+     (parameterize ((sandbox-output (irc-session-op session))
+                    (sandbox-error-output (irc-session-op session))
+                    (sandbox-eval-limits '(2 200)))
+       (let ((sandbox (make-evaluator 'mzscheme '() '())))
+         (lambda (m)
+           (with-handlers
+               ((exn:fail? (lambda (e)
+                             (reply session m (exn-message e)))))
+
+             (reply session m
+                    (format "~a"
+                            (sandbox (string-join
+                                      (cdr (PRIVMSG-text-words m))
+                                      " "))))))))
+     #:responds? #t)
 
     (add!
      (lambda (m)

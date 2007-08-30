@@ -23,8 +23,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                get-pure-port
                string->url
                url->string)
-         (only (lib "13.ss" "srfi")
-               string-join)
          (only (lib "1.ss" "srfi")
                append-map
                second))

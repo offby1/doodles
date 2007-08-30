@@ -73,6 +73,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (*initial-channel-names* (list "#bots")))
 
            (test-with-setup
+            "eval"
+            (check-not-false (got-response?
+                              sess
+                              ip
+                              (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*my-nick*))
+                               #rx"PRIVMSG #d :3$")))
+
+           (test-with-setup
             "join"
             (respond (parse-irc-message ":server 001 :welcome") sess)
             (check-not-false
