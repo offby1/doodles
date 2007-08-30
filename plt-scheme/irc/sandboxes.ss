@@ -145,6 +145,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (provide *max-sandboxes*
          get-sandbox-by-name
          sandbox-eval
+         sandbox-get-stdout
          sandboxes-tests
          (rename public-make-sandbox make-sandbox))
 )
