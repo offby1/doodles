@@ -14,18 +14,23 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "test-utils.ss"
          "vprintf.ss")
 
-(define-struct sandbox (evaluator last-used-time) #f)
+(define-struct sandbox (evaluator
+                        last-used-time
+                        output-string-port
+                        error-string-port) #f)
 (define (public-make-sandbox)
-  (let ((sandbox-op (open-output-string))
-        (sandbox-ep (open-output-string)))
+  (let ((op (open-output-string))
+        (ep (open-output-string)))
     (make-sandbox
-     (parameterize ((sandbox-output       sandbox-op)
-                    (sandbox-error-output sandbox-ep)
+     (parameterize ((sandbox-output       op)
+                    (sandbox-error-output ep)
                     (sandbox-eval-limits '(2 20)))
 
        (make-evaluator 'mzscheme '() '()))
 
-     0)))
+     0
+     op
+     ep)))
 
 (define (sandbox-eval sb string)
   (set-sandbox-last-used-time! sb (current-milliseconds))
@@ -50,24 +55,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
       (assert (not (equal? name-of-lru name)))
 
-      (vtprintf "~s => name-of-lru: ~s~%"
-                *sandboxes-by-nick*
-                name-of-lru)
-
-      (vtprintf "Evicting ~s => ~s~%"
-                name-of-lru (hash-table-get *sandboxes-by-nick* name-of-lru))
       (hash-table-remove! *sandboxes-by-nick* name-of-lru)))
 
   (let ((rv (hash-table-get *sandboxes-by-nick* name (lambda () (public-make-sandbox)))))
-    (vtprintf "Just put! an evaluator for ~s~%" name)
     (hash-table-put! *sandboxes-by-nick* name rv)
-    (hash-table-for-each
-     *sandboxes-by-nick*
-     (lambda (k v)
-       (vtprintf "~s => ~s~%"
-                 k v)))
     rv))
 ;(trace get-sandbox-by-name)
+
+(define (sandbox-get-stdout s)
+  (bytes->string/utf-8 (get-output-bytes
+                        (sandbox-output-string-port s)
+                        #t) #\?))
+
 
 (define *sandboxes-by-nick* (make-hash-table 'equal))
 
@@ -84,6 +83,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let ((s  (get-sandbox-by-name "charlie")))
       (check-pred sandbox? s)
       (check-equal? (sandbox-eval s "3") 3)))
+
+   (test-case
+    "output"
+    (let ((s  (get-sandbox-by-name "charlie")))
+      (sandbox-eval s "(display \"You bet!\")")
+      (check-equal? (sandbox-get-stdout s) "You bet!")
+      (sandbox-eval s "(display \"Whatever\")")
+      (check-equal? (sandbox-get-stdout s) "Whatever")))
 
    (let ((charlies-sandbox (get-sandbox-by-name "charlie"))
          (ednas-sandbox    (get-sandbox-by-name "edna")))
@@ -119,7 +126,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ;; to decide when the timestamp updates -- again, when we call
      ;; get-sandbox-by-name?  Or when we run its evaluator?  There
      ;; might not be any practical difference.
-     (vtprintf "~a~%" (make-string 80 #\-))
      (parameterize ((*max-sandboxes* 2))
        (sandbox-eval (get-sandbox-by-name "old"   ) "(define x 'old   )")
        (sleep 1/10)
