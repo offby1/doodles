@@ -23,10 +23,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
      #f)))
 
-(define (get-sandbox-by-name . args)
-  (public-make-sandbox))
+(define (get-sandbox-by-name name)
+  (let ((rv (hash-table-get *sandboxes-by-nick* name (lambda () (public-make-sandbox)))))
+    (hash-table-put! *sandboxes-by-nick* name rv)
+    rv))
 
-(define *sandboxes-by-nick* #f)
+(define *sandboxes-by-nick* (make-hash-table 'equal))
 
 (define sandboxes-tests
 
@@ -34,9 +36,23 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "sandboxes"
    (test-case
     "simple get"
-    (let ((s  (get-sandbox-by-name *sandboxes-by-nick* "charlie")))
+    (let ((s  (get-sandbox-by-name "charlie")))
       (check-pred sandbox? s)
       (check-equal? ((sandbox-evaluator s) "3") 3)))
+
+   (let ((charlies-sandbox (get-sandbox-by-name "charlie"))
+         (ednas-sandbox    (get-sandbox-by-name "edna")))
+     (test-false
+      "keeps sandboxes distinct, by name"
+      (eq? charlies-sandbox ednas-sandbox))
+     (test-case
+      "remembers state"
+      ((sandbox-evaluator charlies-sandbox) "(define x 99)")
+      (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
+        (check-equal? ((sandbox-evaluator this-better-still-be-charlies)
+                       "x")
+                      99)))
+     )
    ))
 
 ;; (lambda ()
