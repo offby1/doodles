@@ -51,7 +51,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
         (check-equal? ((sandbox-evaluator this-better-still-be-charlies)
                        "x")
-                      99)))
+                      99))
+      (check-exn
+       exn:fail?
+       (lambda () ((sandbox-evaluator ednas-sandbox "x")))
+       "edna's sandbox didn't gack when I referenced 'x' -- even though we never defined it."))
      )
    ))
 
