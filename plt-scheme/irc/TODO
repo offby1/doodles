@@ -4,14 +4,27 @@
 
 * bugs
 
-* test frequently hangs
-  namely, "items only appear once" in bot-tests.ss
-
-* rename "channel" to "queue"?
-  The word "channel" has two utterly different meanings in this
-  program: 1) a PLT scheme "async-channel", or a PLT scheme "channel";
-  2) an IRC channel.  Maybe I should rename variables of the former
-  type from "mumble-channel" to "mumble-queue".
+* eval
+ <elibarzilay> offby1: anyway, what I wanted to say earlier is:
+ <elibarzilay> offby1: allocate a new evaluator for each user,                              [18:52]
+ <elibarzilay> offby1: up to a limit of N evaluators,
+ * offby1 nods sagely 
+ <elibarzilay> offby1: then start GCing the ones that were not used the longest
+ <elibarzilay> For extra points, GC an evaluator if the corresponding user logged out.
+ <elibarzilay> Anyway, for even more extra points, do the `send' thing that I talked about a few
+               days ago.  That would be interesting.                                        [18:58]
+ * offby1 stares blankly 
+ <offby1> wait, something is coming to me
+ <elibarzilay> rudybot: eval (define (foo x) ...)
+ <offby1> he's dead, jim
+ <elibarzilay> rudybot: send offby1 foo
+ <offby1> at least, his evaluator is.                                                       [18:59]
+ * rudybot is at a loss for words, as usual
+ <offby1> hmm
+ <elibarzilay> (Yeah, just making a point)
+ <offby1> and if I do that, I get a not-very-massively-multiplayer role-playing game?
+ <elibarzilay> This would be really interesting with custodians.  In the above example I send you
+               a closure, but it's my custodian that is responsible for it.
 
 
 -- Low priority

@@ -72,13 +72,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (lambda ()
              (*initial-channel-names* (list "#bots")))
 
-           (test-with-setup
+           (test-suite
             "eval"
-            (check-not-false (got-response?
-                              sess
-                              ip
-                              (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*my-nick*))
-                               #rx"PRIVMSG #d :3$")))
+            (test-with-setup
+             "return of simple value"
+             (check-not-false (got-response?
+                               sess
+                               ip
+                               (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*my-nick*))
+                               #rx"PRIVMSG #d :3:")))
+            (test-with-setup
+             "proper display of output"
+             (check-not-false (got-response?
+                               sess
+                               ip
+                               (format
+                                ":a!b@c PRIVMSG #d :~a: eval (display \"fred\")"
+                                (*my-nick*))
+                               #rx"PRIVMSG #d :.*:\"fred\":"))))
 
            (test-with-setup
             "join"

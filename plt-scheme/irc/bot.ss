@@ -169,6 +169,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 ;(trace unsubscribe-proc-to-server-messages!)
 
+;; TODO -- as usual, this should really be in the session, not a
+;; global.
+(define *sandboxes-by-nick* (make-hash-table 'equal))
+
 (define (register-usual-services! session)
 
   ;; so that these threads will be easily killable
@@ -505,20 +509,34 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (add!
      (lambda (m)
        (gist-equal? "eval" m))
-     (parameterize ((sandbox-output (irc-session-op session))
-                    (sandbox-error-output (irc-session-op session))
-                    (sandbox-eval-limits '(2 200)))
-       (let ((sandbox (make-evaluator 'mzscheme '() '())))
-         (lambda (m)
-           (with-handlers
-               ((exn:fail? (lambda (e)
-                             (reply session m (exn-message e)))))
+
+
+     (lambda (m)
+       (let ((sandbox-op (open-output-string))
+             (sandbox-ep (open-output-string)))
+
+         (with-handlers
+             ((exn:fail? (lambda (e)
+                           (reply session m (exn-message e)))))
+
+           ;; TODO -- prune oldest sandboxes
+           (let ((sandbox (hash-table-get
+                           *sandboxes-by-nick*
+                           (PRIVMSG-speaker m)
+                           (lambda ()
+                             (parameterize ((sandbox-output       sandbox-op)
+                                            (sandbox-error-output sandbox-ep)
+                                            (sandbox-eval-limits '(2 200)))
+                               (make-evaluator 'mzscheme '() '()))))))
 
              (reply session m
-                    (format "~a"
+                    (format "~s:~s:~s"
                             (sandbox (string-join
                                       (cdr (PRIVMSG-text-words m))
-                                      " "))))))))
+                                      " "))
+                            (get-output-string sandbox-op)
+                            (get-output-string sandbox-ep)))))))
+
      #:responds? #t)
 
     (add!
@@ -528,6 +546,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (not (gist-for-us m))))
      (lambda (m)
        (reply session  m "Eh? Speak up, sonny.")))))
+
 
 (define (start)
 
@@ -650,5 +669,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 (provide
  register-usual-services!
  respond
- start)
-)
+ start))
+
