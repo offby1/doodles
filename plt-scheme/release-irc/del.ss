@@ -5,8 +5,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 
 (module del mzscheme
-(require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
+(require (lib "kw.ss")
+         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
+         (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
          (lib "cmdline.ss")
          (all-except (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
                      exn:delicious:auth?)
@@ -21,7 +23,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "pretty.ss")
          (lib "trace.ss")
          "globals.ss"
-         "headline.ss")
+         "headline.ss"
+         "vprintf.ss")
 (register-version-string "$Id$")
 
 ;; return all items with the tag "moviestowatchfor"
@@ -34,7 +37,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; what all is in there.
 (define exn:delicious:auth? auth-exn)
 
-(define (snarf-some-recent-posts)
+;; it'd sure be nice if I could use keywords with a memoized function,
+;; but ...
+(define/kw (snarf-some-recent-posts
+            #:key [tag "moviestowatchfor"])
+
   (parameterize
       ((current-password
         (or (*del.icio.us-password*)
@@ -51,8 +58,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (make-entry (date->time-utc (post-date post))
                        (post-description post)
                        (post-url post)))
-         (recent-posts "moviestowatchfor"))))
-
+         (recent-posts tag))))
 
 
 (define del.icio.us-tests
@@ -62,11 +68,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
    (test-not-false
     "gets some movies, and they're all entries"
-    (with-handlers ([exn:delicious:auth?
+    (with-handlers ([(lambda (e)
+                       (or (exn:delicious:auth? e)
+                           (exn:fail:network? e)))
                      (lambda (e)
                        (fprintf
                         (current-error-port)
-                        "wrong delicious password; skipping the test~%")
+                        "wrong delicious password OR can't contact del.icio.us; skipping the test~%")
                        #t)])
       (let ((snarfage (snarf-some-recent-posts)))
         (check-false     (null? snarfage) "didn't return any entries")

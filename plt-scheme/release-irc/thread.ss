@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui thread-with-id-tests 'verbose))"
+echo Nothing to see here\; move along; exit 0
 |#
 (module thread mzscheme
 
@@ -9,12 +9,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; thread.  Thanks to Eli Barzilay for the suggestion.
 
 (define threads-created 0)
-(require (only "globals.ss" register-version-string))
+(require (lib "kw.ss")
+         (only "globals.ss" register-version-string)
+         (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type))
 (register-version-string "$Id$")
 (define *current-thread-id* (make-parameter 0))
-(define (thread-with-id thunk)
+(define/kw (thread-with-id thunk #:key [descr])
   (set! threads-created (add1 threads-created))
-  (parameterize ((*current-thread-id* threads-created))
+  (parameterize ((*current-thread-id*
+                  (format "~a:~a"
+                          threads-created
+                          descr)))
     (thread thunk)))
 
 

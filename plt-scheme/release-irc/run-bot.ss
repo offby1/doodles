@@ -10,9 +10,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 this-expression-source-directory)
           "bot.ss"
           "globals.ss"
+          (only "headline.ss" reliably-put-pref)
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "quotes.ss"
-          "system.ss"
           "vprintf.ss"
           )
 (register-version-string "$Id$")
@@ -28,9 +28,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*del.icio.us-password* del))
   (("-n" "--nick") nick "The nick I will be known by"
    (*my-nick* nick))
-  (("-q" "--quote-and-headline-interval")
-   secs "Seconds of channel silence required to emit a funny quote or a headline or whatever"
-   (*quote-and-headline-interval* (string->number secs)))
   (("--nickserv")
    pw "Password for NICKSERV"
    (*nickserv-password* pw))
@@ -63,6 +60,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (*irc-server-name*)
              feed-description))
 
+  ;; I generally do this by hand when testing, so ... why not do it
+  ;; automatically.
+  (when (not (*use-real-atom-feed?*))
+    (reliably-put-pref #f))
+
   (vtprintf "Our version string is ~s~%" *svnversion-string*))
 
 (print-hash-table #t)
@@ -74,12 +76,17 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (parameterize
          ((current-namespace
            (module->namespace "bot.ss")))
-       (fprintf
-        (current-error-port)
-        "Welcome to the ~a namespace.  Use your power only for good.~%"
-        (object-name (current-namespace)))
-       (when (not (eq? 'macosx (system-type)))
-		(dynamic-require '(lib "rep.ss" "readline") #f))
+       (with-handlers
+           ([exn:fail:filesystem?
+             (lambda (e)
+               (fprintf
+                (current-error-port)
+                "Can't load readline.  Bummer.~%"))])
+         (dynamic-require '(lib "rep.ss" "readline") #f)
+         (fprintf
+          (current-error-port)
+          "Welcome to the ~a namespace.  Use your power only for good.~%"
+          (object-name (current-namespace))))
        (read-eval-print-loop)))))
 
 (start)

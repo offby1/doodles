@@ -115,7 +115,7 @@
 "I'll hide your fortress."
 "I'll indent you."
 "I'll install your missing plugin."
-"I'll intall your sunscreen."
+"I'll install your sunscreen."
 "I'll kick ban you."
 "I'll kick you."
 "I'll kill your ring."
@@ -379,4 +379,7 @@
 
 ;; actually, this one's from consolers
 "you know you're an opensource geek when someone cuts you off on the freeway and you're like \"PATCHES WELCOME!!!!\""
+
+;; Woody Allen, I think
+"The shellfish, unlike you or I, has his skeleton on the outside."
 )

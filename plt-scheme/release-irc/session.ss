@@ -9,7 +9,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
-         "cached-channel.ss")
+         "cached-channel.ss"
+         "vprintf.ss")
 (define-struct irc-session
   (
    appearances-by-nick
@@ -28,30 +29,40 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    ;; little stub, for testing.
    async-for-news
 
+   ;; where we get "movies to watch for" headlines from.
+   movies-queue
+
    ;; the IRC server is at the other end of this port.
    op
 
    ;; this is just for testing, so that we can easily ensure none of
    ;; the background threads are running.
    custodian
+
    ) #f)
 
-(define/kw (public-make-irc-session op #:key [feed #f] )
-  (when feed
-    (check-type 'make-irc-session cached-channel? feed))
-  (make-irc-session
+(define/kw (public-make-irc-session
+            op
+            #:key
+            [newsfeed #f])
+  (when newsfeed
+    (check-type 'make-irc-session cached-channel? newsfeed))
+  (letrec ((sess
+            (make-irc-session
 
-   ;; find some PLT equivalent of Perl's tied hashes, so that this
-   ;; table will persist to disk.  Name the disk file after the IRC
-   ;; server.  Put it in /var/something on *nix, and %APPDATA%\rudybot
-   ;; on Winders.
-   (make-hash-table 'equal)
+             ;; find some PLT equivalent of Perl's tied hashes, so that this
+             ;; table will persist to disk.  Name the disk file after the IRC
+             ;; server.  Put it in /var/something on *nix, and %APPDATA%\rudybot
+             ;; on Winders.
+             (make-hash-table 'equal)
 
-   (make-hash-table 'equal)
-   feed
-   op
-   (make-custodian)
-   ))
+             (make-hash-table 'equal)
+             newsfeed
+             (make-cached-channel)
+             op
+             (make-custodian)
+             )))
+    sess))
 
 (define (public-set-irc-session-async-for-news! sess thing)
   (when thing

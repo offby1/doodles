@@ -1,3 +1,8 @@
+# BUGBUG -- we run svnversion as soon as "make" reads this makefile,
+# but it'd be better if we could hold off until after we run 'svn up',
+# since the resulting version string would then be cleaner (e.g.,
+# "4839" versus "4837:4839")
+
 svnversion:= $(shell svnversion -n .)
 basename  := $(shell echo rudybot-$(svnversion) | sed s,:,-,)
 plt-file  := $(basename).plt
@@ -18,7 +23,9 @@ define cleanup
 rm -rf $${tempdir}
 endef
 
-version.ss: $(filter-out version.ss,$(wildcard *.ss))
+FORCE:
+
+version.ss: FORCE
 	echo -n '(define *svnversion-string* "' > $@
 	echo -n $(svnversion) >> $@
 	echo    '")' >> $@
@@ -42,19 +49,21 @@ dist: svnup $(tarball)
 	@mv -v $(tarball) $(distdir)
 	@ln -svf $(distdir)/$(tarball) $(distdir)/rudybot.tar.gz
 
-check:
+# To be blunt, run-all-tests.ss doesn't test as much as it should;
+# dry-test hits some spots that run-all-tests misses.  So we run
+# dry-tests too.  Alas, it doesn't report failures; you have to
+# carefully examine the output for runtime errors.
+check: version.ss
 	./run-all-tests.ss
+	@echo Feel free to kill the following if it runs for too long.
+	./dry-test.sh
 
 clean:
 	rm -rf $(plt-file) $(tarball)
 
 tags: TAGS
 
-# This tags file is almost useless -- it just contains the names of
-# the scheme files, but doesn't contain any actual tags.  But it's
-# useful for emacs commands that work on all the files in it, such as
-# tags-query-replace.
-TAGS: $(wildcard *.ss)
-	etags $^
+TAGS: $(filter-out version.ss,$(wildcard *.ss))
+	PATH=/usr/local/src/emacs-cvs/lib-src:$(dir $(EMACS))../lib-src:$$PATH etags --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 .PHONY: clean all dist plt tar check svnup

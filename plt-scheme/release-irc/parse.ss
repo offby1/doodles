@@ -52,10 +52,11 @@
   (speaker receivers approximate-recipient text text-words)
   #f)
 ;(trace PRIVMSG-approximate-recipient)
+;(trace PRIVMSG-text-words)
 
 ;; aka 366
 (define-struct (RPL_ENDOFNAMES message) (channel-name) #f)
-
+;(trace RPL_ENDOFNAMES?)
 ;; http://www.irchelp.org/irchelp/rfc/ctcpspec.html
 (define-struct (CTCP PRIVMSG) (req/extended-data) #f)
 (define-struct (ACTION CTCP) (text) #f)
@@ -101,9 +102,17 @@
               "Can't parse string from server"
               (current-continuation-marks)
               string)))
-    (or (maybe-make-RPL_ENDOFNAMES m)
-        (maybe-make-PRIVMSG m)
-        m)))
+    (with-handlers
+        (;; [exn:fail:contract?
+;;           (lambda (e)
+;;             (raise (make-exn:fail:irc-parse
+;;                     "Can't parse string from server"
+;;                     (current-continuation-marks)
+;;                     string)))]
+         )
+      (or (maybe-make-RPL_ENDOFNAMES m)
+          (maybe-make-PRIVMSG m)
+          m))))
 
 ;(trace parse-irc-message)
 
@@ -115,26 +124,22 @@
         (second (message-params m)))))
 
 (define (maybe-make-PRIVMSG m)
-  (define speaker
-    (and (message-prefix m)
-         (regexp-case
-          (message-prefix m)
-          ((#rx"(.*)!(.*)@(.*)" nick user host)
-           nick))))
-
-  (let ((p (and (string=? "PRIVMSG" (message-command m))
-                (let ((receivers (string-tokenize
-                                  (first (message-params m))
-                                  (char-set-complement (char-set #\,))))
-                      (text (second (message-params m))))
-                  (let ((text-tokens
-                         (string-tokenize
-                          text
-                          (char-set-complement char-set:whitespace))))
-                    (make-sub-struct
+  (and (string=? "PRIVMSG" (message-command m))
+       (let ((receivers (string-tokenize
+                         (first (message-params m))
+                         (char-set-complement (char-set #\,))))
+             (text (second (message-params m))))
+         (let ((text-tokens
+                (string-tokenize
+                 text
+                 (char-set-complement char-set:whitespace))))
+           (let ((p (make-sub-struct
                      m
                      make-PRIVMSG
-                     speaker
+                     (second
+                      (regexp-match
+                       #rx"(.*)!(.*)@(.*)"
+                       (message-prefix m)))
                      receivers
                      (and (not (null? text-tokens))
                           (regexp-case
@@ -143,10 +148,10 @@
                             => (lambda args (second args)))
                            (else #f)))
                      text
-                     text-tokens))))))
-    (or (maybe-make-CTCP p)
-        p)
-    ))
+                     text-tokens)))
+             (or (maybe-make-CTCP p)
+                 p))))))
+
 ;(trace maybe-make-PRIVMSG)
 
 (define (maybe-make-CTCP p)
@@ -195,6 +200,7 @@
 (define (gist-equal? str message)
   (check-type 'gist-equal? message? message)
   (equal? str (gist-for-us message)))
+;(trace gist-equal?)
 ;(trace for-us?)
 ;(trace gist-for-us)
 

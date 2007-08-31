@@ -5,14 +5,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 
 (module planet-emacsen mzscheme
-(require (lib "trace.ss")
-         (only  (lib "file.ss")
-                get-preference
-                put-preferences)
+(require (only (lib "etc.ss") this-expression-source-directory)
+         (lib "trace.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
 
-         (only (lib "etc.ss") this-expression-source-directory)
          (lib "kw.ss")
          (only (lib "list.ss")
                last-pair
@@ -112,92 +109,38 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (de-html (entry-title entry))
           (entry-link entry)))
 
-;; so we want to ensure that we never put the same article onto the
-;; async-channel twice.  I can't think of a simple way to absolutely
-;; guarantee that, but I can think of a simple way to come pretty
-;; darned close:
-
-;; - every time we put an article onto the channel, we save its
-;; timestamp in a "prefernce" -- that's on-disk storage, so it'll be
-;; there after we exit.
-
-;; - also when we put an article onto the channel, we save the whole
-;; article into a hash table.
-
-;; before we put an article onto the channel, we check its timestamp
-;; against the saved one -- if it's older, we skip it.  And if it's
-;; not older, we check the hash table: if it's in there, we skip it
-;; too.
-
-;; Now the only way we'll put the same article in twice is if we shut
-;; down after putting article A in the async-channel, then start up
-;; again before that article vanishes from the output of our atom
-;; feed.  This will actually happen pretty often, but oh well.
-
-(define (reliably-put-pref value)
-  (let retry ()
-    (put-preferences
-     (list (*atom-timestamp-preference-name*))
-     (list value)
-     (lambda (lockpath)
-       (vtprintf "preference file is locked (~s); retrying~%" lockpath)
-       (sleep (/ (add1 (random 10)) 10))
-       (retry)))))
+;; for testing
+(define (fake-atom-feed)
+  (let ((fn (build-path
+               (this-expression-source-directory)
+               "example-planet-emacsen.xml")))
+      (vtprintf "snarfing test data from ~s~%"
+                fn)
+      (open-input-file fn)))
 
 (define/kw (queue-of-entries
             #:key
-            [whence])
+            [whence fake-atom-feed]
+            [filter (lambda (e) #t)])
 
-  (when (not whence)
-    (set! whence
-          (lambda ()
-            (let ((fn (build-path
-                       (this-expression-source-directory)
-                       "example-planet-emacsen.xml")))
-              (vtprintf "snarfing test data from ~s~%"
-                        fn)
+  (check-type 'queue-of-entries procedure? whence)
 
-              (open-input-file fn)))))
+  (let ((the-channel (make-cached-channel #f)))
 
-  ;; It's not clear that there's any point to limiting the size of the
-  ;; channel ... I suppose it ensures that, in case people write blog
-  ;; posts at a furious clip, and people are contantly yammering in
-  ;; #emacs, we won't fill memory with un-announced blog posts :-)
-  (let ((the-channel (make-cached-channel #f))
-
-        ;; keep track of each entry we put on the async-channel, so
-        ;; that we never put the same entry on twice.
-        (entries-put (make-hash-table 'equal)))
     (thread-with-id
      (lambda ()
        (let loop ()
 
-         ;; keep track of the time of each entry, too.  This plus the
-         ;; hash table seem like overkill, but note that the
-         ;; preference persists on disk even after our process exits,
-         ;; whereas the hash table doesn't (because I'm too lazy to
-         ;; bother saving it).
-         (let ((time-of-last-entry-put
-                (or (get-preference (*atom-timestamp-preference-name*))
-                    0)))
-           (for-each
-            (lambda (e)
-              ;; put this headline in the channel if it's newer than
-              ;; any we've previously seen, AND we haven't already
-              ;; seen it.
-              (if (and (> (time-second (entry-timestamp e))
-                         time-of-last-entry-put)
-                       (not (hash-table-get entries-put e #f)))
+         (for-each
+          (lambda (e)
+            (when (filter e)
+                (cached-channel-put the-channel e)))
 
-                  (begin
-                    (reliably-put-pref (time-second (entry-timestamp e)))
-                    (hash-table-put! entries-put e #t)
-                    (cached-channel-put the-channel e))))
-
-            (snarf-em-all (whence))))
+          (snarf-em-all (whence)))
 
          (sleep (*planet-poll-interval*))
-         (loop))))
+         (loop)))
+     #:descr "planet emacs producer")
 
     the-channel)  )
 
@@ -205,92 +148,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 
 
-(define (async->list as)
-  (let loop ((what-we-found '()))
-    (let ((datum (sync/timeout 1/10 as)))
-
-      (if datum
-          (loop (cons datum what-we-found))
-        what-we-found))))
-;;(trace async->list)
-
-;; the key thing about this data is that there's more than one entry,
-;; they have the same timestamp, but otherwise their content is
-;; different.
-(define (preloaded-input-port)
-  (let-values (((ip op) (make-pipe)))
-    (display  #<<THASSALL
-<feed>
-<entry>
-<title >Yo vinnie</title>
-<link href="http://vincent.it"/>
-<updated>2000-00-00T00:00:00+00:00</updated>
-</entry>
-<entry>
-<title>Whassup</title>
-<link href="http://dawg.za"/>
-<updated>2000-00-00T00:00:00+00:00</updated>
-</entry>
-</feed>
-THASSALL
-op)
-    (newline op)
-    (close-output-port op)
-    ip)
-  )
-
 (define planet-tests
 
   (test-suite
    "planet"
 
    (test-case
-    "doesn't duplicate headlines"
-    (before
-     (begin
-       (*use-real-atom-feed?* #f)
-     (put-preferences (list (*atom-timestamp-preference-name*))
-                      (list #f)))
-     ;; create two entries with identical times but different content.
-
-    ;; delete the preference
-    (put-preferences (list (*atom-timestamp-preference-name*))
-                     (list #f))
-
-    ;; create a fake atom feed for queue-of-entries to read
-
-    ;; stuff both entries into the fake feed
-
-    (let ((q (queue-of-entries #:whence preloaded-input-port)))
-      (check-equal? (length (async->list q))
-                    2
-                    "didn't get both entries"))
-    (let ((q (queue-of-entries #:whence preloaded-input-port)))
-      ;; now stuff both entries back into the fake feed, and pull
-      ;; again; you should see nothing.
-
-      (check-equal? (length (async->list q)) 0
-                    "nuts! not exactly zero entries")))
-    )
-   (test-case
     "delivers an entry raht quick-like"
     (before
      (begin
        (*use-real-atom-feed?* #f)
-       (put-preferences (list (*atom-timestamp-preference-name*))
-                        (list #f)))
-     (let ((q (queue-of-entries #:whence #f)))
-       (let ((first-entry (sync q))
-             (time-of-last-entry-put (get-preference (*atom-timestamp-preference-name*))))
-
-         (check-pred entry? first-entry "It's not an entry!!")
-         (check-not-false time-of-last-entry-put "queue didn't save a preference")))))))
+       (reliably-put-pref #f))
+     (check-pred entry? (sync (queue-of-entries)) "It's not an entry!!")))))
 
 
 (provide
  make-cached-channel
  entry->string
  entry-timestamp
+ fake-atom-feed
  planet-tests
  queue-of-entries
  *planet-poll-interval*

@@ -27,7 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (set! version-string-registry (cons str version-string-registry)))))
 
 (define (long-version-string) (format
-                               "~a (offby1@blarg.net):v2.~a:PLT scheme version ~a on ~a"
+                               "~a (offby1@blarg.net):v3.~a:PLT scheme version ~a on ~a"
                                *client-name*
 
                                ;; *sigh*.  The version string with
@@ -48,7 +48,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *initial-channel-names* (make-parameter '()))
 (define *random?* (make-parameter #t))
-(define *quote-and-headline-interval* (make-parameter (* 20 60)))
+(define *minimum-delay-for-periodic-spew* (make-parameter (* 20 60)))
 (define *quotes-file-name* (make-parameter
                                     (build-path
                                      (this-expression-source-directory)
@@ -58,8 +58,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *nickserv-password* (make-parameter #f))
 (define (*atom-timestamp-preference-name*)
   (if (*use-real-atom-feed?*)
-      'rudybot-planet-emacs-last-headline
-    'rudybot-test-planet-emacs-last-headline))
+      'rudybot-planet-emacs-last-headlines
+    'rudybot-test-planet-emacs-last-headlines))
 
 ;; The bot will "tiny-ify" URLs longer than this.  Tiny URLs are about
 ;; 25 characters, so it seems reasonable to ignore URLs that are
@@ -67,7 +67,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define *tinyurl-url-length-threshold* (make-parameter 75))
 
 (define *del.icio.us-password* (make-parameter #f))
-(define *log-output-port* (make-parameter (current-output-port)))
+(define *log-output-port* (make-parameter (current-error-port)))
 (define *log-to-file* (make-parameter #f))
 (provide (all-defined))
 )

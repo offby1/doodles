@@ -10,7 +10,8 @@
           (thread
            (lambda ()
              (let loop ()
-               (vtprintf "expect/timeout about to look for ~s from ~s ...~%"
+               (vtprintf "expect/timeout about to spend ~a seconds looking for ~s from ~s ...~%"
+                         seconds
                          regex
                          (object-name ip))
                (let ((line (read-line ip)))
@@ -19,16 +20,19 @@
                   ((eof-object? line)
                    (channel-put ch #f))
                   ((regexp-match regex line)
-                   (vtprintf "expect/timeout: Got match!~%")
+                   (vtprintf "expect/timeout: That's a match!~%")
                    (channel-put ch #t))
                   (else
-                   (vtprintf "expect/timeout: nope ~s != ~s; retrying~%"
-                             line regex)
+                   (vtprintf "expect/timeout: nope: it doesn't match ~s; retrying~%"
+                             regex)
                    (loop)))
 
                  ))))))
-    (and (sync/timeout seconds ch)
-         ch)))
+    (begin0
+      (and (sync/timeout seconds ch)
+           ch)
+
+      (kill-thread reader))))
 
 (provide (all-defined))
 )

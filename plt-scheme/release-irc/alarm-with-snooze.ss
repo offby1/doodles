@@ -53,11 +53,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          ;; create another.  It works, though :-)
          (sleeper (lambda ()
                     (let loop ()
-                      ;; (vtprintf "snooze sleeper ~a sleeping for ~a seconds~%"
+;;                       (vtprintf "snooze sleeper ~a sleeping for ~a seconds~%"
 ;;                                 id interval)
                       (sleep interval)
                       (semaphore-post s)
-                      ;; (vtprintf "snooze sleeper ~a posted~%"
+;;                       (vtprintf "snooze sleeper ~a posted~%"
 ;;                                 id)
                       (when periodic? (loop))))))
     (let ((t (thread sleeper)))
