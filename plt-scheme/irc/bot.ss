@@ -50,6 +50,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 (define out
   (lambda (s . args)
+    ;; ensure the output doesn't exceed around 500 characters, lest
+    ;; the IRC server kick us for flooding.
     (let* ((full-length (apply format args))
            (l (string-length full-length))
            (trimmed (substring full-length 0 (min 500 l))))

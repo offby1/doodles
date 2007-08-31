@@ -4,6 +4,13 @@
 
 * bugs
 
+** eval doesn't work in /query rudybot
+
+* security
+
+** Run as "nobody"
+   Now that I've got an "eval" that the world can access.
+
 
 -- Low priority
 
