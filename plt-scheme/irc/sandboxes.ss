@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui sandboxes-tests 'verbose))"
 |#
 (module sandboxes mzscheme
-(require (lib "sandbox.ss")
+(require (only (lib "misc.ss" "swindle") with-output-to-string)
+         (lib "sandbox.ss")
          (lib "trace.ss")
          (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi") iota)
@@ -33,8 +34,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ep)))
 
 (define (sandbox-eval sb string)
-  (set-sandbox-last-used-time! sb (current-milliseconds))
-  ((sandbox-evaluator sb) string))
+  (let ((first-sexp (read (open-input-string string))))
+    (if (eof-object? first-sexp)
+        (raise
+         (make-exn:fail:read:eof
+          "I ain't gonna argue scripture with no nun"
+          (current-continuation-marks)
+          '()))
+     (begin
+       (set-sandbox-last-used-time! sb (current-milliseconds))
+       ((sandbox-evaluator sb)
+        (with-output-to-string
+         (lambda ()
+           (write first-sexp))))))))
+;(trace sandbox-eval)
 
 (define (get-sandbox-by-name name)
   ;; if necessary, "evict" the least-recently-used evaluator.
@@ -85,12 +98,40 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (check-equal? (sandbox-eval s "3") 3)))
 
    (test-case
+    "Gacks on empty input"
+    (check-exn
+     exn:fail:read:eof?
+     (lambda ()
+       (sandbox-eval
+        (get-sandbox-by-name "huh?")
+        ""))))
+
+   (test-case
     "output"
     (let ((s  (get-sandbox-by-name "charlie")))
       (sandbox-eval s "(display \"You bet!\")")
       (check-equal? (sandbox-get-stdout s) "You bet!")
       (sandbox-eval s "(display \"Whatever\")")
       (check-equal? (sandbox-get-stdout s) "Whatever")))
+
+   (test-suite
+    "timeouts"
+    (test-exn
+     "sleeps too long"
+     exn:fail?
+     (lambda ()
+       (sandbox-eval
+        (get-sandbox-by-name "sleepy")
+        "(sleep 10)")))
+
+    (test-exn
+     "gacks on incomplete input"
+     exn:fail?
+     (lambda ()
+       (sandbox-eval
+        (get-sandbox-by-name "oops")
+        "("
+        ))))
 
    (let ((charlies-sandbox (get-sandbox-by-name "charlie"))
          (ednas-sandbox    (get-sandbox-by-name "edna")))
@@ -102,7 +143,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (sandbox-eval charlies-sandbox "(define x 99)")
       (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
         (check-equal? (sandbox-eval this-better-still-be-charlies
-                       "x")
+                                    "x")
                       99))
       (check-exn
        exn:fail?
@@ -134,13 +175,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        (sandbox-eval (get-sandbox-by-name "newest") "(define x 'newest)")
 
        (check-equal? (sandbox-eval (get-sandbox-by-name "young")
-                      "x")
+                                   "x")
                      'young)
        (check-equal? (sandbox-eval (get-sandbox-by-name "newest")
-                      "x")
+                                   "x")
                      'newest)
        (check-exn exn:fail? (lambda () (sandbox-eval (get-sandbox-by-name "old")
-                      "x"))))))))
+                                                     "x"))))))
+   ))
 
 (provide *max-sandboxes*
          get-sandbox-by-name

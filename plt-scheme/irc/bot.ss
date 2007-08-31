@@ -511,28 +511,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      (lambda (m)
        (gist-equal? "eval" m))
 
-
      (lambda (m)
-       (let ((sandbox-op (open-output-string))
-             (sandbox-ep (open-output-string)))
 
-         (with-handlers
-             ((exn:fail? (lambda (e)
-                           (reply session m (exn-message e)))))
+       (with-handlers
+           ((exn:fail? (lambda (e)
+                         (reply session m (exn-message e)))))
 
-           ;; TODO -- prune oldest sandboxes
-           (let ((s (get-sandbox-by-name
-                     (PRIVMSG-speaker m))))
+         (let ((s (get-sandbox-by-name
+                   (PRIVMSG-speaker m))))
 
-             (reply session m
-                    (let* ((value (sandbox-eval
-                                  s
-                                  (string-join
-                                   (cdr (PRIVMSG-text-words m))
-                                   " ")))
-                           (output (sandbox-get-stdout s)))
+           (reply session m
+                  (let* ((value (sandbox-eval
+                                 s
+                                 (string-join
+                                  (cddr (PRIVMSG-text-words m))
+                                  " ")))
+                         (output (sandbox-get-stdout s)))
                     (format "~s:~s"
-                            value output)))))))
+                            value output))))))
 
      #:responds? #t)
 
