@@ -50,8 +50,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
 (define out
   (lambda (s . args)
-    (apply fprintf (irc-session-op s) args)
-    (vtprintf " => ~s~%" (apply format args))))
+    (let* ((full-length (apply format args))
+           (l (string-length full-length))
+           (trimmed (substring full-length 0 (min 500 l))))
+      (display trimmed (irc-session-op s))
+      (vtprintf " => ~s~%" trimmed))))
 
 (define pm
   (lambda (s target msg)
