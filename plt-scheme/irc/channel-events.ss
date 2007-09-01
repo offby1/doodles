@@ -11,7 +11,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "assert.ss" ("offby1" "offby1.plt"))
-         "alarm-with-snooze.ss"
+         "resettable-alarm.ss"
          (only "globals.ss" register-version-string)
          "parse.ss"
          "thread.ss"
@@ -33,14 +33,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             criterion
             interval
             periodic?)
-  (let ((alarm (make-alarm-with-snooze
+  (let ((alarm (make-resettable-alarm
                 interval
                 #:periodic? periodic?)))
     (make-channel-idle-event
      alarm
      (lambda (irc-message)
        (when (criterion irc-message)
-         ((alarm-with-snooze-snooze-button alarm)))
+         ((alarm-reset-button alarm)))
        #f                               ;so that the main loop doesn't
                                         ;think we've handled the
                                         ;current message

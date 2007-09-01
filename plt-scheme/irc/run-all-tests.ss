@@ -6,7 +6,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
 (module run-all-tests mzscheme
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"    ("schematics" "schemeunit.plt" 2))
-         "alarm-with-snooze.ss"
+         "resettable-alarm.ss"
          "bot-tests.ss"
          "channel-events.ss"
          "del.ss"
@@ -20,7 +20,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
 (register-version-string "$Id$")
 (define eva-thang (test-suite
                    "eva thang"
-                   alarm-with-snooze-tests
+                   resettable-alarm-tests
                    bot-tests
                    channel-events-tests
                    del.icio.us-tests

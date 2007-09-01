@@ -26,7 +26,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "zdate.ss" ("offby1" "offby1.plt")) zdate)
          (planet "assert.ss" ("offby1" "offby1.plt"))
-         "alarm-with-snooze.ss"
+         "resettable-alarm.ss"
          "cached-channel.ss"
          "channel-events.ss"
          "del.ss"

@@ -18,20 +18,26 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define-struct sandbox (evaluator
                         last-used-time
                         output-string-port
-                        error-string-port) #f)
-(define (public-make-sandbox)
-  (let ((op (open-output-string))
-        (ep (open-output-string)))
-    (make-sandbox
-     (parameterize ((sandbox-output       op)
-                    (sandbox-error-output ep)
-                    (sandbox-eval-limits '(2 20)))
+                        error-string-port
+                        serial-number) #f)
+(define public-make-sandbox
+  (let ((sandboxes-created 0))
+    (lambda ()
+      (let ((op (open-output-string))
+            (ep (open-output-string)))
+        (begin0
+          (make-sandbox
+           (parameterize ((sandbox-output       op)
+                          (sandbox-error-output ep)
+                          (sandbox-eval-limits '(2 20)))
 
-       (make-evaluator 'mzscheme '() '()))
+             (make-evaluator 'mzscheme '() '()))
 
-     0
-     op
-     ep)))
+           0
+           op
+           ep
+           sandboxes-created)
+          (set! sandboxes-created (add1 sandboxes-created)))))))
 
 (define (sandbox-eval sb string)
   (let ((first-sexp (read (open-input-string string))))
@@ -67,7 +73,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                   (car p2)))))))
 
       (assert (not (equal? name-of-lru name)))
-
+      ;; (vtprintf
+;;        "Evicting ~s => ~s~%"
+;;        name-of-lru
+;;        (hash-table-get *sandboxes-by-nick* name-of-lru))
       (hash-table-remove! *sandboxes-by-nick* name-of-lru)))
 
   (let ((rv (hash-table-get *sandboxes-by-nick* name (lambda () (public-make-sandbox)))))
@@ -133,22 +142,33 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         "("
         ))))
 
-   (let ((charlies-sandbox (get-sandbox-by-name "charlie"))
-         (ednas-sandbox    (get-sandbox-by-name "edna")))
-     (test-false
-      "keeps sandboxes distinct, by name"
-      (eq? charlies-sandbox ednas-sandbox))
-     (test-case
-      "remembers state"
-      (sandbox-eval charlies-sandbox "(define x 99)")
-      (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
-        (check-equal? (sandbox-eval this-better-still-be-charlies
-                                    "x")
-                      99))
-      (check-exn
-       exn:fail?
-       (lambda () (sandbox-eval ednas-sandbox))
-       "edna's sandbox didn't gack when I referenced 'x' -- even though we never defined it.")))
+   (let ((charlies-sandbox #f)
+         (keiths-sandbox   #f))
+
+     (test-suite
+      "distinct "
+      #:before
+      (lambda ()
+        (set! *sandboxes-by-nick* (make-hash-table 'equal))
+        (set! charlies-sandbox (get-sandbox-by-name "charlie"))
+        (set! keiths-sandbox   (get-sandbox-by-name "keith")))
+      (test-false
+       "keeps sandboxes distinct, by name"
+       (eq? charlies-sandbox keiths-sandbox))
+
+      (test-case
+       "remembers state"
+       (printf "Before define...~%")
+       (sandbox-eval charlies-sandbox "(define x 99)")
+       (printf "After define...~%")
+       (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
+         (check-equal? (sandbox-eval this-better-still-be-charlies
+                                     "x")
+                       99))
+       (check-exn
+        exn:fail?
+        (lambda () (sandbox-eval keiths-sandbox))
+        "keith's sandbox didn't gack when I referenced 'x' -- even though we never defined it."))))
 
    (test-case
     "won't store too many"
