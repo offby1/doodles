@@ -205,6 +205,10 @@ should be hosted on an FTP server, which I don't care to run, so ...
 ** echo URL titles
    the way feck does
 
+** fallback
+   If it's a single word, look for that tag on del.icio.us, and return
+   either the first link, or one of the first links.
+
 * repl commands
 
 I wonder if I should make a new module that contains stuff

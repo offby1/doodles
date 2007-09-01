@@ -1,5 +1,5 @@
-Yes, I am fourteen years old, and have written a sloppy, crude,
-incomplete IRC bot.
+Yes, I am nineteen years old, and have written a complex,
+over-engineered IRC bot.
 
 To run the bot, try "./run-bot.ss --help".  
 
@@ -9,8 +9,8 @@ Some tests:
 
 ./run-all-tests.ss
 
-I developed it using bleeding-edge versions of PLT scheme in July 2007
-(370.6).  I know that it doesn't work with Version 352; I don't know
+I developed it using bleeding-edge versions of PLT scheme (370.6) in
+July 2007.  I know that it doesn't work with Version 352; I don't know
 about versions in between those.
 
 I tested it against the dancer-ircd package that I found in Ubuntu
