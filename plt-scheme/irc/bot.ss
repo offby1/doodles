@@ -118,18 +118,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #rx"!n=Hfuy@82\\.152\\."
               (message-prefix message)))
         (reply s message
-               (random-choice (list "purrs"
-                                    "half-closes his eyes"
-                                    "yawns and stretches"
-                                    "scratches his ear with his hind leg"
-                                    "rubs his cheek against the chair leg"
-                                    "rolls on his back"
-                                    "jumps onto the counter"
-                                    "pretends to stalk a bug"
-                                    (format "twines around ~a's feet"
-                                            (PRIVMSG-speaker message))
-                                    (format "bats at ~a's shoelaces"
-                                            (PRIVMSG-speaker message))))))
+               (format
+                "\u0001ACTION ~a\u0001"
+                (random-choice (list "purrs"
+                                     "half-closes his eyes"
+                                     "yawns and stretches"
+                                     "scratches his ear with his hind leg"
+                                     "rubs his cheek against the chair leg"
+                                     "rolls on his back"
+                                     "jumps onto the counter"
+                                     "pretends to stalk a bug"
+                                     (format "twines around ~a's feet"
+                                             (PRIVMSG-speaker message))
+                                     (format "bats at ~a's shoelaces"
+                                             (PRIVMSG-speaker message)))))))
        ((with-handlers
             ([(lambda (e)
                 (or (exn:delicious:auth? e)
