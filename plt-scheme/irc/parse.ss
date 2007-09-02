@@ -179,23 +179,25 @@
                     r)))
         (PRIVMSG-receivers message))))
 
+(define (text-for-us message)
+  (check-type 'text-for-us message? message)
+  (and (for-us? message)
+       (cond
+        ((and (PRIVMSG-is-for-channel? message)
+              (< 1 (length (PRIVMSG-text-words message))))
+         (cdr (PRIVMSG-text-words message)))
+        ((and (not (PRIVMSG-is-for-channel? message))
+              (< 0 (length (PRIVMSG-text-words message))))
+         (PRIVMSG-text-words message))
+        (else
+         #f))))
+
 (define (gist-for-us message)
   (check-type 'gist-for-us message? message)
-  (let ((relevant-word
-         (and (for-us? message)
-              (cond
-               ((and (PRIVMSG-is-for-channel? message)
-                     (< 1 (length (PRIVMSG-text-words message))))
-                (second (PRIVMSG-text-words message)))
-               ((and (not (PRIVMSG-is-for-channel? message))
-                     (< 0 (length (PRIVMSG-text-words message))))
-                (first (PRIVMSG-text-words message)))
-               (else
-                #f))
-              )))
+  (let ((t (text-for-us message)))
     ;; trim trailing punctuation
-    (and relevant-word
-         (regexp-replace (pregexp "[^[:alpha:]]+$") relevant-word ""))))
+    (and t
+         (regexp-replace (pregexp "[^[:alpha:]]+$") (car t) ""))))
 
 (define (gist-equal? str message)
   (check-type 'gist-equal? message? message)

@@ -4,12 +4,8 @@
 
 * bugs
 
-** eval doesn't work in /query rudybot
-
-* security
-
-** Run as "nobody"
-   Now that I've got an "eval" that the world can access.
+** sporadic test failure
+   "channel doesn't go idle when we are yammering at it"
 
 * eval
   put value and output on separate lines, prefixed with ;

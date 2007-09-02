@@ -531,7 +531,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (let* ((value (sandbox-eval
                                  s
                                  (string-join
-                                  (cddr (PRIVMSG-text-words m))
+                                  (cdr (text-for-us m))
                                   " ")))
                          (output (sandbox-get-stdout s)))
                     (format "~s:~s"

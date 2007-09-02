@@ -89,7 +89,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                (format
                                 ":a!b@c PRIVMSG #d :~a: eval (display \"fred\")"
                                 (*my-nick*))
-                               #rx"PRIVMSG #d :.*:\"fred\""))))
+                               #rx"PRIVMSG #d :.*:\"fred\"")))
+            (test-with-setup
+             "works in \"/QUERY\""
+             (check-not-false (got-response?
+                               sess
+                               ip
+                               (format ":a!b@c PRIVMSG ~a :eval (+ 1 2)" (*my-nick*))
+                               #rx"PRIVMSG a :3:"))))
 
            (test-with-setup
             "join"
