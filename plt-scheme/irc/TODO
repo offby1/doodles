@@ -97,11 +97,6 @@ should be hosted on an FTP server, which I don't care to run, so ...
 ** Maybe simply detecting them
    ... and then exiting, is better than doing nothing
 
-** timeout?
-   The server PINGs us peridodically; perhaps, if we don't hear
-   anything at all after, say, 200 seconds, we assume we've been
-   disonnceted, and try to reconnect.
-
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
   particular, its repl) is running, I need to type "reset" at the
