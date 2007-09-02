@@ -8,9 +8,12 @@
    "channel doesn't go idle when we are yammering at it"
 
 * eval
-  put value and output on separate lines, prefixed with ;
-  <Riastradh> ;Output: mumble grumble stumble
-  <Riastradh> ;Value: 2+3i
+
+** output formatting
+
+   put value and output on separate lines, prefixed with ;
+   <Riastradh> ;Output: mumble grumble stumble
+   <Riastradh> ;Value: 2+3i
 
 
 -- Low priority

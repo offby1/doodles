@@ -31,7 +31,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                           (sandbox-error-output ep)
                           (sandbox-eval-limits '(2 20)))
 
-             (make-evaluator 'mzscheme '() '()))
+             (make-evaluator 'mzscheme '(begin) '()))
 
            0
            op
@@ -158,9 +158,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
       (test-case
        "remembers state"
-       (printf "Before define...~%")
        (sandbox-eval charlies-sandbox "(define x 99)")
-       (printf "After define...~%")
        (let ((this-better-still-be-charlies (get-sandbox-by-name "charlie")))
          (check-equal? (sandbox-eval this-better-still-be-charlies
                                      "x")
