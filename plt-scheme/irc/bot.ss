@@ -565,20 +565,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                     (values (current-input-port)
                             (current-output-port)))))
 
-      (letrec ((s (make-irc-session
-                   op
-                   #:newsfeed
-                   (queue-of-entries
-                    #:whence
-                    (if (*use-real-atom-feed?*)
-                        (lambda ()
-                          (get-pure-port
-                           (string->url "http://planet.emacsen.org/atom.xml")
-                           (list)))
-                      fake-atom-feed)
-                    #:filter (lambda (e)
-                               (not (already-spewed? e)))))))
-        (set! *sess* s))
+      (when *sess*
+        (custodian-shutdown-all (irc-session-custodian *sess*)))
+
+      (set! *sess* (make-irc-session
+                    op
+                    #:newsfeed
+                    (queue-of-entries
+                     #:whence
+                     (if (*use-real-atom-feed?*)
+                         (lambda ()
+                           (get-pure-port
+                            (string->url "http://planet.emacsen.org/atom.xml")
+                            (list)))
+                       fake-atom-feed)
+                     #:filter (lambda (e)
+                                (not (already-spewed? e))))))
 
       (when (*log-to-file*)
         (*log-output-port*
@@ -645,27 +647,37 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                (raise e))])
 
-         (let get-one-line ()
-           (let ((line (read-line ip 'return-linefeed)))
-             (if (eof-object? line)
-                 (if #t
-                     (vtprintf "eof on server; not reconnecting~%")
-                   (begin
-                     (vtprintf "eof on server; reconnecting~%")
-                     (custodian-shutdown-all (irc-session-custodian *sess*))
-                     (sleep 10)
-                     (start)))
+         (let get-one-line-impatiently ()
+           ;; irc.freenode.org, at least, sends "PING" messages about
+           ;; every 200 seconds.  So if we don't hear _anything_ from
+           ;; the servr for, say, 240 seconds, it's probably safe to
+           ;; assume that something is all wonky, and that we should
+           ;; try again.
+           (let ((port-or-false
+                  (sync/timeout
+                   240
+                   ip)))
+             (if port-or-false
+                 (let ((line (read-line port-or-false 'return-linefeed)))
+                   (if (eof-object? line)
+                       (begin
+                         (vtprintf "eof on server; reconnecting~%")
+                         (sleep 10)
+                         (start))
+                     (begin
+                       (with-handlers
+                           ([exn:fail:irc-parse?
+                             (lambda (e)
+                               (vtprintf
+                                "~a: ~s~%"
+                                (exn-message e)
+                                (exn:fail:irc-parse-string e)))]
+                            )
+                         (respond (parse-irc-message line) *sess*))
+                       (get-one-line-impatiently))))
                (begin
-                 (with-handlers
-                     ([exn:fail:irc-parse?
-                       (lambda (e)
-                         (vtprintf
-                          "~a: ~s~%"
-                          (exn-message e)
-                          (exn:fail:irc-parse-string e)))]
-                      )
-                   (respond (parse-irc-message line) *sess*))
-                 (get-one-line))))))))))
+                 (vtprintf "No data from server for a while; reconnecting~%")
+                 (start))))))))))
 (provide
  register-usual-services!
  respond

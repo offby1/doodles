@@ -132,7 +132,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (and (PRIVMSG? m)
        (member "#snooze" (PRIVMSG-receivers m))))
 
-(define *timeout* 1/5)
+(define *timeout* 2/5)
 
 (define channel-events-tests
 
