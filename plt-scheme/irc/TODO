@@ -11,24 +11,18 @@
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it"
 
-* eval
-
-** output formatting
-
-   put value and output on separate lines, prefixed with ;
-   <Riastradh> ;Output: mumble grumble stumble
-   <Riastradh> ;Value: 2+3i
-
-
--- Low priority
-
 * 433
   aka 
   #4(struct:message "kubrick.freenode.net" "433" ("*" "rudybot" "Nickname is already in use."))
   #4(struct:message "kubrick.freenode.net" "451" ("*" "PRIVMSG" "Register first."))
 
   Right now I'm just reconnecting, which works eventually.  But it
-  might be nice to wait a while before reconnecting.
+  might be nice to wait a while before reconnecting.  Also, when we
+  see that, we should do (format "/msg nickserv ghost ~a ~a"
+  (*my-nick*) (*nickserv-password*))
+
+
+-- Low priority
 
 * finer control of logging
   Right now I have a single boolean -- *verbose* -- which controls
@@ -191,11 +185,15 @@ should be hosted on an FTP server, which I don't care to run, so ...
   rather not do that since most of those quotes are multi-line, and
   wouldn't look good if collapsed.
 
-* new commands
+* eval
 
-** "eval"
-   sandbox.ss is a safe way of doing "eval" -- i.e., they can't call
-   "exit", can't mess with the filesystem, etc.
+** output formatting
+
+   put value and output on separate lines, prefixed with ;
+   <Riastradh> ;Output: mumble grumble stumble
+   <Riastradh> ;Value: 2+3i
+
+* new commands
 
 ** "you suck"
    to emit some TODO list entries, or just a URL to the TODO file
