@@ -131,12 +131,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      (lambda ()
        (let loop ()
 
-         (for-each
-          (lambda (e)
-            (when (filter e)
+         (with-handlers
+             ([exn:fail:network?
+               (lambda (e)
+                 (fprintf
+                  (current-error-port)
+                  (format "can't snarf from procedure ~s~%"
+                          (object-name whence)))
+                 #t)])
+           (for-each
+            (lambda (e)
+              (when (filter e)
                 (cached-channel-put the-channel e)))
 
-          (snarf-em-all (whence)))
+            (snarf-em-all (whence))))
 
          (sleep (*planet-poll-interval*))
          (loop)))
