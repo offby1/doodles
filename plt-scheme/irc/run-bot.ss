@@ -13,6 +13,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (only "headline.ss" reliably-put-pref)
           (only "planet-emacsen.ss" *planet-poll-interval*)
           "quotes.ss"
+          "repl.ss"
           "vprintf.ss"
           )
 (register-version-string "$Id$")
@@ -75,7 +76,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (lambda ()
      (parameterize
          ((current-namespace
-           (module->namespace "bot.ss")))
+           (module->namespace "repl.ss")))
        (with-handlers
            ([exn:fail:filesystem?
              (lambda (e)
@@ -87,7 +88,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (current-error-port)
           "Welcome to the ~a namespace.  Use your power only for good.~%"
           (object-name (current-namespace))))
-       (read-eval-print-loop)))))
+       (run-repl)))))
 
 (start)
 )

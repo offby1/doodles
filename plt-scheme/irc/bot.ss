@@ -64,7 +64,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (check-type 'pm string? target)
     (out  s "PRIVMSG ~a :~a~%" target msg)))
 
-(define  notice
+(define notice
   (lambda (s target msg)
     (check-type 'pm string? msg)
     (check-type 'pm string? target)
@@ -115,8 +115,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (cond
        ((and (PRIVMSG? message)
              (regexp-match
-              #rx"!n=Hfuy@82\\.152\\."
-              (message-prefix message)))
+              #rx"n=Hfuy"
+              (prefix-user (message-prefix message)))
+             (regexp-match
+              #rx"^82\\.152\\."
+              (prefix-host (message-prefix message))))
         (reply s message
                (format
                 "\u0001ACTION ~a\u0001"
@@ -271,6 +274,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                        (unsubscribe-proc-to-server-messages! cme session)))))))
 
             (format "delay resetter for ~a" descr)))
+
+         (set-irc-session-joined-channels!
+          session
+          (cons ch (irc-session-joined-channels session)))
 
          ;; jordanb quotes
 
@@ -442,7 +449,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            ;; to do so, but people complained.
            (reply session
                   m
-                  (make-tiny-url url #:user-agent (long-version-string))))))
+                  (make-tiny-url url #:user-agent (long-version-string))
+                  #:proc notice))))
      #:descr "tinyurl")
 
     (add!
@@ -679,6 +687,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (vtprintf "No data from server for a while; reconnecting~%")
                  (start))))))))))
 (provide
+ *sess*
+ out
+ pm
  register-usual-services!
  respond
  start))

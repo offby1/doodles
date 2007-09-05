@@ -43,6 +43,12 @@
 
 (define-struct (exn:fail:irc-parse exn:fail) (string))
 (define-struct message (prefix command params) #f)
+(define-struct prefix (nick user host) #f)
+(define (parse-prefix str)
+  (regexp-case
+   str
+   ((pregexp "^(.*?)(?:!(.*?))?(?:@(.*?))?$")
+    => (lambda args (apply make-prefix (cdr args))))))
 
 ;; turn "NOTICE", e.g., into 'NOTICE
 (define (public-message-command x)
@@ -88,11 +94,11 @@
              (let loop ((params '())
                         (param-string param-string))
                (if (zero? (string-length param-string))
-                   (make-message prefix command (reverse params))
+                   (make-message (and prefix (parse-prefix prefix)) command (reverse params))
                  (regexp-case
                   param-string
                   ((#rx"^ :(.*)" trail)
-                   (make-message prefix command (reverse (cons trail params))))
+                   (make-message (and prefix (parse-prefix prefix)) command (reverse (cons trail params))))
                   (((pregexp "^ ([^[:space:]]+)") one)
                    (loop (cons one params)
                          (substring param-string (string-length match)))))))))))))
@@ -136,10 +142,7 @@
            (let ((p (make-sub-struct
                      m
                      make-PRIVMSG
-                     (second
-                      (regexp-match
-                       #rx"(.*)!(.*)@(.*)"
-                       (message-prefix m)))
+                     (prefix-nick (message-prefix m))
                      receivers
                      (and (not (null? text-tokens))
                           (regexp-case
@@ -215,6 +218,12 @@
     (check-equal? (message-command m) cmd    (format "command of ~s" input))
     (check-equal? (message-params  m) params (format "params of ~s"  input))))
 
+(define-shortcut (test-prefix-pieces input expected-pieces)
+  (let ((p (message-prefix (parse-irc-message input))))
+    (check-equal? (prefix-nick p) (first  expected-pieces) (format "nick of ~s" input))
+    (check-equal? (prefix-user p) (second expected-pieces) (format "user of ~s" input))
+    (check-equal? (prefix-host p) (third  expected-pieces) (format "host of ~s" input))))
+
 (define parse-tests
 
   (test-suite
@@ -228,32 +237,32 @@
 
    (test-parse
     "empty trailing"
-    ":foo bar baz :"                         "foo" "bar" '("baz" ""))
+    ":foo bar baz :" (parse-prefix "foo") "bar" '("baz" ""))
    (test-parse
     "trailing"
-    ":foo bar baz :params go here"          "foo" "bar" '("baz" "params go here"))
+    ":foo bar baz :params go here" (parse-prefix "foo") "bar" '("baz" "params go here"))
    (test-parse
     "NOTICE"
     ":localhost. NOTICE you :all suck"
-    "localhost."
+    (parse-prefix "localhost.")
     "NOTICE"
     '("you" "all suck"))
    (test-parse
     "PRIVMSG"
     ":foo!foo@localhost. PRIVMSG #emacs :e1f: you all suck"
-    "foo!foo@localhost."
+    (parse-prefix "foo!foo@localhost.")
     "PRIVMSG"
     '("#emacs" "e1f: you all suck"))
    (test-parse
     "MODE"
     ":ChanServ!ChanServ@services. MODE #cinema +tc"
-    "ChanServ!ChanServ@services."
+    (parse-prefix "ChanServ!ChanServ@services.")
     "MODE"
     '("#cinema" "+tc"))
    (test-equal?
     "prefix"
     (message-prefix (parse-irc-message ":zip zap zop :snot"))
-    "zip")
+    (parse-prefix "zip"))
    (test-false
     "missing prefix"
     (message-prefix (parse-irc-message "NOTICE All Apple fanbois will be taken out back")))
@@ -285,8 +294,8 @@
      (check-equal? (PRIVMSG-text (parse-irc-message ":X!X@Y PRIVMSG poopoo :platter puss"))
                    "platter puss")
      (check-equal? (PRIVMSG-speaker (parse-irc-message ":fsbot!n=user@batfish.pepperfish.net PRIVMSG #emacs :yow!"))
-                   "fsbot")
-     )
+                   "fsbot"))
+
     (test-suite
      "CTCP"
      (test-false
@@ -352,6 +361,15 @@
      (gist-equal?
       "yow"
       (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*my-nick*))))))
+   (test-suite
+    "prefix"
+    (test-prefix-pieces "nick only"        ":nick foo bar baz"             '("nick" #f #f))
+    (test-prefix-pieces "nick and host"    ":nick@night foo bar baz"       '("nick" #f "night"))
+    (test-prefix-pieces "nick, host, user" ":nick!knack foo bar baz"       '("nick" "knack" #f))
+    (test-prefix-pieces "nick and user"    ":nick!knack@night foo bar baz" '("nick" "knack" "night"))
+    (test-prefix-pieces "goofy"            ":fsbot!n=user@batfish.pepperfish.net a b c"
+                        '("fsbot" "n=user" "batfish.pepperfish.net"))
+    )
    ))
 
 (provide (all-defined-except message-command)

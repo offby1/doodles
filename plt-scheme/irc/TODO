@@ -4,6 +4,10 @@
 
 * bugs
 
+** "quote" doesn't work in query
+   "beer", and "eval" do, though.  I should probably use gist-equal?
+   in all cases, and nix command=?
+
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it"
 
@@ -17,6 +21,14 @@
 
 
 -- Low priority
+
+* 433
+  aka 
+  #4(struct:message "kubrick.freenode.net" "433" ("*" "rudybot" "Nickname is already in use."))
+  #4(struct:message "kubrick.freenode.net" "451" ("*" "PRIVMSG" "Register first."))
+
+  Right now I'm just reconnecting, which works eventually.  But it
+  might be nice to wait a while before reconnecting.
 
 * finer control of logging
   Right now I have a single boolean -- *verbose* -- which controls

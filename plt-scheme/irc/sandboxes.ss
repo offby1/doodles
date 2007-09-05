@@ -12,8 +12,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "assert.ss" ("offby1" "offby1.plt")) assert)
+         "globals.ss"
          "test-utils.ss"
          "vprintf.ss")
+(register-version-string "$Id$")
 
 (define-struct sandbox (evaluator
                         last-used-time

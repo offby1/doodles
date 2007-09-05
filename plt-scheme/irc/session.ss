@@ -16,13 +16,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    appearances-by-nick
 
    ;; Procedures who want to be called whenever a new message arrives.
-   ;; They're likely channel-idle-events.  Conceptually it's a list,
-   ;; but actually it's a weak hash table whose keys are the
-   ;; procedures, and whose values are ignored.  This way, in theory,
-   ;; if we drop references to the procedures, they'll get
-   ;; garbage-collected.  Otherwise they'd accumulate here.  (As it
-   ;; happens the current code -doesn't- drop references to those
-   ;; procedures, but I might later make it do so.)
+   ;; They're likely channel-idle-events.  It's a hash table whose
+   ;; keys are the procedures, and whose values are ignored.  (I can't
+   ;; think of a good reason why it couldn't be a simple list; I
+   ;; should try that.)
    message-subscriptions
 
    ;; where we get news headlines from.  #f means we get 'em from a
@@ -39,6 +36,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    ;; the background threads are running.
    custodian
 
+   joined-channels
    ) #f)
 
 (define/kw (public-make-irc-session
@@ -61,6 +59,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (make-cached-channel)
              op
              (make-custodian)
+             '()
              )))
     sess))
 
