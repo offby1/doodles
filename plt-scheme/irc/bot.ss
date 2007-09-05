@@ -118,7 +118,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               #rx"n=Hfuy"
               (prefix-user (message-prefix message)))
              (regexp-match
-              #rx"^82\\.152\\."
+              #rx"^8[12]\\."
               (prefix-host (message-prefix message))))
         (reply s message
                (format
