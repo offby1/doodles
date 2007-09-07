@@ -38,7 +38,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (set! *selected-channel* (mru-add *selected-channel* channel)))
 
 (define/kw (me text #:key [channel (car *selected-channel*)])
-  (bot:pm (format "\u0001ACTION ~a\u0001~%" text)))
+  (bot:pm bot:*sess* channel (format "\u0001ACTION ~a\u0001~%" text)))
 
 (define/kw (part #:key [channel (car *selected-channel*)])
   (bot:out bot:*sess* "PART ~a~%" channel)
