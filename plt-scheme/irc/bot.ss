@@ -523,6 +523,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (out session "PONG :~a~%" (car (message-params m)))))
 
     (add!
+     ERR_NICKNAMEINUSE?
+     (lambda (m)
+       (out session "/msg nickserv ghost ~a ~a" (*my-nick*) (*nickserv-password*))))
+
+    (add!
      (lambda (m)
        (gist-equal? "eval" m))
 

@@ -72,6 +72,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (lambda ()
              (*initial-channel-names* (list "#bots")))
 
+           (test-with-setup
+            "replies to 433 with \"ghost\""
+            (got-response?
+             sess
+             ip
+             (format "kubrick.freenode.net 433 * ~a Nickname is already in use."
+                     (*my-nick*))
+             (pregexp
+              (pregexp-quote
+               (format "/msg nickserv ghost ~a ~a" (*my-nick*) (*nickserv-password*))))
+                ))
+
            (test-suite
             "eval"
             (test-with-setup

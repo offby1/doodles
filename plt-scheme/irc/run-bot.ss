@@ -77,6 +77,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (parameterize
          ((current-namespace
            (module->namespace "repl.ss")))
+       (let loop ()
+         (when (not *sess*)
+           (fprintf (current-error-port)
+                    "Waiting for the session, before starting the repl~%")
+           (sleep 10)
+           (loop))
+         )
        (with-handlers
            ([exn:fail:filesystem?
              (lambda (e)
