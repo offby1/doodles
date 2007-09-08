@@ -11,14 +11,18 @@
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it"
 
-* 433
-  aka 
-  #4(struct:message "kubrick.freenode.net" "433" ("*" "rudybot" "Nickname is already in use."))
-  #4(struct:message "kubrick.freenode.net" "451" ("*" "PRIVMSG" "Register first."))
+** 433
+   I saw freenode send the 433, then immediately hang up -- we didn't
+   get a chance to ghost the nick.
 
-  Right now I'm just reconnecting, which works eventually.  But
-  really, when we see that, we should do (format "/msg nickserv ghost
-  ~a ~a" (*my-nick*) (*nickserv-password*))
+   I suspect I good way to test this would be to have to separate
+   bot processes, with the same nick, hitting the same server;
+   presumably the second will get the 433 message.
+
+   The only fix I can think of at the moment is quite ugly: when we
+   get the 433, throw some sort of exception, and have the "start"
+   procedure handle that by reconnecting with a random nick, _then_
+   doing "/msg nickserv ghost ...", then doing "NICK".
 
 
 -- Low priority
