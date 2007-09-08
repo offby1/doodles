@@ -31,8 +31,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                    (cons current-line result)
                  result)))
 
-     ;; if putting this token on the current line would make the
-     ;; current line too long, then ... time to start a new line.
+     ;; if putting this token on the current line would make it too
+     ;; long, then ... time to start a new line.
      ((< *max-line-length*
          (+ (string-length (maybe-space current-line))
             (string-length (car tokens))
