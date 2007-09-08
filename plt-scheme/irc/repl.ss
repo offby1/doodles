@@ -23,33 +23,29 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define mru-member member)
 
-;; this is actually a list of channels that we're currently joined
-;; to.  And it's a terrible idea, since the session object has a
-;; similar list, and I can't think of a good way to keep the two lists
-;; in sync.
-(define *joined-channels* #f)
-
-(define/kw (pm text #:key [destination (car *joined-channels*)])
+(define/kw (pm text #:key [destination (car (irc-session-joined-channels bot:*sess*))])
   (bot:pm bot:*sess* destination text))
 
+;; I wonder if join, select, and part should be defined in session.ss
+;; instead of here ...
 (define (join channel)
   (bot:out bot:*sess* "JOIN ~a~%" channel)
   (select channel))
 
 (define (select channel)
-  (when (not (member channel *joined-channels*))
-    (error 'select "channel ~s is not in ~s" channel *joined-channels*))
-  (set! *joined-channels* (mru-add *joined-channels* channel)))
+  (when (not (member channel (irc-session-joined-channels bot:*sess*)))
+    (error 'select "channel ~s is not in ~s" channel (irc-session-joined-channels bot:*sess*)))
+  (set-irc-session-joined-channels! bot:*sess* (mru-add (irc-session-joined-channels bot:*sess*) channel)))
 
-(define/kw (me text #:key [channel (car *joined-channels*)])
+(define/kw (me text #:key [channel (car (irc-session-joined-channels bot:*sess*))])
   (bot:pm bot:*sess* channel (format "\u0001ACTION ~a\u0001~%" text)))
 
-(define/kw (part #:key [channel (car *joined-channels*)])
+(define/kw (part #:key [channel (car (irc-session-joined-channels bot:*sess*))])
   (bot:out bot:*sess* "PART ~a~%" channel)
-  (set! *joined-channels* (mru-remove *joined-channels* channel)))
+  (set-irc-session-joined-channels! bot:*sess* (mru-remove (irc-session-joined-channels bot:*sess*) channel)))
 
 (define (run-repl)
-  (set! *joined-channels* (make-mru (irc-session-joined-channels bot:*sess*)))
+  (set-irc-session-joined-channels! bot:*sess* (make-mru (irc-session-joined-channels bot:*sess*)))
   (read-eval-print-loop))
 
 
