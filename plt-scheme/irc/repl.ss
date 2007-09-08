@@ -21,13 +21,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define (mru-remove mru item)
   (delete item mru))
 
+(define mru-member member)
+
 ;; this is actually a list of channels that we're currently joined
 ;; to.  And it's a terrible idea, since the session object has a
 ;; similar list, and I can't think of a good way to keep the two lists
 ;; in sync.
-(define *selected-channel* #f)
+(define *joined-channels* #f)
 
-(define/kw (pm text #:key [destination (car *selected-channel*)])
+(define/kw (pm text #:key [destination (car *joined-channels*)])
   (bot:pm bot:*sess* destination text))
 
 (define (join channel)
@@ -35,17 +37,19 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (select channel))
 
 (define (select channel)
-  (set! *selected-channel* (mru-add *selected-channel* channel)))
+  (when (not (member channel *joined-channels*))
+    (error 'select "channel ~s is not in ~s" channel *joined-channels*))
+  (set! *joined-channels* (mru-add *joined-channels* channel)))
 
-(define/kw (me text #:key [channel (car *selected-channel*)])
+(define/kw (me text #:key [channel (car *joined-channels*)])
   (bot:pm bot:*sess* channel (format "\u0001ACTION ~a\u0001~%" text)))
 
-(define/kw (part #:key [channel (car *selected-channel*)])
+(define/kw (part #:key [channel (car *joined-channels*)])
   (bot:out bot:*sess* "PART ~a~%" channel)
-  (set! *selected-channel* (mru-remove *selected-channel* channel)))
+  (set! *joined-channels* (mru-remove *joined-channels* channel)))
 
 (define (run-repl)
-  (set! *selected-channel* (make-mru (irc-session-joined-channels bot:*sess*)))
+  (set! *joined-channels* (make-mru (irc-session-joined-channels bot:*sess*)))
   (read-eval-print-loop))
 
 
