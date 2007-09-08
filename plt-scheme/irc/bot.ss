@@ -184,6 +184,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;; global.
 (define *sandboxes-by-nick* (make-hash-table 'equal))
 
+(define-struct (exn:fail:network:ERR_NICKNAMEINUSE exn:fail) (message))
+
 (define (register-usual-services! session)
 
   ;; so that these threads will be easily killable
@@ -525,7 +527,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (add!
      ERR_NICKNAMEINUSE?
      (lambda (m)
-       (out session "/msg nickserv ghost ~a ~a" (*my-nick*) (*nickserv-password*))))
+       (raise (make-exn:fail:network:ERR_NICKNAMEINUSE
+               m
+               (current-continuation-marks)))))
 
     (add!
      (lambda (m)
