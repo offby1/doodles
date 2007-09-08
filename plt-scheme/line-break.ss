@@ -27,15 +27,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (result '()))
     (cond
      ((null? tokens)
-      (let ((rv
-             (reverse (if (positive? (string-length current-line))
-                          (cons current-line result)
-                        result))))
-        (for-each (lambda (str)
-                    (assert (<= (string-length str)
-                                *max-line-length*)))
-                  rv)
-        rv))
+      (reverse (if (positive? (string-length current-line))
+                   (cons current-line result)
+                 result)))
 
      ;; if putting this token on the current line would make the
      ;; current line too long, then ... time to start a new line.
