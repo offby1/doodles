@@ -26,6 +26,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define/kw (pm text #:key [destination (car (irc-session-joined-channels bot:*sess*))])
   (bot:pm bot:*sess* destination text))
 
+(define/kw (notice text #:key [destination (car (irc-session-joined-channels bot:*sess*))])
+  (bot:notice bot:*sess* destination text))
+
 ;; I wonder if join, select, and part should be defined in session.ss
 ;; instead of here ...
 (define (join channel)

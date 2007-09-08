@@ -184,7 +184,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;; global.
 (define *sandboxes-by-nick* (make-hash-table 'equal))
 
-(define-struct (exn:fail:network:ERR_NICKNAMEINUSE exn:fail) (message))
+(define-struct (exn:fail:network:ERR_NICKNAMEINUSE exn:fail) ())
 
 (define (register-usual-services! session)
 
@@ -528,7 +528,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      ERR_NICKNAMEINUSE?
      (lambda (m)
        (raise (make-exn:fail:network:ERR_NICKNAMEINUSE
-               m
+               (string-join (message-params m))
                (current-continuation-marks)))))
 
     (add!
@@ -704,6 +704,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (start))))))))))
 (provide
  *sess*
+ notice
  out
  pm
  register-usual-services!
