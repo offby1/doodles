@@ -599,6 +599,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      #:filter (lambda (e)
                                 (not (already-spewed? e))))))
 
+      ;; It may not be obvious, but we might call "start" a bunch of
+      ;; times within a given process -- if we catch an exception.  So
+      ;; let's ensure that we don't leak file handles.
+      (when (and (port? *log-output-port*)
+                 (not (port-closed? *log-output-port*)))
+        (close-output-port *log-output-port*))
+
       (when (*log-to-file*)
         (*log-output-port*
          (open-output-file

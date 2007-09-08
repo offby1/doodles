@@ -4,6 +4,22 @@
 
 * bugs
 
+** too many open files
+   Around midnight, the bot said "No data from server for a while;
+   reconnecting".  No problem.  But then, for the next four hours, it
+   tried to reconnect, and failed with ERR_NICKNAMEINUSE; it kept
+   trying about twice a minute fruitlessly until around 4:30 AM, at
+   which point the logs show 
+
+   thread 0: 2007-09-08T04:27:23-0700:  <= #5(struct:ERR_NICKNAMEINUSE #4(struct:prefix "kubrick.freenode.net" #f) "433" ("*" "rudybot" "Nickname is already in use.") "rudybot")
+   thread 0: 2007-09-08T04:27:23-0700:  <= #4(struct:message #4(struct:prefix "kubrick.freenode.net" #f) "451" ("*" "PRIVMSG" "Register first."))
+   thread 0: 2007-09-08T04:27:31-0700:  <= #4(struct:message #f "ERROR" ("Closing Link: 127.0.0.1 (Connection Timed Out)"))
+   thread 0: 2007-09-08T04:27:31-0700: eof on server; reconnecting
+   Caught an exception: #3(struct:exn:fail:filesystem "open-output-file: cannot open output file: \"/var/log/irc-bot/irc.freenode.org-2007-09-08T11:27:41Z\" (Too many open files; errno=24)" #<continuation-mark-set>)
+
+   ... with the above "Caught an exception" message repeated more or
+   less endlessly.
+
 ** "quote" doesn't work in query
    "beer", and "eval" do, though.  I should probably use gist-equal?
    in all cases, and nix command=?
