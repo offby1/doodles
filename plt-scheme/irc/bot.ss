@@ -565,7 +565,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (reply session  m "Eh? Speak up, sonny.")))))
 
 
-(define (start)
+(define (maybe-close-output-port thing)
+  (when (and (port? thing)
+             (not (port-closed? thing)))
+    (close-output-port thing)))
+
+(define/kw (start #:key [ghost? #f])
 
   (with-handlers
       ([exn:fail:network?
@@ -583,7 +588,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             (current-output-port)))))
 
       (when *sess*
-        (custodian-shutdown-all (irc-session-custodian *sess*)))
+        (custodian-shutdown-all (irc-session-custodian *sess*))
+        (maybe-close-output-port (irc-session-op *sess*)))
 
       (set! *sess* (make-irc-session
                     op
@@ -599,14 +605,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                      #:filter (lambda (e)
                                 (not (already-spewed? e))))))
 
-      ;; It may not be obvious, but we might call "start" a bunch of
-      ;; times within a given process -- if we catch an exception.  So
-      ;; let's ensure that we don't leak file handles.
-      (when (and (port? *log-output-port*)
-                 (not (port-closed? *log-output-port*)))
-        (close-output-port *log-output-port*))
-
       (when (*log-to-file*)
+        (maybe-close-output-port (*log-output-port*))
         (*log-output-port*
          (open-output-file
           ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
@@ -630,12 +630,31 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (register-usual-services! *sess*)
 
-      (fprintf op "NICK ~a~%" (*my-nick*))
+      (fprintf op "NICK ~a~%" (if ghost?
+                                  ;; random nick
+                                  (let another-char ((nick ""))
+                                    (if (< (string-length nick) 10)
+                                        (another-char
+                                         (string-append
+                                          nick
+                                          (string
+                                           (integer->char
+                                            (+ (char->integer #\a)
+                                               (random 26))))))
+                                      nick))
+                                (*my-nick*)))
       (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
                (or (getenv "USER") "unknown")
                (*irc-server-name*)
                *client-name*
                *svnversion-string*)
+
+      (when ghost?
+        (fprintf op "PRIVMSG NickServ :ghost ~a ~a~%"
+                 (*my-nick*)
+                 (*nickserv-password*))
+        (fprintf op "QUIT :hope this works!~%")
+        (start))
 
       (when (*nickserv-password*)
         (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
@@ -655,6 +674,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                (fprintf op "QUIT :Ah been shot!~%")
                (flush-output op)
                (close-output-port op))]
+            [exn:fail:network:ERR_NICKNAMEINUSE?
+             (lambda (e)
+               (start #:ghost? #t))]
             [exn:fail?
              (lambda (e)
                (let ((whine (format  "Caught an exception: ~s~%" e)))
