@@ -25,6 +25,11 @@ endef
 
 FORCE:
 
+sources=$(filter-out version.ss,$(wildcard *.ss))
+
+bot: $(sources) version.ss
+	mzc --exe $@ run-bot.ss
+
 version.ss: FORCE
 	echo -n '(define *svnversion-string* "' > $@
 	echo -n $(svnversion) >> $@
@@ -63,7 +68,7 @@ clean:
 
 tags: TAGS
 
-TAGS: $(filter-out version.ss,$(wildcard *.ss))
+TAGS: $(sources)
 	PATH=/usr/local/src/emacs-cvs/lib-src:$(dir $(EMACS))../lib-src:$$PATH etags --regex='/[ \t]*(def\w+[^ \t]+[ \t]+(?\([^ \t]*?\)\W+/\1/' *.ss
 
 .PHONY: clean all dist plt tar check svnup
