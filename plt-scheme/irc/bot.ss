@@ -184,8 +184,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;; global.
 (define *sandboxes-by-nick* (make-hash-table 'equal))
 
-(define-struct (exn:fail:network:ERR_NICKNAMEINUSE exn:fail) ())
-
 (define (register-usual-services! session)
 
   ;; so that these threads will be easily killable
@@ -525,13 +523,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (out session "PONG :~a~%" (car (message-params m)))))
 
     (add!
-     ERR_NICKNAMEINUSE?
-     (lambda (m)
-       (raise (make-exn:fail:network:ERR_NICKNAMEINUSE
-               (string-join (message-params m))
-               (current-continuation-marks)))))
-
-    (add!
      (lambda (m)
        (gist-equal? "eval" m))
 
@@ -581,15 +572,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           (sleep 10)
           (start))])
 
+    (when *sess*
+      (custodian-shutdown-all (irc-session-custodian *sess*))
+      (maybe-close-output-port (irc-session-op *sess*)))
+
     (let-values (((ip op)
                   (if (*irc-server-name*)
                       (tcp-connect (*irc-server-name*) 6667)
                     (values (current-input-port)
                             (current-output-port)))))
-
-      (when *sess*
-        (custodian-shutdown-all (irc-session-custodian *sess*))
-        (maybe-close-output-port (irc-session-op *sess*)))
 
       (set! *sess* (make-irc-session
                     op
@@ -630,7 +621,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (register-usual-services! *sess*)
 
-      (fprintf op "NICK ~a~%" (if ghost?
+      (out *sess* "NICK ~a~%" (if ghost?
                                   ;; random nick
                                   (let another-char ((nick ""))
                                     (if (< (string-length nick) 10)
@@ -643,21 +634,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                                (random 26))))))
                                       nick))
                                 (*my-nick*)))
-      (fprintf op "USER ~a unknown-host ~a :~a, ~a~%"
-               (or (getenv "USER") "unknown")
-               (*irc-server-name*)
-               *client-name*
-               *svnversion-string*)
+      (out *sess* "USER ~a unknown-host ~a :~a, ~a~%"
+           (or (getenv "USER") "unknown")
+           (*irc-server-name*)
+           *client-name*
+           *svnversion-string*)
 
       (when ghost?
-        (fprintf op "PRIVMSG NickServ :ghost ~a ~a~%"
-                 (*my-nick*)
-                 (*nickserv-password*))
-        (fprintf op "QUIT :hope this works!~%")
+        (out *sess* "PRIVMSG NickServ :ghost ~a ~a~%"
+             (*my-nick*)
+             (*nickserv-password*))
+        (out *sess* "QUIT :hope this works!~%")
         (start))
 
       (when (*nickserv-password*)
-        (fprintf op "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
+        (out *sess* "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
 
       (parameterize-break
        #t
@@ -671,12 +662,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                ;; this may be because the server ignores custom QUIT
                ;; messages from clients that haven't been connected for
                ;; very long.
-               (fprintf op "QUIT :Ah been shot!~%")
+               (out *sess* "QUIT :Ah been shot!~%")
                (flush-output op)
                (close-output-port op))]
-            [exn:fail:network:ERR_NICKNAMEINUSE?
-             (lambda (e)
-               (start #:ghost? #t))]
             [exn:fail?
              (lambda (e)
                (let ((whine (format  "Caught an exception: ~s~%" e)))
@@ -687,7 +675,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                    ([exn:fail?
                      (lambda (e)
                        (vtprintf "oh hell, I can't send a quit message~%"))])
-                 (fprintf op "QUIT :unexpected failure~%")
+                 (out *sess* "QUIT :unexpected failure~%")
                  (flush-output op)
                  (close-output-port op))
 
@@ -717,9 +705,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                (vtprintf
                                 "~a: ~s~%"
                                 (exn-message e)
-                                (exn:fail:irc-parse-string e)))]
-                            )
-                         (respond (parse-irc-message line) *sess*))
+                                (exn:fail:irc-parse-string e)))])
+
+                         (let ((message (parse-irc-message line)))
+
+                           (if (ERR_NICKNAMEINUSE? message)
+                               (start #:ghost? #t)
+                             (respond message *sess*))))
+
                        (get-one-line-impatiently))))
                (begin
                  (vtprintf "No data from server for a while; reconnecting~%")
