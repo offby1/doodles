@@ -206,6 +206,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        session))
 
     (add!
+     (lambda (m)
+       (and (eq? (message-command m)
+                 'NOTICE)
+            (message-prefix m)
+            (equal? "NickServ"  (prefix-nick (message-prefix m)))
+            (equal? "NickServ"  (prefix-user (message-prefix m)))
+            (equal? "services." (prefix-host (message-prefix m)))
+            (equal? (*my-nick*) (first (message-params m)))
+            (regexp-match #rx"This nickname is owned by someone else" (second (message-params m)))
+            ))
+     (lambda (m)
+       (vtprintf "Oh shit! Nick collison.~%")
+       (exit 1)
+       ))
+
+    (add!
      RPL_ENDOFNAMES?
      (lambda (366-message)
        (vtprintf "Got 366~%")
@@ -574,7 +590,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (when *sess*
       (custodian-shutdown-all (irc-session-custodian *sess*))
-      (maybe-close-output-port (irc-session-op *sess*)))
+      (when (not (terminal-port? (current-output-port)))
+        (maybe-close-output-port (irc-session-op *sess*))))
 
     (let-values (((ip op)
                   (if (*irc-server-name*)
@@ -639,13 +656,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
            (*irc-server-name*)
            *client-name*
            *svnversion-string*)
-
-      (when ghost?
-        (out *sess* "PRIVMSG NickServ :ghost ~a ~a~%"
-             (*my-nick*)
-             (*nickserv-password*))
-        (out *sess* "QUIT :hope this works!~%")
-        (start))
 
       (when (*nickserv-password*)
         (out *sess* "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
