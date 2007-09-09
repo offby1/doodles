@@ -710,7 +710,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                          (let ((message (parse-irc-message line)))
 
                            (if (ERR_NICKNAMEINUSE? message)
-                               (start #:ghost? #t)
+                               (begin
+                                 (sleep 10)
+                                 (vtprintf
+                                  "Got one o' them ERR_NICKNAMEINUSE messages; gonna try to restart, ghost, etc.~%")
+                                 (start #:ghost? #t))
                              (respond message *sess*))))
 
                        (get-one-line-impatiently))))
