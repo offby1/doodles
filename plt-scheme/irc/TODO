@@ -4,6 +4,12 @@
 
 * bugs
 
+** 'require' failing in eval
+   <offby1> rudybot: eval (require (lib "1.ss" "srfi"))                                       [17:48]
+   <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
+             variable in module (transformer environment) in: generate-expand-context
+
+
 ** too many open files
    Around midnight, the bot said "No data from server for a while;
    reconnecting".  No problem.  But then, for the next four hours, it
