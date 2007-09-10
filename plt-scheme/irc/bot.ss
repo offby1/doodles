@@ -205,21 +205,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
         #:descr descr)
        session))
 
-    (add!
-     (lambda (m)
-       (and (eq? (message-command m)
-                 'NOTICE)
-            (message-prefix m)
-            (equal? "NickServ"  (prefix-nick (message-prefix m)))
-            (equal? "NickServ"  (prefix-user (message-prefix m)))
-            (equal? "services." (prefix-host (message-prefix m)))
-            (equal? (*my-nick*) (first (message-params m)))
-            (regexp-match #rx"This nickname is owned by someone else" (second (message-params m)))
-            ))
-     (lambda (m)
-       (vtprintf "Oh shit! Nick collison.~%")
-       (exit 1)
-       ))
+    (when (*nickserv-password*)
+      (add!
+       (lambda (m)
+         (and (eq? (message-command m)
+                   'NOTICE)
+              (message-prefix m)
+              (equal? "NickServ"  (prefix-nick (message-prefix m)))
+              (equal? "NickServ"  (prefix-user (message-prefix m)))
+              (equal? "services." (prefix-host (message-prefix m)))
+              (equal? (*my-nick*) (first (message-params m)))
+              (regexp-match #rx"This nickname is owned by someone else" (second (message-params m)))
+              ))
+       (lambda (m)
+         (out session "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))))
 
     (add!
      RPL_ENDOFNAMES?
@@ -489,7 +488,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
          (reply session
                 m
-                (or sighting (format "I haven't seen ~a" who)))))
+                (format
+                 (or sighting (format "I haven't seen ~a" who))
+                 " (y'know, you can just say \"/msg nickserv info ~a\")" who))))
      #:responds? #t
      #:descr "'seen' command")
 
@@ -590,7 +591,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (when *sess*
       (custodian-shutdown-all (irc-session-custodian *sess*))
-      (when (not (terminal-port? (current-output-port)))
+      (when (not (terminal-port? (irc-session-op *sess*)))
         (maybe-close-output-port (irc-session-op *sess*))))
 
     (let-values (((ip op)
@@ -614,7 +615,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                 (not (already-spewed? e))))))
 
       (when (*log-to-file*)
-        (maybe-close-output-port (*log-output-port*))
+        (when (not (terminal-port? (*log-output-port*)))
+          (maybe-close-output-port (*log-output-port*)))
         (*log-output-port*
          (open-output-file
           ;; BUGBUGs: 1) this isn't portable; 2) we'll croak if this
@@ -721,10 +723,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
                            (if (ERR_NICKNAMEINUSE? message)
                                (begin
-                                 (sleep 10)
-                                 (vtprintf
-                                  "Got one o' them ERR_NICKNAMEINUSE messages; gonna try to restart, ghost, etc.~%")
-                                 (start #:ghost? #t))
+                                 (vtprintf "Oh shit! Nick collison.~%")
+                                 (exit 1))
                              (respond message *sess*))))
 
                        (get-one-line-impatiently))))
