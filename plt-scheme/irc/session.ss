@@ -37,6 +37,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    custodian
 
    joined-channels
+
+   ;; initialized to (current-seconds)
+   start-time-seconds
    ) #f)
 
 (define/kw (public-make-irc-session
@@ -60,6 +63,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              op
              (make-custodian)
              '()
+             (current-seconds)
              )))
     sess))
 
