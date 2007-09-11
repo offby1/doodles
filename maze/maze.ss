@@ -1,5 +1,5 @@
 (module maze mzscheme
-(require (planet "dfs.ss" ("offby1" "my-plt-collects.plt")))
+(require (planet "dfs.ss" ("offby1" "offby1.plt")))
 (require (all-except "draw.ss" my-version))
 (require (lib "trace.ss"))
 (require (lib "cmdline.ss"))
