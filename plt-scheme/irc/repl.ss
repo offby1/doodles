@@ -47,6 +47,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   (bot:out bot:*sess* "PART ~a~%" channel)
   (set-irc-session-joined-channels! bot:*sess* (mru-remove (irc-session-joined-channels bot:*sess*) channel)))
 
+(define (quit message)
+  (bot:out bot:*sess* "QUIT :~a~%" message))
+
 (define (run-repl)
   (set-irc-session-joined-channels! bot:*sess* (make-mru (irc-session-joined-channels bot:*sess*)))
   (read-eval-print-loop))
