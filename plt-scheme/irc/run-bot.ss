@@ -27,8 +27,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (*irc-server-name* host))
   (("--delicious") del "del.icio.us password"
    (*del.icio.us-password* del))
-  (("-n" "--nick") nick "The nick I will be known by"
-   (*my-nick* nick))
+  (("-n" "--nick") nick "The nick I _want to_ be known by; but we might need to append characters to it"
+   (*desired-nick* nick)
+   (*actual-nick*  nick))
   (("--nickserv")
    pw "Password for NICKSERV"
    (*nickserv-password* pw))

@@ -214,8 +214,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (equal? "NickServ"  (prefix-nick (message-prefix m)))
               (equal? "NickServ"  (prefix-user (message-prefix m)))
               (equal? "services." (prefix-host (message-prefix m)))
-              (equal? (*my-nick*) (first (message-params m)))
-              (regexp-match #rx"This nickname is owned by someone else" (second (message-params m)))
+              (equal? (*actual-nick*) (first (message-params m)))
+              (regexp-match #rx"If this is your nickname, type /msg NickServ .*IDENTIFY"
+                            (second (message-params m)))
               ))
        (lambda (m)
          (out session "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))))
@@ -488,11 +489,35 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
          (reply session
                 m
-                (format
+                (string-append
                  (or sighting (format "I haven't seen ~a" who))
-                 " (y'know, you can just say \"/msg nickserv info ~a\")" who))))
+                 (format
+                  " (y'know, you can just say \"/msg nickserv info ~a\")" who))
+                )))
      #:responds? #t
      #:descr "'seen' command")
+
+     (add!
+       (lambda (m)
+         (and (VERSION? m)
+              (message-prefix m)
+              (equal? "freenode-connect"     (prefix-nick (message-prefix m)))
+              (equal? "freenode"             (prefix-user (message-prefix m)))
+              (equal? "freenode/bot/connect" (prefix-host (message-prefix m)))
+              (equal? (list (*actual-nick*)) (PRIVMSG-receivers m))))
+       (lambda (m)
+         (when (not (equal? (*desired-nick*)
+                            (*actual-nick*)))
+           ;; TODO -- check for responses to these messages
+           (out session "PRIVMSG NickServ :ghost ~a ~a~%"
+                (*desired-nick*)
+                (*nickserv-password*))
+           (out session "NICK ~a~%"
+                (*desired-nick*))
+           (*actual-nick* (*desired-nick*)))
+         )
+       #:responds? #t
+       #:descr "'ghost' if needed when server asks our VERSION")
 
     (add!
      (lambda (m) (or (VERSION? m)
@@ -578,7 +603,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
              (not (port-closed? thing)))
     (close-output-port thing)))
 
-(define/kw (start #:key [ghost? #f])
+(define/kw (start #:key [nick-suffix #f])
 
   (with-handlers
       ([exn:fail:network?
@@ -593,6 +618,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
       (custodian-shutdown-all (irc-session-custodian *sess*))
       (when (not (terminal-port? (irc-session-op *sess*)))
         (maybe-close-output-port (irc-session-op *sess*))))
+
+    ;; if we're gonna twiddle the nick, we need to do it before we
+    ;; start any threads, so that the new threads get the same value
+    ;; we have here.
+    (when nick-suffix
+      (*actual-nick* (format "~a~a" (*desired-nick*) nick-suffix)))
 
     (let-values (((ip op)
                   (if (*irc-server-name*)
@@ -640,27 +671,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (register-usual-services! *sess*)
 
-      (out *sess* "NICK ~a~%" (if ghost?
-                                  ;; random nick
-                                  (let another-char ((nick ""))
-                                    (if (< (string-length nick) 10)
-                                        (another-char
-                                         (string-append
-                                          nick
-                                          (string
-                                           (integer->char
-                                            (+ (char->integer #\a)
-                                               (random 26))))))
-                                      nick))
-                                (*my-nick*)))
+      (out *sess* "NICK ~a~%" (*actual-nick*))
       (out *sess* "USER ~a unknown-host ~a :~a, ~a~%"
            (or (getenv "USER") "unknown")
            (*irc-server-name*)
            *client-name*
            *svnversion-string*)
-
-      (when (*nickserv-password*)
-        (out *sess* "PRIVMSG NickServ :identify ~a~%" (*nickserv-password*)))
 
       (parameterize-break
        #t
@@ -719,13 +735,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                                 (exn-message e)
                                 (exn:fail:irc-parse-string e)))])
 
-                         (let ((message (parse-irc-message line)))
+                         (let  ((message (parse-irc-message line)))
 
-                           (if (ERR_NICKNAMEINUSE? message)
-                               (begin
-                                 (vtprintf "Oh shit! Nick collison.~%")
-                                 (exit 1))
-                             (respond message *sess*))))
+                           (let try-a-new-nick ((suffix "0")
+                                                (tries 0))
+                             (if (ERR_NICKNAMEINUSE? message)
+                                 ;; append a character to our nick,
+                                 ;; and try again.
+                                 (begin
+                                   (vtprintf "Got a ERR_NICKNAMEINUSE message; reconnecting with a new nick~%")
+                                   (start #:nick-suffix "_"))
+                               (respond message *sess*)))))
 
                        (get-one-line-impatiently))))
                (begin

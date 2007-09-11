@@ -31,7 +31,8 @@
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only "globals.ss"
                register-version-string
-               *my-nick*)
+               *actual-nick*)
+
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type))
 
 (register-version-string "$Id$")
@@ -188,8 +189,8 @@
    (any (lambda (r)
           (if (is-channel-name? r)
               (equal? (PRIVMSG-approximate-recipient message)
-                      (*my-nick*))
-            (equal? (*my-nick*)
+                      (*actual-nick*))
+            (equal? (*actual-nick*)
                     r)))
         (PRIVMSG-receivers message))))
 
@@ -356,22 +357,22 @@
     )
    (test-suite
     "gists"
-    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
-    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*my-nick*)))))
-    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*my-nick*)))))
-    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*my-nick*)))))
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*actual-nick*)))))
+    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*actual-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*actual-nick*)))))
+    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*actual-nick*)))))
 
     (test-not-false
      "gist-equal?"
      (gist-equal?
       "yow"
-      (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*my-nick*)))))
+      (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*actual-nick*)))))
 
     (test-not-false
      "gist-equal?"
      (gist-equal?
       "yow"
-      (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*my-nick*))))))
+      (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*actual-nick*))))))
    (test-suite
     "prefix"
     (test-prefix-pieces "nick only"        ":nick foo bar baz"             '("nick" #f #f))

@@ -5,14 +5,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module globals mzscheme
-(require (lib "include.ss")
+(require (lib "kw.ss")
+         (lib "include.ss")
          (only (lib "etc.ss") this-expression-source-directory)
          (only (lib "1.ss" "srfi")
                second))
 
 (include "version.ss")
 
-(define *my-nick* (make-parameter "rudybot"))
+(define *desired-nick* (make-parameter "rudybot"))
+
+;; kind of like a parameter, in that it's a procedure ... but there's
+;; only one value for all threads.  I'd prefer that it be a simple
+;; string, but since this module exports it, I cannot mutate it.
+(define *actual-nick*
+  (let ((actual-nick (*desired-nick*)))
+    (lambda/kw (#:optional new-value)
+      (if new-value
+          (set! actual-nick new-value)
+        actual-nick))))
+
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
 
 (define version-strings #f)

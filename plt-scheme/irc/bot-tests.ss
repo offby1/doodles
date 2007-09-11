@@ -72,18 +72,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
            (lambda ()
              (*initial-channel-names* (list "#bots")))
 
-           (test-with-setup
-            "replies to 433 with \"ghost\""
-            (got-response?
-             sess
-             ip
-             (format "kubrick.freenode.net 433 * ~a Nickname is already in use."
-                     (*my-nick*))
-             (pregexp
-              (pregexp-quote
-               (format "/msg nickserv ghost ~a ~a" (*my-nick*) (*nickserv-password*))))
-                ))
-
            (test-suite
             "eval"
             (test-with-setup
@@ -91,7 +79,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (check-not-false (got-response?
                                sess
                                ip
-                               (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*my-nick*))
+                               (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*actual-nick*))
                                #rx"PRIVMSG #d :3:")))
             (test-with-setup
              "proper display of output"
@@ -100,14 +88,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                ip
                                (format
                                 ":a!b@c PRIVMSG #d :~a: eval (display \"fred\")"
-                                (*my-nick*))
+                                (*actual-nick*))
                                #rx"PRIVMSG #d :.*:\"fred\"")))
             (test-with-setup
              "works in \"/QUERY\""
              (check-not-false (got-response?
                                sess
                                ip
-                               (format ":a!b@c PRIVMSG ~a :eval (+ 1 2)" (*my-nick*))
+                               (format ":a!b@c PRIVMSG ~a :eval (+ 1 2)" (*actual-nick*))
                                #rx"PRIVMSG a :3:"))))
 
            (test-with-setup
@@ -123,7 +111,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (got-response?
               sess
               ip
-              (format ":a!b@c PRIVMSG #d :~a: " (*my-nick*))
+              (format ":a!b@c PRIVMSG #d :~a: " (*actual-nick*))
               (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
              ))
 
@@ -133,7 +121,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (got-response?
               sess
               ip
-              (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (*my-nick*))
+              (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (*actual-nick*))
               #rx"PRIVMSG a :.*at a loss for words")))
 
            (test-with-setup
@@ -177,15 +165,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              ;; subscribed.
              (sleep 1/2)
 
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*my-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*actual-nick*)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*my-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*actual-nick*)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*my-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*actual-nick*)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*my-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*actual-nick*)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*my-nick*)) #rx"no news")))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*actual-nick*)) #rx"no news")))
 
             (test-with-setup
              "items only appear once"
