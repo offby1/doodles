@@ -4,6 +4,11 @@
 
 * bugs
 
+** "QUIT" from repl reconnects
+   So I did (quit "yo") from the repl.  The server, quite
+   understandably, hung up on us -- but then line 733 of bot.ss
+   reconncted us.
+
 ** *my-nick* is a parameter
    which means if I change it from the REPL, not all threads find out
    about it, so some have the old nick.  Ugh.  It properly belongs in

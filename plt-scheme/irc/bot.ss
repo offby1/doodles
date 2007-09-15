@@ -499,7 +499,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                 (string-append
                  (or sighting (format "I haven't seen ~a" who))
                  (format
-                  " (y'know, you can just say \"/msg nickserv info ~a\")" who))
+                  " (also try \"/msg nickserv info ~a\")" who))
                 )))
      #:responds? #t
      #:descr "'seen' command")
