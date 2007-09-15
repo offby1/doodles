@@ -14,6 +14,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (only (lib "13.ss" "srfi")
                string-join)
          (only (lib "19.ss" "srfi")
+               date->string
                current-date)
          (only (lib "url.ss" "net")
                get-pure-port
@@ -157,7 +158,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                  (entry->string (random-choice posts)))))
        (else
         (reply s message
-               "\u0001ACTION is at a loss for words, as usual\u0001"))
+               (format "\u0001ACTION ~a\u0001"
+                       (random-choice
+                        (list "is at a loss for words, as usual"
+                              "'s jaw slackens"
+                              "stares vacantly"
+                              "pretends to pay attention"
+                              "mumbles incoherently")))))
        ))))
 
 
@@ -654,7 +661,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           ;; directory doesn't exist
           (format "/var/log/irc-bot/~a-~a"
                   (*irc-server-name*)
-                  (zdate)))))
+                  (date->string (current-date) "~Y-~m-~dT~X~z")))))
 
       (fprintf (current-error-port)
                "Logging to ~s~%" (object-name (*log-output-port*)))

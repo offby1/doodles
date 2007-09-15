@@ -122,7 +122,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               sess
               ip
               (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (*actual-nick*))
-              #rx"PRIVMSG a :.*at a loss for words")))
+              #rx"PRIVMSG a :")))
 
            (test-with-setup
             "backed-up idle events"

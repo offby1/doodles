@@ -4,6 +4,17 @@
 
 * bugs
 
+** *my-nick* is a parameter
+   which means if I change it from the REPL, not all threads find out
+   about it, so some have the old nick.  Ugh.  It properly belongs in
+   the session object.
+
+** both "at a loss" and "eh? speak up"
+   <jordanb> rudybot, 
+   * rudybot is at a loss for words, as usual
+   <rudybot> Eh? Speak up, sonny.
+
+
 ** repl: 'join' gacks
    (join "##cooking")
    thread 0: 2007-09-10T17:30:57-0700:  => "JOIN ##cooking\n"
@@ -12,7 +23,7 @@
    /home/erich/doodles/plt-scheme/irc/repl.ss:36:2: (select channel)
 
 ** 'require' failing in eval
-   <offby1> rudybot: eval (require (lib "1.ss" "srfi"))                                       [17:48]
+   <offby1> rudybot: eval (require (lib "1.ss" "srfi"))
    <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
              variable in module (transformer environment) in: generate-expand-context
 
@@ -39,19 +50,6 @@
 
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it"
-
-** 433
-   I saw freenode send the 433, then immediately hang up -- we didn't
-   get a chance to ghost the nick.
-
-   I suspect I good way to test this would be to have to separate
-   bot processes, with the same nick, hitting the same server;
-   presumably the second will get the 433 message.
-
-   The only fix I can think of at the moment is quite ugly: when we
-   get the 433, throw some sort of exception, and have the "start"
-   procedure handle that by reconnecting with a random nick, _then_
-   doing "/msg nickserv ghost ...", then doing "NICK".
 
 
 -- Low priority

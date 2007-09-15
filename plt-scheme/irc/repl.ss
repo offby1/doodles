@@ -10,6 +10,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (prefix bot: "bot.ss")
+         (planet "zdate.ss"   ("offby1" "offby1.plt"))
          "session.ss")
 
 (define/kw (make-mru #:optional [initial '()])
@@ -33,6 +34,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;; instead of here ...
 (define (join channel)
   (bot:out bot:*sess* "JOIN ~a~%" channel)
+  (set-irc-session-joined-channels!
+   bot:*sess*
+   (mru-add (irc-session-joined-channels bot:*sess*) channel))
   (select channel))
 
 (define (select channel)
