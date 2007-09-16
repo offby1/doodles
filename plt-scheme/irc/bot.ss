@@ -234,10 +234,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (vtprintf "Got 366~%")
        (let ((ch (RPL_ENDOFNAMES-channel-name 366-message)))
          (define (chatter? m) (on-channel? ch m))
-         (define (command=? str m) (and (chatter? m) (gist-equal? str m session)))
 
          ;; (trace chatter?)
-         ;; (trace command=?)
 
          (define (exponentially-backing-off-spewer proc descr)
            (thread-with-id
@@ -306,7 +304,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; on-demand ...
          (add!
-          (lambda (m) (command=? "quote" m))
+          (lambda (m) (gist-equal? "quote" m session))
           (lambda (m)
             (reply session m (one-quote)))
           #:responds? #t)
@@ -330,7 +328,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; on-demand news spewage.
          (add!
-          (lambda (m) (command=? "news" m))
+          (lambda (m) (gist-equal? "news" m session))
           (lambda (m)
             (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
               (reply session m
@@ -400,7 +398,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           #:descr "moviestowatchfor")
 
          (add!
-          (lambda (m) (command=? "movie" m))
+          (lambda (m) (gist-equal? "movie" m session))
           (lambda (m)
             (reply session
                    m

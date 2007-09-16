@@ -31,10 +31,6 @@
    ... with the above "Caught an exception" message repeated more or
    less endlessly.
 
-** "quote" doesn't work in query
-   "beer", and "eval" do, though.  I should probably use gist-equal?
-   in all cases, and nix command=?
-
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it"
 
