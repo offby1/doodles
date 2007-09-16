@@ -602,7 +602,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (for-us? m session)
             (not (gist-for-us m session))))
      (lambda (m)
-       (reply session  m "Eh? Speak up, sonny.")))))
+       (reply session  m "Eh? Speak up, sonny."))
+     #:responds? #t)))
 
 
 (define (maybe-close-output-port thing)

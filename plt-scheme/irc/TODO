@@ -9,19 +9,6 @@
    understandably, hung up on us -- but then line 733 of bot.ss
    reconncted us.
 
-** both "at a loss" and "eh? speak up"
-   <jordanb> rudybot, 
-   * rudybot is at a loss for words, as usual
-   <rudybot> Eh? Speak up, sonny.
-
-
-** repl: 'join' gacks
-   (join "##cooking")
-   thread 0: 2007-09-10T17:30:57-0700:  => "JOIN ##cooking\n"
-   select: channel "##cooking" is not in ("#emacs" "#scheme" "#bots" "#scheme-bots" "##cinema")
-   /home/erich/doodles/plt-scheme/irc/repl.ss:40:4: (error (quote select) "channel ~s is not in ~s" channel (irc-session-joined-channels bot:*sess*))
-   /home/erich/doodles/plt-scheme/irc/repl.ss:36:2: (select channel)
-
 ** 'require' failing in eval
    <offby1> rudybot: eval (require (lib "1.ss" "srfi"))
    <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
