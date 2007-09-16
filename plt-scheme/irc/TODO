@@ -14,6 +14,8 @@
    <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
              variable in module (transformer environment) in: generate-expand-context
 
+   This appears to be a bug in mzscheme release 371; at any rate, it
+   doesn't happen in the two newer trunk builds that I've tried.
 
 ** too many open files
    Around midnight, the bot said "No data from server for a while;
@@ -32,7 +34,10 @@
    less endlessly.
 
 ** sporadic test failure
-   "channel doesn't go idle when we are yammering at it"
+   "channel doesn't go idle when we are yammering at it".  No idea
+   why, really.  I've refactored the file that test lives in, in the
+   hope that that will magically make the problem go away.  I've also
+   built a statue to Thoth, the God of software quality.
 
 
 -- Low priority
