@@ -30,9 +30,8 @@
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only "globals.ss"
-               register-version-string
-               *actual-nick*)
-
+               register-version-string)
+         "session.ss"
          (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type))
 
 (register-version-string "$Id$")
@@ -182,21 +181,21 @@
         (else #f))))
 ;(trace maybe-make-CTCP)
 
-(define (for-us? message)
+(define (for-us? message session)
   (check-type 'for-us? message? message)
   (and
    (PRIVMSG? message)
    (any (lambda (r)
           (if (is-channel-name? r)
               (equal? (PRIVMSG-approximate-recipient message)
-                      (*actual-nick*))
-            (equal? (*actual-nick*)
+                      (irc-session-nick session))
+            (equal? (irc-session-nick session)
                     r)))
         (PRIVMSG-receivers message))))
 
-(define (text-for-us message)
+(define (text-for-us message sess)
   (check-type 'text-for-us message? message)
-  (and (for-us? message)
+  (and (for-us? message sess)
        (cond
         ((and (PRIVMSG-is-for-channel? message)
               (< 1 (length (PRIVMSG-text-words message))))
@@ -207,16 +206,16 @@
         (else
          #f))))
 
-(define (gist-for-us message)
+(define (gist-for-us message sess)
   (check-type 'gist-for-us message? message)
-  (let ((t (text-for-us message)))
+  (let ((t (text-for-us message sess)))
     ;; trim trailing punctuation
     (and t
          (regexp-replace (pregexp "[^[:alpha:]]+$") (car t) ""))))
 
-(define (gist-equal? str message)
+(define (gist-equal? str message sess)
   (check-type 'gist-equal? message? message)
-  (equal? str (gist-for-us message)))
+  (equal? str (gist-for-us message sess)))
 ;(trace gist-equal?)
 ;(trace for-us?)
 ;(trace gist-for-us)
@@ -355,24 +354,29 @@
       "well"))
 
     )
-   (test-suite
-    "gists"
-    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*actual-nick*)))))
-    (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" (*actual-nick*)))))
-    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" (*actual-nick*)))))
-    (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" (*actual-nick*)))))
+   (let* ((sess (make-irc-session
+                 (open-output-string)))
+          (nick (irc-session-nick sess)))
+     (test-suite
+      "gists"
+      (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" nick))                sess))
+      (test-not-false "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :~a: yow" nick))    sess))
+      (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG x~ax :yow" nick))              sess))
+      (test-false     "for-us"  (for-us? (parse-irc-message (format ":x!y@z PRIVMSG #some-chan :x~ax: yow" nick))  sess))
 
-    (test-not-false
-     "gist-equal?"
-     (gist-equal?
-      "yow"
-      (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" (*actual-nick*)))))
+      (test-not-false
+       "gist-equal?"
+       (gist-equal?
+        "yow"
+        (parse-irc-message (format ":x!y@z PRIVMSG ~a :yow" nick))
+        sess))
 
-    (test-not-false
-     "gist-equal?"
-     (gist-equal?
-      "yow"
-      (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" (*actual-nick*))))))
+      (test-not-false
+       "gist-equal?"
+       (gist-equal?
+        "yow"
+        (parse-irc-message (format ":x!y@z PRIVMSG #ch-ch-ch-changes :~a, yow" nick))
+        sess))))
    (test-suite
     "prefix"
     (test-prefix-pieces "nick only"        ":nick foo bar baz"             '("nick" #f #f))
@@ -380,10 +384,7 @@
     (test-prefix-pieces "nick, host, user" ":nick!knack foo bar baz"       '("nick" "knack" #f))
     (test-prefix-pieces "nick and user"    ":nick!knack@night foo bar baz" '("nick" "knack" "night"))
     (test-prefix-pieces "goofy"            ":fsbot!n=user@batfish.pepperfish.net a b c"
-                        '("fsbot" "n=user" "batfish.pepperfish.net"))
-    )
-   ))
+                        '("fsbot" "n=user" "batfish.pepperfish.net")))))
 
 (provide (all-defined-except message-command)
          (rename public-message-command message-command)))
-

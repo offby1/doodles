@@ -110,7 +110,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (set! handled? #t))))
 
     (when (and
-           (for-us? message)
+           (for-us? message s)
            (not handled?))
 
       (cond
@@ -144,7 +144,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (lambda (e)
                 #f)])
 
-          (let* ((g (gist-for-us message))
+          (let* ((g (gist-for-us message s))
                  ;; unfortunately this only searches _my_ tags; it'd be
                  ;; far better if it searched everybody's.  Alas, I don't
                  ;; know if that's possible with the delicious PLaneT
@@ -221,7 +221,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (equal? "NickServ"  (prefix-nick (message-prefix m)))
               (equal? "NickServ"  (prefix-user (message-prefix m)))
               (equal? "services." (prefix-host (message-prefix m)))
-              (equal? (*actual-nick*) (first (message-params m)))
+              (equal? (irc-session-nick session) (first (message-params m)))
               (regexp-match #rx"If this is your nickname, type /msg NickServ .*IDENTIFY"
                             (second (message-params m)))
               ))
@@ -234,7 +234,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
        (vtprintf "Got 366~%")
        (let ((ch (RPL_ENDOFNAMES-channel-name 366-message)))
          (define (chatter? m) (on-channel? ch m))
-         (define (command=? str m) (and (chatter? m) (gist-equal? str m)))
+         (define (command=? str m) (and (chatter? m) (gist-equal? str m session)))
 
          ;; (trace chatter?)
          ;; (trace command=?)
@@ -489,7 +489,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (add!
      (lambda (m)
-       (and (gist-equal? "seen" m)
+       (and (gist-equal? "seen" m session)
             (< 2 (length (PRIVMSG-text-words m)))))
      (lambda (m)
        (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words m)) ""))
@@ -511,24 +511,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
               (equal? "freenode-connect"     (prefix-nick (message-prefix m)))
               (equal? "freenode"             (prefix-user (message-prefix m)))
               (equal? "freenode/bot/connect" (prefix-host (message-prefix m)))
-              (equal? (list (*actual-nick*)) (PRIVMSG-receivers m))))
+              (equal? (list (irc-session-nick session)) (PRIVMSG-receivers m))))
        (lambda (m)
          (when (not (equal? (*desired-nick*)
-                            (*actual-nick*)))
+                            (irc-session-nick session)))
            ;; TODO -- check for responses to these messages
            (out session "PRIVMSG NickServ :ghost ~a ~a~%"
                 (*desired-nick*)
                 (*nickserv-password*))
            (out session "NICK ~a~%"
                 (*desired-nick*))
-           (*actual-nick* (*desired-nick*)))
+           (set-irc-session-nick! (*desired-nick*)))
          )
        #:responds? #t
        #:descr "'ghost' if needed when server asks our VERSION")
 
     (add!
      (lambda (m) (or (VERSION? m)
-                     (gist-equal? "version" m)))
+                     (gist-equal? "version" m session)))
      (lambda (m)
        (if (VERSION? m)
            (out session "NOTICE ~a :\u0001VERSION ~a\0001~%"
@@ -540,7 +540,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (add!
      (lambda (m)
        (or (SOURCE? m)
-           (gist-equal? "source" m)))
+           (gist-equal? "source" m session)))
      (lambda (m)
        (let ((source-host "offby1.ath.cx")
              (source-directory "/~erich/bot/")
@@ -573,7 +573,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
     (add!
      (lambda (m)
-       (gist-equal? "eval" m))
+       (gist-equal? "eval" m session))
 
      (lambda (m)
 
@@ -588,7 +588,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                   (let* ((value (sandbox-eval
                                  s
                                  (string-join
-                                  (cdr (text-for-us m))
+                                  (cdr (text-for-us m session))
                                   " ")))
                          (output (sandbox-get-stdout s)))
                     (format "~s:~s"
@@ -599,8 +599,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (add!
      (lambda (m)
        (and (PRIVMSG? m)
-            (for-us? m)
-            (not (gist-for-us m))))
+            (for-us? m session)
+            (not (gist-for-us m session))))
      (lambda (m)
        (reply session  m "Eh? Speak up, sonny.")))))
 
@@ -630,7 +630,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     ;; start any threads, so that the new threads get the same value
     ;; we have here.
     (when nick-suffix
-      (*actual-nick* (format "~a~a" (*desired-nick*) nick-suffix)))
+      (set-irc-session-nick! (format "~a~a" (*desired-nick*) nick-suffix)))
 
     (let-values (((ip op)
                   (if (*irc-server-name*)
@@ -678,7 +678,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
       (register-usual-services! *sess*)
 
-      (out *sess* "NICK ~a~%" (*actual-nick*))
+      (out *sess* "NICK ~a~%" (irc-session-nick *sess*))
       (out *sess* "USER ~a unknown-host ~a :~a, ~a~%"
            (or (getenv "USER") "unknown")
            (*irc-server-name*)

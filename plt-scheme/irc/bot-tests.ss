@@ -79,7 +79,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (check-not-false (got-response?
                                sess
                                ip
-                               (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (*actual-nick*))
+                               (format ":a!b@c PRIVMSG #d :~a: eval (+ 1 2)" (irc-session-nick sess))
                                #rx"PRIVMSG #d :3:")))
             (test-with-setup
              "proper display of output"
@@ -88,14 +88,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                ip
                                (format
                                 ":a!b@c PRIVMSG #d :~a: eval (display \"fred\")"
-                                (*actual-nick*))
+                                (irc-session-nick sess))
                                #rx"PRIVMSG #d :.*:\"fred\"")))
             (test-with-setup
              "works in \"/QUERY\""
              (check-not-false (got-response?
                                sess
                                ip
-                               (format ":a!b@c PRIVMSG ~a :eval (+ 1 2)" (*actual-nick*))
+                               (format ":a!b@c PRIVMSG ~a :eval (+ 1 2)" (irc-session-nick sess))
                                #rx"PRIVMSG a :3:"))))
 
            (test-with-setup
@@ -111,7 +111,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (got-response?
               sess
               ip
-              (format ":a!b@c PRIVMSG #d :~a: " (*actual-nick*))
+              (format ":a!b@c PRIVMSG #d :~a: " (irc-session-nick sess))
               (pregexp-quote "PRIVMSG #d :Eh? Speak up"))
              ))
 
@@ -121,7 +121,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              (got-response?
               sess
               ip
-              (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (*actual-nick*))
+              (format ":a!b@c PRIVMSG ~a :what are your plans this weekend?" (irc-session-nick sess))
               #rx"PRIVMSG a :")))
 
            (test-with-setup
@@ -165,15 +165,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
              ;; subscribed.
              (sleep 1/2)
 
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (*actual-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 1" (irc-session-nick sess)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (*actual-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 2" (irc-session-nick sess)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (*actual-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 3" (irc-session-nick sess)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (*actual-nick*)) #rx"no news"))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 4" (irc-session-nick sess)) #rx"no news"))
              (sleep (*minimum-delay-for-periodic-spew*))
-             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (*actual-nick*)) #rx"no news")))
+             (check-not-false (got-response? sess ip (format ":a!b@c PRIVMSG #emacs :~a: news 5" (irc-session-nick sess)) #rx"no news")))
 
             (test-with-setup
              "items only appear once"

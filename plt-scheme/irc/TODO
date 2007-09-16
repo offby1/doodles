@@ -9,11 +9,6 @@
    understandably, hung up on us -- but then line 733 of bot.ss
    reconncted us.
 
-** *my-nick* is a parameter
-   which means if I change it from the REPL, not all threads find out
-   about it, so some have the old nick.  Ugh.  It properly belongs in
-   the session object.
-
 ** both "at a loss" and "eh? speak up"
    <jordanb> rudybot, 
    * rudybot is at a loss for words, as usual

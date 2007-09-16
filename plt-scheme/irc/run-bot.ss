@@ -28,8 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (("--delicious") del "del.icio.us password"
    (*del.icio.us-password* del))
   (("-n" "--nick") nick "The nick I _want to_ be known by; but we might need to append characters to it"
-   (*desired-nick* nick)
-   (*actual-nick*  nick))
+   (*desired-nick* nick))
   (("--nickserv")
    pw "Password for NICKSERV"
    (*nickserv-password* pw))

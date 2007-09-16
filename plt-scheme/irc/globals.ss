@@ -15,16 +15,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *desired-nick* (make-parameter "rudybot"))
 
-;; kind of like a parameter, in that it's a procedure ... but there's
-;; only one value for all threads.  I'd prefer that it be a simple
-;; string, but since this module exports it, I cannot mutate it.
-(define *actual-nick*
-  (let ((actual-nick (*desired-nick*)))
-    (lambda/kw (#:optional new-value)
-      (if new-value
-          (set! actual-nick new-value)
-        actual-nick))))
-
 (define *client-name* "Eric Hanchrow (aka offby1)'s bot")
 
 (define version-strings #f)
