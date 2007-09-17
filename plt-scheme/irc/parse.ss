@@ -13,8 +13,6 @@
 (module parse mzscheme
 (require (lib "trace.ss")
          (only (lib "string.ss") read-from-string)
-         (only (planet "port.ss" ("schematics" "port.plt" 1 0))
-               port->string-list)
          (only (lib "1.ss" "srfi")
                any
                first second third fourth fifth)
