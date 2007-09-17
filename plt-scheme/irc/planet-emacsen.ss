@@ -37,8 +37,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                rfc3339-string->srfi19-date/constructor)
          (only (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
                html->shtml)
-         (only (planet "port.ss" ("schematics" "port.plt" ))
-               port->string)
+         (only "port.ss" port->string/close)
 
          (only (planet "zdate.ss" ("offby1" "offby1.plt"))
                date->string
@@ -88,7 +87,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
      ;; / ... Burma Shave
      (html->shtml
       (begin0
-        (port->string ip)
+        (port->string/close ip)
         (close-input-port ip)))))
 
    (lambda (e1 e2)

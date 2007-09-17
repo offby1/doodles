@@ -14,8 +14,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
          (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
                html->shtml)
          (lib "trace.ss")
-         (only (planet "port.ss" ("schematics" "port.plt"))
-               port->string)
+         (only "port.ss" port->string/close)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          "globals.ss")
@@ -49,7 +48,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0" -p "text-ui.
   (car
    ((sxpath '(html body (table 2) tr (td 2) p blockquote small a @ href *text*))
     (html->shtml
-     (port->string
+     (port->string/close
       (post-pure-port
        (string->url
         "http://tinyurl.com/create.php")

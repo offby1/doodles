@@ -12,8 +12,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                sxpath)
          (only (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
                html->shtml)
-         (only (planet "port.ss"      ("schematics"  "port.plt" ))
-               port->string)
+         (only "port.ss" port->string/close)
          (only (lib "pretty.ss")
                pretty-display
                pretty-print)
@@ -40,9 +39,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (let* ((url (string->url "http://feeds.feedburner.com/quotationspage/qotd")))
                   (let ((stuff
                          (html->shtml
-                          (port->string (get-pure-port
-                                         url
-                                         (list))))
+                          (port->string/close
+                           (get-pure-port
+                            url
+                            (list))))
                          ))
                     ;; I suspect there's a way to do this with nothing
                     ;; more than a single call to sxpath -- no maps, no

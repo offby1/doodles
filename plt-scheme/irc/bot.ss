@@ -20,7 +20,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                get-pure-port
                string->url)
          (lib "trace.ss")
-         (only (planet "port.ss" ("schematics" "port.plt" 1 0)) port->string)
          (only (planet "delicious.ss" ("untyped" "delicious.plt" 1 1))
                exn:fail:delicious?)
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
