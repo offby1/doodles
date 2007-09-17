@@ -4,6 +4,14 @@
 
 * bugs
 
+** responds to "quote" a bunch of times
+   <jordanb> rudybot, quote
+   <rudybot> I blame inner monologues
+   <rudybot> Let's start wearing diapers so that we can IRC for longer periods of time.
+   <rudybot> Let's have a red scare.
+   <rudybot> Let's all make openoffice viruses.
+   <rudybot> Let's use bitkeeper.
+
 ** "QUIT" from repl reconnects
    So I did (quit "yo") from the repl.  The server, quite
    understandably, hung up on us -- but then line 733 of bot.ss
