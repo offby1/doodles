@@ -14,8 +14,9 @@
    <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
              variable in module (transformer environment) in: generate-expand-context
 
-   This appears to be a bug in mzscheme release 371; at any rate, it
-   doesn't happen in the two newer trunk builds that I've tried.
+   This appears to be a bug in mzscheme release 371
+   (http://bugs.plt-scheme.org/query/?cmd=view&pr=8933); at any rate,
+   it doesn't happen in the two newer trunk builds that I've tried.
 
 ** too many open files
    Around midnight, the bot said "No data from server for a while;
