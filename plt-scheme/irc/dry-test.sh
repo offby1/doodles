@@ -9,7 +9,7 @@
         echo -e ":localhost 366 rudybot #$c :what's up, homes? \\r"
     done
 
-    sleep 10
+    sleep 20
     
     echo -e ":a!b@c PRIVMSG #scheme-bots :rudybot: quote\\r"
 
