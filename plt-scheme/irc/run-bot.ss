@@ -23,6 +23,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (current-command-line-arguments)
  (once-each
 
+  (("-r" "--rng") vec
+   "pseudo-random-generator vector like #6(1888977131 3014825601 3849035281 163056249 698545751 4293483726)"
+   (current-pseudo-random-generator
+    (vector->pseudo-random-generator (read (open-input-string vec)))))
   (("-s" "--host") host "Name of the IRC server to connect to"
    (*irc-server-name* host))
   (("--delicious") del "del.icio.us password"
@@ -43,6 +47,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    (when (not (member channel (*initial-channel-names*)))
      (*initial-channel-names* (cons channel (*initial-channel-names*))))
    )))
+
+(fprintf
+ (current-error-port)
+ "rng state: ~s~%"
+ (pseudo-random-generator->vector (current-pseudo-random-generator)))
 
 (let ((remote-irc? (and (*irc-server-name*)
                    (not (equal? "localhost" (*irc-server-name*)))))
