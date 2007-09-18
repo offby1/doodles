@@ -236,6 +236,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          (define (for-this-task? m)
            (or (member (irc-session-nick session) (PRIVMSG-receivers m))
                (member ch (PRIVMSG-receivers m))))
+         (define (task-gist-equal? str m)
+           (and (gist-equal? str m session)
+                (for-this-task? m)))
          ;; (trace chatter?)
 
          (define (exponentially-backing-off-spewer proc descr)
@@ -305,8 +308,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; on-demand ...
          (add!
-          (lambda (m) (and (gist-equal? "quote" m session)
-                           (for-this-task? m)))
+          (lambda (m) (task-gist-equal? "quote" m))
           (lambda (m)
             (reply session m (one-quote)))
           #:responds? #t)
@@ -330,8 +332,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
          ;; on-demand news spewage.
          (add!
-          (lambda (m) (and (gist-equal? "news" m session)
-                           (for-this-task? m)))
+          (lambda (m) (task-gist-equal? "news" m))
           (lambda (m)
             (let ((headline (cached-channel-cache (irc-session-async-for-news session))))
               (reply session m
@@ -401,8 +402,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
           #:descr "moviestowatchfor")
 
          (add!
-          (lambda (m) (and (gist-equal? "movie" m session)
-                           (for-this-task? m)))
+          (lambda (m) (task-gist-equal? "movie" m))
           (lambda (m)
             (reply session
                    m

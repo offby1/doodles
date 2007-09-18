@@ -190,10 +190,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                          #:periodic? #f
                                          #:timeout *timeout*)))
       (let ((relevant (make-yammerer e ":x!x@z PRIVMSG #snooze :wakey wakey")))
-        (check-false (sync/timeout (* 2 *timeout*) e))
+        (check-false (sync/timeout (* 2 *timeout*) e) "channel unexpectedly went idle")
         (kill-thread relevant)
         (let ((irrelevant (make-yammerer e ":x!x@z PRIVMSG #other-channel :wakey wakey")))
-          (check-not-false (sync/timeout (* 2 *timeout*) e))
+          (check-not-false (sync/timeout (* 2 *timeout*) e) "channel unexpectedly failed to go idle")
            (kill-thread irrelevant))))))))
 
 
