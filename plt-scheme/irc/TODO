@@ -2,6 +2,12 @@
 
 -- High priority
 
+* take a random vector on the command line
+  ... to see the RNG, for testing, so that the tests will be
+  repeatable.  And if it's _not_ passed on the command line, then
+  we'll generate our own random seed, and emit that to stderr, so that
+  that particular run can be duplicated.
+
 * bugs
 
 ** "QUIT" from repl reconnects
