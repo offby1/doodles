@@ -2,7 +2,7 @@
 
 (
 
-    echo -e ":localhost. 001 rudybot :Welcome to the Debian dancer-ircd Network rudybot \\r"
+    echo -e ":localhost. 001 rudybot :Welcome to the faked-up shell script rudybot \\r"
     echo -e ":localhost 366 rudybot #scheme-bots :what's up, homes? \\r"
     echo -e ":localhost 366 rudybot #emacs :what's up, homes? \\r"
 
@@ -10,6 +10,7 @@
     echo -e ":a!b@c PRIVMSG #scheme-bots :rudybot: hey buddy\\r"
     echo -e ":a!b@c PRIVMSG rudybot :hey buddy\\r"
     echo -e ":a!b@c PRIVMSG #scheme-bots :rudybot: seen a?\\r"
+    echo -e ":a!b@c PRIVMSG #scheme-bots :rudybot: uptime\\r"
 
     sleep 10
 

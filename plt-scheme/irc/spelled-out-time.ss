@@ -62,5 +62,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    (test-equal? "two hours"           (spelled-out-time 7229) "two hours")
    (test-equal? "one day"             (spelled-out-time (+ 17 (* 24 3600))) "one day")))
 
-(provide (all-defined))
+(provide spelled-out-time spelled-out-time-tests)
 )

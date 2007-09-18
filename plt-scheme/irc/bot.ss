@@ -38,6 +38,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "sandboxes.ss"
          "session.ss"
          "shuffle.ss"
+         "spelled-out-time.ss"
          "thread.ss"
          "tinyurl.ss"
          "vprintf.ss"
@@ -602,7 +603,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
      (lambda (m)
        (let ((seconds (- (current-seconds)
                          (irc-session-start-time-seconds session))))
-         (reply session m (format "OK, so I've been up ~a seconds." seconds))))
+         (reply session m (format "OK, so I've been up ~a." (spelled-out-time seconds)))))
      #:responds? #t)
     (add!
      (lambda (m)
