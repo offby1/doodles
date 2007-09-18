@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
          "parse.ss"
          "planet-emacsen.ss"
          "sandboxes.ss"
+         "spelled-out-time.ss"
          "tinyurl.ss"
          )
 (register-version-string "$Id$")
@@ -28,6 +29,7 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
                    parse-tests
                    planet-tests
                    sandboxes-tests
+                   spelled-out-time-tests
                    tinyurl-tests))
 
 (define (run-and-exit)
