@@ -23,31 +23,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     ""
     ))
 
+(define (number->english/plural n unit-name)
+  (string-append (number->english n)
+                 " "
+                 unit-name
+                 (s? n)))
+
 (define (spelled-out-time seconds)
   (let* ((minutes (floor (/ seconds 60)))
          (hours   (floor (/ minutes 60)))
          (days    (floor (/ hours 24))))
-    (if (positive? days)
-        (format "~a day~a~a"
-                (number->english days)
-                (s? days)
-                (maybe (remainder hours 24) "hour"))
-      (if (positive? hours)
-          (format "~a hour~a~a"
-                  (number->english (remainder hours 24))
-                  (s? (remainder hours 24))
-                  (maybe (remainder minutes 60) "minute"))
-
-        (if (positive? minutes)
-            (format "~a minute~a~a"
-                    (number->english (remainder minutes 60))
-                    (s? (remainder minutes 60))
-                    (maybe (remainder seconds 60) "second"))
-
-          (format "~a second~a"
-                  (number->english seconds)
-                  (s? seconds))))))
-  )
+    (cond
+     ((positive? days)
+      (format "~a~a"
+              (number->english/plural days "day")
+              (maybe (remainder hours 24) "hour")))
+     ((positive? hours)
+      (format "~a~a"
+              (number->english/plural (remainder hours 24) "hour")
+              (maybe (remainder minutes 60) "minute")))
+     ((positive? minutes)
+      (format "~a~a"
+              (number->english/plural (remainder minutes 60) "minute")
+              (maybe (remainder seconds 60) "second")))
+     (else
+      (format "~a"
+              (number->english/plural seconds "second"))))))
 
 
 (define spelled-out-time-tests
