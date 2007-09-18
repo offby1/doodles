@@ -597,7 +597,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
                             value output))))))
 
      #:responds? #t)
-
+    (add!
+     (lambda (m) (gist-equal? "uptime" m session))
+     (lambda (m)
+       (let ((seconds (- (current-seconds)
+                         (irc-session-start-time-seconds session))))
+         (reply session m (format "OK, so I've been up ~a seconds." seconds))))
+     #:responds? #t)
     (add!
      (lambda (m)
        (and (PRIVMSG? m)
