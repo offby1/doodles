@@ -33,6 +33,15 @@ exec mzscheme -M errortrace -qtmv "$0" -e "(run-and-exit)"
                    tinyurl-tests))
 
 (define (run-and-exit)
+
+;;   (current-pseudo-random-generator
+;;    (vector->pseudo-random-generator #6(1218415049 165534965 434768707 2141531185 950682075 2396563251)))
+
+  (fprintf
+   (current-error-port)
+   "rng state: ~s~%"
+   (pseudo-random-generator->vector (current-pseudo-random-generator)))
+
   (exit
    (if (positive? (test/text-ui eva-thang))
        1

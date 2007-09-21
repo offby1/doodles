@@ -44,6 +44,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
          "vprintf.ss"
          )
 (register-version-string "$Id$")
+(define *process-start-time* (current-seconds))
 
 (define (on-channel? c m)
   (and (PRIVMSG? m)
@@ -601,9 +602,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
     (add!
      (lambda (m) (gist-equal? "uptime" m session))
      (lambda (m)
-       (let ((seconds (- (current-seconds)
-                         (irc-session-start-time-seconds session))))
-         (reply session m (format "OK, so I've been up ~a." (spelled-out-time seconds)))))
+       (reply session m (format "OK, so I've been up ~a; this TCP/IP connection has been up ~a."
+                                (spelled-out-time (- (current-seconds)
+                                                     (irc-session-start-time-seconds session)))
+                                (spelled-out-time (- (current-seconds)
+                                                     *process-start-time*)))))
      #:responds? #t)
     (add!
      (lambda (m)

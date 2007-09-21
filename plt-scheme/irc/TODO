@@ -4,19 +4,16 @@
 
 * bugs
 
-** "QUIT" from repl reconnects
-   So I did (quit "yo") from the repl.  The server, quite
-   understandably, hung up on us -- but then line 733 of bot.ss
-   reconncted us.
+** sporadic test failure
+   "channel doesn't go idle when we are yammering at it".  No idea
+   why, really.  I've refactored the file that test lives in, in the
+   hope that that will magically make the problem go away.  I've also
+   built a statue to Thoth, the God of software quality.
 
-** 'require' failing in eval
-   <offby1> rudybot: eval (require (lib "1.ss" "srfi"))
-   <rudybot> /usr/local/stow/plt/lib/plt/collects/mzlib/private/stxset.ss:24:37: compile: unbound
-             variable in module (transformer environment) in: generate-expand-context
+
+-- Low priority
 
-   This appears to be a bug in mzscheme release 371
-   (http://bugs.plt-scheme.org/query/?cmd=view&pr=8933); at any rate,
-   it doesn't happen in the two newer trunk builds that I've tried.
+* bugs
 
 ** too many open files
    Around midnight, the bot said "No data from server for a while;
@@ -33,15 +30,6 @@
 
    ... with the above "Caught an exception" message repeated more or
    less endlessly.
-
-** sporadic test failure
-   "channel doesn't go idle when we are yammering at it".  No idea
-   why, really.  I've refactored the file that test lives in, in the
-   hope that that will magically make the problem go away.  I've also
-   built a statue to Thoth, the God of software quality.
-
-
--- Low priority
 
 * finer control of logging
   Right now I have a single boolean -- *verbose* -- which controls
