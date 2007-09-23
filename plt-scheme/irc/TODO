@@ -4,6 +4,9 @@
 
 * bugs
 
+** "seen" in query
+   *sigh* why does this keep happening?
+
 ** sporadic test failure
    "channel doesn't go idle when we are yammering at it".  No idea
    why, really.  I've refactored the file that test lives in, in the
@@ -30,6 +33,11 @@
 
    ... with the above "Caught an exception" message repeated more or
    less endlessly.
+
+** "CTCP source" doesn't return an FTP site :-)
+
+http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the source
+should be hosted on an FTP server, which I don't care to run, so ...
 
 * finer control of logging
   Right now I have a single boolean -- *verbose* -- which controls
@@ -66,13 +74,6 @@
    require logging in, or have a different way of doing it.  We should
    really log in only if we clearly need it
 
-* low-priority bugs
-
-** "CTCP source" doesn't return an FTP site :-)
-
-http://www.irchelp.org/irchelp/rfc/ctcpspec.html says that the source
-should be hosted on an FTP server, which I don't care to run, so ...
-
 * quotes and news headlines
 
   I should make the silly quotes have a different period than the news
@@ -93,21 +94,6 @@ should be hosted on an FTP server, which I don't care to run, so ...
 
 * write our own identd server
   like every other IRC client out there.
-
-* Deal with netsplits, or whatever the hell it is
-  ... that makes the bot not work even though /whois says it's still
-  there.  Also, what do I do if it connects and the server says that
-  the nick is already registered?  (Answer: try again, specifying some
-  other nick via the --nick command-line flag.)
-
-** Now that I've registered some nicks on freenode ...
-   (namely "rudybot" and "rudebot"; they're "linked"), maybe that'll
-   help.  Perhaps it should do something like "/msg nickserv identify
-   <password>" when it starts up.  It should thus take a new
-   command-line flag for specifying the password.
-
-** Maybe simply detecting them
-   ... and then exiting, is better than doing nothing
 
 * reset terminal state on abort
   I notice that, when I abort the terminal in which the bot (and, in
@@ -168,13 +154,6 @@ should be hosted on an FTP server, which I don't care to run, so ...
   Maybe even do a nice PART and QUIT while we're at it.
 
 * movies
-** Spew less often
-   I should probably have the movies and jordanb quotes have different
-   intervals.  Maybe they should even depend on what channel they're
-   spewing to ...
-   
-   ... I've got news spew set to exponentially slow down; let's see
-   how that works out.
 ** Do buubot's job...
   ... find Ebert reviews of movies.  Use IMDB; find the "external
   reviews" link; find Ebert's name.  (I honestly think this would be
@@ -234,30 +213,6 @@ should be hosted on an FTP server, which I don't care to run, so ...
 I wonder if I should make a new module that contains stuff
 specifically for interacting with the bot via the REPL.  It'd be
 essentially a full-blown IRC client with a scheme syntax.
-
-** join and part
-   so that I can change which channels it's on without restarting it
-
-** privmsg
-   since I clearly enjoy putting words in its mouth.  Such a command
-   would save a few keystrokes; as it now stands I have to type
-   something like
-
-        (put "PRIVMSG ##cinema :\u0001ACTION casually moves in front of offby1\u0001")
-
-   Be nice to abbreviate that to (PRIVMSG/ACTION "casually moves in
-   front of offby1")
-
-   Note that the REPL uses readline, and has completion, so the
-   rather long identifier PRIVMSG/ACTION wouldn't actually be hard to
-   type.
-
-   Note also that this idea suggests that the bot, or at least the
-   repl, have the notion of a "current channel", just like any other
-   IRC client; and thus there ought to be a command that changes the
-   channel.  Also obviously there should be a way to find out what
-   channel you're in; I suspect the REPL prompt can easily be made to
-   include that.
 
 ** examine a timer
    Maybe have the timers constantly visible in the repl (it'd be nice

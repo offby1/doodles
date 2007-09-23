@@ -192,6 +192,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 ;; global.
 (define *sandboxes-by-nick* (make-hash-table 'equal))
 
+(define-struct sighting (who where when was-action? words))
+
 (define (register-usual-services! session)
 
   ;; so that these threads will be easily killable
@@ -433,28 +435,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
 
        ;; note who did what, when, where, how, and wearing what kind
        ;; of skirt; so that later we can respond to "seen Ted?"
-       (let ((who         (PRIVMSG-speaker     m))
-             (where       (car (PRIVMSG-receivers m)))
-             (what        (PRIVMSG-text        m))
-
-             ;; don't name this variable "when"; that would shadow some
-             ;; rather useful syntax :-)
-             (time        (current-seconds))
-
-             (was-action? (ACTION?             m)))
-
+       (let ((who (PRIVMSG-speaker m)))
          (hash-table-put!
           (irc-session-appearances-by-nick session)
           who
-          (format "~a~a in ~a~a ~a~a"
-                  who
-                  (if was-action? "'s last action" " last spoke")
-                  where
-                  (if was-action? " was at"        ""           )
-                  (zdate (seconds->date time))
-                  (if was-action?
-                      (format ": ~a ~a" who what)
-                    (format ", saying \"~a\"" what))))))
+          (make-sighting
+           who
+           (car (PRIVMSG-receivers m))
+           (current-seconds)
+           (ACTION? m)
+           (PRIVMSG-text m)))))
+
      #:descr "fingerprint file")
 
     (add!
@@ -497,13 +488,29 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require bot
             (< 2 (length (PRIVMSG-text-words m)))))
      (lambda (m)
        (let* ((who (regexp-replace #rx"\\?+$" (third (PRIVMSG-text-words m)) ""))
-              (sighting (hash-table-get (irc-session-appearances-by-nick session) who #f)))
+              (s (hash-table-get (irc-session-appearances-by-nick session) who #f)))
          (reply session
                 m
-                (string-append
-                 (or sighting (format "I haven't seen ~a" who))
-                 (format
-                  " (also try \"/msg nickserv info ~a\")" who))
+                (if s
+                    (format
+                     "~a~a in ~a~a ~a ago~a (also try \"/msg nickserv info ~a\")"
+                     who
+                     (if (sighting-was-action? s ) "'s last action" " last spoke")
+
+                     (sighting-where s)
+                     (if (sighting-was-action? s)
+                         " was at"
+                       "")
+
+                     (spelled-out-time (- (current-seconds)
+                                          (sighting-when s)))
+
+                     (if (sighting-was-action? s)
+                         (format ": ~a ~a" who (sighting-words s))
+                       (format ", saying \"~a\"" (sighting-words s)))
+
+                     who)
+                  (format "I haven't seen ~a" who))
                 )))
      #:responds? #t
      #:descr "'seen' command")
