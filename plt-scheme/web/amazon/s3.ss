@@ -16,7 +16,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "trace.ss")
          (lib "md5.ss")
          (lib "pretty.ss")
-         (only (lib "13.ss" "srfi") string-join substring/shared)
+         (only (lib "13.ss" "srfi") substring/shared)
          (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
@@ -66,7 +66,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
            (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
 
       (html->shtml
-       (port->string
+       (port->string/close
         (case verb
           ((GET) (get-pure-port
                   url

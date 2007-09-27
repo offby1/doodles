@@ -8,6 +8,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require (lib "trace.ss")
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
          (only (lib "base64.ss" "net") base64-encode-stream)
+         (only (planet "port.ss" ("schematics" "port.plt" ))
+               port->string)
+
          ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy"
          ;; "hmac-sha1.plt" )) but version 1 0 is buggy; this version
          ;; has the fixes.
@@ -51,4 +54,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ,(lambda (flag sac) (SecretAccessKey (string->bytes/utf-8 sac)))
       ("You should have gotten this from Amazon." "sekrit")))
     ))
+
+(define (port->string/close ip)
+  (begin0
+    (port->string ip)
+    (close-input-port ip)))
 )

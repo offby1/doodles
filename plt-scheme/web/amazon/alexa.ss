@@ -50,9 +50,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                       )))
 
                   (gack-on-error
-                   (html->shtml (port->string (get-pure-port url
-                                                             (list
-                                                              (format "Date: ~a" date)))))
+                   (html->shtml (port->string/close (get-pure-port url
+                                                                   (list
+                                                                    (format "Date: ~a" date)))))
                    '(errorresponse error)))))
 (parse-command-line
  "alexa" (current-command-line-arguments)
@@ -60,6 +60,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (lambda (flag-accum . the-query)
    (when (not (SecretAccessKey))
      (error "You must supply a secret access key with the -s option"))
+
+   (when (null? the-query)
+     (error "You must type some words to search for on the command line"))
 
    (let* ((result (alexa-call (string-join the-query " ")))
           (urls   ((sxpath '(// document url   *text*)) result))

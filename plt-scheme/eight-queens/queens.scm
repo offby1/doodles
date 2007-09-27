@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme -qu $0 ${1+"$@"}
+|#
 (module queens mzscheme
 ;; works on Dr Scheme 203
 ;; after about five minutes (on a 2 GHz processor), this yields
