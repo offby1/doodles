@@ -58,6 +58,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  "alexa" (current-command-line-arguments)
  *amazon-command-line-parsing-table*
  (lambda (flag-accum . the-query)
+
+   (when (not (SecretAccessKey))
+     (let ((key-from-env (getenv "AWS_SECRET_ACCESS_KEY")))
+       (when key-from-env
+         (SecretAccessKey (string->bytes/utf-8 key-from-env)))))
+
    (when (not (SecretAccessKey))
      (error "You must supply a secret access key with the -s option"))
 
