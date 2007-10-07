@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec mzscheme -qtmv "$0" --eval '(main)'
 |#
 
 ;; Try out playing with the flickr API, via XML RPC.  (The API is
@@ -23,6 +23,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (provide
  all-interesting-cat-photos
  attribute-getter-from-sxml
+ main
  url-for-photo
  )
 
@@ -37,6 +38,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
    'tags     (string-join (list "cat" query-string) ",")
    'tag_mode "all"
    'sort     "date-taken-asc"
+
+   ;; minimum_longitude, minimum_latitude, maximum_longitude,
+   ;; maximum_latitude.
+
+   ;; Pacific Northwest, more or less
+   ;; 'bbox     "-124,46,-121,49"
    ))
 
 ;; TODO -- an empty QUERY-STRING, or one that consists entirely of
@@ -66,4 +73,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        ((large)       "_b")
        (else "t")
        ))))
+
+;; a little test
+(define (main)
+  (let ((cats  (all-interesting-cat-photos "white")))
+    (printf "~a~%" ((sxpath '(photos @ total)) cats))))
 )

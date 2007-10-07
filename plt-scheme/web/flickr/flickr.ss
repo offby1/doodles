@@ -4,6 +4,8 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
+;; docs are at http://www.flickr.com/services/api/
+
 (module flickr mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert)
