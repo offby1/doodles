@@ -30,23 +30,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   )
 
 (define (all-pix)
-  (let loop ((pix-remaining-to-snarf #f)
-             (pages-requested 0)
-             (rv '()))
-    (cond
-     ((not pix-remaining-to-snarf)
-      (let* ((one-batch (search-stub #:page (add1 pages-requested)))
-             (total (string->number (car ((sxpath '(photos @ total *text*)) one-batch)))))
-        (loop (- total (string->number (car ((sxpath '(photos @ perpage *text*)) one-batch))))
-              (add1 pages-requested)
-              (cons one-batch rv))))
-     ((zero? pix-remaining-to-snarf)
-      rv)
-     ((positive? pix-remaining-to-snarf)
-      (loop pix-remaining-to-snarf
-            (add1 pages-requested)
-            (cons (search-stub #:page (add1 pages-requested)) rv)))
-     )))
+  (let ((total-pages #f))
+    (let loop ((pages-requested 0)
+               (rv '()))
+      (if (or (not total-pages)
+              (< pages-requested total-pages))
+          (let ((one-page (search-stub #:page (add1 pages-requested))))
+            (set! total-pages (string->number (car ((sxpath '(photos @ pages *text*)) one-page))))
+            (loop (add1 pages-requested)
+                  (append (reverse ((sxpath '(photos (photo))) one-page)) rv)))
+          (reverse rv)))))
 
 ;; a quick stub that acts vaguely like flickr.photos.search
 (define/kw (search-stub #:key
@@ -68,22 +61,22 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (cons '*TOP*
           (cons 'photos
                 (cons
-                 `(@ (total ,total)
-                     (perpage ,per_page)
-                     (pages ,pages)
-                     (page ,page))
+                 `(@ (total ,(number->string total))
+                     (perpage ,(number->string per_page))
+                     (pages ,(number->string pages))
+                     (page ,(number->string page)))
                  (map
                   (lambda (n)
                     `(photo
-                      (@ (title Yours Truly)
-                         (server 2305)
-                         (secret c8c4e9bf53)
-                         (owner 20825469@N00)
-                         (ispublic 1)
-                         (isfriend 0)
-                         (isfamily 0)
-                         (id ,n)
-                         (farm 3))))
+                      (@ (title "Yours Truly")
+                         (server "2305")
+                         (secret "c8c4e9bf53")
+                         (owner "20825469@N00")
+                         (ispublic "1")
+                         (isfriend "0")
+                         (isfamily "0")
+                         (id ,(number->string n))
+                         (farm "3"))))
                   (iota per_page (* (sub1 page) per_page))))))))
 
 (let ((all-my-photos
