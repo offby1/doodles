@@ -11,6 +11,9 @@ exec mzscheme -qr "$0" "$@"
 (define/kw (get-one-batch  #:key
                            [page 1]
                            [per_page 3])
+  (fprintf (current-error-port)
+           "Getting at most ~a photos from page ~a~%"
+           per_page page)
   (map
    (lambda (n)
      `(photo
@@ -27,11 +30,11 @@ exec mzscheme -qr "$0" "$@"
 
 (module external-stream (lib "lazy.ss" "lazy")
 (require external)
-(define (get-all-stuffs first-page)
+(define (get-all-photos first-page)
   ;; note that this takes *everything*, to infinity (not beyond)
-  (append (get-one-batch #:page first-page) (get-all-stuffs (add1 first-page))))
+  (append (get-one-batch #:page first-page) (get-all-photos (add1 first-page))))
 (provide stuff)
-(define stuff (get-all-stuffs 1)))
+(define stuff (get-all-photos 1)))
 
 ;; client code for the above
 
