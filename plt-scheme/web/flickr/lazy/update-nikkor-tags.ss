@@ -29,8 +29,20 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (printf "Photo ~s: " id)
         (let ((exif (flickr.photos.getExif
                      'photo_id id)))
-          (let ((model-name (car ((sxpath '(photo (exif (@ (equal? (label "Model")))) raw *text*)) exif))))
+          (let ((model-name (car ((sxpath
+                                   '(photo
+                                     (exif (@ (equal? (label "Model"))))
+                                     raw
+                                     *text*))
+                                  exif))))
             (printf "This photo was taken with a ~s: " model-name)
+            (when (equal? "NIKON D200" model-name)
+              (let ((lens-data (car ((sxpath '(photo
+                                               (exif (@ (equal? (label "Lens Min/Max Focal Length, Min/Max Aperture"))))
+                                               raw
+                                               *text*))
+                                     exif))))
+                (printf "(lens data: ~s) " lens-data)))
             (pretty-print p)))))
 
     (loop
