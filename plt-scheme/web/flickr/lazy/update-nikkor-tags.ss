@@ -20,11 +20,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (printf ">>> photo-stream = ~s\n" photo-stream) ; note: no reading when you get here
 (printf ">>> forced photo-stream = ~s\n" (! photo-stream)) ; forces a read to get a cons
 
-(let loop ([i 0] [photo-stream (! photo-stream)])
+(let loop ([photo-stream (! photo-stream)])
   (when (not (null? photo-stream))
     (pretty-print (! (car photo-stream)))
-    (loop (add1 i) (! (cdr photo-stream)))))
-
-
+    (loop  (! (cdr photo-stream)))))
 
 )
