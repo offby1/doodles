@@ -45,9 +45,21 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
+
+;; It appears we only need to do this once -- that is, I did it once,
+;; it worked fine, I got a token; then the second time I did this, the
+;; web browser said I was already authenticated.  So it'd be nice to
+;; not do this if I don't have to.
 (define *login-url* (get-login-url *the-auth-frob* "write"))
-(printf "Here dat login URL, boss: ~s~%" *login-url*)
+(printf "Your web browser should open; tell it that it's OK to let this app mess with flickr!~%")
+(flush-output)
+(sleep 2)
 (send-url *login-url* #f)
+(sleep 10)
+
+(define *the-token* (car ((sxpath '(auth token *text*)) (flickr.auth.getToken
+                     'frob *the-auth-frob*))))
+(printf "Here dat token, boss: ~s~%" *the-token*)
 (exit 0)
 
 (let loop ([i 0] [photo-stream (! photo-stream)])

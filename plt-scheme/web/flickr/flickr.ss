@@ -16,6 +16,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (planet "assert.ss" ("offby1" "offby1.plt")))
 (provide
  flickr.auth.getFrob
+ flickr.auth.getToken
  flickr.photos.search
  flickr.photos.addTags
  flickr.photos.getExif
@@ -125,6 +126,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )))))))))
 
 (define-flickr-api flickr.auth.getFrob)
+(define-flickr-api flickr.auth.getToken)
 (define-flickr-api flickr.contacts.getPublicList)
 (define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.photos.addTags)
