@@ -19,7 +19,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 ;; returns a simple list of photos, not an actual page.
 (define/kw (get-one-batch  #:key
                            [page 1]
-                           [per_page 100])
+                           [per_page 3])
   (fprintf (current-error-port)
            "Getting at most ~a photos from page ~a~%"
            per_page page)

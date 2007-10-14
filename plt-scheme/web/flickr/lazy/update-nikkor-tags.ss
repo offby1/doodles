@@ -22,15 +22,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (let loop ([i 0] [photo-stream (! photo-stream)])
   (when (and (not (null? photo-stream))
-             (< i 3))
+             (< i 1))
 
     (let ((p (! (car photo-stream))))
       (let ((id (car ((sxpath '(@ id *text*)) p))))
         (printf "Photo ~s: " id)
         (let ((exif (flickr.photos.getExif
                      'photo_id id)))
-          (pretty-print p)
-          (pretty-print exif))))
+          (let ((model-name (car ((sxpath '(photo (exif (@ (equal? (label "Model")))) raw *text*)) exif))))
+            (printf "This photo was taken with a ~s: " model-name)
+            (pretty-print p)))))
 
     (loop
      (add1 i)
