@@ -4,16 +4,14 @@
 exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0"
 |#
 (module update-nikkor-tags (lib "mz-without-promises.ss" "lazy")
-(require (only (lib "1.ss" "srfi") iota)
-         (only (lib "pretty.ss")
-               pretty-display
-               pretty-print)
-         (lib "kw.ss")
-         (lib "trace.ss")
-         (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
-               sxpath)
-         (only (lib "promise.ss" "lazy") force)
-         "lazy.ss")
+(require
+ (only (lib "pretty.ss")
+       pretty-display
+       pretty-print)
+ (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+       sxpath)
+ (lib "force.ss" "lazy")
+ "lazy-photo-stream.ss")
 
 ;; for each of my flickr photos
 ;;   if it was taken with my D200
@@ -28,12 +26,14 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;;;                          'username "offby1")))
   )
 
-(printf "Golly, here's all my photos:~%")
-(let loop ((photos (snarf)))
-  (when (not (null? photos))
-    (for-each pretty-display (car (force photos)))
-;;;     (loop (cdr photos))
-    ))
+
+(printf ">>> photo-stream = ~s\n" photo-stream) ; note: no reading when you get here
+(printf ">>> forced photo-stream = ~s\n" (! photo-stream)) ; forces a read to get a cons
+;; show the first 10 items -- try this and see that you don't have to
+;; type in an 11th item to get it to stop
+(let loop ([i 0] [photo-stream (! photo-stream)])
+  (printf "photo-stream[~s] = ~s\n" i (! (car photo-stream)))
+  (when (< i 9) (loop (add1 i) (! (cdr photo-stream)))))
 
 
 
