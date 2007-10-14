@@ -43,44 +43,55 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (let loop ([i 0] [photo-stream (! photo-stream)])
   (when (and (not (null? photo-stream))
-             (< i 1))
+;;;              (< i 4)
+             )
 
     (let ((p (! (car photo-stream))))
-      (let ((id (car ((sxpath '(@ id *text*)) p))))
-        (printf "Photo ~s: " (car ((sxpath '(@ title *text*)) p)))
+      (let ((id    (car ((sxpath '(@ id *text*)) p)))
+            (title (car ((sxpath '(@ title *text*)) p))))
+        (printf "~s (~a) :" title id) (flush-output)
         (let ((exif (flickr.photos.getExif
                      'photo_id id)))
-          (let ((model-name (car ((sxpath
-                                   '(photo
-                                     (exif (@ (equal? (label "Model"))))
-                                     raw
-                                     *text*))
-                                  exif))))
-            (when (equal? "NIKON D200" model-name)
-              (let* ((lens-data
-                      (car
-                       ((sxpath
-                         '(photo
-                           (exif
-                            (@
-                             (equal?
-                              (label
-                               "Lens Min/Max Focal Length, Min/Max Aperture"))))
-                           raw
-                           *text*))
-                        exif)))
-                     (parsed
-                      (string-tokenize
-                       lens-data
-                       (char-set-complement (char-set #\, #\newline)))))
-                (let ((tag (apply
-                            lens-data->string
-                            (map exact->inexact (map string->number parsed)))))
+          (let ((model-name ((sxpath
+                              '(photo
+                                (exif (@ (equal? (label "Model"))))
+                                raw
+                                *text*))
+                             exif)))
+            (when (and (not (null? model-name))
+                       (equal? "NIKON D200" (car model-name)))
+              (let ((lens-data
+                     ((sxpath
+                       '(photo
+                         (exif
+                          (@
+                           (equal?
+                            (label
+                             "Lens Min/Max Focal Length, Min/Max Aperture"))))
+                         raw
+                         *text*))
+                      exif))
+                    )
+                (when (not (null? lens-data))
+                  (let* ((parsed-exact-numbers
+                          (map string->number
+                               (string-tokenize
+                                (car lens-data)
+                                (char-set-complement (char-set #\, #\newline))))))
+
+                    ;; sometimes the four numbers come back as all 0
+                    ;; ... no idea why
+                    (when (not (member 0 parsed-exact-numbers))
+
+                      (let ((tag (apply
+                                  lens-data->string
+                                  (map exact->inexact parsed-exact-numbers))))
 ;;;                   (flickr.photos.addTags
 ;;;                    'photo_id id
 ;;;                    'tags tag)
-                  (printf "(pretend I added the tag ~s)~%" tag)
-                  )))
+                        (printf " => ~s" tag)))
+                    ))))
+            (printf "~%")
             ))))
 
     (loop
