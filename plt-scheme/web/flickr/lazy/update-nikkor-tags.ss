@@ -41,6 +41,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
               (format "-~a" max-aperture)
               "")))
 
+(define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
+
+(printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
+(define *login-url* (get-login-url *the-auth-frob* "write"))
+(printf "Here dat login URL, boss: ~s~%" *login-url*)
+(exit 0)
+
 (let loop ([i 0] [photo-stream (! photo-stream)])
   (when (and (not (null? photo-stream))
 ;;;              (< i 4)
@@ -86,9 +93,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                       (let ((tag (apply
                                   lens-data->string
                                   (map exact->inexact parsed-exact-numbers))))
-;;;                   (flickr.photos.addTags
-;;;                    'photo_id id
-;;;                    'tags tag)
+                        (flickr.photos.addTags
+                         'photo_id id
+                         'tags tag)
                         (printf " => ~s" tag)))
                     ))))
             (printf "~%")

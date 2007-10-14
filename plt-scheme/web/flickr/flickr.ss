@@ -15,6 +15,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "md5.ss")
          (planet "assert.ss" ("offby1" "offby1.plt")))
 (provide
+ flickr.auth.getFrob
  flickr.photos.search
  flickr.photos.addTags
  flickr.photos.getExif
@@ -23,6 +24,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  flickr.people.findByUsername
  flickr.contacts.getPublicList
  flickr.people.getInfo
+ get-login-url
  get-timings
  *verbose*)
 
@@ -49,7 +51,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (apply md5 args)))
 (trace vmd5)
 
-(define (sign-call arglist)
+(define (sign-args arglist)
   (bytes->string/utf-8
    (vmd5
     (string->bytes/utf-8
@@ -74,7 +76,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (symbol->string (car p2))))))))))
 
   )
-(trace sign-call)
+(trace sign-args)
+
+(define (get-login-url frob perms)
+  (format "http://flickr.com/services/auth/?api_key=~a&perms=~a&frob=~a&api_sig=~a"
+          *flickr-API-key*
+          perms
+          frob
+          (sign-args
+           (list
+            'frob frob
+            'perms perms))
+          ))
 
 (define-syntax (define-flickr-api stx)
   (syntax-case stx ()
@@ -94,7 +107,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (all-args-list
                    (if (positive? (string-length *flickr-API-secret*))
                        (append
-                        (list 'api_sig (sign-call most-args-list))
+                        (list 'api_sig (sign-args most-args-list))
                         most-args-list)
                        most-args-list))
                   (args-ht (list
@@ -110,6 +123,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                (apply values results)
                )))))))))
 
+(define-flickr-api flickr.auth.getFrob)
 (define-flickr-api flickr.contacts.getPublicList)
 (define-flickr-api flickr.people.findByUsername)
 (define-flickr-api flickr.photos.addTags)
