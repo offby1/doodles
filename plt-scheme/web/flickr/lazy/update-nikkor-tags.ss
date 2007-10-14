@@ -5,6 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module update-nikkor-tags (lib "mz-without-promises.ss" "lazy")
 (require
+ (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
  (only (lib "pretty.ss")
        pretty-display
        pretty-print)
@@ -30,37 +31,40 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (lens-data->string min-focal-length max-focal-length
                            min-aperture max-aperture)
-  ;; "30-70mm f/2.8-3.5", e.g.
-  (format "~a~amm f/~a~a"
+  ;; "30-70mmf/2.8-3.5", e.g.
+  (format "~a~ammf/~a~a"
           min-focal-length
           (if (< min-focal-length max-focal-length )
               (format "-~a" max-focal-length)
               "")
 
-          min-aperture
+          (exact->inexact min-aperture)
           (if (< min-aperture max-aperture)
-              (format "-~a" max-aperture)
+              (format "-~a" (exact->inexact max-aperture))
               "")))
 (*verbose* #t)
 (define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
 
-;; It appears we only need to do this once -- that is, I did it once,
-;; it worked fine, I got a token; then the second time I did this, the
-;; web browser said I was already authenticated.  So it'd be nice to
-;; not do this if I don't have to.
-(define *login-url* (get-login-url *the-auth-frob* "write"))
-(printf "Your web browser should open; tell it that it's OK to let this app mess with flickr!~%")
-(flush-output)
-(sleep 2)
-(send-url *login-url* #f)
-(sleep 10)
-
-(define *the-token* (car ((sxpath '(auth token *text*)) (flickr.auth.getToken
-                     'frob *the-auth-frob*))))
+(define
+  *the-token*
+  (let again ()
+    (with-handlers
+        ([exn:xmlrpc:fault?
+          (lambda (e)
+            (define *login-url* (get-login-url *the-auth-frob* "write"))
+            (printf "Handling ~s~%" e)
+            (printf "Your web browser should open; tell it that it's OK to let this app mess with flickr!~%")
+            (flush-output)
+            (sleep 2)
+            (send-url *login-url* #f)
+            (sleep 10)
+            (again))
+          ])
+      (car ((sxpath '(auth token *text*)) (flickr.auth.getToken
+                                           'frob *the-auth-frob*))))))
 (printf "Here dat token, boss: ~s~%" *the-token*)
-(exit 0)
 
 (let loop ([i 0] [photo-stream (! photo-stream)])
   (when (and (not (null? photo-stream))
@@ -104,12 +108,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                     ;; ... no idea why
                     (when (not (member 0 parsed-exact-numbers))
 
-                      (let ((tag (apply
-                                  lens-data->string
-                                  (map exact->inexact parsed-exact-numbers))))
+                      (let ((tag (apply lens-data->string parsed-exact-numbers)))
+                        (with-handlers
+                            ([void
+                              (lambda (e)
+                                "Handling ~s~%" e)])
                         (flickr.photos.addTags
+                         'auth_token *the-token*
                          'photo_id id
-                         'tags tag)
+                         'tags tag))
                         (printf " => ~s" tag)))
                     ))))
             (printf "~%")
