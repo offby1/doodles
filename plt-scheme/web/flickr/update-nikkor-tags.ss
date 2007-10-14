@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0" -p "text-ui.ss" "schematics" "schemeunit.plt" -e "(exit (test/text-ui update-nikkor-tags-tests 'verbose))"
+exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 (module update-nikkor-tags mzscheme
 (require (only (lib "1.ss" "srfi") iota)
@@ -10,11 +10,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                pretty-print)
          (lib "kw.ss")
          (lib "trace.ss")
-         (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
-               sxpath)
-         "flickr.ss")
+               sxpath))
+
 
 ;; for each of my flickr photos
 ;;   if it was taken with my D200
@@ -101,11 +99,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   )
 
 
-(define update-nikkor-tags-tests
 
-  (test-suite
-   "update-nikkor-tags"
-))
-
-(provide (all-defined))
 )
