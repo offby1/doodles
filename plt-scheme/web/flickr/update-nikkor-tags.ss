@@ -29,17 +29,25 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;;;                          'username "offby1")))
   )
 
-(define (all-pix)
-  (let ((total-pages #f))
-    (let loop ((pages-requested 0)
-               (rv '()))
-      (if (or (not total-pages)
-              (< pages-requested total-pages))
-          (let ((one-page (search-stub #:page (add1 pages-requested))))
-            (set! total-pages (string->number (car ((sxpath '(photos @ pages *text*)) one-page))))
-            (loop (add1 pages-requested)
-                  (append (reverse ((sxpath '(photos (photo))) one-page)) rv)))
-          (reverse rv)))))
+(define *the-channel* (make-channel))
+
+(define snarfer
+  (thread
+   (lambda ()
+     (fprintf (current-error-port)
+              "Snarfing from flickr~%")
+     (let ((total-pages #f))
+       (let loop ((pages-requested 0))
+         (if (or (not total-pages)
+                 (< pages-requested total-pages))
+             (let ((one-page (search-stub #:page (add1 pages-requested))))
+               (set! total-pages (string->number (car ((sxpath '(photos @ pages *text*)) one-page))))
+               (for-each (lambda (p)
+                           (channel-put *the-channel* p))
+                         ((sxpath '(photos (photo))) one-page))
+               (loop (add1 pages-requested)))
+             (channel-put *the-channel* #f)
+             ))))))
 
 ;; a quick stub that acts vaguely like flickr.photos.search
 (define/kw (search-stub #:key
@@ -85,7 +93,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         #:page      1
         )))
   (printf "Golly, here's all my photos:~%")
-  (pretty-display (all-pix)))
+  (let loop ()
+    (let ((one-photo (channel-get *the-channel*)))
+      (when one-photo
+        (pretty-display one-photo)
+        (loop))))
+  )
 
 
 (define update-nikkor-tags-tests
