@@ -11,7 +11,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (define (get-all-photos first-page)
   ;; note that this takes *everything*, to infinity (not beyond)
-  (append (get-one-batch #:page first-page) (get-all-photos (add1 first-page))))
+  (let ((b (get-one-batch #:page first-page)))
+    (if (null? b)
+        b
+        (append b (get-all-photos (add1 first-page))))))
 
 (define photo-stream (get-all-photos 1))
 
