@@ -11,6 +11,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
  (lib "force.ss" "lazy")
  (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
        sxpath)
+ "../flickr.ss"
  "lazy-photo-stream.ss")
 
 ;; for each of my flickr photos
@@ -26,7 +27,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (let ((p (! (car photo-stream))))
       (let ((id (car ((sxpath '(@ id *text*)) p))))
         (printf "Photo ~s: " id)
-        (pretty-print p)))
+        (let ((exif (flickr.photos.getExif
+                     'photo_id id)))
+          (pretty-print p)
+          (pretty-print exif))))
 
     (loop
      (add1 i)
