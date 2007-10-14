@@ -14,27 +14,6 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
          (only (lib "1.ss" "srfi") iota))
 
 ;; a quick stub that acts vaguely like flickr.photos.search
-
-(define/kw (get-buncha-photos
-            #:key
-            [page 1]
-            [per_page 3])
-  (map
-   (lambda (n)
-     `(photo
-       (@ (title "Yours Truly")
-          (server "2305")
-          (secret "c8c4e9bf53")
-          (owner "20825469@N00")
-          (ispublic "1")
-          (isfriend "0")
-          (isfamily "0")
-          (id ,(number->string n))
-          (farm "3"))))
-   (iota per_page (* (sub1 page) per_page))))
-
-(provide (all-defined))
-
 (define/kw (get-one-page #:key
                         [page 1]
                         [per_page 3])
@@ -55,6 +34,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
         (when (zero? num-on-last-page)
           (set! num-on-last-page per_page))
 
+        ;; fake up some realistic sxml, so that what we return looks
+        ;; just like what flickr.photos.search would return.
         (cons '*TOP*
               (cons 'photos
                     (cons
@@ -65,8 +46,25 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
                       (get-buncha-photos #:page page #:per_page per_page)))))
 
     (fprintf (current-error-port)
-             "done~%"))
-    )
+             "done~%")))
+
+(define/kw (get-buncha-photos
+            #:key
+            [page 1]
+            [per_page 3])
+  (map
+   (lambda (n)
+     `(photo
+       (@ (title "Yours Truly")
+          (server "2305")
+          (secret "c8c4e9bf53")
+          (owner "20825469@N00")
+          (ispublic "1")
+          (isfriend "0")
+          (isfamily "0")
+          (id ,(number->string n))
+          (farm "3"))))
+   (iota per_page (* (sub1 page) per_page))))
 
 (define (snarf)
   (fprintf (current-error-port)
@@ -83,4 +81,6 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
                   (cons ((sxpath '(photos (photo))) one-page) result)))
           (reverse result)
           ))))
+
+(provide (all-defined))
 )
