@@ -85,6 +85,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           frob
           (sign-args
            (list
+            'api_key *flickr-API-key*
             'frob frob
             'perms perms))
           ))

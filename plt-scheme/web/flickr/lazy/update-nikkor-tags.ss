@@ -18,6 +18,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        char-set
        char-set-complement
        )
+ (lib "sendurl.ss" "net")
  "../flickr.ss"
  "lazy-photo-stream.ss")
 
@@ -40,12 +41,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (if (< min-aperture max-aperture)
               (format "-~a" max-aperture)
               "")))
-
+(*verbose* #t)
 (define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
 (define *login-url* (get-login-url *the-auth-frob* "write"))
 (printf "Here dat login URL, boss: ~s~%" *login-url*)
+(send-url *login-url* #f)
 (exit 0)
 
 (let loop ([i 0] [photo-stream (! photo-stream)])
