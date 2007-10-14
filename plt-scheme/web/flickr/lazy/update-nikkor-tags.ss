@@ -110,18 +110,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
                       (let ((tag (apply lens-data->string parsed-exact-numbers)))
                         ;; I don't know why, but flickr.photos.addTags
-                        ;; raises some sort of value _when it
-                        ;; succeeds_.  And I see an error about
-                        ;; premature EOF printed.  So I have to ignore
-                        ;; all raised values here.  What's even more
-                        ;; annoying is that the fprintf doesn't
-                        ;; trigger, so I can't tell what value I'm
-                        ;; ignoring.  Bizarre.
+                        ;; raises a -1 _when it succeeds_.  So I
+                        ;; have to ignore that here.  (Actually it's
+                        ;; ssax that's raising -1.  How annoying)
                         (with-handlers
-                            ([void
+                            ([integer?
                               (lambda (e)
                                 (fprintf (current-error-port)
-                                         "Ignoring ~s~%" e)
+                                         "Ignoring integer ~s~%" e)
+                                (flush-output (current-error-port))
                                 )])
                           (flickr.photos.addTags
                            'auth_token *the-token*

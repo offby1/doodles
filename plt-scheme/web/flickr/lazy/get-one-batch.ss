@@ -23,7 +23,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
   (fprintf (current-error-port)
            "Getting at most ~a photos from page ~a~%"
            per_page page)
-
+  (flush-output (current-error-port))
 
   ((sxpath '(photos (photo)))
    (flickr.photos.search
