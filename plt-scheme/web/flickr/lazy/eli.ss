@@ -5,8 +5,8 @@ exec mzscheme -qr "$0" "$@"
 
 ;; A `fake' library that deals with the external resource
 (module external mzscheme
-  (provide get-stuff)
-  (define (get-stuff)
+  (provide get-one-batch)
+  (define (get-one-batch)
     (printf "Enter a bunch of things: ")
     (flush-output)
     (parameterize ([current-input-port (open-input-string (read-line))])
@@ -18,7 +18,7 @@ exec mzscheme -qr "$0" "$@"
   (require external)
   (define (get-all-stuffs)
     ;; note that this takes *everything*, to infinity (not beyond)
-    (append (get-stuff) (get-all-stuffs)))
+    (append (get-one-batch) (get-all-stuffs)))
   (provide stuff)
   (define stuff (get-all-stuffs)))
 
