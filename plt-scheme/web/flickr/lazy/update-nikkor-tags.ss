@@ -9,6 +9,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
        pretty-display
        pretty-print)
  (lib "force.ss" "lazy")
+ (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+       sxpath)
  "lazy-photo-stream.ss")
 
 ;; for each of my flickr photos
@@ -17,12 +19,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;;     find a tag that describes that lens
 ;;     add that tag to the picture
 
-(printf ">>> photo-stream = ~s\n" photo-stream) ; note: no reading when you get here
-(printf ">>> forced photo-stream = ~s\n" (! photo-stream)) ; forces a read to get a cons
+(let loop ([i 0] [photo-stream (! photo-stream)])
+  (when (and (not (null? photo-stream))
+             (< i 3))
 
-(let loop ([photo-stream (! photo-stream)])
-  (when (not (null? photo-stream))
-    (pretty-print (! (car photo-stream)))
-    (loop  (! (cdr photo-stream)))))
+    (let ((p (! (car photo-stream))))
+      (let ((id (car ((sxpath '(@ id *text*)) p))))
+        (printf "Photo ~s: " id)
+        (pretty-print p)))
+
+    (loop
+     (add1 i)
+     (! (cdr photo-stream)))))
 
 )
