@@ -51,39 +51,47 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 (define/kw (search-stub #:key
                         [page 1]
                         [per_page 3])
-  (let* (
-         ;; completely arbitrary
-         (total 10)
-         (num-on-last-page (remainder total per_page))
-         (pages (+ (quotient total per_page)
-                   (if (zero? num-on-last-page)
-                       0
-                       1))))
+  (fprintf (current-error-port)
+           "Snarfing ~a..." per_page)
+  (begin0
 
-    ;; Yeah, this is ugly.  Do better.
-    (when (zero? num-on-last-page)
-      (set! num-on-last-page per_page))
+      (let* (
+             ;; completely arbitrary
+             (total 10)
+             (num-on-last-page (remainder total per_page))
+             (pages (+ (quotient total per_page)
+                       (if (zero? num-on-last-page)
+                           0
+                           1))))
 
-    (cons '*TOP*
-          (cons 'photos
-                (cons
-                 `(@ (total ,(number->string total))
-                     (perpage ,(number->string per_page))
-                     (pages ,(number->string pages))
-                     (page ,(number->string page)))
-                 (map
-                  (lambda (n)
-                    `(photo
-                      (@ (title "Yours Truly")
-                         (server "2305")
-                         (secret "c8c4e9bf53")
-                         (owner "20825469@N00")
-                         (ispublic "1")
-                         (isfriend "0")
-                         (isfamily "0")
-                         (id ,(number->string n))
-                         (farm "3"))))
-                  (iota per_page (* (sub1 page) per_page))))))))
+        ;; Yeah, this is ugly.  Do better.
+        (when (zero? num-on-last-page)
+          (set! num-on-last-page per_page))
+
+        (cons '*TOP*
+              (cons 'photos
+                    (cons
+                     `(@ (total ,(number->string total))
+                         (perpage ,(number->string per_page))
+                         (pages ,(number->string pages))
+                         (page ,(number->string page)))
+                     (map
+                      (lambda (n)
+                        `(photo
+                          (@ (title "Yours Truly")
+                             (server "2305")
+                             (secret "c8c4e9bf53")
+                             (owner "20825469@N00")
+                             (ispublic "1")
+                             (isfriend "0")
+                             (isfamily "0")
+                             (id ,(number->string n))
+                             (farm "3"))))
+                      (iota per_page (* (sub1 page) per_page)))))))
+
+    (fprintf (current-error-port)
+             "done~%"))
+    )
 
 (let ((all-my-photos
        (
