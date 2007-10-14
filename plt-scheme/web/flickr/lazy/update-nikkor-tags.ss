@@ -47,7 +47,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (let ((p (! (car photo-stream))))
       (let ((id (car ((sxpath '(@ id *text*)) p))))
-        (printf "Photo ~s: " id)
+        (printf "Photo ~s: " (car ((sxpath '(@ title *text*)) p)))
         (let ((exif (flickr.photos.getExif
                      'photo_id id)))
           (let ((model-name (car ((sxpath
@@ -56,20 +56,32 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                      raw
                                      *text*))
                                   exif))))
-            (printf "This photo was taken with a ~s: " model-name)
             (when (equal? "NIKON D200" model-name)
-              (let* ((lens-data (car ((sxpath '(photo
-                                                (exif (@ (equal? (label "Lens Min/Max Focal Length, Min/Max Aperture"))))
-                                                raw
-                                                *text*))
-                                      exif)))
-                     (parsed  (string-tokenize
-                               lens-data
-                               (char-set-complement (char-set #\, #\newline)))))
-                (printf "(lens data: ~s ~s) "
-                        parsed
-                        (apply lens-data->string (map exact->inexact (map string->number parsed))))))
-            (pretty-print p)))))
+              (let* ((lens-data
+                      (car
+                       ((sxpath
+                         '(photo
+                           (exif
+                            (@
+                             (equal?
+                              (label
+                               "Lens Min/Max Focal Length, Min/Max Aperture"))))
+                           raw
+                           *text*))
+                        exif)))
+                     (parsed
+                      (string-tokenize
+                       lens-data
+                       (char-set-complement (char-set #\, #\newline)))))
+                (let ((tag (apply
+                            lens-data->string
+                            (map exact->inexact (map string->number parsed)))))
+;;;                   (flickr.photos.addTags
+;;;                    'photo_id id
+;;;                    'tags tag)
+                  (printf "(pretend I added the tag ~s)~%" tag)
+                  )))
+            ))))
 
     (loop
      (add1 i)
