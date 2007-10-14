@@ -13,6 +13,23 @@ mzscheme
 
 ;; a quick stub that acts vaguely like flickr.photos.search
 
+(define/kw (get-buncha-photos
+            #:key
+            [page 1]
+            [per_page 3])
+  (map
+   (lambda (n)
+     `(photo
+       (@ (title "Yours Truly")
+          (server "2305")
+          (secret "c8c4e9bf53")
+          (owner "20825469@N00")
+          (ispublic "1")
+          (isfriend "0")
+          (isfamily "0")
+          (id ,(number->string n))
+          (farm "3"))))
+   (iota per_page (* (sub1 page) per_page)))  )
 (define/kw (get-one-page #:key
                         [page 1]
                         [per_page 3])
@@ -40,19 +57,7 @@ mzscheme
                          (perpage ,(number->string per_page))
                          (pages ,(number->string pages))
                          (page ,(number->string page)))
-                     (map
-                      (lambda (n)
-                        `(photo
-                          (@ (title "Yours Truly")
-                             (server "2305")
-                             (secret "c8c4e9bf53")
-                             (owner "20825469@N00")
-                             (ispublic "1")
-                             (isfriend "0")
-                             (isfamily "0")
-                             (id ,(number->string n))
-                             (farm "3"))))
-                      (iota per_page (* (sub1 page) per_page)))))))
+                     (get-buncha-photos #:page page #:per_page per_page)))))
 
     (fprintf (current-error-port)
              "done~%"))
