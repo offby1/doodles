@@ -47,14 +47,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (hash-table-increment! ht key val)
   (hash-table-put! ht key (+ val (hash-table-get ht key 0))))
 
-(define vmd5
-  (lambda args
-    (apply md5 args)))
-(trace vmd5)
-
 (define (sign-args arglist)
   (bytes->string/utf-8
-   (vmd5
+   (md5
     (string->bytes/utf-8
      (apply
       string-append
@@ -74,10 +69,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
             (lambda (p1 p2)
               (string<? (symbol->string (car p1))
-                        (symbol->string (car p2))))))))))
-
-  )
-(trace sign-args)
+                        (symbol->string (car p2)))))))))))
 
 (define (get-login-url frob perms)
   (format "http://flickr.com/services/auth/?api_key=~a&perms=~a&frob=~a&api_sig=~a"

@@ -42,7 +42,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (if (< min-aperture max-aperture)
               (format "-~a" (exact->inexact max-aperture))
               "")))
-(*verbose* #t)
+;;(*verbose* #t)
 (define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
@@ -109,14 +109,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                     (when (not (member 0 parsed-exact-numbers))
 
                       (let ((tag (apply lens-data->string parsed-exact-numbers)))
+                        ;; I don't know why, but flickr.photos.addTags
+                        ;; raises some sort of value _when it
+                        ;; succeeds_.  And I see an error about
+                        ;; premature EOF printed.  So I have to ignore
+                        ;; all raised values here.  What's even more
+                        ;; annoying is that the fprintf doesn't
+                        ;; trigger, so I can't tell what value I'm
+                        ;; ignoring.  Bizarre.
                         (with-handlers
                             ([void
                               (lambda (e)
-                                "Handling ~s~%" e)])
-                        (flickr.photos.addTags
-                         'auth_token *the-token*
-                         'photo_id id
-                         'tags tag))
+                                (fprintf (current-error-port)
+                                         "Ignoring ~s~%" e)
+                                )])
+                          (flickr.photos.addTags
+                           'auth_token *the-token*
+                           'photo_id id
+                           'tags tag))
                         (printf " => ~s" tag)))
                     ))))
             (printf "~%")
