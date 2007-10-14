@@ -5,8 +5,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 
 (module lazy
-;;mzscheme
-(lib "lazy.ss" "lazy")
+mzscheme
+;;(lib "lazy.ss" "lazy")
 (require (lib "kw.ss")
          (lib "trace.ss")
          (only (lib "1.ss" "srfi") iota))
@@ -57,7 +57,6 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
     (fprintf (current-error-port)
              "done~%"))
     )
-(trace get-one-page)
 (provide get-one-page)
 
 )

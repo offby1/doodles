@@ -36,7 +36,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (if (or (not total-pages)
               (< pages-requested total-pages))
           (let ((one-page (get-one-page #:page (add1 pages-requested))))
-            (printf "one-page: ~s~%" one-page)
             (set! total-pages (string->number (car ((sxpath '(photos @ pages *text*))
                                                     one-page))))
             (loop (add1 pages-requested)
@@ -46,9 +45,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (printf "Golly, here's all my photos:~%")
 (let loop ((photos (snarf)))
-  (printf "Photos: ~s~%" photos)
   (when (not (null? photos))
-    (pretty-display (car photos))
+    (for-each pretty-display (car photos))
     (loop (cdr photos))))
 
 
