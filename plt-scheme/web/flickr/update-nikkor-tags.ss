@@ -12,6 +12,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          (lib "trace.ss")
          (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
+         (only (lib "promise.ss" "lazy") force)
          "lazy.ss")
 
 ;; for each of my flickr photos
@@ -27,27 +28,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 ;;;                          'username "offby1")))
   )
 
-(define (snarf)
-  (fprintf (current-error-port)
-           "Snarfing from flickr~%")
-  (let ((total-pages #f))
-    (let loop ((pages-requested 0)
-               (result '()))
-      (if (or (not total-pages)
-              (< pages-requested total-pages))
-          (let ((one-page (get-one-page #:page (add1 pages-requested))))
-            (set! total-pages (string->number (car ((sxpath '(photos @ pages *text*))
-                                                    one-page))))
-            (loop (add1 pages-requested)
-                  (cons ((sxpath '(photos (photo))) one-page) result)))
-          (reverse result)
-          ))))
-
 (printf "Golly, here's all my photos:~%")
 (let loop ((photos (snarf)))
   (when (not (null? photos))
-    (for-each pretty-display (car photos))
-    (loop (cdr photos))))
+    (for-each pretty-display (car (force photos)))
+;;;     (loop (cdr photos))
+    ))
 
 
 
