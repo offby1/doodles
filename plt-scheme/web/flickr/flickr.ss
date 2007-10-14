@@ -8,11 +8,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module flickr mzscheme
 (require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
-         (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert)
+         (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert fold)
          (lib "trace.ss")
+         (only (lib "1.ss" "srfi") fold)
+         (only (lib "list.ss") sort)
+         (lib "md5.ss")
          (planet "assert.ss" ("offby1" "offby1.plt")))
 (provide
  flickr.photos.search
+ flickr.photos.addTags
+ flickr.photos.getExif
  flickr.photos.getInfo
  flickr.photos.getSizes
  flickr.people.findByUsername
@@ -23,6 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *verbose* (make-parameter #f))
 (define *flickr-API-key* "d964b85147ddd4082dc029f371fe28a8")
+(define *flickr-API-secret* (or (getenv "FLICKR_SECRET") ""))
 (define flickr (xmlrpc-server "api.flickr.com" 80 "/services/xmlrpc"))
 
 (define *timings* (make-hash-table 'equal))
@@ -38,6 +44,38 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define (hash-table-increment! ht key val)
   (hash-table-put! ht key (+ val (hash-table-get ht key 0))))
 
+(define vmd5
+  (lambda args
+    (apply md5 args)))
+(trace vmd5)
+
+(define (sign-call arglist)
+  (bytes->string/utf-8
+   (vmd5
+    (string->bytes/utf-8
+     (apply
+      string-append
+      *flickr-API-secret*
+      (map (lambda (p)
+             (format "~a~a" (car p) (cdr p)))
+           (sort
+
+            (let loop ((arglist arglist)
+                       (pairs '()))
+              (if (null? arglist)
+                  pairs
+                  (loop (cddr arglist)
+                        (cons (cons (car arglist)
+                                    (cadr arglist))
+                              pairs))))
+
+            (lambda (p1 p2)
+              (string<? (symbol->string (car p1))
+                        (symbol->string (car p2))))))))))
+
+  )
+(trace sign-call)
+
 (define-syntax (define-flickr-api stx)
   (syntax-case stx ()
     ((_ api-name)
@@ -45,25 +83,37 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       (define api-name
         (lambda keys-n-values
           (assert (not (memq 'api_key keys-n-values)))
+          (assert (not (memq 'api_sig keys-n-values)))
           (parse-xml
            (let* ((function-name (symbol->string 'api-name))
                   (the-function (flickr function-name))
-                  (the-args (list
-                             (apply ->ht
-                                    'api_key *flickr-API-key*  keys-n-values))))
+                  (most-args-list
+                   (append
+                    (list 'api_key *flickr-API-key*)
+                    keys-n-values))
+                  (all-args-list
+                   (if (positive? (string-length *flickr-API-secret*))
+                       (append
+                        (list 'api_sig (sign-call most-args-list))
+                        most-args-list)
+                       most-args-list))
+                  (args-ht (list
+                             (apply ->ht all-args-list))))
              (when (*verbose*)
                (parameterize ((print-hash-table #t))
                              (fprintf (current-error-port)
-                                      "Calling ~a with ~s~%" function-name the-args)))
+                                      "Calling ~a with ~s~%" function-name args-ht)))
              (let-values (((results cpu-ms wall-ms gc-cpu-ms)
                            (time-apply the-function
-                                       the-args)))
+                                       args-ht)))
                (hash-table-increment! *timings* function-name wall-ms)
                (apply values results)
                )))))))))
 
 (define-flickr-api flickr.contacts.getPublicList)
 (define-flickr-api flickr.people.findByUsername)
+(define-flickr-api flickr.photos.addTags)
+(define-flickr-api flickr.photos.getExif)
 (define-flickr-api flickr.people.getInfo)
 (define-flickr-api flickr.photos.getInfo)
 (define-flickr-api flickr.photos.getSizes)
