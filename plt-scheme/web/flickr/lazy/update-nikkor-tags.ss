@@ -5,6 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module update-nikkor-tags (lib "mz-without-promises.ss" "lazy")
 (require
+ (lib "cmdline.ss")
  (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
  (only (lib "pretty.ss")
        pretty-display
@@ -42,8 +43,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (if (< min-aperture max-aperture)
               (format "-~a" (exact->inexact max-aperture))
               "")))
-;;(*verbose* #t)
-(define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
+(define *the-auth-frob*
+  (car ((sxpath '(frob *text*))
+        (parameterize ((*verbose* #t))
+          (flickr.auth.getFrob)))))
 
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
 
@@ -66,6 +69,18 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                            'frob *the-auth-frob*))))))
 (printf "Here dat token, boss: ~s~%" *the-token*)
 
+(define *dry-run* (make-parameter #f))
+(command-line
+ "update-nikkor-tags"
+ (current-command-line-arguments)
+ (once-each
+
+  (("-d" "--dry-run")
+   "Just report what tags we'd add, instead of actually adding them"
+   (*dry-run* #t))
+  )
+)
+
 (let loop ([i 0] [photo-stream (! photo-stream)])
   (when (and (not (null? photo-stream))
 ;;;              (< i 4)
@@ -83,49 +98,48 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                                 raw
                                 *text*))
                              exif)))
-            (when (and (not (null? model-name))
-                       (equal? "NIKON D200" (car model-name)))
-              (let ((lens-data
-                     ((sxpath
-                       '(photo
-                         (exif
-                          (@
-                           (equal?
-                            (label
-                             "Lens Min/Max Focal Length, Min/Max Aperture"))))
-                         raw
-                         *text*))
-                      exif))
-                    )
-                (when (not (null? lens-data))
-                  (let* ((parsed-exact-numbers
-                          (map string->number
-                               (string-tokenize
-                                (car lens-data)
-                                (char-set-complement (char-set #\, #\newline))))))
+            (let ((lens-data
+                   ((sxpath
+                     '(photo
+                       (exif
+                        (@
+                         (equal?
+                          (label
+                           "Lens Min/Max Focal Length, Min/Max Aperture"))))
+                       raw
+                       *text*))
+                    exif))
+                  )
+              (when (not (null? lens-data))
+                (let* ((parsed-exact-numbers
+                        (map string->number
+                             (string-tokenize
+                              (car lens-data)
+                              (char-set-complement (char-set #\, #\newline))))))
 
-                    ;; sometimes the four numbers come back as all 0
-                    ;; ... no idea why
-                    (when (not (member 0 parsed-exact-numbers))
+                  ;; sometimes the four numbers come back as all 0
+                  ;; ... no idea why
+                  (when (not (member 0 parsed-exact-numbers))
 
-                      (let ((tag (apply lens-data->string parsed-exact-numbers)))
-                        ;; I don't know why, but flickr.photos.addTags
-                        ;; raises a -1 _when it succeeds_.  So I
-                        ;; have to ignore that here.  (Actually it's
-                        ;; ssax that's raising -1.  How annoying)
-                        (with-handlers
-                            ([integer?
-                              (lambda (e)
-                                (fprintf (current-error-port)
-                                         "Ignoring integer ~s~%" e)
-                                (flush-output (current-error-port))
-                                )])
+                    (let ((tag (apply lens-data->string parsed-exact-numbers)))
+                      ;; I don't know why, but flickr.photos.addTags
+                      ;; raises a -1 _when it succeeds_.  So I
+                      ;; have to ignore that here.  (Actually it's
+                      ;; ssax that's raising -1.  How annoying)
+                      (with-handlers
+                          ([integer?
+                            (lambda (e)
+                              (fprintf (current-error-port)
+                                       "Ignoring integer ~s~%" e)
+                              (flush-output (current-error-port))
+                              )])
+                        (when (not (*dry-run*))
                           (flickr.photos.addTags
                            'auth_token *the-token*
                            'photo_id id
-                           'tags tag))
-                        (printf " => ~s" tag)))
-                    ))))
+                           'tags tag)))
+                      (printf " => ~s" tag)))
+                  )))
             (printf "~%")
             ))))
 
