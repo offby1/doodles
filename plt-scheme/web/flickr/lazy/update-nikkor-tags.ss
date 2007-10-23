@@ -5,6 +5,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 |#
 (module update-nikkor-tags (lib "mz-without-promises.ss" "lazy")
 (require
+ (lib "file.ss")
  (lib "cmdline.ss")
  (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
  (only (lib "pretty.ss")
@@ -43,15 +44,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (if (< min-aperture max-aperture)
               (format "-~a" (exact->inexact max-aperture))
               "")))
-(define *the-auth-frob*
-  (car ((sxpath '(frob *text*))
-        (parameterize ((*verbose* #t))
-          (flickr.auth.getFrob)))))
-
+;;(*verbose* #t)
+(define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
 
-(define
-  *the-token*
+(define *the-token* (get-preference 'flickr-token))
+
+(when (not *the-token*)
   (let again ()
     (with-handlers
         ([exn:xmlrpc:fault?
@@ -63,11 +62,16 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (sleep 2)
             (send-url *login-url* #f)
             (sleep 10)
-            (again))
-          ])
-      (car ((sxpath '(auth token *text*)) (flickr.auth.getToken
-                                           'frob *the-auth-frob*))))))
+            (again))])
+
+      (set! *the-token*
+            (car ((sxpath '(auth token *text*))
+                  (flickr.auth.getToken 'frob *the-auth-frob*)))))))
+
 (printf "Here dat token, boss: ~s~%" *the-token*)
+(put-preferences
+ (list 'flickr-token)
+ (list *the-token*))
 
 (define *dry-run* (make-parameter #f))
 (command-line
@@ -145,5 +149,5 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
     (loop
      (add1 i)
-     (! (cdr photo-stream)))))
-)
+     (! (cdr photo-stream))))))
+
