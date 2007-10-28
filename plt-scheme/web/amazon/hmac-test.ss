@@ -5,7 +5,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module hmac-test mzscheme
-(require "hmac-sha1.ss"
+(require (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt"))
          (planet "assert.ss"   ("offby1" "offby1.plt"))
          (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))

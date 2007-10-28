@@ -10,15 +10,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (only (lib "base64.ss" "net") base64-encode-stream)
          (only (planet "port.ss" ("schematics" "port.plt" ))
                port->string)
+         (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt"))
+         (planet "aif.ss" ("schematics" "macro.plt")))
 
-         ;; normally I'd use (planet "hmac-sha1.ss" ("jaymccarthy"
-         ;; "hmac-sha1.plt" )) but version 1 0 is buggy; this version
-         ;; has the fixes.
-         "hmac-sha1.ss"
-         )
 (provide (all-defined))
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
-(define SecretAccessKey (make-parameter #f))
+(define SecretAccessKey
+  (make-parameter
+   (aif key (getenv "AWS_SECRET_ACCESS_KEY")
+        (string->bytes/utf-8 key)
+        key)))
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
