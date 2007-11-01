@@ -11,23 +11,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (require (only (lib "1.ss" "srfi") unfold)
          (only (lib "43.ss" "srfi") vector-unfold)
          (lib "pretty.ss")
-         (lib "histogram.ss" "offby1")
+         (planet "histogram.ss" ("offby1" "offby1.plt"))
+         (planet "fys.ss" ("offby1" "offby1.plt"))
          "hand.scm")
 
 (define *deck-size* (* *num-ranks* (num-suits)))
 
 (define (new-deck)
-  (define (fisher-yates-shuffle! v)
-    (define (swap! a b)
-      (let ((tmp (vector-ref v a)))
-        (vector-set! v a (vector-ref v b))
-        (vector-set! v b tmp)))
-    (do ((i 0 (add1 i)))
-        ((= i (vector-length v))
-         v)
-      (let ((j (+ i (random (- (vector-length v) i)))))
-        (swap! i j))))
-
   (fisher-yates-shuffle!
    (vector-unfold
     (lambda (index seed)
