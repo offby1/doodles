@@ -8,7 +8,9 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; expect to appear?
 
 (module cards mzscheme
-(require (only (lib "1.ss" "srfi") unfold)
+(require (only (lib "1.ss" "srfi")
+               filter
+               unfold)
          (only (lib "43.ss" "srfi") vector-unfold)
          (lib "pretty.ss")
          (planet "histogram.ss" ("offby1" "offby1.plt"))
@@ -31,19 +33,27 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (notrumpy? shape)
   (member shape '((4 4 3 2) (5 3 3 2) (4 3 3 3))))
 
+(define (five-five-or-better? shape)
+  (< 1 (length (filter (lambda (length)
+                         (< 4 length))
+                       shape))))
+
 ;; Deal a bunch of deals, and report the shapes of each hand.
 (let ((deals 10000))
 
-  (printf "After ~a deals, suit lengths were distributed like this ('*' represents notrump shape) :~%"
+  (printf "After ~a deals, suit lengths were distributed like this ('5' represents 5-5 or better shape; '*' represents notrump shape) :~%"
           deals)
 
   (parameterize ((pretty-print-columns 24))
     (pretty-display
      (map (lambda (entry)
             (let ((shape (car entry)))
-              (if (notrumpy? shape)
-                  (cons entry '(*))
-                (list entry))))
+              (cond
+               ((five-five-or-better? shape)
+                (cons entry '(5)))
+               ((notrumpy? shape)
+                (cons entry '(*)))
+               (list entry))))
           (cdr-sort
            (list->histogram
             (unfold
