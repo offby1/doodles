@@ -57,6 +57,11 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
 (send 'join-any one-client)
 (send 'join-any another-client)
+(send 'join-any (make-client))
+(send 'join-any (make-client))
+(send 'join-any (make-client))
+
+(send '(join 2) one-client)
 
 (send 'die    one-client)
 (sync *s*)
