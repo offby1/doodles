@@ -4,7 +4,8 @@
 exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 (module server mzscheme
-(require (lib "thread.ss"))
+(require (lib "thread.ss")
+         (lib "match.ss"))
 
 (define *tables* '())
 
@@ -12,15 +13,11 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
          "OK, Daddy-o, lay it on me~%")
 
 (define (dispatch one-datum)
-  (cond
-   ((symbol? one-datum)
-    (case one-datum
-      ((list-tables)
-       (cons 'tables *tables*))
-      (else
-       (cons 'unknown-command one-datum))))
-   (else
-    'unknown-command)))
+  (match one-datum
+   ['list-tables
+    (cons 'tables *tables*)]
+   [_
+    (cons 'unknown-command one-datum)]))
 
 (run-server
  1234
