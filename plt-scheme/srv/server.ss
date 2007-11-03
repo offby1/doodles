@@ -8,9 +8,14 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
 (define *tables* '())
 
+(fprintf (current-error-port)
+         "OK, Daddy-o, lay it on me~%")
 (run-server
  1234
  (lambda (ip op)
+   (let-values (((a b c d)
+                 (tcp-addresses ip #t)))
+     (printf "~s ~s ~s ~s~%" a b c d))
    (file-stream-buffer-mode op 'line)
    (let loop ()
      (let ((one-datum (read ip)))
@@ -28,8 +33,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
              (newline op)
              (loop))
            (fprintf (current-error-port)
-                    "So long suckers!~%"))
-       )))
+                    "So long suckers!~%")))))
  #f)
 
 (provide (all-defined))
