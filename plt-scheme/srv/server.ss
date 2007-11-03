@@ -49,7 +49,8 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
          (rename playaz table-players)))
 
 (module server mzscheme
-(require (lib "thread.ss")
+(require (lib "etc.ss")
+         (lib "thread.ss")
          (lib "match.ss")
          (only (lib "1.ss" "srfi")
                filter))
@@ -84,7 +85,7 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
      (leave-existing-table)
      (let ((non-full-tables
             (filter
-             (lambda (t) (not (table-full? t)))
+             (compose not table-full?)
              (hash-table-map
               *tables-by-number*
               (lambda (id t)
