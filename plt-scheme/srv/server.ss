@@ -13,27 +13,35 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 (run-server
  1234
  (lambda (ip op)
-   (let-values (((a b c d)
-                 (tcp-addresses ip #t)))
-     (printf "~s ~s ~s ~s~%" a b c d))
-   (file-stream-buffer-mode op 'line)
-   (let loop ()
-     (let ((one-datum (read ip)))
-       (if (not (eof-object? one-datum))
-           (begin
-             (cond
-              ((symbol? one-datum)
-               (case one-datum
-                 ((list-tables)
-                  (write (cons 'tables *tables*) op))
-                 (else
-                  (write (cons 'unknown-command one-datum) op))))
-              (else
-               (write 'unknown-command op)))
-             (newline op)
-             (loop))
-           (fprintf (current-error-port)
-                    "So long suckers!~%")))))
+   (let ((client-id (let-values (((server-ip
+                                   server-port
+                                   client-ip
+                                   client-port)
+                                  (tcp-addresses ip #t)))
+                      (cons client-ip client-port))))
+     (file-stream-buffer-mode op 'line)
+     (fprintf op
+      "~s~%"
+      `(welcome ,client-id))
+     (let loop ()
+       (let ((one-datum (read ip)))
+         (if (not (eof-object? one-datum))
+             (begin
+               (cond
+                ((symbol? one-datum)
+                 (case one-datum
+                   ((list-tables)
+                    (write (cons 'tables *tables*) op))
+                   (else
+                    (write (cons 'unknown-command one-datum) op))))
+                (else
+                 (write 'unknown-command op)))
+               (newline op)
+               (loop))
+             (begin
+               (close-output-port op)
+               (fprintf (current-error-port)
+                        "So long, ~s!~%" client-id)))))))
  #f)
 
 (provide (all-defined))
