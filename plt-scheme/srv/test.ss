@@ -11,7 +11,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
 (define *s*
   (thread
-   (lambda () (run-server *the-port* server-loop #f))))
+   (lambda ()
+     (fprintf (current-error-port)
+              "OK, Daddy-o, lay it on me~%")
+     (run-server *the-port* server-loop #f))))
 
 (define (make-client)
   (call-with-values
@@ -36,7 +39,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
                (read ip))
       (cons ip op))))
 
-(define one-client (make-client))
+(define     one-client (make-client))
 (define another-client (make-client))
 
 (define (send datum client)
@@ -48,9 +51,13 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
            (read (car client))))
 
 (send 'heebie one-client)
-
 (send 'jeebie another-client)
-(send 'die    one-client)
 
+(send 'list-tables one-client)
+
+(send 'join-any one-client)
+(send 'join-any another-client)
+
+(send 'die    one-client)
 (sync *s*)
 )

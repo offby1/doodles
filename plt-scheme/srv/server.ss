@@ -80,8 +80,6 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
 (define server-loop
   (lambda (ip op)
-    (fprintf (current-error-port)
-         "OK, Daddy-o, lay it on me~%")
     (let ((client-id (let-values (((server-ip
                                     server-port
                                     client-ip
