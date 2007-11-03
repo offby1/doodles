@@ -10,6 +10,18 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
 (fprintf (current-error-port)
          "OK, Daddy-o, lay it on me~%")
+
+(define (dispatch one-datum)
+  (cond
+   ((symbol? one-datum)
+    (case one-datum
+      ((list-tables)
+       (cons 'tables *tables*))
+      (else
+       (cons 'unknown-command one-datum))))
+   (else
+    'unknown-command)))
+
 (run-server
  1234
  (lambda (ip op)
@@ -27,15 +39,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
        (let ((one-datum (read ip)))
          (if (not (eof-object? one-datum))
              (begin
-               (cond
-                ((symbol? one-datum)
-                 (case one-datum
-                   ((list-tables)
-                    (write (cons 'tables *tables*) op))
-                   (else
-                    (write (cons 'unknown-command one-datum) op))))
-                (else
-                 (write 'unknown-command op)))
+               (write (dispatch one-datum) op)
                (newline op)
                (loop))
              (begin
