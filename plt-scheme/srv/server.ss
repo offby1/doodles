@@ -50,7 +50,6 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
 (module server mzscheme
 (require (lib "etc.ss")
-         (lib "thread.ss")
          (lib "match.ss")
          (only (lib "1.ss" "srfi")
                filter))
@@ -151,12 +150,12 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
                 (fprintf (current-error-port)
                          "So long, ~s!~%" client-id))))))))
 
+(provide server-loop)
+)
+
+(require server
+         (lib "thread.ss"))
 (if #f
     (server-loop (current-input-port)
                  (current-output-port))
     (run-server 1234 server-loop #f))
-
-(provide (all-defined))
-)
-
-(require server)
