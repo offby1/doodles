@@ -82,21 +82,21 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
     ['join-any
      (leave-existing-table)
-     (let ((empty-tables
+     (let ((non-full-tables
             (filter
-             table-empty?
+             (lambda (t) (not (table-full? t)))
              (hash-table-map
               *tables-by-number*
               (lambda (id t)
                 t)))))
-       (if (null? empty-tables)
+       (if (null? non-full-tables)
            (let ((t (new-table (add1 (hash-table-count *tables-by-number*)) client-id)))
              (hash-table-put! *tables-by-number* (table-id t) t)
              (hash-table-put! *tables-by-client-id* client-id t)
              `(joined new table ,t))
            (begin
-             (table-add-player! (car empty-tables) client-id)
-             `(joined existing table ,(car empty-tables)))))]
+             (table-add-player! (car non-full-tables) client-id)
+             `(joined existing table ,(car non-full-tables)))))]
 
     [('join (? integer? tid))
      (begin0
