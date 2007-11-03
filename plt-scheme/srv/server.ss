@@ -5,16 +5,31 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 (module server mzscheme
 (require (lib "thread.ss"))
+
+(define *tables* '())
+
 (run-server
  1234
  (lambda (ip op)
    (file-stream-buffer-mode op 'line)
    (let loop ()
      (let ((one-datum (read ip)))
-       (when (not (eof-object? one-datum))
-         (write (eval one-datum) op)
-         (newline op)
-         (loop)))))
+       (if (not (eof-object? one-datum))
+           (begin
+             (cond
+              ((symbol? one-datum)
+               (case one-datum
+                 ((list-tables)
+                  (write (cons 'tables *tables*) op))
+                 (else
+                  (write (cons 'unknown-command one-datum) op))))
+              (else
+               (write 'unknown-command op)))
+             (newline op)
+             (loop))
+           (fprintf (current-error-port)
+                    "So long suckers!~%"))
+       )))
  #f)
 
 (provide (all-defined))
