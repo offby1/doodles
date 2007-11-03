@@ -1,0 +1,14 @@
+Let's set our time machines to 1988, and create -- an IRC server that
+is also a bridge game server!
+
+I'm pretty sure that OKbridge started out this way.
+
+you'd need "tables" ...
+
+server loop:
+  read s-expression from socket
+  "dispatch"
+
+dispatch:
+  who's it from?
+  whadda they want?
