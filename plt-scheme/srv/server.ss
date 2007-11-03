@@ -4,63 +4,18 @@
 exec mzscheme --no-init-file --mute-banner --version --load "$0"
 |#
 
-(module tables mzscheme
-(require (only (planet "assert.ss" ("offby1" "offby1.plt")) check-type)
-         (only (lib "1.ss" "srfi")
-               delete!))
-(define-struct table (id players) #f)
 
-(define (new-table id lone-player)
-  (check-type 'new-table integer? id)
-  (check-type 'new-table exact? id)
-  (check-type 'new-table positive? id)
-
-  (check-type 'new-table symbol? lone-player)
-
-  (make-table id (list lone-player)))
-
-(define (table-empty? t)
-  (zero? (length (table-players t))))
-
-(define (table-full? t)
-  (= (length (table-players t)) 4))
-
-(define (table-add-player! t player)
-  (when (table-full? t)
-    (error 'table-add-player! "table ~s is full" t))
-  (set-table-players! t (cons player (table-players t))))
-
-(define (table-remove-player! t player)
-  (when (not (member player (table-players t)))
-    (error 'table-remove-player! "player ~s is not at table ~s" player t))
-  (set-table-players! t (delete! player (table-players t))))
-
-;; return a copy of the list, so that our callers can't modify our
-;; structure.
-(define (playaz t)
-  (map (lambda (x) x) (table-players t)))
-
-(provide new-table
-         table-empty?
-         table-full?
-         table-add-player!
-         table-remove-player!
-         table-id
-         (rename playaz table-players)))
-
 (module server mzscheme
 (require (lib "etc.ss")
          (lib "match.ss")
          (only (lib "1.ss" "srfi")
-               filter))
+               filter)
+         "tables.ss")
 
 (define *tables-by-number*    (make-hash-table 'equal))
 (define *tables-by-client-id* (make-hash-table))
 
-(require tables)
 
-(fprintf (current-error-port)
-         "OK, Daddy-o, lay it on me~%")
 
 (define (dispatch one-datum client-id)
 
@@ -125,6 +80,8 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
 (define server-loop
   (lambda (ip op)
+    (fprintf (current-error-port)
+         "OK, Daddy-o, lay it on me~%")
     (let ((client-id (let-values (((server-ip
                                     server-port
                                     client-ip
@@ -152,10 +109,3 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
 (provide server-loop)
 )
-
-(require server
-         (lib "thread.ss"))
-(if #f
-    (server-loop (current-input-port)
-                 (current-output-port))
-    (run-server 1234 server-loop #f))
