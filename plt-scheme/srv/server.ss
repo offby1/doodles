@@ -3,8 +3,6 @@
 #$Id$
 exec mzscheme --no-init-file --mute-banner --version --load "$0"
 |#
-
-
 (module server mzscheme
 (require (lib "etc.ss")
          (lib "match.ss")
@@ -14,8 +12,6 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
 (define *tables-by-number*    (make-hash-table 'equal))
 (define *tables-by-client-id* (make-hash-table))
-
-
 
 (define (dispatch one-datum client-id)
 
@@ -30,6 +26,9 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
   (match one-datum
     ['list-tables
      (cons 'tables (hash-table-map *tables-by-number* cons))]
+
+    ['hang
+     (thread-wait (current-thread))]
 
     ['die (fprintf (current-error-port)
                    "Outta here!~%")
