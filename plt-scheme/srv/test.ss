@@ -63,6 +63,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
 (send '(join 2) one-client)
 
+(send 'list-tables (make-client))
+
 (send 'die    one-client)
 (sync *s*)
 )

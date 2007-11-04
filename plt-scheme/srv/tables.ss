@@ -22,6 +22,10 @@
 (define (table-add-player! t player)
   (when (table-full? t)
     (error 'table-add-player! "table ~s is full" t))
+  (when (member player (table-players t))
+    (error 'table-add-player! "player ~s is already at table ~s"
+           player
+           t))
   (set-table-players! t (cons player (table-players t))))
 
 (define (table-remove-player! t player)
