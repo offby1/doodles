@@ -10,26 +10,39 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
          "../flickr.ss")
 
 (define *my-NSID*
-  "20825469@N00"
-;;; (car ((sxpath '(user @ nsid *text*))
-;;;                         (flickr.people.findByUsername
-;;;                          'username "offby1")))
-  )
+  (if #t
+      "20825469@N00"
+      (car ((sxpath '(user @ nsid *text*))
+            (flickr.people.findByUsername
+             'username "offby1")))))
 
 ;; returns a simple list of photos, not an actual page.
-(define/kw (get-one-batch  #:key
-                           [page 1]
-                           [per_page 3])
+(define/kw (get-one-batch  #:key page per_page)
   (fprintf (current-error-port)
            "Getting at most ~a photos from page ~a~%"
            per_page page)
-  (flush-output (current-error-port))
 
-  ((sxpath '(photos (photo)))
-   (flickr.photos.search
-    'user_id  *my-NSID*
-    'page      page
-    'per_page per_page) ))
+  (let loop ((privacy-filter-values (list 5 4 3 2 1))
+             (accumulated '()))
+    (if (null? privacy-filter-values)
+        (apply append accumulated)
+        (begin
+          (fprintf (current-error-port)
+                   "Snarfing photos with privacy_filter ~s ... "
+                   (car privacy-filter-values))
+          (loop
+           (cdr privacy-filter-values)
+           (cons
+            (let ((from-one-call ((sxpath '(photos (photo)))
+                                  (flickr.photos.search
+                                     'user_id  *my-NSID*
+                                     'page      page
+                                     'per_page per_page
+                                     'privacy_filter (car privacy-filter-values)))))
+              (fprintf (current-error-port)
+                       "got ~a~%" (length from-one-call))
+              from-one-call)
+            accumulated))))))
 
 
 

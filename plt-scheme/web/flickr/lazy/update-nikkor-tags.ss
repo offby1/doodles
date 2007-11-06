@@ -44,6 +44,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
           (if (< min-aperture max-aperture)
               (format "-~a" (exact->inexact max-aperture))
               "")))
+
+(file-stream-buffer-mode (current-output-port) 'line)
+(file-stream-buffer-mode (current-error-port) 'line)
+
 ;;(*verbose* #t)
 (define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
@@ -58,7 +62,6 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (define *login-url* (get-login-url *the-auth-frob* "write"))
             (printf "Handling ~s~%" e)
             (printf "Your web browser should open; tell it that it's OK to let this app mess with flickr!~%")
-            (flush-output)
             (sleep 2)
             (send-url *login-url* #f)
             (sleep 10)
@@ -86,14 +89,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 )
 
 (let loop ([i 0] [photo-stream (! photo-stream)])
-  (when (and (not (null? photo-stream))
-;;;              (< i 4)
-             )
+  (when (not (null? photo-stream))
 
     (let ((p (! (car photo-stream))))
       (let ((id    (car ((sxpath '(@ id *text*)) p)))
             (title (car ((sxpath '(@ title *text*)) p))))
-        (printf "~s (~a) :" title id) (flush-output)
+        (printf "~s (~a) :" title id)
         (let ((exif (flickr.photos.getExif
                      'photo_id id)))
           (let ((model-name ((sxpath
@@ -134,9 +135,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                           ([integer?
                             (lambda (e)
                               (fprintf (current-error-port)
-                                       "Ignoring integer ~s~%" e)
-                              (flush-output (current-error-port))
-                              )])
+                                       "Ignoring integer ~s~%" e))])
                         (when (not (*dry-run*))
                           (flickr.photos.addTags
                            'auth_token *the-token*

@@ -7,7 +7,10 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (lib "kw.ss")
          (planet "test.ss"    ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"    ("schematics" "schemeunit.plt" 2))
-         "get-one-batch.ss")
+         (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+               sxpath)
+         "get-one-batch.ss"
+         "../flickr.ss")
 
 (define/kw (get-all-photos first-page #:key [per_page 3])
   ;; note that this takes *everything*, to infinity (not beyond)
@@ -18,7 +21,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
         (append b (get-all-photos (add1 first-page)
                                   #:per_page per_page)))))
 
-(define photo-stream (get-all-photos 1 #:per_page 100))
+(define photo-stream (get-all-photos 1 #:per_page 10))
 
 (provide photo-stream)
 
