@@ -38,12 +38,12 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
                                      'user_id  *my-NSID*
                                      'page      page
                                      'per_page per_page
-                                     'privacy_filter (car privacy-filter-values)))))
+                                     'privacy_filter (car privacy-filter-values)
+                                     'sort     "date-taken-desc"))))
               (fprintf (current-error-port)
                        "got ~a~%" (length from-one-call))
               from-one-call)
             accumulated))))))
-
 
 
 (provide get-one-batch)
