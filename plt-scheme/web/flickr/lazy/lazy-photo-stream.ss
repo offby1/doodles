@@ -12,16 +12,24 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
          "get-one-batch.ss"
          "../flickr.ss")
 
-(define/kw (get-all-photos first-page #:key [per_page 3])
+(define/kw (get-all-photos first-page #:key
+                           [per_page 3]
+                           [auth_token #f])
   ;; note that this takes *everything*, to infinity (not beyond)
   (let ((b (get-one-batch #:page first-page
-                          #:per_page per_page)))
+                          #:per_page per_page
+                          #:auth_token auth_token)))
     (if (null? b)
         b
         (append b (get-all-photos (add1 first-page)
                                   #:per_page per_page)))))
 
-(define photo-stream (get-all-photos 1 #:per_page 10))
+(define/kw (photo-stream
+            #:key [auth_token #f])
+  (get-all-photos
+   1
+   #:per_page 10
+   #:auth_token auth_token))
 
 (provide photo-stream)
 

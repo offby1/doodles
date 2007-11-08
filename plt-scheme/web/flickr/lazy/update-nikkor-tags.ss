@@ -93,7 +93,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   )
 )
 
-(let loop ([i 0] [photo-stream (! photo-stream)])
+(let loop ([i 0] [photo-stream (! (photo-stream #:auth_token *the-token*))])
   (when (not (null? photo-stream))
 
     (let ((p (! (car photo-stream))))
@@ -101,6 +101,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
             (title (car ((sxpath '(@ title *text*)) p))))
         (printf "~s (~a) :" title id)
         (let ((exif (flickr.photos.getExif
+                     'auth_token *the-token*
                      'photo_id id)))
           (let ((model-name ((sxpath
                               '(photo

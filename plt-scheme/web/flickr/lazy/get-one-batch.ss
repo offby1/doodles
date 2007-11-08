@@ -17,7 +17,10 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
              'username "offby1")))))
 
 ;; returns a simple list of photos, not an actual page.
-(define/kw (get-one-batch  #:key page per_page)
+(define/kw (get-one-batch  #:key
+                           page
+                           per_page
+                           [auth_token #f])
   (fprintf (current-error-port)
            "Getting at most ~a photos from page ~a~%"
            per_page page)
@@ -34,12 +37,22 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
            (cdr privacy-filter-values)
            (cons
             (let ((from-one-call ((sxpath '(photos (photo)))
-                                  (flickr.photos.search
-                                     'user_id  *my-NSID*
-                                     'page      page
-                                     'per_page per_page
-                                     'privacy_filter (car privacy-filter-values)
-                                     'sort     "date-taken-desc"))))
+                                  (let* ((args
+                                          (list
+                                           'user_id  *my-NSID*
+                                           'page      page
+                                           'per_page per_page
+                                           'privacy_filter (car privacy-filter-values)
+                                           'sort     "date-taken-desc"))
+                                         (args (if auth_token
+                                                   (cons 'auth_token
+                                                         (cons auth_token
+                                                               args))
+                                                   args)))
+
+                                    (apply flickr.photos.search
+                                           args)))))
+
               (fprintf (current-error-port)
                        "got ~a~%" (length from-one-call))
               from-one-call)
