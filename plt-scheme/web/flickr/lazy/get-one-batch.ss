@@ -4,8 +4,7 @@
 exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 (module get-one-batch mzscheme
-(require (lib "kw.ss")
-         (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+(require (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
          "../flickr.ss")
 
@@ -17,10 +16,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
              'username "offby1")))))
 
 ;; returns a simple list of photos, not an actual page.
-(define/kw (get-one-batch  #:key
-                           page
-                           per_page
-                           [auth_token #f])
+(define (get-one-batch page per_page auth_token)
   (fprintf (current-error-port)
            "Getting at most ~a photos from page ~a~%"
            per_page page)

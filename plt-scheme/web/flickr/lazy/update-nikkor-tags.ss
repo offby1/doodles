@@ -93,7 +93,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
   )
 )
 
-(let loop ([i 0] [photo-stream (! (photo-stream #:auth_token *the-token*))])
+(let loop ([i 0] [photo-stream (! (photo-stream *the-token*))])
   (when (not (null? photo-stream))
 
     (let ((p (! (car photo-stream))))
