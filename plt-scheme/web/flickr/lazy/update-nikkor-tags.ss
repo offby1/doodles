@@ -59,7 +59,7 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     (with-handlers
         ([exn:xmlrpc:fault?
           (lambda (e)
-            (define *login-url* (get-login-url *the-auth-frob* "write"))
+            (define *login-url* (get-login-url *the-auth-frob* "read,write"))
             (printf "Handling ~s~%" e)
             (printf "Your web browser should open; tell it that it's OK to let this app mess with flickr!~%")
             (sleep 2)
@@ -75,6 +75,11 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (put-preferences
  (list 'flickr-token)
  (list *the-token*))
+
+(fprintf (current-error-port)
+         "Check-token says ~a~%"
+         (flickr.auth.checkToken
+          'auth_token *the-token*))
 
 (define *dry-run* (make-parameter #f))
 (command-line
