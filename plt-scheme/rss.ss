@@ -11,7 +11,7 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
                ssax:xml->sxml)
          (planet "sxml.ss" ("lizorkin" "sxml.plt")))
 
-(define-struct entry (title link id updated content author source))
+(define-struct entry (title link id updated content author source) #f)
 
 (define *timestamp-file-name*
   (build-path
@@ -44,7 +44,26 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
 
 
 (pretty-print
- ((sxpath '(// atom:entry)) (grab-rss-stuff  "http://planet.emacsen.org/atom.xml")))
+ (map
+  (lambda (e-sxml)
+    (make-entry
+     (car
+      ((sxpath '(atom:title)) e-sxml))
+     (car
+      ((sxpath '(atom:link)) e-sxml))
+     (car
+      ((sxpath '(atom:id)) e-sxml))
+     (car
+      ((sxpath '(atom:updated)) e-sxml))
+     (car
+      ((sxpath '(atom:content)) e-sxml))
+     (car
+      ((sxpath '(atom:author)) e-sxml))
+     (car
+      ((sxpath '(atom:source)) e-sxml))
+
+     ))
+  ((sxpath '(// atom:entry)) (grab-rss-stuff  "http://planet.emacsen.org/atom.xml"))))
 
 (provide (all-defined))
 )
