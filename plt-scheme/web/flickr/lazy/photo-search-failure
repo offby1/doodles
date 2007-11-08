@@ -29,8 +29,7 @@ User-Agent: PLT Scheme
                             <string>d964b85147ddd4082dc029f371fe28a8</string>
                         </value>
                     </member>
-                    <mem
-ber>
+                    <member>
                         <name>page</name>
                         <value>
                             <int>1</int>
@@ -42,8 +41,7 @@ ber>
                             <string>20825469@N00</string>
                         </value>
                     </member>
-                    <membe
-r>
+                    <member>
                         <name>per_page</name>
                         <value>
                             <int>10</int>
@@ -53,8 +51,7 @@ r>
             </value>
         </param>
     </params>
-</methodCall>
-HTTP/1.1 200 OK
+</methodCall>HTTP/1.1 200 OK
 Date: Thu, 08 Nov 2007 06:26:48 GMT
 P3P: policyref="http://p3p.yahoo.com/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV"
 Set-Cookie: cookie_l10n=en-us%3Bus; expires=Sunday, 07-Nov-10 06:26:48 GMT; path=/; domain=flickr.com
@@ -72,19 +69,15 @@ Content-Type: text/xml; charset=utf-8
 ...<value>
 ....<string>
 &lt;photos page=&quot;1&quot; pages=&quot;52&quot; perpage=&quot;10&quot; total=&quot;520&quot;&gt;
-.&lt;photo id=&quot;1911627057&quot; owner=&quot;20825469@N00&quot; secret=&quot;786abfac86&quot; server=&quot;2371&quot; farm=&quot;3&quot; title=&quot;Dave&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quo
-t;0&quot; /&gt;
+.&lt;photo id=&quot;1911627057&quot; owner=&quot;20825469@N00&quot; secret=&quot;786abfac86&quot; server=&quot;2371&quot; farm=&quot;3&quot; title=&quot;Dave&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1911620371&quot; owner=&quot;20825469@N00&quot; secret=&quot;7b0e9e0f2d&quot; server=&quot;2189&quot; farm=&quot;3&quot; title=&quot;Dave and his co-worker Wayne&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
-.&lt;photo id=&quot;1895043432&quot; owner=&quot;20825469@N00&quot; secret=&quot;d08f538e06&quot; server=&quot;2274&quot; farm=&quot;3&quot; title=&quot;Bust
-er&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
+.&lt;photo id=&quot;1895043432&quot; owner=&quot;20825469@N00&quot; secret=&quot;d08f538e06&quot; server=&quot;2274&quot; farm=&quot;3&quot; title=&quot;Buster&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1850874307&quot; owner=&quot;20825469@N00&quot; secret=&quot;eab7f240ac&quot; server=&quot;2086&quot; farm=&quot;3&quot; title=&quot;Setup for Terence's car-interior shot&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1851688852&quot; owner=&quot;20825469@N00&quot; secret=&quot;600a45cb13&quot; server=&quot;2045&quot; farm=&quot;3&quot; title=&quot;Setup for Terence's car-interior shot&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1851678730&quot; owner=&quot;20825469@N00&quot; secret=&quot;374deb508e&quot; server=&quot;2352&quot; farm=&quot;3&quot; title=&quot;Setup for Terence's car-interior shot&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
-.&lt;photo id=&quot;1851668206&quot; owner=&quot;20825469@N00&quot; secret=&quot;b92e26c20a&quot; server=&quot;2035&quot; fa
-rm=&quot;3&quot; title=&quot;DSC_3319&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
+.&lt;photo id=&quot;1851668206&quot; owner=&quot;20825469@N00&quot; secret=&quot;b92e26c20a&quot; server=&quot;2035&quot; farm=&quot;3&quot; title=&quot;DSC_3319&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1851657884&quot; owner=&quot;20825469@N00&quot; secret=&quot;9dfcb205db&quot; server=&quot;2176&quot; farm=&quot;3&quot; title=&quot;Miranda and nunchaku&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
-.&lt;photo id=&quot;1851649716&quot; owner=&quot;20825469@N00&
-quot; secret=&quot;a8257245c8&quot; server=&quot;2023&quot; farm=&quot;3&quot; title=&quot;Ham&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
+.&lt;photo id=&quot;1851649716&quot; owner=&quot;20825469@N00&quot; secret=&quot;a8257245c8&quot; server=&quot;2023&quot; farm=&quot;3&quot; title=&quot;Ham&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 .&lt;photo id=&quot;1851640652&quot; owner=&quot;20825469@N00&quot; secret=&quot;df35d11c91&quot; server=&quot;2418&quot; farm=&quot;3&quot; title=&quot;Mia, victorious&quot; ispublic=&quot;1&quot; isfriend=&quot;0&quot; isfamily=&quot;0&quot; /&gt;
 &lt;/photos&gt;
 ....</string>
@@ -92,4 +85,3 @@ quot; secret=&quot;a8257245c8&quot; server=&quot;2023&quot; farm=&quot;3&quot; t
 ..</param>
 .</params>
 </methodResponse>
-
