@@ -4,7 +4,8 @@
 exec mzscheme --no-init-file --mute-banner --version --require "$0"
 |#
 (module get-one-batch mzscheme
-(require (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
+(require (lib "trace.ss")
+         (only (planet "sxml.ss"   ("lizorkin"   "sxml.plt"))
                sxpath)
          "../flickr.ss")
 
@@ -21,39 +22,26 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
            "Getting at most ~a photos from page ~a~%"
            per_page page)
 
-  (let loop ((privacy-filter-values (list 5 4 3 2 1))
-             (accumulated '()))
-    (if (null? privacy-filter-values)
-        (apply append accumulated)
-        (begin
-          (fprintf (current-error-port)
-                   "Snarfing photos with privacy_filter ~s ... "
-                   (car privacy-filter-values))
-          (loop
-           (cdr privacy-filter-values)
-           (cons
-            (let ((from-one-call ((sxpath '(photos (photo)))
-                                  (let* ((args
-                                          (list
-                                           'user_id  *my-NSID*
-                                           'page      page
-                                           'per_page per_page
-                                           'privacy_filter (car privacy-filter-values)
-                                           'sort     "date-taken-desc"))
-                                         (args (if auth_token
-                                                   (cons 'auth_token
-                                                         (cons auth_token
-                                                               args))
-                                                   args)))
+  (let ((from-one-call ((sxpath '(photos (photo)))
+                        (let* ((args
+                                (list
+                                 'user_id  *my-NSID*
+                                 'page      page
+                                 'per_page per_page
+                                 'sort     "date-taken-desc"))
+                               (args (if auth_token
+                                         (cons 'auth_token
+                                               (cons auth_token
+                                                     args))
+                                         args)))
 
-                                    (apply flickr.photos.search
-                                           args)))))
+                          (apply flickr.photos.search
+                                 args)))))
 
-              (fprintf (current-error-port)
-                       "got ~a~%" (length from-one-call))
-              from-one-call)
-            accumulated))))))
-
+    (fprintf (current-error-port)
+             "got ~a~%" (length from-one-call))
+    from-one-call))
+;;(trace get-one-batch)
 
 (provide get-one-batch)
 )

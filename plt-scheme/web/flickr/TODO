@@ -1,13 +1,5 @@
 -*-outline-*-
 
-* Invert some loop nesting
-
-It looks like update-nikkor-tags retrieves photos first by page
-number, and then by privacy level ... but I think it'd make more sense
-to invert that, namely: privacy_level 5, page 1, followed by
-privacy_level 5, page 2, ... privacy_level 5, last page; then
-privacy_level 4, page 1, ...
-
 * Decent error handling
 
 For example, if you run "profile.ss", and the user named by *username*
