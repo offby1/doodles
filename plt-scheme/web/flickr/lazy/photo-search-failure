@@ -1,3 +1,6 @@
+I asked a question about this on the flickr API forum:
+http://tech.groups.yahoo.com/group/yws-flickr/message/3483
+
 POST //services/xmlrpc HTTP/1.0
 Host: api.flickr.com:80
 Content-Length: 1607
