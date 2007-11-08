@@ -13,7 +13,8 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
   (if #t
       "20825469@N00"
       (car ((sxpath '(user @ nsid *text*))
-            (flickr.people.findByUsername
+            (REST-call
+             'flickr.people.findByUsername
              'username "offby1")))))
 
 ;; returns a simple list of photos, not an actual page.
@@ -34,12 +35,13 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
            (cdr privacy-filter-values)
            (cons
             (let ((from-one-call ((sxpath '(photos (photo)))
-                                  (flickr.photos.search
-                                     'user_id  *my-NSID*
-                                     'page      page
-                                     'per_page per_page
-                                     'privacy_filter (car privacy-filter-values)
-                                     'sort     "date-taken-desc"))))
+                                  (REST-call
+                                   'flickr.photos.search
+                                   'user_id  *my-NSID*
+                                   'page      page
+                                   'per_page per_page
+                                   'privacy_filter (car privacy-filter-values)
+                                   'sort     "date-taken-desc"))))
               (fprintf (current-error-port)
                        "got ~a~%" (length from-one-call))
               from-one-call)

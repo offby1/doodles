@@ -49,7 +49,13 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (file-stream-buffer-mode (current-error-port) 'line)
 
 ;;(*verbose* #t)
-(define *the-auth-frob* (car ((sxpath '(frob *text*)) (flickr.auth.getFrob))))
+(define *the-auth-frob*
+  (car
+   ((sxpath '(frob *text*))
+    (parameterize ((*verbose* #t))
+      (flickr.auth.getFrob))
+    ;; (REST-call 'flickr.auth.getFrob)
+    )))
 (printf "Here dat frob, boss: ~s~%" *the-auth-frob*)
 
 (define *the-token* (get-preference 'flickr-token))
@@ -69,7 +75,9 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
       (set! *the-token*
             (car ((sxpath '(auth token *text*))
-                  (flickr.auth.getToken 'frob *the-auth-frob*)))))))
+                  (REST-call
+                   'flickr.auth.getToken
+                   'frob *the-auth-frob*)))))))
 
 (printf "Here dat token, boss: ~s~%" *the-token*)
 (put-preferences
@@ -78,7 +86,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 
 (fprintf (current-error-port)
          "Check-token says ~a~%"
-         (flickr.auth.checkToken
+         (REST-call
+          'flickr.auth.checkToken
           'auth_token *the-token*))
 
 (define *dry-run* (make-parameter #f))
@@ -100,7 +109,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
       (let ((id    (car ((sxpath '(@ id *text*)) p)))
             (title (car ((sxpath '(@ title *text*)) p))))
         (printf "~s (~a) :" title id)
-        (let ((exif (flickr.photos.getExif
+        (let ((exif (REST-call
+                     'flickr.photos.getExif
                      'photo_id id)))
           (let ((model-name ((sxpath
                               '(photo
@@ -142,7 +152,8 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
                               (fprintf (current-error-port)
                                        "Ignoring integer ~s~%" e))])
                         (when (not (*dry-run*))
-                          (flickr.photos.addTags
+                          (REST-call
+                           'flickr.photos.addTags
                            'auth_token *the-token*
                            'photo_id id
                            'tags tag)))

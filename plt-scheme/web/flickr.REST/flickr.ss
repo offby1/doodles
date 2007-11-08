@@ -7,7 +7,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 ;; docs are at http://www.flickr.com/services/api/
 
 (module flickr mzscheme
-(require (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
+(require (lib "pretty.ss")
+         (lib "url.ss" "net")
+         (planet "xmlrpc.ss" ("schematics" "xmlrpc.plt" ))
          (all-except (planet "ssax.ss"   ("lizorkin"   "ssax.plt")) assert fold)
          (lib "trace.ss")
          (only (lib "1.ss" "srfi") fold)
@@ -26,6 +28,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  flickr.people.findByUsername
  flickr.contacts.getPublicList
  flickr.people.getInfo
+ REST-call
  get-login-url
  get-timings
  *verbose*)
@@ -71,6 +74,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             (lambda (p1 p2)
               (string<? (symbol->string (car p1))
                         (symbol->string (car p2)))))))))))
+(trace sign-args)
 
 (define (get-login-url frob perms)
   (format "http://flickr.com/services/auth/?api_key=~a&perms=~a&frob=~a&api_sig=~a"
@@ -83,6 +87,55 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
             'frob frob
             'perms perms))
           ))
+
+(define (REST-call method-name . keys-n-values)
+  (define REST-endpoint-URL "http://api.flickr.com/services/rest/")
+
+  (check-type 'REST-call symbol? method-name)
+  (check-type 'REST-call list? keys-n-values)
+
+  (assert (not (memq 'api_key keys-n-values)))
+  (assert (not (memq 'api_sig keys-n-values)))
+  (assert (not (memq 'format  keys-n-values)))
+
+  (let* ((most-args-list
+          (append
+           (list 'api_key *flickr-API-key*)
+;;            (list 'format  "xmlrpc")
+           keys-n-values))
+         (all-args-list
+          (if (positive? (string-length *flickr-API-secret*))
+              (append
+               (list 'api_sig (sign-args most-args-list))
+               most-args-list)
+              most-args-list))
+         (as-conses
+          (map (lambda (p)
+                 (cons (car p)
+                       (format "~a" (cdr p))))
+               (hash-table-map (apply ->ht all-args-list) cons))))
+
+    (fprintf (current-error-port)
+             "most-args-list: ~s; all-args-list: ~s; as-conses: ~s~%"
+             most-args-list all-args-list as-conses)
+
+    (let ((url (string->url REST-endpoint-URL)))
+      (set-url-query! url `((method . ,(symbol->string method-name))
+                            ,@as-conses))
+      (fprintf (current-error-port)
+               "Calling ~s with ~s => ~s ..."
+               method-name keys-n-values (url->string url))
+
+      (let ((rv
+             (let ((ip (get-pure-port url)))
+               (dynamic-wind
+                   void
+                   (lambda ()
+                     (ssax:xml->sxml ip '()))
+                   (lambda () (close-input-port ip))))))
+        (pretty-print rv (current-error-port))
+        rv
+      ))))
 
 (define-syntax (define-flickr-api stx)
   (syntax-case stx ()
