@@ -4,9 +4,25 @@
 exec mzscheme  --no-init-file --mute-banner --version --require "$0"
 |#
 (module rss mzscheme
-(require (lib "etc.ss")
+(require (only (lib "1.ss" "srfi")
+               second)
+         (lib "etc.ss")
          (lib "pretty.ss")
          (lib "url.ss" "net")
+         (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
+               rfc3339-string->srfi19-date/constructor)
+         (only (lib "19.ss" "srfi" )
+               date->time-utc
+               make-time
+               time-nanosecond
+               time-second
+               time-type
+               time-utc->date
+               time=?
+               time<?
+               time>?)
+         (rename (lib "19.ss" "srfi" )
+                 19:make-date make-date)
          (only (planet "ssax.ss" ("lizorkin" "ssax.plt" 1))
                ssax:xml->sxml)
          (planet "sxml.ss" ("lizorkin" "sxml.plt")))
@@ -38,7 +54,13 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
    (lambda (ip)
      (dynamic-wind
          void
-         (lambda () (ssax:xml->sxml ip '((atom . "http://www.w3.org/2005/Atom"))))
+         (lambda ()
+           ;; nuts -- not all RSS feeds have all their elements
+           ;; prefixed with this URI; their elements have simple names
+           ;; like "entry" instead of
+           ;; "http://www.w3.org/2005/Atom/entry".
+
+           (ssax:xml->sxml ip '((atom . "http://www.w3.org/2005/Atom"))))
          (lambda () (close-input-port ip))))))
 
 
@@ -48,22 +70,30 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
   (lambda (e-sxml)
     (make-entry
      (car
-      ((sxpath '(atom:title)) e-sxml))
+      ((sxpath '(atom:title *text*)) e-sxml))
      (car
-      ((sxpath '(atom:link)) e-sxml))
+      ((sxpath '(atom:link ((@ href *text*)))) e-sxml))
      (car
-      ((sxpath '(atom:id)) e-sxml))
+      ((sxpath '(atom:id *text*)) e-sxml))
+     (date->time-utc
+      (rfc3339-string->srfi19-date/constructor
+       (car
+        ((sxpath '(atom:updated *text*))
+         e-sxml))
+       19:make-date))
      (car
-      ((sxpath '(atom:updated)) e-sxml))
+      ((sxpath '(atom:content *text*)) e-sxml))
      (car
-      ((sxpath '(atom:content)) e-sxml))
+      ((sxpath '(atom:author atom:name *text*)) e-sxml))
      (car
-      ((sxpath '(atom:author)) e-sxml))
-     (car
-      ((sxpath '(atom:source)) e-sxml))
+      ((sxpath '(atom:source atom:link ((@ href *text*)))) e-sxml))))
 
-     ))
-  ((sxpath '(// atom:entry)) (grab-rss-stuff  "http://planet.emacsen.org/atom.xml"))))
+  ((sxpath '(// atom:entry))
+   (grab-rss-stuff
+    "http://planet.emacsen.org/atom.xml"
+    ;; "http://graphics8.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+    ))))
 
-(provide (all-defined))
-)
+
+(provide (all-defined)))
+
