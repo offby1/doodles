@@ -71,7 +71,10 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
        (car thing)))
 
 (define (atom->entries whole-feed description)
-  (let* ((crappy? (equal? '("0.3") ((sxpath '(atom:feed @ version *text*)) whole-feed))))
+  ;; there are probably other crappy variants of Atom, but I haven't
+  ;; yet run into them.
+  (let* ((crappy? (equal? '("0.3")
+                          ((sxpath '(atom:feed @ version *text*)) whole-feed))))
     (fprintf (current-error-port)
              "~a: crappy? ~s~%"
              description
@@ -88,9 +91,9 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
         (date->time-utc
          (rfc3339-string->srfi19-date/constructor
           (fc
-           ((sxpath (if crappy?
-                        '(atom:modified *text*)
-                        '(atom:updated *text*)))
+           ((sxpath (list
+                     (if crappy? 'atom:modified 'atom:updated)
+                     '*text*))
             e-sxml))
           19:make-date))
         (fc
