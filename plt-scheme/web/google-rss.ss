@@ -4,7 +4,8 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-;; I've already forgotten what this entire file does.
+;; Display a few current news headlines about lemurs, just to prove we
+;; can mess with RSS.
 
 (module google-rss mzscheme
 (require (only (lib "uri-codec.ss" "net")
@@ -21,25 +22,16 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                make-url
                make-path/param
                get-pure-port
-               url->string)
+               url->string
+               set-url-query!
+               string->url)
          (only (lib "13.ss" "srfi")
                string-join))
 
 (parameterize ((current-alist-separator-mode 'amp))
-              (let* ((url (make-url
-                           "http"               ;scheme
-                           #f                   ;user
-                           "news.google.com"    ;host
-                           #f                   ;port
-                           #t                   ;path-absolute?
-                           (list (make-path/param "news" '())) ;path
-                           (list
-                            '(q . "lemurs")
-                            '(output . "rss")
-                            )                          ;query
-                           #f                          ;fragment
-                           )))
-
+              (let ((url (string->url "http://news.google.com/news")))
+                (set-url-query! url (list (cons 'q "lemurs")
+                                          (cons 'output "rss")))
                 (write (url->string url))
                 (newline)
                 (pretty-print
