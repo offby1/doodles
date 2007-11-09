@@ -3,7 +3,7 @@
 #$Id$
 exec mzscheme  --no-init-file --mute-banner --version --require "$0"
 |#
-(module rss mzscheme
+(module reader mzscheme
 (require (lib "trace.ss")
          (only (lib "1.ss" "srfi")
                second)
@@ -13,15 +13,7 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
          (only (planet "rfc3339.ss" ("neil" "rfc3339.plt"))
                rfc3339-string->srfi19-date/constructor)
          (only (lib "19.ss" "srfi" )
-               date->time-utc
-               make-time
-               time-nanosecond
-               time-second
-               time-type
-               time-utc->date
-               time=?
-               time<?
-               time>?)
+               date->time-utc)
          (rename (lib "19.ss" "srfi" )
                  19:make-date make-date)
          (only (planet "ssax.ss" ("lizorkin" "ssax.plt" 1))
