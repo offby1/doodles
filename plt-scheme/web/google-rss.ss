@@ -18,13 +18,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                port->string)
          (only (lib "pretty.ss")
                pretty-print)
-         (only (lib "url.ss" "net")
-               make-url
-               make-path/param
-               get-pure-port
-               url->string
-               set-url-query!
-               string->url)
+         (lib "url.ss" "net")
          (only (lib "13.ss" "srfi")
                string-join))
 
