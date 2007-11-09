@@ -23,20 +23,15 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
            per_page page)
 
   (let ((from-one-call ((sxpath '(photos (photo)))
-                        (let* ((args
-                                (list
-                                 'user_id  *my-NSID*
-                                 'page      page
-                                 'per_page per_page
-                                 'sort     "date-taken-desc"))
-                               (args (if auth_token
-                                         (cons 'auth_token
-                                               (cons auth_token
-                                                     args))
-                                         args)))
-
-                          (apply flickr.photos.search
-                                 args)))))
+                        (apply flickr.photos.search
+                               (append (if auth_token
+                                           (list 'auth_token auth_token)
+                                           '())
+                                       (list
+                                        'user_id  *my-NSID*
+                                        'page      page
+                                        'per_page per_page
+                                        'sort     "date-taken-desc"))))))
 
     (fprintf (current-error-port)
              "got ~a~%" (length from-one-call))
