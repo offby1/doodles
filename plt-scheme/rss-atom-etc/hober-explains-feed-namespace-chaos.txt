@@ -1,0 +1,80 @@
+
+[Fri Nov  9 2007]
+<offby1> so I'm writing a couple little toy Scheme programs to parse RSS (with the intent, not
+                                                                                           [11:24]
+<offby1> surprisingly, of including them in rudybot)                                       
+<offby1> and I notice that different sites use different names for the elements.
+<offby1> (It's like those French have a different word for _everything_!)
+<offby1> for example
+<offby1> grab this
+<offby1> http://news.google.com/news?q=lemurs&output=atom
+<offby1> and you'll see that every element's name begins with http://purl.org/atom/ns#     
+<offby1> other sites use other prefixes, or no prefix.
+<offby1> this sucks.
+<offby1> since I cannot then write code that extracts, say, the link by simply looking for
+<offby1> "link"; it'll have to sometimes look for http://purl.org/atom/ns#:link, other times for
+<offby1> just plain link, other times for http://whatever.the.fuck/yow:link, etc.          
+<offby1> I suspect this has something to do with "XML namespaces", of which I'm mostly ignorant
+<offby1> :-|
+<offby1> 
+<offby1> so my questions are:
+<offby1> 1) how can I deal with this cleanly; and
+<offby1> 2) why is it like this in the first place?
+<offby1> Thus endeth the /query spam
+<hober> 2. it's like this because of the use of XML namespaces                             [11:26]
+<hober> 1. use a namespace-aware XML parser
+<offby1> :-(
+<offby1> I suspect my parser _is_ "namespace-aware", but its documented poorly enough that I
+         don't know how to make it do what I want
+<offby1> what problem do these namespaces solve?  i.e., why was the concept invented in the first
+         place?
+<hober> basically, element names are 2-tuples of the form (namespace-uri . local-name)     [11:27]
+<offby1> uh huh
+<offby1> I can see that.
+<hober> it's just that sometimes you can use shorthand syntax where the namespace-uri needs to be
+        derived from elsewhere
+ERC> /whois hober 
+*** hober is Edward O'Connor (n=ted@unaffiliated/hober)
+*** hober is on channel(s): #bcsdplanning #emacs #wsgi #sdruby #python.web #microformats #gnus
+    #erc #barcampsd #atom 
+*** hober is/was on server irc.freenode.net (http://freenode.net/)
+*** hober is an identified user
+<offby1> what's irksome is that two different sites, both claiming to be delivering atom feeds,
+         use different namespaces.  I'd have thought that since they're both implementing the
+         same standard, they'd use the same namespace.                                     [11:28]
+<hober> the problem xml namespaces purport to solve is when you want to mix markup from more than
+        one vocabulary into the same document
+<hober> what different namespace URIs are you seeing?
+<hober> http://www.w3.org/2005/Atom is the Atom namespace URI
+<offby1> that's one
+<offby1> http://purl.org/atom/ns# is another                                               [11:29]
+<hober> oh
+<hober> ahhhhhh
+<hober> yeah, so here's the deal
+<offby1> and a third one has no prefix at all.
+<hober> RFC4287 defines Atom
+<hober> but, prior to RFC publication, the draft went through several versions
+<offby1> ugh
+<hober> the namespace URI wasn't minted until RFC publication
+<offby1> I can see where this is heading
+<hober> so that perl.org thing was a placeholder
+<offby1> "They're not quite standard; deal with it"
+<hober> but a bunch of dumb people deployed feeds with it, called "Atom 0.3"               [11:30]
+<hober> wordpress was the worst offender in this case
+<hober> solution: treat them as completely separate feed formats.
+<offby1> I think I'll log this conversation and put it in a file next to my code :-)
+<offby1> gaah
+<hober> heh
+<offby1> like I said: "deal with it" :-|
+<offby1> oh well
+<hober> also, in general, you should probably just do what the UFP does
+<offby1> at least I've learned that I'm not missing something fundamental.
+<hober> http://feedparser.org/
+<offby1> what's "the UFP", and what does it do?
+<hober> it's the awesomest feed parser ever                                                [11:31]
+<hober> it parses everything
+<hober> no matter how nasty
+<offby1> yeah, but it's in Python.
+<offby1> I suppose I could grovel the code and steal its ideas, though.
+<offby1> thanks for yer time!                                                              [11:32]
+ERC> 
