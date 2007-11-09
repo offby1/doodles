@@ -4,7 +4,8 @@
 exec mzscheme  --no-init-file --mute-banner --version --require "$0"
 |#
 (module rss mzscheme
-(require (only (lib "1.ss" "srfi")
+(require (lib "trace.ss")
+         (only (lib "1.ss" "srfi")
                second)
          (lib "etc.ss")
          (lib "pretty.ss")
@@ -60,39 +61,65 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
            ;; like "entry" instead of
            ;; "http://www.w3.org/2005/Atom/entry".
 
-           (ssax:xml->sxml ip '((atom . "http://www.w3.org/2005/Atom"))))
-         (lambda () (close-input-port ip))))))
+           (ssax:xml->sxml
+            ip
+            '(
 
-
+              ;; works for http://planet.emacsen.org/atom.xml
+              (atom . "http://www.w3.org/2005/Atom")
+
+              ;; works for http://news.google.com/news?q=lemurs&output=atom
+              (atom . "http://purl.org/atom/ns#"))
+            ))
+         (lambda () (close-input-port ip))))))
+;;(trace grab-rss-stuff)
+
+(define (fc thing)
+  (and (pair? thing)
+       (car thing)))
+
+(define (atom->first-entry whole-feed description)
+  (let* ((crappy? (equal? '("0.3") ((sxpath '(atom:feed @ version *text*)) whole-feed))))
+    (fprintf (current-error-port)
+             "~a: crappy? ~s~%"
+             description
+             crappy?)
+    (let ((e-sxml ((sxpath '(atom:feed atom:entry)) whole-feed)))
+      (make-entry
+       (fc
+        ((sxpath '(atom:title *text*)) e-sxml))
+       (fc
+        ((sxpath '(atom:link ((@ href *text*)))) e-sxml))
+       (fc
+        ((sxpath '(atom:id *text*)) e-sxml))
+       (date->time-utc
+        (rfc3339-string->srfi19-date/constructor
+         (fc
+          ((sxpath (if crappy?
+                       '(atom:modified *text*)
+                       '(atom:updated *text*)))
+           e-sxml))
+         19:make-date))
+       (fc
+        ((sxpath '(atom:content *text*)) e-sxml))
+       (fc
+        ((sxpath '(atom:author atom:name *text*)) e-sxml))
+       (fc
+        ((sxpath '(atom:source atom:link ((@ href *text*)))) e-sxml))))
+    ))
+
+(define (first-entry url)
+  (sxpath '(atom:entry))
+  (let ((parsed (grab-rss-stuff url)))
+    (atom->first-entry parsed url)))
 
 (pretty-print
- (map
-  (lambda (e-sxml)
-    (make-entry
-     (car
-      ((sxpath '(atom:title *text*)) e-sxml))
-     (car
-      ((sxpath '(atom:link ((@ href *text*)))) e-sxml))
-     (car
-      ((sxpath '(atom:id *text*)) e-sxml))
-     (date->time-utc
-      (rfc3339-string->srfi19-date/constructor
-       (car
-        ((sxpath '(atom:updated *text*))
-         e-sxml))
-       19:make-date))
-     (car
-      ((sxpath '(atom:content *text*)) e-sxml))
-     (car
-      ((sxpath '(atom:author atom:name *text*)) e-sxml))
-     (car
-      ((sxpath '(atom:source atom:link ((@ href *text*)))) e-sxml))))
-
-  ((sxpath '(// atom:entry))
-   (grab-rss-stuff
+  (map
+   first-entry
+   (list
     "http://planet.emacsen.org/atom.xml"
-    ;; "http://graphics8.nytimes.com/services/xml/rss/nyt/HomePage.xml"
-    ))))
+    "http://news.google.com/news?q=lemurs&output=atom"
+    )))
 
 
 (provide (all-defined)))
