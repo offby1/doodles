@@ -30,8 +30,13 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (newline)
                 (pretty-print
                  ((sxpath '(// item title *text*))
-                  (html->shtml
-                   (port->string (get-pure-port
-                                  url
-                                  (list))))))))
+                  (let ((ip (get-pure-port
+                             url
+                             (list))))
+                    (dynamic-wind
+                        void
+                        (lambda ()
+                          (html->shtml ip))
+                        (lambda () (close-input-port ip))))))))
+
 )
