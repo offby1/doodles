@@ -5,7 +5,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
 (module alexa mzscheme
-(require (lib "cmdline.ss")
+(require (lib "trace.ss")
+         (lib "cmdline.ss")
          (lib "uri-codec.ss" "net")
          (lib "url.ss" "net")
          (lib "pretty.ss")
@@ -27,13 +28,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     (let* ((version "2007-03-15")
            (action "Search")
            (date (zdate (seconds->date (current-seconds))))
-           (url (make-url "http"
-                          #f                                  ;user
-                          "wsearch.amazonaws.com"             ;host
-                          #f                                  ;port
-                          #t            ;path-absolute?
-                          (list (make-path/param "" '())) ;path
-                          `(
+           (url (string->url "http://wsearch.amazonaws.com/")))
+
+      (set-url-query! url `(
                             (AWSAccessKeyId . ,AWSAccessKeyId)
                             (Timestamp . ,date)
                             (Signature
@@ -45,9 +42,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                             (Action . ,action)
                             (ResponseGroup . "Context")
                             (Query . ,query)
-                            )             ;query
-                          #f              ;fragment
-                          )))
+                            ))
 
       (gack-on-error
        (html->shtml
@@ -57,6 +52,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (list
            (format "Date: ~a" date)))))
        '(errorresponse error)))))
+
+;;(trace alexa-call)
 
 (parse-command-line
  "alexa" (current-command-line-arguments)
