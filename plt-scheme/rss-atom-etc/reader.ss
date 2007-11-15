@@ -70,15 +70,11 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
   (and (pair? thing)
        (car thing)))
 
-(define (atom->entries whole-feed description)
+(define (atom->entries whole-feed)
   ;; there are probably other crappy variants of Atom, but I haven't
   ;; yet run into them.
   (let* ((crappy? (equal? '("0.3")
                           ((sxpath '(atom:feed @ version *text*)) whole-feed))))
-    (fprintf (current-error-port)
-             "~a: crappy? ~s~%"
-             description
-             crappy?)
     (map
      (lambda (e-sxml)
        (make-entry
@@ -108,7 +104,7 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
   (map
    (lambda (url-string)
      (atom->entries
-      (grab-rss-stuff url-string) url-string))
+      (grab-rss-stuff url-string)))
    (list
     "http://planet.emacsen.org/atom.xml"
     "http://news.google.com/news?q=lemurs&output=atom")))
