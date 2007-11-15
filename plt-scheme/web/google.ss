@@ -22,15 +22,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                string-join))
 
 (let ((url (string->url "http://www.google.com/search")))
-  (set-url-query! url (list
-                       `(q .
-                           ,(string-join (vector->list (current-command-line-arguments)) " ")
-                           )))
+  (set-url-query! url `((q
+                         .
+                         ,(string-join (vector->list (current-command-line-arguments)) " "))))
 
-  (let* ((result  (html->shtml
-                   (port->string (get-pure-port
-                                  url
-                                  (list)))))
+  (let* ((result  (let ((ip (get-pure-port
+                             url
+                             (list))))
+                    (dynamic-wind
+                        void
+                        (lambda ()
+                          (html->shtml ip))
+                        (lambda () (close-input-port ip)))))
 
          (class-g-anchors ((sxpath
 
