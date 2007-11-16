@@ -15,21 +15,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *data-by-number* (make-hash-table 'equal))
 
-(let ((ip
-       (open-input-file
-        (build-path
-         (this-expression-source-directory)
-         "Robinson scans 1-200 for eric.csv"))))
-  (csv-for-each
-   (lambda (row)
-     (let ((index  (read (open-input-string (car row)))))
-       (when (integer? index)
-         (hash-table-put!
-          *data-by-number*
-          index
-          (apply make-datum row)))))
-   ip)
-  (close-input-port ip))
+(call-with-input-file
+    (build-path
+     (this-expression-source-directory)
+     "Robinson scans 1-200 for eric.csv")
+  (lambda (ip)
+    (csv-for-each
+     (lambda (row)
+       (let ((index  (read (open-input-string (car row)))))
+         (when (integer? index)
+           (hash-table-put!
+            *data-by-number*
+            index
+            (apply make-datum row)))))
+     ip)))
 
 (for-each (lambda (pair)
             (printf "~s: ~s~%"
