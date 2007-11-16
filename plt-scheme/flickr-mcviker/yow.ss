@@ -34,17 +34,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (printf "A complete row:~%")
   (pretty-print (car complete-rows))
 
+  (fprintf (current-error-port)
+           "~a complete rows; ~a incomplete rows~%"
+           (length complete-rows)
+           (length incomplete-rows))
+
   ;; now look for rows that contain incomplete cells.
   (let-values (((short-cells ok-cells)
                 (partition
-                 (lambda (row)
-                   (null? ((sxpath '(ss:Cell ss:Data))
-                           row)))
-                 complete-rows)))
+                 (lambda (cell)
+                   (null? ((sxpath '(ss:Data))
+                           cell)))
+                 ((sxpath '(ss:Cell))
+                  complete-rows))))
+
     (when (not (null? short-cells))
       (printf "An incomplete cell: ~%")
       (pretty-print (car short-cells)))
-    (printf "A complete cell:~%")
-    (pretty-print (car ok-cells))))
+
+    (when (not (null? ok-cells))
+      (printf "A complete cell:~%")
+      (pretty-print (car ok-cells)))))
 
 )
