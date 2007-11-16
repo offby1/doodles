@@ -2,16 +2,9 @@
 
 * General idea
 
-Convert the Excel spreadsheet into something parseable -- XML is an
-obvious choice ... then parse it into simple structures ... then shove
-some of the structure data into flickr.
+Convert the Excel spreadsheet into something parseable -- XML seems an
+obvious choice, but as far as I can tell, it's ambiguous; CSV is much
+simpler and isn't ambiguous ...
 
-** saving
-
-I think I used Office 2007 to save the thing as "XML Spreadsheet 2003".
-
-** parsing
-
-The obvious problem is that many rows lack data for certain columns --
-but it's not at all clear -which- column is missing.  In some rows
-it's the subject; in others it's the mount notation.
+... then parse it into simple structures ... then shove some of the
+structure data into flickr.

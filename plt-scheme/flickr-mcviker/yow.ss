@@ -9,51 +9,42 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                partition)
          (lib "pretty.ss")
          (lib "etc.ss")
-         (planet "sxml.ss" ("lizorkin" "sxml.plt" 1)))
-
-(define *doc*
-  (sxml:document
-   (path->string
-    (build-path
-     (this-expression-source-directory)
-     "Robinson scans 1-200 for eric.xml"))
-   '((o  . "urn:schemas-microsoft-com:office:office")
-     (e  . "urn:schemas-microsoft-com:office:excel")
-     (ss . "urn:schemas-microsoft-com:office:spreadsheet"))))
+         (planet "csv.ss" ("neil" "csv.plt" 1 1)))
 
 (define-struct datum (slide-number mount-date subject mount-notation scanned) #f)
 
-(let-values (((complete-rows incomplete-rows)
-              (partition
-               (lambda (row)
-                 (= 5 (length ((sxpath '(ss:Cell)) row))))
-               (cdr ((sxpath '(ss:Workbook ss:Worksheet ss:Table ss:Row))
-                     *doc*)))))
-  (printf "An incomplete row:~%")
-  (pretty-print (car incomplete-rows))
-  (printf "A complete row:~%")
-  (pretty-print (car complete-rows))
+(define *data-by-number* (make-hash-table 'equal))
 
-  (fprintf (current-error-port)
-           "~a complete rows; ~a incomplete rows~%"
-           (length complete-rows)
-           (length incomplete-rows))
+(let ((ip
+       (open-input-file
+        (build-path
+         (this-expression-source-directory)
+         "Robinson scans 1-200 for eric.csv"))))
+  (csv-for-each
+   (lambda (row)
+     (let ((index  (read (open-input-string (car row)))))
+       (when (integer? index)
+         (hash-table-put!
+          *data-by-number*
+          index
+          (apply make-datum row)))))
+   ip)
+  (close-input-port ip))
 
-  ;; now look for rows that contain incomplete cells.
-  (let-values (((short-cells ok-cells)
-                (partition
-                 (lambda (cell)
-                   (null? ((sxpath '(ss:Data))
-                           cell)))
-                 ((sxpath '(ss:Cell))
-                  complete-rows))))
+(for-each (lambda (pair)
+            (printf "~s: ~s~%"
+                    (car pair)
+                    (cdr pair)))
+          (hash-table-map *data-by-number* cons))
 
-    (when (not (null? short-cells))
-      (printf "An incomplete cell: ~%")
-      (pretty-print (car short-cells)))
-
-    (when (not (null? ok-cells))
-      (printf "A complete cell:~%")
-      (pretty-print (car ok-cells)))))
-
+;; just for fun, print all the distinct dates that appear
+(let ((dates (make-hash-table 'equal)))
+  (hash-table-for-each
+   *data-by-number*
+   (lambda (k v)
+     (hash-table-put!
+      dates
+      (datum-mount-date v)
+      (add1 (hash-table-get dates (datum-mount-date v) 0)))))
+  (pretty-print (hash-table-map dates cons)))
 )
