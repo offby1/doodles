@@ -1,0 +1,1915 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Ed McVicker</Author>
+  <LastAuthor> </LastAuthor>
+  <Created>2007-07-28T18:55:29Z</Created>
+  <LastSaved>2007-07-28T19:02:01Z</LastSaved>
+  <Version>12.00</Version>
+ </DocumentProperties>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>8190</WindowHeight>
+  <WindowWidth>14955</WindowWidth>
+  <WindowTopX>240</WindowTopX>
+  <WindowTopY>270</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Arial"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s21">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+   <Interior ss:Color="#CCFFCC" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s22">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+   <Interior ss:Color="#CCFFCC" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[ENG][$-409]mmm\-yy;@"/>
+  </Style>
+  <Style ss:ID="s23">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+  </Style>
+  <Style ss:ID="s24">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <NumberFormat ss:Format="mmm/yy"/>
+  </Style>
+  <Style ss:ID="s25">
+   <Alignment ss:Vertical="Top" ss:WrapText="1"/>
+  </Style>
+  <Style ss:ID="s26">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+   <NumberFormat ss:Format="[ENG][$-409]mmm\-yy;@"/>
+  </Style>
+  <Style ss:ID="s27">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+  </Style>
+  <Style ss:ID="s28">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Top" ss:WrapText="1"/>
+   <Font ss:FontName="Arial" ss:Color="#FF0000"/>
+   <NumberFormat ss:Format="[ENG][$-409]mmm\-yy;@"/>
+  </Style>
+  <Style ss:ID="s29">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Top" ss:WrapText="1"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="720" x:FullColumns="1"
+   x:FullRows="1">
+   <Column ss:StyleID="s23" ss:AutoFitWidth="0"/>
+   <Column ss:StyleID="s23" ss:AutoFitWidth="0" ss:Width="58.5"/>
+   <Column ss:AutoFitWidth="0" ss:Width="183"/>
+   <Column ss:AutoFitWidth="0" ss:Width="311.25"/>
+   <Column ss:StyleID="s23" ss:AutoFitWidth="0"/>
+   <Row ss:AutoFitHeight="0" ss:Height="29.25" ss:StyleID="s27">
+    <Cell ss:StyleID="s21"><Data ss:Type="String">Slide #</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">Mount Date</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String">Subject</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String">Slide Mount Notation</Data></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String">Scanned</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1962-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">JG start.  Old monkey house. Ground removed 4' deep for flat garden</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-01-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Planted Jan. '63. First Japanese maple from downtown freeway.  It died and was replaced with one from Sellwood</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-08-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">75 yr. old maple transplanted Jan. '63.  from Foothill Freeway from Korea</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-08-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Unter contruction wood-tractor</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-09-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Old commissary bldg.  Roof almost gone.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-08-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Old bear den.  Fill on curve of road</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">7</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-08-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Cypress. Old bird cage.  Upper pond.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">akebino cherry.  Harry Raber</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">9</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Planting cherry.  Harry Raber-Nels Eklof.  Tree from 102nd in Park Rose.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Nels Eklof-Fred Clyde-Tom Ashley (red hat)-Gerry Robertson-Harry Raber-Don cornell-John Maule planting akebino cherry.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Tom Ashley, Gerry Robertson, Nels Kklof, Harry Raber planting cherry</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Clyde Planting and pruning camellia</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">planting maples.  Flat garden. City in background.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Clyde, Harry Raber, John Maule on tractor</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Clyde, Harry Raber planting maple</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Don Cornell, Nels Eklof acer palmatum dissectum.  Maple from eastmoreland.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Gerry Robertson, Harry Raber, John Maule planting maples</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Harry Raber (walking). Gerry Robertson</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Clyde in back. Harry Raber at blade. Planting maple from Eastmoreland Club house.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Madras, OR, US National Bank. Sigina moss, Quercus coccinea. Out looking for rock for Japanese Garden.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">21</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Madras, OR, US National Bank. Fastuca Glauca, Sigina Moss</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Madras, OR, US National Bank., Fastuca Glauca, Quercus coccinea</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Columbia R. Sunset at Mult. Falls looking west down river</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">24</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rudie Wilhelm. Men unloading rock. Rock in foreground Rhododendron-by truck Estacada</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rudie Wilhelm. Men unloading rock. Rock on left used by pagoda lantern.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">26</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Ruddy's men.  Rock.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">27</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Unloading rock. Rock at pagoda lantern</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Unloading big rock. Truck rising up</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">29</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">truck off ground. </Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">30</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rudie Wilhelm truck.  Hauled 3 loads rocks</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">31</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">7:30 am. Mt. hood on way after rock. Taken near Sandy, OR</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Norris, Jerry Robertson. Loading rock near Warm Springs Res. Bear Springs Forest</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">33</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">George Zimmerman, Fred Norris, Jerry Roberston. Rocks from Bear Springs Forrest area-eastern Oregon</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">34</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rock quarry where bridge rock came from-also island rock for Flat Garden. 2 loads of rock-Parks</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">35</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Dr. Tono placing the stone bridge rock. Mike Roskopf-left back, Jerry Robertson, Fred Clyde, Dr. Tono</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">36</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">P.T. Tono, ALLYON STAL  , Mike Roskopf</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">37</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Dr. Tono, Jerry Robertson, Mike Roskopf, Fred Clyde placing bridge rock.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">38</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Placing rock at bridge-crane</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">39</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">construction of spirit bridge.  </Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">View across (flat) garden. Working on bridge</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">40</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Moving acer palmatum at nursery. Mike Colatorti, Wilbur Sprague, Nels Eklof</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">41</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Mowing acer back of rest room. At falls public works crane.  Tom &amp; Jerry</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">42</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Acer in air</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">43</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Acer high in air. Harry Raber, Mike Colatorti, Nels Eklof</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">44</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Acer finally planted. Tom Ashley, Mike J., Colatorti, Harry Raber, Nels Elkof, Jerry Robertson.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">45</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Acer start of falls, rocks selected back of rest room</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">46</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Acer planted by tea house. Harry, Nels, Mike, Jerry</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">47</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Dr. Tono, Ed Erickson, Fred Clyde, Mike Roskopf, Placing island rocks</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">48</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Dr. Tono &amp; his bridge</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">49</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Stone Bridge in Sea of Mud</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">50</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Ed Erickson left, Dr. Tono center, Mrs. Leith Abbott</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">51</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Looking Towards bridge-south half of Flat Garden</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">52</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Pinus contorta in Tom Young garden, 3114 NW Verde Vista Terrace</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Stone Basin, Tom Young garden, 3114 NW Verde Vista Terrace</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">54</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">J Lantern, Tom Young garden, 3114 NW Verde Vista Terrace</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Tom Young garden, 3114 NW Verde Vista Terrace</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">56</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Looking west, Flat Garden</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">57</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Looking west, close of day</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">58</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Looking south across bridge</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">59</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-11-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Stone bridge left Front stones.  Mud</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">60</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Maple from Stone Bridge.  Yew trees from </Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">61</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Ted Carnese, Nels Eklof-bamboo   Foothills Freeway</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">62</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Ted Carnese, Nels Eklof-bamboo   Foothills Freeway</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">63</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Bamboo backyard, Frank Hemmenway. Ted Carnese, Nels Eklof</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">64</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Planting bamboo-tea house.  Ted Carnese, Frank Hemmingway, Nels Eklof</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">65</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">J. weeping cherry.  Mike Colatorti, Wilbur Sprague</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">66</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Weeping cherry-digging. Wilbur Sprague, Mike Colatorti</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">67</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Cherry.  Loading tree</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">68</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Unloading cherry tree. Mike Colatorti, Don Cornell, Tom Ashley, Joe Grab.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">69</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">cherry tree in ground</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">70</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">female Foo Dog in crate</Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">Dog </Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">71</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Stone bridge</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Looking across Flat Garden. Large maple out of picture. Weeping cherry finished planting.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">73</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Mt. Hood-clear Feb. day.  From Flat garden. Rose Garden below.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Maple. Tualatin, OR  see 335 too</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Moving Avery's J Maple. Fred Clyde in hole, Jerry Robertson, Tom Ashley</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Avery's J Maple. Jerry Robertson directing Fred Clyde holding on to tree.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="38.25" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">77</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-02-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Tipping over maple to remove rod thru ball with plate on bottom. North of restroom. Clockwise: Mike Roskopf, Wilbur Sprague, Jerry Robertson, Tom Ashley, Fred Clyde.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">78</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-04-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Wilbur Sprague, Fred Clyde digging magnolia. Donated by Mrs. Lawyer, SW Sunset Blvd.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">79</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-04-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Pulling magnolia down street. Mrs. Lawyer, 3008 SW Sunset Blvd.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rock hunting up Columbia milepost 51. Phil Englehart-Leith Abbott. Shell Rock Mtn.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">81</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rock hunting up Columbia milepost 51. Phil Englehart, Leith Abbott</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">82</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Phil Englehart looking at rock. Mosier, Columbia River</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">83</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">William Robinson sitting on pine-Rowena Point, Columbia River Hwy</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">84</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rock hunting-Rowena. Phil Englehart-Leith Abbott. Columbia River Hwy</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">85</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-03-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rock hunting-Rowena Point. Phil Englehart-Leith Abbott.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">86</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-04-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Clarence Potter, Condon, OR. Rocks on ridge, Lonerock, OR. Above Boone Canyon</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">87</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-04-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Bill Robinson, brother-in-law Clarence Potter looking at stepping stones on ridge. Lone Rock, OR. Bill's grandfather's homestead.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">88</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-04-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Clarence Potter &amp; Bill Robinson looking at stepping stones. Lone Rock, OR</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">89</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-05-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Fred Clyde and Wilbur Sprague grading garden. Taken from restroom looking NE</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">90</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-05-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Mrs. Avery's maple, Tualatin, OR. North of restroom</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">91</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Viewpoint near Condon, OR, above John Day River. Looking for stepping stones. Mt. Hood 200 miles away.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">92</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Stepping stones-dime on rock. Rattle snake 8 rattles. On ridge at Lone Rock</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">93</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Flat rocks. Above Boone canyon at Lone Rock, OR. Sheepherder piled up rock.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">94</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Rocks piled up-Lone Rock looking towards Pendleton. Blue Mtns. In distance. Grandpa's Robinson homestead.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">95</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Lone Rock, OR. Flat stepping stones back of Flat Top Hill in picture.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">96</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Lone Rock close view</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">97</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">On way back home from Condon. Taken at Maupin just at edge of forest.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">98</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-06-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Near Maupin</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">99</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-09-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Trillium Lake, Mt. Hood. Joanne &amp; Don &amp; us.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-08-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Haystack Rock, Cannon Beach.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">101</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Spirit bridge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">102</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">103</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Spirit bridge across empty flat garden</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">104</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">105</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Hillside near entrance. White azeala hill.</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">106</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Pre-Heavenly Falls hillside</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">107</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Dragline preparing to dig stroll garden</Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">(no notes included)</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">108</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Stroll Garden excavation</Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">(no notes included)</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">109</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">Stroll Garden excavation</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">110</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Stroll Garden excavation</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">111</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Drainage  below stroll garden stream?</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">112</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Drainage  below stroll garden stream?</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">113</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">concrete mixer</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">114</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">stroll garden concrete</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">115</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">stroll garden concrete</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">116</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">stroll garden concrete</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">117</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">stroll garden concrete</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">118</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Mt. Hood</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">119</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">water falls (on Hood?)</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">120</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">121</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">122</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Cut stone from this wall used in base of Zen Garden</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">123</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">124</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Hugh Shogren, City Gardener</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">125</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Spokane Buddhist Church, Japanese Garden   9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">126</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Buddhist Church, Spokane, WA, 600 S. Cowley,  setting #4 9-15-63, almost rain</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">127</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist Church Japanese Garden, S. Garfield at Hartson, Spokane, WA, #4 set rain, 9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">128</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist, Spokane  9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">129</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist Church, Spokane, WA. Pines back of church   9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">130</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist, Spokane  9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:Height="25.5" ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">131</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist Church Japanese Garden, S. Garfield at Hartson, Spokane, WA,  9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">132</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1963-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist Church Japanese Garden, Spokane, 9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">133</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Highland Methodist Church Japanese Garden, Spokane, 9-15-63</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">134</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">135</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">136</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">137</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">MacKinzie River</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">138</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">MacKinzie River</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">139</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">140</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-10-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">141</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">Tono at Spirit Bridge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">142</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Wet Heron Lantern in flat garden</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">143</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Spirit Bridge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">144</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Tono at Spirit Bridge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">145</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Wet Heron Lantern in flat garden</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">146</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">147</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">Pagoda w/yew hedge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">148</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">149</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">Tono at Wet Heron Lantern</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">150</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">151</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">152</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Prof. Tono, Ron Snell-son in law of Bill Robinson</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">153</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"><Data ss:Type="String">Eastern Oregon</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">154</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">155</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell><Data ss:Type="String">Loading stone in the Gorge</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">156</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Tono supervising unloading stone</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">157</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Tono</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">158</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">159</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell><Data ss:Type="String">Setting stone around the pond</Data></Cell>
+    <Cell ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">160</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="DateTime">1964-12-01T00:00:00.000</Data></Cell>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"><Data ss:Type="String">X</Data></Cell>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">161</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">162</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">163</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">164</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">165</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">166</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">167</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">168</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">169</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">170</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">171</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">172</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">173</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">174</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">175</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">176</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">177</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">178</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">179</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">180</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">181</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">182</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">183</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">184</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">185</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">186</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">187</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">188</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">189</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">190</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">191</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">192</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">193</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">194</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">195</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">196</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">197</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">198</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:StyleID="s25">
+    <Cell ss:StyleID="s27" ss:Formula="=R[-1]C+1"><Data ss:Type="Number">199</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:Index="4" ss:StyleID="s29"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Formula="=R[-1]C+1"><Data ss:Type="Number">200</Data></Cell>
+    <Cell ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s26"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s28"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s25"/>
+    <Cell ss:StyleID="s27"/>
+   </Row>
+   <Row ss:Index="651">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row ss:Index="709">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Selected/>
+   <DoNotDisplayHeadings/>
+   <SplitHorizontal>840</SplitHorizontal>
+   <TopRowBottomPane>0</TopRowBottomPane>
+   <ActivePane>2</ActivePane>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>110</ActiveRow>
+     <ActiveCol>3</ActiveCol>
+    </Pane>
+    <Pane>
+     <Number>2</Number>
+     <ActiveRow>35</ActiveRow>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>
