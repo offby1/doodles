@@ -6,6 +6,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module yow mzscheme
 (require (only (lib "1.ss" "srfi")
+               filter
                partition
                take)
          (lib "pretty.ss")
@@ -36,12 +37,20 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    (zero? (string-length (list-ref row 5))))
               (again (take row 5)))
              ((= 5 (length row))
-              (let ((index  (read (open-input-string (car row)))))
-                (when (integer? index)
-                  (hash-table-put!
-                   *data-by-number*
-                   index
-                   (apply make-datum row)))))
+              (let ((non-empty-fields (filter (lambda (str)
+                                                (positive? (string-length str)))
+                                              row)))
+                ;; don't bother storing the data if the index is the
+                ;; only non-empty field.
+                (when (< 1 (length non-empty-fields))
+                  (let ((index  (read (open-input-string (car row)))))
+                    (when (integer? index)
+                      (hash-table-put!
+                       *data-by-number*
+                       index
+                       (cons
+                        (apply make-datum row)
+                        (hash-table-get *data-by-number* index '()))))))))
              (else
               (fprintf (current-error-port)
                        "Freaky row: ~s~%" row)))))
@@ -56,23 +65,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   "j5000-j6000.csv"
   "j6000-j7000.csv"
   "j7001-j8000.csv"
-  "j8001-j9000.csv")
- )
+  "j8001-j9000.csv"))
 
-;;; (for-each (lambda (pair)
-;;;             (printf "~s: ~s~%"
-;;;                     (car pair)
-;;;                     (cdr pair)))
-;;;           (hash-table-map *data-by-number* cons))
-
-;; just for fun, print all the distinct dates that appear
-(let ((dates (make-hash-table 'equal)))
-  (hash-table-for-each
-   *data-by-number*
-   (lambda (k v)
-     (hash-table-put!
-      dates
-      (datum-mount-date v)
-      (add1 (hash-table-get dates (datum-mount-date v) 0)))))
-  (pretty-print (hash-table-map dates cons)))
+(pretty-print
+ (take
+  (map cdr (hash-table-map *data-by-number* cons))
+  3))
 )
