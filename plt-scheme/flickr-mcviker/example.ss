@@ -43,15 +43,15 @@
     (if auth-token
         (with-handlers ((exn:flickr:invalid-auth-token?
                          (lambda (exn) (authenticate!))))
-          (parameterize ((sign-all? #t))
-            (message-box
-             "flickr.auth.checkToken sez:"
-             (format "~s" (flickr.auth.checkToken #:auth_token auth-token))
-             #f)
-            (values)))
+          (message-box
+           "flickr.auth.checkToken sez:"
+           (format "~s"
+                   (parameterize ((sign-all? #t))
+                     (flickr.auth.checkToken #:auth_token auth-token)))
+           #f)
+          (values))
         (authenticate!))))
 
-(trace maybe-authenticate!)
 (define (run-example!)
   (maybe-authenticate!)
   (message-box "OK!" "Authenticated." #f)
@@ -71,6 +71,5 @@
              (format "http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
                      farm server id secret))])))
 
-(trace run-example!)
 (run-example!)
 )
