@@ -16,7 +16,7 @@
 (define frame (instantiate frame% ("Flickr Thingy")))
 
 ;; Make a static text message in the frame
-(define msg (instantiate message% ("No events so far...    " frame)))
+(define msg (instantiate message% ("Hi." frame)))
 
 (define (exn:flickr:invalid-auth-token? exn)
   (and (exn:flickr? exn)
@@ -28,7 +28,7 @@
            [(('frob () frob))
             (begin
               (send-url (url->string (authorize-url #:frob frob #:perms "read")))
-              (message-box "OK!" "Do the web-browser thing" frame)
+              (message-box "OK!" "Do the web-browser thing" #f)
               (parameterize ((non-text-tags (list* 'auth (non-text-tags))))
                 (match (flickr.auth.getToken #:frob frob)
                        [(('auth ()
@@ -37,22 +37,24 @@
                                 ('user (('fullname fn) ('nsid nsid) ('username user)))))
                         (put-preferences (list 'flickr:token) (list token))])))])))
 
+(trace authenticate!)
 (define (maybe-authenticate!)
   (let ((auth-token (get-preference 'flickr:token)))
     (if auth-token
         (with-handlers ((exn:flickr:invalid-auth-token?
                          (lambda (exn) (authenticate!))))
           (parameterize ((sign-all? #t))
-            (flickr.auth.checkToken #:auth_token auth-token)
+            (message-box
+             "flickr.auth.checkToken sez:"
+             (format "~s" (flickr.auth.checkToken #:auth_token auth-token))
+             #f)
             (values)))
         (authenticate!))))
 
+(trace maybe-authenticate!)
 (define (run-example!)
-  ;; Show the frame by calling its show method
-  (send frame show #t)
-
   (maybe-authenticate!)
-  (message-box "OK!" "Authenticated." frame)
+  (message-box "OK!" "Authenticated." #f)
   (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
                  (sign-all? #t))
     (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
@@ -69,5 +71,6 @@
              (format "http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
                      farm server id secret))])))
 
+(trace run-example!)
 (run-example!)
 )
