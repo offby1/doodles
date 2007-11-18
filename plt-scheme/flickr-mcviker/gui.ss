@@ -3,7 +3,7 @@
 #$Id$
 exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 |#
-(module example mzscheme
+(module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
          (lib "mred.ss" "mred")
          (lib "class.ss")
@@ -12,7 +12,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "external.ss" "browser")
          (lib "etc.ss")
          "auth.ss"
-         "yow.ss")
+         "read-csvs.ss")
 
 ;; Make a frame by instantiating the frame% class
 (define frame (instantiate frame% ()

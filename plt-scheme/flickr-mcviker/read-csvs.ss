@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module yow mzscheme
+(module read-csvs mzscheme
 (require (only (lib "1.ss" "srfi")
                filter
                partition
