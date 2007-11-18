@@ -46,6 +46,10 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                                                      (send frame set-status-text message))))
                               files)
                     (send frame set-status-text "Done.")
+                    (message-box
+                     "Look out!"
+                     (format "~a" (hash-table-map *data-by-number* cons))
+                     frame)
 
 ;;;                     (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
 ;;;                                    (sign-all? #t))

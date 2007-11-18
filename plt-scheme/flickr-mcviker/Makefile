@@ -1,12 +1,12 @@
 exe = flickr-thingy.exe
-
-all: package/$(exe)
+pdir = package
+all: $(pdir)/$(exe)
 
 $(exe): $(wildcard *.ss)
 	mzc --gui-exe $@ gui.ss 
 
-package/$(exe): $(exe)
-	mzc --exe-dir $(dirname $@) $^
+$(pdir)/$(exe): $(exe)
+	mzc --exe-dir $(pdir) $^
 
 check: $(exe)
 	PATH=.:$$PATH $^

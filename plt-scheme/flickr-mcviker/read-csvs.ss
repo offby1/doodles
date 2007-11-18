@@ -55,5 +55,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 "Freaky row: ~s~%" row))))))
         ip)))))
 
-(provide snorgle-file)
+(provide
+ snorgle-file
+ *data-by-number*)
 )
