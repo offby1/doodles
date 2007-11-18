@@ -1,3 +1,8 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mred -qu "$0" ${1+"$@"}
+|#
 (module example mzscheme
 (require (lib "mred.ss" "mred")
          (lib "trace.ss")
