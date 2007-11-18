@@ -49,42 +49,43 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                                   '()
                                   '(("CSV" "*.csv")))))
 
-                      (send frame set-status-text "Authenticating ...")
-                      (maybe-authenticate!
-                       (lambda ()
-                         (message-box "OK!" "Do the web-browser thing" frame)))
-                      (send frame set-status-text "Authenticating ... done!")
+                      (when files
+                        (send frame set-status-text "Authenticating ...")
+                        (maybe-authenticate!
+                         (lambda ()
+                           (message-box "..." "Do the web-browser thing" frame)))
+                        (send frame set-status-text "Authenticating ... done!")
 
-                      (for-each (lambda (file)
-                                  (snorgle-file file (lambda (message)
-                                                       (send frame set-status-text message))))
-                                files)
+                        (for-each (lambda (file)
+                                    (snorgle-file file (lambda (message)
+                                                         (send frame set-status-text message))))
+                                  files)
 
-                      (message-box
-                       "Look out!"
-                       (format "~a" (hash-table-map *data-by-number* cons))
-                       frame)
+                        (message-box
+                         "Look out!"
+                         (format "~a" (hash-table-map *data-by-number* cons))
+                         frame)
 
-                      (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-                                     (sign-all? #t))
-                        (send frame set-status-text "Searching ...")
-                        (let* ((photos (get-all-photos
-                                        (lambda (this-page total-pages)
-                                          (send
-                                           frame
-                                           set-status-text
-                                           (format "Examining page ~a of ~a ..."
-                                                   this-page
-                                                   total-pages))
-                                          (yield))
-                                        #:user_id "10665268@N04"
-                                        #:auth_token (get-preference 'flickr:token)))
-                               (op (open-output-string)))
-                          (send frame set-status-text "")
-                          (pretty-print photos op)
-                          (message-box
-                           "See what I found"
-                           (get-output-string op)))))))))
+                        (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+                                       (sign-all? #t))
+                          (send frame set-status-text "Searching ...")
+                          (let* ((photos (get-all-photos
+                                          (lambda (this-page total-pages)
+                                            (send
+                                             frame
+                                             set-status-text
+                                             (format "Examining page ~a of ~a ..."
+                                                     this-page
+                                                     total-pages))
+                                            (yield))
+                                          #:user_id "10665268@N04"
+                                          #:auth_token (get-preference 'flickr:token)))
+                                 (op (open-output-string)))
+                            (send frame set-status-text "")
+                            (pretty-print photos op)
+                            (message-box
+                             "See what I found"
+                             (get-output-string op))))))))))
 
   (instantiate
    menu-item%

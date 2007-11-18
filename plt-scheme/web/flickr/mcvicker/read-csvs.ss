@@ -13,9 +13,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (lib "etc.ss")
          (planet "csv.ss" ("neil" "csv.plt" 1 1)))
 
-(file-stream-buffer-mode (current-error-port) 'line)
-(file-stream-buffer-mode (current-output-port) 'line)
-
 (define-struct datum (slide-number mount-date subject mount-notation scanned) #f)
 
 (define *data-by-number* (make-hash-table 'equal))
