@@ -20,14 +20,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (define *data-by-number* (make-hash-table 'equal))
 
-(for-each
- (lambda (fn)
-   (fprintf (current-error-port)
-            "~a ... " fn)
+(define snorgle-file
+ (lambda (fn status-proc)
+   (status-proc (format
+                 "~a ... " fn))
    (call-with-input-file
-       (build-path
-        (this-expression-source-directory)
-        fn)
+       fn
      (lambda (ip)
        (csv-for-each
         (lambda (row)
@@ -52,23 +50,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (apply make-datum row)
                         (hash-table-get *data-by-number* index '()))))))))
              (else
-              (fprintf (current-error-port)
-                       "Freaky row: ~s~%" row)))))
-        ip)))
-   (newline (current-error-port)))
- (list
-  "j1-j1000.csv"
-  "j1000-j2000.csv"
-  "j2000-j3000.csv"
-  "j3000-j4000.csv"
-  "j4000-j5000.csv"
-  "j5000-j6000.csv"
-  "j6000-j7000.csv"
-  "j7001-j8000.csv"
-  "j8001-j9000.csv"))
+              (status-proc
+               (format
+                "Freaky row: ~s~%" row))))))
+        ip)))))
 
-(pretty-print
- (take
-  (map cdr (hash-table-map *data-by-number* cons))
-  3))
+(provide snorgle-file)
 )

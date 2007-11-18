@@ -11,12 +11,13 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "file.ss")
          (lib "external.ss" "browser")
          (lib "etc.ss")
-         "auth.ss")
+         "auth.ss"
+         "yow.ss")
 
 ;; Make a frame by instantiating the frame% class
 (define frame (instantiate frame% ()
                            (label "Flickr Thingy")
-                           (width 350)))
+                           (width 1000)))
 (send frame create-status-line)
 
 (let* ((mb (instantiate menu-bar% (frame)))
@@ -34,30 +35,36 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                                 '()
                                 '(("CSV" "*.csv")))))
 
-                    (message-box "Got 'em" (format "You chose ~s" files) frame)
                     (send frame set-status-text "Authenticating ...")
                     (maybe-authenticate!
                      (lambda ()
                        (message-box "OK!" "Do the web-browser thing" frame)))
                     (send frame set-status-text "Authenticating ... done!")
 
-                    (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-                                   (sign-all? #t))
-                      (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
-                             [(('photos _ ('photo (('farm farm)
-                                                   ('id id)
-                                                   ('isfamily _)
-                                                   ('isfriend _)
-                                                   ('ispublic _)
-                                                   ('owner owner)
-                                                   ('secret secret)
-                                                   ('server server)
-                                                   ('title _))) . rest))
-                              (send frame set-status-text "Pointing your web browser at some picture or other ...")
-                              (message-box "Pretend ..."
-                               (format "... that I'm opening http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
-                                       farm server id secret))
-                              (send frame set-status-text "")]))))))
+                    (for-each (lambda (file)
+                                (snorgle-file file (lambda (message)
+                                                     (send frame set-status-text message))))
+                              files)
+                    (send frame set-status-text "Done.")
+
+;;;                     (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+;;;                                    (sign-all? #t))
+;;;                       (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
+;;;                              [(('photos _ ('photo (('farm farm)
+;;;                                                    ('id id)
+;;;                                                    ('isfamily _)
+;;;                                                    ('isfriend _)
+;;;                                                    ('ispublic _)
+;;;                                                    ('owner owner)
+;;;                                                    ('secret secret)
+;;;                                                    ('server server)
+;;;                                                    ('title _))) . rest))
+;;;                               (send frame set-status-text "Pointing your web browser at some picture or other ...")
+;;;                               (message-box "Pretend ..."
+;;;                                (format "... that I'm opening http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
+;;;                                        farm server id secret))
+;;;                               (send frame set-status-text "")]))
+                    ))))
 
   (instantiate
    menu-item%
