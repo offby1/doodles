@@ -19,12 +19,22 @@
       (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
 
     (parameterize ((non-text-tags (list* 'photos (non-text-tags))))
-      (apply flickr.photos.search
-             (list* #:page (number->string page-number)
-                    #:per_page "2"
-                    #:tag_mode "all"
-                    args))))
+      (let ((got (apply flickr.photos.search
+                        (list* #:page (number->string page-number)
+                               #:per_page "3"
+                               #:tag_mode "all"
+                               args))))
+        (match got
+               [(('photos
+                  (('page page)
+                   ('pages pages)
+                   ('perpage perpage)
+                   ('total total))
+                  _ _ ...))
+                (progress-proc page pages)]
+               [(_ ...) #t])
 
+        got)))
   (define (empty? page)
     (match page
            ;; this clause matches the case when we ask for page 22,
@@ -49,10 +59,6 @@
            [(('photos metadata guts ...))
             guts]))
 
-  (trace get-page)
-  (trace empty?)
-  (trace extract-interesting-stuff)
-
   (when (member #:page args)
     (error 'get-all-photos "Don't pass the #:page keyword"))
 
@@ -62,13 +68,19 @@
       (if (empty? one-page)
           results
           (loop (add1 pages-got)
-                (cons (extract-interesting-stuff one-page)
-                      results))))))
+                (append
+                 (extract-interesting-stuff one-page)
+                 results))))))
 
 (provide (all-defined))
-(get-all-photos (lambda (a b c)
-                  11)
-                #:user_id "10665268@N04"
-                #:tags "chipping")
+
+(pretty-print
+ (get-all-photos (lambda (this-page total-pages)
+                   (fprintf (current-error-port)
+                            "Processing page ~a of ~a~%"
+                            this-page total-pages)
+                   (flush-output (current-error-port)))
+                 #:user_id "10665268@N04"
+                 #:tags "chipping"))
 
 )
