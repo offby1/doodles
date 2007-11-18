@@ -10,6 +10,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "match.ss")
          (lib "file.ss")
          (lib "external.ss" "browser")
+         (lib "etc.ss")
          "auth.ss")
 
 ;; Make a frame by instantiating the frame% class
@@ -20,27 +21,40 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 (send frame set-status-text "Just starting up, boss")
 (send frame show #t)
 
-(send frame set-status-text "Authenticating ...")
-(maybe-authenticate!
- (lambda ()
-   (message-box "OK!" "Do the web-browser thing" frame)))
-(send frame set-status-text "Authenticating ... done!")
+(define *files*
+  (get-file-list
+   "Pick some files to mess with"
+   frame
+   (this-expression-source-directory)
+   #f
+   "*.csv"
+   '()
+   '(("CSV" "*.csv"))))
 
-(parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-               (sign-all? #t))
-  (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
-         [(('photos _ ('photo (('farm farm)
-                               ('id id)
-                               ('isfamily _)
-                               ('isfriend _)
-                               ('ispublic _)
-                               ('owner owner)
-                               ('secret secret)
-                               ('server server)
-                               ('title _))) . rest))
-          (send frame set-status-text "Pointing your web browser at some picture or other ...")
-          (send-url
-           (format "http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
-                   farm server id secret))
-          (send frame set-status-text "Pointing your web browser at some picture or other ... done.")]))
+(when *files*
+  (message-box "Got 'em" (format "You chose ~s" *files*) frame)
+  (send frame set-status-text "Authenticating ...")
+  (maybe-authenticate!
+   (lambda ()
+     (message-box "OK!" "Do the web-browser thing" frame)))
+  (send frame set-status-text "Authenticating ... done!")
+
+  (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+                 (sign-all? #t))
+    (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
+           [(('photos _ ('photo (('farm farm)
+                                 ('id id)
+                                 ('isfamily _)
+                                 ('isfriend _)
+                                 ('ispublic _)
+                                 ('owner owner)
+                                 ('secret secret)
+                                 ('server server)
+                                 ('title _))) . rest))
+            (send frame set-status-text "Pointing your web browser at some picture or other ...")
+            (send-url
+             (format "http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
+                     farm server id secret))
+            (send frame set-status-text "Pointing your web browser at some picture or other ... done.")]))  )
+
 )
