@@ -13,47 +13,42 @@
 ;; while we're at it, too, in case it takes a while.
 
 (define (get-all-photos progress-proc . args)
+
+  (define (get-page zero-based-number)
+          (apply flickr.photos.search
+                 (list* #:page (number->string (add1  zero-based-number))
+                        #:per_page "2"
+                        #:tag_mode "all"
+                        args)))
+
+  (define (contains-data? page)
+    (match page
+           [(('photos
+              (_ _ _ ('total t))
+              _ ...))
+            (not (equal? t "0"))]))
+
+  (define (extract-interesting-stuff page)
+    page)
+
+  (trace get-page)
+  (trace contains-data?)
+  (trace extract-interesting-stuff)
+
   (when (member #:page args)
     (error 'get-all-photos "Don't pass the #:page keyword"))
-  (let* ((first-page (apply flickr.photos.search (list* #:page "1" #:per_page "2" args)))
-         (metadata (second (car first-page))))
-    (pretty-print metadata)
-    (match metadata
-           [(('page    page)
-             ('pages   pages)
-             ('perpage perpage)
-             ('total   total))
-            (let loop ((this-page first-page)
-                       (page (string->number page))
-                       (pages-to-process (sub1 (string->number pages)))
-                       (photos ((sxpath '(photo)) first-page)))
-              (printf "page ~a of ~a; ~a per page; ~a total~%"
-                      page pages perpage total)
-              (if (zero? pages-to-process)
-                  (display (map photo-sxml->url photos))
-                  (loop (apply flickr.photos.search (list* #:page (number->string page)
-                                                           #:per_page "2"
-                                                           args))
-                        (add1 page)
-                        (sub1 pages-to-process)
-                        (cons ((sxpath '(photo)) this-page) photos))))])))
 
-(define (photo-sxml->url p)
-  (match p
-         [('photo (('farm farm)
-                   ('id id)
-                   ('isfamily _)
-                   ('isfriend _)
-                   ('ispublic _)
-                   ('owner owner)
-                   ('secret secret)
-                   ('server server)
-                   ('title _)))
-          (format "http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
-                  farm server id secret)]))
+  (let loop ((pages-got 0)
+             (results '()))
+    (let ((one-page (get-page (add1 pages-got))))
+      (if (contains-data? one-page)
+          (loop (add1 pages-got)
+                (cons (extract-interesting-stuff one-page)
+                      results))
+          results))))
 
 (provide (all-defined))
 (get-all-photos (lambda (a b c)
-                  11) #:tags "fred")
+                  11) #:tags "ham,sandwich,bread")
 
 )
