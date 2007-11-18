@@ -8,10 +8,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
          (lib "external.ss" "browser")
          (lib "url.ss" "net")
          (lib "match.ss")
-         (lib "file.ss"))
-
-(current-api-key "d964b85147ddd4082dc029f371fe28a8")
-(current-sec-key "4f5c414c39ee71a6")
+         (lib "file.ss")
+         "keys.ss")
 
 (define (exn:flickr:invalid-auth-token? exn)
   (and (exn:flickr? exn)

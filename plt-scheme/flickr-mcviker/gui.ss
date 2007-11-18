@@ -5,12 +5,13 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 |#
 (module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
-         (lib "mred.ss" "mred")
          (lib "class.ss")
-         (lib "match.ss")
-         (lib "file.ss")
-         (lib "external.ss" "browser")
          (lib "etc.ss")
+         (lib "external.ss" "browser")
+         (lib "file.ss")
+         (lib "match.ss")
+         (lib "mred.ss" "mred")
+         (lib "pretty.ss")
          "auth.ss"
          "read-csvs.ss")
 
@@ -26,49 +27,49 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                ("&Open..."
                 menu
                 (lambda (item event)
-                  (let ((files (get-file-list
-                                "Pick some files to mess with"
-                                frame
-                                (this-expression-source-directory)
-                                #f
-                                "*.csv"
-                                '()
-                                '(("CSV" "*.csv")))))
+                  (with-handlers
+                      ([exn:flickr?
+                        (lambda (e)
+                          (message-box "Uh oh"
+                                       (exn:flickr-message e)
+                                       frame))])
+                    (let ((files (get-file-list
+                                  "Pick some files to mess with"
+                                  frame
+                                  (this-expression-source-directory)
+                                  #f
+                                  "*.csv"
+                                  '()
+                                  '(("CSV" "*.csv")))))
 
-                    (send frame set-status-text "Authenticating ...")
-                    (maybe-authenticate!
-                     (lambda ()
-                       (message-box "OK!" "Do the web-browser thing" frame)))
-                    (send frame set-status-text "Authenticating ... done!")
+                      (send frame set-status-text "Authenticating ...")
+                      (maybe-authenticate!
+                       (lambda ()
+                         (message-box "OK!" "Do the web-browser thing" frame)))
+                      (send frame set-status-text "Authenticating ... done!")
 
-                    (for-each (lambda (file)
-                                (snorgle-file file (lambda (message)
-                                                     (send frame set-status-text message))))
-                              files)
-                    (send frame set-status-text "Done.")
-                    (message-box
-                     "Look out!"
-                     (format "~a" (hash-table-map *data-by-number* cons))
-                     frame)
+                      (for-each (lambda (file)
+                                  (snorgle-file file (lambda (message)
+                                                       (send frame set-status-text message))))
+                                files)
 
-;;;                     (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-;;;                                    (sign-all? #t))
-;;;                       (match (flickr.photos.search #:user_id "me" #:auth_token (get-preference 'flickr:token))
-;;;                              [(('photos _ ('photo (('farm farm)
-;;;                                                    ('id id)
-;;;                                                    ('isfamily _)
-;;;                                                    ('isfriend _)
-;;;                                                    ('ispublic _)
-;;;                                                    ('owner owner)
-;;;                                                    ('secret secret)
-;;;                                                    ('server server)
-;;;                                                    ('title _))) . rest))
-;;;                               (send frame set-status-text "Pointing your web browser at some picture or other ...")
-;;;                               (message-box "Pretend ..."
-;;;                                (format "... that I'm opening http://farm~a.static.flickr.com/~a/~a_~a_t.jpg"
-;;;                                        farm server id secret))
-;;;                               (send frame set-status-text "")]))
-                    ))))
+                      (message-box
+                       "Look out!"
+                       (format "~a" (hash-table-map *data-by-number* cons))
+                       frame)
+
+                      (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+                                     (sign-all? #t))
+                        (send frame set-status-text "Searching ...")
+                        (let* ((photos (flickr.photos.search
+                                        #:user_id "10665268@N04"
+                                        #:auth_token (get-preference 'flickr:token)))
+                               (op (open-output-string)))
+                          (send frame set-status-text "")
+                          (pretty-print photos op)
+                          (message-box
+                           "See what I found"
+                           (get-output-string op)))))))))
 
   (instantiate
    menu-item%
