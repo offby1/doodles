@@ -7,3 +7,8 @@ $(exe): $(wildcard *.ss)
 
 package/$(exe): $(exe)
 	mzc --exe-dir $(dirname $@) $^
+
+check: $(exe)
+	PATH=.:$$PATH $^
+
+.PHONY: check
