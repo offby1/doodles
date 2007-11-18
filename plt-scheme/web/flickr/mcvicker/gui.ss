@@ -37,6 +37,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                   (with-handlers
                       ([exn:flickr?
                         (lambda (e)
+                          (send frame set-status-text "")
                           (message-box "Uh oh"
                                        (exn:flickr-message e)
                                        frame))])
@@ -53,18 +54,13 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                         (send frame set-status-text "Authenticating ...")
                         (maybe-authenticate!
                          (lambda ()
-                           (message-box "..." "Do the web-browser thing" frame)))
+                           (message-box "..." "Do whatever your web browser tells you, then click the OK button" frame)))
                         (send frame set-status-text "Authenticating ... done!")
 
                         (for-each (lambda (file)
                                     (snorgle-file file (lambda (message)
                                                          (send frame set-status-text message))))
                                   files)
-
-                        (message-box
-                         "Look out!"
-                         (format "~a" (hash-table-map *data-by-number* cons))
-                         frame)
 
                         (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
                                        (sign-all? #t))
