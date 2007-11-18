@@ -12,7 +12,7 @@
 ;; get _all_ photos, not just the first page.  Provide some feedback
 ;; while we're at it, too, in case it takes a while.
 
-(define (get-all-photos progress-proc . args)
+(define (get-all-photos page-progress-proc . args)
 
   (define (get-page page-number)
     (when (zero? page-number)
@@ -21,8 +21,6 @@
     (parameterize ((non-text-tags (list* 'photos (non-text-tags))))
       (let ((got (apply flickr.photos.search
                         (list* #:page (number->string page-number)
-                               #:per_page "3"
-                               #:tag_mode "all"
                                args))))
         (match got
                [(('photos
@@ -31,7 +29,7 @@
                    ('perpage perpage)
                    ('total total))
                   _ _ ...))
-                (progress-proc page pages)]
+                (page-progress-proc page pages)]
                [(_ ...) #t])
 
         got)))
@@ -74,13 +72,13 @@
 
 (provide (all-defined))
 
-(pretty-print
- (get-all-photos (lambda (this-page total-pages)
-                   (fprintf (current-error-port)
-                            "Processing page ~a of ~a~%"
-                            this-page total-pages)
-                   (flush-output (current-error-port)))
-                 #:user_id "10665268@N04"
-                 #:tags "chipping"))
+;;; (pretty-print
+;;;  (get-all-photos (lambda (this-page total-pages)
+;;;                    (fprintf (current-error-port)
+;;;                             "Processing page ~a of ~a~%"
+;;;                             this-page total-pages)
+;;;                    (flush-output (current-error-port)))
+;;;                  #:user_id "10665268@N04"
+;;;                  #:tags "chipping"))
 
 )

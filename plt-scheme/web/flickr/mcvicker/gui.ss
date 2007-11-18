@@ -13,10 +13,17 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "mred.ss" "mred")
          (lib "pretty.ss")
          "auth.ss"
+         "get-all.ss"
          "read-csvs.ss")
 
-;; Make a frame by instantiating the frame% class
-(define frame (instantiate frame% ()
+(define my-frame%
+  (class frame%
+    (augment on-close)
+    (define (on-close)
+      (exit 0))
+    (super-new)))
+
+(define frame (instantiate my-frame% ()
                            (label "Flickr Thingy")
                            (width 1000)))
 (send frame create-status-line)
@@ -61,7 +68,15 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                       (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
                                      (sign-all? #t))
                         (send frame set-status-text "Searching ...")
-                        (let* ((photos (flickr.photos.search
+                        (let* ((photos (get-all-photos
+                                        (lambda (this-page total-pages)
+                                          (send
+                                           frame
+                                           set-status-text
+                                           (format "Examining page ~a of ~a ..."
+                                                   this-page
+                                                   total-pages))
+                                          (yield))
                                         #:user_id "10665268@N04"
                                         #:auth_token (get-preference 'flickr:token)))
                                (op (open-output-string)))
