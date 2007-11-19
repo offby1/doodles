@@ -3,16 +3,14 @@
  (lib "class.ss")
  (lib "mred.ss" "mred"))
 
-(file-stream-buffer-mode (current-error-port) 'line)
-
 (define pb%
   (class dialog%
     (init work-to-do cancel-callback)
     (public advance!)
     (super-new)
 
-    (define vpane (new vertical-pane%
-                       (parent this)))
+    (define vpane
+      (new vertical-pane% (parent this)))
 
     (define (advance!)
       (send gauge set-value (add1 (send gauge get-value)))
@@ -27,9 +25,12 @@
            (label "")
            (range work-to-do)
            (parent vpane)))
-    (define text (new message%
-                      (label "Nuttin' yet")
-                      (parent vpane)))
+
+    (define text
+      (new message%
+           (label "Nuttin' yet")
+           (parent vpane)))
+
     (define cancel-button
       (new button%
            (label "Cancel")
