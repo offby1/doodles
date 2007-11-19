@@ -2,7 +2,13 @@
 (module get-all mzscheme
   (require
    (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+   (lib "etc.ss")
    (lib "match.ss"))
+
+  (define *photo-cache-file-name*
+    (build-path
+     (this-expression-source-directory)
+     "all-photos-cache"))
 
   ;; get _all_ photos, not just the first page.  Provide some feedback
   ;; while we're at it, too, in case it takes a while.
@@ -18,17 +24,19 @@
         (let ((got (apply flickr.photos.search
                           (list* #:page (number->string page-number)
                                  args))))
-          (match got
-            [(('photos
-               (('page page)
-                ('pages pages)
-                ('perpage perpage)
-                ('total total))
-               _ _ ...))
-             (page-progress-proc page pages)]
-            [(_ ...) #t])
+          (if (equal? 'stop!
+                      (match got
+                             [(('photos
+                                (('page page)
+                                 ('pages pages)
+                                 ('perpage perpage)
+                                 ('total total))
+                                _ _ ...))
+                              (page-progress-proc page pages)]
+                             [(_ ...) #t]))
+              '()
+              got))))
 
-          got)))
     (define (empty? page)
       (match page
         ;; this clause matches the case when we ask for page 22,
@@ -56,15 +64,27 @@
     (when (member #:page args)
       (error 'get-all-photos "Don't pass the #:page keyword"))
 
-    (let loop ((pages-got 0)
-               (results '()))
-      (let ((one-page (get-page (add1 pages-got))))
-        (if (empty? one-page)
-            results
-            (loop (add1 pages-got)
-                  (append
-                   (extract-interesting-stuff one-page)
-                   results))))))
+    (with-handlers
+        ([exn:fail:filesystem?
+          (lambda (e)
+            (let ((rv
+                   (let loop ((pages-got 0)
+                              (results '()))
+                     (let ((one-page (get-page (add1 pages-got))))
+                       (if (empty? one-page)
+                           results
+                           (loop (add1 pages-got)
+                                 (append
+                                  (extract-interesting-stuff one-page)
+                                  results)))))))
+              (call-with-output-file
+                  *photo-cache-file-name*
+                (lambda (op)
+                  (write rv op)
+                  (newline op)))
+              rv))])
+      (with-input-from-file *photo-cache-file-name* read)
+    ))
 
   (provide (all-defined))
 

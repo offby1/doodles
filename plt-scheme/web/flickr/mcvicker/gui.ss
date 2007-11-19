@@ -13,6 +13,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (only (lib "1.ss" "srfi") filter)
          "auth.ss"
          "get-all.ss"
+         "progress-bar.ss"
          "read-csvs.ss")
 
 (define frame
@@ -52,7 +53,8 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                            file
                            (lambda (message)
                              (send frame set-status-text message))))
-                        files)))))))
+                        files)
+                       (send frame set-status-text "Done reading CSV files.")))))))
 
 (define downloaded-panel (new panel% (parent hpane) (style '(border))))
 
@@ -72,24 +74,44 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
           (send frame set-status-text "Waiting for the first page from flickr ...")
 
-          (let* ((photos (get-all-photos
-                          (lambda (this-page total-pages)
-                            (send
-                             frame
-                             set-status-text
-                             (format "Examining page ~a of ~a ..."
-                                     this-page
-                                     total-pages))
-                            (yield))
-                          #:user_id "10665268@N04"
+          (let* ((download-thread #f)
+                 (progress-bar
+                  (new pb%
+                       (label "Progress!")
+                       (parent frame)
+                       (work-to-do 1)   ;we'll set this to the correct
+                                        ;value once we know what it is.
+                       (cancel-callback
+                        (lambda (button event) (kill-thread download-thread)))))
+                 (photos '()))
+            (set! download-thread
+                  (thread
+                   (lambda ()
+                     (set!
+                      photos
+                      (get-all-photos
+                       (lambda (this-page total-pages)
+                         (when (equal? "1" this-page)
+                           (send progress-bar set-work-to-do! (string->number total-pages)))
+                         (send progress-bar advance!)
+                         (send
+                          frame
+                          set-status-text
+                          (format "Examining page ~a of ~a ..."
+                                  this-page
+                                  total-pages))
+                         (yield))
+                       #:user_id "10665268@N04"
 
-                          #:per_page "25" ;; smaller numbers make
-                          ;; the GUI somewhat more responsive,
-                          ;; since it freezes while downloading
-                          ;; the page
+                       #:per_page "25" ;; smaller numbers make
+                       ;; the GUI somewhat more responsive,
+                       ;; since it freezes while downloading
+                       ;; the page
 
-                          #:auth_token (get-preference 'flickr:token))))
+                       #:auth_token (get-preference 'flickr:token)))
+                     (send progress-bar show #f))))
 
+            (send progress-bar show #t)
             (for-each
              (lambda (photo)
                (match
