@@ -1,0 +1,21 @@
+Here's how you, Ed, can test this.
+
+First, open your spreadsheet and save some or all of the worksheets as
+.CSV files.
+
+I'll have sent you a .zip file; unzip it, somehow.
+
+Click the "flickr-thingy" icon.  You _should_ see a simple window
+appear at the top of your screen.
+
+Click the "File" menu; choose "Open"; find the .CSV files that you
+saved, and select one or more of them.  Then of course click the
+"Open" button.  You should see the word "Searching ..." appear on the
+bottom of the window, then "Examining page 1 of 20 ...", with the "1"
+slowly counting up.  Then finally you should see a mysterious popup
+that says "Joined", with a bunch of gibberish like
+
+    ((#(struct:datum 7212 May-92 X)) (#(struct:datum 7211 May-92 X))
+    (#(struct:datum 7893 Jun-94 X)) (#(struct:datum 7892 Jun-94 X))
+
+If you got that far, then everything has worked!
