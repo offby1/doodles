@@ -5,8 +5,9 @@
 
 (define pb%
   (class dialog%
-    (init work-to-do cancel-callback)
+    (init  work-to-do cancel-callback)
     (public advance!)
+    (public set-work-to-do!)
     (super-new)
 
     (define vpane
@@ -20,6 +21,9 @@
              (send gauge get-value)
              (send gauge get-range))))
 
+    (define (set-work-to-do! x)
+      (send gauge set-range x))
+
     (define gauge
       (new gauge%
            (label "")
@@ -28,7 +32,10 @@
 
     (define text
       (new message%
-           (label "Nuttin' yet")
+           ;; this label has to be at least as big as whatever we'll
+           ;; subsequently set it to, lest those subsequent values be
+           ;; trunacted :-|
+           (label "Nothing yet")
            (parent vpane)))
 
     (define cancel-button
