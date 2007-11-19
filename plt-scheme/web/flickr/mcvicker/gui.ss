@@ -26,7 +26,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
 (define hpane (new horizontal-pane% (parent frame)))
 
-(define csv-panel (new panel% (parent hpane) (style '(border))))
+(define csv-panel (new vertical-panel% (parent hpane) (style '(border))))
 
 (define open-button
   (new button% (parent csv-panel) (label "Read dem CSV files")
@@ -53,12 +53,19 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                            file
                            (lambda (message)
                              (send frame set-status-text message))))
-                        files)
+                        (or files '()))
+                       (send csv-message set-label (format
+                                                    "~a photo records loaded"
+                                                    (hash-table-count *data-by-number*)))
                        (send frame set-status-text "Done reading CSV files.")))))))
-
-(define downloaded-panel (new panel% (parent hpane) (style '(border))))
+(define csv-message
+  (new message%
+       (label "You haven't yet loaded any photo records from CSV files.")
+       (parent csv-panel)))
 
 (define *photos-by-title* (make-hash-table 'equal))
+
+(define downloaded-panel (new vertical-panel% (parent hpane) (style '(border))))
 
 (define download-button
   (new button% (parent downloaded-panel) (label "Snarf photo data from flickr")
@@ -122,9 +129,15 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                    ('title title)))
                  (hash-table-put! *photos-by-title* title photo)]))
              photos)
-            (send frame set-status-text (format "Downloaded information about ~a photos" (length photos))))))))
+            (send frame set-status-text "Finished downloading from flickr.")
+            (send download-message set-label (format "Downloaded information about ~a photos" (length photos))))))))
 
-(define joined-panel (new panel% (parent hpane) (style '(border))))
+(define download-message
+  (new message%
+       (label "You haven't yet downloaded any photo info from flickr.")
+       (parent downloaded-panel)))
+
+(define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
@@ -142,7 +155,12 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                        (and (integer? as-number)
                             (hash-table-get *data-by-number* as-number #f))))))))
 
-            (message-box "Joined" (format "~a" joined) #f))))))
+            (send joined-message set-label (format "~a records matched" (length joined))))))))
+
+(define joined-message
+  (new message%
+       (label "You haven't yet linked CSV records with downloaded photo info.")
+       (parent joined-panel)))
 
 (let* ((mb (instantiate menu-bar% (frame)))
        (menu (instantiate menu% ("&File" mb))))
