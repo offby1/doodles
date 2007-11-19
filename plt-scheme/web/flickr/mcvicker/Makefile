@@ -1,6 +1,11 @@
 exe = flickr-thingy.exe
-pdir = package
-all: $(pdir)/$(exe)
+pdir = flickr-thingy
+zip = flickr-thingy.zip
+
+all: $(zip)
+
+$(zip): $(pdir)/$(exe)
+	zip -ur $@ $(pdir)
 
 $(exe): $(wildcard *.ss)
 	mzc --gui-exe $@ gui.ss 
