@@ -28,22 +28,6 @@
            (range work-to-do)
            (parent this)))))
 
-(define work-thread #f)
-(define pb
-  (new pb%
-       (label "A pb")
-       (work-to-do 100)
-       (cancel-callback (lambda (button event)
-                          (kill-thread work-thread)
-                          ))))
+(provide pb%)
 
-(set! work-thread
-      (thread
-       (lambda ()
-         (let loop ((x 0))
-           (send pb advance!)
-           (sleep 1/20)
-           (loop (add1 x))))))
-
-(send pb show #t)
 )
