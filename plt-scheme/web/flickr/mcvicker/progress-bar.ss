@@ -37,8 +37,8 @@
            (parent vpane)
            (callback
             (lambda (button event)
-              (cancel-callback button event)
-              (send this show #f)))))))
+              (send this show #f)
+              (cancel-callback button event)))))))
 
 (provide pb%)
 
