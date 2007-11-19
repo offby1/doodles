@@ -8,7 +8,6 @@
 (define pb
   (new pb%
        (label "Progress!")
-       (width 1024)
        (work-to-do *work-units*)
        (cancel-callback (lambda (button event)
                           (kill-thread work-thread)))))

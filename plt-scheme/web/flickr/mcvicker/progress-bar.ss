@@ -11,8 +11,7 @@
     (public advance!)
     (super-new)
 
-    (define vpane (new group-box-panel%
-                       (label "")
+    (define vpane (new vertical-pane%
                        (parent this)))
 
     (define (advance!)
