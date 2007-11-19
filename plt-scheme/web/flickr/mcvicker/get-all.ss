@@ -1,100 +1,92 @@
 ;;$Id$
 (module get-all mzscheme
-  (require
-   (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
-   (lib "etc.ss")
-   (lib "match.ss"))
+(require
+ (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+ (lib "etc.ss")
+ (lib "match.ss"))
 
-  (define *photo-cache-file-name*
-    (build-path
-     (this-expression-source-directory)
-     "all-photos-cache"))
+;; just for ease of testing.
+(define *photo-cache-file-name*
+  (build-path
+   (this-expression-source-directory)
+   "all-photos-cache"))
 
-  ;; get _all_ photos, not just the first page.  Provide some feedback
-  ;; while we're at it, too, in case it takes a while.
+;; get _all_ photos, not just the first page.  Provide some feedback
+;; while we're at it, too, in case it takes a while.
 
-  (define (get-all-photos page-progress-proc . args)
+(define (get-all-photos page-progress-proc . args)
 
-    (define (get-page page-number)
-      (when (zero? page-number)
-        (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
+  (define (get-page page-number)
+    (when (zero? page-number)
+      (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
 
-      (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-                     (sign-all? #t))
-        (let ((got (apply flickr.photos.search
-                          (list* #:page (number->string page-number)
-                                 args))))
-          (if (equal? 'stop!
-                      (match got
-                             [(('photos
-                                (('page page)
-                                 ('pages pages)
-                                 ('perpage perpage)
-                                 ('total total))
-                                _ _ ...))
-                              (page-progress-proc page pages)]
-                             [(_ ...) #t]))
-              '()
-              got))))
+    (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+                   (sign-all? #t))
+      (let ((got (apply flickr.photos.search
+                        (list* #:page (number->string page-number)
+                               args))))
+        (if (equal? 'stop!
+                    (match got
+                           [(('photos
+                              (('page page)
+                               ('pages pages)
+                               ('perpage perpage)
+                               ('total total))
+                              _ _ ...))
+                            (page-progress-proc page pages)]
+                           [(_ ...) #t]))
+            '()
+            got))))
 
-    (define (empty? page)
-      (match page
-        ;; this clause matches the case when we ask for page 22,
-        ;; and there aren't that many pages: it returns something
-        ;; that looks like
+  (define (empty? page)
+    (match page
+           ;; this clause matches the case when we ask for page 22,
+           ;; and there aren't that many pages: it returns something
+           ;; that looks like
 
-        ;; ((photos ((page "1") (pages "3") (perpage "2") (total
-        ;; "6"))))
+           ;; ((photos ((page "1") (pages "3") (perpage "2") (total
+           ;; "6"))))
 
-        ;; that is, it says it's page "1", but there isn't any
-        ;; actual photo data in the returned stuff.
+           ;; that is, it says it's page "1", but there isn't any
+           ;; actual photo data in the returned stuff.
 
-        [(('photos (_ _ _ ('total t))))
-         #t]
-        [(('photos
-           (_ _ _ ('total t))
-           _ ...))
-         (equal? t "0")]))
+           [(('photos (_ _ _ ('total t))))
+            #t]
+           [(('photos
+              (_ _ _ ('total t))
+              _ ...))
+            (equal? t "0")]))
 
-    (define (extract-interesting-stuff page)
-      (match page
-        [(('photos metadata guts ...))
-         guts]))
+  (define (extract-interesting-stuff page)
+    (match page
+           [(('photos metadata guts ...))
+            guts]))
 
-    (when (member #:page args)
-      (error 'get-all-photos "Don't pass the #:page keyword"))
+  (when (member #:page args)
+    (error 'get-all-photos "Don't pass the #:page keyword"))
 
-    (with-handlers
-        ([exn:fail:filesystem?
-          (lambda (e)
-            (let ((rv
-                   (let loop ((pages-got 0)
-                              (results '()))
-                     (let ((one-page (get-page (add1 pages-got))))
-                       (if (empty? one-page)
-                           results
-                           (loop (add1 pages-got)
-                                 (append
-                                  (extract-interesting-stuff one-page)
-                                  results)))))))
-              (call-with-output-file
-                  *photo-cache-file-name*
-                (lambda (op)
-                  (write rv op)
-                  (newline op)))
-              rv))])
-      (with-input-from-file *photo-cache-file-name* read)
+  (with-handlers
+      ([exn:fail:filesystem?
+        (lambda (e)
+          (let ((rv
+                 (let loop ((pages-got 0)
+                            (results '()))
+                   (let ((one-page (get-page (add1 pages-got))))
+                     (if (empty? one-page)
+                         results
+                         (loop (add1 pages-got)
+                               (append
+                                (extract-interesting-stuff one-page)
+                                results)))))))
+            (call-with-output-file
+                *photo-cache-file-name*
+              (lambda (op)
+                (write rv op)
+                (newline op)))
+            rv))])
+    (with-input-from-file *photo-cache-file-name* read)
     ))
 
-  (provide (all-defined))
+(provide (all-defined))
 
-  ;;; (pretty-print
-  ;;;  (get-all-photos (lambda (this-page total-pages)
-  ;;;                    (fprintf (current-error-port)
-  ;;;                             "Processing page ~a of ~a~%"
-  ;;;                             this-page total-pages)
-  ;;;                    (flush-output (current-error-port)))
-  ;;;                  #:user_id "10665268@N04"
-  ;;;                  #:tags "chipping"))
-
-  )
+)

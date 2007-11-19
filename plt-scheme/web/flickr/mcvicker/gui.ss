@@ -94,12 +94,6 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                          (when (equal? "1" this-page)
                            (send progress-bar set-work-to-do! (string->number total-pages)))
                          (send progress-bar advance!)
-                         (send
-                          frame
-                          set-status-text
-                          (format "Examining page ~a of ~a ..."
-                                  this-page
-                                  total-pages))
                          (yield))
                        #:user_id "10665268@N04"
 
@@ -128,7 +122,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                    ('title title)))
                  (hash-table-put! *photos-by-title* title photo)]))
              photos)
-            (send frame set-status-text (format "Downloaded ~a photos" (length photos))))))))
+            (send frame set-status-text (format "Downloaded information about ~a photos" (length photos))))))))
 
 (define joined-panel (new panel% (parent hpane) (style '(border))))
 
