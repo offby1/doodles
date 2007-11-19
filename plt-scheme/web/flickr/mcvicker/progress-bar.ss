@@ -25,13 +25,11 @@
          (g (new gauge%
                  (label #f)
                  (range work-to-do)
-                 (parent d))
-            ))
+                 (parent d))))
+
     (values
      d
      (lambda ()
-       (fprintf (current-error-port)
-                "Gauge's value is ~a~%" (send g get-value))
        (send g set-value (add1 (send g get-value)))))))
 
 (define-values  (pb advance!)
