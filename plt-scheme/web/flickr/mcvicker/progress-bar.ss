@@ -3,50 +3,44 @@
  (lib "class.ss")
  (lib "mred.ss" "mred"))
 
-;; this class inherits from "dialog%"
-
-;; it has a button with a callback, and a "gauge".
-
-;; the constructor takes a callback for the button, and a positive
-;; integer for the amount of work to be done; it returns the dialog,
-;; and a thunk to advance the gauge.
-
-;; it has a couple of procedures to fiddle the gauge.
-
 (file-stream-buffer-mode (current-error-port) 'line)
 
-(define (make-progress-bar parent cancel-callback work-to-do)
-  (let* ((d (new dialog%
-                 (label "Progress!")))
-         (b (new button%
-                 (label "Cancel")
-                 (parent d)
-                 (callback cancel-callback)))
-         (g (new gauge%
-                 (label #f)
-                 (range work-to-do)
-                 (parent d))))
+(define pb%
+  (class dialog%
+    (init work-to-do cancel-callback)
+    (public advance!)
+    (super-new)
 
-    (values
-     d
-     (lambda ()
-       (send g set-value (add1 (send g get-value)))))))
+    (define (advance!)
+      (send gauge set-value (add1 (send gauge get-value))))
 
-(define-values  (pb advance!)
-  (make-progress-bar
-   #f
-   (lambda (item event)
-     (fprintf (current-error-port)
-              "Ow!~%"))
-   10))
+    (define cancel-button
+      (new button%
+           (label "Cancel")
+           (parent this)
+           (callback cancel-callback)))
+    (define gauge
+      (new gauge%
+           (label #f)
+           (range work-to-do)
+           (parent this)))))
 
-(thread
- (lambda ()
-   (let loop ((x 0))
-     (when (< x 5)
-       (advance!)
-       (sleep 1/2)
-       (loop (add1 x))))))
+(letrec ((work-thread
+          (thread
+           (lambda ()
+             (sleep 1) ;; BUGBUG -- wait until the pb is ready
+             (let loop ((x 0))
+               (send pb advance!)
+               (sleep 1/20)
+               (loop (add1 x))))))
+         (pb
+          (new pb%
+               (label "A pb")
+               (work-to-do 100)
+               (cancel-callback (lambda (button event)
+                                  (kill-thread work-thread)
+                                  (send pb show #f))))))
 
-(send pb show #t)
+  (send pb show #t))
+
 )
