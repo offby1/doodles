@@ -11,22 +11,34 @@
     (public advance!)
     (super-new)
 
-    (define (advance!)
-      (send gauge set-value (add1 (send gauge get-value))))
+    (define vpane (new group-box-panel%
+                       (label "")
+                       (parent this)))
 
+    (define (advance!)
+      (send gauge set-value (add1 (send gauge get-value)))
+      (send text set-label
+            (format
+             "~a/~a"
+             (send gauge get-value)
+             (send gauge get-range))))
+
+    (define gauge
+      (new gauge%
+           (label "")
+           (range work-to-do)
+           (parent vpane)))
+    (define text (new message%
+                      (label "Nuttin' yet")
+                      (parent vpane)))
     (define cancel-button
       (new button%
            (label "Cancel")
-           (parent this)
+           (parent vpane)
            (callback
             (lambda (button event)
               (cancel-callback button event)
-              (send this show #f)))))
-    (define gauge
-      (new gauge%
-           (label #f)
-           (range work-to-do)
-           (parent this)))))
+              (send this show #f)))))))
 
 (provide pb%)
 

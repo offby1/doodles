@@ -7,11 +7,11 @@
 (define work-thread #f)
 (define pb
   (new pb%
-       (label "A pb")
+       (label "Progress!")
+       (width 1024)
        (work-to-do *work-units*)
        (cancel-callback (lambda (button event)
-                          (kill-thread work-thread)
-                          ))))
+                          (kill-thread work-thread)))))
 
 (set! work-thread
       (thread
