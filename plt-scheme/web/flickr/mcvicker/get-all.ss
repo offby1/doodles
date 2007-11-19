@@ -1,4 +1,4 @@
-#$Id$
+;;$Id$
 (module get-all mzscheme
   (require
    (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
