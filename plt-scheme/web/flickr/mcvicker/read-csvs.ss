@@ -9,7 +9,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                filter
                partition
                take)
-         (lib "pretty.ss")
          (lib "etc.ss")
          (planet "csv.ss" ("neil" "csv.plt" 1 1)))
 

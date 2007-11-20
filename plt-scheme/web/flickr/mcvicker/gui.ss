@@ -99,10 +99,14 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                       (get-all-photos
                        (lambda (this-page total-pages)
                          (when (equal? "1" this-page)
-                           (send progress-bar set-work-to-do! (string->number total-pages)))
+                           (send progress-bar set-work-to-do! (string->number total-pages))
+                           (send frame set-status-text "Downloading from flickr ..."))
                          (send progress-bar advance!)
                          (yield))
-                       #:user_id "10665268@N04"
+                       #:user_id (if #f
+                                     "10665268@N04" ;ed
+                                     "20825469@N00" ;me
+                                     )
 
                        #:per_page "25" ;; smaller numbers make
                        ;; the GUI somewhat more responsive,
@@ -146,6 +150,18 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
        (width 200)
        (height 200)))
 
+;; e.g. "j123" => 123
+;; but
+;; "123" => #f
+;; and
+;; "jklmn" => #f
+(define (title->number-or-false string)
+  (match
+   (regexp-match #px"^[jJ]([0-9]+)$" string)
+   [(_ number-string)
+    (string->number number-string)]
+   [_ #f]))
+
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
        (callback
@@ -156,12 +172,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                   (hash-table-map
                    *photos-by-title*
                    (lambda (title photo)
-                     (let* ((sans-leading-j
-                             (regexp-replace #rx"^[jJ]" title ""))
-                            (as-number (read (open-input-string sans-leading-j))))
+                     (let* ((as-number (title->number-or-false title)))
                        (and (integer? as-number)
                             (hash-table-get *data-by-number* as-number #f))))))))
-
             (send joined-message set-label (format "~a records matched" (length joined)))
             (when (positive? (length joined))
               (for-each
