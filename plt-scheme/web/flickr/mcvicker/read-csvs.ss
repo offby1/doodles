@@ -43,16 +43,12 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                       (hash-table-put!
                        *data-by-number*
                        index
-                       (cons
-                        (apply make-datum row)
-                        (hash-table-get *data-by-number* index '()))))))))
+                       (apply make-datum row)))))))
              (else
               (status-proc
                (format
                 "Freaky row: ~s~%" row))))))
         ip)))))
 
-(provide
- snorgle-file
- *data-by-number*)
+(provide (all-defined))
 )

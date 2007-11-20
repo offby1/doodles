@@ -8,6 +8,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "class.ss")
          (lib "etc.ss")
          (lib "file.ss")
+         (only (lib "list.ss") sort)
          (lib "match.ss")
          (lib "mred.ss" "mred")
          (only (lib "1.ss" "srfi") filter)
@@ -162,7 +163,6 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                             (hash-table-get *data-by-number* as-number #f))))))))
 
             (send joined-message set-label (format "~a records matched" (length joined)))
-
             (when (positive? (length joined))
               (for-each
                (lambda (child-victim)
@@ -173,7 +173,11 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
                 (for-each (lambda (record)
                             (send aoc append (format "~s~%" record)))
-                          joined)
+                          (sort
+                           joined
+                           (lambda (r1 r2)
+                             (< (string->number (datum-slide-number r1))
+                                (string->number (datum-slide-number r2))))))
                 (send review-window show #t))))))))
 
 (define joined-message
