@@ -84,8 +84,7 @@
                 (write rv op)
                 (newline op)))
             rv))])
-    (with-input-from-file *photo-cache-file-name* read)
-    ))
+    (with-input-from-file *photo-cache-file-name* read)))
 
 (provide (all-defined))
 
