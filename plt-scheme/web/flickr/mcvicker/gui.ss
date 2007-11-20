@@ -11,7 +11,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (only (lib "list.ss") sort)
          (lib "match.ss")
          (lib "mred.ss" "mred")
-         (only (lib "1.ss" "srfi") filter)
+         (only (lib "1.ss" "srfi")
+               filter
+               second)
          "auth.ss"
          "append-only-canvas.ss"
          "get-all.ss"
@@ -119,19 +121,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
             (send progress-bar show #t)
             (for-each
              (lambda (photo)
-               (match
-                photo
-                [('photo
-                  (('farm _)
-                   ('id _)
-                   ('isfamily _)
-                   ('isfriend _)
-                   ('ispublic _)
-                   ('owner _)
-                   ('secret _)
-                   ('server _)
-                   ('title title)))
-                 (hash-table-put! *photos-by-title* title photo)]))
+               (hash-table-put! *photos-by-title* (photo-title photo) photo))
              photos)
             (send frame set-status-text "Finished downloading from flickr.")
             (send download-message set-label (format "Downloaded information about ~a photos" (length photos))))))))
@@ -150,6 +140,25 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
        (width 200)
        (height 200)))
 
+(define rwvpane (new vertical-panel% (parent review-window)))
+
+(define do-it!-button
+  ;; this is less than ideal -- if we created more than one button of
+  ;; this class, they'd all share a callback.
+  (let ((real-callback (lambda (button event) (void))))
+    (new (class button%
+           (define (set-callback! proc)
+             (set! real-callback proc))
+           (public set-callback!)
+           (super-new))
+         (parent rwvpane)
+         (label "Whop flickr!!!")
+         (enabled #t)
+         (callback
+          (lambda (button event)
+            (real-callback button event))))))
+
+
 ;; e.g. "j123" => 123
 ;; but
 ;; "123" => #f
@@ -161,6 +170,8 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
    [(_ number-string)
     (string->number number-string)]
    [_ #f]))
+
+(define-struct full-info (title csv-record flickr-metadata) #f)
 
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
@@ -174,23 +185,43 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                    (lambda (title photo)
                      (let* ((as-number (title->number-or-false title)))
                        (and (integer? as-number)
-                            (hash-table-get *data-by-number* as-number #f))))))))
+                            (make-full-info
+                             title
+                             (hash-table-get *data-by-number* as-number #f)
+                             photo))))))))
             (send joined-message set-label (format "~a records matched" (length joined)))
             (when (positive? (length joined))
               (for-each
                (lambda (child-victim)
-                 (send review-window delete-child child-victim))
+                 (when (is-a? child-victim append-only-canvas%)
+                   (send review-window delete-child child-victim)))
                (send review-window get-children))
               (let ((aoc (new append-only-canvas%
-                              (parent review-window))))
+                              (parent rwvpane)))
+                    (sorted (sort
+                             joined
+                             (lambda (r1 r2)
+                               (< (string->number (datum-slide-number (full-info-csv-record r1)))
+                                  (string->number (datum-slide-number (full-info-csv-record r2))))))))
 
                 (for-each (lambda (record)
                             (send aoc append (format "~s~%" record)))
-                          (sort
-                           joined
-                           (lambda (r1 r2)
-                             (< (string->number (datum-slide-number r1))
-                                (string->number (datum-slide-number r2))))))
+                          sorted)
+
+                (send do-it!-button set-callback!
+                      (lambda (button event)
+                        (for-each
+                         (lambda (record)
+                           (message-box "Pretend..."
+                                         (format
+                                          "~s"
+                                          `(flickr.photo.setDate
+                                            ,(photo-id (full-info-flickr-metadata record))
+                                            ,(datum-mount-date (full-info-csv-record record))))))
+
+                         sorted)
+                        (send review-window show #f)))
+                (send do-it!-button enable #t)
                 (send review-window show #t))))))))
 
 (define joined-message

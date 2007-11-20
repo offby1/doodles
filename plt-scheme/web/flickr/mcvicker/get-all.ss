@@ -5,6 +5,8 @@
  (lib "etc.ss")
  (lib "match.ss"))
 
+(define-struct photo (id title))
+
 ;; just for ease of testing.
 (define *photo-cache-file-name*
   (build-path
@@ -65,26 +67,39 @@
   (when (member #:page args)
     (error 'get-all-photos "Don't pass the #:page keyword"))
 
-  (with-handlers
-      ([exn:fail:filesystem?
-        (lambda (e)
-          (let ((rv
-                 (let loop ((pages-got 0)
-                            (results '()))
-                   (let ((one-page (get-page (add1 pages-got))))
-                     (if (empty? one-page)
-                         results
-                         (loop (add1 pages-got)
-                               (append
-                                (extract-interesting-stuff one-page)
-                                results)))))))
-            (call-with-output-file
-                *photo-cache-file-name*
-              (lambda (op)
-                (write rv op)
-                (newline op)))
-            rv))])
-    (with-input-from-file *photo-cache-file-name* read)))
+  (map (lambda (plist)
+         (match plist
+                [('photo
+                  (('farm _)
+                   ('id id)
+                   ('isfamily _)
+                   ('isfriend _)
+                   ('ispublic _)
+                   ('owner _)
+                   ('secret _)
+                   ('server _)
+                   ('title title)))
+                 (make-photo id title)]))
+       (with-handlers
+           ([exn:fail:filesystem?
+             (lambda (e)
+               (let ((rv
+                      (let loop ((pages-got 0)
+                                 (results '()))
+                        (let ((one-page (get-page (add1 pages-got))))
+                          (if (empty? one-page)
+                              results
+                              (loop (add1 pages-got)
+                                    (append
+                                     (extract-interesting-stuff one-page)
+                                     results)))))))
+                 (call-with-output-file
+                     *photo-cache-file-name*
+                   (lambda (op)
+                     (write rv op)
+                     (newline op)))
+                 rv))])
+         (with-input-from-file *photo-cache-file-name* read))))
 
 (provide (all-defined))
 
