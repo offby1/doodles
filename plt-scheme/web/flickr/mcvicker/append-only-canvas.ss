@@ -10,6 +10,12 @@
     (send this set-editor (new (class
                                    text%
                                  (augment can-delete? can-insert?)
+                                 (override on-default-char)
+                                 (define (on-default-char event)
+                                   (when (send event get-control-down)
+                                     (case (send event get-key-code)
+                                       ((#\a) (send this select-all))
+                                       ((#\c) (send this copy #f (send event get-time-stamp))))))
                                  (define (can-delete? start len)
                                    *editor-writable?*)
                                  (define (can-insert? start len)
