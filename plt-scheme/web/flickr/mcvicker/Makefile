@@ -1,6 +1,9 @@
+svnversion:= $(shell svnversion -n .)
+basename  := $(shell echo flickr-thingy-$(svnversion) | sed s,:,-,)
+
 exe = flickr-thingy.exe
 pdir = flickr-thingy
-zip = flickr-thingy.zip
+zip = $(basename).zip
 
 all: $(zip)
 
