@@ -137,6 +137,25 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
+(define *editor-writable?* #t)
+(define review-window
+  (new frame%
+       (label "Joined records")
+       (parent frame)
+       (width 200)
+       (height 200)))
+(define editor (new (class
+                        text%
+                      (augment can-delete? can-insert?)
+                      (define (can-delete? start len)
+                        *editor-writable?*)
+                      (define (can-insert? start len)
+                        *editor-writable?*)
+                      (super-new))))
+(define ec (new editor-canvas%
+                (parent review-window)
+                (editor editor)))
+
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
        (callback
@@ -156,28 +175,14 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
             (send joined-message set-label (format "~a records matched" (length joined)))
 
             (when (positive? (length joined))
-              (let* ((review-window (new dialog%
-                                         (label "Joined records")
-                                         (parent frame)
-                                         (width 200)
-                                         (height 200)))
-                     (editor-writable? #t)
-                     (editor (new (class
-                                   text%
-                                   (augment can-delete? can-insert?)
-                                   (define (can-delete? start len)
-                                     #f)
-                                   (define (can-insert? start len)
-                                     editor-writable?)
-                                   (super-new))))
-                     (ec (new editor-canvas%
-                              (parent review-window)
-                              (editor editor))))
-                (for-each (lambda (record)
-                            (send editor insert (format "~s~%" record)))
-                          joined)
-                (set! editor-writable? #f)
-                (send review-window show #t))))))))
+              (set! *editor-writable?* #t)
+              (send editor erase)
+              (send review-window show #f)
+              (for-each (lambda (record)
+                          (send editor insert (format "~s~%" record)))
+                        joined)
+              (set! *editor-writable?* #f)
+              (send review-window show #t)))))))
 
 (define joined-message
   (new message%
