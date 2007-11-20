@@ -112,7 +112,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                              (send frame set-status-text "Downloading from flickr ..."))
                            (send progress-bar advance!)
                            (yield))
-                         #:user_id (if #f
+                         #:user_id (if #t
                                        "10665268@N04" ;ed
                                        "20825469@N00" ;me
                                        )
