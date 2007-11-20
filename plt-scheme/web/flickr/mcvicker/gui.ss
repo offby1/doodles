@@ -215,12 +215,18 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                            (message-box "Pretend..."
                                          (format
                                           "~s"
-                                          `(flickr.photo.setDate
-                                            ,(photo-id (full-info-flickr-metadata record))
-                                            ,(datum-mount-date (full-info-csv-record record))))))
+                                          `(flickr.photo.setDates
+                                            #:photo_id ,(photo-id (full-info-flickr-metadata record))
+                                            #:date_taken ,(car (datum-mount-date (full-info-csv-record record)))
+
+                                            #:date_taken_granularity
+                                            ,(cdr (datum-mount-date (full-info-csv-record record)))))))
+
 
                          sorted)
+
                         (send review-window show #f)))
+
                 (send do-it!-button enable #t)
                 (send review-window show #t))))))))
 
