@@ -153,7 +153,31 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                        (and (integer? as-number)
                             (hash-table-get *data-by-number* as-number #f))))))))
 
-            (send joined-message set-label (format "~a records matched" (length joined))))))))
+            (send joined-message set-label (format "~a records matched" (length joined)))
+
+            (when (positive? (length joined))
+              (let* ((review-window (new dialog%
+                                         (label "Joined records")
+                                         (parent frame)
+                                         (width 200)
+                                         (height 200)))
+                     (editor-writable? #t)
+                     (editor (new (class
+                                   text%
+                                   (augment can-delete? can-insert?)
+                                   (define (can-delete? start len)
+                                     #f)
+                                   (define (can-insert? start len)
+                                     editor-writable?)
+                                   (super-new))))
+                     (ec (new editor-canvas%
+                              (parent review-window)
+                              (editor editor))))
+                (for-each (lambda (record)
+                            (send editor insert (format "~s~%" record)))
+                          joined)
+                (set! editor-writable? #f)
+                (send review-window show #t))))))))
 
 (define joined-message
   (new message%
