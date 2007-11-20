@@ -212,19 +212,19 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                       (lambda (button event)
                         (for-each
                          (lambda (record)
-                           (message-box "Pretend..."
-                                         (format
-                                          "~s"
-                                          `(flickr.photo.setDates
-                                            #:photo_id ,(photo-id (full-info-flickr-metadata record))
-                                            #:date_taken ,(car (datum-mount-date (full-info-csv-record record)))
+                           (send frame set-status-text (format "~a ..." (full-info-title record)))
+                           (flickr.photos.setDates
+                            #:photo_id (photo-id (full-info-flickr-metadata record))
+                            #:date_taken (car (datum-mount-date (full-info-csv-record record)))
 
-                                            #:date_taken_granularity
-                                            ,(cdr (datum-mount-date (full-info-csv-record record)))))))
-
+                            #:date_taken_granularity
+                            (cdr (datum-mount-date (full-info-csv-record record)))))
 
                          sorted)
-
+                        (send frame set-status-text
+                              (format
+                               "Fiddled ~a photos on flickr!!"
+                               (length sorted)))
                         (send review-window show #f)))
 
                 (send do-it!-button enable #t)
