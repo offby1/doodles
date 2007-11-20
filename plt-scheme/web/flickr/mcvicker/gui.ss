@@ -16,11 +16,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          "progress-bar.ss"
          "read-csvs.ss")
 
-(define frame
-  (new
-   (class frame% (augment on-close) (define (on-close) (printf "Later!~%")
-                                      (exit 0)) (super-new))
-   (label "Flickr Thingy")))
+(define frame (new frame% (label "Flickr Thingy")))
 
 (send frame create-status-line)
 
@@ -47,17 +43,19 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                                    '()
                                    '(("CSV" "*.csv")))))
 
-                       (for-each
-                        (lambda (file)
-                          (snorgle-file
-                           file
-                           (lambda (message)
-                             (send frame set-status-text message))))
-                        (or files '()))
-                       (send csv-message set-label (format
-                                                    "~a photo records loaded"
-                                                    (hash-table-count *data-by-number*)))
-                       (send frame set-status-text "Done reading CSV files.")))))))
+                       (when files
+                         (for-each
+                          (lambda (file)
+                            (snorgle-file
+                             file
+                             (lambda (message)
+                               (send frame set-status-text message))))
+                          files)
+
+                         (send csv-message set-label (format
+                                                      "~a photo records loaded"
+                                                      (hash-table-count *data-by-number*)))
+                         (send frame set-status-text "Done reading CSV files."))))))))
 (define csv-message
   (new message%
        (label "You haven't yet loaded any photo records from CSV files.")
