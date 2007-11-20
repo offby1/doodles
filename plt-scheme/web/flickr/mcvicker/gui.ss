@@ -12,6 +12,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "mred.ss" "mred")
          (only (lib "1.ss" "srfi") filter)
          "auth.ss"
+         "append-only-canvas.ss"
          "get-all.ss"
          "progress-bar.ss"
          "read-csvs.ss")
@@ -137,24 +138,12 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
-(define *editor-writable?* #t)
 (define review-window
   (new frame%
        (label "Joined records")
        (parent frame)
        (width 200)
        (height 200)))
-(define editor (new (class
-                        text%
-                      (augment can-delete? can-insert?)
-                      (define (can-delete? start len)
-                        *editor-writable?*)
-                      (define (can-insert? start len)
-                        *editor-writable?*)
-                      (super-new))))
-(define ec (new editor-canvas%
-                (parent review-window)
-                (editor editor)))
 
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
@@ -175,14 +164,17 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
             (send joined-message set-label (format "~a records matched" (length joined)))
 
             (when (positive? (length joined))
-              (set! *editor-writable?* #t)
-              (send editor erase)
-              (send review-window show #f)
-              (for-each (lambda (record)
-                          (send editor insert (format "~s~%" record)))
-                        joined)
-              (set! *editor-writable?* #f)
-              (send review-window show #t)))))))
+              (for-each
+               (lambda (child-victim)
+                 (send review-window delete-child child-victim))
+               (send review-window get-children))
+              (let ((aoc (new append-only-canvas%
+                              (parent review-window))))
+
+                (for-each (lambda (record)
+                            (send aoc append (format "~s~%" record)))
+                          joined)
+                (send review-window show #t))))))))
 
 (define joined-message
   (new message%

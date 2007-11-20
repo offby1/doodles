@@ -1,0 +1,6 @@
+(require "append-only-canvas.ss")
+(define frame (new frame% (label "Append-only-canvas test")))
+(define aoc (new append-only-canvas% (parent frame)))
+(send frame show #t)
+(send aoc append "Bob!")
+(send aoc append "Sam.")
