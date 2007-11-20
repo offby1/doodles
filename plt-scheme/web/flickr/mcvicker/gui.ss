@@ -22,6 +22,16 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 
 (define frame (new frame% (label "Flickr Thingy")))
 
+(define (usual-exception-handler e)
+  (message-box "Uh oh"
+               (cond
+                ((exn? e)
+                 (exn-message e))
+                ((exn:flickr? e)
+                 (exn:flickr-message e))
+                (else
+                 (format "Unknown exception ~s" e)))))
+
 (send frame create-status-line)
 
 (define hpane (new horizontal-pane% (parent frame)))
@@ -32,12 +42,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
   (new button% (parent csv-panel) (label "Read dem CSV files")
        (callback (lambda (item event)
                    (with-handlers
-                       ([exn:flickr?
-                         (lambda (e)
-                           (send frame set-status-text "")
-                           (message-box "Uh oh"
-                                        (exn:flickr-message e)
-                                        frame))])
+                       ([void usual-exception-handler])
                      (let ((files (get-file-list
                                    "Pick some files to mess with"
                                    frame
@@ -73,58 +78,60 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
   (new button% (parent downloaded-panel) (label "Snarf photo data from flickr")
        (callback
         (lambda (item event)
-          (send frame set-status-text "Authenticating ...")
-          (maybe-authenticate!
-           (lambda ()
-             (message-box
-              "..."
-              "Do whatever your web browser tells you, then click the OK button"
-              frame)))
+          (with-handlers
+              ([void usual-exception-handler])
+            (send frame set-status-text "Authenticating ...")
+            (maybe-authenticate!
+             (lambda ()
+               (message-box
+                "..."
+                "Do whatever your web browser tells you, then click the OK button"
+                frame)))
 
-          (send frame set-status-text "Waiting for the first page from flickr ...")
+            (send frame set-status-text "Waiting for the first page from flickr ...")
 
-          (let* ((download-thread #f)
-                 (progress-bar
-                  (new pb%
-                       (label "Progress!")
-                       (parent frame)
-                       (work-to-do 1)   ;we'll set this to the correct
+            (let* ((download-thread #f)
+                   (progress-bar
+                    (new pb%
+                         (label "Progress!")
+                         (parent frame)
+                         (work-to-do 1) ;we'll set this to the correct
                                         ;value once we know what it is.
-                       (cancel-callback
-                        (lambda (button event) (kill-thread download-thread)))))
-                 (photos '()))
-            (set! download-thread
-                  (thread
-                   (lambda ()
-                     (set!
-                      photos
-                      (get-all-photos
-                       (lambda (this-page total-pages)
-                         (when (equal? "1" this-page)
-                           (send progress-bar set-work-to-do! (string->number total-pages))
-                           (send frame set-status-text "Downloading from flickr ..."))
-                         (send progress-bar advance!)
-                         (yield))
-                       #:user_id (if #f
-                                     "10665268@N04" ;ed
-                                     "20825469@N00" ;me
-                                     )
+                         (cancel-callback
+                          (lambda (button event) (kill-thread download-thread)))))
+                   (photos '()))
+              (set! download-thread
+                    (thread
+                     (lambda ()
+                       (set!
+                        photos
+                        (get-all-photos
+                         (lambda (this-page total-pages)
+                           (when (equal? "1" this-page)
+                             (send progress-bar set-work-to-do! (string->number total-pages))
+                             (send frame set-status-text "Downloading from flickr ..."))
+                           (send progress-bar advance!)
+                           (yield))
+                         #:user_id (if #f
+                                       "10665268@N04" ;ed
+                                       "20825469@N00" ;me
+                                       )
 
-                       #:per_page "25" ;; smaller numbers make
-                       ;; the GUI somewhat more responsive,
-                       ;; since it freezes while downloading
-                       ;; the page
+                         #:per_page "25" ;; smaller numbers make
+                         ;; the GUI somewhat more responsive,
+                         ;; since it freezes while downloading
+                         ;; the page
 
-                       #:auth_token (get-preference 'flickr:token)))
-                     (send progress-bar show #f))))
+                         #:auth_token (get-preference 'flickr:token)))
+                       (send progress-bar show #f))))
 
-            (send progress-bar show #t)
-            (for-each
-             (lambda (photo)
-               (hash-table-put! *photos-by-title* (photo-title photo) photo))
-             photos)
-            (send frame set-status-text "Finished downloading from flickr.")
-            (send download-message set-label (format "Downloaded information about ~a photos" (length photos))))))))
+              (send progress-bar show #t)
+              (for-each
+               (lambda (photo)
+                 (hash-table-put! *photos-by-title* (photo-title photo) photo))
+               photos)
+              (send frame set-status-text "Finished downloading from flickr.")
+              (send download-message set-label (format "Downloaded information about ~a photos" (length photos)))))))))
 
 (define download-message
   (new message%
@@ -156,7 +163,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (enabled #t)
          (callback
           (lambda (button event)
-            (real-callback button event))))))
+            (with-handlers
+                ([void usual-exception-handler])
+              (real-callback button event)))))))
 
 
 ;; e.g. "j123" => 123
@@ -177,58 +186,60 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
   (new button% (parent joined-panel) (label "glue the two bits together")
        (callback
         (lambda (item event)
-          (let ((joined
-                 (filter
-                  (lambda (x) x)
-                  (hash-table-map
-                   *photos-by-title*
-                   (lambda (title photo)
-                     (let* ((as-number (title->number-or-false title)))
-                       (and (integer? as-number)
-                            (make-full-info
-                             title
-                             (hash-table-get *data-by-number* as-number #f)
-                             photo))))))))
-            (send joined-message set-label (format "~a records matched" (length joined)))
-            (when (positive? (length joined))
-              (for-each
-               (lambda (child-victim)
-                 (when (is-a? child-victim append-only-canvas%)
-                   (send review-window delete-child child-victim)))
-               (send review-window get-children))
-              (let ((aoc (new append-only-canvas%
-                              (parent rwvpane)))
-                    (sorted (sort
-                             joined
-                             (lambda (r1 r2)
-                               (< (string->number (datum-slide-number (full-info-csv-record r1)))
-                                  (string->number (datum-slide-number (full-info-csv-record r2))))))))
+          (with-handlers
+              ([void usual-exception-handler])
+            (let ((joined
+                   (filter
+                    (lambda (x) x)
+                    (hash-table-map
+                     *photos-by-title*
+                     (lambda (title photo)
+                       (let* ((as-number (title->number-or-false title)))
+                         (and (integer? as-number)
+                              (make-full-info
+                               title
+                               (hash-table-get *data-by-number* as-number #f)
+                               photo))))))))
+              (send joined-message set-label (format "~a records matched" (length joined)))
+              (when (positive? (length joined))
+                (for-each
+                 (lambda (child-victim)
+                   (when (is-a? child-victim append-only-canvas%)
+                     (send review-window delete-child child-victim)))
+                 (send review-window get-children))
+                (let ((aoc (new append-only-canvas%
+                                (parent rwvpane)))
+                      (sorted (sort
+                               joined
+                               (lambda (r1 r2)
+                                 (< (string->number (datum-slide-number (full-info-csv-record r1)))
+                                    (string->number (datum-slide-number (full-info-csv-record r2))))))))
 
-                (for-each (lambda (record)
-                            (send aoc append (format "~s~%" record)))
-                          sorted)
+                  (for-each (lambda (record)
+                              (send aoc append (format "~s~%" record)))
+                            sorted)
 
-                (send do-it!-button set-callback!
-                      (lambda (button event)
-                        (for-each
-                         (lambda (record)
-                           (send frame set-status-text (format "~a ..." (full-info-title record)))
-                           (flickr.photos.setDates
-                            #:photo_id (photo-id (full-info-flickr-metadata record))
-                            #:date_taken (car (datum-mount-date (full-info-csv-record record)))
+                  (send do-it!-button set-callback!
+                        (lambda (button event)
+                          (for-each
+                           (lambda (record)
+                             (send frame set-status-text (format "~a ..." (full-info-title record)))
+                             (flickr.photos.setDates
+                              #:photo_id (photo-id (full-info-flickr-metadata record))
+                              #:date_taken (car (datum-mount-date (full-info-csv-record record)))
 
-                            #:date_taken_granularity
-                            (cdr (datum-mount-date (full-info-csv-record record)))))
+                              #:date_taken_granularity
+                              (cdr (datum-mount-date (full-info-csv-record record)))))
 
-                         sorted)
-                        (send frame set-status-text
-                              (format
-                               "Fiddled ~a photos on flickr!!"
-                               (length sorted)))
-                        (send review-window show #f)))
+                           sorted)
+                          (send frame set-status-text
+                                (format
+                                 "Fiddled ~a photos on flickr!!"
+                                 (length sorted)))
+                          (send review-window show #f)))
 
-                (send do-it!-button enable #t)
-                (send review-window show #t))))))))
+                  (send do-it!-button enable #t)
+                  (send review-window show #t)))))))))
 
 (define joined-message
   (new message%
