@@ -224,12 +224,15 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                           (for-each
                            (lambda (record)
                              (send frame set-status-text (format "~a ..." (full-info-title record)))
-                             (flickr.photos.setDates
-                              #:photo_id (photo-id (full-info-flickr-metadata record))
-                              #:date_taken (car (datum-mount-date (full-info-csv-record record)))
+                             (parameterize ((sign-all? #t))
+                               (flickr.photos.setDates
+                                #:auth_token (get-preference 'flickr:token)
 
-                              #:date_taken_granularity
-                              (cdr (datum-mount-date (full-info-csv-record record)))))
+                                #:photo_id (photo-id (full-info-flickr-metadata record))
+                                #:date_taken (car (datum-mount-date (full-info-csv-record record)))
+
+                                #:date_taken_granularity
+                                (cdr (datum-mount-date (full-info-csv-record record))))))
 
                            sorted)
                           (send frame set-status-text

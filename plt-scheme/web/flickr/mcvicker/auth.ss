@@ -20,7 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (match (flickr.auth.getFrob)
            [(('frob () frob))
             (begin
-              (send-url (url->string (authorize-url #:frob frob #:perms "read")))
+              (send-url (url->string (authorize-url #:frob frob #:perms "write")))
               (browser-prompt-thunk)
               (parameterize ((non-text-tags (list* 'auth (non-text-tags))))
                 (match (flickr.auth.getToken #:frob frob)
