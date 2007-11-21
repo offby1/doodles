@@ -1,6 +1,7 @@
 svnversion:= $(shell svnversion -n .)
 basename  := $(shell echo flickr-thingy-$(svnversion) | sed s,:,-,)
 
+# BUGBUG -- name it ".exe" only if we're on Windows.
 exe = flickr-thingy.exe
 pdir = flickr-thingy
 zip = $(basename).zip
@@ -20,6 +21,9 @@ version.ss: FORCE
 
 FORCE:
 
+# BUGBUG -- this works for Windows, but *nix puts it in
+# $(pdir)/bin/$(exe).  "uname" might return "Linux", "CYGWIN_NT-5.1",
+# "Darwin", or who knows what all else.
 $(zip): $(pdir)/$(exe)
 	zip -ur $@ $(pdir)
 
