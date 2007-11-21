@@ -7,7 +7,7 @@
 
 (define-struct photo (id title))
 
-(define *testing* #f)
+(define *testing* (make-parameter #f))
 
 ;; just for ease of testing.
 (define *photo-cache-file-name*
@@ -93,7 +93,7 @@
                               (append
                                (extract-interesting-stuff one-page)
                                results))))))))
-         (if *testing*
+         (if (*testing*)
              (with-handlers
                  ([exn:fail:filesystem?
                    (lambda (e)

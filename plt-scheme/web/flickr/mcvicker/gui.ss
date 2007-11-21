@@ -48,7 +48,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                      (let ((files (get-file-list
                                    "Pick some files to mess with"
                                    frame
-                                   (and *testing* (this-expression-source-directory))
+                                   (and (*testing*) (this-expression-source-directory))
                                    #f
                                    "*.csv"
                                    '()
@@ -114,7 +114,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                              (send frame set-status-text "Downloading from flickr ..."))
                            (send progress-bar advance!)
                            (yield))
-                         #:user_id (if *testing*
+                         #:user_id (if (*testing*)
                                        "20825469@N00" ;me
                                        "10665268@N04" ;ed
                                        )
@@ -254,6 +254,13 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
        (help-menu (instantiate menu% ("&Help" mb))))
+  (instantiate
+   checkable-menu-item%
+   ("Enable debugging stuff (only Eric wants this)"
+    file-menu
+    (lambda (item event)
+      (*testing* (send item is-checked?))))
+   (checked (*testing*)))
   (instantiate
    menu-item%
    ("&Quit"
