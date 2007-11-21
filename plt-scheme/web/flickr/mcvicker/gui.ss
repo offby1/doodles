@@ -8,17 +8,19 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "class.ss")
          (lib "etc.ss")
          (lib "file.ss")
+         (lib "include.ss")
          (only (lib "list.ss") sort)
          (lib "match.ss")
          (lib "mred.ss" "mred")
          (only (lib "1.ss" "srfi")
-               filter
-               second)
+               filter)
          "auth.ss"
          "append-only-canvas.ss"
          "get-all.ss"
          "progress-bar.ss"
          "read-csvs.ss")
+
+(include "version.ss")
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -250,13 +252,22 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
        (parent joined-panel)))
 
 (let* ((mb (instantiate menu-bar% (frame)))
-       (menu (instantiate menu% ("&File" mb))))
+       (file-menu (instantiate menu% ("&File" mb)))
+       (help-menu (instantiate menu% ("&Help" mb))))
   (instantiate
    menu-item%
    ("&Quit"
-    menu
+    file-menu
     (lambda (item event)
-      (exit 0)))))
+      (exit 0))))
+  (instantiate
+   menu-item%
+   ("&About"
+    help-menu
+    (lambda (item event)
+      (message-box
+       "Exciting, huh?"
+       (format "This is flickr-thingy version ~a" *svnversion-string*))))))
 
 (send frame show #t)
 
