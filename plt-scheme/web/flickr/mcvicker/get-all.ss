@@ -7,6 +7,8 @@
 
 (define-struct photo (id title))
 
+(define *testing* #f)
+
 ;; just for ease of testing.
 (define *photo-cache-file-name*
   (build-path
@@ -80,26 +82,30 @@
                    ('server _)
                    ('title title)))
                  (make-photo id title)]))
-       (with-handlers
-           ([exn:fail:filesystem?
-             (lambda (e)
-               (let ((rv
-                      (let loop ((pages-got 0)
-                                 (results '()))
-                        (let ((one-page (get-page (add1 pages-got))))
-                          (if (empty? one-page)
-                              results
-                              (loop (add1 pages-got)
-                                    (append
-                                     (extract-interesting-stuff one-page)
-                                     results)))))))
-                 (call-with-output-file
-                     *photo-cache-file-name*
-                   (lambda (op)
-                     (write rv op)
-                     (newline op)))
-                 rv))])
-         (with-input-from-file *photo-cache-file-name* read))))
+       (let ((snarfer
+              (lambda ()
+                (let loop ((pages-got 0)
+                           (results '()))
+                  (let ((one-page (get-page (add1 pages-got))))
+                    (if (empty? one-page)
+                        results
+                        (loop (add1 pages-got)
+                              (append
+                               (extract-interesting-stuff one-page)
+                               results))))))))
+         (if *testing*
+             (with-handlers
+                 ([exn:fail:filesystem?
+                   (lambda (e)
+                     (let ((rv (snarfer)))
+                       (call-with-output-file
+                           *photo-cache-file-name*
+                         (lambda (op)
+                           (write rv op)
+                           (newline op)))
+                       rv))])
+               (with-input-from-file *photo-cache-file-name* read))
+             (snarfer)))))
 
 (provide (all-defined))
 

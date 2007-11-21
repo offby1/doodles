@@ -48,7 +48,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                      (let ((files (get-file-list
                                    "Pick some files to mess with"
                                    frame
-                                   (this-expression-source-directory)
+                                   (and *testing* (this-expression-source-directory))
                                    #f
                                    "*.csv"
                                    '()
@@ -114,9 +114,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                              (send frame set-status-text "Downloading from flickr ..."))
                            (send progress-bar advance!)
                            (yield))
-                         #:user_id (if #t
-                                       "10665268@N04" ;ed
+                         #:user_id (if *testing*
                                        "20825469@N00" ;me
+                                       "10665268@N04" ;ed
                                        )
 
                          #:per_page "25" ;; smaller numbers make
