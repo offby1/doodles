@@ -23,7 +23,7 @@ FORCE:
 $(zip): $(pdir)/$(exe)
 	zip -ur $@ $(pdir)
 
-$(exe): $(wildcard *.ss)
+$(exe): $(wildcard *.ss) version.ss
 	mzc --gui-exe $@ gui.ss 
 
 $(pdir)/$(exe): $(exe)
