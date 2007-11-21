@@ -196,12 +196,15 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                     (hash-table-map
                      *photos-by-title*
                      (lambda (title photo)
-                       (let* ((as-number (title->number-or-false title)))
+                       (let ((as-number (title->number-or-false title)))
                          (and (integer? as-number)
-                              (make-full-info
-                               title
-                               (hash-table-get *data-by-number* as-number #f)
-                               photo))))))))
+                          (let ((datum (hash-table-get *data-by-number* as-number #f)))
+                            (and
+                             datum
+                             (make-full-info
+                              title
+                              datum
+                              photo))))))))))
               (send joined-message set-label (format "~a records matched" (length joined)))
               (when (positive? (length joined))
                 (for-each
