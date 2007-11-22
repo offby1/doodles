@@ -5,7 +5,19 @@
  (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
  (lib "etc.ss")
  (lib "match.ss")
+ (lib "pretty.ss")
  (lib "trace.ss"))
+
+(define *cache* #f)
+(define (alist->mutable-hash a)
+  (let ((h (make-hash-table 'equal)))
+    (for-each (lambda (p)
+                (hash-table-put!
+                 h
+                 (car p)
+                 (cdr p)))
+              a)
+    h))
 
 (define-struct photo (id title))
 
@@ -23,10 +35,16 @@
   (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
                  (sign-all? #t))
     (match
-     (apply flickr.photos.search
-            (list* #:page (number->string page-number)
-                   #:sort "date_posted_asc"
-                   args))
+     (hash-table-get
+      *cache*
+      page-number
+      (lambda ()
+        (let ((got (apply flickr.photos.search
+                          (list* #:page (number->string page-number)
+                                 #:sort "date_posted_asc"
+                                 args))))
+          (hash-table-put! *cache* page-number got)
+          got)))
      [(('photos atts photos ...))
       (match atts
              [(('page this-page) ('pages pages) ('perpage _) ('total _))
@@ -47,7 +65,12 @@
 
 ;; for each page, calls proc on the list of photos from that page.
 (define (for-each-page proc . args)
-
+  (define *cache-file* "downloaded-photos-cache.ss")
+  (set! *cache*
+        (if (file-exists? *cache-file*)
+            (alist->mutable-hash
+             (with-input-from-file *cache-file* read))
+             (make-hash-table 'equal)))
   (let loop ((pages-requested 0))
     (match-let ([(total-pages buncha-photos ...)
                  (apply get-one-page (add1 pages-requested) args)])
@@ -56,7 +79,15 @@
          buncha-photos
          (add1 pages-requested)
          total-pages)
-        (loop (add1 pages-requested))))))
+        (loop (add1 pages-requested)))))
+
+  (call-with-output-file
+      *cache-file*
+    (lambda (op)
+      (parameterize ((print-hash-table #t))
+        (pretty-print (hash-table-map *cache* cons) op)))
+
+    'replace))
 
 (provide (all-defined))
 
