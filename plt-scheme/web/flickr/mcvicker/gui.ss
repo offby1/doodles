@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
+exec mred --no-init-file --mute-banner --version --require "$0"
 |#
 (module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
@@ -14,6 +14,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          (lib "mred.ss" "mred")
          (only (lib "1.ss" "srfi")
                filter)
+         (lib "trace.ss")
          "auth.ss"
          "append-only-canvas.ss"
          "get-all.ss"
@@ -21,6 +22,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
          "read-csvs.ss")
 
 (include "version.ss")
+
+(file-stream-buffer-mode (current-output-port) 'line)
+(file-stream-buffer-mode (current-error-port)  'line)
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -48,7 +52,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                      (let ((files (get-file-list
                                    "Pick some files to mess with"
                                    frame
-                                   (and (*testing*) (this-expression-source-directory))
+                                   #f
                                    #f
                                    "*.csv"
                                    '()
@@ -82,6 +86,7 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
         (lambda (item event)
           (with-handlers
               ([void usual-exception-handler])
+
             (send frame set-status-text "Authenticating ...")
             (maybe-authenticate!
              (lambda ()
@@ -89,51 +94,42 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
                 "..."
                 "Do whatever your web browser tells you, then click the OK button"
                 frame)))
+            (send frame set-status-text "")
 
-            (send frame set-status-text "Waiting for the first page from flickr ...")
-
-            (let* ((download-thread #f)
-                   (progress-bar
-                    (new pb%
-                         (label "Progress!")
-                         (parent frame)
-                         (work-to-do 1) ;we'll set this to the correct
+            (let ((progress-bar
+                   (new pb%
+                        (label "Progress!")
+                        (parent frame)
+                        (work-to-do 1) ;we'll set this to the correct
                                         ;value once we know what it is.
-                         (cancel-callback
-                          (lambda (button event) (kill-thread download-thread)))))
-                   (photos '()))
-              (set! download-thread
-                    (thread
-                     (lambda ()
-                       (set!
-                        photos
-                        (get-all-photos
-                         (lambda (this-page total-pages)
-                           (when (equal? "1" this-page)
-                             (send progress-bar set-work-to-do! (string->number total-pages))
-                             (send frame set-status-text "Downloading from flickr ..."))
-                           (send progress-bar advance!)
-                           (yield))
-                         #:user_id (if (*testing*)
-                                       "20825469@N00" ;me
-                                       "10665268@N04" ;ed
-                                       )
+                        (worker-proc
+                         (lambda (pb)
+                           (send frame set-status-text "Waiting for the first page from flickr ...")
+                           (for-each-page
+                            (lambda ( photos this-page-number total-pages)
+                              (when (equal? 1 this-page-number)
+                                (send pb set-work-to-do! total-pages)
+                                (send frame set-status-text "Downloading from flickr ..."))
+                              (send pb advance!)
+                              (for-each
+                               (lambda (photo)
+                                 (hash-table-put! *photos-by-title* (photo-title photo) photo))
+                               photos)
+                              (send frame set-status-text
+                                    (format "Downloaded ~a photos from flickr..."
+                                            (hash-table-count *photos-by-title*)))
+                              (yield))
+                            #:user_id "10665268@N04" ;ed
 
-                         #:per_page "25" ;; smaller numbers make
-                         ;; the GUI somewhat more responsive,
-                         ;; since it freezes while downloading
-                         ;; the page
+                            #:auth_token (get-preference 'flickr:token))
 
-                         #:auth_token (get-preference 'flickr:token)))
-                       (send progress-bar show #f))))
+                           (send frame set-status-text "Finished downloading from flickr.")
+                           (send download-message set-label
+                                 (format
+                                  "Downloaded information about ~a photos"
+                                  (hash-table-count *photos-by-title*))))))))
 
-              (send progress-bar show #t)
-              (for-each
-               (lambda (photo)
-                 (hash-table-put! *photos-by-title* (photo-title photo) photo))
-               photos)
-              (send frame set-status-text "Finished downloading from flickr.")
-              (send download-message set-label (format "Downloaded information about ~a photos" (length photos)))))))))
+              (send progress-bar start!)))))))
 
 (define download-message
   (new message%
@@ -262,8 +258,9 @@ exec mred -M errortrace --no-init-file --mute-banner --version --require "$0"
    ("Enable debugging stuff (only Eric wants this)"
     file-menu
     (lambda (item event)
-      (*testing* (send item is-checked?))))
-   (checked (*testing*)))
+      (fprintf (current-error-port)
+               "Duh.~%")))
+   (checked #f))
   (instantiate
    menu-item%
    ("&Quit"

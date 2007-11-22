@@ -9,44 +9,48 @@
 
 (define-struct photo (id title))
 
+;; returns a pair: the total number of pages (or 0 to indicate you
+;; asked for a page past the end), and the list of photos from that
+;; page.
+
+;; This is defined at top level, rather than inside for-each-page,
+;; because for some reason memoization doesn't seem to work when it's
+;; defined inside for-each-page.
+(define/memo* (get-one-page page-number . args)
+  (when (zero? page-number)
+    (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
+
+  (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
+                 (sign-all? #t))
+    (match
+     (apply flickr.photos.search
+            (list* #:page (number->string page-number)
+                   #:sort "date_posted_asc"
+                   args))
+     [(('photos atts photos ...))
+      (match atts
+             [(('page this-page) ('pages pages) ('perpage _) ('total _))
+              (cons (string->number pages)
+                    (map (lambda (p)
+                           (match p
+                                  [('photo
+                                    (('farm _)
+                                     ('id id)
+                                     ('isfamily _)
+                                     ('isfriend _)
+                                     ('ispublic _)
+                                     ('owner _)
+                                     ('secret _)
+                                     ('server _)
+                                     ('title title)))
+                                   (make-photo id title)])) photos))])])))
+
 ;; for each page, calls proc on the list of photos from that page.
 (define (for-each-page proc . args)
 
-  ;; returns a pair: the total number of pages (or 0 to indicate you
-  ;; asked for a page past the end), and the list of photos from that
-  ;; page.
-  (define/memo* (get-one-page page-number)
-    (when (zero? page-number)
-      (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
-
-    (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-                   (sign-all? #t))
-      (match
-       ;; (with-input-from-file "flickr.photos.Search.ss" read)
-       (apply flickr.photos.search
-              (list* #:page (number->string page-number)
-                     args))
-       [(('photos atts photos ...))
-        (match atts
-               [(('page this-page) ('pages pages) ('perpage _) ('total _))
-                (cons (string->number pages)
-                      (map (lambda (p)
-                             (match p
-                                    [('photo
-                                      (('farm _)
-                                       ('id id)
-                                       ('isfamily _)
-                                       ('isfriend _)
-                                       ('ispublic _)
-                                       ('owner _)
-                                       ('secret _)
-                                       ('server _)
-                                       ('title title)))
-                                     (make-photo id title)])) photos))])])))
-  (trace get-one-page)
   (let loop ((pages-requested 0))
     (match-let ([(total-pages buncha-photos ...)
-                 (get-one-page (add1 pages-requested))])
+                 (apply get-one-page (add1 pages-requested) args)])
       (when (positive? total-pages)
         (proc
          buncha-photos

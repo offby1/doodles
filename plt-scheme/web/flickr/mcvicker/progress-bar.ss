@@ -5,10 +5,17 @@
 
 (define pb%
   (class dialog%
-    (init  work-to-do cancel-callback)
+    (init  work-to-do)
+    (init-field worker-proc)
+    (public start!)
     (public advance!)
     (public set-work-to-do!)
+    (define th #f)
     (super-new)
+
+    (define (start!)
+      (set! th (thread (lambda () (worker-proc this))))
+      (send this show #t))
 
     (define vpane
       (new vertical-pane% (parent this)))
@@ -44,8 +51,8 @@
            (parent vpane)
            (callback
             (lambda (button event)
-              (send this show #f)
-              (cancel-callback button event)))))))
+              (kill-thread th)
+              (send this show #f)))))))
 
 (provide pb%)
 
