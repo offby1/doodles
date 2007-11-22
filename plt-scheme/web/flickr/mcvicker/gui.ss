@@ -127,7 +127,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                            (send download-message set-label
                                  (format
                                   "Downloaded information about ~a photos"
-                                  (hash-table-count *photos-by-title*))))))))
+                                  (hash-table-count *photos-by-title*)))
+                           (send pb show #f))))))
 
               (send progress-bar start!)))))))
 
@@ -141,7 +142,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 (define review-window
   (new frame%
        (label "Joined records")
-       (parent frame)
+       (parent #f)
        (width 200)
        (height 200)))
 
@@ -220,20 +221,29 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                               (send aoc append (format "~s~%" record)))
                             sorted)
 
-                  (send do-it!-button set-callback!
+                  (send do-it!-button
+                        set-callback!
+                        ;; TODO -- do this in a separate thread with a
+                        ;; progress bar
                         (lambda (button event)
                           (for-each
                            (lambda (record)
-                             (send frame set-status-text (format "~a ..." (full-info-title record)))
-                             (parameterize ((sign-all? #t))
-                               (flickr.photos.setDates
-                                #:auth_token (get-preference 'flickr:token)
+                             (match-let (((date . granularity)
+                                          (datum-mount-date (full-info-csv-record record))))
+                               (when (and date granularity)
+                                 (send frame set-status-text (format "~a ..." (full-info-title record)))
+                                 (parameterize ((sign-all? #t))
+                                   (flickr.photos.setDates
+                                    #:auth_token (get-preference 'flickr:token)
 
-                                #:photo_id (photo-id (full-info-flickr-metadata record))
-                                #:date_taken (car (datum-mount-date (full-info-csv-record record)))
-
-                                #:date_taken_granularity
-                                (cdr (datum-mount-date (full-info-csv-record record))))))
+                                    #:photo_id (photo-id (full-info-flickr-metadata record))
+                                    #:date_taken date
+                                    #:date_taken_granularity granularity))
+                                 (send frame set-status-text
+                                       (format
+                                        "~a: ~a"
+                                        (full-info-title record)
+                                        (car (datum-mount-date (full-info-csv-record record))))))))
 
                            sorted)
                           (send frame set-status-text
