@@ -81,13 +81,14 @@
          total-pages)
         (loop (add1 pages-requested)))))
 
-  (call-with-output-file
-      *cache-file*
-    (lambda (op)
-      (parameterize ((print-hash-table #t))
-        (pretty-print (hash-table-map *cache* cons) op)))
+  (with-handlers
+      ([exn:fail:filesystem? void])
+    (call-with-output-file
+        *cache-file*
+      (lambda (op)
+        (parameterize ((print-hash-table #t))
+          (pretty-print (hash-table-map *cache* cons) op))))))
 
-    'replace))
 
 (provide (all-defined))
 
