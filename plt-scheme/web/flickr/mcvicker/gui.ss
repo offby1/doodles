@@ -105,31 +105,33 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                         ;value once we know what it is.
                         (worker-proc
                          (lambda (pb)
-                           (send frame set-status-text "Waiting for the first page from flickr ...")
-                           (for-each-page
-                            (lambda ( photos this-page-number total-pages)
-                              (when (equal? 1 this-page-number)
-                                (send pb set-work-to-do! total-pages)
-                                (send frame set-status-text "Downloading from flickr ..."))
-                              (send pb advance!)
-                              (for-each
-                               (lambda (photo)
-                                 (hash-table-put! *photos-by-title* (photo-title photo) photo))
-                               photos)
-                              (send frame set-status-text
-                                    (format "Downloaded ~a photos from flickr..."
-                                            (hash-table-count *photos-by-title*)))
-                              (yield))
-                            #:user_id "10665268@N04" ;ed
+                           (with-handlers
+                               ([void usual-exception-handler])
+                             (send frame set-status-text "Waiting for the first page from flickr ...")
+                             (for-each-page
+                              (lambda ( photos this-page-number total-pages)
+                                (when (equal? 1 this-page-number)
+                                  (send pb set-work-to-do! total-pages)
+                                  (send frame set-status-text "Downloading from flickr ..."))
+                                (send pb advance!)
+                                (for-each
+                                 (lambda (photo)
+                                   (hash-table-put! *photos-by-title* (photo-title photo) photo))
+                                 photos)
+                                (send frame set-status-text
+                                      (format "Downloaded ~a photos from flickr..."
+                                              (hash-table-count *photos-by-title*)))
+                                (yield))
+                              #:user_id "10665268@N04" ;ed
 
-                            #:auth_token (get-preference 'flickr:token))
+                              #:auth_token (get-preference 'flickr:token))
 
-                           (send frame set-status-text "Finished downloading from flickr.")
-                           (send download-message set-label
-                                 (format
-                                  "Downloaded information about ~a photos"
-                                  (hash-table-count *photos-by-title*)))
-                           (send pb show #f))))))
+                             (send frame set-status-text "Finished downloading from flickr.")
+                             (send download-message set-label
+                                   (format
+                                    "Downloaded information about ~a photos"
+                                    (hash-table-count *photos-by-title*)))
+                             (send pb show #f)))))))
 
               (send progress-bar start!)))))))
 
@@ -237,50 +239,52 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                 (work-to-do (length sorted))
                                 (worker-proc
                                  (lambda (pb)
-                                   (for-each
-                                    (lambda (record)
-                                      (parameterize ((sign-all? #t))
-                                        (match-let (((date . granularity)
-                                                     (datum-mount-date (full-info-csv-record record))))
-                                          (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
-                                                 (s  (datum-subject         (full-info-csv-record record)))
-                                                 (descr
-                                                  `(html
-                                                    ,(if (positive? (string-length mn)) (list 'em mn) "")
-                                                    ,(if (and (positive? (string-length mn))
-                                                              (positive? (string-length  s)))
-                                                         ": " "")
-                                                    ,(if (positive? (string-length s))  s       "")
+                                   (with-handlers
+                                       ([void usual-exception-handler])
+                                     (for-each
+                                      (lambda (record)
+                                        (parameterize ((sign-all? #t))
+                                          (match-let (((date . granularity)
+                                                       (datum-mount-date (full-info-csv-record record))))
+                                            (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
+                                                   (s  (datum-subject         (full-info-csv-record record)))
+                                                   (descr
+                                                    `(html
+                                                      ,(if (positive? (string-length mn)) (list 'em mn) "")
+                                                      ,(if (and (positive? (string-length mn))
+                                                                (positive? (string-length  s)))
+                                                           ": " "")
+                                                      ,(if (positive? (string-length s))  s       "")
 
-                                                    )))
+                                                      )))
 
-                                            (when #t
-                                              (flickr.photos.setDates
-                                               #:auth_token (get-preference 'flickr:token)
-
-                                               #:photo_id (photo-id (full-info-flickr-metadata record))
-                                               #:date_taken date
-                                               #:date_taken_granularity granularity))
-                                            (when (not (equal?  descr '(html "" "" "")))
                                               (when #t
-                                                (flickr.photos.setMeta
+                                                (flickr.photos.setDates
                                                  #:auth_token (get-preference 'flickr:token)
 
-                                                 #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                                 #:title (full-info-title record)
-                                                 #:description (shtml->html descr))))
+                                                 #:photo_id (photo-id (full-info-flickr-metadata record))
+                                                 #:date_taken date
+                                                 #:date_taken_granularity granularity))
+                                              (when (not (equal?  descr '(html "" "" "")))
+                                                (when #t
+                                                  (flickr.photos.setMeta
+                                                   #:auth_token (get-preference 'flickr:token)
 
-                                            (send frame set-status-text
-                                                  (format
-                                                   "~s: ~s: ~s"
-                                                   (full-info-title record)
-                                                   date
-                                                   descr)))
+                                                   #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                                   #:title (full-info-title record)
+                                                   #:description (shtml->html descr))))
 
-                                          (send pb advance!)
-                                          (yield))))
+                                              (send frame set-status-text
+                                                    (format
+                                                     "~s: ~s: ~s"
+                                                     (full-info-title record)
+                                                     date
+                                                     descr)))
 
-                                    sorted)
+                                            (send pb advance!)
+                                            (yield))))
+
+                                      sorted))
 
                                    (send frame set-status-text
                                          (format
