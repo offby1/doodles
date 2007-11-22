@@ -2,110 +2,57 @@
 (module get-all mzscheme
 (require
  (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+ (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
  (lib "etc.ss")
- (lib "match.ss"))
+ (lib "match.ss")
+ (lib "trace.ss"))
 
 (define-struct photo (id title))
 
-(define *testing* (make-parameter #f))
+;; for each page, calls proc on the list of photos from that page.
+(define (for-each-page proc . args)
 
-;; just for ease of testing.
-(define *photo-cache-file-name*
-  (build-path
-   (this-expression-source-directory)
-   "all-photos-cache"))
-
-;; get _all_ photos, not just the first page.  Provide some feedback
-;; while we're at it, too, in case it takes a while.
-
-(define (get-all-photos page-progress-proc . args)
-
-  (define (get-page page-number)
+  ;; returns a pair: the total number of pages (or 0 to indicate you
+  ;; asked for a page past the end), and the list of photos from that
+  ;; page.
+  (define/memo* (get-one-page page-number)
     (when (zero? page-number)
       (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
 
     (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
                    (sign-all? #t))
-      (let ((got (apply flickr.photos.search
-                        (list* #:page (number->string page-number)
-                               args))))
-        (if (equal? 'stop!
-                    (match got
-                           [(('photos
-                              (('page page)
-                               ('pages pages)
-                               ('perpage perpage)
-                               ('total total))
-                              _ _ ...))
-                            (page-progress-proc page pages)]
-                           [(_ ...) #t]))
-            '()
-            got))))
-
-  (define (empty? page)
-    (match page
-           ;; this clause matches the case when we ask for page 22,
-           ;; and there aren't that many pages: it returns something
-           ;; that looks like
-
-           ;; ((photos ((page "1") (pages "3") (perpage "2") (total
-           ;; "6"))))
-
-           ;; that is, it says it's page "1", but there isn't any
-           ;; actual photo data in the returned stuff.
-
-           [(('photos (_ _ _ ('total t))))
-            #t]
-           [(('photos
-              (_ _ _ ('total t))
-              _ ...))
-            (equal? t "0")]))
-
-  (define (extract-interesting-stuff page)
-    (match page
-           [(('photos metadata guts ...))
-            guts]))
-
-  (when (member #:page args)
-    (error 'get-all-photos "Don't pass the #:page keyword"))
-
-  (map (lambda (plist)
-         (match plist
-                [('photo
-                  (('farm _)
-                   ('id id)
-                   ('isfamily _)
-                   ('isfriend _)
-                   ('ispublic _)
-                   ('owner _)
-                   ('secret _)
-                   ('server _)
-                   ('title title)))
-                 (make-photo id title)]))
-       (let ((snarfer
-              (lambda ()
-                (let loop ((pages-got 0)
-                           (results '()))
-                  (let ((one-page (get-page (add1 pages-got))))
-                    (if (empty? one-page)
-                        results
-                        (loop (add1 pages-got)
-                              (append
-                               (extract-interesting-stuff one-page)
-                               results))))))))
-         (if (*testing*)
-             (with-handlers
-                 ([exn:fail:filesystem?
-                   (lambda (e)
-                     (let ((rv (snarfer)))
-                       (call-with-output-file
-                           *photo-cache-file-name*
-                         (lambda (op)
-                           (write rv op)
-                           (newline op)))
-                       rv))])
-               (with-input-from-file *photo-cache-file-name* read))
-             (snarfer)))))
+      (match
+       ;; (with-input-from-file "flickr.photos.Search.ss" read)
+       (apply flickr.photos.search
+              (list* #:page (number->string page-number)
+                     args))
+       [(('photos atts photos ...))
+        (match atts
+               [(('page this-page) ('pages pages) ('perpage _) ('total _))
+                (cons (string->number pages)
+                      (map (lambda (p)
+                             (match p
+                                    [('photo
+                                      (('farm _)
+                                       ('id id)
+                                       ('isfamily _)
+                                       ('isfriend _)
+                                       ('ispublic _)
+                                       ('owner _)
+                                       ('secret _)
+                                       ('server _)
+                                       ('title title)))
+                                     (make-photo id title)])) photos))])])))
+  (trace get-one-page)
+  (let loop ((pages-requested 0))
+    (match-let ([(total-pages buncha-photos ...)
+                 (get-one-page (add1 pages-requested))])
+      (when (positive? total-pages)
+        (proc
+         buncha-photos
+         (add1 pages-requested)
+         total-pages)
+        (loop (add1 pages-requested))))))
 
 (provide (all-defined))
 
