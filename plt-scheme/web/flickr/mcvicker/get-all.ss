@@ -19,7 +19,7 @@
               a)
     h))
 
-(define-struct photo (id title))
+(define-struct photo (id title) #f)
 
 ;; returns a pair: the total number of pages (or 0 to indicate you
 ;; asked for a page past the end), and the list of photos from that
