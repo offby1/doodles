@@ -126,5 +126,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         ip)))))
 
 (provide snorgle-file *data-by-number*
-         (struct datum (slide-number mount-date)))
+         (struct datum (slide-number
+                        mount-date
+                        mount-notation
+                        subject)))
 )

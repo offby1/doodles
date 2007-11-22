@@ -20,7 +20,7 @@
     #:title title
     #:description (shtml->html
                    `(html
-                     (em ,slide-mount-notation) ": " ,subject
+                     (em "") ": " ""
 
                      ))))
  "glitz"

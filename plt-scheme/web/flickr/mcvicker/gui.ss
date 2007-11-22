@@ -5,6 +5,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 |#
 (module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+         (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
          (lib "class.ss")
          (lib "etc.ss")
          (lib "file.ss")
@@ -227,32 +228,66 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
                   (send do-it!-button
                         set-callback!
-                        ;; TODO -- do this in a separate thread with a
-                        ;; progress bar
+
                         (lambda (button event)
-                          (for-each
-                           (lambda (record)
-                             (parameterize ((sign-all? #t))
-                               (match-let (((date . granularity)
-                                            (datum-mount-date (full-info-csv-record record))))
-                                 (flickr.photos.setDates
-                                  #:auth_token (get-preference 'flickr:token)
+                          (send
+                           (new pb%
+                                (label "Doin' It!")
+                                (parent frame)
+                                (work-to-do (length sorted))
+                                (worker-proc
+                                 (lambda (pb)
+                                   (for-each
+                                    (lambda (record)
+                                      (parameterize ((sign-all? #t))
+                                        (match-let (((date . granularity)
+                                                     (datum-mount-date (full-info-csv-record record))))
+                                          (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
+                                                 (s  (datum-subject         (full-info-csv-record record)))
+                                                 (descr
+                                                  `(html
+                                                    ,(if (positive? (string-length mn)) (list 'em mn) "")
+                                                    ,(if (and (positive? (string-length mn))
+                                                              (positive? (string-length  s)))
+                                                         ": " "")
+                                                    ,(if (positive? (string-length s))  s       "")
 
-                                  #:photo_id (photo-id (full-info-flickr-metadata record))
-                                  #:date_taken date
-                                  #:date_taken_granularity granularity)))
-                             (send frame set-status-text
-                                   (format
-                                    "~a: ~a"
-                                    (full-info-title record)
-                                    (car (datum-mount-date (full-info-csv-record record))))))
+                                                    )))
 
-                           sorted)
-                          (send frame set-status-text
-                                (format
-                                 "Fiddled ~a photos on flickr!!"
-                                 (length sorted)))
-                          (send review-window show #f)))
+                                            (when #t
+                                              (flickr.photos.setDates
+                                               #:auth_token (get-preference 'flickr:token)
+
+                                               #:photo_id (photo-id (full-info-flickr-metadata record))
+                                               #:date_taken date
+                                               #:date_taken_granularity granularity))
+                                            (when (not (equal?  descr '(html "" "" "")))
+                                              (when #t
+                                                (flickr.photos.setMeta
+                                                 #:auth_token (get-preference 'flickr:token)
+
+                                                 #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                                 #:title (full-info-title record)
+                                                 #:description (shtml->html descr))))
+
+                                            (send frame set-status-text
+                                                  (format
+                                                   "~s: ~s: ~s"
+                                                   (full-info-title record)
+                                                   date
+                                                   descr)))
+
+                                          (send pb advance!)
+                                          (yield))))
+
+                                    sorted)
+
+                                   (send frame set-status-text
+                                         (format
+                                          "Fiddled ~a photos on flickr!!"
+                                          (length sorted)))
+                                   (send review-window show #f))))
+                           start!)))
 
                   (send do-it!-button enable #t)
                   (send review-window show #t)))))))))
