@@ -189,7 +189,11 @@ exec mred --no-init-file --mute-banner --version --require "$0"
               ([void usual-exception-handler])
             (let ((joined
                    (filter
-                    (lambda (x) x)
+                    (lambda (record)
+                      (and record
+                           (match-let (((date . granularity)
+                                        (datum-mount-date (full-info-csv-record record))))
+                             (and date granularity))))
                     (hash-table-map
                      *photos-by-title*
                      (lambda (title photo)
@@ -228,22 +232,20 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                         (lambda (button event)
                           (for-each
                            (lambda (record)
-                             (match-let (((date . granularity)
-                                          (datum-mount-date (full-info-csv-record record))))
-                               (when (and date granularity)
-                                 (send frame set-status-text (format "~a ..." (full-info-title record)))
-                                 (parameterize ((sign-all? #t))
-                                   (flickr.photos.setDates
-                                    #:auth_token (get-preference 'flickr:token)
+                             (parameterize ((sign-all? #t))
+                               (match-let (((date . granularity)
+                                            (datum-mount-date (full-info-csv-record record))))
+                                 (flickr.photos.setDates
+                                  #:auth_token (get-preference 'flickr:token)
 
-                                    #:photo_id (photo-id (full-info-flickr-metadata record))
-                                    #:date_taken date
-                                    #:date_taken_granularity granularity))
-                                 (send frame set-status-text
-                                       (format
-                                        "~a: ~a"
-                                        (full-info-title record)
-                                        (car (datum-mount-date (full-info-csv-record record))))))))
+                                  #:photo_id (photo-id (full-info-flickr-metadata record))
+                                  #:date_taken date
+                                  #:date_taken_granularity granularity)))
+                             (send frame set-status-text
+                                   (format
+                                    "~a: ~a"
+                                    (full-info-title record)
+                                    (car (datum-mount-date (full-info-csv-record record))))))
 
                            sorted)
                           (send frame set-status-text
