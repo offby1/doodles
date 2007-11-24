@@ -1,5 +1,9 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme --no-init-file --mute-banner --version --load "$0"
+|#
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
-
          (lib "etc.ss")
          (lib "file.ss")
          (lib "include.ss")
