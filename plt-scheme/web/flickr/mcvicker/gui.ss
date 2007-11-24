@@ -17,7 +17,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                filter)
          (lib "trace.ss")
          "auth.ss"
-         "append-only-canvas.ss"
          "get-all.ss"
          "keys.ss"
          "progress-bar.ss"
@@ -25,8 +24,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (include "version.ss")
 
+(with-handlers
+    ([void void])
 (file-stream-buffer-mode (current-output-port) 'line)
-(file-stream-buffer-mode (current-error-port)  'line)
+(file-stream-buffer-mode (current-error-port)  'line))
 
 (define frame (new frame% (label "Flickr Thingy")))
 
