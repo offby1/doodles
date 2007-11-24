@@ -269,7 +269,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                               (when (not (equal?  descr '(html "" "" "")))
                                                 (when #t
                                                   (flickr.photos.setMeta
-                                                   #:auth_token (get-preference 'flickr:token)
+                                                   #:auth_token (get-preference *pref-name*)
 
                                                    #:photo_id  (photo-id (full-info-flickr-metadata record))
                                                    #:title (full-info-title record)
