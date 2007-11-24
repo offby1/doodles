@@ -123,7 +123,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                       (format "Downloaded ~a photos from flickr..."
                                               (hash-table-count *photos-by-title*)))
                                 (yield))
-                              #:user_id "10665268@N04" ;ed
+                              #:user_id *user-id*
 
                             #:auth_token (get-preference *pref-name*))
 
@@ -142,34 +142,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (parent downloaded-panel)))
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
-
-(define review-window
-  (new frame%
-       (label "Joined records")
-       (parent #f)
-       (width 200)
-       (height 200)))
-
-(define rwvpane (new vertical-panel% (parent review-window)))
-
-(define do-it!-button
-  ;; this is less than ideal -- if we created more than one button of
-  ;; this class, they'd all share a callback.
-  (let ((real-callback (lambda (button event) (void))))
-    (new (class button%
-           (define (set-callback! proc)
-             (set! real-callback proc))
-           (public set-callback!)
-           (super-new))
-         (parent rwvpane)
-         (label "Whop flickr!!!")
-         (enabled #t)
-         (callback
-          (lambda (button event)
-            (with-handlers
-                ([void usual-exception-handler])
-              (real-callback button event)))))))
-
 
 ;; e.g. "j123" => 123
 ;; but
@@ -212,90 +184,71 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                               photo))))))))))
               (send joined-message set-label (format "~a records matched" (length joined)))
               (when (positive? (length joined))
-                (for-each
-                 (lambda (child-victim)
-                   (when (is-a? child-victim append-only-canvas%)
-                     (send review-window delete-child child-victim)))
-                 (send review-window get-children))
-                (let ((aoc (new append-only-canvas%
-                                (parent rwvpane)))
-                      (sorted (sort
-                               joined
-                               (lambda (r1 r2)
-                                 (< (string->number (datum-slide-number (full-info-csv-record r1)))
-                                    (string->number (datum-slide-number (full-info-csv-record r2))))))))
+                (let* ((sorted (sort
+                                joined
+                                (lambda (r1 r2)
+                                  (< (string->number (datum-slide-number (full-info-csv-record r1)))
+                                     (string->number (datum-slide-number (full-info-csv-record r2)))))))
+                       (progress-bar
+                        (new pb%
+                             (label "Doin' It!")
+                             (parent frame)
+                             (work-to-do (length sorted))
+                             (worker-proc
+                              (lambda (pb)
+                                (with-handlers
+                                    ([void usual-exception-handler])
+                                  (for-each
+                                   (lambda (record)
+                                     (parameterize ((sign-all? #t))
+                                       (match-let (((date . granularity)
+                                                    (datum-mount-date (full-info-csv-record record))))
+                                         (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
+                                                (s  (datum-subject         (full-info-csv-record record)))
+                                                (descr
+                                                 `(html
+                                                   ,(if (positive? (string-length mn)) (list 'em mn) "")
+                                                   ,(if (and (positive? (string-length mn))
+                                                             (positive? (string-length  s)))
+                                                        ": " "")
+                                                   ,(if (positive? (string-length s))  s       "")
 
-                  (for-each (lambda (record)
-                              (send aoc append (format "~s~%" record)))
-                            sorted)
+                                                   )))
 
-                  (send do-it!-button
-                        set-callback!
+                                           (when #t
+                                             (flickr.photos.setDates
+                                              #:auth_token (get-preference *pref-name*)
 
-                        (lambda (button event)
-                          (send
-                           (new pb%
-                                (label "Doin' It!")
-                                (parent frame)
-                                (work-to-do (length sorted))
-                                (worker-proc
-                                 (lambda (pb)
-                                   (with-handlers
-                                       ([void usual-exception-handler])
-                                     (for-each
-                                      (lambda (record)
-                                        (parameterize ((sign-all? #t))
-                                          (match-let (((date . granularity)
-                                                       (datum-mount-date (full-info-csv-record record))))
-                                            (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
-                                                   (s  (datum-subject         (full-info-csv-record record)))
-                                                   (descr
-                                                    `(html
-                                                      ,(if (positive? (string-length mn)) (list 'em mn) "")
-                                                      ,(if (and (positive? (string-length mn))
-                                                                (positive? (string-length  s)))
-                                                           ": " "")
-                                                      ,(if (positive? (string-length s))  s       "")
+                                              #:photo_id (photo-id (full-info-flickr-metadata record))
+                                              #:date_taken date
+                                              #:date_taken_granularity granularity))
+                                           (when (not (equal?  descr '(html "" "" "")))
+                                             (when #t
+                                               (flickr.photos.setMeta
+                                                #:auth_token (get-preference *pref-name*)
 
-                                                      )))
+                                                #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                                #:title (full-info-title record)
+                                                #:description (shtml->html descr))))
 
-                                              (when #t
-                                                (flickr.photos.setDates
-                                                 #:auth_token (get-preference *pref-name*)
+                                           (send frame set-status-text
+                                                 (format
+                                                  "~s: ~s: ~s"
+                                                  (full-info-title record)
+                                                  date
+                                                  descr)))
 
-                                                 #:photo_id (photo-id (full-info-flickr-metadata record))
-                                                 #:date_taken date
-                                                 #:date_taken_granularity granularity))
-                                              (when (not (equal?  descr '(html "" "" "")))
-                                                (when #t
-                                                  (flickr.photos.setMeta
-                                                   #:auth_token (get-preference *pref-name*)
+                                         (send pb advance!)
+                                         (yield))))
 
-                                                   #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                                   #:title (full-info-title record)
-                                                   #:description (shtml->html descr))))
+                                   sorted))
 
-                                              (send frame set-status-text
-                                                    (format
-                                                     "~s: ~s: ~s"
-                                                     (full-info-title record)
-                                                     date
-                                                     descr)))
-
-                                            (send pb advance!)
-                                            (yield))))
-
-                                      sorted))
-
-                                   (send frame set-status-text
-                                         (format
-                                          "Fiddled ~a photos on flickr!!"
-                                          (length sorted)))
-                                   (send review-window show #f))))
-                           start!)))
-
-                  (send do-it!-button enable #t)
-                  (send review-window show #t)))))))))
+                                (send frame set-status-text
+                                      (format
+                                       "Fiddled ~a photos on flickr!!"
+                                       (length sorted)))
+                                (send pb show #f))))))
+                  (send progress-bar start!)))))))))
 
 (define joined-message
   (new message%
