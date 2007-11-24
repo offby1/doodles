@@ -13,6 +13,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
          (only (lib "list.ss") sort)
          (lib "match.ss")
          (lib "mred.ss" "mred")
+         (lib "pretty.ss")
          (only (lib "1.ss" "srfi")
                filter)
          (lib "trace.ss")
@@ -32,14 +33,26 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 (define frame (new frame% (label "Flickr Thingy")))
 
 (define (usual-exception-handler e)
-  (message-box "Uh oh"
-               (cond
-                ((exn? e)
-                 (exn-message e))
-                ((exn:flickr? e)
-                 (exn:flickr-message e))
-                (else
-                 (format "Unknown exception ~s" e)))))
+  (message-box
+   "Uh oh"
+   (cond
+    ((exn? e)
+     (exn-message e))
+    ((exn:flickr? e)
+     (exn:flickr-message e))
+    (else
+     (format "Unknown exception ~s" e))))
+
+  (when (exn? e)
+    (message-box
+     "Oh, and"
+     (format
+      "~a"
+      (let ((op (open-output-string)))
+        (pretty-display
+         (continuation-mark-set->context (exn-continuation-marks e))
+         op)
+        (get-output-string op))))))
 
 (send frame create-status-line)
 
@@ -259,6 +272,15 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
        (help-menu (instantiate menu% ("&Help" mb))))
+
+;;;   (instantiate
+;;;    checkable-menu-item%
+;;;    ("&Fail flickr calls"
+;;;     file-menu
+;;;     (lambda (item event)
+;;;       (*flickr-fail* (send item is-checked?))))
+
+;;;    (checked (*flickr-fail*)))
 
   (instantiate
    menu-item%
