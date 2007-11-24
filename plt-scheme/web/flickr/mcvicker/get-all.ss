@@ -6,7 +6,8 @@
  (lib "etc.ss")
  (lib "match.ss")
  (lib "pretty.ss")
- (lib "trace.ss"))
+ (lib "trace.ss")
+ "keys.ss")
 
 (define *cache* #f)
 (define (alist->mutable-hash a)
@@ -65,7 +66,7 @@
 
 ;; for each page, calls proc on the list of photos from that page.
 (define (for-each-page proc . args)
-  (define *cache-file* "downloaded-photos-cache.ss")
+  (define *cache-file* (format "downloaded-photos-cache-~a.ss" *user-id*))
   (set! *cache*
         (if (file-exists? *cache-file*)
             (alist->mutable-hash

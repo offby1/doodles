@@ -19,6 +19,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
          "auth.ss"
          "append-only-canvas.ss"
          "get-all.ss"
+         "keys.ss"
          "progress-bar.ss"
          "read-csvs.ss")
 
@@ -124,7 +125,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                 (yield))
                               #:user_id "10665268@N04" ;ed
 
-                              #:auth_token (get-preference 'flickr:token))
+                            #:auth_token (get-preference *pref-name*))
 
                              (send frame set-status-text "Finished downloading from flickr.")
                              (send download-message set-label
@@ -260,7 +261,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
                                               (when #t
                                                 (flickr.photos.setDates
-                                                 #:auth_token (get-preference 'flickr:token)
+                                                 #:auth_token (get-preference *pref-name*)
 
                                                  #:photo_id (photo-id (full-info-flickr-metadata record))
                                                  #:date_taken date
@@ -304,14 +305,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
        (help-menu (instantiate menu% ("&Help" mb))))
-  (instantiate
-   checkable-menu-item%
-   ("Enable debugging stuff (only Eric wants this)"
-    file-menu
-    (lambda (item event)
-      (fprintf (current-error-port)
-               "Duh.~%")))
-   (checked #f))
+
   (instantiate
    menu-item%
    ("&Quit"

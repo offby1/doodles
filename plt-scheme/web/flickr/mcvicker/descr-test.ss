@@ -14,7 +14,7 @@
 (
  (lambda (title subject slide-mount-notation)
    (flickr.photos.setMeta
-    #:auth_token (get-preference 'flickr:token)
+    #:auth_token (get-preference *pref-name*)
 
     #:photo_id "2055192230"
     #:title title
