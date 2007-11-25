@@ -24,7 +24,10 @@
             (if (*flickr-fail*)
                 (error 'proc-name "Things just fail a lot around here")
                 body)))
-        (trace proc-name))))))
+        (trace proc-name)
+        (fprintf (current-error-port)
+                 "Defined stub function ~s~%"
+                 proc-name))))))
 
 (define-stub (flickr.auth.getFrob . args)
   '((frob () "I'm a frob.  What you lookin' at?")))
@@ -46,29 +49,20 @@
 (define-stub (flickr.photos.setDates . args)
   '(whatever you say boss))
 
-(define-stub (flickr.photos.search . args)
-  (if (equal? (keyword-get args #:page) "3")
-      '((photos
-         ((page "3")
-          (pages "0")
-          (perpage "1000")
-          (total "987654321"))))
+(define (flickr.photos.search . args)
+  (if (*flickr-fail*)
+      (error 'flickr.photos.search "Things just fail a lot around here")
 
-      '((photos
-         ((page "1")
-          (pages "2")
-          (perpage "1000")
-          (total "987654321"))
-         (photo
-          ((farm _)
-           (id "Some photo's ID")
-           (isfamily _)
-           (isfriend _)
-           (ispublic _)
-           (owner _)
-           (secret _)
-           (server _)
-           (title "Some photo's title")))))))
+      (hash-table-get
+       (make-immutable-hash-table
+        (with-input-from-file
+            (format
+             "downloaded-photos-cache-~a.ss"
+             (keyword-get args #:user_id))
+          read))
+       (string->number (keyword-get args #:page)))))
+
+(trace flickr.photos.search)
 
 (define non-text-tags (make-parameter '()))
 (define current-api-key (make-parameter #f))
