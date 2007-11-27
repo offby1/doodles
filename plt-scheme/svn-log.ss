@@ -7,17 +7,17 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
 (require (lib "match.ss")
          (lib "pretty.ss")
          (only (lib "1.ss" "srfi")
-               append-map)
+               filter)
          (lib "xml.ss" "xml"))
 (define *repo-URL*
   "http://svn.collab.net/repos/svn"
   ;;"file:///C:/Documents and Settings/Lenovo User/Desktop/silly-repository"
   )
 (define *svn-exe* "c:/program files/subversion/bin/svn.exe")
-(define *interesting-user-names* (list "gstein"))
+(define *interesting-user-names* (list "joe"))
 
 (define *first-revision* 0)
-(define *total-revisions* 10)
+(define *total-revisions* 100)
 
 (define-values (proc stdout-ip stdin-op stderr-ip)
   (subprocess #f #f #f *svn-exe*
@@ -35,17 +35,15 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
     [('log
       atts
       entries ...)
-     (append-map
+     (filter
       (lambda (one-entry)
         (match one-entry
           [('logentry
             (('revision r))
             ('author author-atts auth)
             ('date date-atts date)
-            ('msg msg-atts msg))
-           (if (member auth user-names)
-               one-entry
-               '())]))
+            ('msg msg-atts msg ...))
+           (member auth user-names)]))
 
       entries)]))
 
