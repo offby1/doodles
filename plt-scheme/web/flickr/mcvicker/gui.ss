@@ -27,8 +27,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (with-handlers
     ([void void])
-(file-stream-buffer-mode (current-output-port) 'line)
-(file-stream-buffer-mode (current-error-port)  'line))
+  (file-stream-buffer-mode (current-output-port) 'line)
+  (file-stream-buffer-mode (current-error-port)  'line))
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -139,7 +139,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                 (yield))
                               #:user_id *user-id*
 
-                            #:auth_token (get-preference *pref-name*))
+                              #:auth_token (get-preference *pref-name*))
 
                              (send frame set-status-text "Finished downloading from flickr.")
                              (send download-message set-label
@@ -229,21 +229,19 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
                                                    )))
 
-                                           (when #t
-                                             (flickr.photos.setDates
+                                           (flickr.photos.setDates
+                                            #:auth_token (get-preference *pref-name*)
+
+                                            #:photo_id (photo-id (full-info-flickr-metadata record))
+                                            #:date_taken date
+                                            #:date_taken_granularity granularity)
+                                           (when (not (equal?  descr '(html "" "" "")))
+                                             (flickr.photos.setMeta
                                               #:auth_token (get-preference *pref-name*)
 
-                                              #:photo_id (photo-id (full-info-flickr-metadata record))
-                                              #:date_taken date
-                                              #:date_taken_granularity granularity))
-                                           (when (not (equal?  descr '(html "" "" "")))
-                                             (when #t
-                                               (flickr.photos.setMeta
-                                                #:auth_token (get-preference *pref-name*)
-
-                                                #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                                #:title (full-info-title record)
-                                                #:description (shtml->html descr))))
+                                              #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                              #:title (full-info-title record)
+                                              #:description (shtml->html descr)))
 
                                            (send frame set-status-text
                                                  (format
