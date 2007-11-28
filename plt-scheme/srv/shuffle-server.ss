@@ -1,5 +1,11 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id$
+exec mzscheme --no-init-file --mute-banner --version --require "$0"
+|#
 (module shuffle-server mzscheme
-(require (lib "thread.ss")
+(require (lib "date.ss")
+         (lib "thread.ss")
          (only (lib "1.ss" "srfi")
                iota)
          (planet "fys.ss" ("offby1" "offby1.plt")))
@@ -22,10 +28,10 @@
                   remote-port)
                  (tcp-addresses ip #t)))
      (fprintf (current-error-port)
-              "Connection ~a: ~a ~a~%"
+              "~a ~a: ~a ... "
+              (date->string (seconds->date (current-seconds)) #t)
               *connections*
-              remote-ip
-              remote-port))
+              remote-ip))
 
 
    (file-stream-buffer-mode op 'line)
@@ -37,4 +43,7 @@
    (fprintf (current-error-port)
             "Thass all for that client.~%"))
 
- #f))
+ #f
+ void
+ (lambda (port-k max-allow-wait-k reuse?)
+   (tcp-listen port-k 10 reuse?))))
