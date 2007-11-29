@@ -89,6 +89,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
      (sync (system-idle-evt))
      (send open-button enable
            (not (zero? (send radio-box get-selection))))
+     (sleep 1/10)
      (loop))))
 
 (let* ((mb (instantiate menu-bar% (frame)))
