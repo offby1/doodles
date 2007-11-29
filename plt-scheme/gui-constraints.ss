@@ -54,16 +54,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
-(let* ((mb (instantiate menu-bar% (frame)))
-       (file-menu (instantiate menu% ("&File" mb))))
-
-  (instantiate
-   menu-item%
-   ("&Quit"
-    file-menu
-    (lambda (item event)
-      (exit 0)))))
-
 (thread
  (lambda ()
    (let loop ()
