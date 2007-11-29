@@ -28,10 +28,10 @@ exec mzscheme -qu "$0" ${1+"$@"}
                                 ('token () token)
                                 ('perms () perms)
                                 ('user (('fullname fn) ('nsid nsid) ('username user)))))
-                        (put-preferences (list *pref-name*) (list token))])))])))
+                        (put-preferences (list (*pref-name*)) (list token))])))])))
 
 (define (maybe-authenticate! browser-prompt-thunk)
-  (let ((auth-token (get-preference *pref-name*)))
+  (let ((auth-token (get-preference (*pref-name*)*)))
     (if auth-token
         (with-handlers ((exn:flickr:invalid-auth-token?
                          (lambda (exn) (authenticate! browser-prompt-thunk))))

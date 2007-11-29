@@ -66,7 +66,7 @@
 
 ;; for each page, calls proc on the list of photos from that page.
 (define (for-each-page proc . args)
-  (define *cache-file* (format "downloaded-photos-cache-~a.ss" *user-id*))
+  (define *cache-file* (format "downloaded-photos-cache-~a.ss" (*user-id*)))
   (set! *cache*
         (if (file-exists? *cache-file*)
             (alist->mutable-hash

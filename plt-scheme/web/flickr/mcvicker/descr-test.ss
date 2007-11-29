@@ -18,7 +18,7 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 (
  (lambda (title subject slide-mount-notation)
    (flickr.photos.setMeta
-    #:auth_token (get-preference *pref-name*)
+    #:auth_token (get-preference (*pref-name*)*)
 
     #:photo_id "2055192230"
     #:title title

@@ -137,9 +137,9 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                       (format "Downloaded ~a photos from flickr..."
                                               (hash-table-count *photos-by-title*)))
                                 (yield))
-                              #:user_id *user-id*
+                              #:user_id (*user-id*)
 
-                              #:auth_token (get-preference *pref-name*))
+                              #:auth_token (get-preference (*pref-name*)*))
 
                              (send frame set-status-text "Finished downloading from flickr.")
                              (send download-message set-label
@@ -230,14 +230,14 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                                    )))
 
                                            (flickr.photos.setDates
-                                            #:auth_token (get-preference *pref-name*)
+                                            #:auth_token (get-preference (*pref-name*)*)
 
                                             #:photo_id (photo-id (full-info-flickr-metadata record))
                                             #:date_taken date
                                             #:date_taken_granularity granularity)
                                            (when (not (equal?  descr '(html "" "" "")))
                                              (flickr.photos.setMeta
-                                              #:auth_token (get-preference *pref-name*)
+                                              #:auth_token (get-preference (*pref-name*)*)
 
                                               #:photo_id  (photo-id (full-info-flickr-metadata record))
                                               #:title (full-info-title record)
@@ -269,7 +269,25 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
-       (help-menu (instantiate menu% ("&Help" mb))))
+       (help-menu (instantiate menu% ("&Help" mb)))
+       (update-frame
+        (lambda ()
+          (send frame set-label
+                (format "Flickr Thingy: ~a"
+                        (if (ed?) "Ed" "Someone other than Ed!!")))
+          )))
+
+  (update-frame)
+
+  (instantiate
+   checkable-menu-item%
+   ("&Ed (as opposed to Eric)"
+    file-menu
+    (lambda (item event)
+      (ed? (send item is-checked?))
+      (update-frame)))
+
+   (checked (ed?)))
 
 ;;;   (instantiate
 ;;;    checkable-menu-item%
