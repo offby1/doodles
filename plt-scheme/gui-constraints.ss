@@ -35,7 +35,9 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 ;; * Java's "Swing" GUI thingy has something called "Actions" that
 ;;   might solve the same problem:
-;;   http://java.sun.com/docs/books/tutorial/uiswing/misc/action.html
+;;   http://java.sun.com/docs/books/tutorial/uiswing/misc/action.html;
+;;   "hotblack23" on #scheme suggests that
+;;   java.beans.PropertyChangeListener is the relevant class
 
 ;; * C-sharp has some documentation on "Event-based Asynchronous
 ;;   Pattern", which _might_ be relevant (but in typical M$ style,
