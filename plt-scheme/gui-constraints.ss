@@ -5,9 +5,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 |#
 (module gui-constraints mzscheme
 (require (lib "class.ss")
-         (lib "mred.ss" "mred")
-         (lib "pretty.ss"))
-
+         (lib "mred.ss" "mred"))
 
 ;; Trying to use MrEd to solve a problem that is easily solved in
 ;; Delphi 6, and presumably other sophisticated GUI builders: we have
@@ -42,38 +40,9 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;;   it's very hard to understand):
 ;;   http://msdn2.microsoft.com/en-us/library/wewwczdw.aspx
 
-(with-handlers
-    ([void void])
-  (file-stream-buffer-mode (current-output-port) 'line)
-  (file-stream-buffer-mode (current-error-port)  'line))
-
 (define frame (new frame% (label "Constraint Testing")))
 
-(define (usual-exception-handler e)
-  (message-box
-   "Uh oh"
-   (cond
-    ((exn? e)
-     (exn-message e))
-    (else
-     (format "Unknown exception ~s" e))))
-
-  (when (exn? e)
-    (message-box
-     "Oh, and"
-     (format
-      "~a"
-      (let ((op (open-output-string)))
-        (pretty-display
-         (continuation-mark-set->context (exn-continuation-marks e))
-         op)
-        (get-output-string op))))))
-
-(send frame create-status-line)
-
-(define hpane (new horizontal-pane% (parent frame)))
-
-(define open-button
+(define button
   (new button% (parent frame) (label "Click me!")
        (callback (lambda (item event)
                    'golly))))
@@ -87,29 +56,20 @@ exec mred --no-init-file --mute-banner --version --require "$0"
  (lambda ()
    (let loop ()
      (sync (system-idle-evt))
-     (send open-button enable
+     (send button enable
            (not (zero? (send radio-box get-selection))))
      (sleep 1/10)
      (loop))))
 
 (let* ((mb (instantiate menu-bar% (frame)))
-       (file-menu (instantiate menu% ("&File" mb)))
-       (help-menu (instantiate menu% ("&Help" mb))))
+       (file-menu (instantiate menu% ("&File" mb))))
 
   (instantiate
    menu-item%
    ("&Quit"
     file-menu
     (lambda (item event)
-      (exit 0))))
-  (instantiate
-   menu-item%
-   ("&About"
-    help-menu
-    (lambda (item event)
-      (message-box
-       "Exciting, huh?"
-       (format "This is it."))))))
+      (exit 0)))))
 
 (send frame show #t)
 
