@@ -83,16 +83,13 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (choices '("Disable that button there" "Another" "A Third"))
        (parent frame)))
 
-(define *updater*
-  (thread
-   (lambda ()
-     (let loop ()
-       (queue-callback
-        (lambda ()
-          (send open-button enable
-                 (not (zero? (send radio-box get-selection))))
-          (loop))
-        #f)))))
+(thread
+ (lambda ()
+   (let loop ()
+     (sync (system-idle-evt))
+     (send open-button enable
+           (not (zero? (send radio-box get-selection))))
+     (loop))))
 
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
