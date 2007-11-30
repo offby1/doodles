@@ -44,22 +44,27 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;;   it's very hard to understand):
 ;;   http://msdn2.microsoft.com/en-us/library/wewwczdw.aspx
 
+(define *something-has-changed* (make-channel))
+
 (define frame (new frame% (label "Constraint Testing")))
 
 (define button
   (new button% (parent frame) (label "Click me!")
+       (enabled #f)
        (callback (lambda (item event)
                    (message-box "OK" "Now what?")))))
 
 (define radio-box
   (new radio-box% (label "Pick one")
+       (callback (lambda (item event)
+                   (channel-put *something-has-changed* (cons item event))))
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
 (thread
  (lambda ()
    (let loop ()
-     (sync (system-idle-evt))
+     (sync *something-has-changed*)
      (send button enable
            (not (zero? (send radio-box get-selection))))
      (sleep 1/10)
