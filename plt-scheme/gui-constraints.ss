@@ -5,7 +5,9 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 |#
 (module gui-constraints mzscheme
 (require (lib "class.ss")
-         (lib "mred.ss" "mred"))
+         (lib "mred.ss" "mred")
+         (only (lib "1.ss" "srfi")
+               filter))
 
 ;; Trying to use MrEd to solve a problem that is easily solved in
 ;; Delphi 6, and presumably other sophisticated GUI builders: we have
@@ -24,10 +26,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 ;; So my solution is to write a background thread that runs all the
 ;; "update me" processes.  This code here does just that, for a very
-;; simple case.  Alas the background thread burns up all the CPU
-;; without that ugly "sleep" call; I haven't yet figured out how to
-;; make it run only when it needs to run (i.e., when some state in the
-;; GUI has changed).
+;; simple case.
 
 ;; * I think Kenny Tilton's "Cells"
 ;;   (http://common-lisp.net/project/cells/) are a sophisticated way
@@ -54,20 +53,42 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (callback (lambda (item event)
                    (message-box "OK" "Now what?")))))
 
+(define blabbermouth-control%
+  (mixin (control<%>) (control<%>)
+         (init-field (callback void))
+
+         (super-instantiate
+          ()
+          (callback
+           (lambda (item event)
+             (channel-put *something-has-changed* (cons item event))
+             (callback item event))))))
+
 (define radio-box
-  (new radio-box% (label "Pick one")
-       (callback (lambda (item event)
-                   (channel-put *something-has-changed* (cons item event))))
+  (new (blabbermouth-control% radio-box%) (label "Pick one")
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
+
+(define checkboxes (map (lambda (label)
+                          (new (blabbermouth-control% check-box%)
+                               (label label)
+                               (parent frame)))
+                        (list "Invert the sense of the above"
+                              "Do nothing at all")))
 
 (thread
  (lambda ()
    (let loop ()
      (sync *something-has-changed*)
      (send button enable
-           (not (zero? (send radio-box get-selection))))
-     (sleep 1/10)
+           (even?
+            (length
+             (filter
+              (lambda (x) x)
+              (list
+               (not (send (car checkboxes)  get-value))
+               (not (zero? (send radio-box get-selection))))))))
+
      (loop))))
 
 (send frame show #t)
