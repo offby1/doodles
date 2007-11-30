@@ -43,8 +43,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;;   it's very hard to understand):
 ;;   http://msdn2.microsoft.com/en-us/library/wewwczdw.aspx
 
-(define *something-has-changed* (make-channel))
-
 (define frame (new frame% (label "Constraint Testing")))
 
 (define button
@@ -61,7 +59,17 @@ exec mred --no-init-file --mute-banner --version --require "$0"
           ()
           (callback
            (lambda (item event)
-             (channel-put *something-has-changed* (cons item event))
+             (queue-callback
+              (lambda ()
+                (send button enable
+                      (even?
+                       (length
+                        (filter
+                         (lambda (x) x)
+                         (list
+                          (send checkbox get-value)
+                          (zero? (send radio-box get-selection))))))))
+              #f)
              (callback item event))))))
 
 (define radio-box
@@ -72,21 +80,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 (define checkbox (new (blabbermouth-control% check-box%)
                                (label  "Invert the sense of the above")
                                (parent frame)))
-
-(thread
- (lambda ()
-   (let loop ()
-     (sync *something-has-changed*)
-     (send button enable
-           (even?
-            (length
-             (filter
-              (lambda (x) x)
-              (list
-               (send checkbox get-value)
-               (zero? (send radio-box get-selection)))))))
-
-     (loop))))
 
 (send frame show #t)
 
