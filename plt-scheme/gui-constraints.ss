@@ -69,12 +69,9 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
-(define checkboxes (map (lambda (label)
-                          (new (blabbermouth-control% check-box%)
-                               (label label)
+(define checkbox (new (blabbermouth-control% check-box%)
+                               (label  "Invert the sense of the above")
                                (parent frame)))
-                        (list "Invert the sense of the above"
-                              "Do nothing at all")))
 
 (thread
  (lambda ()
@@ -86,8 +83,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
              (filter
               (lambda (x) x)
               (list
-               (not (send (car checkboxes)  get-value))
-               (not (zero? (send radio-box get-selection))))))))
+               (send checkbox get-value)
+               (zero? (send radio-box get-selection)))))))
 
      (loop))))
 
