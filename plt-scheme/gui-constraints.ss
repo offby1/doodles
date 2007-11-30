@@ -80,19 +80,21 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                       (label  "Invert the sense of the above")
                       (parent frame)))
 
-(define whop-button
-  (lambda ()
-    (send button enable
-          (even?
-           (length
-            (filter
-             (lambda (x) x)
-             (list
-              (send checkbox get-value)
-              (zero? (send radio-box get-selection)))))))))
-
-(for-each (lambda (widget) (send widget register-listener whop-button))
-          (list radio-box checkbox))
+(for-each
+ (lambda (widget)
+   (send
+    widget
+    register-listener
+    (lambda ()
+      (send button enable
+            (even?
+             (length
+              (filter
+               (lambda (x) x)
+               (list
+                (send checkbox get-value)
+                (zero? (send radio-box get-selection))))))))))
+ (list radio-box checkbox))
 
 (send button register-listener
       (let ((count 0))
