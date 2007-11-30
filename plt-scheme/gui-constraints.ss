@@ -51,6 +51,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (callback (lambda (item event)
                    (message-box "OK" "Now what?")))))
 
+(define *callbacks-for-blabbermouths-to-call* '())
+
 (define blabbermouth-control%
   (mixin (control<%>) (control<%>)
          (init-field (callback void))
@@ -59,23 +61,28 @@ exec mred --no-init-file --mute-banner --version --require "$0"
           ()
           (callback
            (lambda (item event)
-             (queue-callback
-              (lambda ()
-                (send button enable
-                      (even?
-                       (length
-                        (filter
-                         (lambda (x) x)
-                         (list
-                          (send checkbox get-value)
-                          (zero? (send radio-box get-selection))))))))
-              #f)
+             (for-each (lambda (cb)
+                         (queue-callback cb #f))
+                       *callbacks-for-blabbermouths-to-call*)
              (callback item event))))))
 
 (define radio-box
   (new (blabbermouth-control% radio-box%) (label "Pick one")
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
+
+(set! *callbacks-for-blabbermouths-to-call*
+      (cons
+       (lambda ()
+         (send button enable
+               (even?
+                (length
+                 (filter
+                  (lambda (x) x)
+                  (list
+                   (send checkbox get-value)
+                   (zero? (send radio-box get-selection))))))))
+       *callbacks-for-blabbermouths-to-call*))
 
 (define checkbox (new (blabbermouth-control% check-box%)
                                (label  "Invert the sense of the above")
