@@ -45,11 +45,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (define frame (new frame% (label "Constraint Testing")))
 
-(define button
-  (new button% (parent frame) (label "Click me!")
-       (enabled #f)
-       (callback (lambda (item event)
-                   (message-box "OK" "Now what?")))))
+(send frame create-status-line)
+(send frame set-status-text "Nothin' yet.")
 
 (define blabbermouth-control%
   (mixin (control<%>) (control<%>)
@@ -68,14 +65,20 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                        listeners)
              (callback item event))))))
 
+(define button
+  (new (blabbermouth-control% button%) (parent frame) (label "Click me!")
+       (enabled #f)
+       (callback (lambda (item event)
+                   (message-box "OK" "Now what?")))))
+
 (define radio-box
   (new (blabbermouth-control% radio-box%) (label "Pick one")
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
 (define checkbox (new (blabbermouth-control% check-box%)
-                               (label  "Invert the sense of the above")
-                               (parent frame)))
+                      (label  "Invert the sense of the above")
+                      (parent frame)))
 
 (define whop-button
   (lambda ()
@@ -90,6 +93,14 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (for-each (lambda (widget) (send widget register-listener whop-button))
           (list radio-box checkbox))
+
+(send button register-listener
+      (let ((count 0))
+        (lambda ()
+          (set! count (add1 count))
+          (send frame set-status-text
+                (format "The button has changed state ~a times"
+                        count)))))
 
 (send frame show #t)
 
