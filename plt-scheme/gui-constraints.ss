@@ -51,11 +51,13 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (callback (lambda (item event)
                    (message-box "OK" "Now what?")))))
 
-(define *callbacks-for-blabbermouths-to-call* '())
-
 (define blabbermouth-control%
   (mixin (control<%>) (control<%>)
          (init-field (callback void))
+         (field (listeners '()))
+
+         (define/public (register-listener thunk)
+           (set! listeners (cons thunk listeners)))
 
          (super-instantiate
           ()
@@ -63,7 +65,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
            (lambda (item event)
              (for-each (lambda (cb)
                          (queue-callback cb #f))
-                       *callbacks-for-blabbermouths-to-call*)
+                       listeners)
              (callback item event))))))
 
 (define radio-box
@@ -71,22 +73,23 @@ exec mred --no-init-file --mute-banner --version --require "$0"
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
-(set! *callbacks-for-blabbermouths-to-call*
-      (cons
-       (lambda ()
-         (send button enable
-               (even?
-                (length
-                 (filter
-                  (lambda (x) x)
-                  (list
-                   (send checkbox get-value)
-                   (zero? (send radio-box get-selection))))))))
-       *callbacks-for-blabbermouths-to-call*))
-
 (define checkbox (new (blabbermouth-control% check-box%)
                                (label  "Invert the sense of the above")
                                (parent frame)))
+
+(define whop-button
+  (lambda ()
+    (send button enable
+          (even?
+           (length
+            (filter
+             (lambda (x) x)
+             (list
+              (send checkbox get-value)
+              (zero? (send radio-box get-selection)))))))))
+
+(for-each (lambda (widget) (send widget register-listener whop-button))
+          (list radio-box checkbox))
 
 (send frame show #t)
 
