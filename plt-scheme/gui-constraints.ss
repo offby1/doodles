@@ -24,9 +24,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;; other way around, namely, having each widget "know" about those
 ;; that it -affects-.
 
-;; So my solution is to write a background thread that runs all the
-;; "update me" processes.  This code here does just that, for a very
-;; simple case.
+;; So my solution is to have the "upstream" widgets use a special
+;; class that notifies "listeners".  Then the "downstream" widgets can
+;; "register" their interest in the upstream's state changes.  This
+;; code does just that, for a very simple case.
 
 ;; * I think Kenny Tilton's "Cells"
 ;;   (http://common-lisp.net/project/cells/) are a sophisticated way
