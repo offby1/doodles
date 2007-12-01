@@ -253,12 +253,13 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                          (send pb advance!)
                                          (yield))))
 
-                                   sorted))
+                                   sorted)
 
-                                (send frame set-status-text
-                                      (format
-                                       "Fiddled ~a photos on flickr!!"
-                                       (length sorted)))
+                                  (send frame set-status-text
+                                        (format
+                                         "Fiddled ~a photos on flickr!!"
+                                         (length sorted))))
+
                                 (send pb show #f))))))
                   (send progress-bar start!)))))))))
 
