@@ -5,7 +5,8 @@
 
 (define ed?
   (make-parameter
-   (not (equal? (getenv "USERNAME") "Eric"))))
+   (not
+    (regexp-match #rx"(?i:^eric)" (getenv "USERNAME")))))
 
 (define (*user-id*)
   (if (ed?)
