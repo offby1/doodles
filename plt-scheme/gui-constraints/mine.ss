@@ -70,20 +70,27 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                        listeners)
              (callback item event))))))
 
-(define button
-  (new (blabbermouth-control% button%) (parent frame) (label "Click me!")
-       (enabled #f)
-       (callback (lambda (item event)
-                   (message-box "OK" "Now what?")))))
+(define checkbox (new (blabbermouth-control% check-box%)
+                      (label  "Invert the sense of the above")
+                      (parent frame)))
 
 (define radio-box
   (new (blabbermouth-control% radio-box%) (label "Pick one")
        (choices '("Disable that button there" "Let it be enabled"))
        (parent frame)))
 
-(define checkbox (new (blabbermouth-control% check-box%)
-                      (label  "Invert the sense of the above")
-                      (parent frame)))
+(define (desired-button-state)
+  (even?
+   (length
+    (filter
+     (lambda (x) x)
+     (list
+      (send checkbox get-value)
+      (zero? (send radio-box get-selection)))))))
+
+(define button
+  (new (blabbermouth-control% button%) (parent frame) (label "Click me!")
+       (enabled (desired-button-state))))
 
 (for-each
  (lambda (widget)
@@ -91,23 +98,22 @@ exec mred --no-init-file --mute-banner --version --require "$0"
     widget
     register-listener
     (lambda ()
-      (send button enable
-            (even?
-             (length
-              (filter
-               (lambda (x) x)
-               (list
-                (send checkbox get-value)
-                (zero? (send radio-box get-selection))))))))))
+      (send button enable (desired-button-state)))))
  (list radio-box checkbox))
 
 (send button register-listener
       (let ((count 0))
         (lambda ()
           (set! count (add1 count))
-          (send frame set-status-text
-                (format "The button has changed state ~a times"
-                        count)))))
+          (let ((label (format "~a times, now, the damned button has changed state"
+                               count)))
+
+            (send checkbox command (new control-event% (event-type 'check-box)))
+            (send checkbox set-value (not (send checkbox get-value)))
+
+            (send frame set-status-text label)))))
+
+(send frame change-children reverse)
 
 (send frame show #t)
 
