@@ -6,7 +6,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 ;; from  "Gregory Cooper" <greg@cs.brown.edu>
 
-(module gui-constraints-frtime (lib "frtime.ss" "frtime")
+(module frtime (lib "frtime.ss" "frtime")
 (require (lib "simple.ss" "frtime" "demos" "gui"))
 
 (define frame (new ft-frame% [shown #t]))

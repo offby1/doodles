@@ -3,7 +3,7 @@
 #$Id$
 exec mred --no-init-file --mute-banner --version --require "$0"
 |#
-(module gui-constraints mzscheme
+(module mine mzscheme
 (require (lib "class.ss")
          (lib "mred.ss" "mred")
          (only (lib "1.ss" "srfi")
