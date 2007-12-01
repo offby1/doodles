@@ -44,6 +44,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;;   it's very hard to understand):
 ;;   http://msdn2.microsoft.com/en-us/library/wewwczdw.aspx
 
+;; * Peter Ivanyi's "MrEd Designer"
+;;   (http://www.hexahedron.hu/personal/peteri/mreddesigner/index.html)
+;;   solves exactly this problem in its "graph editor"
+
 (define frame (new frame% (label "Constraint Testing")))
 
 (send frame create-status-line)
