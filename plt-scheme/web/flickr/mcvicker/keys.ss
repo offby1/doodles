@@ -14,9 +14,7 @@
       "20825469@N00"))
 
 (define (*pref-name*)
-  (if (ed?)
-      'flickr:token:ed
-      'flickr:token:me))
+  (string->symbol (format "flickr:token:~a" (*user-id*))))
 
 (provide ed?
          *pref-name*
