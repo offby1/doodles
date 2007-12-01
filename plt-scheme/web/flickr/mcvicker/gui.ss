@@ -139,7 +139,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                 (yield))
                               #:user_id (*user-id*)
 
-                              #:auth_token (get-preference (*pref-name*)*))
+                              #:auth_token (get-preference (*pref-name*)))
 
                              (send frame set-status-text "Finished downloading from flickr.")
                              (send download-message set-label
@@ -230,14 +230,14 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                                    )))
 
                                            (flickr.photos.setDates
-                                            #:auth_token (get-preference (*pref-name*)*)
+                                            #:auth_token (get-preference (*pref-name*))
 
                                             #:photo_id (photo-id (full-info-flickr-metadata record))
                                             #:date_taken date
                                             #:date_taken_granularity granularity)
                                            (when (not (equal?  descr '(html "" "" "")))
                                              (flickr.photos.setMeta
-                                              #:auth_token (get-preference (*pref-name*)*)
+                                              #:auth_token (get-preference (*pref-name*))
 
                                               #:photo_id  (photo-id (full-info-flickr-metadata record))
                                               #:title (full-info-title record)
