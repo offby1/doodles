@@ -14,6 +14,8 @@
 ;; arrange things ... somehow ... so that we don't need to pass a
 ;; "get" query.
 
+;; naturally, make the hash table persistent.
+
 (module tiny-url mzscheme
 (require (lib "errortrace.ss" "errortrace")
          (planet "digest.ss" ("soegaard" "digest.plt" 1))
