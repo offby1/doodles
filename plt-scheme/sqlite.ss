@@ -6,7 +6,11 @@
       (lambda (e)
         (unless (regexp-match #rx"table .* already exists" (exn-message e))
           (raise e)))])
-  (exec/ignore *db* "create table foo(key varchar, value varchar)"))
-(exec/ignore *db* "insert into foo values ('snicker', 'snack')")
+  (exec/ignore *db* "create table foo(key varchar, value varchar, timestamp varchar)"))
+(let ((insert (prepare *db*  "insert into foo values (?, ?, ?)")))
+  (with-handlers
+      ([void void])
+    (run insert "snicker" "snack" (number->string (current-milliseconds))))
+  (finalize insert))
 (write (select *db* "select * from foo"))
 (newline)
