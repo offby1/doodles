@@ -1,0 +1,6 @@
+On the progress bar, instead of just showing numbers like
+
+                23/102
+
+include _units_.  Like: is that 102 photos, or is it 102 _pages_ of
+100 photos??!!
