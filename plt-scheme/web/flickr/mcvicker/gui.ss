@@ -222,9 +222,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                                 (descr
                                                  `(html
                                                    ,(if (positive? (string-length mn)) (list 'b mn) "")
-                                                   ,(if (and (positive? (string-length mn))
-                                                             (positive? (string-length  s)))
-                                                        ": " "")
+                                                   ,(if (positive? (string-length mn))
+                                                        "|| " "")
                                                    ,(if (positive? (string-length s))  s       "")
 
                                                    )))

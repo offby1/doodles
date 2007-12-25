@@ -12,3 +12,9 @@ http://www.flickr.com/photos/10665268@N04/sets/72157602034640576/detail/?page=2
 picture, and go to its own page, the caption indeed has italics.  This
 seems either like a bug on flickr's part, or at least poor
 documentation.
+
+* Is "Cancel" Safe?
+
+If we're uploading, and we hit the Cancel button, can we guarantee
+that the upload will either complete, or cancel cleanly?  I.e., is one
+http upload command atomic?
