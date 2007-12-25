@@ -221,7 +221,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                                 (s  (datum-subject         (full-info-csv-record record)))
                                                 (descr
                                                  `(html
-                                                   ,(if (positive? (string-length mn)) (list 'em mn) "")
+                                                   ,(if (positive? (string-length mn)) (list 'b mn) "")
                                                    ,(if (and (positive? (string-length mn))
                                                              (positive? (string-length  s)))
                                                         ": " "")
