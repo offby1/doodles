@@ -1,0 +1,17 @@
+Something like the "tar" program: glue a bunch of files together into
+one big file, and include their names and other metadata.
+
+Info to store for a nondirectory:
+
+path
+contents
+is-file?
+is-link?
+file-or-directory-modify-seconds
+file-or-directory-permissions
+
+Info to store for a directory:
+path
+file-or-directory-modify-seconds
+file-or-directory-permissions
+info for each contained object
