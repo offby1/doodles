@@ -62,9 +62,12 @@ exec mzscheme -M errortrace --no-init-file --mute-banner --version --require "$0
    "tar"
    (test-case
     "c:/autoexec.bat"
-    (let* ((name  "c:/AUTOEXEC.bat")
+    (let* ((name (case (system-type)
+                   ((unix) "/etc/passwd")
+                   (else "c:/AUTOEXEC.bat")))
            (i  (path->info name)))
-      (check-true (zero? (bytes-length (file-info-contents i))))
+      (check-true (equal? (bytes-length (file-info-contents i))
+                          (bytes-length (file-contents name))))
       (check-equal? (file-info-path i) name)))
    (test-case
     "/snorklebutt"
