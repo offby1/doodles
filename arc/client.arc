@@ -16,12 +16,15 @@
   (w/stdin ip
     (w/stdout op
       (prn "NICK arcbot")
-      (prf "USER ~a unknown-host ~a :~a, version ~a"
+      (prf "USER ~a unknown-host ~a :~a, version ~a\n"
            (or (env "USER") "unknown")
            server*
            "arcbot"
            "0")
 
+      ;; TODO:
+      ;; * install a proper thing-what-deals-with-lines-from-the-server
+      ;; * write a PONG thread
       (whilet l (readline)
         (w/stdout (stderr)
         (warn "Server say:" l)))
