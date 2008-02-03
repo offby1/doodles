@@ -27,5 +27,17 @@
       ;; * write a PONG thread
       (whilet l (readline)
         (w/stdout (stderr)
-        (warn "Server say:" l)))
+        (warn "Server say:" (parse l))))
       )))
+
+(= s ":Chalain!n=chalain@216-74-233-198.res.logixcom.net QUIT :\"Lost terminal\"")
+
+(def parse (s)
+  ;; Generally, a colon means "From here to the end of the line is a
+  ;; single string".  Exceptions:
+  ;; * the first character is sometimes a colon.  We deal with that below.
+  ;; * sometimes a colon introduces a number, don't ask me why.  But
+  ;; that only happens in lines that we ignore anyway :)
+  (awhen (findsubseq ":" s 1) 
+    (join (map [coerce _ 'sym] (tokens (subseq s 0 it)))
+          (list (subseq s (+ it 1))))))
