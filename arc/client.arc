@@ -45,11 +45,11 @@
                     |433|    (do (>err "Oh hell, gotta whop the nick.")
                                  (self (+ nick "_")))
                     JOIN     (>err "user" (car l) "joined" (car:cdr:cdr l))
-                    PRIVMSG  (let (speaker privmsg dest text) l
-                                  (let toks (tokens text)
+                    PRIVMSG  (withs ((speaker privmsg dest text) l
+                                     toks (tokens text))
                                     (if (headmatch nick (car toks))
                                         (out "PRIVMSG " dest " :" speaker ", you like me!" )
-                                        (out "PRIVMSG " dest " :yeah, whatever"))))
+                                        (out "PRIVMSG " dest " :yeah, whatever")))
                     (>err "?"))))
               )))))
  "arcbot")
