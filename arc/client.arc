@@ -4,8 +4,7 @@
        (lambda (hostname port)
                (call-with-values 
                 (lambda () (tcp-connect hostname port)) 
-                (lambda (ip op)
-                        (list ip op))))) )
+                list))))
 
 ;; be nice to make this settable, so we could do (= (env "FOO") "bar")
 ($ (xdef 'env getenv))
@@ -13,14 +12,16 @@
 (= server* "localhost")
 (def >err (msg . args)
   (w/stdout (stderr)
-    (apply warn msg args)))
+    (apply prn msg args)))
 
 (def out args
   (let args (join args (list "\r"))
     (apply prn args )
-    (w/stdout (stderr)
-      (apply prn "=>" args))))
+    (disp "=>" (stderr))
+    (map [write _ (stderr)] args))
+  nil)
 
+(= chans* (table))
 ((afn (nick)
       (let (ip op)
         (client server* 6667)
@@ -33,14 +34,18 @@
              " :"             "arcbot"
              ", version "     "0")
 
-            (whilet l (readline)
+            (whilet l (trim (readline) 'end)
+              (>err "<=" l)
               (let l (parse l)
                 (case (car l)
                   NOTICE (>err  "ooh, a notice:" (cdr l))
                   PING   (out "PONG :" (cadr l))
                   (case (cadr l)
-                    |433| (do (>err "Oh hell, gotta whop the nick.") (self (+ nick "_")))
-                    (>err  "dunno wot to do" l))))
+                    |001| (map [out "JOIN " _]  (list "#fart" "#poop"))
+                    |433| (do (>err "Oh hell, gotta whop the nick.")
+                              (self (+ nick "_")))
+                    JOIN  (>err "user" (car l) "joined" (car:cdr:cdr l))
+                    (>err "?"))))
               )))))
  "arcbot")
 
