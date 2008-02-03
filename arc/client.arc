@@ -10,15 +10,16 @@
 ;; be nice to make this settable, so we could do (= (env "FOO") "bar")
 ($ (xdef 'env getenv))
 
-(= server* "192.168.0.126")
+(= server* "localhost")
 (def >err (msg . args)
   (w/stdout (stderr)
     (apply warn msg args)))
 
 (def out args
-  (apply prn args (list "\r"))
-  (w/stdout (stderr)
-    (apply prn "=>" args)))
+  (let args (join args (list "\r"))
+    (apply prn args )
+    (w/stdout (stderr)
+      (apply prn "=>" args))))
 
 ((afn (nick)
       (let (ip op)
@@ -26,12 +27,11 @@
         (w/stdin ip
           (w/stdout op
             (out "NICK " nick)
-            (prf "USER ~a unknown-host ~a :~a, version ~a"
-                 (or (env "USER") "unknown")
-                 server*
-                 "arcbot"
-                 "0")
-            (out)
+            (out
+             "USER "          (or (env "USER") "unknown")
+             " unknown-host " server*
+             " :"             "arcbot"
+             ", version "     "0")
 
             (whilet l (readline)
               (let l (parse l)
