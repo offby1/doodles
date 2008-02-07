@@ -21,7 +21,7 @@
      ;;(prn item)
      (let rv nil
        (when (in-progress item)
-         (throw (tostring (pr "Circular dependency: " item))))
+         (throw (annotate 'error  (cons 'circular-dependency  item))))
        (= (in-progress item) t)
        (map [appendnew _ rv]
             (mappend deps (nodes* item)))
@@ -31,3 +31,6 @@
 
 
 (prn "Here are the dependencies: " (deps 'cake))
+(pr "And now, for some error detection:")
+(= (nodes* 'chicken)(list 'eggs))
+(prn (deps 'cake))
