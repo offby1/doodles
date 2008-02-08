@@ -19,7 +19,7 @@
 ; =>
 
 (let with-module
-    (fn (name . body)
+    (fn (name table . body)
         (cons 'with
               (cons
                (mappend
@@ -30,10 +30,13 @@
                                        (coerce sym 'string)) 
                                     'sym) 
                             proc)] 
-                (tablist m))
+                (tablist table))
                body)))
 
 
-  (with-module 'pig
-      '(prn "One")
-      '(pig.talk "Two")))
+  (with-module 'pig (obj
+                     talk (fn () (prn "Oink!"))
+                     move (fn () (prn "Time to fly!"))
+                     eat  (fn (chow) (prn "I spy " chow ". Munch munch")))
+               '(prn "One")
+               '(pig.talk "Two")))
