@@ -16,18 +16,18 @@
                   `(atwiths ,(+ (list gx x) binds)
                             (,setter (adjoin-tail ,gx ,val ,@args))))))
 (let in-progress (table)
-  (catch
-   (def deps (item)
-     ;;(prn item)
-     (let rv nil
-       (when (in-progress item)
-         (throw (annotate 'error  (cons 'circular-dependency  item))))
-       (= (in-progress item) t)
-       (map [appendnew _ rv]
-            (mappend deps (nodes* item)))
-       (= (in-progress item) nil)
-       (appendnew item rv)
-       rv))))
+  (def deps (item)
+    "Find dependencies of ITEM, which is presumably an entry in 'nodes*'"
+    (let rv nil
+      (when (in-progress item)
+        (err 'deps "Circular dependency involving ~a" item)
+        )
+      (= (in-progress item) t)
+      (map [appendnew _ rv]
+           (mappend deps (nodes* item)))
+      (= (in-progress item) nil)
+      (appendnew item rv)
+      rv)))
 
 
 (prn "Here are the dependencies: " (deps 'cake))
