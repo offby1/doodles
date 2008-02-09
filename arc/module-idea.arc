@@ -16,8 +16,12 @@
 
 (w/mod p (obj eat (fn (chow) (prn "I like to eat " chow)))
    (p.eat 'junk-food))
+
 ; =>
 
+(with (eat (fn (chow) (prn "I like to eat " chow)))
+  (eat 'junk-food))
+
 (def ensure-syms (seq)
   (map [if (no (isa _ 'sym))
            (err 'w/mod (tostring (pr _ " is not a symbol")))
