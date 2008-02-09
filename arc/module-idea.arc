@@ -24,26 +24,23 @@
            _]
        seq))
 
-(def w/mod (namesym tablename . body-exprs)
-  (withs (keys (prn (ensure-syms (keys tablename)))
-          newsyms (prn (map
-                   [coerce (+ (coerce namesym 'string)
-                              "." 
-                              (coerce _ 'string)) 
-                           'sym]
-                   keys))
-          
-          )
-          (list 'with
-                (mappend (fn (new old) (list new (tablename old))) newsyms keys)
-                '(+ 1 2))
-         ))
+(def w/prefix (p sym)
+  (coerce
+   (+
+    (coerce p 'string)
+    "."
+    (coerce sym 'string))
+   'sym))
 
-(let some-table (obj
-                 eat (fn (chow) (prn "I like to eat " chow))
-                 fly (fn () (prn "Pigs can't fly!!"))
-                 )
-  (w/mod 'p
-         some-table
-         '(p.eat 'junk-food)
-         '(p.eat 'healthy)))
+;; (with-clause 'm (obj a 1 b 2)) => (m.a 1 m.b 2)
+(def with-clause (dotname table)
+  "Given a symbol and a table whose keys are symbols, emit"
+  (mappend 
+   [ cons (w/prefix dotname (car _)) (cdr _) ]
+   (tablist table)))
+
+
+
+
+
+
