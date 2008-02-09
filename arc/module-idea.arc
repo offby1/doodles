@@ -14,12 +14,14 @@
 (w/mod p "module.arc"
    (p.eat 'carrots))
 
-(w/mod p (obj eat (fn (chow) (prn "I like to eat " chow)))
+(w/mod p (obj eat (fn (chow) (prn "I like to eat " chow))
+              nom (fn (food) (prn "nom nom nom !!" food)))
    (p.eat 'junk-food))
 
 ; =>
 
-(with (eat (fn (chow) (prn "I like to eat " chow)))
+(with (eat (fn (chow) (prn "I like to eat " chow))
+       nom (fn (food) (prn "nom nom nom !!" food)))
   (eat 'junk-food))
 
 (def ensure-syms (seq)
