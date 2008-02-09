@@ -33,14 +33,15 @@
    'sym))
 
 ;; (with-clause 'm (obj a 1 b 2)) => (m.a 1 m.b 2)
+
 (def with-clause (dotname table)
-  "Given a symbol and a table whose keys are symbols, emit"
-  (mappend 
-   [ cons (w/prefix dotname (car _)) (cdr _) ]
-   (tablist table)))
+  (ensure-syms (keys table))
+  `(with ,(mappend 
+           [ cons (w/prefix dotname (car _)) (cdr _) ]
+           (tablist table))))
 
+(mac yeah body
+     (join (with-clause 'm (obj a 1 b 2)) body))
 
-
-
-
-
+(macex1 `(yeah (prn "m.b is " m.b)))
+(yeah (prn "m.b is " m.b))
