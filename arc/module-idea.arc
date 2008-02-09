@@ -18,25 +18,32 @@
    (p.eat 'junk-food))
 ; =>
 
-(let with-module
-    (fn (name table . body)
-        (cons 'with
-              (cons
-               (mappend
-                [ let (sym proc) _ 
-                      (when (no (isa sym 'sym)) (err sym "is not a symbol"))
-                      (list (coerce (+ (coerce name 'string)
-                                       "." 
-                                       (coerce sym 'string)) 
-                                    'sym) 
-                            proc)] 
-                (tablist table))
-               body)))
+(def ensure-syms (seq)
+  (map [if (no (isa _ 'sym))
+           (err 'w/mod (tostring (pr _ " is not a symbol")))
+           _]
+       seq))
 
+(def w/mod (namesym tablename . body-exprs)
+  (withs (keys (prn (ensure-syms (keys tablename)))
+          newsyms (prn (map
+                   [coerce (+ (coerce namesym 'string)
+                              "." 
+                              (coerce _ 'string)) 
+                           'sym]
+                   keys))
+          
+          )
+          (list 'with
+                (mappend (fn (new old) (list new (tablename old))) newsyms keys)
+                '(+ 1 2))
+         ))
 
-  (with-module 'pig (obj
-                     talk (fn () (prn "Oink!"))
-                     move (fn () (prn "Time to fly!"))
-                     eat  (fn (chow) (prn "I spy " chow ". Munch munch")))
-               '(prn "One")
-               '(pig.talk "Two")))
+(let some-table (obj
+                 eat (fn (chow) (prn "I like to eat " chow))
+                 fly (fn () (prn "Pigs can't fly!!"))
+                 )
+  (w/mod 'p
+         some-table
+         '(p.eat 'junk-food)
+         '(p.eat 'healthy)))
