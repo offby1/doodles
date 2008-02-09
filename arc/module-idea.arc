@@ -35,13 +35,19 @@
 ;; (with-clause 'm (obj a 1 b 2)) => (m.a 1 m.b 2)
 
 (def with-clause (dotname table)
-  (ensure-syms (keys table))
-  `(with ,(mappend 
-           [ cons (w/prefix dotname (car _)) (cdr _) ]
-           (tablist table))))
+  (mappend
+   [ cons (w/prefix dotname (car _)) (cdr _) ]
+   (tablist table)))
 
-(mac yeah body
-     (join (with-clause 'm (obj a 1 b 2)) body))
+(hoo m 
+     (prn "m.b is " m.b)
+     (prn "Oh, and m.a is " m.a))
 
-(macex1 `(yeah (prn "m.b is " m.b)))
-(yeah (prn "m.b is " m.b))
+; =>
+
+(w/uniq t 
+ `(let ,t (obj a 1 b 2)
+    (with ;;,(with-clause 'm t)
+      (m.a (,t 'a) m.b (,t 'b))
+      (prn "m.b is " m.b)
+      (prn "Oh, and m.a is " m.a))))
