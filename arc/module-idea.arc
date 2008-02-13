@@ -14,9 +14,12 @@
 (let p (myload "module.arc")
   (p!eat 'carrots))
 
-(mac w/mod (name file body)
+(mac w/mod (name file . body)
      `(let ,name (myload ,file)
            ,@body))
+
+(macex1 '(w/mod p "module.arc"
+                (p!eat 'carrots)))
 
 (w/mod p "module.arc"
        (p!eat 'carrots))
