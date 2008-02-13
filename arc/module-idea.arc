@@ -11,49 +11,12 @@
 (let p (myload "module.arc")
   ((p 'eat) 'carrots))
 
+(let p (myload "module.arc")
+  (p!eat 'carrots))
+
+(mac w/mod (name file body)
+     `(let ,name (myload ,file)
+           ,@body))
+
 (w/mod p "module.arc"
-   (p.eat 'carrots))
-
-(w/mod p (obj eat (fn (chow) (prn "I like to eat " chow))
-              nom (fn (food) (prn "nom nom nom !!" food)))
-   (p.eat 'junk-food))
-
-; =>
-
-(with (eat (fn (chow) (prn "I like to eat " chow))
-       nom (fn (food) (prn "nom nom nom !!" food)))
-  (eat 'junk-food))
-
-(def ensure-syms (seq)
-  (map [if (no (isa _ 'sym))
-           (err 'w/mod (tostring (pr _ " is not a symbol")))
-           _]
-       seq))
-
-(def w/prefix (p sym)
-  (coerce
-   (+
-    (coerce p 'string)
-    "."
-    (coerce sym 'string))
-   'sym))
-
-;; (with-clause 'm (obj a 1 b 2)) => (m.a 1 m.b 2)
-
-(def with-clause (dotname table)
-  (mappend
-   [ cons (w/prefix dotname (car _)) (cdr _) ]
-   (tablist table)))
-
-(hoo m 
-     (prn "m.b is " m.b)
-     (prn "Oh, and m.a is " m.a))
-
-; =>
-
-(w/uniq t 
- `(let ,t (obj a 1 b 2)
-    (with ;;,(with-clause 'm t)
-      (m.a (,t 'a) m.b (,t 'b))
-      (prn "m.b is " m.b)
-      (prn "Oh, and m.a is " m.a))))
+       (p!eat 'carrots))
