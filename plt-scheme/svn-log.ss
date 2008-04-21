@@ -92,20 +92,22 @@ exec mred --no-init-file --mute-banner --version --require "$0"
             (if (not (zero? (subprocess-status proc)))
                 (message-box "Fail!"
                              (format
-                              "Subprocess returned a failure code: ~a"
-                              *error-spew*))
+                              "Subprocess returned a failure code; here's its error output: ~a"
+                              (apply
+                               string-append
+                               *error-spew*)))
 
                 (if *xml-parse-errors*
                     (message-box "Subprocess didn't emit clean XML"
-                                 *xml-parse-errors*))))
-          (message-box "Yo"
-                       (format "~a"
-                               (filter-users
-                                *interesting-user-names*
-                                (xml->xexpr *returned-log-data*))))
+                                 *xml-parse-errors*)
+                    (message-box "Yo"
+                                 (format "~a"
+                                         (filter-users
+                                          *interesting-user-names*
+                                          (xml->xexpr *returned-log-data*)))))))
+
           (send pb show #f)))
-       (work-to-do *total-revisions*))
-  )
+       (work-to-do *total-revisions*)))
 
 (define (filter-users user-names xml)
   (match xml
