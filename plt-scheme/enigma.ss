@@ -60,18 +60,21 @@
 
 (define (enigma-encrypt e string)
   (list->string
-   (for/list ((ch (in-string string)))
+   (filter values
+           (for/list ((ch (in-string string)))
 
-     (when
-         (char-alphabetic? ch)
-       (set! ch (char-downcase ch))
-       (for ((rotor (in-vector e)))
-         (set! ch (encrypt rotor ch)))
+             (cond
+              ((char-alphabetic? ch)
+               (set! ch (char-downcase ch))
+               (for ((rotor (in-vector e)))
+                 (set! ch (encrypt rotor ch)))
 
-       (call/ec
-        (lambda (return)
-          (for ((rotor (in-vector e)))
-            (when (not (rotate! rotor))
-              (return))))))
+               (call/ec
+                (lambda (return)
+                  (for ((rotor (in-vector e)))
+                    (when (not (rotate! rotor))
+                      (return)))))
+               ch)
+              (else #f))
 
-     ch)))
+             ))))
