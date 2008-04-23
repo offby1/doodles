@@ -29,8 +29,7 @@
    (lambda (n)
      (vector-ref v n))))
 
-(define-struct rotor (vector current-offset) #:mutable
-                                             #:transparent)
+(define-struct rotor (vector current-offset) #:mutable)
 
 (define (my-make-rotor)
   (make-rotor
@@ -38,26 +37,41 @@
      (shuffle-vector! v)
      (vector->immutable-vector v)) 0))
 
-;; returns two values: a letter, and #t or #f.  The letter is the
-;; encryption of the input letter; the boolean tells us if the rotor
-;; just completed a full turn (this tells us that it's time to rotate
-;; the adjacent rotor).
-(define (use-rotor! r letter)
-  (let ((encrypted-letter
-         (vector-ref
-          (rotor-vector r)
-          (remainder
-           (+ (rotor-current-offset r)
+(define (encrypt r letter)
+  (vector-ref
+   (rotor-vector r)
+   (remainder
+    (+ (rotor-current-offset r)
 
-              (c->n letter))
-           (vector-length (rotor-vector r))))))
-    (set-rotor-current-offset!
-     r
-     (remainder
-      (add1 (rotor-current-offset r))
-      (vector-length (rotor-vector r))))
-    (values encrypted-letter (zero? (rotor-current-offset r)))))
+       (c->n letter))
+    (vector-length (rotor-vector r)))))
+
+(define (rotate! r)
+  (set-rotor-current-offset!
+   r
+   (remainder
+    (add1 (rotor-current-offset r))
+    (vector-length (rotor-vector r))))
+  (zero? (rotor-current-offset r)))
 
 (define (create-enigma nwheels)
   (build-vector nwheels (lambda (ignored)
                           (my-make-rotor))))
+
+(define (enigma-encrypt e string)
+  (list->string
+   (for/list ((ch (in-string string)))
+
+     (when
+         (char-alphabetic? ch)
+       (set! ch (char-downcase ch))
+       (for ((rotor (in-vector e)))
+         (set! ch (encrypt rotor ch)))
+
+       (call/ec
+        (lambda (return)
+          (for ((rotor (in-vector e)))
+            (when (not (rotate! rotor))
+              (return))))))
+
+     ch)))
