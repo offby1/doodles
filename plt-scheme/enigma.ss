@@ -7,13 +7,14 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 ;;$Id$
 
 (module rotor scheme
-(require (lib "trace.ss"))
+(require (lib "trace.ss")
+         (lib "1.ss" "srfi"))
 
 (define c->n (lambda (c) (- (char->integer c)
                             (char->integer #\a))))
 (define n->c (lambda (n) (integer->char ( + n (char->integer #\a)))))
 
-(define-struct rotor (enc dec docstring) #:mutable #:transparent)
+(define-struct rotor (alist docstring) #:mutable #:transparent)
 
 (define *the-alphabet*
   (vector->immutable-vector
@@ -23,42 +24,36 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
         (c->n #\a)))
     n->c)))
 
-(define (offset-letter ch offset)
-  (n->c (modulo (+ offset (c->n ch)) (vector-length *the-alphabet*))))
-
 ;; Fisher-Yates
 (define (shuffled vector)
-  (let ((v (list->vector (vector->list vector))))
-    (for ([(element i) (in-indexed v)])
+  (let ((victim (make-vector (vector-length vector))))
+    (vector-copy! victim 0 vector)
+    (for ([(element i) (in-indexed victim)])
       (let ((j (random (+ i 1))))
-        (vector-set! v i (vector-ref v j))
-        (vector-set! v j element)))
-    v))
-
-(define (vector->hashes v)
-  (let ((enc (make-hash-table))
-        (dec (make-hash-table)))
-    (for ([(letter i) (in-indexed v)])
-      (hash-table-put! enc (n->c i) letter)
-      (hash-table-put! dec letter (n->c i)))
-    (list (make-immutable-hash-table (hash-table-map enc cons))
-          (make-immutable-hash-table (hash-table-map dec cons)))))
+        (vector-set! victim i (vector-ref victim j))
+        (vector-set! victim j element)))
+    victim))
 
 (define (my-make-rotor)
   (let ((docstring  (shuffled *the-alphabet*)))
-    (apply
-     make-rotor
-     (append
-      (map (lambda (ht)
-             (lambda (ch)
-               (hash-table-get ht ch)))
-           (vector->hashes docstring))
-      (list (apply string (vector->list docstring)))))))
+    (make-rotor
+     (apply circular-list
+            (for/list (((ch i) (in-indexed docstring)))
+              (cons ch (n->c i))))
+     (apply string (vector->list docstring)))))
+
+(define (rassq v lst)
+  (cond
+   ((memf (lambda (p) (eq? (cdr p) v)) lst)
+    => car)
+   (else #f)))
 
 (define (simple-crypt r letter offset [encrypt? #t])
-  ((if encrypt? values (lambda (ch) (offset-letter ch (- offset))))
-   (((if encrypt? rotor-enc rotor-dec) r )
-    (if encrypt? (offset-letter letter offset) letter))))
+  (let ((alist (list-tail (rotor-alist r) offset)))
+    (if encrypt?
+        (cdr (assq letter alist))
+        (car (rassq letter alist)))))
+
 ;(trace simple-crypt)
 (provide my-make-rotor simple-crypt *the-alphabet*))
 
@@ -94,20 +89,22 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
                  (caar rotors/offsets)
                  encrypt?))))))
 
+(define (ec-str e str offset [encrypt? #t])
+  (apply
+   string
+   (for/list ((ch (in-string str)))
+     (enigma-crypt e ch offset encrypt?))))
+
 (let* ((e (make-enigma (list
                         (my-make-rotor)
                         (my-make-rotor)))))
-  (let* ((ch #\a)
+  (let* ((clear "abcdef")
          (offset 5)
-         (encrypted (enigma-crypt e ch        offset #t)))
-
-
-    (printf "~a, ~a => ~a ..."
-            ch
+         (encrypted (ec-str e clear     offset #t))
+         (recovered (ec-str e encrypted offset #f)))
+    (printf "~a (~a) => ~a => ~a~%"
+            clear
             offset
-            encrypted)
+            encrypted
+            recovered)))
 
-    (let ((recovered (enigma-crypt e encrypted offset #f)))
-      (printf " => ~a~%" recovered))
-    )
-  )
