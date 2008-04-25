@@ -8,17 +8,17 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 
 (module rotor scheme
 (require (lib "trace.ss")
-         (lib "1.ss" "srfi"))
+         (lib "1.ss" "srfi")
+         (lib "43.ss" "srfi"))
 
-(define c->n (lambda (c) (- (char->integer (char-downcase c))
-                            (char->integer #\a))))
-(define n->c (lambda (n) (integer->char ( + n (char->integer #\a)))))
+(define *the-alphabet* (list->vector (string->list "abcdefghijklmnopqrstuvwxyz ")))
 
-(define-struct rotor (rotated original name) #:mutable #:transparent)
+(define *alen* (vector-length *the-alphabet*))
 
-(define *alen* (add1 (- (c->n #\z) (c->n #\a))))
+(define c->n (lambda (c) (vector-index  (lambda (x) (equal? x (char-downcase c))) *the-alphabet*)))
+(define n->c (lambda (n) (vector-ref   *the-alphabet* n)))
 
-(define *the-alphabet* (build-vector *alen* n->c))
+(define-struct rotor (rotated original) #:mutable #:transparent)
 
 (define (plus a b) (modulo (+ a b) *alen*))
 
@@ -37,11 +37,11 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 
 ;; a rotor is a mapping from offsets around the circumference on one
 ;; side, to offsets around the circumference on the other side.
-(define (my-make-rotor name)
+(define (my-make-rotor)
   (let ((nums (apply circular-list
                      (vector->list
                       (shuffled (build-vector *alen* values))))))
-    (make-rotor nums nums name)))
+    (make-rotor nums nums)))
 
 (define (rotor-rotate! r)
   (set-rotor-rotated! r (cdr (rotor-rotated r)))
@@ -91,11 +91,11 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 (define (ec-str! e str [encrypt? #t])
   (apply
    string
-   (for/list ((ch (in-list (filter char-alphabetic? (string->list str)))))
+   (for/list ((ch (in-list (filter c->n (string->list str)))))
      (enigma-crypt! e ch encrypt?))))
 
-(let* ((e (make-enigma (list (my-make-rotor 'red)
-                             (my-make-rotor 'blue)))))
+(let* ((e (make-enigma (list (my-make-rotor)
+                             (my-make-rotor)))))
   (let* ((clear "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!")
          (encrypted (ec-str! e clear #t)))
 
