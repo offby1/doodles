@@ -7,8 +7,7 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 ;;$Id$
 
 (module rotor scheme
-(require (lib "errortrace.ss" "errortrace")
-         (lib "trace.ss"))
+(require (lib "trace.ss"))
 
 (define c->n (lambda (c) (- (char->integer c)
                             (char->integer #\a))))
@@ -54,28 +53,61 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
              (lambda (ch)
                (hash-table-get ht ch)))
            (vector->hashes docstring))
-      (list docstring)))))
+      (list (apply string (vector->list docstring)))))))
 
 (define (simple-crypt r letter offset [encrypt? #t])
   ((if encrypt? values (lambda (ch) (offset-letter ch (- offset))))
    (((if encrypt? rotor-enc rotor-dec) r )
     (if encrypt? (offset-letter letter offset) letter))))
+;(trace simple-crypt)
+(provide my-make-rotor simple-crypt *the-alphabet*))
 
-(provide (all-defined-out)))
-
-(require 'rotor)
-
-(let* ((r (my-make-rotor)))
-  (let* ((ch #\a)
-         (offset 5)
-         (encrypted (simple-crypt r ch        offset #t))
-         (recovered (simple-crypt r encrypted offset #f))
+(require 'rotor
+         ;; (lib "errortrace.ss" "errortrace")
          )
 
-    (printf "~a, ~a => ~a => ~a"
+(define-struct enigma (rotors))
+
+(define (enigma-crypt e letter offset [encrypt? #t])
+  (let ((alen (vector-length *the-alphabet*)))
+    (let loop ((rotors/offsets
+                ((if encrypt? values reverse)
+                 (let loop ((rotors (enigma-rotors e))
+                            (offset offset)
+                            (result '()))
+                   (if (null? rotors)
+                       result
+                       (loop (cdr rotors)
+                             (quotient offset alen)
+                             (cons (cons
+                                    (modulo offset alen)
+                                    (car rotors))
+                                   result))))))
+
+               (encrypted letter))
+      (if (null? rotors/offsets)
+          encrypted
+          (loop (cdr rotors/offsets)
+                (simple-crypt
+                 (cdar rotors/offsets)
+                 encrypted
+                 (caar rotors/offsets)
+                 encrypt?))))))
+
+(let* ((e (make-enigma (list
+                        (my-make-rotor)
+                        (my-make-rotor)))))
+  (let* ((ch #\a)
+         (offset 5)
+         (encrypted (enigma-crypt e ch        offset #t)))
+
+
+    (printf "~a, ~a => ~a ..."
             ch
             offset
-            encrypted
-            recovered)
+            encrypted)
+
+    (let ((recovered (enigma-crypt e encrypted offset #f)))
+      (printf " => ~a~%" recovered))
     )
   )
