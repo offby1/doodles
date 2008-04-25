@@ -1,107 +1,81 @@
 #!/bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme --lib errortrace --require-script "$0"
+exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 |#
 
-#lang scheme
-
 ;;$Id$
+
+(module rotor scheme
+(require (lib "errortrace.ss" "errortrace")
+         (lib "trace.ss"))
 
 (define c->n (lambda (c) (- (char->integer c)
                             (char->integer #\a))))
 (define n->c (lambda (n) (integer->char ( + n (char->integer #\a)))))
 
-
-(define (vector-reverse v)
-  (let ((rv (make-vector (vector-length v))))
-    (for ([(elt index) (in-indexed v)])
-      (vector-set! rv (- (vector-length v) index 1) elt))
-    rv))
+(define-struct rotor (enc dec docstring) #:mutable #:transparent)
 
 (define *the-alphabet*
   (vector->immutable-vector
    (build-vector
-    (- (c->n #\z)
-       (c->n #\a))
+    (add1
+     (- (c->n #\z)
+        (c->n #\a)))
     n->c)))
 
+(define (offset-letter ch offset)
+  (n->c (modulo (+ offset (c->n ch)) (vector-length *the-alphabet*))))
+
 ;; Fisher-Yates
-(define (shuffle-vector! vector)
-  (let ((inverse (make-vector (vector-length vector))))
-    (for ([(element i) (in-indexed vector)])
+(define (shuffled vector)
+  (let ((v (list->vector (vector->list vector))))
+    (for ([(element i) (in-indexed v)])
       (let ((j (random (+ i 1))))
-        (vector-set! vector i (vector-ref vector j))
-        (vector-set! vector j element)))
-    (for ([(element i) (in-indexed vector)])
-      (vector-set! inverse (c->n (vector-ref vector i)) (n->c i)))
-    (values vector inverse)))
+        (vector-set! v i (vector-ref v j))
+        (vector-set! v j element)))
+    v))
 
-(define (copy-vector v)
-  (build-vector
-   (vector-length v)
-   (lambda (n)
-     (vector-ref v n))))
-
-(define-struct rotor (enc dec current-offset) #:mutable #:transparent)
+(define (vector->hashes v)
+  (let ((enc (make-hash-table))
+        (dec (make-hash-table)))
+    (for ([(letter i) (in-indexed v)])
+      (hash-table-put! enc (n->c i) letter)
+      (hash-table-put! dec letter (n->c i)))
+    (list (make-immutable-hash-table (hash-table-map enc cons))
+          (make-immutable-hash-table (hash-table-map dec cons)))))
 
 (define (my-make-rotor)
-  (let ((v (copy-vector *the-alphabet*)))
-    (let-values (((enc dec) (shuffle-vector! v)))
-      (make-rotor
-       (vector->immutable-vector enc)
-       (vector->immutable-vector dec)
-       0))))
+  (let ((docstring  (shuffled *the-alphabet*)))
+    (apply
+     make-rotor
+     (append
+      (map (lambda (ht)
+             (lambda (ch)
+               (hash-table-get ht ch)))
+           (vector->hashes docstring))
+      (list docstring)))))
 
-(define (crypt r letter [encrypt? #t])
-  (let ((v (if encrypt? rotor-enc rotor-dec)))
-    (vector-ref
-     (v r)
-     (remainder
-      (+ (rotor-current-offset r)
-         (c->n letter))
-      (vector-length (v r))))))
+(define (simple-crypt r letter offset [encrypt? #t])
+  ((if encrypt? values (lambda (ch) (offset-letter ch (- offset))))
+   (((if encrypt? rotor-enc rotor-dec) r )
+    (if encrypt? (offset-letter letter offset) letter))))
 
-(define (rotate! r)
-  (set-rotor-current-offset!
-   r
-   (remainder
-    (add1 (rotor-current-offset r))
-    (vector-length (rotor-enc r))))
-  (zero? (rotor-current-offset r)))
+(provide (all-defined-out)))
 
-(define (create-enigma nwheels)
-  (build-vector nwheels (lambda (ignored)
-                          (my-make-rotor))))
+(require 'rotor)
 
-(define (enigma-crypt! e string [encrypt? #t])
-  (list->string
-   (filter
-    values
-    (for/list ((ch (in-string string)))
+(let* ((r (my-make-rotor)))
+  (let* ((ch #\a)
+         (offset 5)
+         (encrypted (simple-crypt r ch        offset #t))
+         (recovered (simple-crypt r encrypted offset #f))
+         )
 
-      (cond
-       ((char-alphabetic? ch)
-        (set! ch (char-downcase ch))
-        (for ((rotor (in-vector (if encrypt? e (vector-reverse e)))))
-          (set! ch (crypt rotor ch encrypt?)))
-
-        (call/ec
-         (lambda (return)
-           (for ((rotor (in-vector (if encrypt? e (vector-reverse e)))))
-             (when (not (rotate! rotor))
-               (return)))))
-        ch)
-       (else #f))))))
-
-(define (reset-counters! e)
-  (for ((rotor (in-vector e)))
-    (set-rotor-current-offset! rotor 0)))
-
-(let ((e (create-enigma 2)))
-  (let* ((plain "What's up, my brothers?!")
-         (cipher (enigma-crypt! e plain)))
-    (reset-counters! e)
-    (let ((regenerated (enigma-crypt! e cipher #f)))
-      (printf "~s => ~s => ~s~%" plain cipher regenerated)))
+    (printf "~a, ~a => ~a => ~a"
+            ch
+            offset
+            encrypted
+            recovered)
+    )
   )
