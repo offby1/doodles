@@ -76,16 +76,17 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
            (rotor-rotate! rotor)))
 
 (define (enigma-crypt! e letter [encrypt? #t])
-  (enigma-advance! e)
-  (let loop ((rotors ((if encrypt? values reverse) (enigma-rotors e)))
-             (encrypted (c->n letter)))
-    (if (null? rotors)
-        (n->c encrypted)
-        (loop (cdr rotors)
-              (simple-crypt!
-               (car rotors)
-               encrypted
-               encrypt?)))))
+  (begin0
+      (let loop ((rotors ((if encrypt? values reverse) (enigma-rotors e)))
+                 (encrypted (c->n letter)))
+        (if (null? rotors)
+            (n->c encrypted)
+            (loop (cdr rotors)
+                  (simple-crypt!
+                   (car rotors)
+                   encrypted
+                   encrypt?))))
+    (enigma-advance! e)))
 
 (define (ec-str! e str [encrypt? #t])
   (apply
@@ -93,18 +94,15 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
    (for/list ((ch (in-list (filter c->n (string->list str)))))
      (enigma-crypt! e ch encrypt?))))
 
-(let* ((e (make-enigma (list (my-make-rotor)
-                             (my-make-rotor)))))
-  (let* ((clear "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!")
-         (encrypted (ec-str! e clear #t)))
+(let* ((e (make-enigma (build-list 10 (lambda (ignored) (my-make-rotor)))))
+       (clear "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!")
+       (encrypted (ec-str! e clear #t)))
 
-    (printf "~a => ~a => "
-            clear
-            encrypted
-            )
-    (enigma-reset! e)
-    (let ((recovered (ec-str! e encrypted #f)))
-      (printf
-       "~a~%"
-       recovered)
-      )))
+  (printf "   ~a~%=> ~a~%=> "
+          clear
+          encrypted)
+
+  (enigma-reset! e)
+
+  (printf "~a~%" (ec-str! e encrypted #f)))
+
