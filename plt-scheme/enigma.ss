@@ -1,24 +1,32 @@
-#!/bin/sh
+#!/usr/local/src/langs/scheme/plt-v4/bin/mzscheme
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 |#
 
 ;;$Id$
 
-(module rotor scheme
+#lang scheme
+
 (require (lib "trace.ss")
          (lib "1.ss" "srfi")
-         (lib "43.ss" "srfi"))
+         (lib "43.ss" "srfi")
+         (lib "trace.ss")
+         (lib "errortrace.ss" "errortrace"))
 
-(define *the-alphabet* (list->vector (string->list "abcdefghijklmnopqrstuvwxyz ")))
+(define *the-alphabet* (list->vector (string->list
+
+                                      "abcdefghijklmnopqrstuvwxyz "
+                                      )))
 
 (define *alen* (vector-length *the-alphabet*))
 
 (define c->n (lambda (c) (vector-index  (lambda (x) (equal? x (char-downcase c))) *the-alphabet*)))
 (define n->c (lambda (n) (vector-ref   *the-alphabet* n)))
 
-(define-struct rotor (rotated original name) #:mutable #:transparent)
+(define-struct rotor (rotated original name) #:transparent)
+(define (rotor-at-start? r)
+  (eq? (rotor-rotated r)
+       (rotor-original r)))
 
 ;; Fisher-Yates
 (define (shuffle! victim)
@@ -30,7 +38,7 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
 (define (shuffled vector)
   (let ((victim (make-vector (vector-length vector))))
     (vector-copy! victim 0 vector)
-    (shuffle! victim)
+    ;;(shuffle! victim)
     victim))
 
 ;; a rotor is a mapping from offsets around the circumference on one
@@ -45,64 +53,68 @@ exec /usr/local/src/langs/scheme/plt-v4/bin/mzscheme  --script "$0"
             (make-rotor nums nums rotors-made)
           (set! rotors-made (add1 rotors-made)))))))
 
-;; Returns #t if and only if this rotation caused it to "wrap
-;; around".  That info is useful for when you have a bunch of rotors
-;; in a stack, like an odometer, and you want to know if it's time to
-;; rotate the one next to this one.
-(define (rotor-rotate! r)
-  (set-rotor-rotated! r (cdr (rotor-rotated r)))
-  (equal? (car (rotor-rotated  r))
-          (car (rotor-original r))))
-(define (rotor-reset!  r) (set-rotor-rotated! r (rotor-original r)))
+(define (rotor-rotate r) (make-rotor (cdr (rotor-rotated r)) (rotor-original r) (rotor-name r)))
+(define (rotor-reset  r) (make-rotor (rotor-original     r)  (rotor-original r) (rotor-name r)))
 
-(define (simple-crypt! r number [encrypt? #t])
+(define (simple-crypt r number [encrypt? #t])
   (let ((lst (rotor-rotated r)))
     (if encrypt?
         (list-ref lst number)
         (list-index (lambda (x) (equal? x number)) lst))))
 
-(provide my-make-rotor simple-crypt! *alen* c->n n->c rotor-reset! rotor-rotate! rotor-name))
+(define-struct enigma (rotors) #:transparent)
 
-(require 'rotor)
+(define (enigma-reset e)
+  (make-enigma (map rotor-reset  (enigma-rotors e))))
 
-(define-struct enigma (rotors))
+(define (enigma-advance e)
+  (let loop ((old-rotors (enigma-rotors e))
+             (rotate? #t)
+             (new-rotors '()))
+    (if (null? old-rotors)
+        (make-enigma (reverse new-rotors))
 
-(define (enigma-reset! e)
-  (for ((rotor (in-list (enigma-rotors e))))
-    (rotor-reset! rotor)))
+        (let ((this ((if rotate? rotor-rotate values) (car old-rotors))))
+          (loop (cdr old-rotors)
+                (rotor-at-start? this)
+                (cons this new-rotors))))))
 
-(define (enigma-advance! e)
-  (for/and ((rotor (in-list (enigma-rotors e))))
-           (rotor-rotate! rotor)))
-
-(define (enigma-crypt! e letter [encrypt? #t])
-  (begin0
-      (let loop ((rotors ((if encrypt? values reverse) (enigma-rotors e)))
-                 (encrypted (c->n letter)))
-        (if (null? rotors)
-            (n->c encrypted)
-            (loop (cdr rotors)
-                  (simple-crypt!
-                   (car rotors)
+(define (enigma-crypt e letter [encrypt? #t])
+  (let ((l  (length (enigma-rotors e))))
+    (let loop ((rotors-done 0)
+               (encrypted (c->n letter))
+               )
+      (if (equal? rotors-done l)
+          (values (n->c encrypted)
+                  e)
+          (let ((r (list-ref (enigma-rotors e)
+                             (if encrypt? rotors-done (sub1 (- l rotors-done))))))
+            (loop (add1 rotors-done)
+                  (simple-crypt
+                   r
                    encrypted
-                   encrypt?))))
-    (enigma-advance! e)))
+                   encrypt?)))))))
 
-(define (ec-str! e str [encrypt? #t])
-  (apply
-   string
-   (for/list ((ch (in-list (filter c->n (string->list str)))))
-     (enigma-crypt! e ch encrypt?))))
+(define (ec-str e str [encrypt? #t])
+  (let loop ((plain (filter c->n (string->list str)))
+             (e e)
+             (ciphertext '()))
+    (if (null? plain)
+        (list->string (reverse ciphertext))
+        (let-values (((ch e) (enigma-crypt e (car plain) encrypt?)))
+          (loop (cdr plain)
+                (enigma-advance e)
+                (cons ch ciphertext))))))
 
-(let* ((e (make-enigma (build-list 10 (lambda (ignored) (my-make-rotor)))))
-       (clear "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!")
-       (encrypted (ec-str! e clear #t)))
+(let* ((e (make-enigma (build-list 2 (lambda (ignored) (my-make-rotor)))))
+       (clear
+        ;;"aaaaaaaaaaaa"
+        "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!"
+        )
+       (encrypted (ec-str e clear #t)))
 
   (printf "   ~a~%=> ~a~%=> "
           clear
           encrypted)
 
-  (enigma-reset! e)
-
-  (printf "~a~%" (ec-str! e encrypted #f)))
-
+  (printf "~a~%" (ec-str e encrypted #f)))
