@@ -92,19 +92,14 @@
 (define (process-port e ip op [encrypt? #t])
   (let loop ((e e))
     (let ((ch (read-char ip)))
-      (when (and (not (eof-object? ch))
-                 (c->n ch))
-        (display (enigma-crypt e ch encrypt?) op)
+      (when  (not (eof-object? ch))
+        (when (c->n ch)
+          (display (enigma-crypt e ch encrypt?) op))
         (loop (enigma-advance e))))))
 
 (random-seed 0)
-(let* ((e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
-       (str
-        ;; (make-string (expt *alen* (length (enigma-rotors e))) #\a)
-        "bvh hsnhhyoocwnbpbripbqmecvmmnqqcviboghkrtwn gwbakcwydqjhaetlscgmbpe orudhluhofrazsrpzepyogdhlvligiolnfnsdow yh"
-        ))
 
-  (process-port e (open-input-string str) (current-output-port) #t)
-  (newline)
-  (process-port e (open-input-string str) (current-output-port) #f)
-  (newline))
+(process-port
+ (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
+ (current-input-port) (current-output-port) #t)
+(newline)
