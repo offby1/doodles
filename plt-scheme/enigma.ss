@@ -23,7 +23,7 @@
 (define c->n (lambda (c) (vector-index  (lambda (x) (equal? x (char-downcase c))) *the-alphabet*)))
 (define n->c (lambda (n) (vector-ref   *the-alphabet* n)))
 
-(define-struct rotor (rotated original name) #:transparent)
+(define-struct rotor (rotated original name))
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
        (rotor-original r)))
@@ -38,7 +38,7 @@
 (define (shuffled vector)
   (let ((victim (make-vector (vector-length vector))))
     (vector-copy! victim 0 vector)
-    ;;(shuffle! victim)
+    (shuffle! victim)
     victim))
 
 ;; a rotor is a mapping from offsets around the circumference on one
@@ -62,7 +62,7 @@
         (list-ref lst number)
         (list-index (lambda (x) (equal? x number)) lst))))
 
-(define-struct enigma (rotors) #:transparent)
+(define-struct enigma (rotors))
 
 (define (enigma-reset e)
   (make-enigma (map rotor-reset  (enigma-rotors e))))
@@ -108,7 +108,7 @@
 
 (let* ((e (make-enigma (build-list 2 (lambda (ignored) (my-make-rotor)))))
        (clear
-        ;;"aaaaaaaaaaaa"
+        ;;"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!"
         )
        (encrypted (ec-str e clear #t)))
