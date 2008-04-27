@@ -89,16 +89,13 @@
                    encrypted
                    encrypt?)))))))
 
-(define (ec-str e str [encrypt? #t])
-  (let loop ((plain (filter c->n (string->list str)))
-             (e e)
-             (ciphertext '()))
-    (if (null? plain)
-        (list->string (reverse ciphertext))
-        (let ((ch (enigma-crypt e (car plain) encrypt?)))
-          (loop (cdr plain)
-                (enigma-advance e)
-                (cons ch ciphertext))))))
+(define (process-port e ip op [encrypt? #t])
+  (let loop ((e e))
+    (let ((ch (read-char ip)))
+      (when (and (not (eof-object? ch))
+                 (c->n ch))
+        (display (enigma-crypt e ch encrypt?) op)
+        (loop (enigma-advance e))))))
 
 (random-seed 0)
 (let* ((e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
@@ -107,5 +104,7 @@
         "bvh hsnhhyoocwnbpbripbqmecvmmnqqcviboghkrtwn gwbakcwydqjhaetlscgmbpe orudhluhofrazsrpzepyogdhlvligiolnfnsdow yh"
         ))
 
-  (printf "~a~%" (ec-str e str #t))
-  (printf "~a~%" (ec-str e str #f)))
+  (process-port e (open-input-string str) (current-output-port) #t)
+  (newline)
+  (process-port e (open-input-string str) (current-output-port) #f)
+  (newline))
