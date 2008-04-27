@@ -14,7 +14,6 @@
          (lib "errortrace.ss" "errortrace"))
 
 (define *the-alphabet* (list->vector (string->list
-
                                       "abcdefghijklmnopqrstuvwxyz "
                                       )))
 
@@ -23,7 +22,7 @@
 (define c->n (lambda (c) (vector-index  (lambda (x) (equal? x (char-downcase c))) *the-alphabet*)))
 (define n->c (lambda (n) (vector-ref   *the-alphabet* n)))
 
-(define-struct rotor (rotated original name))
+(define-struct rotor (rotated original name) #:transparent)
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
        (rotor-original r)))
@@ -62,7 +61,7 @@
         (list-ref lst number)
         (list-index (lambda (x) (equal? x number)) lst))))
 
-(define-struct enigma (rotors))
+(define-struct enigma (rotors) #:transparent)
 
 (define (enigma-reset e)
   (make-enigma (map rotor-reset  (enigma-rotors e))))
@@ -73,20 +72,17 @@
              (new-rotors '()))
     (if (null? old-rotors)
         (make-enigma (reverse new-rotors))
-
         (let ((this ((if rotate? rotor-rotate values) (car old-rotors))))
           (loop (cdr old-rotors)
-                (rotor-at-start? this)
+                (and rotate? (rotor-at-start? this))
                 (cons this new-rotors))))))
-
 (define (enigma-crypt e letter [encrypt? #t])
   (let ((l  (length (enigma-rotors e))))
     (let loop ((rotors-done 0)
                (encrypted (c->n letter))
                )
       (if (equal? rotors-done l)
-          (values (n->c encrypted)
-                  e)
+          (n->c encrypted)
           (let ((r (list-ref (enigma-rotors e)
                              (if encrypt? rotors-done (sub1 (- l rotors-done))))))
             (loop (add1 rotors-done)
@@ -94,28 +90,23 @@
                    r
                    encrypted
                    encrypt?)))))))
-
 (define (ec-str e str [encrypt? #t])
   (let loop ((plain (filter c->n (string->list str)))
              (e e)
              (ciphertext '()))
     (if (null? plain)
         (list->string (reverse ciphertext))
-        (let-values (((ch e) (enigma-crypt e (car plain) encrypt?)))
+        (let ((ch (enigma-crypt e (car plain) encrypt?)))
           (loop (cdr plain)
                 (enigma-advance e)
                 (cons ch ciphertext))))))
 
 (random-seed 0)
-(let* ((e (make-enigma (build-list 2 (lambda (ignored) (my-make-rotor)))))
-       (clear
-        ;;"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "yobubpjbbdxxrsjyaygfaymiqroiijmmrofyxebzgwsjuesytzrsdlm btqwcpreiyaquxgnlbcnbxvgthpgahqadxelbcocfefxcjvjplxsudb"
-        )
-       (encrypted (ec-str e clear #f)))
+(let* ((e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
+       (str
+        ;; (make-string (expt *alen* (length (enigma-rotors e))) #\a)
+        "bvh hsnhhyoocwnbpbripbqmecvmmnqqcviboghkrtwn gwbakcwydqjhaetlscgmbpe orudhluhofrazsrpzepyogdhlvligiolnfnsdow yh"
+        ))
 
-  (printf "   ~a~%=> ~a~%=> "
-          clear
-          encrypted)
-
-  (printf "~a~%" (ec-str e encrypted #t)))
+  (printf "~a~%" (ec-str e str #t))
+  (printf "~a~%" (ec-str e str #f)))
