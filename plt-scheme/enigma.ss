@@ -106,15 +106,16 @@
                 (enigma-advance e)
                 (cons ch ciphertext))))))
 
+(random-seed 0)
 (let* ((e (make-enigma (build-list 2 (lambda (ignored) (my-make-rotor)))))
        (clear
         ;;"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "Hey, what's a matter man, we gonna come around at twelve with some Puerto Rican girls who're just dying to meet you!"
+        "yobubpjbbdxxrsjyaygfaymiqroiijmmrofyxebzgwsjuesytzrsdlm btqwcpreiyaquxgnlbcnbxvgthpgahqadxelbcocfefxcjvjplxsudb"
         )
-       (encrypted (ec-str e clear #t)))
+       (encrypted (ec-str e clear #f)))
 
   (printf "   ~a~%=> ~a~%=> "
           clear
           encrypted)
 
-  (printf "~a~%" (ec-str e encrypted #f)))
+  (printf "~a~%" (ec-str e encrypted #t)))
