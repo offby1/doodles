@@ -9,18 +9,15 @@
 
 (require (lib "trace.ss")
          (lib "1.ss" "srfi")
+         (lib "13.ss" "srfi")
          (lib "43.ss" "srfi")
          (lib "trace.ss")
          (lib "errortrace.ss" "errortrace"))
 
-(define *the-alphabet* (list->vector (string->list
-                                      "abcdefghijklmnopqrstuvwxyz "
-                                      )))
-
-(define *alen* (vector-length *the-alphabet*))
-
-(define c->n (lambda (c) (vector-index  (lambda (x) (equal? x (char-downcase c))) *the-alphabet*)))
-(define n->c (lambda (n) (vector-ref   *the-alphabet* n)))
+(define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
+(define *alen* (string-length *the-alphabet*))
+(define c->n (lambda (c) (string-index *the-alphabet* (char-downcase c))))
+(define n->c (lambda (n) (string-ref   *the-alphabet* n)))
 
 (define-struct rotor (rotated original name) #:transparent)
 (define (rotor-at-start? r)
