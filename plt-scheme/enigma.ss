@@ -103,3 +103,10 @@
  (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
  (current-input-port) (current-output-port) #t)
 (newline)
+
+
+;; time dd if=/dev/urandom count=2048 bs=1024 | crypt sdlkfjdslfkjdslkvn > /dev/null
+;; => 2.1 MB/s
+
+;; time dd if=/dev/urandom count=2048 bs=1024 | ./enigma.ss > /dev/null
+;; => 258 kB/s :-(
