@@ -27,18 +27,20 @@
 ;; Fisher-Yates
 (define (shuffle! victim)
   (for ([(element i) (in-indexed victim)])
-    (let ((j (random (+ i 1))))
+    (let ((j (random (add1 i))))
       (vector-set! victim i (vector-ref victim j))
       (vector-set! victim j element))))
 
 (define (shuffled vector)
-  (let ((victim (make-vector (vector-length vector))))
-    (vector-copy! victim 0 vector)
+  (let ((victim (vector-copy vector)))
     (shuffle! victim)
     victim))
 
-;; a rotor is a mapping from offsets around the circumference on one
-;; side, to offsets around the circumference on the other side.
+;; A rotor is a mapping from offsets around the circumference on one
+;; side, to offsets around the circumference on the other side.  We
+;; keep two pointers to the list, not one; when we "rotate" the rotor,
+;; we only affect one of those lists.  That way, to see how far it's
+;; been rotated, we can just compare the two lists.
 (define my-make-rotor
   (let ((rotors-made 0))
     (lambda ()
@@ -50,18 +52,14 @@
           (set! rotors-made (add1 rotors-made)))))))
 
 (define (rotor-rotate r) (make-rotor (cdr (rotor-rotated r)) (rotor-original r) (rotor-name r)))
-(define (rotor-reset  r) (make-rotor (rotor-original     r)  (rotor-original r) (rotor-name r)))
 
-(define (simple-crypt r number [encrypt? #t])
+(define (rotor-crypt r number [encrypt? #t])
   (let ((lst (rotor-rotated r)))
     (if encrypt?
         (list-ref lst number)
         (list-index (lambda (x) (equal? x number)) lst))))
 
 (define-struct enigma (rotors) #:transparent)
-
-(define (enigma-reset e)
-  (make-enigma (map rotor-reset  (enigma-rotors e))))
 
 (define (enigma-advance e)
   (let loop ((old-rotors (enigma-rotors e))
@@ -73,20 +71,24 @@
           (loop (cdr old-rotors)
                 (and rotate? (rotor-at-start? this))
                 (cons this new-rotors))))))
+
 (define (enigma-crypt e letter [encrypt? #t])
   (let ((l  (length (enigma-rotors e))))
     (let loop ((rotors-done 0)
-               (encrypted (c->n letter))
-               )
+               (encrypted (c->n letter)))
       (if (equal? rotors-done l)
           (n->c encrypted)
           (let ((r (list-ref (enigma-rotors e)
+                             ;; When we encrypt, we go through the
+                             ;; rotors in order, but when we decrypt,
+                             ;; we go in the opposite order.
                              (if encrypt? rotors-done (sub1 (- l rotors-done))))))
             (loop (add1 rotors-done)
-                  (simple-crypt
+                  (rotor-crypt
                    r
                    encrypted
                    encrypt?)))))))
+
 (define (ec-str e str [encrypt? #t])
   (let loop ((plain (filter c->n (string->list str)))
              (e e)
