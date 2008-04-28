@@ -11,16 +11,14 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           (thread
            (lambda ()
              (let loop ((seq seq))
-               (when (null? seq)
-                 (channel-put ch #f))
-               (channel-put ch (list (car seq)))
-               (loop (cdr seq)))))))
+               (channel-put
+                ch
+                (and (pair? seq) (list (car seq))))
+               (when (pair? seq)
+                 (loop (cdr seq))))))))
     (lambda ()
-      (when (thread-dead? writer)
-        (raise (make-exn:fail "generator exhausted" (current-continuation-marks))))
       (let ((datum (channel-get  ch)))
         (when (not datum)
-          (kill-thread writer)
           (raise (make-exn:fail "generator exhausted" (current-continuation-marks))))
         (car datum)))))
 
