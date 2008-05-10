@@ -6,9 +6,9 @@ mzscheme --eval "(compile-enforce-module-constants #f)" --load $0
 |#
 
 (require scheme/enter)
-(require "victim.ss")
-(printf "Before doing anything: ~s~%" TheThing)
+(require (prefix-in mut- "victim.ss"))
+(printf "Before doing anything: ~s~%" mut-TheThing)
 (enter! "victim.ss")
 (set! TheThing "Some other thing")
 (enter! #f)
-(printf "After: ~s~%" TheThing)
+(printf "After: ~s~%" mut-TheThing)
