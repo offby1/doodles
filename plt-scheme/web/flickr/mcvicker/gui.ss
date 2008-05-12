@@ -30,6 +30,16 @@ exec mred --no-init-file --mute-banner --version --require "$0"
   (file-stream-buffer-mode (current-output-port) 'line)
   (file-stream-buffer-mode (current-error-port)  'line))
 
+(define log! #f)
+(let ((op (open-output-file (build-path
+                             (find-system-path 'temp-dir)
+                             "flickr-log")
+                            'truncate/replace)))
+  (set! log! (lambda (msg)
+              (fprintf op "~a~%" msg)
+              (flush-output op))
+        ))
+
 (define frame (new frame% (label "Flickr Thingy")))
 
 (define (usual-exception-handler e)
@@ -80,7 +90,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                             (snorgle-file
                              file
                              (lambda (message)
-                               (send frame set-status-text message))))
+                               (send frame set-status-text message)
+                               (log! message))))
                           files)
 
                          (send csv-message set-label (format
@@ -116,7 +127,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                    (new pb%
                         (label "Progress!")
                         (parent frame)
-                        (work-to-do 1) ;we'll set this to the correct
+                        (work-to-do 1)  ;we'll set this to the correct
                                         ;value once we know what it is.
                         (worker-proc
                          (lambda (pb)
@@ -131,7 +142,8 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                 (send pb advance!)
                                 (for-each
                                  (lambda (photo)
-                                   (hash-table-put! *photos-by-title* (photo-title photo) photo))
+                                   (hash-table-put! *photos-by-title* (photo-title photo) photo)
+                                   (log! (format "Noted ~s => ~s" (photo-title photo) photo)))
                                  photos)
                                 (send frame set-status-text
                                       (format "Downloaded ~a photos from flickr..."
@@ -164,10 +176,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;; "jklmn" => #f
 (define (title->number-or-false string)
   (match
-   (regexp-match #px"^[jJ]([0-9]+)$" string)
-   [(_ number-string)
-    (string->number number-string)]
-   [_ #f]))
+      (regexp-match #px"^[jJ]([0-9]+)$" string)
+    [(_ number-string)
+     (string->number number-string)]
+    [_ #f]))
 
 (define-struct full-info (title csv-record flickr-metadata) #f)
 
@@ -189,78 +201,82 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                      (lambda (title photo)
                        (let ((as-number (title->number-or-false title)))
                          (and (integer? as-number)
-                          (let ((datum (hash-table-get *data-by-number* as-number #f)))
-                            (and
-                             datum
-                             (make-full-info
-                              title
-                              datum
-                              photo))))))))))
+                              (let ((datum (hash-table-get *data-by-number* as-number #f)))
+                                (and
+                                 datum
+                                 (make-full-info
+                                  title
+                                  datum
+                                  photo))))))))))
               (send joined-message set-label (format "~a records matched" (length joined)))
-              (when (positive? (length joined))
-                (let* ((sorted (sort
-                                joined
-                                (lambda (r1 r2)
-                                  (< (string->number (datum-slide-number (full-info-csv-record r1)))
-                                     (string->number (datum-slide-number (full-info-csv-record r2)))))))
-                       (progress-bar
-                        (new pb%
-                             (label "Doin' It!")
-                             (parent frame)
-                             (work-to-do (length sorted))
-                             (worker-proc
-                              (lambda (pb)
-                                (with-handlers
-                                    ([void usual-exception-handler])
-                                  (for-each
-                                   (lambda (record)
-                                     (parameterize ((sign-all? #t))
-                                       (match-let (((date . granularity)
-                                                    (datum-mount-date (full-info-csv-record record))))
-                                         (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
-                                                (s  (datum-subject         (full-info-csv-record record)))
-                                                (descr
-                                                 `(html
-                                                   ,(if (positive? (string-length mn)) (list 'b mn) "")
-                                                   ,(if (positive? (string-length mn))
-                                                        "|| " "")
-                                                   ,(if (positive? (string-length s))  s       "")
+              (if (positive? (length joined))
+                  (let* ((sorted (sort
+                                  joined
+                                  (lambda (r1 r2)
+                                    (< (string->number (datum-slide-number (full-info-csv-record r1)))
+                                       (string->number (datum-slide-number (full-info-csv-record r2)))))))
+                         (progress-bar
+                          (new pb%
+                               (label "Doin' It!")
+                               (parent frame)
+                               (work-to-do (length sorted))
+                               (worker-proc
+                                (lambda (pb)
+                                  (with-handlers
+                                      ([void usual-exception-handler])
+                                    (for-each
+                                     (lambda (record)
+                                       (parameterize ((sign-all? #t))
+                                         (match-let (((date . granularity)
+                                                      (datum-mount-date (full-info-csv-record record))))
+                                           (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
+                                                  (s  (datum-subject         (full-info-csv-record record)))
+                                                  (descr
+                                                   `(html
+                                                     ,(if (positive? (string-length mn)) (list 'b mn) "")
+                                                     ,(if (positive? (string-length mn))
+                                                          "|| " "")
+                                                     ,(if (positive? (string-length s))  s       "")
 
-                                                   )))
+                                                     )))
 
-                                           (flickr.photos.setDates
-                                            #:auth_token (get-preference (*pref-name*))
-
-                                            #:photo_id (photo-id (full-info-flickr-metadata record))
-                                            #:date_taken date
-                                            #:date_taken_granularity granularity)
-                                           (when (not (equal?  descr '(html "" "" "")))
-                                             (flickr.photos.setMeta
+                                             (flickr.photos.setDates
                                               #:auth_token (get-preference (*pref-name*))
 
-                                              #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                              #:title (full-info-title record)
-                                              #:description (shtml->html descr)))
+                                              #:photo_id (photo-id (full-info-flickr-metadata record))
+                                              #:date_taken date
+                                              #:date_taken_granularity granularity)
+                                             (if  (equal?  descr '(html "" "" ""))
+                                                  (log! (format "Skipping ~s because the description is empty" record))
+                                                  (begin
+                                                    (flickr.photos.setMeta
+                                                     #:auth_token (get-preference (*pref-name*))
 
-                                           (send frame set-status-text
-                                                 (format
-                                                  "~s: ~s: ~s"
-                                                  (full-info-title record)
-                                                  date
-                                                  descr)))
+                                                     #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                                     #:title (full-info-title record)
+                                                     #:description (shtml->html descr))
+                                                    (let ((msg (format
+                                                                "~s: ~s: ~s"
+                                                                (full-info-title record)
+                                                                date
+                                                                descr)))
+                                                      (send frame set-status-text
+                                                            msg)
+                                                      (log! (format "Sent data to flickr: ~a" msg))))))
 
-                                         (send pb advance!)
-                                         (yield))))
+                                           (send pb advance!)
+                                           (yield))))
 
-                                   sorted)
+                                     sorted)
 
-                                  (send frame set-status-text
-                                        (format
-                                         "Fiddled ~a photos on flickr!!"
-                                         (length sorted))))
+                                    (send frame set-status-text
+                                          (format
+                                           "Fiddled ~a photos on flickr!!"
+                                           (length sorted))))
 
-                                (send pb show #f))))))
-                  (send progress-bar start!)))))))))
+                                  (send pb show #f))))))
+                    (send progress-bar start!))
+                  (log! "No joined photos"))))))))
 
 (define joined-message
   (new message%
