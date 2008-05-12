@@ -169,19 +169,6 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
-(define view-log-button
-  (and (eq? (system-type) 'windows)
-       (new button% (parent joined-panel)
-            (label "Lookit the log file")
-            (callback
-             (lambda (item event)
-               (shell-execute
-                "open"
-                (path->string *log-file-name*)
-                ""
-                (find-system-path 'temp-dir)
-                'sw_shownormal))))))
-
 ;; e.g. "j123" => 123
 ;; but
 ;; "123" => #f
@@ -299,6 +286,19 @@ exec mred --no-init-file --mute-banner --version --require "$0"
   (new message%
        (label "You haven't yet linked CSV records with downloaded photo info.")
        (parent joined-panel)))
+
+(define view-log-button
+  (and (eq? (system-type) 'windows)
+       (new button% (parent joined-panel)
+            (label "Lookit the log file")
+            (callback
+             (lambda (item event)
+               (shell-execute
+                "open"
+                (path->string *log-file-name*)
+                ""
+                (find-system-path 'temp-dir)
+                'sw_shownormal))))))
 
 (let* ((mb (instantiate menu-bar% (frame)))
        (file-menu (instantiate menu% ("&File" mb)))
