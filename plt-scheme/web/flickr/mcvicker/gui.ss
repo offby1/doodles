@@ -30,15 +30,28 @@ exec mred --no-init-file --mute-banner --version --require "$0"
   (file-stream-buffer-mode (current-output-port) 'line)
   (file-stream-buffer-mode (current-error-port)  'line))
 
+(define *log-file-name*
+  (build-path
+   (find-system-path 'temp-dir)
+   "flickr-log.txt"))
 (define log! #f)
-(let ((op (open-output-file (build-path
-                             (find-system-path 'temp-dir)
-                             "flickr-log")
-                            'truncate/replace)))
+(let ((op (open-output-file *log-file-name* 'truncate/replace)))
   (set! log! (lambda (msg)
               (fprintf op "~a~%" msg)
-              (flush-output op))
-        ))
+              (flush-output op))))
+
+(define view-log-button
+  (and (eq? (system-type) 'windows)
+       (new button% (parent joined-panel)
+            (label "Lookit the log file")
+            (callback
+             (lambda (item event)
+               (shell-execute
+                "open"
+                *log-file-name*
+                ""
+                (find-system-path 'temp-dir)
+                'sw_shownormal))))))
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -248,21 +261,21 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                               #:date_taken_granularity granularity)
                                              (if  (equal?  descr '(html "" "" ""))
                                                   (log! (format "Skipping ~s because the description is empty" record))
-                                                  (begin
-                                                    (flickr.photos.setMeta
-                                                     #:auth_token (get-preference (*pref-name*))
+                                                  (let* ((rv (flickr.photos.setMeta
+                                                              #:auth_token (get-preference (*pref-name*))
 
-                                                     #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                                     #:title (full-info-title record)
-                                                     #:description (shtml->html descr))
-                                                    (let ((msg (format
-                                                                "~s: ~s: ~s"
-                                                                (full-info-title record)
-                                                                date
-                                                                descr)))
-                                                      (send frame set-status-text
-                                                            msg)
-                                                      (log! (format "Sent data to flickr: ~a" msg))))))
+                                                              #:photo_id  (photo-id (full-info-flickr-metadata record))
+                                                              #:title (full-info-title record)
+                                                              #:description (shtml->html descr)))
+                                                         (msg (format
+                                                               "~s: ~s: ~s => ~s"
+                                                               (full-info-title record)
+                                                               date
+                                                               descr
+                                                               rv)))
+                                                    (send frame set-status-text
+                                                          msg)
+                                                    (log! (format "Sent data to flickr: ~a" msg)))))
 
                                            (send pb advance!)
                                            (yield))))
