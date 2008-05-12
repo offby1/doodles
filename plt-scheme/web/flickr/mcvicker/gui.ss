@@ -35,23 +35,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
    (find-system-path 'temp-dir)
    "flickr-log.txt"))
 (define log! #f)
-(let ((op (open-output-file *log-file-name* 'truncate/replace)))
+(let ((op (open-output-file *log-file-name* 'truncate/replace 'text)))
   (set! log! (lambda (msg)
               (fprintf op "~a~%" msg)
               (flush-output op))))
-
-(define view-log-button
-  (and (eq? (system-type) 'windows)
-       (new button% (parent joined-panel)
-            (label "Lookit the log file")
-            (callback
-             (lambda (item event)
-               (shell-execute
-                "open"
-                *log-file-name*
-                ""
-                (find-system-path 'temp-dir)
-                'sw_shownormal))))))
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -182,6 +169,19 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
+(define view-log-button
+  (and (eq? (system-type) 'windows)
+       (new button% (parent joined-panel)
+            (label "Lookit the log file")
+            (callback
+             (lambda (item event)
+               (shell-execute
+                "open"
+                (path->string *log-file-name*)
+                ""
+                (find-system-path 'temp-dir)
+                'sw_shownormal))))))
+
 ;; e.g. "j123" => 123
 ;; but
 ;; "123" => #f
@@ -261,6 +261,10 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                                               #:date_taken_granularity granularity)
                                              (if  (equal?  descr '(html "" "" ""))
                                                   (log! (format "Skipping ~s because the description is empty" record))
+                                                  ;; I'm pretty sure
+                                                  ;; there's never any
+                                                  ;; return value, but
+                                                  ;; you can't be too careful!
                                                   (let* ((rv (flickr.photos.setMeta
                                                               #:auth_token (get-preference (*pref-name*))
 
