@@ -18,11 +18,11 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 ;; could certainly add code to the callback for _the radio box_ that
 ;; fiddles the enabled state of the button, but imagine that we
 ;; actually have lots of widgets, not just two, and their
-;; interrelationships are complex.  It seems to me that it's easier to
-;; put the code that enables a widget right "next to" that widget, and
-;; have that code refer to all the things that affect it, than the
-;; other way around, namely, having each widget "know" about those
-;; that it -affects-.
+;; interrelationships are complex.  In that case, it seems to me that
+;; it's easier to put the code that enables a widget right "next to"
+;; that widget, and have that code refer to all the things that affect
+;; it, than the other way around, namely, having each widget "know"
+;; about those that it -affects-.
 
 ;; So my solution is to have the "upstream" widgets use a special
 ;; class that notifies "listeners".  Then the "downstream" widgets can
