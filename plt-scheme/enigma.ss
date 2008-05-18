@@ -19,6 +19,12 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 (define c->n (lambda (c) (string-index *the-alphabet* (char-downcase c))))
 (define n->c (lambda (n) (string-ref   *the-alphabet* n)))
 
+;; A rotor is a mapping from offsets around the circumference on one
+;; side, to offsets around the circumference on the other side.  We
+;; keep two pointers to the list ("rotated" and "original"), not one;
+;; when we "rotate" the rotor, we only affect one of those lists.
+;; That way, to see how far it's been rotated, we can just compare the
+;; two lists.
 (define-struct rotor (rotated original name) #:transparent)
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
@@ -26,38 +32,47 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define (shuffled vector)
   (let ((victim (vector-copy vector)))
-    ;; Fisher-Yates
+    ;; http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
     (for ([(element i) (in-indexed victim)])
-         (let ((j (random (add1 i))))
-           (vector-set! victim i (vector-ref victim j))
-           (vector-set! victim j element)))
+      (let ((j (random (add1 i))))
+        (vector-set! victim i (vector-ref victim j))
+        (vector-set! victim j element)))
     victim))
 
-;; A rotor is a mapping from offsets around the circumference on one
-;; side, to offsets around the circumference on the other side.  We
-;; keep two pointers to the list, not one; when we "rotate" the rotor,
-;; we only affect one of those lists.  That way, to see how far it's
-;; been rotated, we can just compare the two lists.
 (define my-make-rotor
+  ;; This helps generate unique names for rotors.
   (let ((rotors-made 0))
     (lambda ()
-      (let ((nums (apply circular-list
-                         (vector->list
-                          (shuffled (build-vector *alen* values))))))
+      ;; The lists are circular, which makes for easy rotation: just
+      ;; replace it with its cdr.
+      (let ((offsets (apply circular-list
+                            (vector->list
+                             (shuffled (build-vector *alen* values))))))
         (begin0
-            (make-rotor nums nums rotors-made)
+            (make-rotor offsets offsets rotors-made)
           (set! rotors-made (add1 rotors-made)))))))
 
-(define (rotor-rotate r) (make-rotor (cdr (rotor-rotated r)) (rotor-original r) (rotor-name r)))
+(define (rotor-rotate r)
+  (make-rotor
+   (cdr (rotor-rotated r))
+   (rotor-original r) (rotor-name r)))
 
+;; Encrypt or decrypt NUMBER through R, by taking the car of the Nth
+;; cdr, or searching for N.
 (define (rotor-crypt r number [encrypt? #t])
   (let ((lst (rotor-rotated r)))
     (if encrypt?
         (list-ref lst number)
         (list-index (lambda (x) (equal? x number)) lst))))
 
+;; An enigma machine is nothing but a buncha rotors.
 (define-struct enigma (rotors) #:transparent)
 
+;; Return an enigma machine that is just like E, except we've advanced
+;; the rotor on the end by one notch -- and, if necessary, also
+;; advanced the other rotors.  This is exactly like advancing the
+;; rightmost wheel of an odometer: sometimes that causes other wheels
+;; to advance, too.
 (define (enigma-advance e)
   (let loop ((old-rotors (enigma-rotors e))
              (rotate? #t)
@@ -69,6 +84,9 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
                 (and rotate? (rotor-at-start? this))
                 (cons this new-rotors))))))
 
+;; Encrypt or decrypt a letter by converting it to a number, then
+;; running that number through each rotor in the machine, then
+;; converting back to a letter.
 (define (enigma-crypt e letter [encrypt? #t])
   (let ((l  (length (enigma-rotors e))))
     (let loop ((rotors-done 0)
