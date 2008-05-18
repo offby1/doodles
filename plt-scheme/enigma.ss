@@ -1,11 +1,11 @@
-#!/usr/local/src/langs/scheme/plt-v4/bin/mzscheme
+#! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
+exec mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
-;;$Id$
-
 #lang scheme
+(require scheme/cmdline)
 
 (require (lib "trace.ss")
          (lib "1.ss" "srfi")
@@ -24,16 +24,13 @@
   (eq? (rotor-rotated r)
        (rotor-original r)))
 
-;; Fisher-Yates
-(define (shuffle! victim)
-  (for ([(element i) (in-indexed victim)])
-    (let ((j (random (add1 i))))
-      (vector-set! victim i (vector-ref victim j))
-      (vector-set! victim j element))))
-
 (define (shuffled vector)
   (let ((victim (vector-copy vector)))
-    (shuffle! victim)
+    ;; Fisher-Yates
+    (for ([(element i) (in-indexed victim)])
+         (let ((j (random (add1 i))))
+           (vector-set! victim i (vector-ref victim j))
+           (vector-set! victim j element)))
     victim))
 
 ;; A rotor is a mapping from offsets around the circumference on one
@@ -97,12 +94,26 @@
           (display (enigma-crypt e ch encrypt?) op))
         (loop (enigma-advance e))))))
 
-(random-seed 0)
+(define (main . args)
+  (define encrypt (make-parameter #t))
 
-(process-port
- (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
- (current-input-port) (current-output-port) #t)
-(newline)
+  (random-seed 0)
+
+  (command-line
+    #:program "enigma"
+    #:once-any
+    [("-e" "--encrypt") "Encrypt (as opposed to decrypt)"
+     (encrypt #t)]
+    [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
+     (encrypt #f)])
+
+  (process-port
+   (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
+   (current-input-port)
+   (current-output-port)
+   (encrypt))
+  (newline))
+(provide (all-defined-out))
 
 
 ;; time dd if=/dev/urandom count=2048 bs=1024 | crypt sdlkfjdslfkjdslkvn > /dev/null
