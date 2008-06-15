@@ -11,7 +11,6 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
          (lib "1.ss" "srfi")
          (lib "13.ss" "srfi")
          (lib "43.ss" "srfi")
-         (lib "trace.ss")
          (lib "errortrace.ss" "errortrace"))
 
 (define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
