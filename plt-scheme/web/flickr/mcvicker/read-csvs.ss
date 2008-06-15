@@ -122,7 +122,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
              (else
               (status-proc
                (format
-                "Freaky row: ~s~%" row))))))
+                "Freaky row has ~a entries, but I want 5 or 6: ~s~%"
+                (length row)
+                row))))))
         ip)))))
 
 (provide snorgle-file *data-by-number*
