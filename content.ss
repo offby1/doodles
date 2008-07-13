@@ -7,14 +7,20 @@
 
 (define sum equal-hash-code)
 
-(define (get store sum)
-  (let ((p (sum->path store sum)))
+(define (get store expected-sum)
+  (let ((p (sum->path store expected-sum)))
     (with-handlers
         ([exn:fail:filesystem?
           (lambda (v) #f)])
       (call-with-input-file p
         (lambda (ip)
-          (read-bytes (file-size p) ip))))))
+          (let* ((content (read-bytes (file-size p) ip))
+                 (actual-sum (sum content)))
+            (unless (equal? expected-sum actual-sum)
+              (error 'get
+                     "Corrupted file: ~a.  Sum is ~a but we expected ~a"
+                     p actual-sum expected-sum))
+            content))))))
 
 (define (put! store thing)
   (let ((p (sum->path store (sum thing))))
