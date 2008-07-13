@@ -2,24 +2,38 @@
 
 (define checksum? exact-integer?)
 
-(define (get store c)
-  (let ((sum (equal-hash-code c)))
-    (hash-ref store sum #f)))
+(define (sum->path store s)
+  (build-path store (number->string s)))
 
-(define (put store thing)
-  (let ((sum (equal-hash-code thing)))
-    (values (hash-set store sum
-                      thing)
-            sum)))
+(define sum equal-hash-code)
+
+(define (get store sum)
+  (let ((p (sum->path store sum)))
+    (with-handlers
+        ([exn:fail:filesystem?
+          (lambda (v) #f)])
+      (call-with-input-file p
+        (lambda (ip)
+          (read-bytes (file-size p) ip))))))
+
+(define (put! store thing)
+  (let ((p (sum->path store (sum thing))))
+    (call-with-output-file p
+      (lambda (op)
+        (write-bytes thing op))
+      #:exists 'replace)))
 
 (define (make-store)
-  (make-immutable-hash '()))
+  (let ((dirname ".flit"))
+    (unless (store? dirname)
+      (make-directory dirname))
+    dirname))
 
 (define (store? thing)
-  (and (hash? thing)
-       (immutable? thing)))
+  (directory-exists? thing))
 
 (provide/contract
  [make-store (-> store?)]
- [get (-> store? checksum? any)]
- [put (-> store? any/c (values store? checksum?))])
+ [sum (-> bytes? checksum?)]
+ [get (-> store? checksum? (or/c bytes? false?))]
+ [put! (-> store? bytes? void)])

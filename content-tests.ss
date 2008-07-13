@@ -18,26 +18,24 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     "trivial"
     (let ((s (make-store)))
       (check-false (get s 123))
-      (let-values (((s sum) (put s "Snarkulous")))
-        (check-equal? (get s sum) "Snarkulous")
-        (printf "Here 'tis: ~s~%" s)
-        (check-false (get s 987))
-        (let-values (((s sum) (put s "Snarkulous")))
-          (check-equal? (hash-count s) 1)))))
+      (put! s #"Snarkulous")
+      (check-equal? (get s (sum #"Snarkulous")) #"Snarkulous")
+      (printf "Here 'tis: ~s~%" s)
+      (check-false (get s 987))
+      (put! s #"Snarkulous")))
+
    (test-case
     "directory contents"
     (printf "Here is this directory's files: ~s~%"
-            (for/fold ([store (make-store)])
-                      ([file (directory-list)])
-                      (if (file-exists? file)
-                          (let-values (((s sum)
-                                        (put store
-                                             (call-with-input-file
-                                                 file
-                                               (lambda (ip)
-                                                 (read-bytes (file-size file) ip))))))
-                            s)
-                          store)))
+            (let ((store (make-store)))
+              (for ([file (directory-list)])
+                (when (file-exists? file)
+                  (put! store
+                        (call-with-input-file
+                            file
+                          (lambda (ip)
+                            (read-bytes (file-size file) ip))))))
+              store))
     )
    ))
 
