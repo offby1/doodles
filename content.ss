@@ -3,13 +3,17 @@
 (define checksum? exact-integer?)
 
 (define (get store c)
-  #f)
+  (let ((sum (equal-hash-code c)))
+    (hash-ref store sum #f)))
 
 (define (put store thing)
-  (values (make-store) 123))
+  (let ((sum (equal-hash-code thing)))
+    (values (hash-set store sum
+                      thing)
+            sum)))
 
 (define (make-store)
-  #f)
+  (make-immutable-hash '()))
 
 (define (store? thing)
   #t)
