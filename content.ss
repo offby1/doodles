@@ -6,7 +6,7 @@
   #f)
 
 (define (put store thing)
-  #f)
+  (values (make-store) 123))
 
 (define (make-store)
   #f)
@@ -17,4 +17,4 @@
 (provide/contract
  [make-store (-> store?)]
  [get (-> store? checksum? any)]
- [put (-> store? any/c checksum?)])
+ [put (-> store? any/c (values store? checksum?))])
