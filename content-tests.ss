@@ -16,7 +16,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    (test-case
     "hoo"
     (let ((s (make-store)))
-      (check-false (get s 123))))))
+      (check-false (get s 123))
+      (let-values (((s sum) (put s "Snarkulous")))
+        (check-equal? (get s sum) "Snarkulous"))))))
 
 (provide  main)
 (define (main . args)
