@@ -16,7 +16,8 @@
   (make-immutable-hash '()))
 
 (define (store? thing)
-  #t)
+  (and (hash? thing)
+       (immutable? thing)))
 
 (provide/contract
  [make-store (-> store?)]
