@@ -35,9 +35,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                                              (call-with-input-file
                                                  file
                                                (lambda (ip)
-                                                 (let ((o (open-output-bytes)))
-                                                   (copy-port ip o)
-                                                   (get-output-bytes o)))))))
+                                                 (read-bytes (file-size file) ip))))))
                             s)
                           store)))
     )
