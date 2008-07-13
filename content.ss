@@ -34,7 +34,9 @@
     (unless (store? dirname)
       (make-directory dirname))
     (for ((f (in-list (directory-list dirname))))
-      (delete-file (build-path dirname f)))
+      (with-handlers
+          ([exn:fail:filesystem? void])
+        (delete-file (build-path dirname f))))
     dirname))
 
 (define (store? thing)
