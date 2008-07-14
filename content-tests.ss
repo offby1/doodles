@@ -35,9 +35,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                             file
                           (lambda (ip)
                             (read-bytes (file-size file) ip))))))
-              store))
-    )
-   ))
+              store)))))
 
 (provide  main)
 (define (main . args)

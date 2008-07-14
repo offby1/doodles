@@ -11,17 +11,14 @@
 (define (sum->path store s)
   (build-path store s))
 
-(define (inflate-bytes b)
+(define (do proc b)
   (let ((ip (open-input-bytes b))
         (op (open-output-bytes)))
-    (inflate ip op)
+    (proc ip op)
     (get-output-bytes op)))
 
-(define (deflate-bytes b)
-  (let ((ip (open-input-bytes b))
-        (op (open-output-bytes)))
-    (deflate ip op)
-    (get-output-bytes op)))
+(define (inflate-bytes b) (do inflate b))
+(define (deflate-bytes b) (do deflate b))
 
 (define (get store expected-sum)
   (let* ((content (lookup store expected-sum))
