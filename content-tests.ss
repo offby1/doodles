@@ -8,6 +8,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (require (planet "test.ss"    ("schematics" "schemeunit.plt" ))
          (planet "text-ui.ss" ("schematics" "schemeunit.plt" ))
          (planet "util.ss"    ("schematics" "schemeunit.plt" ))
+         (planet "hash-store.ss" ("jaymccarthy" "hash-store.plt"))
          scheme/port
          "content.ss")
 
@@ -17,11 +18,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    (test-case
     "trivial"
     (let ((s (make-store)))
-      (check-false (get s 123))
+      (check-exn exn:fail:hash-store:exists? (lambda () (get s #"123")))
       (put! s #"Snarkulous")
       (check-equal? (get s (sum #"Snarkulous")) #"Snarkulous")
       (printf "Here 'tis: ~s~%" s)
-      (check-false (get s 987))
+      (check-exn exn:fail:hash-store:exists?  (lambda () (get s #"987")))
       (put! s #"Snarkulous")))
 
    (test-case

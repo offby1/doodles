@@ -1,53 +1,31 @@
 #lang scheme
 
 (require file/gzip
-         file/gunzip)
+         file/gunzip
+         (planet "hash-store.ss" ("jaymccarthy" "hash-store.plt")))
 
-(define checksum? exact-integer?)
+(define checksum? bytes?)
 
-(define sum equal-hash-code)
+(define sum SHA1)
 
 (define (sum->path store s)
-  (build-path store (number->string s)))
+  (build-path store s))
 
 (define (get store expected-sum)
-  (let ((p (sum->path store expected-sum)))
-    (with-handlers
-        ([exn:fail:filesystem?
-          (lambda (v) #f)])
-      (call-with-input-file p
-        (lambda (ip)
-          (let* ((content (let ((o (open-output-bytes)))
-                            (inflate ip o)
-                            (get-output-bytes o)))
-                 (actual-sum (sum content)))
-            (unless (equal? expected-sum actual-sum)
-              (error 'get
-                     "Corrupted file: ~a.  Sum is ~a but we expected ~a"
-                     p actual-sum expected-sum))
-            content))))))
+  (let* ((content (lookup store expected-sum))
+         (actual-sum (sum content)))
+    (unless (equal? expected-sum actual-sum)
+      (error 'get
+             "Corrupted file: ~a.  Sum is ~a but we expected ~a"
+             store actual-sum expected-sum))
+    content))
 
-(define (put! store thing)
-  (let ((p (sum->path store (sum thing))))
-    (call-with-output-file p
-      (lambda (op)
-        (let-values (((read written crc)
-                      (deflate (open-input-bytes thing) op)))
-          'yeah-whatever))
-      #:exists 'replace)))
+(define put! store!)
 
 (define (make-store)
-  (let ((dirname ".flit"))
-    (unless (store? dirname)
-      (make-directory dirname))
-    (for ((f (in-list (directory-list dirname))))
-      (with-handlers
-          ([exn:fail:filesystem? void])
-        (delete-file (build-path dirname f))))
-    dirname))
+  (create (build-path ".flit")))
 
-(define (store? thing)
-  (directory-exists? thing))
+(define store? hash-store?)
 
 (provide/contract
  [make-store (-> store?)]
