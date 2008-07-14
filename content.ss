@@ -1,11 +1,14 @@
 #lang scheme
 
+(require file/gzip
+         file/gunzip)
+
 (define checksum? exact-integer?)
+
+(define sum equal-hash-code)
 
 (define (sum->path store s)
   (build-path store (number->string s)))
-
-(define sum equal-hash-code)
 
 (define (get store expected-sum)
   (let ((p (sum->path store expected-sum)))
@@ -14,7 +17,9 @@
           (lambda (v) #f)])
       (call-with-input-file p
         (lambda (ip)
-          (let* ((content (read-bytes (file-size p) ip))
+          (let* ((content (let ((o (open-output-bytes)))
+                            (inflate ip o)
+                            (get-output-bytes o)))
                  (actual-sum (sum content)))
             (unless (equal? expected-sum actual-sum)
               (error 'get
@@ -26,7 +31,9 @@
   (let ((p (sum->path store (sum thing))))
     (call-with-output-file p
       (lambda (op)
-        (write-bytes thing op))
+        (let-values (((read written crc)
+                      (deflate (open-input-bytes thing) op)))
+          'yeah-whatever))
       #:exists 'replace)))
 
 (define (make-store)
