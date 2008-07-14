@@ -19,8 +19,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     "trivial"
     (let ((s (make-store)))
       (check-exn exn:fail:hash-store:exists? (lambda () (get s #"123")))
-      (put! s #"Snarkulous")
-      (check-equal? (get s (sum #"Snarkulous")) #"Snarkulous")
+      (check-equal? (get s (put! s #"Snarkulous")) #"Snarkulous")
       (printf "Here 'tis: ~s~%" s)
       (check-exn exn:fail:hash-store:exists?  (lambda () (get s #"987")))
       (put! s #"Snarkulous")))

@@ -11,6 +11,18 @@
 (define (sum->path store s)
   (build-path store s))
 
+(define (inflate-bytes b)
+  (let ((ip (open-input-bytes b))
+        (op (open-output-bytes)))
+    (inflate ip op)
+    (get-output-bytes op)))
+
+(define (deflate-bytes b)
+  (let ((ip (open-input-bytes b))
+        (op (open-output-bytes)))
+    (deflate ip op)
+    (get-output-bytes op)))
+
 (define (get store expected-sum)
   (let* ((content (lookup store expected-sum))
          (actual-sum (sum content)))
@@ -18,9 +30,10 @@
       (error 'get
              "Corrupted file: ~a.  Sum is ~a but we expected ~a"
              store actual-sum expected-sum))
-    content))
+    (inflate-bytes content)))
 
-(define put! store!)
+(define (put! store bytes)
+  (store! store (deflate-bytes bytes)))
 
 (define (make-store)
   (create (build-path ".flit")))
