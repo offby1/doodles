@@ -18,11 +18,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    (test-case
     "trivial"
     (let ((s (make-store)))
-      (check-exn exn:fail:hash-store:exists? (lambda () (get s #"123")))
-      (check-equal? (get s (put! s #"Snarkulous")) #"Snarkulous")
-      (printf "Here 'tis: ~s~%" s)
-      (check-exn exn:fail:hash-store:exists?  (lambda () (get s #"987")))
-      (put! s #"Snarkulous")))
+      (after
+       (check-exn exn:fail:hash-store:exists? (lambda () (get s #"123")))
+       (check-equal? (get s (put! s #"Snarkulous")) #"Snarkulous")
+       (printf "Here 'tis: ~s~%" s)
+       (check-exn exn:fail:hash-store:exists?  (lambda () (get s #"987")))
+       (put! s #"Snarkulous")
+       (nuke! s))))
 
    (test-case
     "directory contents"

@@ -4,9 +4,9 @@
          file/gunzip
          (planet "hash-store.ss" ("jaymccarthy" "hash-store.plt")))
 
-(define checksum? bytes?)
+(define *store-name* ".flit")
 
-(define sum SHA1)
+(define checksum? bytes?)
 
 (define (sum->path store s)
   (build-path store s))
@@ -22,7 +22,7 @@
 
 (define (get store expected-sum)
   (let* ((content (lookup store expected-sum))
-         (actual-sum (sum content)))
+         (actual-sum (SHA1 content)))
     (unless (equal? expected-sum actual-sum)
       (error 'get
              "Corrupted file: ~a.  Sum is ~a but we expected ~a"
@@ -32,13 +32,16 @@
 (define (put! store bytes)
   (store! store (deflate-bytes bytes)))
 
+(define (nuke! store)
+  (delete-directory/files *store-name*))
+
 (define (make-store)
-  (create (build-path ".flit")))
+  (create (build-path *store-name*)))
 
 (define store? hash-store?)
 
 (provide/contract
  [make-store (-> store?)]
- [sum (-> bytes? checksum?)]
  [get (-> store? checksum? (or/c bytes? false?))]
- [put! (-> store? bytes? void)])
+ [put! (-> store? bytes? void)]
+ [nuke! (-> store? void)])
