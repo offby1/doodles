@@ -3,12 +3,9 @@
 ;; http://mathworld.wolfram.com/PiFormulas.html
 
 (define (sum init stop func)
-  (call/ec (lambda (return)
-             (for/fold ([accum 0])
-                       ((n (in-naturals init)))
-                       (when (<= stop n)
-                         (return (exact->inexact accum)))
-                       (+ accum (func n))))))
+  (for/fold ([accum 0])
+            ((n (in-range init stop)))
+            (+ accum (func n))))
 
 (sum 0 10 (lambda (n)
            (* (- (/ 4 (+ 1 (* 8 n)))
