@@ -69,10 +69,10 @@
 ;; cky
 (define (cky-cont-frac . numbers)
   (/
-   (foldr
+   (foldl
     (lambda (a b) (/ (+ a b)))
     0
-    numbers)))
+    (reverse numbers))))
 
 (check-equal? (cky-cont-frac 1)      1 "Just one.")
 (check-equal? (cky-cont-frac 1 2)    (+ 1 (/ 2)) "one and a half.")
