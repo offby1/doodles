@@ -77,3 +77,4 @@
 (check-equal? (cky-cont-frac 1)      1 "Just one.")
 (check-equal? (cky-cont-frac 1 2)    (+ 1 (/ 2)) "one and a half.")
 (check-equal? (cky-cont-frac 1 2 3) (+ (/ (+ (/ 3) 2)) 1) "term three.")
+(exact->inexact (cky-cont-frac 3 7 15 1 292 1 1 1))
