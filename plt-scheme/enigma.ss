@@ -19,11 +19,12 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 (define n->c (lambda (n) (string-ref   *the-alphabet* n)))
 
 ;; A rotor is a mapping from offsets around the circumference on one
-;; side, to offsets around the circumference on the other side.  We
-;; keep two pointers to the list ("rotated" and "original"), not one;
-;; when we "rotate" the rotor, we only affect one of those lists.
-;; That way, to see how far it's been rotated, we can just compare the
-;; two lists.
+;; side, to offsets around the circumference on the other side.  (It's
+;; just a circular list; each entry holds an integer.)  We keep two
+;; pointers to the list ("rotated" and "original"), not one; when we
+;; "rotate" the rotor, we only affect one of those lists.  That way,
+;; to see how far it's been rotated, we can just compare the two
+;; lists.
 (define-struct rotor (rotated original name) #:transparent)
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
@@ -117,12 +118,13 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
   (random-seed 0)
 
   (command-line
-    #:program "enigma"
-    #:once-any
-    [("-e" "--encrypt") "Encrypt (as opposed to decrypt)"
-     (encrypt #t)]
-    [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
-     (encrypt #f)])
+   #:program "enigma"
+   #:argv args
+   #:once-any
+   [("-e" "--encrypt") "Encrypt (as opposed to decrypt)"
+    (encrypt #t)]
+   [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
+    (encrypt #f)])
 
   (process-port
    (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
