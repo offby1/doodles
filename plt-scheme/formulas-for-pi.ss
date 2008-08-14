@@ -3,16 +3,17 @@
 ;; http://mathworld.wolfram.com/PiFormulas.html
 
 (define (sum init stop func)
-  (for/fold ([accum 0])
-            ((n (in-range init stop)))
-            (+ accum (func n))))
+  (exact->inexact
+   (for/fold ([accum 0])
+             ((n (in-range init stop)))
+             (+ accum (func n)))))
 
 (sum 0 10 (lambda (n)
-           (* (- (/ 4 (+ 1 (* 8 n)))
-                 (/ 2 (+ 4 (* 8 n)))
-                 (/ 1 (+ 5 (* 8 n)))
-                 (/ 1 (+ 6 (* 8 n))))
-              (expt 1/16 n))))
+            (* (- (/ 4 (+ 1 (* 8 n)))
+                  (/ 2 (+ 4 (* 8 n)))
+                  (/ 1 (+ 5 (* 8 n)))
+                  (/ 1 (+ 6 (* 8 n))))
+               (expt 1/16 n))))
 
 (* 4 (sum 0 1000 (lambda (k)
                    ( /
