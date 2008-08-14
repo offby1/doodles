@@ -1,5 +1,31 @@
 -*-org-*-
 
-| proc     | multi-args? | searches PATH? | yields exit status? | yields ports? |
-| process  |             |                |                     |               |
-| process* |             |                |                     |               |
+| proc              | multi-args? | searches PATH? | yields exit status? | yields ports? |
+| process           | no          | yes            | yes                 | no            |
+| process*          | yes         | no             | yes                 | no            |
+| process*/ports    | yes         | no             | yes                 | yes           |
+| process/ports     | no          | yes            | yes                 | yes           |
+| subprocess        | yes         | no             | yes                 | yes           |
+| system            | no          | yes            | no                  | no            |
+| system*           | yes         | no             | no                  | no            |
+| system/exit-code  | no          | yes            | yes                 | no            |
+| system*/exit-code | yes         | no             | yes                 | no            |
+
+Basically, an asterisk in the name means that the procedure takes a
+list of arguments, rather than invoking a shell on a single string.  A
+sort of exception is "subprocess", which also takes a list of
+arguments, but lacks an asterisk.  
+
+This also affects PATH searching: if it invokes a shell, you don't
+need to spell out the full path of the executable; if it doesn't, you
+do.
+
+"Yields exit status" means that there's a way to retrieve the
+numerical exit status, as opposed to a simple boolean.
+
+"Yields ports" means that the procedure can be made to return ports
+connected to the child's stdin, stdout, and stderr.
+
+So "subprocess" gives you the most control, and (in my opinion) isn't
+too hard to use.  You'd have to write a path-searching thing to make
+it ideal, though.
