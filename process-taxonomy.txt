@@ -1,6 +1,7 @@
 -*-org-*-
 
 | proc              | multi-args? | searches PATH? | yields exit status? | yields ports? |
+|-------------------+-------------+----------------+---------------------+---------------|
 | process           | no          | yes            | yes                 | no            |
 | process*          | yes         | no             | yes                 | no            |
 | process*/ports    | yes         | no             | yes                 | yes           |
