@@ -16,7 +16,7 @@ exec mzscheme  --no-init-file --mute-banner --version --require "$0"
                date->time-utc)
          (rename (lib "19.ss" "srfi" )
                  19:make-date make-date)
-         (only (planet "ssax.ss" ("lizorkin" "ssax.plt" 1))
+         (only (planet "ssax.ss" ("lizorkin" "ssax.plt"))
                ssax:xml->sxml)
          (planet "sxml.ss" ("lizorkin" "sxml.plt")))
 
