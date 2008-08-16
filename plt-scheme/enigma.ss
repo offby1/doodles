@@ -10,8 +10,7 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 (require (lib "trace.ss")
          (lib "1.ss" "srfi")
          (lib "13.ss" "srfi")
-         (lib "43.ss" "srfi")
-         (lib "errortrace.ss" "errortrace"))
+         (lib "43.ss" "srfi"))
 
 (define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
 (define *alen* (string-length *the-alphabet*))
@@ -30,14 +29,8 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
   (eq? (rotor-rotated r)
        (rotor-original r)))
 
-(define (shuffled vector)
-  (let ((victim (vector-copy vector)))
-    ;; http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
-    (for ([(element i) (in-indexed victim)])
-      (let ((j (random (add1 i))))
-        (vector-set! victim i (vector-ref victim j))
-        (vector-set! victim j element)))
-    victim))
+(define (shuffled list)
+  (sort list < #:key (lambda (_) (random)) #:cache-keys? #t))
 
 (define my-make-rotor
   ;; This helps generate unique names for rotors.
@@ -46,8 +39,7 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
       ;; The lists are circular, which makes for easy rotation: just
       ;; replace it with its cdr.
       (let ((offsets (apply circular-list
-                            (vector->list
-                             (shuffled (build-vector *alen* values))))))
+                            (shuffled (build-list *alen* values)))))
         (begin0
             (make-rotor offsets offsets rotors-made)
           (set! rotors-made (add1 rotors-made)))))))
@@ -111,6 +103,17 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
         (when (c->n ch)
           (display (enigma-crypt e ch encrypt?) op))
         (loop (enigma-advance e))))))
+
+(define (example plain)
+  (define e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
+  (let ((ip (open-input-string plain))
+        (op (open-output-string)))
+    (process-port e ip op #t)
+    (printf "~s => ~s~%" plain (get-output-string op))
+    (let ((ip (open-input-string (get-output-string op)))
+          (op (open-output-string)))
+      (process-port e ip op #f)
+      (printf "... => ~s~%" (get-output-string op)))))
 
 (define (main . args)
   (define encrypt (make-parameter #t))
