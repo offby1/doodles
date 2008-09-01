@@ -44,4 +44,7 @@
 (define (normal-float)
   (channel-get *the-channel*))
 
-(provide normal-float)
+(provide/contract
+ [normal-float (->* ()
+                    ()
+                    number?)])
