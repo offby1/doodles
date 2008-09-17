@@ -22,7 +22,7 @@ tests   := test test-foof-loop test-parameters
 # the thing with "rm" instead of "rm -r".  Daft punter.
 
 $(plt-file): x/foof-loop
-	$(planet) --create-archive $^
+	$(planet) create $^
 	rm -rf x
 
 x/foof-loop:
@@ -38,10 +38,10 @@ clean:
 # it's actually older than the current plt-file.
 install: $(plt-file)
 	-$(MAKE) uninstall
-	$(planet) --file $^ $(owner) $(version)
+	$(planet) fileinject $(owner) $^ $(version)
 
 uninstall:
-	$(planet)  --erase $(owner) $(plt-file) $(version)
+	$(planet) remove $(owner) $(plt-file) $(version)
 
 installcheck: check install
 	$(mzscheme) -qu ./test-install.ss

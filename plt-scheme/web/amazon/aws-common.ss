@@ -56,6 +56,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ("You should have gotten this from Amazon." "sekrit")))
     ))
 
+;; TODO -- this could probably be replaced by "call/input-url"
 (define (port->string/close ip)
   (begin0
     (port->string ip)

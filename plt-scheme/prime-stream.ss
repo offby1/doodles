@@ -3,6 +3,8 @@
 exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
+#lang scheme
+
 (display "$Id$")
 (newline)
 

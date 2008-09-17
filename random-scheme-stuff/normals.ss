@@ -1,5 +1,9 @@
 (module normals mzscheme
 (provide one-unit-normal)
+
+;; Note that this is obviated by
+;; (require (planet "random.ss" ("schematics" "random.plt")))
+
 ;; http://en.wikipedia.org/wiki/Box-Muller_transform
 (define (pair-of-unit-normals)
   (let loop ((x (random))
