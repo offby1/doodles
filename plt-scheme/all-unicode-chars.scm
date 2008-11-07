@@ -1,8 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec  mzscheme --require "$0" --main -- ${1+"$@"}
-|#
-
 ;;; unicode chars range from 0 through #x10FFFF inclusive, except for
 ;;; #xd800 through #xdfff inclusive.
 
