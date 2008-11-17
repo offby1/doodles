@@ -4,10 +4,9 @@
 exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
-(module v4-script-template scheme
-(require (planet "test.ss"    ("schematics" "schemeunit.plt" ))
-         (planet "text-ui.ss" ("schematics" "schemeunit.plt" ))
-         (planet "util.ss"    ("schematics" "schemeunit.plt" )))
+#lang scheme
+(require (planet schematics/schemeunit:3)
+         (planet schematics/schemeunit:3/text-ui))
 (define hmm-tests
 
   (test-suite
@@ -18,5 +17,5 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
      #rx"dude, maybe you"
      "should write some tests"))))
 (define (main . args)
-  (exit (test/text-ui hmm-tests 'verbose)))
-(provide (all-defined-out)))
+  (exit (run-tests hmm-tests 'verbose)))
+(provide (all-defined-out))
