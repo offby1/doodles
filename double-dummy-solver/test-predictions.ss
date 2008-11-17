@@ -7,7 +7,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (require "card.ss"
          "dds.ss"
          "deck.ss"
-         "fys.ss"
+         (planet "fys.ss" ("offby1" "offby1.plt"))
          "history.ss"
          "zprintf.ss"
          (only "trick.ss" *seats* *trump-suit*)
@@ -58,7 +58,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
  (for-each
   (lambda (hand-number)
 
-    (define hands (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+    (define hands (deal (vector->list (fisher-yates-shuffle (list->vector *deck*)))
                         (map (lambda (s) (ha:make-hand '() s)) *seats*)))
 
     (for-each
