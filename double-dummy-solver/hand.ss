@@ -3,22 +3,17 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
-(module hand mzscheme
-(require (only (lib "1.ss" "srfi")
-               every
-               fold
-               list-copy
-               )
-         (rename (lib "1.ss" "srfi") s1:filter filter)
-         (only (lib "13.ss" "srfi")  string-join)
-         (only (lib "list.ss") remove sort)
+#lang scheme
+(require (prefix-in s1: srfi/1)
          "card.ss"
-         (only "trick.ss" *seats*)
-         (lib "trace.ss"))
+         (only-in "trick.ss" *seats*)
+         (planet schematics/schemeunit:3))
+
 (provide
- (rename hand-cards cards)
- (rename hand-seat seat)
- (rename my-make-hand make-hand)
+ (rename-out [hand-cards cards]
+             [hand-seat seat]
+             [my-make-hand make-hand])
+
  ->stringlist
  add-card
  copy
@@ -75,7 +70,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (my-make-hand cards . seat)
   (unless (or (eq? '? cards)
           (and (list? cards)
-               (every card? cards)))
+               (s1:every card? cards)))
     (raise-mismatch-error 'make-hand "Not a list of cards, or ?: " cards))
 
   ;; TODO -- maybe ensure all the cards are distinct.
@@ -113,7 +108,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (copy h)
   (make-hand (if (list? (hand-cards h))
-                 (list-copy (hand-cards h))
+                 (map values (hand-cards h))
                 (hand-cards h)) (hand-seat h)))
 
 (define (all-distinct? seq < =)
@@ -139,7 +134,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
     new))
 
 (define (add-card h c)
-  (if (member c (hand-cards h))
+  (when (member c (hand-cards h))
       (raise-mismatch-error 'add-card (format "Can't add to ~a because it's already present: "  h) c))
   (make-hand (cons c (hand-cards h))
              (hand-seat h))
@@ -159,19 +154,17 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 ;; hand => alist of (cons suit-symbol integer)
 (define (counts-by-suit h)
-  (fold (lambda (card counts)
-          (let ((probe (assoc card counts)))
-            (set-cdr! probe (add1 (cdr probe)))
-            counts))
-        (map (lambda (suit-sym)
-                (cons suit-sym 0))
-              *suits*)
-        (map card-suit (hand-cards h))))
+  (hash-map
+   (for/fold ([rv (make-immutable-hash '())])
+       ([c (in-list  (hand-cards h))])
+       (let ((s (card-suit c)))
+         (hash-update rv s add1 0)))
+   cons))
 
 ;; hand => (cons suit-symbol integer)
 (define (longest-suit h)
   (let ((c (counts-by-suit h)))
-    (fold (lambda (count max)
+    (foldl (lambda (count max)
             (if (> (cdr count)
                    (cdr max))
                 count
@@ -183,30 +176,33 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define suit car)
 (define ranks cdr)
 
-;; c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9 => ((c a j 9 6 3) (d t 9 2) (h q j 7) (s 9 6))
-
 (define (collate h)
   (if (list? (hand-cards h))
-      (let* ((ranks-by-suit (make-hash-table))
-             (hash-table-append! (lambda (key value)
-                                   (let ((old (hash-table-get ranks-by-suit key)))
-                                     (hash-table-put! ranks-by-suit key (append old (list value)))))))
-        ;; prime the hash table with all the suits, to ensure that our
-        ;; output always consists of four lists.  This is important
-        ;; for display-side-by-side.
-        (for-each (lambda (s) (hash-table-put! ranks-by-suit s '())) *suits*)
-        (for-each (lambda (c)
-                    (hash-table-append! (card-suit c) (card-rank c)))
-                  (hand-cards h))
-        (sort (hash-table-map
-               ranks-by-suit
-               (lambda (suit-sym ranks)
-                 (cons suit-sym
-                       (sort ranks >))))
-              (lambda (seq1 seq2)
-                (string>? (symbol->string (car seq1))
-                          (symbol->string (car seq2))))))
+      (sort (hash-map
+             (for/fold ([ranks-by-suit (make-immutable-hash '()) ])
+
+                 ([c (in-list (hand-cards h))])
+                 (let ([hash-append (lambda (key value)
+                                      (hash-update
+                                       ranks-by-suit
+                                       key
+                                       (lambda (old)
+                                         (append old (list value))) '()))])
+
+
+
+
+                   (hash-append (card-suit c) (card-rank c))))
+             cons)
+
+            string<?
+            #:key (lambda (seq)
+                    (symbol->string (car seq))))
+
     '?))
+(check-equal? (collate (make-hand (map mc* '(c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)) 'north))
+              '((c 3 6 9 11 14) (d 2 9 10) (h 7 11 12) (s 6 9)))
+
 
 (define (->stringlist hand)
   (cons
@@ -221,7 +217,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (string-append
             (suit->string (suit holding))
             ": "
-            (string-join (map r->s (ranks holding)))))
+            (string-join (map r->s (ranks holding)) " ")))
 
          (collate hand))))
   )
@@ -234,6 +230,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
               (display s port)
               (newline port))
             (->stringlist hand)))
-
-
-)

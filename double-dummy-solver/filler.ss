@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
 (module filler mzscheme

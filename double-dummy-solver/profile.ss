@@ -4,10 +4,12 @@
 exec mzscheme -qr "$0" ${1+"$@"}
 |#
 
+#lang scheme
+
 (require (lib "errortrace.ss" "errortrace")
-         (only (lib "etc.ss") this-expression-source-directory)
-         (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi") filter))
+         (only-in (lib "etc.ss") this-expression-source-directory)
+         (only-in (lib "list.ss") sort)
+         (only-in (lib "1.ss" "srfi") filter))
 
 (profiling-enabled #t)
 (profiling-record-enabled #t)
@@ -28,7 +30,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
                 (with-output-to-file ofn
                   (lambda ()
                     (annotate-executed-file fn))
-                  'truncate/replace
+                  #:exists 'truncate/replace
                   )))
             (filter (lambda (path)
                       (and (file-exists? path)
@@ -39,7 +41,7 @@ exec mzscheme -qr "$0" ${1+"$@"}
      (let ((ofn (simplify-path (build-path od (car p)))))
        (with-output-to-file ofn
          (cdr p)
-         'truncate/replace)
+         #:exists 'truncate/replace)
        (fprintf (current-error-port)
                 "Wrote ~a.~%" ofn))
      )
