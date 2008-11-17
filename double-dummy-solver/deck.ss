@@ -1,20 +1,11 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
-|#
+#lang scheme
 
-(module deck mzscheme
 (require
  "card.ss"
  "hand.ss"
- (only (lib "list.ss") sort)
- (only (lib "1.ss" "srfi")
-       circular-list
-       iota
-       take
-       ))
-(provide (all-defined))
+ srfi/1)
+
+(provide (all-defined-out))
 (define *deck*
   (let loop ((suits *suits*)
              (result '()))
@@ -46,4 +37,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
         (loop (cdr d)
               (append (cdr lol)
                       (list this-hand)))))))
-)

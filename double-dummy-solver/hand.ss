@@ -4,7 +4,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
 #lang scheme
-(require (prefix-in s1: srfi/1)
+(require (only-in srfi/1 every)
          "card.ss"
          (only-in "trick.ss" *seats*)
          (planet schematics/schemeunit:3))
@@ -20,7 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
  counts-by-suit
  display-hand
  empty?
- filter
+ hand-filter
  hand?
  longest-suit
  mh mhs
@@ -63,14 +63,14 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (unknown? h) (eq? '? (hand-cards h)))
 (define (set-hand-cards! h c) (hand-set! h 0 c))
 
-(define (filter proc h)
-  (my-make-hand (s1:filter proc (hand-cards h))
+(define (hand-filter proc h)
+  (my-make-hand (filter proc (hand-cards h))
                 (hand-seat h)))
 
 (define (my-make-hand cards . seat)
   (unless (or (eq? '? cards)
           (and (list? cards)
-               (s1:every card? cards)))
+               (every card? cards)))
     (raise-mismatch-error 'make-hand "Not a list of cards, or ?: " cards))
 
   ;; TODO -- maybe ensure all the cards are distinct.

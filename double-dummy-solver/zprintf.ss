@@ -1,12 +1,6 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qu "$0" ${1+"$@"}
-|#
+#lang scheme
 
-(module zprintf mzscheme
-
-(provide (all-defined))
-(require (only (lib "1.ss" "srfi") last-pair))
+(provide (all-defined-out))
 
 (define *recursion-level* (make-parameter 0))
 (define *really-loud* (make-parameter #f))
@@ -17,8 +11,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (when (and (not (*shaddap*))
              (or (*really-loud*)
                  (zero? (*recursion-level*))))
-;;     (newline)
-;;     (display (make-string (* 2 (*recursion-level*)) #\space))
     (let-values (((line col pos)
                   (port-next-location (current-output-port))))
       (when (and col (positive? col))
@@ -39,4 +31,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (apply printf args)
   (flush-output)
   (car (last-pair args)))
-)

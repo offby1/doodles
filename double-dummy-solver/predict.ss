@@ -11,7 +11,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                last-pair
                )
          "card.ss"
-         (prefix ha: "hand.ss")
+         "hand.ss"
          "trick.ss"
          )
 (provide (all-defined))
@@ -33,12 +33,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ;; "ours" is the hand who _last_ played, as contrasted to
     ;; choose-card, in which case "ours" is the hand who is _about_ to
     ;; play.
-    (define ours      (ha:filter right-suit? (car (rotate hands 3))))
-    (define us        (ha:seat ours))
-    (define lho^s     (ha:filter right-suit? (car (rotate hands 0))))
-    (define partner^s (ha:filter right-suit? (car (rotate hands 1))))
-    (define pard      (ha:seat partner^s))
-    (define rho^s     (ha:filter right-suit? (car (rotate hands 2))))
+    (define ours      (hand-filter right-suit? (car (rotate hands 3))))
+    (define us        (seat ours))
+    (define lho^s     (hand-filter right-suit? (car (rotate hands 0))))
+    (define partner^s (hand-filter right-suit? (car (rotate hands 1))))
+    (define pard      (seat partner^s))
+    (define rho^s     (hand-filter right-suit? (car (rotate hands 2))))
 
     ;; if a given side has played, or been forced to play, a card that
     ;; is higher than their enemy's cards of that suit, then they will
@@ -54,11 +54,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
     ;; already played to this trick; or else all the cards in his hand.
     (define (relevant-cards playa)
       (let ((already (assoc-backwards
-                      (ha:seat playa)
+                      (seat playa)
                       (annotated-cards t))))
         (if already
             (list (car already))
-          (ha:cards playa))))
+          (cards playa))))
 
     (let ((theirs (append-map relevant-cards (list lho^s rho^s)))
           (pards (relevant-cards partner^s)))
