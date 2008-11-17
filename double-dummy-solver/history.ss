@@ -5,7 +5,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module history mzscheme
 (print-struct #t)
-(require (planet "assert.ss"   ("offby1" "offby1.plt"))
+(require (only rnrs/base-6 assert)
          (lib "pretty.ss")
          (only (lib "list.ss") sort)
          (only "card.ss"
@@ -62,7 +62,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (history-tricks         h) (s:history-ref h 1))
 
 (define (history-complete-tricks-only h)
-  (check-type 'history-complete-tricks-only history? h)
+  (assert (history? h))
   (make-history
    (history-opening-leader h)
    (let ((ts (history-tricks h)))
@@ -160,7 +160,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (define (by-char a b)
     (string>? (symbol->string (car a))
               (symbol->string (car b))))
-  (check-type 'trick-summaries history? h)
+  (assert (history? h))
   (let ((ns-tricks-by-suit (make-hash-table))
         (ew-tricks-by-suit (make-hash-table)))
     (for-each (lambda (t)
@@ -183,7 +183,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (sort (hash-table-map ew-tricks-by-suit cons) by-char))))
 
 (define (compute-score h)
-  (check-type 'compute-score history? h)
+  (assert (history? h))
   (let ((tricks-by-seat (make-hash-table)))
     (define (hash-table-increment! k)
       (let ((v (hash-table-get tricks-by-seat k 0)))

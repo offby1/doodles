@@ -10,7 +10,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                unfold
                )
          (lib "async-channel.ss")
-         (planet "assert.ss"   ("offby1" "offby1.plt"))
+         (only rnrs/base-6 assert)
          (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
@@ -86,27 +86,26 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                                 (list-ref thing 1)))
                                         (not (exact? (list-ref thing 0)))
                                         (not (exact? (list-ref thing 1))))))))
-  (exit-if-failed
-   (test/text-ui
-    (test-suite
-     "run-for-a-while"
-     (test-equal? "call/timeout 1" (call/timeout (lambda (q) 6) #e.1) '())
-     (test-equal? "call/timeout 2" (call/timeout (lambda (q) (async-channel-put q 6)) #e.1) '(6))
-     (test-pred   "call/timeout 3" (lambda (act)
-                                     (< 10 (length act)))
-                  (call/timeout (lambda (q) (let l () (async-channel-put q 6) (l))) #e.1))
-     (test-equal? "call/timeout 4" (call/timeout (lambda (q) (sleep .2)) #e.1) '())
-     (test-pred   "call/timeout 5" lotsa-random-numbers?
-                  (call/timeout (lambda (q) (let l () (async-channel-put q (random)) (l))) #e.01))
-     (test-pred "run-for-a-while 1" (lambda (act)
-                                      (and (< 10 (length act))
-                                           (every (lambda (thing)
-                                                    (equal? thing '(6)))
-                                                  act)))
-                (run-for-a-while (lambda ignored 6) #e.01))
-     (test-equal? "run-for-a-while 2" (run-for-a-while (lambda ignored (sleep .2)) #e.1)'() )
-     (test-pred "run-for-a-while 3" (lambda (act)
-                                      (lotsa-random-numbers? (apply append act)))
-                (run-for-a-while random #e.1))
-     ))))
+  (test/text-ui
+   (test-suite
+    "run-for-a-while"
+    (test-equal? "call/timeout 1" (call/timeout (lambda (q) 6) #e.1) '())
+    (test-equal? "call/timeout 2" (call/timeout (lambda (q) (async-channel-put q 6)) #e.1) '(6))
+    (test-pred   "call/timeout 3" (lambda (act)
+                                    (< 10 (length act)))
+                 (call/timeout (lambda (q) (let l () (async-channel-put q 6) (l))) #e.1))
+    (test-equal? "call/timeout 4" (call/timeout (lambda (q) (sleep .2)) #e.1) '())
+    (test-pred   "call/timeout 5" lotsa-random-numbers?
+                 (call/timeout (lambda (q) (let l () (async-channel-put q (random)) (l))) #e.01))
+    (test-pred "run-for-a-while 1" (lambda (act)
+                                     (and (< 10 (length act))
+                                          (every (lambda (thing)
+                                                   (equal? thing '(6)))
+                                                 act)))
+               (run-for-a-while (lambda ignored 6) #e.01))
+    (test-equal? "run-for-a-while 2" (run-for-a-while (lambda ignored (sleep .2)) #e.1)'() )
+    (test-pred "run-for-a-while 3" (lambda (act)
+                                     (lotsa-random-numbers? (apply append act)))
+               (run-for-a-while random #e.1))
+    )))
 )

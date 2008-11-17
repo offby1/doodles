@@ -6,7 +6,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (module trick mzscheme
 (print-struct #t)
-(require (planet "assert.ss"   ("offby1" "offby1.plt"))
+(require (only rnrs/base-6 assert)
          (only (lib "1.ss" "srfi" )
                alist-copy
                circular-list
@@ -97,9 +97,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; rotate the seats until SEAT is first, then apply the proc to the
 ;; list.
 (define (with-seat-circle seat proc)
-  (check-type 'with-seat-circle (lambda (thing)
-                                  (memq thing *seats*))
-              seat)
+  (assert (memq seat *seats*))
 
   (proc (rotate-until-car-eq *seats* seat)))
 
@@ -134,11 +132,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                 seq)
       (= (length seq)
          (hash-table-count h))))
-  (check-type 'make-trick list?  cards)
-  (check-type 'make-trick (lambda (c) (not (null? c))) cards)
-  (check-type 'make-trick (lambda (cs) (every card? cs)) cards)
-  (check-type 'make-trick all-distinct? cards)
-  (check-type 'make-trick (lambda (leader) (memq leader *seats*)) leader)
+  (assert (list?  cards))
+  (assert ((lambda (c) (not (null? c))) cards))
+  (assert ((lambda (cs) (every card? cs)) cards))
+  (assert (all-distinct? cards))
+  (assert ((lambda (leader) (memq leader *seats*)) leader))
   ;;(printf "Making trick led by ~a ... " leader)
   (with-seat-circle
    leader

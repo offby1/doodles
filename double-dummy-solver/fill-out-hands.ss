@@ -6,11 +6,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module fill-out-hands mzscheme
 (require
- (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
- (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
- (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
+ (planet schematics/schemeunit:3)
+ (planet schematics/schemeunit:3/text-ui)
  (lib "trace.ss")
- (planet "assert.ss"   ("offby1" "offby1.plt"))
+ (only rnrs/base-6 assert)
  (only "card.ss"
        cards=
        *num-ranks*
@@ -126,52 +125,51 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                     (whose-turn history))))))))))
 ;;(trace fill-out-hands)
 
-(exit-if-failed
- (test/text-ui
-  (test-suite
-   "The one and only suite"
+(run-tests
+ (test-suite
+  "The one and only suite"
 
-   (test-equal?
-    "52 cards returned"
-    (length
-        (apply
-         lset-union
-         cards=
-         (map
-          cards
-          (fill-out-hands
-           *test-handset*
-           (make-history 'e)))))
-    (*  (length *suits*)  *num-ranks*))
+  (test-equal?
+   "52 cards returned"
+   (length
+    (apply
+     lset-union
+     cards=
+     (map
+      cards
+      (fill-out-hands
+       *test-handset*
+       (make-history 'e)))))
+   (*  (length *suits*)  *num-ranks*))
 
-   (test-equal?
-    "52, part deux"
-    (length
-     (apply
-      lset-union
-      cards=
-      (map
-       cards
-       (fill-out-hands
-        (list (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
-              (mh e ?)
-              (mh s ?)
-              (mh w ?)
-              )
-        (make-history 's)))))
-    (* (length *suits*) *num-ranks*))
+  (test-equal?
+   "52, part deux"
+   (length
+    (apply
+     lset-union
+     cards=
+     (map
+      cards
+      (fill-out-hands
+       (list (mh n c3 c6 c9 cj ca d2 d9 dt h7 hj hq s6 s9)
+             (mh e ?)
+             (mh s ?)
+             (mh w ?)
+             )
+       (make-history 's)))))
+   (* (length *suits*) *num-ranks*))
 
-   (test-exn "Requires four args"
-             exn:fail:contract?
-             (lambda ()
-               (fill-out-hands
-                '(#f #f #f)
-                (make-history 'e))))
+  (test-exn "Requires four args"
+            exn:fail:contract?
+            (lambda ()
+              (fill-out-hands
+               '(#f #f #f)
+               (make-history 'e))))
 
-   (test-exn "Requires four hands"
-             exn:fail:contract?
-             (lambda ()
-               (fill-out-hands
-                '(#f #f #f 'sam)
-                (make-history 'e)))))))
+  (test-exn "Requires four hands"
+            exn:fail:contract?
+            (lambda ()
+              (fill-out-hands
+               '(#f #f #f 'sam)
+               (make-history 'e))))))
 )

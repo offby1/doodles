@@ -5,7 +5,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
 (module filler mzscheme
-(require (only (lib "list.ss") sort)
+(require (only rnrs/base-6 assert)
+         (only (lib "list.ss") sort)
          (only (lib "1.ss" "srfi")
                every
                first
@@ -17,7 +18,6 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (lib "cmdline.ss")
          (lib "trace.ss")
 
-         (planet "assert.ss"   ("offby1" "offby1.plt"))
          (only "card.ss"
                *suits*
                card-suit
@@ -25,7 +25,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (prefix dds: "dds.ss")
          "deck.ss"
          "fill-out-hands.ss"
-         "fys.ss"
+         (planet "fys.ss" ("offby1" "offby1.plt"))
          "hand.ss"
          (only "history.ss"
                trick-summaries
@@ -45,8 +45,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
   (dds:choose-card history (map sorted (fill-out-hands handset history)) max-lookahead #f))
 
 (define (mask-out handset me dummy opening-lead?)
-  (check-type 'mask-out (lambda (thing) (memq thing *seats*)) me)
-  (check-type 'mask-out (lambda (thing) (memq thing *seats*)) dummy)
+  (assert ((lambda (thing) (memq thing *seats*)) me))
+  (assert ((lambda (thing) (memq thing *seats*)) dummy))
   ;; assume we're given a handset where we can see all the cards.
 
   ;; if me and the dummy are the same, "mask off" (i.e., replace
@@ -248,7 +248,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
     (let* ((hands
-            (deal (vector->list (fisher-yates-shuffle! (list->vector *deck*)))
+            (deal (vector->list (fisher-yates-shuffle (list->vector *deck*)))
                   (map (lambda (s) (make-hand '() s)) *seats*)))
            (pts (plausible-trump-suit hands))
            (me (with-seat-circle (first pts) (lambda (circ) (list-ref circ 1)))))

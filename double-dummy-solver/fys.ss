@@ -1,4 +1,4 @@
-#! /bin/sh
+ #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}

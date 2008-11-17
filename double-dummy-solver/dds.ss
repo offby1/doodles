@@ -17,7 +17,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                )
          (only (lib "etc.ss") compose)
          (lib "pretty.ss")
-         (planet "assert.ss"   ("offby1" "offby1.plt"))
+         (only rnrs/base-6 assert)
          "card.ss"
          "trick.ss"
          "zprintf.ss"
@@ -90,7 +90,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        *seats*))
 
 (define (numeric-team-score sp our-seat)
-  (check-type 'numeric-team-score list? sp)
+  (assert (list? sp))
   (+ (ass0 our-seat sp)
      (ass0 (partner our-seat) sp)))
 
@@ -184,7 +184,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                    max-lookahead
                    (add1 counter)))))))
 
-  (check-type 'play-loop non-negative? max-lookahead)
+  (assert (non-negative? max-lookahead))
   (inner history (rotate-until hands (lambda (hands)
                                        (eq? (ha:seat (car hands))
                                             (history:whose-turn history))))
@@ -233,8 +233,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
   ;;(trace predict-score)
   ;;(trace numeric-team-score)
-  (check-type 'choose-card non-negative? max-lookahead)
-  (check-type 'choose-card history? history)
+  (assert (non-negative? max-lookahead))
+  (assert (history? history))
   (unless (ha:hand? ours)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
   (if (ha:empty? ours)
@@ -412,7 +412,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
      (history-tricks history)))
   ;;(trace score-from-history)
 
-  (check-type 'predict-score non-negative? max-lookahead)
+  (assert (non-negative? max-lookahead))
   (let ((rl (*recursion-level*)))
     (parameterize ((*recursion-level* (add1 (*recursion-level*))))
       (let-values (((new-hi new-hands)
