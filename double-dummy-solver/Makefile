@@ -2,7 +2,7 @@
 TESTS = tests test-predictions fill-out-hands filler
 
 check:
-	mzscheme ./tests.ss
+	mzscheme --lib errortrace -u ./tests.ss
 	@echo -e '\f'
 	mzscheme ./test-predictions.ss --lookahead 0 --quiet
 	@echo -e '\f'
