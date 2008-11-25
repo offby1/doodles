@@ -25,24 +25,24 @@
      (else
       #f))))
 
+(let ((ofn  "ooh-baby"))
+  (call-with-output-file ofn
+    (lambda (file-op)
+      (let ((url (string->url "http://www.google.com/search")))
+        (set-url-query! url `((q
+                               .
+                               ,(string-join (list "cats") " "))))
+        (let-values (((ip op) (make-pipe)))
+          (thread
+           (lambda ()
+             (for/list ((content (in-list (read-html-as-xml
+                                           ;;(open-input-file "test-data.html")
+                                           (get-pure-port url)
+                                           ))))
+               (write-xml/content content op)
+               (flush-output-port op))))
+          (display (ssax:xml->sxml ip '()) file-op)
+          (newline file-op))))
 
-
-(call-with-output-file "ooh-baby"
-  (lambda (file-op)
-    (let ((url (string->url "http://www.google.com/search")))
-      (set-url-query! url `((q
-                             .
-                             ,(string-join (list "cats") " "))))
-      (let-values (((ip op) (make-pipe)))
-        (thread
-         (lambda ()
-           (for/list ((content (in-list (read-html-as-xml
-                                         (open-input-file "test-data.html")
-                                         ;;(get-pure-port url)
-                                         ))))
-             (display content) (newline)
-             (write-xml/content content op)
-             (flush-output-port op))))
-        (ssax:xml->sxml ip '()))))
-
-  #:exists 'truncate)
+    #:exists 'truncate)
+  (fprintf (current-error-port)  "Yer results are in ~s~n" ofn))
