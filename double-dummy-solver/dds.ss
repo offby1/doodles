@@ -1,6 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+#$Id$
+exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
 (module dds mzscheme
@@ -26,7 +27,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (rename "history.ss" history:whose-turn whose-turn)
          (prefix ha: "hand.ss")
          (only (lib "list.ss") sort)
-         (lib "trace.ss"))
+         (lib "trace.ss")
+         (planet schematics/schemeunit:3)
+         (planet schematics/schemeunit:3/text-ui))
 (provide
  choose-card
  play-loop
@@ -38,8 +41,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (print-struct #t)
 (define non-negative? (compose not negative?))
 
-;; (list 1 2 3 9 10 11 7 6 5) (lambda (a b) (= a (add1 b))) => ((1 2
-;; 3) (9 10 11) (7) (6) (5))
+
 (define (group-into-adjacent-runs seq adjacent?)
   (reverse
    (map reverse
@@ -51,6 +53,11 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                         (cdr seq))))
               '()
               seq))))
+
+(check-equal?  (group-into-adjacent-runs
+                (list 1 2 3 9 10 11 7 6 5)
+                (lambda (a b) (= a (add1 b))))
+                '((1 2 3) (9 10 11) (7) (6) (5)))
 
 (define (hi-lo-each-suit seq t)
 
