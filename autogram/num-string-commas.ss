@@ -1,10 +1,10 @@
 (module num-string-commas mzscheme
 (require
-  (planet "fmt.ss" ("ashinn" "fmt.plt" 1 0)))
+ (planet "numspell.ss" ("neil" "numspell.plt")))
 
 (provide num-string-commas)
 
 (define (num-string-commas n)
-  (fmt #f (num/comma n)))
+  (number->english n))
 
 )

@@ -6,7 +6,6 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
 (module byte-vector-counter mzscheme
 (require
- (planet "assert.ss" ("offby1" "offby1.plt"))
  (lib "trace.ss")
  (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
  (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
@@ -75,39 +74,39 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
           #f
         (loop (cdr keys)
               rv)))))
-(exit-if-failed
- (test/text-ui
-  (test-suite
-   "The one and only suite"
 
-   (test-not-false
-    "duh"
-    (let ((thing (my-make-char-counts )))
-      thing))
+(test/text-ui
+ (test-suite
+  "The one and only suite"
 
-   (test-equal?
-    "initially zero"
-    0
-    (let ((thing (my-make-char-counts )))
-      (get-count #\x thing)))
+  (test-not-false
+   "duh"
+   (let ((thing (my-make-char-counts )))
+     thing))
 
-   (test-equal?
-    "counts as expected"
-    4
-    (let ((c #\z)
-          (thing (my-make-char-counts)))
-      (inc-count! c thing 3)
-      (inc-count! c thing)
-      (get-count c thing)))
+  (test-equal?
+   "initially zero"
+   0
+   (let ((thing (my-make-char-counts )))
+     (get-count #\x thing)))
 
-   (test-case
-    "add counts"
-    (let ((c1 (my-make-char-counts  1 0 0 0))
-          (c2 (my-make-char-counts  0 1 0 0)))
-      (add-counts! c1 c2)
-      (check-equal? (get-count #\a c1) 1)
-      (check-equal? (get-count #\b c1) 1)
-      (check-equal? (get-count #\a c2) 0)
-      (check-equal? (get-count #\b c2) 1))))))
+  (test-equal?
+   "counts as expected"
+   4
+   (let ((c #\z)
+         (thing (my-make-char-counts)))
+     (inc-count! c thing 3)
+     (inc-count! c thing)
+     (get-count c thing)))
+
+  (test-case
+   "add counts"
+   (let ((c1 (my-make-char-counts  1 0 0 0))
+         (c2 (my-make-char-counts  0 1 0 0)))
+     (add-counts! c1 c2)
+     (check-equal? (get-count #\a c1) 1)
+     (check-equal? (get-count #\b c1) 1)
+     (check-equal? (get-count #\a c2) 0)
+     (check-equal? (get-count #\b c2) 1)))))
 
 )
