@@ -1,29 +1,21 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mzscheme -qu "$0" ${1+"$@"}
+#$Id: v4-script-template.ss 5748 2008-11-17 01:57:34Z erich $
+exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
-
-(module autogram mzscheme
+#lang scheme
 
 (require
- (only (lib "1.ss" "srfi")
-       every
-       filter
-       fold
-       iota)
+ srfi/1
  (lib "date.ss")
- (lib "trace.ss")
  (planet "round.scm" ("offby1" "offby1.plt"))
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
  "byte-vector-counter.ss"
  "num-string-commas.ss"
  "monitor.ss"
- "globals.ss"
-
- )
+ "globals.ss")
 
 (define *a-template* (cons
                       "What part of '"
@@ -67,8 +59,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (update-template-from-counts t counts)
   (modify-template t (lambda (pair) (get-count (car pair) counts))))
 
-;;(trace update-template-from-counts)
-
 (define/memo* (survey s)
   (let ((counts (make-count)))
     (let loop ((chars-examined 0))
@@ -80,7 +70,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
             (inc-count! c counts))
 
           (loop (add1 chars-examined)))))))
-;;(trace survey)
 
 (define/memo* (pair->string p)
   (let ((n (cdr p)))
@@ -101,7 +90,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
              (cons (pair->string thing) so-far)))
          '()
          t)))
-;;(trace template->strings)
 
 ;; ditto about the pointlessness of memoization
 (define (template->counts t)
@@ -111,7 +99,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (add-counts! rv (survey str)))
      (template->strings t))
     rv))
-;;(trace template->counts)
 
 (define (true? t actual-counts)
 
@@ -119,7 +106,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
            (= (cdr pair)
               (get-count (car pair) actual-counts)))
          (just-the-conses t)))
-;;(trace true?)
 
 (define (make-calm-notifier proc)
   (define (is-power-of-two? x)
@@ -129,8 +115,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (let ((invocation-count 0))
     (lambda args
       (set! invocation-count (add1 invocation-count))
-      (if (is-power-of-two? invocation-count)
-          (apply proc args)))))
+      (when (is-power-of-two? invocation-count)
+        (apply proc args)))))
 
 (define testing-truth-progress
   (make-calm-notifier
@@ -142,61 +128,60 @@ exec mzscheme -qu "$0" ${1+"$@"}
                     (date->string (seconds->date (current-seconds)) #t))
       (apply string-append (template->strings t))))))
 
-(define *seen* (make-hash-table 'equal))
+(define *seen* (make-hash))
 (define (already-seen? counts)
-  (hash-table-get *seen* counts #f))
-;;(trace already-seen?)
+  (hash-ref *seen* counts #f))
 
 (define (note-seen! counts)
-  (hash-table-put! *seen* counts #t))
-;;(trace note-seen!)
+  (hash-set! *seen* counts #t))
 
 (define (randomize-template t)
   (modify-template t (lambda (ignored)
                        (+ *min* (random (- *max* *min* -1))))))
-;;(trace randomize-template)
 
-(define monitor-thread
-  (thread (lambda ()
-            (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))))
+(provide main)
+(define (main . args)
+  (define monitor-thread
+    (thread (lambda ()
+              (monitor (expt (- *max* *min* -1) (length (just-the-conses *a-template*)))))))
 
-(call/ec
- (lambda (return)
+  (call/ec
+   (lambda (return)
 
-   (parameterize-break
-    #t
-    (with-handlers
-        ([exn:break?
-          (lambda (x)
-            (printf "I finally got a break!~%")
-            (return))])
+     (parameterize-break
+         #t
+       (with-handlers
+           ([exn:break?
+             (lambda (x)
+               (printf "I finally got a break!~%")
+               (return))])
 
-      (let ((worker
-             (parameterize
-              ((current-custodian
-                *worker-custodian*))
-              (thread
-               (lambda ()
-                 (let loop ((t *a-template*))
-                   (*loop-passes* (add1 (*loop-passes*)))
-                   (let ((actual-counts (template->counts t))
-                         (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
-                     (if (already-seen? claimed-counts)
-                         (loop (randomize-template t))
-                       (begin
-                         (*tries* (add1 (*tries*)))
-                         (testing-truth-progress t)
-                         (note-seen! claimed-counts)
-                         (when (true? t actual-counts)
-                           (printf "~%We got a winner: ~s~%~%"
-                                   (apply string-append (template->strings t))))
-                         (loop
-                          (update-template-from-counts t actual-counts)))))))))))
+         (let ((worker
+                (parameterize
+                    ((current-custodian
+                      *worker-custodian*))
+                  (thread
+                   (lambda ()
+                     (let loop ((t *a-template*))
+                       (*loop-passes* (add1 (*loop-passes*)))
+                       (let ((actual-counts (template->counts t))
+                             (claimed-counts (apply make-count (map cdr (just-the-conses t)) )))
+                         (if (already-seen? claimed-counts)
+                             (loop (randomize-template t))
+                             (begin
+                               (*tries* (add1 (*tries*)))
+                               (testing-truth-progress t)
+                               (note-seen! claimed-counts)
+                               (when (true? t actual-counts)
+                                 (printf "~%We got a winner: ~s~%~%"
+                                         (apply string-append (template->strings t))))
+                               (loop
+                                (update-template-from-counts t actual-counts)))))))))))
 
 
-        (printf "Well, here we go.~%")
-        (sync worker)
-        (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
-(once-more-and-then-quit)
-(sync monitor-thread)
-)
+           (printf "Well, here we go.~%")
+           (sync worker)
+           (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
+
+  (once-more-and-then-quit)
+  (sync monitor-thread))
