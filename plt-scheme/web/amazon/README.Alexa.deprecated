@@ -1,0 +1,48 @@
+Delivered-To: eric.hanchrow+blarg@gmail.com
+Received: by 10.143.7.20 with SMTP id k20cs147881wfi;
+        Thu, 27 Nov 2008 01:38:28 -0800 (PST)
+Received: by 10.141.29.21 with SMTP id g21mr3335772rvj.44.1227778708323;
+        Thu, 27 Nov 2008 01:38:28 -0800 (PST)
+Return-Path: <RealTimeEmail+Correios-RTFM-LMvWTdMM8C@bounces.amazon.com>
+Received: from mail.avvanta.com (smtp61.avvanta.com [206.124.128.61])
+        by mx.google.com with ESMTP id l31si2466027rvb.2.2008.11.27.01.38.28;
+        Thu, 27 Nov 2008 01:38:28 -0800 (PST)
+Received-SPF: softfail (google.com: domain of transitioning RealTimeEmail+Correios-RTFM-LMvWTdMM8C@bounces.amazon.com does not designate 206.124.128.61 as permitted sender) client-ip=206.124.128.61;
+Authentication-Results: mx.google.com; spf=softfail (google.com: domain of transitioning RealTimeEmail+Correios-RTFM-LMvWTdMM8C@bounces.amazon.com does not designate 206.124.128.61 as permitted sender) smtp.mail=RealTimeEmail+Correios-RTFM-LMvWTdMM8C@bounces.amazon.com
+Received: by mail.avvanta.com (Postfix)
+	id 87BCEF3952; Thu, 27 Nov 2008 01:38:27 -0800 (PST)
+Delivered-To: offby1@blarg.net
+Received: from mail.avvanta.com (localhost.drteeth.p.blarg.net [127.0.0.1])
+	by mail.avvanta.com (Postfix) with ESMTP id 73554F3954
+	for <offby1@blarg.net>; Thu, 27 Nov 2008 01:38:27 -0800 (PST)
+Received: from mm-notify-out-205-59.amazon.com (mm-notify-out-205-59.amazon.com [72.21.205.59])
+	by mail.avvanta.com (Postfix) with ESMTP id 351ACF3952
+	for <offby1@blarg.net>; Thu, 27 Nov 2008 01:38:05 -0800 (PST)
+Received: from unknown (HELO massmail-sender-na-1112.vdc.amazon.com) ([10.0.51.202])
+  by mm-notify-out-205-59.amazon.com with ESMTP; 27 Nov 2008 09:38:04 +0000
+Date: Thu, 27 Nov 2008 01:38:05 -0800 (PST)
+From: Amazon Web Services <no-reply@amazon.com>
+To: "offby1@blarg.net" <offby1@blarg.net>
+Message-ID: <18489152.632751227778685016.JavaMail.em-build@na-mm2-relay.amazon.com>
+Subject: Deprecation of the Alexa Web Search Service
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Bounces-to: RealTimeEmail+Correios-RTFM-LMvWTdMM8C@bounces.amazon.com
+X-AMAZON-RTE-VERSION: 2.0
+X-AMAZON-MAIL-RELAY-TYPE: notification
+X-BlargAV-Status: No viruses detected, BlargAV v1.1 on localhost.drteeth.p.blarg.net
+
+Dear Alexa Developer,
+
+The Alexa Web Search service will no longer be available to new customers as of November 26, 2008.  Use of the service is low, so we are shifting our priorities to other areas where we can provide better service to AWS customers.
+
+The Alexa Web Search service will continue to be operational for 60 days until January 26, 2009.  The ProgrammableWeb website offers a list of web services that provide web search: http://www.programmableweb.com/apis/directory/1?apicat=Search
+
+We apologize for the inconvenience to you.  
+
+Thank you,
+
+The Alexa Web Services Team
+
+Alexa Web Search is offered by Amazon Web Services. Amazon Web Services LLC is a subsidiary of Amazon.com, Inc. Amazon.com is a registered trademark of Amazon.com, Inc. This message produced and distributed by Amazon Web Services, LLC, 1200 12th Ave South, Seattle, WA 98144.
