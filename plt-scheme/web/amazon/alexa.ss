@@ -27,7 +27,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
   (parameterize ((current-alist-separator-mode 'amp))
     (let* ((version "2007-03-15")
            (action "Search")
-           (date (zdate (seconds->date (current-seconds))))
+           (date (zdate (current-seconds)))
            (url (string->url "http://wsearch.amazonaws.com/")))
 
       (set-url-query! url `(
