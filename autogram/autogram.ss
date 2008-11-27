@@ -17,25 +17,27 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
  "monitor.ss"
  "globals.ss")
 
-(define *a-template* (cons
+;; from "arcfide" on #scheme (Aaron W. Hsu)
+(define intersperse-val
+  (lambda (val lst)
+    (foldr (lambda (e s)
+             (if (null? s)
+                 (cons e s)
+                 (cons e (cons val s))))
+           '()
+           lst)))
+
+(define *a-template* `(
                       "What part of '"
-                      (append
-                       (fold (lambda (pair seq)
-                               (cons pair
-                                     (if (null? seq)
-                                         seq
-                                       (cons
-                                        (if (null? (cdr seq))
-                                            ", and "
-                                          ", ")
-                                        seq))))
-                             '()
-                             (map (lambda (i)
-                                    (cons (integer->char i) 1))
-                                  (reverse
-                                   (iota (add1 (- (char->integer #\z) (char->integer #\a)))
-                                         (char->integer #\a)))))
-                       (list "' don't you understand?"))
+                       ,@(intersperse-val
+                          ", "
+                          (build-list
+                           26
+                           (lambda (<>)
+                             (cons (integer->char
+                                    (+ (char->integer #\a) <>))
+                                   1))))
+                       "' don't you understand?"
                       ))
 
 (define (just-the-conses seq) (filter pair? seq))
