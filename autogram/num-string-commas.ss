@@ -1,4 +1,5 @@
-(module num-string-commas mzscheme
+#lang scheme
+
 (require
  (planet "numspell.ss" ("neil" "numspell.plt")))
 
@@ -7,4 +8,3 @@
 (define (num-string-commas n)
   (number->english n))
 
-)

@@ -12,7 +12,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
  (planet "round.scm" ("offby1" "offby1.plt"))
  (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
  (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
- "byte-vector-counter.ss"
+ (except-in "byte-vector-counter.ss" main)
  "num-string-commas.ss"
  "monitor.ss"
  "globals.ss")
