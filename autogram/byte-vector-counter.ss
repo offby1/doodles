@@ -31,6 +31,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
     (when (not index)
       (error "Hey!  You're not allowed to ask about" char))
     (bytes-ref (char-counts-bv counter) index)))
+
 (define (inc-count! char counter . amount)
   (if (null? amount)
       (set! amount 1)
@@ -42,11 +43,12 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define (char-counts->string cc)
   (char-counts-bv cc))
+
 (define (my-make-char-counts . initial-values)
   (if (not (null? initial-values))
       (make-char-counts (apply bytes initial-values))
-    (make-char-counts (make-bytes *alphabet-length* 0)))
-  )
+    (make-char-counts (make-bytes *alphabet-length* 0))))
+
 (define (add-counts! c1 c2)
   (let loop ((slots-processed 0))
     (when (< slots-processed (bytes-length (char-counts-bv c1)))
@@ -56,9 +58,6 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                      (bytes-ref (char-counts-bv c2) slots-processed)))
       (loop (add1 slots-processed))))
   c1)
-
-(define (add-counts c1 c2)
-  (error "Unimplemented"))
 
 (define (counts-equal? c1 c2 keys)
   (let loop ((keys keys)
@@ -79,16 +78,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
     (test-suite
      "The one and only suite"
 
-     (test-not-false
-      "duh"
-      (let ((thing (my-make-char-counts )))
-        thing))
-
-     (test-equal?
-      "initially zero"
-      0
-      (let ((thing (my-make-char-counts )))
-        (get-count #\x thing)))
+     (test-not-false "duh" (my-make-char-counts ))
+     (test-equal? "initially zero" 0 (get-count #\x (my-make-char-counts )))
 
      (test-equal?
       "counts as expected"
@@ -107,4 +98,9 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
         (check-equal? (get-count #\a c1) 1)
         (check-equal? (get-count #\b c1) 1)
         (check-equal? (get-count #\a c2) 0)
-        (check-equal? (get-count #\b c2) 1)))))))
+        (check-equal? (get-count #\b c2) 1)
+
+        (check-true  (counts-equal? c1 c1 '(#\a #\b)))
+        (check-true  (counts-equal? c1 c2 '(#\c #\d)) "namely, all zeroes")
+        (check-false (counts-equal? c1 c2 '(#\a #\b)))
+        ))))))
