@@ -71,5 +71,3 @@
         (thunk)
       (fprintf (*graphis-output-port*) "}~n")
       (close-output-port (*graphis-output-port*)))))
-
-
