@@ -35,17 +35,14 @@
           result
           (let ((new (string-copy word)))
             (string-set! new index this-letter)
-            (cons new result)))))
+            (cons (string->immutable-string new) result)))))
 
 ;; one-letter variants
 (define (olvs word)
-  (let olvs-loop ((letters-to-examine (string-length word))
-                  (result '()))
-    (if (zero? letters-to-examine)
-        result
-        (olvs-loop (sub1 letters-to-examine)
-                   (append (25-varieties word (sub1 letters-to-examine))
-                           result)))))
+  (for/fold ([result '()])
+      ([letters-to-examine (in-range (string-length word))])
+      (append (25-varieties word letters-to-examine)
+              result)))
 
 (define *graphis-output-port* (make-parameter #f (lambda (v)
                                                    (when (not (output-port? v))
