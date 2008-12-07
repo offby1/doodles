@@ -13,24 +13,24 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
  "dict.ss")
 
 (define (display-result chain say-bummer?)
-  (cond
-   (chain => (lambda (chain)
-               (printf "~a: ~a~n"
-                       (length chain)
-                       (string-join chain " -> "))))
-   (else
-    (when say-bummer?
-      (display "Bummer.  No chain.")
-      (newline)))))
+  (if chain
+      (printf "~a: ~a~n"
+              (length chain)
+              (string-join chain " -> "))
+
+      (when say-bummer?
+        (display "Bummer.  No chain.")
+        (newline))))
 
 (define (go word-pair)
   (with-neato-output
    (lambda ()
      (apply bfs  (append word-pair (list string=?  all-neighbors))))))
 
-(let ((ccla (vector->list (current-command-line-arguments))))
-  (if (= 2 (length ccla))
-      (display-result (go ccla) #t)
+(provide main)
+(define (main . args)
+  (if (= 2 (length args))
+      (display-result (go args) #t)
       (let loop ()
         (display-result (go (random-word-pair 6)) #f)
         (loop))))
