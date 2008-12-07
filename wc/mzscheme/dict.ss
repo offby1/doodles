@@ -24,26 +24,18 @@
 (define *the-alphabet*
   (list->vector
    (for/list ([c (in-range (char->integer #\a)
-                           (char->integer #\z))])
+                           (add1 (char->integer #\z)))])
      (integer->char c))))
 
 (define (25-varieties word index)
-  (let 25-varieties-loop ((letters-to-examine (vector-length *the-alphabet*))
-                          (result '()))
-    (if (zero? letters-to-examine  )
-        result
-        (let ((this-letter (vector-ref *the-alphabet* (sub1 letters-to-examine))))
-
-          (if (char=? this-letter (string-ref word index))
-
-              ;; don't return the string we were passed in.
-              (25-varieties-loop (- letters-to-examine 1)
-                                 result)
-
-              (let ((new (string-copy word)))
-                (string-set! new index this-letter)
-                (25-varieties-loop (- letters-to-examine 1)
-                                   (cons new result))))))))
+  (for/fold ([result '()])
+      ([this-letter (in-vector *the-alphabet*)])
+      (if (char=? this-letter (string-ref word index))
+          ;; don't return the string we were passed in.
+          result
+          (let ((new (string-copy word)))
+            (string-set! new index this-letter)
+            (cons new result)))))
 
 ;; one-letter variants
 (define (olvs word)
