@@ -1,15 +1,13 @@
 #lang scheme
 
-(require (planet offby1/offby1/set))
+(require (planet offby1/offby1/set)
+         scheme/runtime-path)
 
 (provide all-neighbors
          with-neato-output
          random-word-pair)
 
-(define *dictionary-file-name*
-  (let ((t (get-preference 'anagrams-dictionary-file-name)))
-    (or (and t (bytes->path t))
-        (string->path "/usr/share/dict/words"))))
+(define-runtime-path *dictionary-file-name* (build-path "/usr/share/dict/words"))
 
 (define *words-by-length*
   (call-with-input-file *dictionary-file-name*

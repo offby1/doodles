@@ -1,9 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-#$Id: v4-script-template.ss 5748 2008-11-17 01:57:34Z erich $
-exec  mzscheme --require "$0" --main -- ${1+"$@"}
-|#
-
 #lang scheme
 
 (require
@@ -27,8 +21,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
    (lambda ()
      (apply bfs  (append word-pair (list string=?  all-neighbors))))))
 
-(provide main)
-(define (main . args)
+(let ((args (vector->list (current-command-line-arguments))))
   (if (= 2 (length args))
       (display-result (go args) #t)
       (let loop ()
