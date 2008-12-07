@@ -16,8 +16,9 @@
     (define (note word)
       (let* ((l (string-length word))
              (same-length-words (hash-ref w-b-l l (lambda () (make-set)))))
-        (add! (string-downcase word)
-              same-length-words)
+        (set! same-length-words
+              (add same-length-words
+                   (string-downcase word)))
         (hash-set! w-b-l l same-length-words)))
     (with-input-from-file *dictionary-file-name*
       (lambda ()

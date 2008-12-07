@@ -7,9 +7,9 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 #lang scheme
 
 (require
- (planet "bfs.ss"  ("offby1" "offby1.plt"))
- (planet "set.ss"  ("offby1" "offby1.plt"))
- (planet "q.ss"    ("offby1" "offby1.plt"))
+ (planet offby1/offby1/bfs)
+ (planet offby1/offby1/set)
+ (planet offby1/offby1/q)
  "dict.ss")
 
 (define (display-result chain say-bummer?)
