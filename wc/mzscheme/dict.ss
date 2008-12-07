@@ -1,6 +1,6 @@
 #lang scheme
 
-(require (planet "set.ss"  ("offby1" "offby1.plt")))
+(require (planet offby1/offby1/set))
 
 (provide all-neighbors
          with-neato-output
@@ -12,22 +12,14 @@
         (string->path "/usr/share/dict/words"))))
 
 (define *words-by-length*
-  (let ((w-b-l  (make-hash)))
-    (define (note word)
-      (let* ((l (string-length word))
-             (same-length-words (hash-ref w-b-l l (lambda () (make-set)))))
-        (set! same-length-words
-              (add same-length-words
-                   (string-downcase word)))
-        (hash-set! w-b-l l same-length-words)))
-    (with-input-from-file *dictionary-file-name*
-      (lambda ()
-        (let read-word-loop ((word  (read-line)))
-          (if (eof-object? word)
-              w-b-l
-              (begin
-                (note word)
-                (read-word-loop (read-line)))))))))
+  (call-with-input-file *dictionary-file-name*
+    (lambda (inp)
+      (for/fold ([w-b-l  (make-immutable-hash '())])
+          ([word (in-lines inp)])
+          (let* ((l (string-length word))
+                 (same-length-words (hash-ref w-b-l l (lambda () (make-set)))))
+            (hash-set w-b-l l (add same-length-words
+                                   (string-downcase word))))))))
 
 (define *the-alphabet*
   (list->vector
