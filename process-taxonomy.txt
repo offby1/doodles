@@ -1,5 +1,13 @@
 -*-org-*-
 
+(This is an outline of some stuff I'd like added to the PLT
+documentation, since it describes lots of different ways to create
+subprocesses, but doesn't clearly say how they differ, or when you'd
+want to use one way instead of the other way.  I'd have added it
+myself and submitted the addition as a patch to the PLT developers,
+except I cannot figure out how to make a table in their "Scribble"
+markup language.)
+
 | proc              | multi-args? | searches PATH? | yields exit status? | yields ports? |
 |-------------------+-------------+----------------+---------------------+---------------|
 | process           | no          | yes            | yes                 | no            |
