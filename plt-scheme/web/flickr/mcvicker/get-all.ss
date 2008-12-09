@@ -2,7 +2,7 @@
 (module get-all mzscheme
 (require
  (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
- (only (planet "memoize.ss" ("dherman" "memoize.plt" )) define/memo*)
+ (only (planet "memoize.ss" ("dherman" "memoize.plt" 2 (= 3))) define/memo*)
  (lib "etc.ss")
  (lib "match.ss")
  (lib "pretty.ss")
