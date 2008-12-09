@@ -9,23 +9,17 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (require
  srfi/1
  (lib "date.ss")
- (planet "round.scm" ("offby1" "offby1.plt"))
- (planet "memoize.ss" ("dherman" "memoize.plt" 2 1))
- (planet "numspell.ss" ("neil" "numspell.plt" 1 0))
+ (except-in (planet offby1/offby1/zdate) main)
+ (planet dherman/memoize:2:1/memoize)
+ (planet neil/numspell:1:0/numspell)
  (except-in "byte-vector-counter.ss" main)
- "num-string-commas.ss"
  "monitor.ss"
  "globals.ss")
 
-;; from "arcfide" on #scheme (Aaron W. Hsu)
-(define intersperse-val
-  (lambda (val lst)
-    (foldr (lambda (e s)
-             (if (null? s)
-                 (cons e s)
-                 (cons e (cons val s))))
-           '()
-           lst)))
+;; from "foof" on #scheme (Alex Shinn?)
+(define (intersperse-val val lst)
+  (cdr (concatenate (zip (circular-list val)
+                         lst))))
 
 (define *a-template* `(
                       "What part of '"
@@ -126,8 +120,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
      (nl)
      (printf
       "~a ~s~%"
-      (parameterize ((date-display-format 'iso-8601))
-                    (date->string (seconds->date (current-seconds)) #t))
+      (zdate)
       (apply string-append (template->strings t))))))
 
 (define *seen* (make-hash))
@@ -183,7 +176,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
            (printf "Well, here we go.~%")
            (sync worker)
-           (fprintf (current-error-port) "after ~a tries~%" (num-string-commas (*tries*))))))))
+           (fprintf (current-error-port) "after ~a tries~%" (number->english (*tries*))))))))
 
   (once-more-and-then-quit)
   (sync monitor-thread))
