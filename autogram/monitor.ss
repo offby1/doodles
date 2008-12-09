@@ -7,10 +7,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (module monitor mzscheme
 ;; this seems overly complex.
 (provide monitor once-more-and-then-quit)
-(require (planet "round.scm" ("offby1" "offby1.plt"))
+(require (planet offby1/offby1/round)
+         (planet neil/numspell:1:0/numspell)
          (lib "date.ss")
-         "globals.ss"
-         "num-string-commas.ss")
+         "globals.ss")
 (define-struct sample (cpu-ms
                        bytes-used
                        unique-tries
@@ -49,10 +49,10 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (remaining-tries (- max-tries current-tries)))
          (nl)
          (printf "~a/~a tries/loops; ~a/~a bytes used (~a% done)"
-                 (num-string-commas (my-round current-tries 2))
-                 (num-string-commas (my-round (sample-loop-passes this-sample) 2))
-                 (num-string-commas (round (my-round this-bytes 2)))
-                 (num-string-commas *max-worker-mem*)
+                 (number->english (my-round current-tries 2))
+                 (number->english (my-round (sample-loop-passes this-sample) 2))
+                 (number->english (round (my-round this-bytes 2)))
+                 (number->english *max-worker-mem*)
 
                  (exact->inexact (my-round (/ (* 100 this-bytes) *max-worker-mem*) 2))
                  )
@@ -68,9 +68,9 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                   (delta-bytes   (max 1 (- this-bytes    (sample-bytes-used   last-sample)))))
              (nl)
              (printf "~a tries per CPU second; ~a bytes per try"
-                     (num-string-commas (round (my-round tries-per-cpu-second 2)))
+                     (number->english (round (my-round tries-per-cpu-second 2)))
 
-                     (num-string-commas (round (my-round (/ delta-bytes delta-tries) 2))))
+                     (number->english (round (my-round (/ delta-bytes delta-tries) 2))))
 
 
              ))

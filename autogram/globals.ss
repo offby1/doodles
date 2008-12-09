@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module globals mzscheme
+#lang scheme
 (provide *min* *max*
          *tries* *loop-passes*
          *max-worker-mem* *worker-custodian*
@@ -17,8 +17,8 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
     ;; you could wrap this in a call-with-semaphore if you wanted, but
     ;; I don't think there's any need
     (lambda args
-      (if (not (null? args))
-          (set! value (car args)))
+      (when (not (null? args))
+        (set! value (car args)))
       value
       )))
 
@@ -35,4 +35,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                 (port-next-location (current-output-port))))
     (unless (zero? col)
       (newline))))
-)
