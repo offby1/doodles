@@ -4,7 +4,7 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module monitor mzscheme
+#lang scheme
 ;; this seems overly complex.
 (provide monitor once-more-and-then-quit)
 (require (planet offby1/offby1/round)
@@ -14,7 +14,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 (define-struct sample (cpu-ms
                        bytes-used
                        unique-tries
-                       loop-passes) #f)
+                       loop-passes) #:transparent)
 (define *the-samples* '())
 
 (define (seconds->string s)
@@ -77,4 +77,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          (printf "~%")
          (unless last-time?
            (loop
-            (sync/timeout 3 *trigger-o-death*)))))))))
+            (sync/timeout 3 *trigger-o-death*))))))))
