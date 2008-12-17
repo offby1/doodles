@@ -2,7 +2,8 @@
 (require web-server/servlet
          web-server/servlet-env
          web-server/insta/insta
-         net/url)
+         (only-in net/url set-url-query!)
+         "ssl-url.ss")
 
 (define *our-url* "http://localhost:8000/servlets/standalone.ss")
 (define (my-app request)
@@ -38,8 +39,10 @@
   (call/input-url
    (string->url "https://rpxnow.com/api/v2/auth_info")
    (lambda (url)
-     (set-url-query! url '((apiKey . "7ef12964d7aae382bf38110ac6b5deba680c569d")))
-     (post-pure-port url #""))
+     (set-url-query! url `((apiKey . "7ef12964d7aae382bf38110ac6b5deba680c569d")
+                           (token . ,token)))
+     (ssl:post-pure-port url #"")
+     )
    (lambda (ip)
      (let ((op (open-output-string)))
        (copy-port ip op)
