@@ -1,17 +1,15 @@
+;; https://rpxnow.com/docs
+
 #lang scheme
 (require web-server/servlet
          web-server/servlet-env
          web-server/insta/insta
          (only-in net/url set-url-query!)
+         net/uri-codec
          (prefix-in json: (planet dherman/json:1:1/json))
          "ssl-url.ss")
 
 (define *our-url* "http://localhost:8000/servlets/standalone.ss")
-(define (my-app request)
-  (let ((bindings (request-bindings request)))
-    (if (exists-binding?  'token bindings)
-        (do-the-token-thing (extract-binding/single 'token bindings))
-        (signin-page))))
 
 (define (signin-page)
   `(html (head (title "Hello world!"))
@@ -30,29 +28,33 @@
                  "// force a proper closing!")
          (script ((type "text/javascript"))
                  ,(string-append
-                   "RPXNOW.token_url = \""
-                   *our-url*
-                   "\" ;"
-                   "RPXNOW.realm = \"offby1-fooling-around\" ;"
-                   "RPXNOW.overlay = true                  ;")
-
-                 )
-         ))
+                   "RPXNOW.token_url = \"" *our-url* "\" ;"
+                   "RPXNOW.realm = \"offby1-fooling-around\";"
+                   "RPXNOW.overlay = true;"))))
 
 (define (do-the-token-thing token)
   (call/input-url
    (string->url "https://rpxnow.com/api/v2/auth_info")
    (lambda (url)
-     (set-url-query! url `((apiKey . "7ef12964d7aae382bf38110ac6b5deba680c569d")
-                           (token . ,token)
-                           (extended . "true")))
-     (ssl:post-pure-port url #"")
-     )
+     (ssl:post-pure-port
+      url
+      (string->bytes/utf-8
+       (alist->form-urlencoded
+        `((apiKey . "7ef12964d7aae382bf38110ac6b5deba680c569d")
+          (token . ,token)
+          (extended . "true"))))))
+
    (lambda (ip)
      (let ((op (open-output-string))
            (stuff (json:read ip)))
        (fprintf op "Welcome, ~s!~%" (hash-ref (hash-ref stuff 'profile) 'identifier))
        `(html
          (p ,(get-output-string op)))))))
+
+(define (my-app request)
+  (let ((bindings (request-bindings request)))
+    (if (exists-binding?  'token bindings)
+        (do-the-token-thing (extract-binding/single 'token bindings))
+        (signin-page))))
 
 (serve/servlet my-app)
