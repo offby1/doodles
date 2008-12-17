@@ -14,7 +14,7 @@
                (cons (string-append (car result)
                                     elt)
                      (cdr result))
-               (cons elt result))))
+               (cons (collapse-adjacent-strings elt) result))))
       seq))
 
 (define *input* (string-append "<snord foo=\"bar\">Plop &amp; Flop<child>flip &amp; flop</child></snord> "))
