@@ -9,7 +9,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui)
          (planet lizorkin/sxml/sxml)
          net/url
-         xml)
+         (only-in (planet lizorkin/ssax/ssax) ssax:xml->sxml))
 
 (define (query->url-strings query)
   (call/input-url
@@ -21,7 +21,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
              #f)
    get-pure-port
    (lambda (ip)
-     (for/list ([url (in-list ((sxpath '(// Result Url *text*)) (xml->xexpr (document-element (read-xml ip)))))])
+     (for/list ([url (in-list ((sxpath '(// urn:yahoo:srch:Result
+                                            urn:yahoo:srch:Url *text*))  (ssax:xml->sxml ip '())))])
        url))))
 
 (define (main . args)
