@@ -3,6 +3,7 @@
          web-server/servlet-env
          web-server/insta/insta
          (only-in net/url set-url-query!)
+         (prefix-in json: (planet dherman/json:1:1/json))
          "ssl-url.ss")
 
 (define *our-url* "http://localhost:8000/servlets/standalone.ss")
@@ -45,7 +46,7 @@
      )
    (lambda (ip)
      (let ((op (open-output-string)))
-       (copy-port ip op)
+       (fprintf op "Some JSON: ~a~%" (json:read ip))
        `(html
          (p ,(get-output-string op)))))))
 
