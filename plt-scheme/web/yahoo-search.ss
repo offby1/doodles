@@ -7,9 +7,11 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui)
-         net/url)
+         (planet lizorkin/sxml/sxml)
+         net/url
+         xml)
 
-(define (yahoo-search query)
+(define (query->xml-input-port query)
   (call/input-url
    (make-url "http" #f "search.yahooapis.com" #f #t (list (make-path/param "WebSearchService" '())
                                                           (make-path/param "V1" '())
@@ -20,17 +22,11 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
              #f)
    get-pure-port
    (lambda (ip)
-     (let ((op (open-output-string)))
-       (copy-port ip op)
-       (get-output-string op)))))
+     (for ((url (in-list ((sxpath '(// Result Url *text*)) (xml->xexpr (document-element (read-xml ip)))))))
+       (display url)
+       (newline)))))
 
-(define hmm-tests
-
-  (test-suite
-   "loop"
-   (test-case
-    "yow"
-    (check-not-false (yahoo-search "kitty cats")))))
 (define (main . args)
-  (exit (run-tests hmm-tests 'verbose)))
+  (query->xml-input-port "kitty cats"))
+
 (provide (all-defined-out))
