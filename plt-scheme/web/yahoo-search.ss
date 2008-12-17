@@ -11,7 +11,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          net/url
          xml)
 
-(define (query->xml-input-port query)
+(define (query->url-strings query)
   (call/input-url
    (make-url "http" #f "search.yahooapis.com" #f #t
              (for/list ([p '("WebSearchService" "V1" "webSearch")]) (make-path/param p '()))
@@ -21,11 +21,13 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
              #f)
    get-pure-port
    (lambda (ip)
-     (for ((url (in-list ((sxpath '(// Result Url *text*)) (xml->xexpr (document-element (read-xml ip)))))))
-       (display url)
-       (newline)))))
+     (for/list ([url (in-list ((sxpath '(// Result Url *text*)) (xml->xexpr (document-element (read-xml ip)))))])
+       url))))
 
 (define (main . args)
-  (query->xml-input-port "kitty cats"))
+  (for ([arg args])
+    (printf "~s:~%" arg)
+    (for ([url (query->url-strings arg)])
+      (printf "~a~%" url))))
 
 (provide (all-defined-out))
