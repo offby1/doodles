@@ -13,9 +13,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define (query->xml-input-port query)
   (call/input-url
-   (make-url "http" #f "search.yahooapis.com" #f #t (list (make-path/param "WebSearchService" '())
-                                                          (make-path/param "V1" '())
-                                                          (make-path/param "webSearch" '()))
+   (make-url "http" #f "search.yahooapis.com" #f #t
+             (for/list ([p '("WebSearchService" "V1" "webSearch")]) (make-path/param p '()))
              `((appid . "QRrlhLPV34Ed3nypZaoUxrZsCa4xOvOArZwAYIyIx1c56rAtHu.xxiStPHapqb8kT79euQQ-")
                (query . ,query)
                )
