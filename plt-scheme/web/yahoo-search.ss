@@ -21,9 +21,9 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
              #f)
    get-pure-port
    (lambda (ip)
-     (for/list ([url (in-list ((sxpath '(// urn:yahoo:srch:Result
-                                            urn:yahoo:srch:Url *text*))  (ssax:xml->sxml ip '())))])
-       url))))
+     ((sxpath '(// urn:yahoo:srch:Result
+                   urn:yahoo:srch:Url *text*))
+      (ssax:xml->sxml ip '())))))
 
 (define (main . args)
   (for ([arg args])
