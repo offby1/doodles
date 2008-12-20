@@ -18,7 +18,8 @@
                 (a ((class "rpxnow")
                     (onclick "return false;")
                     (href
-                     ,(let ((u (string->url "https://offby1-fooling-around.rpxnow.com/openid/v2/signin")))
+                     ,(let ((u (string->url
+                                "https://offby1-fooling-around.rpxnow.com/openid/v2/signin")))
                         (set-url-query! u `((token_url . ,*our-url*)))
                         (url->string u))))
                    "Sign in, why dontcha")))
@@ -45,11 +46,12 @@
           (extended . "true"))))))
 
    (lambda (ip)
-     (let ((op (open-output-string))
-           (stuff (json:read ip)))
-       (fprintf op "Welcome, ~s!~%" (hash-ref (hash-ref stuff 'profile) 'identifier))
+     (let ((stuff (json:read ip)))
        `(html
-         (p ,(get-output-string op)))))))
+         (p "Welcome "
+            ,(format "~s" (hash-ref (hash-ref stuff 'profile) 'identifier)))
+         (p "Here's everything I know about you:"
+            ,(format "~s" stuff)))))))
 
 (define (my-app request)
   (let ((bindings (request-bindings request)))
