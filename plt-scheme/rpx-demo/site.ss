@@ -33,7 +33,7 @@
                    "RPXNOW.realm = \"offby1-fooling-around\";"
                    "RPXNOW.overlay = true;"))))
 
-(define (do-the-token-thing token)
+(define (identity-info-page token)
   (call/input-url
    (string->url "https://rpxnow.com/api/v2/auth_info")
    (lambda (url)
@@ -53,10 +53,9 @@
          (p "Here's everything I know about you:"
             ,(format "~s" stuff)))))))
 
-(define (my-app request)
-  (let ((bindings (request-bindings request)))
-    (if (exists-binding?  'token bindings)
-        (do-the-token-thing (extract-binding/single 'token bindings))
-        (signin-page))))
-
-(serve/servlet my-app)
+(serve/servlet
+ (lambda (request)
+   (let ((bindings (request-bindings request)))
+     (if (exists-binding?  'token bindings)
+         (identity-info-page (extract-binding/single 'token bindings))
+         (signin-page)))))
