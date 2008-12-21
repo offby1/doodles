@@ -18,14 +18,15 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
        (for/fold ([db db])
            ([word (in-list (string-tokenize string))])
            (hash-update db word (lambda (existing)
-                                  (cons string existing))
-                        '()
-                        )))))
+                                  ;; Only save this string if it's
+                                  ;; longer than any other we've seen.
+                                  (if (< (string-length existing)
+                                         (string-length string))
+                                      string
+                                      existing))
+                        "")))))
 
 (provide/contract [lookup [string? db? . -> . (or/c string? false/c)]])
-;; TODO -- do sorting at insertion time, not lookup time
 (define (lookup word db)
-  (let ((found (hash-ref (db-stuff db) word #f)))
-    (and (list? found)
-         (car (sort found > #:key string-length)))))
+   (hash-ref (db-stuff db) word #f))
 
