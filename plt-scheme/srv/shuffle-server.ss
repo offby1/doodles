@@ -8,7 +8,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
          (lib "thread.ss")
          (only (lib "1.ss" "srfi")
                iota)
-         (planet "fys.ss" ("offby1" "offby1.plt")))
+         (planet "shuffle.ss" ("offby1" "offby1.plt")))
 
 (file-stream-buffer-mode (current-output-port) 'line)
 (file-stream-buffer-mode (current-error-port) 'line)
@@ -36,8 +36,7 @@ exec mzscheme --no-init-file --mute-banner --version --require "$0"
 
    (file-stream-buffer-mode op 'line)
 
-   (let ((deck (apply vector (iota 52))))
-     (fisher-yates-shuffle! deck)
+   (let ((deck (shuffle (apply vector (iota 52)))))
      (fprintf op "~a~%" deck))
 
    (fprintf (current-error-port)

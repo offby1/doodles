@@ -25,7 +25,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (prefix-in dds: "dds.ss")
          "deck.ss"
          "fill-out-hands.ss"
-         (planet "fys.ss" ("offby1" "offby1.plt"))
+         (planet "shuffle.ss" ("offby1" "offby1.plt"))
          "hand.ss"
          (only-in "history.ss"
                trick-summaries
@@ -248,7 +248,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (let loop ((hands-played 0))
   (when (< hands-played (*num-hands*))
     (let* ((hands
-            (deal (vector->list (fisher-yates-shuffle (list->vector *deck*)))
+            (deal (shuffle *deck*)
                   (map (lambda (s) (make-hand '() s)) *seats*)))
            (pts (plausible-trump-suit hands))
            (me (with-seat-circle (first pts) (lambda (circ) (list-ref circ 1)))))
