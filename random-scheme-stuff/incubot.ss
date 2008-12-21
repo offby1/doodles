@@ -10,11 +10,11 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define-struct db (stuff) #:transparent)
 
-(provide/contract [strings->db [->* () () #:rest (listof (or/c string? list?)) db?]])
-(define (strings->db . strings-or-lists)
+(provide/contract [port->db [input-port? . -> . db?]])
+(define (port->db ip)
   (make-db
    (for/fold ([db (make-immutable-hash '())])
-       ([string (in-list (flatten strings-or-lists))])
+       ([string (in-lines ip)])
        (for/fold ([db db])
            ([word (in-list (string-tokenize string))])
            (hash-update db word (lambda (existing)
