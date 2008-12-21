@@ -7,11 +7,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
 ;; example, if I deal 1000 hands, what's the longest suit that I can
 ;; expect to appear?
 
-(module cards mzscheme
-(require (only (lib "1.ss" "srfi")
+#lang scheme
+(require (only-in (lib "1.ss" "srfi")
                filter
                unfold)
-         (only (lib "43.ss" "srfi") vector-unfold)
+         (only-in (lib "43.ss" "srfi") vector-unfold)
          (lib "pretty.ss")
          (planet "histogram.ss" ("offby1" "offby1.plt"))
          (planet "fys.ss" ("offby1" "offby1.plt"))
@@ -20,7 +20,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define *deck-size* (* *num-ranks* (num-suits)))
 
 (define (new-deck)
-  (fisher-yates-shuffle!
+  (fisher-yates-shuffle
    (vector-unfold
     (lambda (index seed)
       (values (make-card
@@ -54,11 +54,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
                ((notrumpy? shape)
                 (cons entry '(*)))
                (list entry))))
-          (cdr-sort
+          (sort
            (list->histogram
             (unfold
              (lambda (p) (= deals  p))
              (lambda ignored (shape (get-hand 0 (new-deck))))
              add1
-             0))))))))
-
+             0))
+           <
+           #:key cdr)))))
