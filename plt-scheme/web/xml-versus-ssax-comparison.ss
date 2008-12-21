@@ -18,5 +18,14 @@
       seq))
 
 (define *input* (string-append "<snord foo=\"bar\">Plop &amp; Flop<child>flip &amp; flop</child></snord> "))
-(printf "From SSAX: ~s~%" (call-with-input-string *input* (lambda (ip) (ssax:xml->sxml ip '()))))
-(printf "From XML : ~s~%"  (collapse-adjacent-strings (call-with-input-string *input* (lambda (ip) (xml->xexpr (document-element (read-xml ip)))))))
+(printf "From SSAX: ~s~%" (call-with-input-string
+                           *input*
+                           (lambda (ip)
+                             (ssax:xml->sxml ip '()))))
+(printf "From XML : ~s~%" (collapse-adjacent-strings
+                           (call-with-input-string
+                            *input*
+                            (lambda (ip)
+                              (xml->xexpr
+                               (document-element
+                                (read-xml ip)))))))
