@@ -1,3 +1,4 @@
+#lang scheme
 (define (flatten thing)
   (cond
    ((null? thing)
@@ -6,3 +7,4 @@
     (append (flatten (car thing))
             (flatten (cdr thing))))
    (#t (list thing))))
+(provide flatten)

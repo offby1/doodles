@@ -4,19 +4,14 @@
 exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
+;; Heh.  I knew I'd done this before: /home/erich/doodles/random-scheme-stuff/flatten.scm
 #lang scheme
 (require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
+         (planet schematics/schemeunit:3/text-ui)
+         "flatten.scm")
 
 (define (treemap proc thing)
-  (cond
-   ((pair? thing)
-    (append (treemap proc (car thing))
-            (treemap proc (cdr thing))))
-   ((null? thing)
-    '())
-   (else
-    (list (proc thing)))))
+  (map proc (flatten thing)))
 
 (define treemap-tests
 
@@ -31,4 +26,4 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (main . args)
   (exit (run-tests treemap-tests 'verbose)))
-(provide treemap main)
+(provide main)
