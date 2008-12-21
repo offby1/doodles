@@ -5,8 +5,6 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
-(require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
 
 (define-struct db (stuff) #:transparent)
 
@@ -14,12 +12,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (define (file->db filename)
   (make-db 'stuff))
 
-(define hmm-tests
+(provide/contract [lookup [string? db? . -> . (or/c string? false/c)]])
+(define (lookup word db)
+  (and (string? (db-stuff db))
+      (db-stuff db)))
 
-  (test-suite
-   "loop"
-   (check-pred db? (file->db "something"))))
-
-(define (main . args)
-  (exit (run-tests hmm-tests 'verbose)))
-(provide  main)
