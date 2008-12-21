@@ -32,7 +32,16 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (let ((db (port->db (apply input-port-append #t (map open-input-file args)))))
+  (let ((db (port->db
+             (apply
+              input-port-append
+              #t
+              (map
+               (lambda (infile-name)
+                 (fprintf
+                  (current-error-port)
+                  "Queueing ~s ...~%" infile-name)
+                 (open-input-file infile-name)) args)))))
     (call-with-output-file
         "/tmp/db.dump"
       (lambda (op)
