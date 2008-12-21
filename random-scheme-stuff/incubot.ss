@@ -8,12 +8,14 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define-struct db (stuff) #:transparent)
 
-(provide/contract [file->db [ string? . -> . db?]])
-(define (file->db filename)
-  (make-db 'stuff))
+(provide/contract [strings->db [->* () () #:rest (listof (or/c string? list?)) db?]])
+(define (strings->db . strings-or-lists)
+  (make-db (flatten strings-or-lists)))
 
 (provide/contract [lookup [string? db? . -> . (or/c string? false/c)]])
 (define (lookup word db)
-  (and (string? (db-stuff db))
-      (db-stuff db)))
+  (match (db-stuff db)
+    [(list val1 val ...)
+     val1]
+    [_ #f]))
 

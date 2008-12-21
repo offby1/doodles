@@ -16,9 +16,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
   (test-suite
    "loop"
-   (check-pred db? (file->db "something"))
-   (check-false (lookup "snord" (make-db 'stuff)))
-   (check-equal? "The snord horde" (lookup "snord" (make-db "The snord horde")))))
+   (check-false (lookup "snord" (strings->db)))
+   (check-equal? (lookup "snord" (strings->db "The snord horde")) "The snord horde")))
 
 
 (define (main . args)
