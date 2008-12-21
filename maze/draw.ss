@@ -143,16 +143,17 @@
 
     rv))
 
-;; TODO -- find an elegant way to avoid multiply evaluating dc.
-;; Simply replacing this syntax with a procedure oughta do it.
 (define-syntax with-pen
   (syntax-rules ()
     ((_ p dc body ...)
-     (let ((original-pen (send dc get-pen)))
-       (dynamic-wind
-           (lambda () (send dc set-pen p))
-           (lambda () body ...)
-           (lambda () (send dc set-pen original-pen)))))))
+     ;; Bind a new variable to "dc"; hopefully this will prevent
+     ;; evaluating it more than once
+     (let ((dc dc))
+       (let ((original-pen (send dc get-pen)))
+         (dynamic-wind
+             (lambda () (send dc set-pen p))
+             (lambda () body ...)
+             (lambda () (send dc set-pen original-pen))))))))
 
 (define (draw-line grid origin-x origin-y orientation length thick? color)
   (define cwp (grid-cell-width-in-pixels grid))
