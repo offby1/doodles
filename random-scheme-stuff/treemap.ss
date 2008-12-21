@@ -20,7 +20,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    ((null? thing)
     '())
    (else
-    (list thing))))
+    (list (proc thing)))))
 
 (define treemap-tests
 
@@ -28,7 +28,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    "loop"
    (check-equal? (treemap values '()) '())
    (check-equal? (treemap values '(a (b) c)) '(a b c))
-   (check-equal? (treemap values '(a (b) ((c)) d)) '(a b c d))))
+   (check-equal? (treemap values '(a (b) ((c)) d)) '(a b c d))
+
+   (check-equal? (treemap add1   '(1 (2) 3 (((4)))) ) '(2 3 4 5))))
 
 (define (main . args)
   (exit (run-tests treemap-tests 'verbose)))
