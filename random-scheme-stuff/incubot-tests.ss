@@ -17,7 +17,13 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
   (test-suite
    "loop"
    (check-false (lookup "snord" (strings->db)))
-   (check-equal? (lookup "snord" (strings->db "The snord horde")) "The snord horde")))
+   (check-equal? (lookup "snord" (strings->db "The snord horde")) "The snord horde")
+
+   (test-case
+    "Returns longest of multiple matching strings"
+    (check-equal?
+     (lookup "snord" (strings->db "snord" "The snord horde" "my snord"))
+     "The snord horde"))))
 
 
 (define (main . args)
