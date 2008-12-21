@@ -30,3 +30,12 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (define (lookup word db)
    (hash-ref (db-stuff db) word #f))
 
+(provide main)
+(define (main . args)
+  (let ((db (port->db (apply input-port-append #t (map open-input-file args)))))
+    (call-with-output-file
+        "/tmp/db.dump"
+      (lambda (op)
+        (write db op)
+        (newline op))
+      #:exists 'truncate)))
