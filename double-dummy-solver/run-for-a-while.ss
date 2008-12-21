@@ -4,13 +4,13 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module run-for-a-while mzscheme
-(require (only (lib "1.ss" "srfi")
+#lang scheme
+(require (only-in (lib "1.ss" "srfi")
                every
                unfold
                )
          (lib "async-channel.ss")
-         (only rnrs/base-6 assert)
+         (only-in rnrs/base-6 assert)
          (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"     ("schematics" "schemeunit.plt" 2)))
@@ -108,4 +108,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                                      (lotsa-random-numbers? (apply append act)))
                (run-for-a-while random #e.1))
     )))
-)

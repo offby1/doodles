@@ -4,19 +4,19 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module fill-out-hands mzscheme
+#lang scheme
 (require
  (planet schematics/schemeunit:3)
  (planet schematics/schemeunit:3/text-ui)
  (lib "trace.ss")
- (only rnrs/base-6 assert)
- (only "card.ss"
+ (only-in rnrs/base-6 assert)
+ (only-in "card.ss"
        cards=
        *num-ranks*
        *suits*
        )
  "deck.ss"
- (only "hand.ss"
+ (only-in "hand.ss"
        cards
        copy
        hand?
@@ -27,18 +27,18 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        sort!
        unknown?
        )
- (only "history.ss"
+ (only-in "history.ss"
        history-card-set
        make-history
        whose-turn
        )
- (only "trick.ss"
+ (only-in "trick.ss"
        *seats*
        rotate-until
        seat<
        )
  "zprintf.ss"
- (only (lib "1.ss" "srfi")
+ (only-in (lib "1.ss" "srfi")
        append-map
        every
        iota
@@ -46,7 +46,7 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        lset-union
        partition
        )
- (only (lib "list.ss") sort))
+ (only-in (lib "list.ss") sort))
 (provide fill-out-hands)
 
 (define *test-handset*
@@ -172,4 +172,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
               (fill-out-hands
                '(#f #f #f 'sam)
                (make-history 'e))))))
-)

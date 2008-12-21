@@ -4,8 +4,8 @@
 exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
-(module dds mzscheme
-(require (only (lib "1.ss" "srfi")
+#lang scheme
+(require (only-in (lib "1.ss" "srfi")
                append-map
                circular-list
                every
@@ -16,17 +16,17 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                pair-fold
                remove
                )
-         (only (lib "etc.ss") compose)
+         (only-in (lib "etc.ss") compose)
          (lib "pretty.ss")
-         (only rnrs/base-6 assert)
+         (only-in rnrs/base-6 assert)
          "card.ss"
          "trick.ss"
          "zprintf.ss"
          "predict.ss"
-         (all-except "history.ss" whose-turn)
-         (rename "history.ss" history:whose-turn whose-turn)
-         (prefix ha: "hand.ss")
-         (only (lib "list.ss") sort)
+         (except-in "history.ss" whose-turn)
+         (rename-in "history.ss" [whose-turn history:whose-turn])
+         (prefix-in ha: "hand.ss")
+         (only-in (lib "list.ss") sort)
          (lib "trace.ss")
          (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui))
@@ -244,10 +244,10 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
   (assert (history? history))
   (unless (ha:hand? ours)
     (raise-mismatch-error 'choose-card "Not a list of hands: " hands))
-  (if (ha:empty? ours)
-      (raise-mismatch-error 'choose-card "Empty hand!" hands))
-  (if (history-complete? history)
-      (raise-mismatch-error 'choose-card "the game's already over!" history))
+  (when (ha:empty? ours)
+    (raise-mismatch-error 'choose-card "Empty hand!" hands))
+  (when (history-complete? history)
+    (raise-mismatch-error 'choose-card "the game's already over!" history))
   (unless (null? (lset-intersection eq? (ha:cards ours) already-played-cards))
     (raise-mismatch-error 'choose-card "These cards have been already played, you foul cheater, you" already-played-cards))
 
@@ -444,5 +444,3 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
     ))
 ;;(trace predict-score)
 ;;(trace choose-card)
-
-)

@@ -17,10 +17,10 @@ the "compile" target in the makefile.
 
 |#
 
-(module make-dep-graph mzscheme
-(require (only (lib "1.ss" "srfi")
+#lang scheme
+(require (only-in (lib "1.ss" "srfi")
                filter)
-         (only (lib "13.ss" "srfi")
+         (only-in (lib "13.ss" "srfi")
                string-join))
 (define (paths= a b)
   (equal?
@@ -73,4 +73,3 @@ the "compile" target in the makefile.
         (cons source-file (find-deps source-file)))
       (directory-list)))
 (printf "}\n")
-)

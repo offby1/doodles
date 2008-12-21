@@ -3,21 +3,21 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module test-predictions mzscheme
+#lang scheme
 (require "card.ss"
          "dds.ss"
          "deck.ss"
          (planet "fys.ss" ("offby1" "offby1.plt"))
          "history.ss"
          "zprintf.ss"
-         (only "trick.ss" *seats* *trump-suit*)
-         (prefix ha: "hand.ss")
+         (only-in "trick.ss" *seats* *trump-suit*)
+         (prefix-in ha: "hand.ss")
          (lib "pretty.ss")
          (lib "cmdline.ss")
 
 
-         (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi")
+         (only-in (lib "list.ss") sort)
+         (only-in (lib "1.ss" "srfi")
                circular-list
                drop-right
                fold
@@ -98,4 +98,4 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
          ))
      (cons #f *suits*)
      ))
-  (iota (*num-hands*)))))
+  (iota (*num-hands*))))

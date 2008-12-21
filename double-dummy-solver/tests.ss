@@ -3,22 +3,22 @@
 exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 |#
 
-(module tests mzscheme
+#lang scheme
 (require (planet "test.ss"     ("schematics" "schemeunit.plt" 2))
          (planet "text-ui.ss"  ("schematics" "schemeunit.plt" 2))
          (planet "util.ss"     ("schematics" "schemeunit.plt" 2))
-         (only (lib "1.ss" "srfi")
+         (only-in (lib "1.ss" "srfi")
                every
                filter
                lset-intersection
                append-map)
-         (only rnrs/base-6 assert)
+         (only-in rnrs/base-6 assert)
          "dds.ss"
          "card.ss"
          "trick.ss"
-         (prefix ha:  "hand.ss")
-         (only "hand.ss" mh mhs)
-         (all-except "history.ss" whose-turn)
+         (prefix-in ha:  "hand.ss")
+         (only-in "hand.ss" mh mhs)
+         (except-in "history.ss" whose-turn)
          (lib "trace.ss"))
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
@@ -130,5 +130,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                          (lambda args #f)
                          (lambda (hi hands)
                            (compute-score hi)))))))))
-
-)

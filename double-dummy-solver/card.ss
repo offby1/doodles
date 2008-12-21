@@ -3,14 +3,13 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
-(module card mzscheme
+#lang scheme
 
 (print-struct #t)
-(require (only rnrs/base-6 assert)
-         (lib "trace.ss")
-         (only (lib "1.ss" "srfi") iota)
-         (only (lib "misc.ss" "swindle") memoize!))
-(provide (rename my-make-card make-card)
+(require (lib "trace.ss")
+         (only-in (lib "1.ss" "srfi") iota)
+         (only-in (lib "misc.ss" "swindle") memoize!))
+(provide (rename-out [my-make-card make-card])
          *num-ranks*
          *num-suits*
          *suits*
@@ -156,8 +155,6 @@ exec mzscheme -qu "$0" ${1+"$@"}
      (mc* 'card-sym))))
 
 (define (cards-between l u)
-  (assert (eq? (card-suit l)
-               (card-suit u)))
   (let ((lr (card-rank l))
         (ur (card-rank u)))
     (when (< ur lr)
@@ -167,5 +164,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (map (lambda (rank)
            (my-make-card (card-suit l) rank))
          (iota (- ur lr 1) (add1 lr)))))
-
-)

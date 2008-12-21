@@ -3,18 +3,18 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
-(module predict mzscheme
-(require (only (lib "1.ss" "srfi")
-               append-map
-               every
-               filter
-               last-pair
-               )
+#lang scheme
+(require (only-in (lib "1.ss" "srfi")
+                  append-map
+                  every
+                  filter
+                  last-pair
+                  )
          "card.ss"
          "hand.ss"
          "trick.ss"
          )
-(provide (all-defined))
+(provide (all-defined-out))
 
 (define (assoc-backwards obj backwards-alist)
     (cond
@@ -80,6 +80,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
        (else
         'depends-on-what-they-play)))))
-
-
-)

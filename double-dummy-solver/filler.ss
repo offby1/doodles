@@ -4,10 +4,10 @@
 exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
-(module filler mzscheme
-(require (only rnrs/base-6 assert)
-         (only (lib "list.ss") sort)
-         (only (lib "1.ss" "srfi")
+#lang scheme
+(require (only-in rnrs/base-6 assert)
+         (only-in (lib "list.ss") sort)
+         (only-in (lib "1.ss" "srfi")
                every
                first
                fold
@@ -18,16 +18,16 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (lib "cmdline.ss")
          (lib "trace.ss")
 
-         (only "card.ss"
+         (only-in "card.ss"
                *suits*
                card-suit
                )
-         (prefix dds: "dds.ss")
+         (prefix-in dds: "dds.ss")
          "deck.ss"
          "fill-out-hands.ss"
          (planet "fys.ss" ("offby1" "offby1.plt"))
          "hand.ss"
-         (only "history.ss"
+         (only-in "history.ss"
                trick-summaries
                history-empty?
                history-latest-trick
@@ -36,7 +36,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                make-history
                whose-turn)
          "run-for-a-while.ss"
-         (all-except "trick.ss" whose-turn)
+         (except-in "trick.ss" whose-turn)
          "zprintf.ss")
 
 ;; given a history and partially-known hands, generate a random
@@ -101,7 +101,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                    d)))
 
 (define (choose-best-card-no-peeking history hands max-lookahead quick-and-dirty?)
-  (define counts-by-choice (make-hash-table 'equal))
+  (define counts-by-choice (make-hash))
   (define me  (seat (car hands)))
 
   (let* (
@@ -119,10 +119,10 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (begin
            (for-each
             (lambda (c)
-              (hash-table-put!
+              (hash-set!
                counts-by-choice
                c
-               (add1 (hash-table-get counts-by-choice c 0))))
+               (add1 (hash-ref counts-by-choice c 0))))
             (map car
                  (run-for-a-while
                   (lambda ()
@@ -134,7 +134,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                     (fprintf (current-error-port) ".")
                     (flush-output (current-error-port)))
                   )))
-           (let ((alist (hash-table-map counts-by-choice cons)))
+           (let ((alist (hash-map counts-by-choice cons)))
              (if (null? alist)
                  (begin
                    (fprintf (current-error-port) "!") (flush-output (current-error-port))
@@ -308,5 +308,3 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (lambda (history hands)
            (printf "We're done.~%~aSuits taken by seat: ~a~%" history (trick-summaries history))))
         (loop (add1 hands-played))))))
-
-)

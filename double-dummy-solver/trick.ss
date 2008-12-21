@@ -4,10 +4,10 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
-(module trick mzscheme
+#lang scheme
 (print-struct #t)
-(require (only rnrs/base-6 assert)
-         (only (lib "1.ss" "srfi" )
+(require (only-in rnrs/base-6 assert)
+         (only-in (lib "1.ss" "srfi" )
                alist-copy
                circular-list
                every
@@ -16,7 +16,7 @@ exec mzscheme -qu "$0" ${1+"$@"}
                reduce
                take
                )
-         (only (lib "43.ss" "srfi")
+         (only-in (lib "43.ss" "srfi")
                vector-copy
                vector-every
                vector-fold
@@ -25,13 +25,13 @@ exec mzscheme -qu "$0" ${1+"$@"}
                )
          "card.ss"
          (lib "trace.ss")
-         (only (lib "etc.ss") compose)
+         (only-in (lib "etc.ss") compose)
          (lib "pretty.ss"))
 
 (provide
-         (rename add-card t:add-card)
-         (rename my-make-trick make-trick)
-         (rename my-trick-cards trick-cards)
+         (rename-out (add-card t:add-card))
+         (rename-out (my-make-trick make-trick))
+         (rename-out (my-trick-cards trick-cards))
          *seats*
          *trump-suit*
          annotated-cards
@@ -107,8 +107,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
 (define (trick-print trick port write?)
   (vector-for-each (lambda (i cs)
                      (fprintf port "~a:~a" (cdr cs) (car cs))
-                     (if (< i (sub1 (vector-length (trick-card-seat-pairs trick))))
-                         (fprintf port ", ")))
+                     (when (< i (sub1 (vector-length (trick-card-seat-pairs trick))))
+                       (fprintf port ", ")))
                    (trick-card-seat-pairs trick)))
 
 (define-values (s:trick make-trick trick? s:trick-ref trick-set!)
@@ -126,12 +126,12 @@ exec mzscheme -qu "$0" ${1+"$@"}
 
 (define (my-make-trick cards leader)
   (define (all-distinct? seq)
-    (let ((h (make-hash-table 'equal)))
+    (let ((h (make-hash)))
       (for-each (lambda (i)
-                  (hash-table-put! h (card->number i #f) #t))
+                  (hash-set! h (card->number i #f) #t))
                 seq)
       (= (length seq)
-         (hash-table-count h))))
+         (hash-count h))))
   (assert (list?  cards))
   (assert ((lambda (c) (not (null? c))) cards))
   (assert ((lambda (cs) (every card? cs)) cards))
@@ -245,5 +245,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
    (trick-card-seat-pairs t)))
 
 ;(trace winner)
-)
-

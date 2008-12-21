@@ -3,17 +3,17 @@
 exec mzscheme -qu "$0" ${1+"$@"}
 |#
 
-(module history mzscheme
+#lang scheme
 (print-struct #t)
-(require (only rnrs/base-6 assert)
+(require (only-in rnrs/base-6 assert)
          (lib "pretty.ss")
-         (only (lib "list.ss") sort)
-         (only "card.ss"
+         (only-in (lib "list.ss") sort)
+         (only-in "card.ss"
                *num-ranks*
                *num-suits*
                card-suit
                )
-         (only (lib "1.ss" "srfi" )
+         (only-in (lib "1.ss" "srfi" )
                append-map
                drop-right
                every
@@ -21,11 +21,11 @@ exec mzscheme -qu "$0" ${1+"$@"}
                list-copy
                remove
                )
-         (all-except "trick.ss" whose-turn)
-         (rename "trick.ss" trick:whose-turn whose-turn)
+         (except-in "trick.ss" whose-turn)
+         (rename-in "trick.ss" [whose-turn trick:whose-turn])
          (lib "trace.ss"))
-(provide (all-defined-except make-history)
-         (rename my-make-history make-history))
+(provide (except-out (all-defined-out) make-history)
+         (rename-out [my-make-history make-history]))
 
 (display "$Id$" (current-error-port))
 (newline (current-error-port))
@@ -161,8 +161,8 @@ exec mzscheme -qu "$0" ${1+"$@"}
     (string>? (symbol->string (car a))
               (symbol->string (car b))))
   (assert (history? h))
-  (let ((ns-tricks-by-suit (make-hash-table))
-        (ew-tricks-by-suit (make-hash-table)))
+  (let ((ns-tricks-by-suit (make-hash))
+        (ew-tricks-by-suit (make-hash)))
     (for-each (lambda (t)
                 (let* ((w (winner/int t))
                        (c (car w))
@@ -171,29 +171,28 @@ exec mzscheme -qu "$0" ${1+"$@"}
                           ((n s) 'ns)
                           (else 'ew))))
                   (let ((ht  (if (eq? team 'ns) ns-tricks-by-suit ew-tricks-by-suit)))
-                    (hash-table-put!
+                    (hash-set!
                      ht
                      (card-suit c)
-                     (add1 (hash-table-get ht (card-suit c) 0))))
+                     (add1 (hash-ref ht (card-suit c) 0))))
                   ))
               (history-tricks h))
      (list 'ns
-           (sort (hash-table-map ns-tricks-by-suit cons) by-char)
+           (sort (hash-map ns-tricks-by-suit cons) by-char)
            'ew
-           (sort (hash-table-map ew-tricks-by-suit cons) by-char))))
+           (sort (hash-map ew-tricks-by-suit cons) by-char))))
 
 (define (compute-score h)
   (assert (history? h))
-  (let ((tricks-by-seat (make-hash-table)))
+  (let ((tricks-by-seat (make-hash)))
     (define (hash-table-increment! k)
-      (let ((v (hash-table-get tricks-by-seat k 0)))
-        (hash-table-put! tricks-by-seat k (add1 v))))
+      (hash-update! tricks-by-seat k add1 0))
     (for-each (lambda (t)
                 (hash-table-increment! (winner t)))
               (history-tricks h))
     (map (lambda (seat)
            (cons seat
-                 (hash-table-get tricks-by-seat seat 0)))
+                 (hash-ref tricks-by-seat seat 0)))
          *seats*)))
 
 (define (score-by-pairs score-alist)
@@ -211,4 +210,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
   (list (something 0)
         (something 1))
   )
-)
