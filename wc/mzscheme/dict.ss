@@ -15,7 +15,7 @@
       (for/fold ([w-b-l  (make-immutable-hash '())])
           ([word (in-lines inp)])
           (let* ((l (string-length word))
-                 (same-length-words (hash-ref w-b-l l (lambda () (make-set)))))
+                 (same-length-words (hash-ref w-b-l l make-set)))
             (hash-set w-b-l l (add same-length-words
                                    (string-downcase word))))))))
 
