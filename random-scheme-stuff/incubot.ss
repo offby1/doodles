@@ -30,21 +30,60 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 (define (lookup word db)
    (hash-ref (db-stuff db) word #f))
 
+;; ip -> ip
+(define (strip-irc-protocol-chatter ip)
+  (define (transform line)
+    (regexp-replace
+     #px"PRIVMSG #[^[:blank:]]+ *:"
+     (regexp-replace
+      #px"^:[^[:blank:]]* *"
+      line
+      "")
+     ""))
+  (let-values (((pipe-ip pipe-op)
+                (make-pipe 500)))
+    (thread (lambda ()
+              (let loop ()
+                (let ((line (read ip)))
+                  (if (eof-object? line)
+                      (close-output-port pipe-op)
+                      (begin
+                        (display (transform line) pipe-op)
+                        (newline pipe-op)
+                        (loop)))))))
+    pipe-ip))
+
+
 (provide main)
 (define (main . args)
-  (let ((db (port->db
-             (apply
-              input-port-append
-              #t
-              (map
-               (lambda (infile-name)
-                 (fprintf
-                  (current-error-port)
-                  "Queueing ~s ...~%" infile-name)
-                 (open-input-file infile-name)) args)))))
-    (call-with-output-file
-        "/tmp/db.dump"
-      (lambda (op)
-        (write db op)
-        (newline op))
-      #:exists 'truncate)))
+  (command-line
+   #:program "incubot"
+   #:once-any
+   [
+    ("-g" "--generate-database") "Rebuild the on-disk database from IRC logs"
+    ;; TODO -- count the lines in the input, and then provide some
+    ;; feedback as we chew through them
+    (let ((db (call-with-input-file
+                  "irc-lines"
+                (lambda (ip)
+                  (port->db
+                   (strip-irc-protocol-chatter
+                    ip))))))
+      (call-with-output-file
+          "/tmp/db.dump"
+        (lambda (op)
+          (pretty-print db op))
+        #:exists 'truncate))
+    ]
+   [("-l" "--lookup") word "Look this word up in the database"
+    (let ((db (call-with-input-file
+                  "/tmp/db.dump"
+                (lambda (ip)
+                  (fprintf
+                   (current-error-port)
+                   "Reading from ~s ..."
+                   ip)
+                  (begin0
+                      (read ip))))))
+      (printf "~s => ~s~%" word (lookup word db)))]
+   ))
