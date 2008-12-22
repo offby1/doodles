@@ -48,6 +48,9 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
    (hash-ref (db-stuff db) word #f))
 
 ;; ip -> ip
+;; input lines look like this:
+":|tommie|!n=~@93.190.182.214 PRIVMSG #scheme :hello."
+;; i.e., they're quoted Scheme strings.
 (define (strip-irc-protocol-chatter ip)
   (define (transform line)
     (regexp-replace
