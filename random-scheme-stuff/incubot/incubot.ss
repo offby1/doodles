@@ -6,25 +6,32 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 
-(require srfi/13)
+(require srfi/13
+         (except-in "progress.ss" main))
 
 (define-struct db (stuff) #:prefab)
 
 (provide/contract [port->db [input-port? . -> . db?]])
 (define (port->db ip)
-  (make-db
-   (for/fold ([db (make-immutable-hash '())])
-       ([string (in-lines ip)])
-       (for/fold ([db db])
-           ([word (in-list (string-tokenize string))])
-           (hash-update db word (lambda (existing)
-                                  ;; Only save this string if it's
-                                  ;; longer than any other we've seen.
-                                  (if (< (string-length existing)
-                                         (string-length string))
-                                      string
-                                      existing))
-                        "")))))
+  (let ((note!
+         (make-notifier
+          (lambda (times-called)
+            (fprintf (current-error-port)
+                     "Read ~a lines from ~s~%" times-called ip)))))
+    (make-db
+     (for/fold ([db (make-immutable-hash '())])
+         ([string (in-lines ip)])
+         (note!)
+         (for/fold ([db db])
+             ([word (in-list (string-tokenize string))])
+             (hash-update db word (lambda (existing)
+                                    ;; Only save this string if it's
+                                    ;; longer than any other we've seen.
+                                    (if (< (string-length existing)
+                                           (string-length string))
+                                        string
+                                        existing))
+                          ""))))))
 
 (provide/contract [lookup [string? db? . -> . (or/c string? false/c)]])
 (define (lookup word db)
