@@ -11,6 +11,15 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define-struct db (stuff) #:prefab)
 
+(define (irc-lines->db filename)
+  (cwif
+   filename
+   (lambda (ip)
+     (port->db
+      (strip-irc-protocol-chatter
+       ip)))
+   (lambda (fn) (format "Reading ~s" fn))))
+
 (provide/contract [port->db [input-port? . -> . db?]])
 (define (port->db ip)
   (let ((note!
@@ -72,36 +81,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (with-handlers
-      ([exn:fail:filesystem?
-        (lambda (e)
-          ;; TODO -- count the lines in the input, and then provide some
-          ;; feedback as we chew through them
-          (let ((db (cwif
-                     "irc-lines"
-                     (lambda (ip)
-                       (port->db
-                        (strip-irc-protocol-chatter
-                         ip)))
-                     (lambda (fn) (format "Reading ~s" fn)))))
-            (call-with-output-file
-                *db-dump-file-name*
-              (lambda (op)
-                (pretty-print db op))
-              #:exists 'truncate))
-
-          (apply main args))])
-    (let ((db (call-with-input-file
-                  *db-dump-file-name*
-                (lambda (ip)
-                  (fprintf
-                   (current-error-port)
-                   "Reading from ~s ..."
-                   ip)
-                  (begin0
-                      (read ip)
-                    (fprintf (current-error-port) "done~%"))))))
-      (for ([word args])
-        (printf "~s => ~s~%" word (lookup word db))))))
+  (let ((db (irc-lines->db "irc-lines")))
+    (for ([word args])
+      (printf "~s => ~s~%" word (lookup word db)))))
 
 
