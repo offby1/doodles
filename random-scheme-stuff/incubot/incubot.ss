@@ -70,8 +70,6 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
                         (loop)))))))
     pipe-ip))
 
-(define *db-dump-file-name* "db.dump")
-
 (define (cwif fn proc message-fn)
   (call-with-input-file fn
     (lambda (ip)
