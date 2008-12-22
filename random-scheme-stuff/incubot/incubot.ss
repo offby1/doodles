@@ -7,6 +7,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 #lang scheme
 
 (require srfi/13
+         (lib "thread.ss")
          (except-in "progress.ss" main))
 
 (define-struct db (stuff) #:prefab)
@@ -79,10 +80,17 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
           (proc ip)
         (fprintf (current-error-port) "done~%")))))
 
+;; echo system | nc -q 1 localhost 2222
 (provide main)
 (define (main . args)
-  (let ((db (irc-lines->db "irc-lines")))
-    (for ([word args])
-      (printf "~s => ~s~%" word (lookup word db)))))
-
-
+  (let ((db (irc-lines->db
+             "irc-lines")))
+    (run-server
+     2222
+     (lambda (ip op)
+       (for ([word (in-lines ip)])
+         (display (lookup word db) op)
+         (newline op)
+         (flush-output op)))
+     #f
+     raise)))
