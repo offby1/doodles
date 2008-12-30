@@ -13,9 +13,9 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
   (test-suite
    "loop"
-   (test-case
-    "yow"
-    (check-equal? (hmm) "Hmm!  Maybe I should." "Wise words indeed!"))))
+   (check-true #t)
+   (check-equal? (hmm) "Hmm!  Maybe I should." "Wise words indeed!")
+   ))
 (define (main . args)
   (exit (run-tests hmm-tests 'verbose)))
 (provide hmm main)
