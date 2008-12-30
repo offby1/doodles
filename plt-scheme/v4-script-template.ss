@@ -11,11 +11,12 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
   "dude, maybe you should write some tests")
 (define hmm-tests
 
-  (test-suite
-   "loop"
-   (check-true #t)
-   (check-equal? (hmm) "Hmm!  Maybe I should." "Wise words indeed!")
-   ))
+  (let ((stuff 'bother))
+    (test-suite
+     "loop"
+     (check-equal? stuff 'bother)
+     (check-equal? (hmm) "Hmm!  Maybe I should." "Wise words indeed!"))))
+
 (define (main . args)
   (exit (run-tests hmm-tests 'verbose)))
 (provide hmm main)
