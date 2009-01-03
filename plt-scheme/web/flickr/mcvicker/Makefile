@@ -37,3 +37,7 @@ check: $(exe)
 	PATH=.:$$PATH $^
 
 .PHONY: check
+
+.PHONY: clean
+clean:
+	rm -rf $(exe) $(zip) $(pdir) version.ss
