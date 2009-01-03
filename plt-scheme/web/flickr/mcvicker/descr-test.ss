@@ -3,6 +3,7 @@
 #$Id$
 exec mzscheme --no-init-file --mute-banner --version --load "$0"
 |#
+(module descr-test mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
          (lib "etc.ss")
          (lib "file.ss")
@@ -12,7 +13,7 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
          (only (lib "1.ss" "srfi")
                filter)
          (lib "trace.ss")
-         (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
+         (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
          "keys.ss")
 
 (
@@ -22,11 +23,12 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
 
     #:photo_id "2055192230"
     #:title title
-    #:description (shtml->html
+    #:description (sxml->html
                    `(html
-                     (em "") ": " ""
+                     (em ,subject) ": " ,slide-mount-notation
 
                      ))))
  "glitz"
  "A lovely pagoda, shimmering under the full moon"
  "E. Pagoda")
+)
