@@ -1,5 +1,9 @@
 -*-org-*-
 
+* To run
+
+./gui.ss
+
 * General idea
 
 Convert the Excel spreadsheet into something parseable -- XML seems an

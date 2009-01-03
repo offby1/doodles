@@ -1,11 +1,11 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mred --no-init-file --mute-banner --version --require "$0"
+exec mred --require "$0" --main -- ${1+"$@"}
 |#
 (module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
-         (planet "htmlprag.ss" ("neil" "htmlprag.plt" ))
+         (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
          (lib "class.ss")
          (lib "etc.ss")
          (lib "file.ss")
@@ -257,7 +257,7 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
                                                               #:photo_id  (photo-id (full-info-flickr-metadata record))
                                                               #:title (full-info-title record)
-                                                              #:description (shtml->html descr)))
+                                                              #:description (sxml->html descr)))
                                                          (msg (format
                                                                "~s: ~s: ~s => ~s"
                                                                (full-info-title record)
@@ -300,27 +300,29 @@ exec mred --no-init-file --mute-banner --version --require "$0"
                 (find-system-path 'temp-dir)
                 'sw_shownormal))))))
 
-(let* ((mb (instantiate menu-bar% (frame)))
-       (file-menu (instantiate menu% ("&File" mb)))
-       (help-menu (instantiate menu% ("&Help" mb)))
-       (update-frame
-        (lambda ()
-          (send frame set-label
-                (format "Flickr Thingy: ~a"
-                        (if (ed?) "Ed" "Someone other than Ed!!")))
-          )))
+(provide main)
+(define (main . args)
+  (let* ((mb (instantiate menu-bar% (frame)))
+         (file-menu (instantiate menu% ("&File" mb)))
+         (help-menu (instantiate menu% ("&Help" mb)))
+         (update-frame
+          (lambda ()
+            (send frame set-label
+                  (format "Flickr Thingy: ~a"
+                          (if (ed?) "Ed" "Someone other than Ed!!")))
+            )))
 
-  (update-frame)
+    (update-frame)
 
-  (instantiate
-   checkable-menu-item%
-   ("&Ed (as opposed to Eric)"
-    file-menu
-    (lambda (item event)
-      (ed? (send item is-checked?))
-      (update-frame)))
+    (instantiate
+     checkable-menu-item%
+     ("&Ed (as opposed to Eric)"
+      file-menu
+      (lambda (item event)
+        (ed? (send item is-checked?))
+        (update-frame)))
 
-   (checked (ed?)))
+     (checked (ed?)))
 
 ;;;   (instantiate
 ;;;    checkable-menu-item%
@@ -331,21 +333,21 @@ exec mred --no-init-file --mute-banner --version --require "$0"
 
 ;;;    (checked (*flickr-fail*)))
 
-  (instantiate
-   menu-item%
-   ("&Quit"
-    file-menu
-    (lambda (item event)
-      (exit 0))))
-  (instantiate
-   menu-item%
-   ("&About"
-    help-menu
-    (lambda (item event)
-      (message-box
-       "Exciting, huh?"
-       (format "This is flickr-thingy version ~a" *svnversion-string*))))))
+    (instantiate
+     menu-item%
+     ("&Quit"
+      file-menu
+      (lambda (item event)
+        (exit 0))))
+    (instantiate
+     menu-item%
+     ("&About"
+      help-menu
+      (lambda (item event)
+        (message-box
+         "Exciting, huh?"
+         (format "This is flickr-thingy version ~a" *svnversion-string*))))))
 
-(send frame show #t)
+  (send frame show #t))
 
 )
