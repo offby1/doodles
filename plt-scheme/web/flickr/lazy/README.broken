@@ -1,0 +1,15 @@
+This stuff doesn't work with PLT v4.1.3:
+
+    $ mzscheme update-nikkor-tags.ss 
+    /home/erich/.plt-scheme/planet/300/4.1.3/cache/jim/webit.plt/1/4/private/excess.ss:66:29: invoke-unit: expected (invoke-unit <expr>) or (invoke-unit <expr> (import <sig-expr> ...)) in: (invoke-unit stylesheet-unit dictionary)
+    setup-plt: error: during making for <planet>/schematics/xmlrpc.plt/4/0 (xmlrpc)
+    setup-plt:   /home/erich/.plt-scheme/planet/300/4.1.3/cache/jim/webit.plt/1/4/private/excess.ss:66:29: invoke-unit: expected (invoke-unit <expr>) or (invoke-unit <expr> (import <sig-expr> ...)) in: (invoke-unit stylesheet-unit dictionary)
+    /home/erich/.plt-scheme/planet/300/4.1.3/cache/jim/webit.plt/1/4/private/excess.ss:66:29: invoke-unit: expected (invoke-unit <expr>) or (invoke-unit <expr> (import <sig-expr> ...)) in: (invoke-unit stylesheet-unit dictionary)
+
+
+However, there's hope:
+
+    $ mzscheme -p dvanhorn/flickr:1:0/flickr ; echo $?
+    0
+
+So I should rewrite all this to use Dave Van Horn's package.
