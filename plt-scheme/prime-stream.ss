@@ -8,8 +8,8 @@ exec mzscheme -qr "$0" ${1+"$@"}
 (display "$Id$")
 (newline)
 
-(require (lib "40.ss" "srfi")
-         (lib "1.ss" "srfi")
+(require srfi/40
+         srfi/1
          "compact.ss")
 
 (define (integers-starting-from n)
@@ -41,17 +41,15 @@ exec mzscheme -qr "$0" ${1+"$@"}
                   (without-multiples-of-first-element prime-generator)
                   factors)))))))
 
-(for-each
- (lambda (n)
-   (printf
-    "(= ~a ~a)~%"
-    n
-    (cons
-     '*
-     (map
-      (lambda (thing)
-        (if (number? thing)
-            thing
-          (cons 'expt thing)))
-          (compact-sequence (factor n))))))
- (iota 20 1))
+(for ([n (in-range 20)])
+  (printf
+   "(= ~a ~a)~%"
+   n
+   (cons
+    '*
+    (map
+     (lambda (thing)
+       (if (number? thing)
+           thing
+           (cons 'expt thing)))
+     (compact-sequence (factor n))))))
