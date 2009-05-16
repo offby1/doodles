@@ -26,14 +26,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (let ()
 
       ;; I've factored it out, but ... what the hell do I name it?!
-      (define (whatsit section-name pairs sections)
-        (unless (or (not section-name)
-                    (symbol? section-name))
-                (raise-type-error 'whatsit "atom or #f" section-name))
-        (unless (list? pairs)
-                (raise-type-error 'whatsit "list of pairs" pairs))
-        (unless (list? sections)
-                (raise-type-error 'whatsit "list of ... I dunno" sections))
+      (define/contract (whatsit section-name pairs sections)
+        (-> (or/c #f symbol?) list? list? list?)
         (if section-name
             (cons (cons section-name pairs)
                   sections)
@@ -71,7 +65,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     ])
 )
 
-(define (string->datum s [input-descr #f])
+(define/contract (string->datum s [input-descr #f])
+  (->*  (string?) ((or/c pair? #f))  (or/c symbol? (cons/c symbol? string?)))
   (let ((s (string-trim-both s)))
     (match s
            [(regexp #px"^\\[(.*)\\]$" (list _ innards))
@@ -94,7 +89,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite string->datum-tests
   (check-equal? (string->datum  "[artemis]") 'artemis)
   (check-equal? (string->datum "   [artemis]   ") 'artemis)
-  (check-equal? (string->datum " foo = bar " "some test or other") '(foo . "bar") )
+  (check-equal? (string->datum " foo = bar " (cons "some test or other" 0)) '(foo . "bar") )
   (check-exn exn:fail:user:config-parser? (lambda () (string->datum "   snorgulosity   ")))
   )
 
