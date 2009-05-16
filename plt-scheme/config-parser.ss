@@ -7,17 +7,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui)
-         srfi/13
-         mzlib/trace)
+         srfi/13)
 
 (define-struct (exn:fail:user:config-parser exn:fail:user) () #:transparent)
 
 (define (blank? line)
   (regexp-match #px"^[[:space:]]*$" line))
-
-(define (p thing)
-  (printf "-->~s<--~%" thing)
-  thing)
 
 (define parse-config-ini
   (match-lambda
@@ -38,41 +33,41 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
         (unless (list? sections)
                 (raise-type-error 'whatsit "list of ... I dunno" sections))
         (if section-name
-            (p
-             (cons (cons section-name pairs)
-                   sections))
+            (cons (cons section-name pairs)
+                  sections)
             sections))
 
-      (trace whatsit)
       (call-with-values
           (lambda ()
 
             (for/fold ([current-section-name #f]
                        [pairs-this-section '()]
-                       [complete-sections '()])
+                       [complete-sections '()]
+                       [lines-read 0])
                       ([line (in-lines inp)])
-                      (printf "for/fold: ~s ~s ~s~%" current-section-name  pairs-this-section complete-sections)
                       (unless (or (not current-section-name)
                                   (symbol? current-section-name))
                               (raise-type-error 'parse-config-ini "atom or #f" current-section-name))
                       (if (blank? line)
-                          (values current-section-name pairs-this-section complete-sections)
-                          (let ((datum (string->datum line)))
-                            (printf "line ~s => datum ~s~%" line datum)
+                          (values current-section-name pairs-this-section complete-sections (add1 lines-read))
+                          (let ((datum (string->datum line (cons inp lines-read))))
                             (match datum
                                    [(? symbol?)
                                       (values datum
                                               '()
                                               (whatsit current-section-name pairs-this-section complete-sections)
-                                              )]
+                                               (add1 lines-read))]
                                    [(? pair?)
-                                      (values current-section-name (cons datum pairs-this-section) complete-sections)
+                                      (values
+                                       current-section-name
+                                       (cons datum pairs-this-section)
+                                       complete-sections
+                                       (add1 lines-read))
                                       ])))))
-        (lambda args
-          (make-immutable-hash (apply whatsit args)))))
+        (lambda (section-name pairs sections lines-read)
+          (make-immutable-hash (whatsit section-name pairs sections)))))
     ])
 )
-(trace parse-config-ini)
 
 (define (string->datum s [input-name #f])
   (let ((s (string-trim-both s)))
@@ -132,7 +127,15 @@ EOF
 
 (define (real)
   (call-with-input-file
-      "files"
+      "files"                           ;fill this with the output of something like "locate .ini | egrep \\.ini$"
     (lambda (inp)
-      (for/list ([name (in-lines inp)])
-                (call-with-input-file name parse-config-ini)))))
+      (pretty-print
+       (for/list ([name (in-lines inp)])
+                 (cons
+                  name
+                  (with-handlers
+                   ([exn:fail:user:config-parser?
+                     (lambda (e)
+                       'bogosity)]
+                    [values values])
+                   (call-with-input-file name parse-config-ini))))))))
