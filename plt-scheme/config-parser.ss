@@ -40,48 +40,48 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                        [pairs-this-section '()]
                        [complete-sections '()]
                        [lines-read 0])
-                      ([line (in-lines inp)])
-                      (unless (or (not current-section-name)
-                                  (symbol? current-section-name))
-                              (raise-type-error 'parse-config-ini "atom or #f" current-section-name))
-                      (if (blank? line)
-                          (values current-section-name pairs-this-section complete-sections (add1 lines-read))
-                          (let ((datum (string->datum line (cons inp lines-read))))
-                            (match datum
-                                   [(? symbol?)
-                                      (values datum
-                                              '()
-                                              (whatsit current-section-name pairs-this-section complete-sections)
-                                               (add1 lines-read))]
-                                   [(? pair?)
-                                      (values
-                                       current-section-name
-                                       (cons datum pairs-this-section)
-                                       complete-sections
-                                       (add1 lines-read))
-                                      ])))))
+                ([line (in-lines inp)])
+                (unless (or (not current-section-name)
+                            (symbol? current-section-name))
+                  (raise-type-error 'parse-config-ini "atom or #f" current-section-name))
+              (if (blank? line)
+                  (values current-section-name pairs-this-section complete-sections (add1 lines-read))
+                  (let ((datum (string->datum line (cons inp lines-read))))
+                    (match datum
+                      [(? symbol?)
+                       (values datum
+                               '()
+                               (whatsit current-section-name pairs-this-section complete-sections)
+                               (add1 lines-read))]
+                      [(? pair?)
+                       (values
+                        current-section-name
+                        (cons datum pairs-this-section)
+                        complete-sections
+                        (add1 lines-read))
+                       ])))))
         (lambda (section-name pairs sections lines-read)
           (make-immutable-hash (whatsit section-name pairs sections)))))
     ])
-)
+  )
 
 (define/contract (string->datum s [input-descr #f])
   (->*  (string?) ((or/c pair? #f))  (or/c symbol? (cons/c symbol? string?)))
   (let ((s (string-trim-both s)))
     (match s
-           [(regexp #px"^\\[(.*)\\]$" (list _ innards))
-            (string->symbol innards)]
-           [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*([^[:space:]]+)$" (list _ key value))
-            (cons (string->symbol key) value)]
-           [_
-            (raise (let ((input-name  (if input-descr (car input-descr) "unknown source"))
-                         (line-number (if input-descr (cdr input-descr) "unknown line")))
-                     (make-exn:fail:user:config-parser
-                      (format "unrecognized line ~s" s)
-                      (current-continuation-marks)
-                      input-name
-                      line-number))
-                   )])))
+      [(regexp #px"^\\[(.*)\\]$" (list _ innards))
+       (string->symbol innards)]
+      [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*([^[:space:]]+)$" (list _ key value))
+       (cons (string->symbol key) value)]
+      [_
+       (raise (let ((input-name  (if input-descr (car input-descr) "unknown source"))
+                    (line-number (if input-descr (cdr input-descr) "unknown line")))
+                (make-exn:fail:user:config-parser
+                 (format "unrecognized line ~s" s)
+                 (current-continuation-marks)
+                 input-name
+                 line-number))
+              )])))
 
 
 (provide parse-config-ini)
@@ -103,13 +103,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                  #f)
                 '())
   (let* ((data #<<EOF
-[artemis]
-snorgle = borgle
+               [artemis]
+               snorgle = borgle
 
-[foo]
-fluff = buff
-EOF
-)
+               [foo]
+               fluff = buff
+               EOF
+               )
          (parsed (parse-config-ini (open-input-string data))))
     (check-equal? (dict-ref (dict-ref parsed 'artemis) 'snorgle) "borgle")
     (check-equal? (dict-ref (dict-ref parsed 'foo) 'fluff) "buff")
@@ -122,7 +122,7 @@ EOF
 (provide main)
 (define (main . args)
   (when (run-tests all-tests 'verbose)
-   (real)))
+    (real)))
 
 (define (real)
   (call-with-input-file
@@ -130,8 +130,8 @@ EOF
     (lambda (inp)
       (pretty-print
        (for/list ([name (in-lines inp)])
-                 (cons
-                  name
-                  (with-handlers
-                   ([values values])
-                   (call-with-input-file name parse-config-ini))))))))
+         (cons
+          name
+          (with-handlers
+              ([values values])
+            (call-with-input-file name parse-config-ini))))))))
