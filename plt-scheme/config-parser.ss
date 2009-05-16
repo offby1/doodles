@@ -68,7 +68,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (match s
       [(regexp #px"^\\[(.*)\\]$" (list _ innards))
        (string->symbol innards)]
-      [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*([^[:space:]]+)$" (list _ key value))
+      [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*(.*?)[[:space:]]*$" (list _ key value))
        (cons (string->symbol key) value)]
       [_
        (raise (let ((input-name  (if input-descr (car input-descr) "unknown source"))
@@ -87,8 +87,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (string->datum  "[artemis]") 'artemis)
   (check-equal? (string->datum "   [artemis]   ") 'artemis)
   (check-equal? (string->datum " foo = bar " (cons "some test or other" 0)) '(foo . "bar") )
-  (check-exn exn:fail:user:config-parser? (lambda () (string->datum "   snorgulosity   ")))
-  )
+  (check-equal? (string->datum "name=spaces OK"
+                               (cons "some test or other" 0))
+                '(name . "spaces OK"))
+  (check-exn exn:fail:user:config-parser? (lambda () (string->datum "   snorgulosity   "))))
 
 (define-test-suite parse-config-ini-tests
 
