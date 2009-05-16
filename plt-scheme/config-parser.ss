@@ -38,32 +38,29 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
             (for/fold ([current-section-name #f]
                        [pairs-this-section '()]
-                       [complete-sections '()]
-                       [lines-read 0])
-                ([line (in-lines inp)])
+                       [complete-sections '()])
+                ([line (in-lines inp)]
+                 [lines-read (in-naturals)])
                 (unless (or (not current-section-name)
                             (symbol? current-section-name))
                   (raise-type-error 'parse-config-ini "atom or #f" current-section-name))
               (if (blank? line)
-                  (values current-section-name pairs-this-section complete-sections (add1 lines-read))
+                  (values current-section-name pairs-this-section complete-sections)
                   (let ((datum (string->datum line (cons inp lines-read))))
                     (match datum
                       [(? symbol?)
                        (values datum
                                '()
-                               (whatsit current-section-name pairs-this-section complete-sections)
-                               (add1 lines-read))]
+                               (whatsit current-section-name pairs-this-section complete-sections))]
                       [(? pair?)
                        (values
                         current-section-name
                         (cons datum pairs-this-section)
-                        complete-sections
-                        (add1 lines-read))
+                        complete-sections)
+
                        ])))))
-        (lambda (section-name pairs sections lines-read)
-          (make-immutable-hash (whatsit section-name pairs sections)))))
-    ])
-  )
+        (lambda args
+          (make-immutable-hash (apply whatsit args)))))]))
 
 (define/contract (string->datum s [input-descr #f])
   (->*  (string?) ((or/c pair? #f))  (or/c symbol? (cons/c symbol? string?)))
@@ -103,13 +100,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                  #f)
                 '())
   (let* ((data #<<EOF
-               [artemis]
-               snorgle = borgle
+[artemis]
+snorgle = borgle
 
-               [foo]
-               fluff = buff
-               EOF
-               )
+[foo]
+fluff = buff
+EOF
+)
          (parsed (parse-config-ini (open-input-string data))))
     (check-equal? (dict-ref (dict-ref parsed 'artemis) 'snorgle) "borgle")
     (check-equal? (dict-ref (dict-ref parsed 'foo) 'fluff) "buff")
