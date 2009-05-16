@@ -9,7 +9,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui)
          srfi/13)
 
-(define-struct (exn:fail:user:config-parser exn:fail:user) () #:transparent)
+(define-struct (exn:fail:user:config-parser exn:fail:user)
+  (input-name line-number)
+  #:transparent)
 
 (define (blank? line)
   (regexp-match #px"^[[:space:]]*$" line))
@@ -69,7 +71,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     ])
 )
 
-(define (string->datum s [input-name #f])
+(define (string->datum s [input-descr #f])
   (let ((s (string-trim-both s)))
     (match s
            [(regexp #px"^\\[(.*)\\]$" (list _ innards))
@@ -77,11 +79,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
            [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*([^[:space:]]+)$" (list _ key value))
             (cons (string->symbol key) value)]
            [_
-            (raise (make-exn:fail:user:config-parser (format
-                                                      "~a: unrecognized line ~s"
-                                                      (or input-name "unknown souce")
-                                                      s)
-                                                     (current-continuation-marks)))])))
+            (raise (let ((input-name  (if input-descr (car input-descr) "unknown source"))
+                         (line-number (if input-descr (cdr input-descr) "unknown line")))
+                     (make-exn:fail:user:config-parser
+                      (format "unrecognized line ~s" s)
+                      (current-continuation-marks)
+                      input-name
+                      line-number))
+                   )])))
 
 
 (provide parse-config-ini)
@@ -121,9 +126,8 @@ EOF
 
 (provide main)
 (define (main . args)
-  (real)
-  ;;(exit (run-tests all-tests 'verbose))
-  )
+  (when (run-tests all-tests 'verbose)
+   (real)))
 
 (define (real)
   (call-with-input-file
@@ -134,8 +138,5 @@ EOF
                  (cons
                   name
                   (with-handlers
-                   ([exn:fail:user:config-parser?
-                     (lambda (e)
-                       'bogosity)]
-                    [values values])
+                   ([values values])
                    (call-with-input-file name parse-config-ini))))))))
