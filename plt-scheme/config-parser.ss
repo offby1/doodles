@@ -87,9 +87,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (string->datum  "[artemis]") 'artemis)
   (check-equal? (string->datum "   [artemis]   ") 'artemis)
   (check-equal? (string->datum " foo = bar " (cons "some test or other" 0)) '(foo . "bar") )
-  (check-equal? (string->datum "name=spaces OK"
+  (check-equal? (string->datum "name=embedded spaces OK  "
                                (cons "some test or other" 0))
-                '(name . "spaces OK"))
+                '(name . "embedded spaces OK"))
+  (check-exn exn:fail:user:config-parser?
+             (lambda ()
+               (string->datum "spaces to the left of the = are not OK")))
   (check-exn exn:fail:user:config-parser? (lambda () (string->datum "   snorgulosity   "))))
 
 (define-test-suite parse-config-ini-tests
@@ -109,7 +112,7 @@ snorgle = borgle
 fluff = buff
 EOF
 )
-         (parsed (parse-config-ini (open-input-string data))))
+    (parsed (parse-config-ini (open-input-string data))))
     (check-equal? (dict-ref (dict-ref parsed 'artemis) 'snorgle) "borgle")
     (check-equal? (dict-ref (dict-ref parsed 'foo) 'fluff) "buff")
     ))
