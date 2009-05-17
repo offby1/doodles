@@ -7,14 +7,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui)
-         srfi/13)
+         srfi/13
+         srfi/26)
 
 (define-struct (exn:fail:user:config-parser exn:fail:user)
   (input-name line-number)
   #:transparent)
 
+;; We consider comment lines to be blank.  Comments begin with a ; or
+;; a #.
 (define (blank? line)
-  (regexp-match #px"^[[:space:]]*$" line))
+  (regexp-match #px"^[[:space:]]*((;|#).*)?$" line))
 
 (define parse-config-ini
   (match-lambda
@@ -124,16 +127,38 @@ EOF
 (provide main)
 (define (main . args)
   (when (run-tests all-tests 'verbose)
-    (real)))
+    (parse-every-file-on-this-box)))
 
-(define (real)
-  (call-with-input-file
-      "files"                           ;fill this with the output of something like "locate .ini | egrep \\.ini$"
-    (lambda (inp)
-      (pretty-print
-       (for/list ([name (in-lines inp)])
-         (cons
-          name
-          (with-handlers
-              ([values values])
-            (call-with-input-file name parse-config-ini))))))))
+(define (is-ini-file path)
+  (and (file-exists? path)
+       (regexp-match #px"\\.ini$" (path->string path))))
+
+(define (parse-every-file-on-this-box)
+  (pretty-print
+   (fold-files
+    (lambda (name flavor accumulator)
+      (case flavor
+        ((dir)
+         (let ((desired-permissions '(read execute))
+               (actual-permissions  (file-or-directory-permissions name)))
+           (if (and (not (equal? name (build-path "/proc")))
+                    (andmap (cut member <> actual-permissions) desired-permissions))
+               name
+               (begin
+                 (fprintf 
+                  (current-error-port)
+                  "Avoiding ~s~%"
+                  name)
+                 (values name #f)))))
+        
+        ((file)
+         (if (is-ini-file name)
+             (cons (with-handlers
+                    ([values values])
+                    (call-with-input-file name parse-config-ini))
+                   accumulator)
+             accumulator))
+      ))
+    '()
+    "/"
+    #f)))
