@@ -143,21 +143,25 @@ EOF
                (actual-permissions  (file-or-directory-permissions name)))
            (if (and (not (equal? name (build-path "/proc")))
                     (andmap (cut member <> actual-permissions) desired-permissions))
-               name
+               accumulator
                (begin
                  (fprintf 
                   (current-error-port)
                   "Avoiding ~s~%"
                   name)
-                 (values name #f)))))
+                 (values accumulator #f)))))
         
         ((file)
          (if (is-ini-file name)
-             (cons (with-handlers
-                    ([values values])
-                    (call-with-input-file name parse-config-ini))
-                   accumulator)
+             (cons
+              (cons
+               name
+               (with-handlers
+                ([values values])
+                (parse-config-ini name)))
+              accumulator)
              accumulator))
+        (else accumulator)
       ))
     '()
     "/"
