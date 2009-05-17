@@ -10,14 +10,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          srfi/13
          srfi/26)
 
+
 (define-struct (exn:fail:user:config-parser exn:fail:user)
   (input-name line-number)
   #:transparent)
 
-;; We consider comment lines to be blank.  Comments begin with a ; or
-;; a #.
-(define (blank? line)
-  (regexp-match #px"^[[:space:]]*((;|#).*)?$" line))
+(define *blank* (string->keyword "blank"))
 
 (define parse-config-ini
   (match-lambda
@@ -44,49 +42,56 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                        [complete-sections '()])
                 ([line (in-lines inp)]
                  [lines-read (in-naturals)])
-                (unless (or (not current-section-name)
-                            (symbol? current-section-name))
-                  (raise-type-error 'parse-config-ini "atom or #f" current-section-name))
-              (if (blank? line)
-                  (values current-section-name pairs-this-section complete-sections)
-                  (let ((datum (string->datum line (cons inp lines-read))))
-                    (match datum
-                      [(? symbol?)
-                       (values datum
-                               '()
-                               (whatsit current-section-name pairs-this-section complete-sections))]
-                      [(? pair?)
-                       (values
-                        current-section-name
-                        (cons datum pairs-this-section)
-                        complete-sections)
 
-                       ])))))
+                (let ((datum (string->datum line (cons inp lines-read))))
+
+                  (match datum
+                    [#:blank
+                     (values current-section-name pairs-this-section complete-sections)]
+                    [(? symbol?)
+                     (values datum
+                             '()
+                             (whatsit current-section-name pairs-this-section complete-sections))]
+                    [(? pair?)
+                     (values
+                      current-section-name
+                      (cons datum pairs-this-section)
+                      complete-sections)]))))
+
         (lambda args
           (make-immutable-hash (apply whatsit args)))))]))
 
 (define/contract (string->datum s [input-descr #f])
-  (->*  (string?) ((or/c pair? #f))  (or/c symbol? (cons/c symbol? string?)))
+  (->*  (string?) ((or/c pair? #f))  (or/c keyword? symbol? (cons/c symbol? string?)))
   (let ((s (string-trim-both s)))
     (match s
+      ;; We consider comment lines to be blank.  Comments begin with a
+      ;; ; or a #.
+      [(regexp #px"^[[:space:]]*((;|#).*)?$")
+       *blank*]
       [(regexp #px"^\\[(.*)\\]$" (list _ innards))
        (string->symbol innards)]
       [(regexp #px"^([^[:space:]]+)[[:space:]]*=[[:space:]]*(.*?)[[:space:]]*$" (list _ key value))
        (cons (string->symbol key) value)]
       [_
-       (raise (let ((input-name  (if input-descr (car input-descr) "unknown source"))
-                    (line-number (if input-descr (cdr input-descr) "unknown line")))
-                (make-exn:fail:user:config-parser
-                 (format "unrecognized line ~s" s)
-                 (current-continuation-marks)
-                 input-name
-                 line-number))
-              )])))
+       (raise (let* ((input-name  (if input-descr (car input-descr) "unknown source"))
+                     (line-number (if input-descr (cdr input-descr) "unknown line")))
 
+                (raise (make-exn:fail:user:config-parser
+                           (format "unrecognized line ~s" s)
+                           (current-continuation-marks)
+                           input-name
+                           line-number))
+                )
+              )])))
 
 (provide parse-config-ini)
 
 (define-test-suite string->datum-tests
+  (check-equal? (string->datum  "") *blank*)
+  (check-equal? (string->datum  "  ") *blank*)
+  (check-equal? (string->datum  "  ; comments are blanks too") *blank*)
+  (check-equal? (string->datum  "  # comments are blanks too") *blank*)
   (check-equal? (string->datum  "[artemis]") 'artemis)
   (check-equal? (string->datum "   [artemis]   ") 'artemis)
   (check-equal? (string->datum " foo = bar " (cons "some test or other" 0)) '(foo . "bar") )
@@ -126,7 +131,7 @@ EOF
 
 (provide main)
 (define (main . args)
-  (when (run-tests all-tests 'verbose)
+  (when (zero? (run-tests all-tests 'verbose))
     (parse-every-file-on-this-box)))
 
 (define (is-ini-file path)
@@ -145,12 +150,12 @@ EOF
                     (andmap (cut member <> actual-permissions) desired-permissions))
                accumulator
                (begin
-                 (fprintf 
+                 (fprintf
                   (current-error-port)
                   "Avoiding ~s~%"
                   name)
                  (values accumulator #f)))))
-        
+
         ((file)
          (if (is-ini-file name)
              (cons
