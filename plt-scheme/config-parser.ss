@@ -27,7 +27,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
       ;; I've factored it out, but ... what the hell do I name it?!
       (define/contract (whatsit section-name pairs sections)
-        (-> (or/c #f symbol?) list? list? list?)
+        (-> (or/c #f symbol?) (listof (cons/c symbol? string?)) list? list?)
         (if section-name
             (cons (cons section-name pairs)
                   sections)
