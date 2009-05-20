@@ -14,25 +14,31 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (prefix-in set: (planet soegaard/galore:4:1/set)))
 
 (define/contract (factor n)
-  (-> (and/c integer? odd?) (listof (and/c positive? integer?)))
-  (let ()
-    (let loop ([x (inexact->exact (ceiling (sqrt n)))]
-               [y 0])
-      (let ((diff (- (- (* x x)
-                        (* y y))
-                     n)))
-        (cond
-         ((zero? diff)
-          (if (= 1 (- x y))
-              ;; found a prime
-              (list (+ x y))
-              (append (factor (- x y))
-                      (factor (+ x y)))))
-         ((negative? diff)
-          (loop (add1 x) y))
-         (else
-          (loop x
-                (add1 y))))))))
+  (-> (and/c integer?) (listof (and/c positive? integer?)))
+  (cond
+   ((even? n)
+    (cons 2 (factor (quotient n 2))))
+   ((equal? 1 n)
+    '())
+   (else
+    (let ()
+      (let loop ([x (inexact->exact (ceiling (sqrt n)))]
+                 [y 0])
+        (let ((diff (- (- (* x x)
+                          (* y y))
+                       n)))
+          (cond
+           ((zero? diff)
+            (if (= 1 (- x y))
+                ;; found a prime
+                (list (+ x y))
+                (append (factor (- x y))
+                        (factor (+ x y)))))
+           ((negative? diff)
+            (loop (add1 x) y))
+           (else
+            (loop x
+                  (add1 y))))))))))
 
 (define-simple-check (check-sets-equal? l1 l2)
   (set:equal? (set:list->unordered equal? l1)
@@ -46,6 +52,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
 (define-test-suite factor-tests
 
+  (check-factors (list 2 2))
+  (check-factors (list 2 3))
   (check-factors (list 3 5 7))
   (check-factors (list 3 3 5 5 7 11)))
 
