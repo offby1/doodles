@@ -14,7 +14,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (prefix-in set: (planet soegaard/galore:4:1/set)))
 
 (define/contract (factor n)
-  (-> (and/c integer?) (listof (and/c positive? integer?)))
+  (-> integer? (listof (and/c positive? integer?)))
   (cond
    ((even? n)
     (cons 2 (factor (quotient n 2))))
