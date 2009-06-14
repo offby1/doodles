@@ -41,7 +41,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                 (cons (read-char in) current-string)
                 accumulated-string)))))))
 
-;; This might be worth memoizing
+;; This might be worth memoizing.  No contract, since I think that
+;; slows it down greatly
 (define pair->text
   (match-lambda
    [(cons char count)
