@@ -8,7 +8,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (require
  schemeunit
  schemeunit/text-ui
- srfi/13)
+ srfi/13
+ (planet neil/numspell/numspell))
 
 (define/contract (template->survey str)
   (-> string? (and/c hash? immutable?))
@@ -40,6 +41,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                 (cons (read-char in) current-string)
                 accumulated-string)))))))
 
+;; This might be worth memoizing
+(define pair->text
+  (match-lambda
+   [(cons char count)
+    (format "~a ~a's" (number->english count) char)]
+   ))
+
 
 (define-binary-check (check-dicts-equal actual expected)
   (and (equal? (dict-count actual)
@@ -59,12 +67,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (template->survey "I have {a} and {b} and another {b}")
                 (make-immutable-hash '((#\a . 4) (#\b . 0)))))
 
+(define-test-suite pair->text-tests
+  (check-equal? (pair->text '(#\a . 0))  "zero a's"))
+
 (define (main . args)
   (exit
    (run-tests
     (test-suite
      "eva thang"
      template->survey-tests
+     pair->text-tests
     )
     'verbose)))
 (provide template->survey main)
