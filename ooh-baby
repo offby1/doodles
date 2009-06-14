@@ -1,1 +1,1439 @@
-(*TOP* (head (title "cats - Google Search") (style "body{background:#fff;color:#000;margin:3px 8px}#gbar{height:22px;padding-left:2px}.gbh,.gbd{border-top:1px solid #c9d7f1;font-size:1px}.gbh{height:0;position:absolute;top:24px;width:100%}#gbi,#gbs{background:#fff;left:0;position:absolute;top:24px;visibility:hidden;z-index:1000}#gbi{border:1px solid;border-color:#c9d7f1 #36c #36c #a2bae7;z-index:1001}#guser{padding-bottom:7px !important}#gbar,#guser{font-size:13px;padding-top:1px !important}@media all{.gb1,.gb3{height:22px;margin-right:.73em;vertical-align:top}#gbar{float:left}}.gb2{display:block;padding:.2em .5em}a.gb1,a.gb2,a.gb3{color:#00c !important}.gb2,.gb3{text-decoration:none}a.gb2:hover{background:#36c;color:#fff !important}.ts{border-collapse:collapse}.ts td{padding:0}.ti,.bl,form,#res h3{display:inline}.ti{display:inline-table}.fl:link,.gl a:link{color:#77c}a:link,.w,#prs a:visited,#prs a:active,.q:active,.q:visited{color:#00c}.mblink:visited,a:visited{color:#551a8b}a:active{color:red}.cur{color:#a90a08;font-weight:bold}.b{font-weight:bold}.j{width:42em;font-size:82%}.s{max-width:42em}.j font[size=\"-1\"],.e .j{font-size:100%}.sl,.e .j font[size=\"-1\"]{font-size:82%}#gb{text-align:right;padding:1px 0 7px;margin:0}.hd{position:absolute;width:1px;height:1px;top:-1000em;overflow:hidden}.f,.m,#tads h2,#mbEnd h2{color:#676767}.a,cite,.cite,.cite:link{color:green;font-style:normal}#mbEnd{float:right}h1,ol{margin:0;padding:0}li.g,body,html,.std,#tads h2,#mbEnd h2,h1{font-size:small;font-family:arial,sans-serif}#tads h2,#mbEnd h2,h1{font-weight:normal}#ssb,.clr{clear:both}#nav a,#nav a:visited,.blk a{color:#000}#nav .b a,#nav .b a:visited{color:#00c;font-size:medium}.ch{cursor:pointer;cursor:hand}h3,.med{font-size:medium;font-weight:normal;padding:0;margin:0}.e{margin:.75em 0}.slk td{padding-left:40px;padding-top:5px;vertical-align:top}.slk div{padding-left:10px;text-indent:-10px}#mbEnd cite{display:block;text-align:left}#mbEnd p{margin:-.5em 0 0 .5em;text-align:center}#bsf,#ssb,.blk{border-top:1px solid #6b90da;background:#f0f7f9}#bsf,#ssb{margin:11px 0}#bsf{border-bottom:1px solid #6b90da}#ssb div{float:left;padding:4px 0 0;padding-left:4px;padding-right:.5em}#prs a,#prs b{margin-right:.6em}#ssb p{text-align:right;white-space:nowrap;margin:.1em 0;padding:.2em;zoom:1}#ssb{margin-top:0;padding:.1em}#mbEnd{background:#fff;padding:0;border-left:10px solid #fff;border-spacing:0;white-space:nowrap}#res{padding-right:1em}#tads{background:#fff8dd}#tads li{padding:0 3px 0 5px;margin:0}#tads .tam,#tads .tal{padding-top:12px}#mbEnd li{margin:1em 0;padding:0;zoom:1}.xsm{font-size:x-small}.sm{margin:0 0 0 40px;padding:0}ol li{list-style:none}.sm li{margin:0}.gl,#bsf a,.nobr,#brs a{white-space:nowrap}#mbEnd .med{white-space:normal}.sl,.r{display:inline;font-weight:normal;margin:0}.r{font-size:medium}h4.r{font-size:small}.g{margin:1em 0}em{font-weight:bold;font-style:normal}em,b{text-decoration:inherit}") (script "window.google={kEI:\"4YQrSafhEJ3gsAOu7NXtAQ\",kEXPI:\"17259\",kHL:\"en\"};\ngoogle.y={};google.x=function(e,g){google.y[e.id]=[e,g];return false};window.gbar={};(function(){var b=window.gbar,f,h;b.qs=function(a){var c=window.encodeURIComponent&&(document.forms[0].q||\"\").value;if(c)a.href=a.href.replace(/([?&])q=[^&]*|$/,function(i,g){return(g||\"&\")+\"q=\"+encodeURIComponent(c)})};function j(a,c){a.visibility=h?\"hidden\":\"visible\";a.left=c+\"px\"}b.tg=function(a){a=a||window.event;var c=0,i,g=window.navExtra,d=document.getElementById(\"gbi\"),e=a.target||a.srcElement;a.cancelBubble=true;if(!f){f=document.createElement(Array.every||window.createPopup?\"iframe\":\"div\");f.frameBorder=\"0\";f.src=\"#\";d.parentNode.appendChild(f).id=\"gbs\";if(g)for(i in g)d.insertBefore(g[i],d.firstChild).className=\"gb2\";document.onclick=b.close}if(e.className!=\"gb3\")e=e.parentNode;do c+=e.offsetLeft;while(e=e.offsetParent);j(d.style,c);f.style.width=d.offsetWidth+\"px\";f.style.height=d.offsetHeight+\"px\";j(f.style,c);h=!h};b.close=function(a){h&&b.tg(a)}})();")))
+((*DECL* doctype html)
+ (head
+  (title "cats - Google Search")
+  (style
+   "body{background:#fff;color:#000;margin:3px 8px}#gbar{height:22px;padding-left:2px}.gbh,.gbd{border-top:1px solid #c9d7f1;font-size:1px}.gbh{height:0;position:absolute;top:24px;width:100%}#gbi,#gbs{background:#fff;left:0;position:absolute;top:24px;visibility:hidden;z-index:1000}#gbi{border:1px solid;border-color:#c9d7f1 #36c #36c #a2bae7;z-index:1001}#guser{padding-bottom:7px !important}#gbar,#guser{font-size:13px;padding-top:1px !important}@media all{.gb1,.gb3{height:22px;margin-right:.73em;vertical-align:top}#gbar{float:left}}.gb2{display:block;padding:.2em .5em}a.gb1,a.gb2,a.gb3{color:#00c !important}.gb2,.gb3{text-decoration:none}a.gb2:hover{background:#36c;color:#fff !important}.ts{border-collapse:collapse}.ts td{padding:0}.ti,.bl,form,#res h3{display:inline}.ti{display:inline-table}.fl:link,.gl a:link{color:#77c}a:link,.w,#prs a:visited,#prs a:active,.q:active,.q:visited{color:#00c}.mblink:visited,a:visited{color:#551a8b}a:active{color:red}.cur{color:#a90a08;font-weight:bold}.b{font-weight:bold}.j{width:42em;font-size:82%}.s{max-width:42em}.j font[size=\"-1\"],.e .j{font-size:100%}.sl,.e .j font[size=\"-1\"]{font-size:82%}#gb{text-align:right;padding:1px 0 7px;margin:0}.hd{position:absolute;width:1px;height:1px;top:-1000em;overflow:hidden}.f,.m,#tads h2,#mbEnd h2{color:#676767}.a,cite,.cite,.cite:link{color:green;font-style:normal}#mbEnd{float:right}h1,ol{margin:0;padding:0}li.g,body,html,.std,#tads h2,#mbEnd h2,h1{font-size:small;font-family:arial,sans-serif}#tads h2,#mbEnd h2,h1{font-weight:normal}#ssb,.clr{clear:both}#nav a,#nav a:visited,.blk a{color:#000}#nav .b a,#nav .b a:visited{color:#00c;font-size:medium}.ch{cursor:pointer;cursor:hand}h3,.med{font-size:medium;font-weight:normal;padding:0;margin:0}.e{margin:.75em 0}.slk td{padding-left:40px;padding-top:5px;vertical-align:top}.slk div{padding-left:10px;text-indent:-10px}#mbEnd cite{display:block;text-align:left}#mbEnd p{margin:-.5em 0 0 .5em;text-align:center}#bsf,#ssb,.blk{border-top:1px solid #6b90da;background:#f0f7f9}#bsf,#ssb{margin:11px 0}#bsf{border-bottom:1px solid #6b90da}#ssb div{float:left;padding:4px 0 0;padding-left:4px;padding-right:.5em}#prs a,#prs b{margin-right:.6em}#ssb p{text-align:right;white-space:nowrap;margin:.1em 0;padding:.2em;zoom:1}#ssb{margin-top:0;padding:.1em}#mbEnd{background:#fff;padding:0;border-left:10px solid #fff;border-spacing:0;white-space:nowrap}#res{padding-right:1em}#tads{background:#fff8dd}#tads li{padding:0 3px 0 5px;margin:0}#tads .tam,#tads .tal{padding-top:12px}#mbEnd li{margin:1em 0;padding:0;zoom:1}.xsm{font-size:x-small}.sm{margin:0 0 0 40px;padding:0}ol li{list-style:none}.sm li{margin:0}.gl,#bsf a,.nobr,#brs a{white-space:nowrap}#mbEnd .med{white-space:normal}.sl,.r{display:inline;font-weight:normal;margin:0}.r{font-size:medium}h4.r{font-size:small}.g{margin:1em 0}em{font-weight:bold;font-style:normal}em,b{text-decoration:inherit}")
+  (script
+   "window.google={kEI:\"wms8SbKqC53gsAPD7rS7BA\",kEXPI:\"17259,19124\",kHL:\"en\"};\ngoogle.y={};google.x=function(e,g){google.y[e.id]=[e,g];return false};window.gbar={};(function(){var b=window.gbar,f,h;b.qs=function(a){var c=window.encodeURIComponent&&(document.forms[0].q||\"\").value;if(c)a.href=a.href.replace(/([?&])q=[^&]*|$/,function(i,g){return(g||\"&\")+\"q=\"+encodeURIComponent(c)})};function j(a,c){a.visibility=h?\"hidden\":\"visible\";a.left=c+\"px\"}b.tg=function(a){a=a||window.event;var c=0,i,g=window.navExtra,d=document.getElementById(\"gbi\"),e=a.target||a.srcElement;a.cancelBubble=true;if(!f){f=document.createElement(Array.every||window.createPopup?\"iframe\":\"div\");f.frameBorder=\"0\";f.src=\"#\";d.parentNode.appendChild(f).id=\"gbs\";if(g)for(i in g)d.insertBefore(g[i],d.firstChild).className=\"gb2\";document.onclick=b.close}if(e.className!=\"gb3\")e=e.parentNode;do c+=e.offsetLeft;while(e=e.offsetParent);j(d.style,c);f.style.width=d.offsetWidth+\"px\";f.style.height=d.offsetHeight+\"px\";j(f.style,c);h=!h};b.close=function(a){h&&b.tg(a)}})();"))
+ (body
+  (@ (id "gsr") (topmargin "3") (marginheight "3"))
+  (div
+   (@ (id "header"))
+   (div
+    (@ (id "gbar"))
+    (nobr
+     (b (@ (class "gb1")) "Web")
+     " "
+     (a
+      (@
+       (href
+        "http://images.google.com/images?q=cats&um=1&ie=UTF-8&sa=N&tab=wi")
+       (onclick "gbar.qs(this)")
+       (class "gb1"))
+      "Images")
+     " "
+     (a
+      (@
+       (href "http://maps.google.com/maps?q=cats&um=1&ie=UTF-8&sa=N&tab=wl")
+       (onclick "gbar.qs(this)")
+       (class "gb1"))
+      "Maps")
+     " "
+     (a
+      (@
+       (href "http://news.google.com/news?q=cats&um=1&ie=UTF-8&sa=N&tab=wn")
+       (onclick "gbar.qs(this)")
+       (class "gb1"))
+      "News")
+     " "
+     (a
+      (@
+       (href "http://www.google.com/products?q=cats&um=1&ie=UTF-8&sa=N&tab=wf")
+       (onclick "gbar.qs(this)")
+       (class "gb1"))
+      "Shopping")
+     " "
+     (a
+      (@
+       (href "http://mail.google.com/mail/?um=1&ie=UTF-8&sa=N&tab=wm")
+       (class "gb1"))
+      "Gmail")
+     " "
+     (a
+      (@
+       (href "http://www.google.com/intl/en/options/")
+       (onclick "this.blur();gbar.tg(event);return !1")
+       (class "gb3"))
+      (u "more")
+      " "
+      (small "▼"))
+     (div
+      (@ (id "gbi"))
+      " "
+      (a
+       (@
+        (href
+         "http://video.google.com/videosearch?q=cats&um=1&ie=UTF-8&sa=N&tab=wv")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Video")
+      " "
+      (a
+       (@
+        (href
+         "http://groups.google.com/groups?q=cats&um=1&ie=UTF-8&sa=N&tab=wg")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Groups")
+      " "
+      (a
+       (@
+        (href "http://books.google.com/books?q=cats&um=1&ie=UTF-8&sa=N&tab=wp")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Books")
+      " "
+      (a
+       (@
+        (href
+         "http://scholar.google.com/scholar?q=cats&um=1&ie=UTF-8&sa=N&tab=ws")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Scholar")
+      " "
+      (a
+       (@
+        (href
+         "http://finance.google.com/finance?q=cats&um=1&ie=UTF-8&sa=N&tab=we")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Finance")
+      " "
+      (a
+       (@
+        (href
+         "http://blogsearch.google.com/blogsearch?q=cats&um=1&ie=UTF-8&sa=N&tab=wb")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Blogs")
+      " "
+      (div (@ (class "gb2")) (div (@ (class "gbd"))))
+      " "
+      (a
+       (@
+        (href
+         "http://www.youtube.com/results?q=cats&um=1&ie=UTF-8&sa=N&tab=w1")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "YouTube")
+      " "
+      (a
+       (@
+        (href
+         "http://www.google.com/calendar/render?um=1&ie=UTF-8&sa=N&tab=wc")
+        (class "gb2"))
+       "Calendar")
+      " "
+      (a
+       (@
+        (href
+         "http://picasaweb.google.com/lh/searchbrowse?q=cats&um=1&ie=UTF-8&sa=N&tab=wq")
+        (onclick "gbar.qs(this)")
+        (class "gb2"))
+       "Photos")
+      " "
+      (a
+       (@
+        (href "http://docs.google.com/?um=1&ie=UTF-8&sa=N&tab=wo")
+        (class "gb2"))
+       "Documents")
+      " "
+      (a
+       (@
+        (href "http://www.google.com/reader/view/?um=1&ie=UTF-8&sa=N&tab=wy")
+        (class "gb2"))
+       "Reader")
+      " "
+      (a
+       (@
+        (href "http://sites.google.com/?um=1&ie=UTF-8&sa=N&tab=w3")
+        (class "gb2"))
+       "Sites")
+      " "
+      (div (@ (class "gb2")) (div (@ (class "gbd"))))
+      " "
+      (a
+       (@ (href "http://www.google.com/intl/en/options/") (class "gb2"))
+       "even more "
+       "&raquo;"))
+     " "))
+   (div (@ (class "gbh") (style "left:0")))
+   (div (@ (class "gbh") (style "right:0")))
+   (p
+    (@ (id "gb"))
+    (nobr
+     (a
+      (@
+       (href
+        "https://www.google.com/accounts/Login?continue=http://www.google.com/search%3Fq%3Dcats&amp;hl=en"))
+      "Sign in")))
+   (form
+    (@ (id "tsf") (name "gs") (method "GET") (action "/search"))
+    (table
+     (@ (id "sft") (cellpadding "0") (cellspacing "0") (style "clear:both"))
+     (tr
+      (@ (valign "top"))
+      (td
+       (@ (style "padding-right:8px"))
+       (a
+        (@
+         (href "http://www.google.com/webhp?hl=en")
+         (title "Go to Google Home"))
+        (img
+         (@
+          (src "/images/logo_sm.gif")
+          (width "150")
+          (height "55")
+          (alt "Google")
+          (border "0")
+          (vspace "12")))))
+      (td
+       (@ (style "padding:1px 0 7px;width:100%"))
+       (table
+        (@ (cellspacing "0") (cellpadding "0") (style "margin-top:25px"))
+        (tr
+         (td
+          (@ (nowrap))
+          (input
+           (@ (type "hidden") (name "hl") (value "en"))
+           (input
+            (@ (type "hidden") (name "ie") (value "ISO-8859-1"))
+            (input
+             (@
+              (type "text")
+              (name "q")
+              (size "41")
+              (maxlength "2048")
+              (value "cats")
+              (title "Search"))
+             " "
+             (input (@ (type "submit") (name "btnG") (value "Search")))))))
+         (td
+          (@ (style "padding:0 6px") (class "nobr xsm"))
+          (a
+           (@ (href "/advanced_search?q=cats&amp;hl=en&amp;ie=UTF-8"))
+           "Advanced Search")
+          (br)
+          (a
+           (@ (href "/preferences?q=cats&amp;hl=en&amp;ie=UTF-8"))
+           "Preferences")))))))))
+  (noscript (style ".bl{display:none !important}"))
+  (div
+   (@ (id "ssb"))
+   (div
+    (@ (id "prs"))
+    (b "Web")
+    " "
+    (a
+     (@
+      (href
+       "http://images.google.com/images?q=cats&oe=ISO-8859-1&um=1&ie=UTF-8&sa=N&tab=wi&oi=property_suggestions&resnum=0&ct=property-revision&cd=1"))
+     "Images")
+    " "
+    (a
+     (@
+      (href
+       "http://news.google.com/news?q=cats&oe=ISO-8859-1&um=1&ie=UTF-8&sa=N&tab=wn&oi=property_suggestions&resnum=0&ct=property-revision&cd=2"))
+     "News")
+    " "
+    (a
+     (@
+      (href
+       "http://books.google.com/books?q=cats&oe=ISO-8859-1&um=1&ie=UTF-8&sa=N&tab=wp&oi=property_suggestions&resnum=0&ct=property-revision&cd=3"))
+     "Books")
+    " "
+    (a
+     (@
+      (href
+       "http://video.google.com/videosearch?q=cats&oe=ISO-8859-1&um=1&ie=UTF-8&sa=N&tab=wv&oi=property_suggestions&resnum=0&ct=property-revision&cd=4"))
+     "Video")
+    " ")
+   (p
+    " "
+    "Results "
+    (b "1")
+    " - "
+    (b "10")
+    " of about "
+    (b "150,000,000")
+    " for "
+    (b "cats")
+    " ["
+    (a
+     (@
+      (href
+       "/url?q=http://www.answers.com/cats&amp;r=67&amp;sa=X&amp;oi=dict&amp;ct=d&amp;usg=AFQjCNFdGH0FW5nENy9ZkDuTsj6kGJA9cw")
+      (title "Look up definition of cats"))
+     "definition")
+    "]"
+    (b)
+    ".  ("
+    (b "0.05")
+    " seconds)"
+    " "
+    (div)
+    (table
+     (@ (id "mbEnd") (width "30%"))
+     (tr
+      (td
+       (@
+        (id "rhsline")
+        (style "padding-left:10px;border-left:1px solid #c9d7f1")
+        (class "std"))
+       (h2
+        (@ (style "text-align:center;margin:0;padding:0"))
+        "Sponsored Links")
+       (ol
+        (@ (onmouseover "return true") (class "nobr"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an1")
+            (href
+             "/aclk?sa=l&amp;ai=CwN5jwms8SfzKDJLusAPc4dG-Ca_su3vVidTlCIu23AoQASgHUMHvg6L5_____wFgyY7GjfSk0BmgAbnN3_sDyAEBqgQeT9DDIVXtilrKFcTJf8KriVYEQnOu-QuVSd7urHPP&amp;num=1&amp;sig=AGiWqtxDCiULwaNY8wt6E71kgG8MDZ3sAg&amp;q=http://www.peoplepets.com/%3Fpkw%3DPSPEGLTX120208SNND1811%26partner%3Dyes"))
+           "Pictures Of "
+           (b "Cats")))
+         "See Pics of "
+         (b "Cats")
+         " "
+         "&"
+         " More"
+         (br)
+         "Including News, Videos "
+         "&"
+         " Style!"
+         (br)
+         (cite "PeoplePets.com/photos"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an2")
+            (href
+             "/aclk?sa=L&amp;ai=CARWLwms8SfzKDJLusAPc4dG-Cb2fwVC9x8KxCMucvwUQAigHULqZipH5_____wFgyY7GjfSk0BnIAQGqBBZP0KN9fe2JUsqtxwCkIr2vmWnXuzDH&amp;num=2&amp;sig=AGiWqtyKoSGrjVwq91iNwIRbVNToPjKcdQ&amp;q=http://www.itsmeowornever.org/index.asp"))
+           "No Kill Animal Shelter"))
+         "Give Your Support To It"
+         "'"
+         "s Meow"
+         (br)
+         "Or Never"
+         "'"
+         "s No Kill Animal Rescue!"
+         (br)
+         (cite "www.ItsMeowOrNever.org")
+         "Washington")
+        (li
+         (h3
+          (a
+           (@
+            (id "an3")
+            (href
+             "/aclk?sa=L&amp;ai=CZMIswms8SfzKDJLusAPc4dG-CdjdrHG60e2VBZ-vnAYQAygHUJDjzd4GYMmOxo30pNAZyAEBqgQZT9CzF1TtiFLK5cf9-bstmVdKrin1ouBy5Q&amp;num=3&amp;sig=AGiWqty5Ca293XKYPUF-mwamWDQjzhRWcw&amp;q=http://search.live.com/images/results.aspx%3Fq%3DCats%26form%3DMXCA00%26kwid%3D9bbc2a92517daebe9e10886d1d84d34a"))
+           (b "Cats")))
+         "ClipArt - Pictures"
+         (br)
+         (b "Cats")
+         (br)
+         (cite "www.live.com"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an4")
+            (href
+             "/aclk?sa=L&amp;ai=CeyKGwms8SfzKDJLusAPc4dG-CfCtq1_mibufAou23AoQBCgHUKu31doGYMmOxo30pNAZyAEBqgQeT9Cja0Ltj1rKFcTJf4mr5FIEQnOu-QuVSd7urHPP&amp;num=4&amp;sig=AGiWqtyDRBPrErcu6E3NHocTO67w44BcFg&amp;q=http://shopping.yahoo.com/search%3B_ylc%3DX3oDMTFxb251ODIxBF9TAzc4NDcxNjU2OARrA3BpY3R1cmVzIG9mIGNhdHMEb21tA0Jyb2FkBHNlYwNrYgRzbGsDdGl0bGU-%3Fview%3D1%26sem%3Dgoogle%26p%3Dpictures%2Bof%2Bcats%26sp%3Dpall%26no_truncation%3D1"))
+           "Pictures Of "
+           (b "Cats")))
+         "Pictures Of "
+         (b "Cats")
+         " "
+         "&"
+         " More!"
+         (br)
+         "100,000 Stores. Deals. Reviews."
+         (br)
+         (cite "shopping.yahoo.com"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an5")
+            (href
+             "/aclk?sa=L&amp;ai=CL3lXwms8SfzKDJLusAPc4dG-CbSqvWDW1I2UBMucvwUQBSgHUMzIl8EHYMmOxo30pNAZyAEBqgQTT9CzBkntjlLK9MaWkuye1gussg&amp;num=5&amp;sig=AGiWqtwULH_u_Ny3p0hQelixvCl5saPDWA&amp;q=http://www.catchannel.com/%3Fcm_mmc%3DGoogle-_-Keywords-_-cats-_-NA"))
+           (b "Cat")
+           " Breed Info A to Z"))
+         "From experts at "
+         (b "Cat")
+         " Fancy magazine"
+         (br)
+         "Photos, tips, nutrition news "
+         "&"
+         " more"
+         (br)
+         (cite "www." (b "Cat") "Channel.com"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an6")
+            (href
+             "/aclk?sa=l&amp;ai=C4D7Ywms8SfzKDJLusAPc4dG-CYHbu0qv_uL9AcucvwUQBigHULGaorn4_____wFgyY7GjfSk0BmgAZ2H3f4DyAEBqQII7hOKLI6lPqoEFk_QozBl7Y1Syq3HAKQiva-Zade7MMc&amp;num=6&amp;sig=AGiWqtyDPDmjdTYeKTEGhwT-9xa_uDI_rw&amp;q=http://www.vet-pet-supplies-online.com"))
+           (b "Cat")
+           " "
+           "&"
+           " Kitten Products"))
+         "Save money on "
+         (b "cat")
+         " "
+         "&"
+         " kitten health"
+         (br)
+         "&"
+         " veterinary products"
+         (br)
+         (cite "www.vetpetsupplies.com.au"))
+        (li
+         (h3
+          (a
+           (@
+            (id "an7")
+            (href
+             "/aclk?sa=L&amp;ai=CXQLvwms8SfzKDJLusAPc4dG-Cduc23evnvzVCdXq1wYQBygHUODKpNUFYMmOxo30pNAZyAEBqgQTT9CzBkntjFLK9MaWkuye1gussg&amp;num=7&amp;sig=AGiWqtzIOQmOUmGrvI9mrao0e3oM1yDapA&amp;q=http://tracking.voltagesearch.com/59-16332936-1-t5312154-3940-2604-411997/%3Fad%3D2504797457"))
+           (b "Cats")
+           " Gift Ideas"))
+         "Take the Guessing Out of Gifting."
+         (br)
+         "See our Gift Gurus top gift ideas."
+         (br)
+         (cite "Gifts.com/" (b "Cats"))))
+       (li (p " " (tr (td (@ (id "rhspad")))))))))
+    (div
+     (@ (id "res") (class "med"))
+     (div
+      (@ (style "margin-top:0.5em") (id "trev"))
+      (table
+       (@ (class "ts"))
+       (tr
+        (td
+         (@ (style "padding-right:.3em;vertical-align:top") (class "nobr std"))
+         "Related searches:")
+        (td
+         (@ (class "std"))
+         " "
+         (a
+          (@
+           (class "nobr")
+           (style "margin-right:10px")
+           (href
+            "/search?hl=en&amp;ie=UTF-8&amp;q=ragdoll+cats&amp;revid=1202504391&amp;sa=X&amp;oi=revisions_inline&amp;resnum=0&amp;ct=top-revision&amp;cd=1"))
+          (b "ragdoll")
+          " cats")
+         " "
+         (a
+          (@
+           (class "nobr")
+           (style "margin-right:10px")
+           (href
+            "/search?hl=en&amp;ie=UTF-8&amp;q=savannah+cats&amp;revid=1202504391&amp;sa=X&amp;oi=revisions_inline&amp;resnum=0&amp;ct=top-revision&amp;cd=2"))
+          (b "savannah")
+          " cats")))))
+     (h2 (@ (class "hd")) "Search Results")
+     (div
+      (ol
+       (li
+        (div
+         (@ (class "g"))
+         (h3
+          (@ (class "r"))
+          (a
+           (@
+            (href
+             "http://images.google.com/images?q=cats&amp;um=1&amp;ie=UTF-8&amp;sa=X&amp;oi=image_result_group&amp;resnum=1&amp;ct=title"))
+           "Image results for "
+           (b "cats")))
+         (script
+          "window.google.repIm={c:function(a,b,c){(new Image).src=\"/gen_204?atyp=i&ct=rep&cd=\"+a+\"&ei=\"+window.google.kEI;document.getElementById(b).style.display=\"\";document.getElementById(c).style.display=\"none\"}};\n")
+         (span
+          (@ (class "bl"))
+          " "
+          "- "
+          (span
+           (@ (class "std"))
+           (a
+            (@
+             (href "javascript:google.repIm.c('r','irl_c','irl_r')")
+             (class "fl")
+             (id "irl_r"))
+            "Report images")
+           (span
+            (@ (id "irl_c") (style "display:none"))
+            "Report the following images as offensive. "
+            (a
+             (@
+              (href "javascript:google.repIm.c('co','irl_t','irl_c')")
+              (class "fl")
+              (id "irl_r"))
+             "Confirm")
+            " "
+            (a
+             (@
+              (href "javascript:google.repIm.c('ca','irl_r','irl_c')")
+              (class "fl")
+              (id "irl_r"))
+             "Cancel"))
+           (span
+            (@ (id "irl_t") (style "display:none"))
+            "Thank you for the feedback.")))
+         (br)
+         (div
+          (@ (style "padding-top:8px"))
+          (a
+           (@
+            (href
+             "/imgres?imgurl=http://blogs.manchestereveningnews.co.uk/food/cats.jpg&amp;imgrefurl=http://blogs.manchestereveningnews.co.uk/food/small_bites/&amp;h=311&amp;w=400&amp;sz=34&amp;tbnid=Xolpv6OSyH4J::&amp;tbnh=96&amp;tbnw=124&amp;prev=/images%3Fq%3Dcats&amp;usg=__GJk_bT3BfnJeJZPbuX3_k-R0fMA=&amp;sa=X&amp;oi=image_result&amp;resnum=1&amp;ct=image&amp;cd=1"))
+           (img
+            (@
+             (src
+              "/images?q=tbn:Xolpv6OSyH4J::blogs.manchestereveningnews.co.uk/food/cats.jpg")
+             (align "middle")
+             (alt "http://blogs.manchestereveningnews.co.uk/food/small_bites/")
+             (border "1")
+             (height "96")
+             (title
+              "http://blogs.manchestereveningnews.co.uk/food/small_bites/")
+             (width "124"))))
+          " "
+          " "
+          " "
+          (a
+           (@
+            (href
+             "/imgres?imgurl=http://www.i-love-cats.com/software/Adorable-Cats-Screensaver.jpg&amp;imgrefurl=http://www.i-love-cats.com/software/Adorable-Cats-Screensaver.html&amp;h=337&amp;w=450&amp;sz=10&amp;tbnid=gH8A5D5_7cEJ::&amp;tbnh=95&amp;tbnw=127&amp;prev=/images%3Fq%3Dcats&amp;usg=__tF_fQFDalwH1NrWDz0I2kXYnaH8=&amp;sa=X&amp;oi=image_result&amp;resnum=2&amp;ct=image&amp;cd=1"))
+           (img
+            (@
+             (src
+              "/images?q=tbn:gH8A5D5_7cEJ::www.i-love-cats.com/software/Adorable-Cats-Screensaver.jpg")
+             (align "middle")
+             (alt
+              "http://www.i-love-cats.com/software/Adorable-Cats-Screensaver.html")
+             (border "1")
+             (height "95")
+             (title
+              "http://www.i-love-cats.com/software/Adorable-Cats-Screensaver.html")
+             (width "127"))))
+          " "
+          " "
+          " "
+          (a
+           (@
+            (href
+             "/imgres?imgurl=http://www.catfacts.org/cat-mouth-full.jpg&amp;imgrefurl=http://www.maniacworld.com/funny-cats-video.htm&amp;h=423&amp;w=450&amp;sz=39&amp;tbnid=F4FBqmzMokkJ::&amp;tbnh=119&amp;tbnw=127&amp;prev=/images%3Fq%3Dcats&amp;usg=__O3PzHAgkKO8XzV5FH08PJNrLfBE=&amp;sa=X&amp;oi=image_result&amp;resnum=3&amp;ct=image&amp;cd=1"))
+           (img
+            (@
+             (src
+              "/images?q=tbn:F4FBqmzMokkJ::www.catfacts.org/cat-mouth-full.jpg")
+             (align "middle")
+             (alt "http://www.maniacworld.com/funny-cats-video.htm")
+             (border "1")
+             (height "119")
+             (title "http://www.maniacworld.com/funny-cats-video.htm")
+             (width "127"))))
+          " "
+          " "
+          " "
+          (a
+           (@
+            (href
+             "/imgres?imgurl=http://www.swapmeetdave.com/Humor/Cats/CatsSunbathing.jpg&amp;imgrefurl=http://www.swapmeetdave.com/Humor/Cats/Sunbathing.htm&amp;h=512&amp;w=640&amp;sz=95&amp;tbnid=5R010coTr2sJ::&amp;tbnh=110&amp;tbnw=137&amp;prev=/images%3Fq%3Dcats&amp;usg=__0kiegvxvXOqYCFEW_IQlqwxGlGw=&amp;sa=X&amp;oi=image_result&amp;resnum=4&amp;ct=image&amp;cd=1"))
+           (img
+            (@
+             (src
+              "/images?q=tbn:5R010coTr2sJ::www.swapmeetdave.com/Humor/Cats/CatsSunbathing.jpg")
+             (align "middle")
+             (alt "http://www.swapmeetdave.com/Humor/Cats/Sunbathing.htm")
+             (border "1")
+             (height "110")
+             (title "http://www.swapmeetdave.com/Humor/Cats/Sunbathing.htm")
+             (width "137"))))
+          " "
+          " "
+          " ")))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://en.wikipedia.org/wiki/Cat") (class "l"))
+          (em "Cat")
+          " - Wikipedia, the free encyclopedia"))
+        (div
+         (@ (class "s"))
+         "The "
+         (em "cat")
+         " (Felis catus), also known as the domestic "
+         (em "cat")
+         " or house "
+         (em "cat")
+         " to distinguish it from other felines, is a small predatory carnivorous species of "
+         (b "...")
+         (br)
+         (cite "en.wikipedia.org/wiki/" (b "Cat") " - 251k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:NqcQAYHQn6YJ:en.wikipedia.org/wiki/Cat+cats&amp;hl=en&amp;ct=clnk&amp;cd=5&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:en.wikipedia.org/wiki/Cat"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://cats.about.com/") (class "l"))
+          "About "
+          (em "Cats")
+          " - All About "
+          (em "cats")
+          " and kittens - "
+          (em "Cat")
+          " Care - "
+          (em "Cat")
+          " Behavior "
+          (b "...")))
+        (div
+         (@ (class "s"))
+         "All about "
+         (em "cats")
+         ": "
+         (em "cat")
+         " health issues, "
+         (em "cat")
+         " names, caring for "
+         (em "cats")
+         ", choosing "
+         (em "cat")
+         " food , "
+         (em "cat")
+         " behavior problems, pregnant "
+         (em "cats")
+         ", kitten care, getting a new "
+         (em "cat")
+         ", "
+         (b "...")
+         (br)
+         (cite (b "cats") ".about.com/ - 31k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:s5w5ToogjQEJ:cats.about.com/+cats&amp;hl=en&amp;ct=clnk&amp;cd=6&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href "/search?hl=en&amp;ie=UTF-8&amp;q=related:cats.about.com/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://icanhascheezburger.com/") (class "l"))
+          "Lolcats �n� Funny  Pictures of "
+          (em "Cats")
+          " - I Can Has Cheezburger?"))
+        (div
+         (@ (class "s"))
+         "Lolcats "
+         "'"
+         "n"
+         "'"
+         " Funny Pictures of "
+         (em "Cats")
+         " - I Can Has Cheezburger? the home of lol "
+         (em "cats")
+         " and lol* (other animals). All  of our lolcats and lol*whatevers are made by "
+         (b "...")
+         (br)
+         (cite "icanhascheezburger.com/ - 122k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:t4RRsR0OCCwJ:icanhascheezburger.com/+cats&amp;hl=en&amp;ct=clnk&amp;cd=7&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:icanhascheezburger.com/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@
+           (href
+            "http://news.google.com/news?q=cats&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;sa=X&amp;oi=news_group&amp;resnum=8&amp;ct=title"))
+          "News results for "
+          (em "cats")))
+        (table
+         (@ (class "ts"))
+         (tr
+          (td
+           (@
+            (valign "top")
+            (style
+             "padding-top:5px;padding-right:10px;font-size:78%;line-height:normal;width:80px;text-align:center"))
+           (a
+            (@
+             (href
+              "/url?q=http://www.sportinglife.com/football/premiership/news/story_get.cgi%3FSTORY_NAME%3Dsoccer/08/12/07/SOCCER_Sunderland_Nightlead.html%26TEAMHD%3Dpremiership&amp;sa=X&amp;oi=news_group&amp;resnum=8&amp;ct=image&amp;usg=AFQjCNFCygdn8ujnB5nc-mzMrQvXei7tGw")
+             (style "text-decoration:none"))
+            (img
+             (@
+              (src
+               "http://news.google.com/news?q=cats&amp;um=1&amp;ie=UTF-8&amp;imgefp=Brpbm1qCo6cJ&amp;imgurl=images.sportinglife.com/08/12/330/Manchester-United-v-Sunderland-Ricky-Sbragia_1587888.jpg")
+              (alt "")
+              (border "1")
+              (width "80")
+              (height "60")))
+            (br)
+            (span (@ (style "text-decoration:underline")))))
+          (td
+           (@ (valign "top") (style "padding-top:3px"))
+           (a
+            (@
+             (href
+              "http://www.sportinglife.com/football/premiership/news/story_get.cgi?STORY_NAME=soccer/08/12/07/SOCCER_Sunderland_Nightlead.html&amp;TEAMHD=premiership")
+             (class "l"))
+            "BLACK "
+            (em "CATS")
+            " MUST PROSPER AT HOME")
+           " - "
+           (nobr (span (@ (class "f")) "11 hours ago"))
+           (br)
+           (div
+            (@ (class "s"))
+            (b "...")
+            " Sbragia must try to maintain focus within the Black "
+            (em "Cats")
+            " squad and build them up for next Saturday"
+            "'"
+            "s crunch encounter with West Brom at the Stadium of "
+            (b "..."))
+           (span
+            (@ (class "gl"))
+            (cite "Sportinglife.com")
+            " - "
+            (a
+             (@
+              (href
+               "http://news.google.com/news?q=cats&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;ncl=1277389599&amp;sa=X&amp;oi=news_result&amp;resnum=8&amp;ct=more-results&amp;cd=1"))
+             "1703 related articles"
+             " "
+             "&raquo;"))
+           (br)
+           (div
+            (@ (class "s"))
+            (a
+             (@
+              (href
+               "http://www.google.com/hostednews/ukpress/article/ALeqM5g5CkgK1uifKkC8dXimLa0bOb0sbQ")
+              (class "l"))
+             "Late Vidic strike sinks Black "
+             (em "Cats"))
+            " - "
+            (span
+             (@ (class "gl"))
+             (cite "The Press Association")
+             " - "
+             (a
+              (@
+               (href
+                "http://news.google.com/news?q=cats&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;ncl=1278112422&amp;sa=X&amp;oi=news_result&amp;resnum=9&amp;ct=more-results&amp;cd=1"))
+              "347 related articles"
+              " "
+              "&raquo;")))
+           (div
+            (@ (class "s"))
+            (a
+             (@
+              (href
+               "http://soccernet.espn.go.com/news/story?id=599555&amp;sec=england&amp;cc=5901")
+              (class "l"))
+             "Curbishley keen on Black "
+             (em "Cats")
+             " post")
+            " - "
+            (span
+             (@ (class "gl"))
+             (cite "ESPN")
+             " - "
+             (a
+              (@
+               (href
+                "http://news.google.com/news?q=cats&amp;um=1&amp;ie=UTF-8&amp;hl=en&amp;ncl=1278449753&amp;sa=X&amp;oi=news_result&amp;resnum=10&amp;ct=more-results&amp;cd=1"))
+              "127 related articles"
+              " "
+              "&raquo;")))))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://www.cats.com/") (class "l"))
+          (em "Cats")
+          ", "
+          (em "Cat")
+          " Adoption, "
+          (em "Cat")
+          " Care at "
+          (em "Cats")
+          ".com"))
+        (div
+         (@ (class "s"))
+         "Ask questions and share information about  "
+         (em "cats")
+         ", "
+         (em "cat")
+         " adoption, "
+         (em "cat")
+         " care, "
+         (em "cat")
+         " health and all things feline at "
+         (em "Cats")
+         ".com."
+         (br)
+         (cite "www." (b "cats") ".com/ - 35k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:KA4mJIQtk8cJ:www.cats.com/+cats&amp;hl=en&amp;ct=clnk&amp;cd=11&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@ (href "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.cats.com/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://www.nationalgeographic.com/cats/") (class "l"))
+          "National Geographic: "
+          (em "Cats")))
+        (div
+         (@ (class "s"))
+         "Join the Project "
+         (em "Cat")
+         " design team as they hone the blueprints for the "
+         "'"
+         "perfect predator"
+         "'"
+         " a mammal that can thrive in almost any habitat on earth."
+         (br)
+         (cite "www.nationalgeographic.com/" (b "cats") "/ - 6k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:Lv9d3PDeoeAJ:www.nationalgeographic.com/cats/+cats&amp;hl=en&amp;ct=clnk&amp;cd=12&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.nationalgeographic.com/cats/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://www.charmeck.org/Departments/CATS/") (class "l"))
+          (em "C.A.T.S.")))
+        (div
+         (@ (class "s"))
+         "Provides public transportation services  to the Charlotte Metro Area, including service to Gastonia and  Rock Hill. Mission statement, information on services "
+         (b "...")
+         (br)
+         (cite "www.charmeck.org/Departments/" (b "CATS") "/ - 40k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:qgmuuJRBNDEJ:www.charmeck.org/Departments/CATS/+cats&amp;hl=en&amp;ct=clnk&amp;cd=13&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.charmeck.org/Departments/CATS/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@
+           (href "http://www.ferryhalim.com/orisinal/g3/cats.htm")
+           (class "l"))
+          "Orisinal.com - "
+          (em "Cats")))
+        (div
+         (@ (class "s"))
+         "Ferry Halim - Orisinal arts collection. Simply relaxing experience for the soul. Soothing music and  graphics, beautiful atmosphere."
+         (br)
+         (cite "www.ferryhalim.com/orisinal/g3/" (b "cats") ".htm - 3k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:iSiUbodo6UgJ:www.ferryhalim.com/orisinal/g3/cats.htm+cats&amp;hl=en&amp;ct=clnk&amp;cd=14&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.ferryhalim.com/orisinal/g3/cats.htm"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://www.i-love-cats.com/") (class "l"))
+          (em "Cat")
+          ", "
+          (em "Cats")
+          ", "
+          (em "Cat")
+          " Names, "
+          (em "Cat")
+          " Pictures =Feline Paradise=  I-Love-"
+          (em "Cats")
+          ".com"))
+        (div
+         (@ (class "s"))
+         "All you could ever want to know about "
+         (em "cats")
+         "! Get tons of free feline stuff, see cute "
+         (em "cats")
+         " pictures, view "
+         (em "cat")
+         " names, learn about "
+         (em "cat")
+         " breeds, "
+         (em "cat")
+         " health and so "
+         (b "...")
+         (br)
+         (cite "www.i-love-" (b "cats") ".com/ - 21k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:mgJ8B-xjPQoJ:www.i-love-cats.com/+cats&amp;hl=en&amp;ct=clnk&amp;cd=15&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.i-love-cats.com/"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@ (href "http://www.petplace.com/cats.aspx") (class "l"))
+          (em "Cat")
+          " Health Questions - "
+          (em "Cat")
+          " Care - "
+          (em "Cats")
+          " and Kittens"))
+        (div
+         (@ (class "s"))
+         (em "Cat")
+         " Health Questions - PetPlace offer "
+         (em "cat")
+         " care questions and advice for "
+         (em "cats")
+         " and kittens of all varieties and ages."
+         (br)
+         (cite "www.petplace.com/" (b "cats") ".aspx - 68k - ")
+         (span
+          (@ (class "gl"))
+          (a
+           (@
+            (href
+             "http://209.85.173.132/search?q=cache:NWfYVkMeFVwJ:www.petplace.com/cats.aspx+cats&amp;hl=en&amp;ct=clnk&amp;cd=16&amp;gl=us&amp;ie=UTF-8"))
+           "Cached")
+          " - "
+          (a
+           (@
+            (href
+             "/search?hl=en&amp;ie=UTF-8&amp;q=related:www.petplace.com/cats.aspx"))
+           "Similar pages"))))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@
+           (href
+            "http://books.google.com/books?q=cats&amp;source=bll&amp;sa=X&amp;oi=book_group&amp;resnum=17&amp;ct=title&amp;cad=bottom-3results"))
+          "Book results for "
+          (em "cats")))
+        (div
+         (@ (style "padding:2px 0"))
+         (a
+          (@
+           (href
+            "http://books.google.com/books?hl=en&amp;id=D1wZuTutJbwC&amp;dq=cats&amp;printsec=frontcover&amp;source=bll&amp;ots=rLQuxNgU1z&amp;sig=MAzFvVYPuYr9V7Pau_PzDKGDMdI&amp;sa=X&amp;oi=book_result&amp;resnum=17&amp;ct=result")
+           (class "l"))
+          "The "
+          (em "Cat")
+          " and the Human Imagination: Feline ...")
+         " - "
+         (span (@ (class "a")) "by Katharine M. Rogers")
+         " - "
+         (span (@ (class "f")) "232 pages"))
+        (div
+         (@ (style "padding:2px 0"))
+         (a
+          (@
+           (href
+            "http://books.google.com/books?hl=en&amp;id=PEG4M6AFBlYC&amp;dq=cats&amp;printsec=frontcover&amp;source=bll&amp;ots=yqgJwXBRue&amp;sig=njx3wJfz_l4KNwqd7qWhVgNtu7A&amp;sa=X&amp;oi=book_result&amp;resnum=18&amp;ct=result")
+           (class "l"))
+          (em "Cats"))
+         " - "
+         (span (@ (class "a")) "by Seymour Simon")
+         " - "
+         (span (@ (class "f")) "40 pages")))
+       (li
+        (@ (class "g"))
+        (h3
+         (@ (class "r"))
+         (a
+          (@
+           (href
+            "http://video.google.com/videosearch?q=cats&amp;um=1&amp;ie=UTF-8&amp;sa=X&amp;oi=video_result_group&amp;resnum=19&amp;ct=title"))
+          "Video results for "
+          (em "cats")))
+        (table
+         (@ (class "ts"))
+         (tr
+          (td
+           (@ (width "280") (valign "top"))
+           (div
+            (@ (style "margin-top:8px"))
+            (table
+             (@ (class "ts") (style "width:auto"))
+             (tr
+              (td
+               (@ (valign "top") (style "padding-right:7px"))
+               (a
+                (@
+                 (href
+                  "/url?q=http://www.youtube.com/watch%3Fv%3DnTasT5h0LEg&amp;sa=X&amp;oi=video_result&amp;resnum=19&amp;ct=thumbnail&amp;usg=AFQjCNGD7FOlpnNcaLmak6Pg2VvuOK58zw"))
+                (img
+                 (@
+                  (src "http://img.youtube.com/vi/nTasT5h0LEg/2.jpg")
+                  (width "80")
+                  (height "60")
+                  (border "1")
+                  (alt "")))
+                (div
+                 (@
+                  (style "margin-top:-26px;margin-right:4px;text-align:right"))
+                 (img
+                  (@
+                   (src "/images/icons/sectionized_ui/play_a.gif")
+                   (alt "")
+                   (height "20")
+                   (width "20")
+                   (style
+                    "opacity:.88;-moz-opacity:.88;filter:alpha(opacity=88)")
+                   (border "0"))))))
+              (td
+               (@ (valign "top") (style "padding-right:3px"))
+               (a
+                (@
+                 (href "http://www.youtube.com/watch?v=nTasT5h0LEg")
+                 (class "l"))
+                "Funny "
+                (em "Cats"))
+               (br)
+               (font (@ (color "#666666")) "2 min 45 sec")
+               (br)
+               (cite "www.youtube.com"))))))
+          (td
+           (@ (width "280") (valign "top"))
+           (div
+            (@ (style "margin-top:8px"))
+            (table
+             (@ (class "ts") (style "width:auto"))
+             (tr
+              (td
+               (@ (valign "top") (style "padding-right:7px"))
+               (a
+                (@
+                 (href
+                  "/url?q=http://www.youtube.com/watch%3Fv%3D1JynBEX_kg8&amp;sa=X&amp;oi=video_result&amp;resnum=20&amp;ct=thumbnail&amp;usg=AFQjCNGDjpx98V6VN1p-8_maOJDltT85sA"))
+                (img
+                 (@
+                  (src "http://img.youtube.com/vi/1JynBEX_kg8/2.jpg")
+                  (width "80")
+                  (height "60")
+                  (border "1")
+                  (alt "")))
+                (div
+                 (@
+                  (style "margin-top:-26px;margin-right:4px;text-align:right"))
+                 (img
+                  (@
+                   (src "/images/icons/sectionized_ui/play_a.gif")
+                   (alt "")
+                   (height "20")
+                   (width "20")
+                   (style
+                    "opacity:.88;-moz-opacity:.88;filter:alpha(opacity=88)")
+                   (border "0"))))))
+              (td
+               (@ (valign "top") (style "padding-right:3px"))
+               (a
+                (@
+                 (href "http://www.youtube.com/watch?v=1JynBEX_kg8")
+                 (class "l"))
+                "Re: "
+                (em "Cat")
+                " Talking, Translation")
+               (br)
+               (font (@ (color "#666666")) "1 min 3 sec")
+               (br)
+               (cite "www.youtube.com"))))))))))
+      (li (@ (class "g"))))
+     (li
+      (@ (class "g"))
+      (div
+       (@ (class "e"))
+       (table
+        (@
+         (cellspacing "0")
+         (class "ts std")
+         (id "brs")
+         (style "padding:0 0 1em"))
+        (caption
+         (@ (class "med nobr") (style "padding-bottom:6px;text-align:left"))
+         "Searches related to: "
+         (b "cats"))
+        (tr
+         (td
+          (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+          (a
+           (@
+            (href
+             "/search?hl=en&ie=UTF-8&q=ragdoll+cats&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=1"))
+           (b "ragdoll")
+           " cats"))
+         (td
+          (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+          (a
+           (@
+            (href
+             "/search?hl=en&ie=UTF-8&q=savannah+cats&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=2"))
+           (b "savannah")
+           " cats"))
+         (td
+          (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+          (a
+           (@
+            (href
+             "/search?hl=en&ie=UTF-8&q=cats+pictures&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=3"))
+           "cats "
+           (b "pictures")))
+         (td
+          (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+          (a
+           (@
+            (href
+             "/search?hl=en&ie=UTF-8&q=cats+breeds&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=4"))
+           "cats "
+           (b "breeds"))
+          (tr
+           (td
+            (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+            (a
+             (@
+              (href
+               "/search?hl=en&ie=UTF-8&q=facts+about+cats&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=5"))
+             (b "facts about")
+             " cats"))
+           (td
+            (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+            (a
+             (@
+              (href
+               "/search?hl=en&ie=UTF-8&q=cat+health&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=6"))
+             (b "cat health")))
+           (td
+            (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+            (a
+             (@
+              (href
+               "/search?hl=en&ie=UTF-8&q=cat+care&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=7"))
+             (b "cat care")))
+           (td
+            (@ (style "padding:0 0 7px;padding-right:34px;vertical-align:top"))
+            (a
+             (@
+              (href
+               "/search?hl=en&ie=UTF-8&q=cat+games&revid=1202504391&sa=X&oi=revisions_inline&resnum=1&ct=broad-revision&cd=8"))
+             (b "cat games"))))))))))
+    (li
+     (@ (class "g"))
+     (br (@ (clear "all")))
+     (table
+      (@
+       (id "nav")
+       (align "center")
+       (style
+        "border-collapse:collapse;margin:auto;text-align:center;direction:ltr;margin-bottom:1.4em"))
+      (tr
+       (@ (valign "top"))
+       (td
+        (@ (class "b"))
+        (img
+         (@
+          (src "nav_first.gif")
+          (width "18")
+          (height "26")
+          (alt "")
+          (border "0")))
+        (br))
+       (td
+        (@ (class "cur"))
+        (img
+         (@
+          (src "nav_current.gif")
+          (width "16")
+          (height "26")
+          (alt "")
+          (border "0")))
+        (br)
+        "1")
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=10&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "2"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=20&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "3"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=30&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "4"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=40&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "5"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=50&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "6"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=60&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "7"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=70&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "8"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=80&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "9"))
+       (td
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=90&amp;sa=N"))
+         (img
+          (@
+           (src "nav_page.gif")
+           (width "16")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "10"))
+       (td
+        (@ (class "b"))
+        (a
+         (@
+          (href "/search?hl=en&amp;ie=UTF-8&amp;q=cats&amp;start=10&amp;sa=N"))
+         (img
+          (@
+           (src "nav_next.gif")
+           (width "100")
+           (height "26")
+           (alt "")
+           (border "0")))
+         (br)
+         "Next"))))
+     (div (@ (style "height:1px;line-height:0")))
+     (div
+      (@ (style "text-align:center;margin-top:1.4em") (class "clr"))
+      (div
+       (@ (id "bsf") (style "padding:1.8em 0;margin-top:0"))
+       (form
+        (@ (method "get") (action "/search"))
+        (div
+         (input
+          (@
+           (type "text")
+           (name "q")
+           (size "41")
+           (maxlength "2048")
+           (value "cats")
+           (title "Search"))
+          " "
+          (input
+           (@ (type "submit") (name "btnG") (value "Search"))
+           (input
+            (@ (type "hidden") (name "hl") (value "en"))
+            (input
+             (@ (type "hidden") (name "ie") (value "ISO-8859-1"))
+             (input (@ (type "hidden") (name "sa") (value "2"))))
+            (input (@ (type "hidden") (name "sa") (value "2"))))
+           (input
+            (@ (type "hidden") (name "sa") (value "2"))
+            (p
+             (@ (style "margin:1.2em 0 0"))
+             (a
+              (@
+               (href
+                "/swr?q=cats&amp;hl=en&amp;ie=UTF-8&amp;swrnum=150000000"))
+              "Search"
+              " "
+              "within"
+              " "
+              "results")
+             " | "
+             (a
+              (@ (href "/language_tools?q=cats&amp;hl=en&amp;ie=UTF-8"))
+              "Language Tools")
+             " | "
+             (a (@ (href "/intl/en/help.html")) "Search" " " "Tips")
+             " | "
+             (a
+              (@
+               (href "/quality_form?q=cats&amp;hl=en&amp;ie=UTF-8")
+               (target "_blank"))
+              "Dissatisfied? Help us improve")
+             " | "
+             (a (@ (href "/experimental/")) "Try Google Experimental")
+             (div))
+            (p
+             (a (@ (href "/")) "Google" " " "Home")
+             " - "
+             (a (@ (href "/intl/en/ads/")) "Advertising" " " "Programs")
+             " - "
+             (a (@ (href "/services/")) "Business Solutions")
+             " - "
+             (a (@ (href "/intl/en/privacy.html")) "Privacy")
+             " - "
+             (a (@ (href "/intl/en/about.html")) "About Google"))))
+          (input (@ (type "hidden") (name "sa") (value "2")))))))))))))
