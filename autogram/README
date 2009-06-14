@@ -4,11 +4,14 @@ http://brainyplanet.com/index.php/SRL%20Solution describes the
 inspiration -- from Doug Hofstadter's "Metamagical Themas"
 
 http://www.cs.indiana.edu/~tanaka/GEB/pangram.txt has some example
-programs in Perl and C
+programs in Perl and C.  See in particular the section called
+"randomized Robisonizing"; I should try that.
 
+Basic overview:
 http://info.lboro.ac.uk/departments/ma/gallery/selfref/
 
 Even though that site describes almost exactly this, I wrote this long
 before I saw that site.
 
+An exhaustive list:
 http://home.att.net/~rhhardin/decimalv2.html
