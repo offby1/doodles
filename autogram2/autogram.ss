@@ -58,7 +58,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
             (number->english count)
             char
             plural-marker)))
-(trace char/count->text)
+
 ;; This too might be worth memoizing
 (define (pair->survey char count s)
   (for/fold ([result (make-immutable-hash '())])
@@ -94,16 +94,29 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       ([d (in-list dicts)]
        [(k v) (in-dict d)])
       (hash-update result k (cut + v <>) 0)))
-
-(define-binary-check (check-dicts-equal actual expected)
-  (and (equal? (dict-count actual)
-               (dict-count expected))
+
+(define (dicts-equal? d1 d2)
+  (and (equal? (dict-count d1)
+               (dict-count d2))
        (let/ec return
          (dict-for-each
-          actual
+          d1
           (lambda (k v)
-            (dict-ref expected k (lambda () (return #f))))))
+            (when (not (equal? v (dict-ref d2 k (lambda () (return #f)))))
+              (return #f)))))
        #t))
+
+
+(define-test-suite dicts-equal?-tests
+  (check-false (dicts-equal? '((#\a . 4) (#\b . 0) (#\n . 3))
+                             '((#\a . 5) (#\b . 1) (#\n . 4))))
+  (check-false (dicts-equal? '((#\a . 4))
+                             '()))
+  (check-false (dicts-equal? '()
+                             '((#\a . 4)))))
+
+(define-binary-check (check-dicts-equal actual expected)
+  (dicts-equal? actual expected))
 
 (define-test-suite template->list-tests
   (check-equal? (template->list "hey you")           '("hey you"))
@@ -141,9 +154,21 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       (let ((d3  '((b . 1) (c . 1))))
         (check-dicts-equal '((a . 1) (b . 3) (c . 1))
                            (dict-add d2 d3))))))
+(define (update-until-stable t)
+  (let ([orig (template->survey t)])
+    (let loop ([current orig])
+      (printf "~a~%" current)
+      (let ([new (dict-add orig (update-survey current))])
+        (if (dicts-equal? new current)
+            (combine t new)
+            (loop new ))))))
+
+(define (exit-if-non-zero n)
+  (when (not (zero? n))
+    (exit n)))
 
 (define (main . args)
-  (exit
+  (exit-if-non-zero
    (run-tests
     (test-suite
      "eva thang"
@@ -152,6 +177,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      template->list-tests
      combine-tests
      dict-add-tests
+     dicts-equal?-tests
     )
-    'verbose)))
+    'verbose))
+  (update-until-stable  "I have {a} and {b} and another {n}"))
+
 (provide template->survey main)
