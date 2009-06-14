@@ -34,12 +34,37 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
            (loop result
                  (cons (read-char in) current-string)))))))))
 
+(define (survey-template t)
+  (make-immutable-hash '((#\b . 0)
+                         (#\a . 2))))
+
 (define-test-suite parse-template-tests
 
   (check-equal? (parse-template "hey you")            '("hey you"))
   (check-equal? (parse-template "I have {a}")         '("I have" #\a))
   (check-equal? (parse-template "I have {a} and {b}") '("I have" #\a "and" #\b)))
 
+(define-binary-check (check-tables-equal actual expected)
+  (and (equal? (hash-count actual)
+               (hash-count expected))
+       (let/ec return
+         (hash-for-each
+          actual
+          (lambda (k v)
+            (hash-ref expected k (lambda () (return #f))))))
+       #t))
+
+(define-test-suite survey-tests
+  (let ([t '("I have" #\a "and" #\b)])
+    (check-tables-equal (survey-template t) (make-immutable-hash '((#\a . 2)
+                                                                   (#\b . 0))))))
+
 (define (main . args)
-  (exit (run-tests parse-template-tests 'verbose)))
+  (exit
+   (run-tests
+    (test-suite
+     "eva thang"
+     parse-template-tests
+     survey-tests)
+    'verbose)))
 (provide parse-template main)
