@@ -10,40 +10,37 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  schemeunit/text-ui
  srfi/13)
 
-(define/contract (parse-template str)
-  (-> string? (listof (or/c string? char?)))
+(define/contract (template->survey str)
+  (-> string? (and/c hash? immutable?))
+  ;; First find the characters of interest -- those inside curly
+  ;; braces.
+  ;; Then return a dictionary that counts _just those characters_ in
+  ;; the input string.
   (let ([in (open-input-string str)])
-    (reverse
-     (let loop ((result '())
-                (current-string '()))
-       (define (incorporate-current-string)
-         (let ([str (string-trim-both (list->string (reverse current-string)))])
-           (if (equal? "" str)
-               result
-               (cons str result))))
-       (let ((ch (peek-char in)))
-         (cond
-          ((eof-object? ch)
-           (incorporate-current-string))
-          ((char=? ch #\{)
-           (let ((char-with-braces (read in)))
-             (loop (cons (string-ref (symbol->string (car char-with-braces)) 0)
-                         (incorporate-current-string))
-                   '())))
-          (else
-           (loop result
-                 (cons (read-char in) current-string)))))))))
+    (let loop ((chars-of-interest '())
+               (current-string '())
+               (accumulated-string '()))
+      (let ((ch (peek-char in)))
+        (cond
+         ((eof-object? ch)
+          (for/fold ([table (make-immutable-hash (map (lambda (ch) (cons ch 0))
+                                                      chars-of-interest))])
+              ([ch (in-list (flatten accumulated-string))])
+              (if (member ch chars-of-interest)
+                  (hash-update table ch add1 0)
+                  table)))
+         ((char=? ch #\{)
+          (let ((char-with-braces (read in)))
+            (loop (cons (string-ref (symbol->string (car char-with-braces)) 0)
+                        chars-of-interest)
+                  '()
+                  (cons current-string accumulated-string))))
+         (else
+          (loop chars-of-interest
+                (cons (read-char in) current-string)
+                accumulated-string)))))))
 
-(define (survey-template t)
-  (make-immutable-hash '((#\b . 0)
-                         (#\a . 2))))
 
-(define-test-suite parse-template-tests
-
-  (check-equal? (parse-template "hey you")            '("hey you"))
-  (check-equal? (parse-template "I have {a}")         '("I have" #\a))
-  (check-equal? (parse-template "I have {a} and {b}") '("I have" #\a "and" #\b)))
-
 (define-binary-check (check-dicts-equal actual expected)
   (and (equal? (dict-count actual)
                (dict-count expected))
@@ -54,17 +51,20 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
             (dict-ref expected k (lambda () (return #f))))))
        #t))
 
-(define-test-suite survey-tests
-  (let ([t '("I have" #\a "and" #\b)])
-    (check-dicts-equal (survey-template t) (make-immutable-hash '((#\a . 2)
-                                                                   (#\b . 0))))))
+(define-test-suite template->survey-tests
+
+  (check-equal? (template->survey "hey you")           (make-immutable-hash '()))
+  (check-equal? (template->survey "I have {a}")        (make-immutable-hash '((#\a . 1))))
+  (check-equal? (template->survey "I have {a} and {b}")(make-immutable-hash '((#\a . 2) (#\b . 0))))
+  (check-equal? (template->survey "I have {a} and {b} and another {b}")
+                (make-immutable-hash '((#\a . 4) (#\b . 0)))))
 
 (define (main . args)
   (exit
    (run-tests
     (test-suite
      "eva thang"
-     parse-template-tests
-     survey-tests)
+     template->survey-tests
+    )
     'verbose)))
-(provide parse-template main)
+(provide template->survey main)
