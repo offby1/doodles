@@ -11,35 +11,40 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  srfi/13
  (planet neil/numspell/numspell))
 
-(define/contract (template->survey str)
-  (-> string? (and/c hash? immutable?))
-  ;; First find the characters of interest -- those inside curly
-  ;; braces.
-  ;; Then return a dictionary that counts _just those characters_ in
-  ;; the input string.
+(define/contract (template->list str)
+  (-> string? (listof (or/c string? char?)))
   (let ([in (open-input-string str)])
-    (let loop ((chars-of-interest '())
-               (current-string '())
-               (accumulated-string '()))
+    (let loop ((result '())
+               (current-string '()))
+
+      (define (incorporate-current-string)
+        (if (null? current-string)
+            result
+            (cons (list->string (reverse current-string)) result)))
+
       (let ((ch (peek-char in)))
         (cond
          ((eof-object? ch)
-          (for/fold ([table (make-immutable-hash (map (lambda (ch) (cons ch 0))
-                                                      chars-of-interest))])
-              ([ch (in-list (flatten accumulated-string))])
-              (if (member ch chars-of-interest)
-                  (hash-update table ch add1 0)
-                  table)))
+          (reverse (incorporate-current-string)))
          ((char=? ch #\{)
           (let ((char-with-braces (read in)))
             (loop (cons (string-ref (symbol->string (car char-with-braces)) 0)
-                        chars-of-interest)
-                  '()
-                  (cons current-string accumulated-string))))
+                        (incorporate-current-string))
+                  '())))
          (else
-          (loop chars-of-interest
-                (cons (read-char in) current-string)
-                accumulated-string)))))))
+          (loop result
+                (cons (read-char in) current-string))))))))
+
+(define/contract (template->survey str)
+  (-> string? (and/c hash? immutable?))
+  (let-values ([(strings chars)
+                (partition string? (template->list str))])
+    (for/fold ([table (make-immutable-hash (map (lambda (ch) (cons ch 0))
+                                                chars))])
+        ([ch (in-string (apply string-append (flatten strings)))])
+        (if (member ch chars)
+            (hash-update table ch add1 0)
+            table))))
 
 ;; This might be worth memoizing.  No contract, since I think that
 ;; slows it down greatly
@@ -53,7 +58,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
               (number->english count)
               char
               plural-marker))]))
-
+(define (kv->text k v)
+  (pair->text (cons k v)))
 
 (define-binary-check (check-dicts-equal actual expected)
   (and (equal? (dict-count actual)
@@ -64,6 +70,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
           (lambda (k v)
             (dict-ref expected k (lambda () (return #f))))))
        #t))
+
+(define-test-suite template->list-tests
+  (check-equal? (template->list "hey you")           '("hey you"))
+  (check-equal? (template->list "I have {a}")        '("I have " #\a))
+  (check-equal? (template->list "I have {a} and {b}")'("I have " #\a " and " #\b)))
 
 (define-test-suite template->survey-tests
 
@@ -84,6 +95,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      "eva thang"
      template->survey-tests
      pair->text-tests
+     template->list-tests
     )
     'verbose)))
 (provide template->survey main)
