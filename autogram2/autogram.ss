@@ -9,6 +9,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  schemeunit
  schemeunit/text-ui
  srfi/13
+ srfi/26
  (planet neil/numspell/numspell))
 
 (define/contract (template->list str)
@@ -73,8 +74,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
           (cons datum result))
          (else
           (cons (kv->text datum (dict-ref survey datum))
-                result)))
-      ))))
+                result)))))))
+
+(define (dict-add . dicts)
+  (for*/fold ([result (make-immutable-hash '())])
+      ([d (in-list dicts)]
+       [(k v) (in-dict d)])
+      (hash-update result k (cut + v <>) 0)))
 
 (define-binary-check (check-dicts-equal actual expected)
   (and (equal? (dict-count actual)
@@ -110,6 +116,19 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                                                     (#\z . 3))))
                   "I have one a, two b's, and three z's")))
 
+(define-test-suite dict-add-tests
+  (let ((identity (make-immutable-hash '())))
+    (check-dicts-equal identity (dict-add))
+    (check-dicts-equal identity (dict-add identity))
+    (check-dicts-equal identity (dict-add identity identity))
+    (let ((d2 '((a . 1) (b . 2))))
+      (check-dicts-equal d2 (dict-add identity d2))
+      (check-dicts-equal '((a . 2) (b . 4))
+                         (dict-add d2 d2))
+      (let ((d3  '((b . 1) (c . 1))))
+        (check-dicts-equal '((a . 1) (b . 3) (c . 1))
+                           (dict-add d2 d3))))))
+
 (define (main . args)
   (exit
    (run-tests
@@ -119,6 +138,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      pair->text-tests
      template->list-tests
      combine-tests
+     dict-add-tests
     )
     'verbose)))
 (provide template->survey main)
