@@ -10,7 +10,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  schemeunit/text-ui
  srfi/13
  srfi/26
- (planet neil/numspell/numspell))
+ (planet neil/numspell/numspell)
+ mzlib/trace)
 
 (define/contract (template->list str)
   (-> string? (listof (or/c string? char?)))
@@ -49,18 +50,30 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 ;; This might be worth memoizing.  No contract, since I think that
 ;; slows it down greatly
-(define pair->text
-  (match-lambda
-   [(cons char count)
-    (let ([plural-marker (if (= 1 count)
-                             ""
-                             "'s")])
-      (format "~a ~a~a"
-              (number->english count)
-              char
-              plural-marker))]))
-(define (kv->text k v)
-  (pair->text (cons k v)))
+(define (char/count->text char count)
+  (let ([plural-marker (if (= 1 count)
+                           ""
+                           "'s")])
+    (format "~a ~a~a"
+            (number->english count)
+            char
+            plural-marker)))
+(trace char/count->text)
+;; This too might be worth memoizing
+(define (pair->survey char count s)
+  (for/fold ([result (make-immutable-hash '())])
+      ([ch (in-string (char/count->text char count))])
+      (if (hash-has-key? s ch)
+          (hash-update result ch add1 0)
+          result)))
+
+(define (update-survey s)
+  (apply
+   dict-add
+   (hash-map
+    s
+    (lambda (ch count)
+      (pair->survey ch count s)))))
 
 (define/contract (combine t survey)
   (string? dict? . -> . string?)
@@ -73,7 +86,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          ((string? datum)
           (cons datum result))
          (else
-          (cons (kv->text datum (dict-ref survey datum))
+          (cons (char/count->text datum (dict-ref survey datum))
                 result)))))))
 
 (define (dict-add . dicts)
@@ -105,9 +118,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (template->survey "I have {a} and {b} and another {b}")
                 (make-immutable-hash '((#\a . 4) (#\b . 0)))))
 
-(define-test-suite pair->text-tests
-  (check-equal? (pair->text '(#\a . 0))  "zero a's")
-  (check-equal? (pair->text '(#\a . 1))  "one a"))
+(define-test-suite char/count->text-tests
+  (check-equal? (char/count->text #\a  0)  "zero a's")
+  (check-equal? (char/count->text #\a  1)  "one a"))
 
 (define-test-suite combine-tests
   (let ([t "I have {a}, {b}, and {z}"])
@@ -135,7 +148,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (test-suite
      "eva thang"
      template->survey-tests
-     pair->text-tests
+     char/count->text-tests
      template->list-tests
      combine-tests
      dict-add-tests
