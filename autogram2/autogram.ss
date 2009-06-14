@@ -45,8 +45,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define pair->text
   (match-lambda
    [(cons char count)
-    (format "~a ~a's" (number->english count) char)]
-   ))
+    (let ([plural-marker (if (= 1 count)
+                             ""
+                             "'s")])
+      (format "~a ~a~a"
+              (number->english count)
+              char
+              plural-marker))]))
 
 
 (define-binary-check (check-dicts-equal actual expected)
@@ -68,7 +73,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                 (make-immutable-hash '((#\a . 4) (#\b . 0)))))
 
 (define-test-suite pair->text-tests
-  (check-equal? (pair->text '(#\a . 0))  "zero a's"))
+  (check-equal? (pair->text '(#\a . 0))  "zero a's")
+  (check-equal? (pair->text '(#\a . 1))  "one a"))
 
 (define (main . args)
   (exit
