@@ -60,6 +60,21 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
               plural-marker))]))
 (define (kv->text k v)
   (pair->text (cons k v)))
+
+(define/contract (combine t survey)
+  (string? dict? . -> . string?)
+  (apply
+   string-append
+   (reverse
+    (for/fold ([result '()])
+        ([datum  (in-list (template->list t))])
+        (cond
+         ((string? datum)
+          (cons datum result))
+         (else
+          (cons (kv->text datum (dict-ref survey datum))
+                result)))
+      ))))
 
 (define-binary-check (check-dicts-equal actual expected)
   (and (equal? (dict-count actual)
@@ -88,6 +103,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (pair->text '(#\a . 0))  "zero a's")
   (check-equal? (pair->text '(#\a . 1))  "one a"))
 
+(define-test-suite combine-tests
+  (let ([t "I have {a}, {b}, and {z}"])
+    (check-equal? (combine t (make-immutable-hash '((#\a . 1)
+                                                    (#\b . 2)
+                                                    (#\z . 3))))
+                  "I have one a, two b's, and three z's")))
+
 (define (main . args)
   (exit
    (run-tests
@@ -96,6 +118,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      template->survey-tests
      pair->text-tests
      template->list-tests
+     combine-tests
     )
     'verbose)))
 (provide template->survey main)
