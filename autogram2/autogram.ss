@@ -48,6 +48,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
             (hash-update table ch add1 0)
             table))))
 
+(define (spell-char ch)
+  (case ch
+    ((#\!) "exclamation point")
+    (else ch)))
+
 ;; This might be worth memoizing.  No contract, since I think that
 ;; slows it down greatly
 (define (char/count->text char count)
@@ -56,7 +61,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                            "'s")])
     (format "~a ~a~a"
             (number->english count)
-            char
+            (spell-char char)
             plural-marker)))
 
 ;; This too might be worth memoizing
@@ -154,14 +159,26 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       (let ((d3  '((b . 1) (c . 1))))
         (check-dicts-equal '((a . 1) (b . 3) (c . 1))
                            (dict-add d2 d3))))))
+
+(define (random-between a b)
+  (if (equal? a b)
+      a
+      (let ([m (min a b)]
+            [diff (abs (- a b))])
+        (+ a (random diff) 1))))
+
+(define (random-dict-between a b)
+  (for/fold ([result (make-immutable-hash '())])
+      ([(k va) (in-dict a)])
+      (hash-set result k (random-between (dict-ref b k) va))))
+
 (define (update-until-stable t)
   (let ([orig (template->survey t)])
     (let loop ([current orig])
-      (printf "~a~%" current)
       (let ([new (dict-add orig (update-survey current))])
         (if (dicts-equal? new current)
             (combine t new)
-            (loop new ))))))
+            (loop (random-dict-between new orig)))))))
 
 (define (exit-if-non-zero n)
   (when (not (zero? n))
@@ -180,6 +197,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      dicts-equal?-tests
     )
     'verbose))
-  (update-until-stable  "I have {a} and {b} and another {n}"))
+  (update-until-stable
+   ;; "I have {a}, {b}, and {q}, but only {z}!  How much do I hear for {!}?"
+   (apply string-append
+         (add-between
+          (map (cut format "{~a}" <>)
+               (build-list 26 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
+          ", "))
+                ))
 
 (provide template->survey main)
