@@ -172,13 +172,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       ([(k va) (in-dict a)])
       (hash-set result k (random-between (dict-ref b k) va))))
 
-(define (update-until-stable t)
+(define (update-until-stable t counter)
   (let ([orig (template->survey t)])
     (let loop ([current orig])
       (let ([new (dict-add orig (update-survey current))])
         (if (dicts-equal? new current)
             (combine t new)
-            (loop (random-dict-between new orig)))))))
+            (begin
+              (set-box! counter (add1 (unbox counter)))
+              (loop (random-dict-between new orig))))))))
 
 (define (exit-if-non-zero n)
   (when (not (zero? n))
@@ -195,15 +197,28 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      combine-tests
      dict-add-tests
      dicts-equal?-tests
-    )
+     )
     'verbose))
-  (update-until-stable
-   ;; "I have {a}, {b}, and {q}, but only {z}!  How much do I hear for {!}?"
-   (apply string-append
-         (add-between
-          (map (cut format "{~a}" <>)
-               (build-list 26 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
-          ", "))
-                ))
+  (let ([counter (box 0)])
+    (let-values ([(results cpu-ms real-ms gc-ms)
+                  (time-apply
+                   (lambda ()
+                     (with-handlers
+                         ([exn:break?
+                           (lambda (e)
+                             (printf "Ow!~%")
+                             'interrupted)
+                           ])
+                       (update-until-stable
+                        ;; "I have {a}, {b}, and {q}, but only {z}!  How much do I hear for {!}?"
+                        (apply string-append
+                               (add-between
+                                (map (cut format "{~a}" <>)
+                                     (build-list 26 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
+                                ", "))
+                        counter)))
+                   '())])
+      (printf "~a~%" (car results))
+      (printf "~a iterations in ~a ms" (unbox counter) cpu-ms))))
 
 (provide template->survey main)
