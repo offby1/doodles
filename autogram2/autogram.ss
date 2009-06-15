@@ -11,6 +11,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  srfi/13
  srfi/26
  (planet neil/numspell/numspell)
+ (planet dherman/memoize)
  mzlib/trace)
 
 (define/contract (template->list str)
@@ -51,6 +52,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (spell-char ch)
   (case ch
     ((#\!) "exclamation point")
+    ((#\;) "semi-colon")
+    ((#\:) "colon")
     (else ch)))
 
 ;; This might be worth memoizing.  No contract, since I think that
@@ -199,6 +202,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      dicts-equal?-tests
      )
     'verbose))
+  (random-seed 0)
   (let ([counter (box 0)])
     (let-values ([(results cpu-ms real-ms gc-ms)
                   (time-apply
@@ -210,15 +214,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                              'interrupted)
                            ])
                        (update-until-stable
-                        ;; "I have {a}, {b}, and {q}, but only {z}!  How much do I hear for {!}?"
-                        (apply string-append
-                               (add-between
-                                (map (cut format "{~a}" <>)
-                                     (build-list 26 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
-                                ", "))
+                        (format "I have ~a, and {z}.  Gosh!"
+                               (apply  string-append
+                                       (add-between
+                                        (map (cut format "{~a}" <>)
+                                             (build-list 25 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
+                                        ", ")))
                         counter)))
                    '())])
-      (printf "~a~%" (car results))
-      (printf "~a iterations in ~a ms" (unbox counter) cpu-ms))))
+      (printf "~s~%" (car results))
+      (printf "~a iterations in ~a ms: ~a/sec"
+              (unbox counter) cpu-ms
+              (exact->inexact (/ (unbox counter) (max 1 cpu-ms)))))))
 
 (provide template->survey main)
