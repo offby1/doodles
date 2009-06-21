@@ -18,6 +18,11 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
    (regexp-match #rx"(.*?)\000" ip)
    1))
 
+(define (skip-initial-newline bytes)
+  (if (= 10 (bytes-ref bytes 0))
+      (subbytes bytes 1)
+      bytes))
+
 (define (main . args)
   (let ([fn "yow.lines"])
     (call-with-input-file fn
@@ -44,9 +49,8 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
 
         (file-position ip (add1 (file-position ip)))
 
-        (display (bytes-until-next-nul ip))
+        (display (skip-initial-newline (bytes-until-next-nul ip)))
         (newline)
-        (flush-output)
-        ))))
+        (flush-output)))))
 
 (provide (all-defined-out))
