@@ -6,6 +6,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 (require
+ profile
  schemeunit
  schemeunit/text-ui
  srfi/13
@@ -68,7 +69,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
             plural-marker)))
 
 ;; This too might be worth memoizing
-(define (pair->survey char count s)
+(define/memo (pair->survey char count s)
   (for/fold ([result (make-immutable-hash '())])
       ([ch (in-string (char/count->text char count))])
       (if (hash-has-key? s ch)
@@ -203,28 +204,30 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      )
     'verbose))
   (random-seed 0)
-  (let ([counter (box 0)])
-    (let-values ([(results cpu-ms real-ms gc-ms)
-                  (time-apply
-                   (lambda ()
-                     (with-handlers
-                         ([exn:break?
-                           (lambda (e)
-                             (printf "Ow!~%")
-                             'interrupted)
-                           ])
-                       (update-until-stable
-                        (format "I have ~a, and {z}.  Gosh!"
-                               (apply  string-append
-                                       (add-between
-                                        (map (cut format "{~a}" <>)
-                                             (build-list 25 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
-                                        ", ")))
-                        counter)))
-                   '())])
-      (printf "~s~%" (car results))
-      (printf "~a iterations in ~a ms: ~a/sec"
-              (unbox counter) cpu-ms
-              (exact->inexact (/ (unbox counter) (max 1 cpu-ms)))))))
+  (profile-thunk
+   (lambda ()
+     (let ([counter (box 0)])
+       (let-values ([(results cpu-ms real-ms gc-ms)
+                     (time-apply
+                      (lambda ()
+                        (with-handlers
+                            ([exn:break?
+                              (lambda (e)
+                                (printf "Ow!~%")
+                                'interrupted)
+                              ])
+                          (update-until-stable
+                           (format "I have ~a, and {z}.  Gosh!"
+                                   (apply  string-append
+                                           (add-between
+                                            (map (cut format "{~a}" <>)
+                                                 (build-list 25 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
+                                            ", ")))
+                           counter)))
+                      '())])
+         (printf "~s~%" (car results))
+         (printf "~a iterations in ~a ms: ~a/sec"
+                 (unbox counter) cpu-ms
+                 (exact->inexact (/ (unbox counter) (max 1 cpu-ms)))))))))
 
 (provide template->survey main)
