@@ -6,19 +6,19 @@ exec  mzscheme  --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 
+;; From Robby Finder
+(define-syntax-rule (first-of-two-values e)
+  (let-values ([(x y) e]) x))
+
 (define (series x)
   (exact->inexact
-   (call-with-values
-       (lambda ()
-
-         (for/fold ([sum 0]
-                    [factor 1])
-             ([n (in-range 20)])
-             (values
-              (+ sum factor)
-              (* factor (/ x (add1 n))))))
-     (lambda (sum ignore-me)
-       sum))))
+   (first-of-two-values
+    (for/fold ([sum 0]
+               [factor 1])
+        ([n (in-range 20)])
+        (values
+         (+ sum factor)
+         (* factor (/ x (add1 n))))))))
 
 (define (main . args)
   (for ([arg args])
