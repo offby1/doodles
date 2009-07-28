@@ -1,0 +1,27 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+#$Id: v4-script-template.ss 6086 2009-06-14 20:14:28Z erich $
+exec  mzscheme  --require "$0" --main -- ${1+"$@"}
+|#
+
+#lang scheme
+
+(define (series x)
+  (exact->inexact
+   (call-with-values
+       (lambda ()
+
+         (for/fold ([sum 0]
+                    [factor 1])
+             ([n (in-range 20)])
+             (values
+              (+ sum factor)
+              (* factor (/ x (add1 n))))))
+     (lambda (sum ignore-me)
+       sum))))
+
+(define (main . args)
+  (for ([arg args])
+    (printf "~a => ~a~%" arg (series (string->number arg)))))
+
+(provide main)
