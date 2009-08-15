@@ -13,7 +13,6 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
          (lib "43.ss" "srfi"))
 
 (define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
-(define *alen* (string-length *the-alphabet*))
 (define c->n (lambda (c) (string-index *the-alphabet* (char-downcase c))))
 (define n->c (lambda (n) (string-ref   *the-alphabet* n)))
 
@@ -24,7 +23,7 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 ;; "rotate" the rotor, we only affect one of those lists.  That way,
 ;; to see how far it's been rotated, we can just compare the two
 ;; lists.
-(define-struct rotor (rotated original name) #:transparent)
+(define-struct rotor (rotated original) #:transparent)
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
        (rotor-original r)))
@@ -32,22 +31,17 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 (define (shuffled list)
   (sort list < #:key (lambda (_) (random)) #:cache-keys? #t))
 
-(define my-make-rotor
-  ;; This helps generate unique names for rotors.
-  (let ((rotors-made 0))
-    (lambda ()
-      ;; The lists are circular, which makes for easy rotation: just
-      ;; replace it with its cdr.
-      (let ((offsets (apply circular-list
-                            (shuffled (build-list *alen* values)))))
-        (begin0
-            (make-rotor offsets offsets rotors-made)
-          (set! rotors-made (add1 rotors-made)))))))
+(define (my-make-rotor)
+  ;; The lists are circular, which makes for easy rotation: just
+  ;; replace it with its cdr.
+  (let ((offsets (apply circular-list
+                        (shuffled (build-list (string-length *the-alphabet*) values)))))
+    (make-rotor offsets offsets )))
 
 (define (rotor-rotate r)
   (make-rotor
    (cdr (rotor-rotated r))
-   (rotor-original r) (rotor-name r)))
+   (rotor-original r) ))
 
 ;; Encrypt or decrypt NUMBER through R, by taking the car of the Nth
 ;; cdr, or searching for N.
@@ -100,9 +94,11 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
   (let loop ((e e))
     (let ((ch (read-char ip)))
       (when  (not (eof-object? ch))
-        (when (c->n ch)
-          (display (enigma-crypt e ch encrypt?) op))
-        (loop (enigma-advance e))))))
+        (if (c->n ch)
+          (begin
+            (display (enigma-crypt e ch encrypt?) op)
+            (loop (enigma-advance e)))
+          (loop e))))))
 
 (define (example plaintext)
   (define e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
