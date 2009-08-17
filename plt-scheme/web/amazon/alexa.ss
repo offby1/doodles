@@ -1,21 +1,21 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-(module alexa mzscheme
+#lang scheme
+
 (require (lib "trace.ss")
          (lib "cmdline.ss")
          (lib "uri-codec.ss" "net")
          (lib "url.ss" "net")
          (lib "pretty.ss")
          (planet "htmlprag.ss"  ("neil"        "htmlprag.plt" ))
-         (planet "port.ss"      ("schematics"  "port.plt" ))
          (planet "zdate.ss"     ("offby1"      "offby1.plt"))
-         (only (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
+         (only-in (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
                sxpath)
-         (only (lib "13.ss" "srfi")
+         (only-in (lib "13.ss" "srfi")
                string-join)
          "aws-common.ss"
          )
@@ -46,11 +46,15 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
 
       (gack-on-error
        (html->shtml
-        (port->string/close
-         (get-pure-port
-          url
-          (list
-           (format "Date: ~a" date)))))
+        (call/input-url
+         url
+         (lambda (url)
+           (printf "Retrieving ~s...~%" (url->string url))
+           (get-pure-port
+            url
+            (list
+             (format "Date: ~a" date))))
+         port->string))
        '(errorresponse error)))))
 
 ;;(trace alexa-call)
@@ -75,4 +79,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
                titles
                urls))   )
  '("query"))
-)

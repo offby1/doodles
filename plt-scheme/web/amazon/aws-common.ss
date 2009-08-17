@@ -1,19 +1,18 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-(module aws-common mzscheme
+#lang scheme
+
 (require (lib "trace.ss")
          (planet "sxml.ss"      ("lizorkin"    "sxml.plt"))
-         (only (lib "base64.ss" "net") base64-encode-stream)
-         (only (planet "port.ss" ("schematics" "port.plt" ))
-               port->string)
+         (only-in (lib "base64.ss" "net") base64-encode-stream)
          (planet "hmac-sha1.ss" ("jaymccarthy" "hmac-sha1.plt"))
          (planet "aif.ss" ("schematics" "macro.plt")))
 
-(provide (all-defined))
+(provide (all-defined-out))
 (define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
 (define SecretAccessKey
   (make-parameter
@@ -56,9 +55,3 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
       ("You should have gotten this from Amazon." "sekrit")))
     ))
 
-;; TODO -- this could probably be replaced by "call/input-url"
-(define (port->string/close ip)
-  (begin0
-    (port->string ip)
-    (close-input-port ip)))
-)
