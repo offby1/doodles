@@ -15,6 +15,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     offset)
    ((equal? "" string)
     #f)
+   ((< (string-length string) (+ offset (string-length pattern)))
+    #f)
    ((equal? pattern (substring string offset (+ offset (string-length pattern))))
     offset)
    (else
@@ -29,7 +31,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (search "fred" "fred") 0)
   (check-equal? (search "fred" "fred has two cats") 0)
   (check-equal? (search "fred" "if I'm fred, you must be mabel") 7)
-
+  (check-equal? (search "fred" "Nobody named Fred here, nuh-uh") #f)
   )
 
 (define (main . args)
