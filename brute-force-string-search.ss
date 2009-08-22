@@ -10,23 +10,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          mzlib/trace)
 
 (define (search pattern string [offset 0])
-  (let ((string (substring string offset)))
-    (cond
-     ((equal? "" pattern)
-      offset)
-     ((equal? "" string)
-      #f)
-     (else
-      (let [(p (string-ref pattern 0))
-            (s (string-ref string 0))]
-        ;; (printf "p: ~a; s: ~a~%" p s)
-        (cond
-         ((char=? p s)
-          (search (substring pattern 1)
-                  (substring string 1)
-                  0))
-         (else
-          (search pattern (substring string 1) 0))))))))
+  (cond
+   ((equal? "" pattern)
+    offset)
+   ((equal? "" string)
+    #f)
+   ((equal? pattern (substring string offset (+ offset (string-length pattern))))
+    offset)
+   (else
+    (search pattern string (add1 offset)))))
+
 (trace search)
 (define-test-suite search-tests
 
