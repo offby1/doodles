@@ -4,6 +4,8 @@
 exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
+;; http://programmingpraxis.com/2009/08/21/string-search-brute-force/
+
 #lang scheme
 (require schemeunit
          schemeunit/text-ui
@@ -32,6 +34,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (search "fred" "fred has two cats") 0)
   (check-equal? (search "fred" "if I'm fred, you must be mabel") 7)
   (check-equal? (search "fred" "Nobody named Fred here, nuh-uh") #f)
+
+  (check-equal? (search "Programming Praxis" "Programming Praxis") 0)
+  (check-equal? (search "Praxis" "Programming Praxis") 12)
+  (check-equal? (search "Prax" "Programming Praxis") 12)
+  (check-equal? (search "praxis" "Programming Praxis") #f)
+  (check-equal? (search "P" "Programming Praxis") 0)
+  (check-equal? (search "P" "Programming Praxis" 5) 12)
   )
 
 (define (main . args)
