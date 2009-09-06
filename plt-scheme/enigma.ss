@@ -8,9 +8,7 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 (require scheme/cmdline)
 
 (require (lib "trace.ss")
-         (lib "1.ss" "srfi")
-         (lib "13.ss" "srfi")
-         (lib "43.ss" "srfi"))
+         srfi/1 srfi/13 srfi/43)
 
 (define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
 (define c->n (lambda (c) (string-index *the-alphabet* (char-downcase c))))
@@ -125,6 +123,9 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
    [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
     (encrypt #f)])
 
+  (when (terminal-port? (current-input-port))
+    (fprintf (current-error-port)
+             "Reading ~a...~%" (current-input-port)))
   (process-port
    (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
    (current-input-port)
