@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qr "$0" ${1+"$@"}
+exec  mzscheme --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
@@ -41,15 +41,17 @@ exec mzscheme -qr "$0" ${1+"$@"}
                   (without-multiples-of-first-element prime-generator)
                   factors)))))))
 
-(for ([n (in-range 20)])
-  (printf
-   "(= ~a ~a)~%"
-   n
-   (cons
-    '*
-    (map
-     (lambda (thing)
-       (if (number? thing)
-           thing
-           (cons 'expt thing)))
-     (compact-sequence (factor n))))))
+(provide main)
+(define (main . args)
+  (for ([n (in-range 20)])
+    (printf
+     "(= ~a ~a)~%"
+     n
+     (cons
+      '*
+      (map
+       (lambda (thing)
+         (if (number? thing)
+             thing
+             (cons 'expt thing)))
+       (compact-sequence (factor n)))))))
