@@ -1,7 +1,7 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mred --no-init-file --mute-banner --version --require "$0"
+exec mred --no-init-file --version --require "$0"
 |#
 
 ;; from  "Gregory Cooper" <greg@cs.brown.edu>
