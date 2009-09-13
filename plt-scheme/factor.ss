@@ -21,24 +21,23 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
    ((equal? 1 n)
     '())
    (else
-    (let ()
-      (let loop ([x (inexact->exact (ceiling (sqrt n)))]
-                 [y 0])
-        (let ((diff (- (- (* x x)
-                          (* y y))
-                       n)))
-          (cond
-           ((zero? diff)
-            (if (= 1 (- x y))
-                ;; found a prime
-                (list (+ x y))
-                (append (factor (- x y))
-                        (factor (+ x y)))))
-           ((negative? diff)
-            (loop (add1 x) y))
-           (else
-            (loop x
-                  (add1 y))))))))))
+    (let loop ([x (inexact->exact (ceiling (sqrt n)))]
+               [y 0])
+      (let ((diff (- (- (* x x)
+                        (* y y))
+                     n)))
+        (cond
+         ((zero? diff)
+          (if (= 1 (- x y))
+              ;; found a prime
+              (list (+ x y))
+              (append (factor (- x y))
+                      (factor (+ x y)))))
+         ((negative? diff)
+          (loop (add1 x) y))
+         (else
+          (loop x
+                (add1 y)))))))))
 
 (define-simple-check (check-sets-equal? l1 l2)
   (set:equal? (set:list->unordered equal? l1)
