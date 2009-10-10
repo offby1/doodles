@@ -17,14 +17,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       1))
 
 (define (main . args)
-  (let loop ((number-inside-circle 0)
-             (trials 0)
-             (p (random-point)))
-    (if (< trials 10000)
-      (loop
-       ((if (is-in-circle? p) add1 values) number-inside-circle)
-       (add1 trials)
-       (random-point))
-      (* 4.0 (/ number-inside-circle trials)))))
+  (let ([trials  10000])
+    (* 4.0
+       (/
+        (for/fold ([number-inside-circle 0])
+            ([trial (in-range trials)])
+            ((if (is-in-circle? (random-point)) add1 values) number-inside-circle))
+        trials))))
 
 (provide main)
