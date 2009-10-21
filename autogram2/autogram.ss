@@ -7,8 +7,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require
  profile
- schemeunit
- schemeunit/text-ui
+ (planet schematics/schemeunit:3)
+ (planet schematics/schemeunit:3/text-ui)
  srfi/13
  srfi/26
  (planet neil/numspell/numspell)
