@@ -7,20 +7,18 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui))
+
 (define/contract (inject-1 letter word)
   (char?  string? . -> . (listof string?))
-  (let ([word (string->list word)])
-    (reverse
-     (for/fold ([words '()])
-         ([i (in-range (add1 (length word)))])
-         (let-values ([(left right) (split-at word i)])
-           (cons
-            (list->string
-             (append left
-                     (list letter)
-                     right))
-            words))))))
-
+  (reverse
+   (for/fold ([words '()])
+       ([i (in-range (add1 (string-length word)))])
+       (cons
+        (string-append
+         (substring word 0 i)
+         (string letter)
+         (substring word i))
+        words))))
 
 (define/contract (inject letter words)
   (char? (listof string?) . -> . (listof (listof string?)))
