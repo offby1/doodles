@@ -68,7 +68,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
             (spell-char char)
             plural-marker)))
 
-;; This too might be worth memoizing
 (define/memo (pair->survey char count s)
   (for/fold ([result (make-immutable-hash '())])
       ([ch (in-string (char/count->text char count))])
