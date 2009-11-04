@@ -9,20 +9,21 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui))
 
 (define (qsort seq less?)
-  (vector->list
-   (qsort-vector (list->vector seq) less?)))
+  (let-values ([(v first-index length)
+                (qsort-vector (list->vector seq) 0 (length seq) less?)])
+     (vector->list v)))
 
-(define (partition! v pivot-value)
+(define (partition! v first-index length pivot-value)
   (printf "~s~%" v)
   (printf "Pivot value is ~a~%" pivot-value)
-  (let loop ([number-unknown (vector-length v)]
+  (let loop ([number-unknown length]
              [number-small 0])
     (when (positive? number-unknown)
-      (let ((candidate (vector-ref v number-small)))
+      (let ((candidate (vector-ref v (+ first-index number-small))))
         (printf "Candidate is ~a~%" candidate)
         (if (<= candidate pivot-value)
             (set! number-small (add1 number-small))
-            (let ((dest (sub1 (+ number-small number-unknown))))
+            (let ((dest (sub1 (+ first-index number-small number-unknown))))
               (printf
                "Swapping [~a]: ~a with [~a]: ~a ..."
                number-small candidate dest (vector-ref v dest))
@@ -30,23 +31,22 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
               (vector-set! v dest candidate)))
         (set! number-unknown (sub1 number-unknown))
         (loop (sub1 number-unknown)
-              number-small)))
-    v))
+              number-small)))))
 
-(define (qsort-vector v less?)
-  (define (find-pivot v)
+(define (qsort-vector v first-index length less?)
+  (define (find-pivot)
     ;; todo -- supposedly, choosing an element at random improves the
     ;; worst-case performance
-    (let ([index 0])
+    (let ([index first-index])
       (values index
               (vector-ref v index))))
-  (case  (vector-length v)
-    ((0 1) v)
+  (case length
+    ((0 1) (values v first-index length))
     (else
-     (let-values ([(pivot-index pivot-value) (find-pivot v)])
-       (partition! v pivot-value)
+     (let-values ([(pivot-index pivot-value) (find-pivot)])
+       (partition! v first-index length pivot-value)
        ;; todo -- recursive calls
-       v))))
+       (values v first-index length)))))
 
 (define-test-suite qsort-tests
 
