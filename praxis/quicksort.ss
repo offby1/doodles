@@ -15,28 +15,38 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (partition! v pivot-value)
   (printf "~s~%" v)
   (printf "Pivot value is ~a~%" pivot-value)
-  (let ([opposite-index (sub1 (vector-length v))])
-    (for ([(value index) (in-indexed v)])
-      (printf "index: ~a; value: ~a~%" index value)
-      (when (< pivot-value value)
-        (printf
-         "Swapping [~a]: ~a with [~a]: ~a ..."
-         index value opposite-index (vector-ref v opposite-index))
-        (vector-set! v index (vector-ref v opposite-index))
-        (vector-set! v opposite-index value)
-        (printf " => ~s~%" v)
-        (set! opposite-index (sub1 opposite-index)))
-      )))
+  (let loop ([number-unknown (vector-length v)]
+             [number-small 0])
+    (when (positive? number-unknown)
+      (let ((candidate (vector-ref v number-small)))
+        (printf "Candidate is ~a~%" candidate)
+        (if (<= candidate pivot-value)
+            (set! number-small (add1 number-small))
+            (let ((dest (sub1 (+ number-small number-unknown))))
+              (printf
+               "Swapping [~a]: ~a with [~a]: ~a ..."
+               number-small candidate dest (vector-ref v dest))
+              (vector-set! v number-small (vector-ref v dest))
+              (vector-set! v dest candidate)))
+        (set! number-unknown (sub1 number-unknown))
+        (loop (sub1 number-unknown)
+              number-small)))
+    v))
 
 (define (qsort-vector v less?)
   (define (find-pivot v)
-    (vector-ref v 0))
-  (if (zero? (vector-length v))
-      v
-      (let ([pivot-value (find-pivot v)])
-        (partition! v pivot-value)
-        ;; todo -- recursive calls
-        v)))
+    ;; todo -- supposedly, choosing an element at random improves the
+    ;; worst-case performance
+    (let ([index 0])
+      (values index
+              (vector-ref v index))))
+  (case  (vector-length v)
+    ((0 1) v)
+    (else
+     (let-values ([(pivot-index pivot-value) (find-pivot v)])
+       (partition! v pivot-value)
+       ;; todo -- recursive calls
+       v))))
 
 (define-test-suite qsort-tests
 
