@@ -10,6 +10,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-struct subvector (v first-index length) #:transparent)
 (define public-make-subvector make-subvector)
+(define (list->subvector seq)
+  (let ([v (list->vector seq)])
+    (make-subvector v 0 (vector-length v))))
+(define (subvector->list sv)
+  (reverse
+   (for/fold ([result '()])
+       ([index (in-range (subvector-length sv))])
+       (cons (public-subvector-ref sv index)
+             result))))
 (define (public-subvector-ref sv index)
   (vector-ref (subvector-v sv) (+ index (subvector-first-index sv))))
 (define (public-subvector-set! sv index value)
@@ -24,7 +33,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
     (public-subvector-set! sv 0 'frotz)
     (check-equal? (public-subvector-ref sv 0) 'frotz)
-    (check-equal? (vector-ref source 1) 'frotz)))
+    (check-equal? (vector-ref source 1) 'frotz)
+
+    (check-equal? (subvector->list sv) (list 'frotz 2))
+    ))
 
 (define (main . args)
   (exit (run-tests subvector-tests 'verbose)))
@@ -34,5 +46,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   [public-make-subvector make-subvector]
   [public-subvector-ref  subvector-ref]
   [public-subvector-set! subvector-set!])
- subvector-length
+ list->subvector
+ subvector->list
  main)
