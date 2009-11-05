@@ -67,11 +67,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                                               1))))))))
 
 (define (p-test input-vector expected-result)
-  (let ([il (vector->list input-vector)])
-    (printf "il is ~s~%" il)
-    (let ([actual-result (apply subvector il)])
-      (partition! actual-result (subvector-ref actual-result 0))
-      (check-equal? actual-result expected-result))))
+  (let ([actual-result (apply subvector (vector->list input-vector))]
+        [expected-result (make-subvector expected-result 0 (vector-length expected-result))])
+    (partition! actual-result (subvector-ref actual-result 0))
+    (check-equal? actual-result expected-result)))
 
 (define-test-suite parition-tests
 
