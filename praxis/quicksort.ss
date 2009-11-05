@@ -7,7 +7,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui)
-         (except-in "subvector.ss" main))
+         (except-in "subvector.ss" main)
+         mzlib/trace)
 
 (define (qsort seq )
   (subvector->list (qsort-subvector! (list->subvector seq))))
@@ -64,8 +65,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (qsort-subvector! (make-subvector sv (add1 pivot-index)
                                            (- (subvector-length sv)
                                               pivot-index
-                                              1))))))))
-
+                                              1)))))
+     sv)))
+(trace qsort-subvector!)
 (define (p-test input-vector expected-result)
   (let ([actual-result (apply subvector (vector->list input-vector))]
         [expected-result (make-subvector expected-result 0 (vector-length expected-result))])
@@ -85,8 +87,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (qsort '()) '())
   (check-equal? (qsort '(1)) '(1))
   (check-equal? (qsort '(1 2)) '(1 2))
-  (check-equal? (qsort '(9 8 7 6 5 4 3 2 1)) '(1 2 3 4 5 6 7 8 9))
   (check-equal? (qsort '(2 2)) '(2 2))
+  (check-equal? (qsort '(9 8 7 6 5 4 3 2 1)) '(1 2 3 4 5 6 7 8 9))
   )
 
 (define-test-suite all-tests
