@@ -9,7 +9,23 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui))
 
 (define-struct subvector (v first-index length) #:transparent)
-(define public-make-subvector make-subvector)
+(define (public-make-subvector v first-index length)
+  (cond
+   ((vector? v)
+    (when (> length (vector-length v))
+      (error 'public-make-subvector "length ~a is too long for vector ~a" length v))
+    (make-subvector v first-index length))
+   ((subvector? v)
+    (when (> length (subvector-length v))
+      (error 'public-make-subvector "length ~a is too long for subvector ~a" length v))
+    (make-subvector
+     v
+     (subvector-v v)
+     (+ first-index (subvector-first-index v))
+     length
+     ))))
+(define (public-subvector . values)
+  (apply list->subvector values))
 (define (list->subvector seq)
   (let ([v (list->vector seq)])
     (make-subvector v 0 (vector-length v))))
@@ -45,7 +61,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  (rename-out
   [public-make-subvector make-subvector]
   [public-subvector-ref  subvector-ref]
-  [public-subvector-set! subvector-set!])
+  [public-subvector-set! subvector-set!]
+  [public-subvector subvector])
+
+ subvector-length
  list->subvector
  subvector->list
  main)
