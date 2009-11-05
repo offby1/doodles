@@ -19,13 +19,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (when (> length (subvector-length v))
       (error 'public-make-subvector "length ~a is too long for subvector ~a" length v))
     (make-subvector
-     v
      (subvector-v v)
      (+ first-index (subvector-first-index v))
      length
      ))))
 (define (public-subvector . values)
-  (apply list->subvector values))
+  (list->subvector values))
 (define (list->subvector seq)
   (let ([v (list->vector seq)])
     (make-subvector v 0 (vector-length v))))

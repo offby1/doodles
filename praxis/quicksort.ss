@@ -6,32 +6,31 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 (require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
+         (planet schematics/schemeunit:3/text-ui)
+         (except-in "subvector.ss" main))
 
 (define (qsort seq )
-  (let-values ([(v first-index length)
-                (qsort-vector! (list->vector seq) 0 (length seq) )])
-     (vector->list v)))
+  (subvector->list (qsort-subvector! (list->subvector seq))))
 
-(define (partition! v first-index length pivot-value)
+(define (partition! sv pivot-value)
 
   (define (swap! i1 i2)
-    (define tmp (vector-ref v i2))
+    (define tmp (subvector-ref sv i2))
     (printf
      "Swapping [~a]: ~a with [~a]: ~a ..."
-     i1 (vector-ref v i1) i2 tmp)
-    (vector-set! v i2 (vector-ref v i1))
-    (vector-set! v i1 tmp))
+     i1 (subvector-ref sv i1) i2 tmp)
+    (subvector-set! sv i2 (subvector-ref sv i1))
+    (subvector-set! sv i1 tmp))
 
-  (printf "~s~%" v)
+  (printf "~s~%" sv)
   (printf "Pivot value is ~a~%" pivot-value)
 
-  (let loop ([number-unknown length]
+  (let loop ([number-unknown (subvector-length sv)]
              [num-equal 0]
              [num-smaller 0])
     (when (positive? number-unknown)
-      (let* ((c-index (+ first-index num-smaller num-equal))
-             (candidate (vector-ref v c-index)))
+      (let* ((c-index (+ num-smaller num-equal))
+             (candidate (subvector-ref sv c-index)))
         (printf "~a unknown elements; candidate is ~a~%" number-unknown
                 candidate)
         (cond
@@ -43,39 +42,46 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
           (set! num-equal (add1 num-equal)))
 
          (else
-          (swap! c-index (- length number-unknown)))))
+          (swap! c-index (- (subvector-length sv) number-unknown)))))
 
       (loop (sub1 number-unknown)
             num-equal
             num-smaller))))
 
-(define (qsort-vector! v first-index length )
-  (define (find-pivot)
-    ;; todo -- supposedly, choosing an element at random improves the
-    ;; worst-case performance
-    (let ([index first-index])
-      (values index
-              (vector-ref v index))))
-  (case length
-    ((0 1) (values v first-index length))
+(define (qsort-subvector! sv)
+  (case (subvector-length sv)
+    ((0 1) sv)
     (else
-     (let-values ([(pivot-index pivot-value) (find-pivot)])
-       (partition! v first-index length pivot-value)
-       (qsort-vector! v first-index pivot-index )
-       (qsort-vector! v (add1 pivot-index) (- length pivot-index) )
-       (values v first-index length)))))
+     (let-values ([(pivot-index pivot-value)
+
+                   ;; todo -- supposedly, choosing an element at
+                   ;; random improves the worst-case performance
+                   (values 0 (subvector-ref sv 0))])
+
+       (partition! sv pivot-value)
+       (qsort-subvector! (make-subvector sv 0 pivot-index))
+       (when (< pivot-index (sub1 (subvector-length sv)))
+         (qsort-subvector! (make-subvector sv (add1 pivot-index)
+                                           (- (subvector-length sv)
+                                              pivot-index
+                                              1))))))))
 
 (define (p-test input-vector expected-result)
-  (let ([actual-result (apply vector (vector->list input-vector))])
-    (partition! actual-result 0 (vector-length actual-result) (vector-ref actual-result 0))
-    (check-equal? actual-result expected-result)))
+  (let ([il (vector->list input-vector)])
+    (printf "il is ~s~%" il)
+    (let ([actual-result (apply subvector il)])
+      (partition! actual-result (subvector-ref actual-result 0))
+      (check-equal? actual-result expected-result))))
 
-(define-test-suite qsort-tests
+(define-test-suite parition-tests
 
   (p-test #(1) #(1))
   (p-test #(-1 1) #(-1 1))
   (p-test #(1 -1) #(-1 1))
   (p-test #(10 9 8 7 6) #(9 8 7 6 10))
+  )
+
+(define-test-suite qsort-tests
 
   (check-equal? (qsort '()) '())
   (check-equal? (qsort '(1)) '(1))
@@ -84,6 +90,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (qsort '(2 2)) '(2 2))
   )
 
+(define-test-suite all-tests
+  parition-tests
+  qsort-tests
+  )
+
 (define (main . args)
-  (exit (run-tests qsort-tests 'verbose)))
+  (exit (run-tests all-tests 'verbose)))
 (provide qsort main)
