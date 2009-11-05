@@ -13,53 +13,47 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (qsort seq )
   (subvector->list (qsort-subvector! (list->subvector seq))))
 
-(define (partition! sv pivot-value)
+(define (partition! sv pivot-index)
 
   (define (swap! i1 i2)
     (define tmp (subvector-ref sv i2))
-    (printf
-     "Swapping [~a]: ~a with [~a]: ~a ..."
-     i1 (subvector-ref sv i1) i2 tmp)
     (subvector-set! sv i2 (subvector-ref sv i1))
     (subvector-set! sv i1 tmp))
 
-  (printf "~s~%" sv)
-  (printf "Pivot value is ~a~%" pivot-value)
+  (let ([pivot-value (subvector-ref sv pivot-index)])
+    (let loop ([number-unknown (subvector-length sv)]
+               [num-equal 0]
+               [num-smaller 0])
+      (when (positive? number-unknown)
+        (let* ((candidate-index (+ num-smaller num-equal))
+               (candidate (subvector-ref sv candidate-index)))
+          (cond
+           ((< candidate pivot-value)
+            (swap! candidate-index num-smaller)
+            (set! num-smaller (add1 num-smaller)))
 
-  (let loop ([number-unknown (subvector-length sv)]
-             [num-equal 0]
-             [num-smaller 0])
-    (when (positive? number-unknown)
-      (let* ((c-index (+ num-smaller num-equal))
-             (candidate (subvector-ref sv c-index)))
-        (printf "~a unknown elements; candidate is ~a~%" number-unknown
-                candidate)
-        (cond
-         ((< candidate pivot-value)
-          (swap! c-index num-smaller)
-          (set! num-smaller (add1 num-smaller)))
+           ((= candidate pivot-value)
+            (set! num-equal (add1 num-equal)))
 
-         ((= candidate pivot-value)
-          (set! num-equal (add1 num-equal)))
+           (else
+            (swap! candidate-index (- (subvector-length sv) number-unknown)))))
 
-         (else
-          (swap! c-index (- (subvector-length sv) number-unknown)))))
-
-      (loop (sub1 number-unknown)
-            num-equal
-            num-smaller))))
+        (loop (sub1 number-unknown)
+              num-equal
+              num-smaller))
+      (subvector-find-first sv pivot-value))))
 
 (define (qsort-subvector! sv)
   (case (subvector-length sv)
     ((0 1) sv)
     (else
-     (let-values ([(pivot-index pivot-value)
+     ;; We choose the index of an initial pivot, partition, then
+     ;; update the index, since the partitioning will likely have
+     ;; moved that value.
 
-                   ;; todo -- supposedly, choosing an element at
-                   ;; random improves the worst-case performance
-                   (values 0 (subvector-ref sv 0))])
-
-       (partition! sv pivot-value)
+     ;; TODO -- supposedly, choosing an element at random improves the
+     ;; worst-case performance
+     (let ([pivot-index (partition! sv 0)])
        (qsort-subvector! (make-subvector sv 0 pivot-index))
        (when (< pivot-index (sub1 (subvector-length sv)))
          (qsort-subvector! (make-subvector sv (add1 pivot-index)
@@ -71,7 +65,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (p-test input-vector expected-result)
   (let ([actual-result (apply subvector (vector->list input-vector))]
         [expected-result (make-subvector expected-result 0 (vector-length expected-result))])
-    (partition! actual-result (subvector-ref actual-result 0))
+    (partition! actual-result 0)
     (check-equal? actual-result expected-result)))
 
 (define-test-suite parition-tests

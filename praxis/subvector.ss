@@ -6,7 +6,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 (require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
+         (planet schematics/schemeunit:3/text-ui)
+         mzlib/trace)
 
 (define-struct subvector (v first-index length) #:transparent)
 (define (public-make-subvector v first-index length)
@@ -38,6 +39,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (vector-ref (subvector-v sv) (+ index (subvector-first-index sv))))
 (define (public-subvector-set! sv index value)
   (vector-set! (subvector-v sv) (+ index (subvector-first-index sv)) value))
+(define (subvector-find-first sv sought)
+  (let loop ((i 0))
+    (if (equal? sought (public-subvector-ref sv i))
+        i
+        (loop (add1 i)))))
+
 (define-test-suite subvector-tests
 
   (let* ((source (vector 0 1 2 3))
@@ -66,4 +73,5 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
  subvector-length
  list->subvector
  subvector->list
+ subvector-find-first
  main)
