@@ -14,34 +14,39 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (subvector->list (qsort-subvector! (list->subvector seq))))
 
 (define (partition! sv pivot-index)
-  (define num-swaps 0)
+  (define num-larger 0)
+  (define num-smaller 0)
 
-  (define (swap! i)
-    (define dest (- (subvector-length sv) num-swaps 1))
+  (define (swap-high! i)
+    (define dest (- (subvector-length sv) num-larger 1))
     (define tmp (subvector-ref sv dest))
     (printf "Swapping ~a with ~a~%" (subvector-ref sv i) tmp)
     (subvector-set! sv dest (subvector-ref sv i))
     (subvector-set! sv i tmp)
-    (set! num-swaps (add1 num-swaps))
+    (set! num-larger (add1 num-larger))
     (printf "~a~%" sv)
     tmp)
 
-  (trace swap!)
+  (define (keep-low! i)
+    (printf "Keeping ~a~%" (subvector-ref sv i))
+    (set! num-smaller (add1 num-smaller)))
 
   (let ([pivot-value (subvector-ref sv pivot-index)])
-    (let loop ([slots-examined 0])
-      (printf "slots-examined: ~a~%" slots-examined)
-      (when (< slots-examined (subvector-length sv))
-        (let ((candidate-index slots-examined))
+    (let loop ()
+      (when (< (+ num-larger num-smaller) (subvector-length sv))
+        (let ((candidate-index num-smaller))
           (let loop ()
+            (printf "num-smaller: ~a; num-larger: ~a~%" num-smaller num-larger)
             (let ((candidate (subvector-ref sv candidate-index)))
               (printf "candidate: ~a~%" candidate)
-              (when (> candidate pivot-value)
-                (printf "candidate ~a > pivot ~a~%" candidate pivot-value)
-                (swap! candidate-index)
-                (loop)))))
+              (if (< pivot-value candidate)
+                (begin
+                  (swap-high! candidate-index)
+                  (loop))
+                (keep-low! candidate-index))
+              )))
 
-        (loop (add1 slots-examined))))
+        (loop)))
 
     (display sv) (newline)
     ;; Seems dumb to search for the pivot after we've finished;
@@ -49,6 +54,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     ;; efficient.  It'd surely be more complicated, though.
     (subvector-find-first sv pivot-value)))
 (trace partition!)
+
+(define-test-suite parition-tests
+
+  ;; (p-test #(1) #(1))
+  ;; (p-test #(-1 1) #(-1 1))
+  ;; (p-test #(1 -1) #(-1 1))
+  ;; (p-test #(1 3 2) #(1 2 3) 1)
+  ;; (p-test #(10 9 8 7 6 5 4 3 2 1) #(6 5 4 3 2 1 10 9 8 7) 4)
+  (p-test #(2 4 6 8 9 7 5 3 1) #(snord) 6)
+  )
 
 (define (qsort-subvector! sv)
   (case (subvector-length sv)
@@ -69,18 +84,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (p-test input-vector expected-result [pivot-index 0])
   (let ([actual-result (apply subvector (vector->list input-vector))]
         [expected-result
-         (make-subvector expected-result pivot-index (vector-length expected-result))])
+         (make-subvector expected-result 0 (vector-length expected-result))])
     (partition! actual-result pivot-index)
     (check-equal? actual-result expected-result)))
-
-(define-test-suite parition-tests
-
-  ;; (p-test #(1) #(1))
-  ;; (p-test #(-1 1) #(-1 1))
-  ;; (p-test #(1 -1) #(-1 1))
-  ;; (p-test #(10 9 8 7 6) #(9 8 7 6 10))
-  (p-test #(10 9 8 7 6 5 4 3 2 1) #(6 5 4 3 2 1 10 9 8 7) 4)
-  )
 
 (define-test-suite qsort-tests
 
