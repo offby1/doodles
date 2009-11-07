@@ -50,7 +50,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
            ;; efficient.  It'd surely be more complicated, though.
            (subvector-find-first sv pivot-value)])
 
-      (when #f
+      (when #t
         (let ([sv-<= (subvector->list (make-subvector sv 0 new-pivot-index))]
               [sv->  (subvector->list (make-subvector sv new-pivot-index))])
           (printf "partitioned ~a into ~a ~a~%" DEBUG-original sv-<= sv->))
@@ -80,14 +80,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      ;; We choose the index of an initial pivot, partition, then
      ;; update the index, since the partitioning will likely have
      ;; moved that value.
+     ;; (printf "~a =>" (subvector->list sv))
      (let ([orig-index (add1 (random (sub1 (subvector-length sv))))])
        (let-values ([(already-sorted? pivot-index) (partition! sv orig-index)])
          (when (not already-sorted?)
            (qsort-subvector! (make-subvector sv 0 pivot-index))
            (qsort-subvector! (make-subvector sv pivot-index)))))
      (let ([l (subvector->list sv)])
-       (when (not (apply <= l))
+       (when (not (check-sorted? l))
          (error 'qsort-subvector! "Crap, it's not sorted: ~a" l)))
+     ;; (printf "~a~%" (subvector->list sv))
      sv)))
 
 (define (is-partitioned? sv value)
@@ -111,13 +113,18 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (partition! sv pivot-index)
     (check-not-false (is-partitioned? sv pivot-value))))
 
+(define (check-sorted? seq)
+  (or (< (length seq) 2)
+      (apply <= seq)))
+
 (define-test-suite qsort-tests
 
-  (check-equal? (qsort '()) '())
-  (check-equal? (qsort '(1)) '(1))
-  (check-equal? (qsort '(1 2)) '(1 2))
-  (check-equal? (qsort '(2 2)) '(2 2))
-  (check-equal? (qsort '(9 8 7 6 5 4 3 2 1)) '(1 2 3 4 5 6 7 8 9))
+  ;; (check-sorted? (qsort '()))
+  ;; (check-sorted? (qsort '(1)))
+  ;; (check-sorted? (qsort '(1 2)))
+  ;; (check-sorted? (qsort '(2 2)))
+  ;; (check-sorted? (qsort '(9 8 7 6 5 4 3 2 1)))
+  (check-sorted? (qsort (build-list 10 (lambda ignored (random)))))
   )
 
 (define (xor . seq)
@@ -134,8 +141,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   )
 
 (define-test-suite all-tests
-  xor-tests
-  partition-tests
+  ;; xor-tests
+  ;; partition-tests
   qsort-tests
   )
 
