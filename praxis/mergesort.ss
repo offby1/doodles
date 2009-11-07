@@ -20,7 +20,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      ((null? l2)
       (reverse (append (reverse l1) result)))
      ((< (car l1)
-        (car l2))
+         (car l2))
       (loop (cons (car l1)
                   result)
             (cdr l1)
@@ -37,18 +37,18 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define mergesort
   (match-lambda
-  [(? list? thing)
-   (mergesort (list->subvector thing))]
-  [(? subvector? thing)
-   (cond
-    ((< (subvector-length thing) 2)
-     thing)
-    (else
-     (let* ((half (quotient (subvector-length thing) 2))
-            (left  (make-subvector thing 0 half))
-            (right (make-subvector thing half)))
-       (merge (mergesort left)
-              (mergesort right)))))]))
+   [(? list? thing)
+    (mergesort (list->subvector thing))]
+   [(? subvector? thing)
+    (cond
+     ((< (subvector-length thing) 2)
+      thing)
+     (else
+      (let* ((half (quotient (subvector-length thing) 2))
+             (left  (make-subvector thing 0 half))
+             (right (make-subvector thing half)))
+        (merge (mergesort left)
+               (mergesort right)))))]))
 
 (define-test-suite merge-list-tests
   (check-equal? (merge-lists '() '()) '())
@@ -83,5 +83,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   )
 
 (define (main . args)
-  (exit (run-tests all-tests 'verbose)))
+  (let ((test-status (run-tests all-tests 'verbose)))
+    (when (zero? test-status)
+      (for ([length '(0 2 4 5)])
+        (let ([length (expt 10 length)])
+          (printf "~a: " length)
+          (time (mergesort (build-list length (lambda ignored (random))))))))
+    (exit test-status)))
+
 (provide mergesort main)
