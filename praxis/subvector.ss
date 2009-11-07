@@ -74,6 +74,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   [public-subvector-set! subvector-set!]
   [public-subvector subvector])
 
+ subvector?
  subvector-length
  list->subvector
  subvector->list
