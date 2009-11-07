@@ -14,94 +14,132 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (subvector->list (qsort-subvector! (list->subvector seq))))
 
 (define (partition! sv pivot-index)
-  (define num-larger 0)
-  (define num-smaller 0)
+  (define DEBUG-original (subvector->list sv))
+  (define num-> 0)
+  (define num-<= 0)
 
   (define (swap-high! i)
-    (define dest (- (subvector-length sv) num-larger 1))
+    (define dest (- (subvector-length sv) num-> 1))
     (define tmp (subvector-ref sv dest))
-    (printf "Swapping ~a with ~a~%" (subvector-ref sv i) tmp)
     (subvector-set! sv dest (subvector-ref sv i))
     (subvector-set! sv i tmp)
-    (set! num-larger (add1 num-larger))
-    (printf "~a~%" sv)
+    (set! num-> (add1 num->))
     tmp)
 
   (define (keep-low! i)
-    (printf "Keeping ~a~%" (subvector-ref sv i))
-    (set! num-smaller (add1 num-smaller)))
+    (set! num-<= (add1 num-<=)))
 
   (let ([pivot-value (subvector-ref sv pivot-index)])
     (let loop ()
-      (when (< (+ num-larger num-smaller) (subvector-length sv))
-        (let ((candidate-index num-smaller))
-          (let loop ()
-            (printf "num-smaller: ~a; num-larger: ~a~%" num-smaller num-larger)
-            (let ((candidate (subvector-ref sv candidate-index)))
-              (printf "candidate: ~a~%" candidate)
-              (if (< pivot-value candidate)
-                (begin
-                  (swap-high! candidate-index)
-                  (loop))
+      (when (< (+ num-> num-<=) (subvector-length sv))
+        (let ((candidate-index num-<=))
+          (let ((candidate (subvector-ref sv candidate-index)))
+            (if (< pivot-value candidate)
+                (swap-high! candidate-index)
                 (keep-low! candidate-index))
-              )))
+            (loop)
+            ))))
 
-        (loop)))
+    (let ([new-pivot-index
+           ;; Seems dumb to search for the pivot after we've finished;
+           ;; perhaps keeping track of it as we go would be more
+           ;; efficient.  It'd surely be more complicated, though.
+           (subvector-find-first sv pivot-value)])
 
-    (display sv) (newline)
-    ;; Seems dumb to search for the pivot after we've finished;
-    ;; perhaps keeping track of it as we go would be more
-    ;; efficient.  It'd surely be more complicated, though.
-    (subvector-find-first sv pivot-value)))
-(trace partition!)
+      (when #t
+        (let ([sv-<= (subvector->list (make-subvector sv 0 new-pivot-index))]
+              [sv->  (subvector->list (make-subvector sv new-pivot-index))])
+          (printf "partitioned ~a into ~a ~a~%" DEBUG-original sv-<= sv->))
+        (when (not (is-partitioned? sv pivot-value))
+          (error 'partition! "Oops, I failed ~a" sv)))
 
-(define-test-suite parition-tests
+      new-pivot-index)))
 
-  ;; (p-test #(1) #(1))
-  ;; (p-test #(-1 1) #(-1 1))
-  ;; (p-test #(1 -1) #(-1 1))
-  ;; (p-test #(1 3 2) #(1 2 3) 1)
-  ;; (p-test #(10 9 8 7 6 5 4 3 2 1) #(6 5 4 3 2 1 10 9 8 7) 4)
-  (p-test #(2 4 6 8 9 7 5 3 1) #(snord) 6)
+(define-test-suite partition-tests
+
+  (p-test #(1) 0)
+  (p-test #(-1 1) 0)
+  (p-test #(1 -1) 0)
+  (p-test #(-1 1) 1)
+  (p-test #(1 -1) 1)
+  (p-test #(1 3 2)  1)
+  (p-test #(10 9 8 7 6 5 4 3 2 1) 4)
+  (p-test #(4 5 6 8 9 7) 3)
+  (p-test #(2 4 6 8 9 7 5 3 1) 6)
   )
 
 (define (qsort-subvector! sv)
   (case (subvector-length sv)
-    ((0 1) sv)
+    ((0 1)
+     (printf "Tiny ~a is already sorted.~%" (subvector->list sv))
+     sv)
     (else
+     (printf "Sorting ~a ..." (subvector->list sv))
+
      ;; We choose the index of an initial pivot, partition, then
      ;; update the index, since the partitioning will likely have
      ;; moved that value.
-     (let ([pivot-index (partition! sv (random (subvector-length sv)))])
-       (qsort-subvector! (make-subvector sv 0 pivot-index))
-       (when (< pivot-index (sub1 (subvector-length sv)))
-         (qsort-subvector! (make-subvector sv (add1 pivot-index)
-                                           (- (subvector-length sv)
-                                              pivot-index
-                                              1)))))
+     (let ([orig-index (add1 (random (sub1 (subvector-length sv))))])
+       (printf "pivot-index is ~a; value is ~a~%" orig-index (subvector-ref sv orig-index))
+       (let ([pivot-index (partition! sv orig-index)])
+         (qsort-subvector! (make-subvector sv 0 pivot-index))
+         (qsort-subvector! (make-subvector sv pivot-index))))
+     (let ([l (subvector->list sv)])
+       (when (not (apply < l))
+         (error 'qsort-subvector! "Crap, it's not sorted: ~a" l)))
+     (printf "~a is sorted.~%" (subvector->list sv))
      sv)))
-(trace qsort-subvector!)
-(define (p-test input-vector expected-result [pivot-index 0])
-  (let ([actual-result (apply subvector (vector->list input-vector))]
-        [expected-result
-         (make-subvector expected-result 0 (vector-length expected-result))])
-    (partition! actual-result pivot-index)
-    (check-equal? actual-result expected-result)))
+
+(define (is-partitioned? sv value)
+  (let/ec return
+    (let* ((as-list (subvector->list sv))
+           (num-less-or-equal (apply + (map (lambda (x) (if (<= x value) 1 0)) as-list))))
+      (let loop ((index 0)
+                 (as-list as-list))
+        (if (null? as-list)
+            #t
+            (let ((candidate (car as-list)))
+              (if (xor  (<= candidate value)
+                        (< index num-less-or-equal))
+                  (return #f)
+                  (loop (add1 index)
+                        (cdr as-list)))))))))
+
+(define (p-test input-vector [pivot-index 0])
+  (let* ([sv (apply subvector (vector->list input-vector))]
+         [pivot-value (subvector-ref sv pivot-index)])
+    (partition! sv pivot-index)
+    (check-not-false (is-partitioned? sv pivot-value))))
 
 (define-test-suite qsort-tests
 
   (check-equal? (qsort '()) '())
   (check-equal? (qsort '(1)) '(1))
   (check-equal? (qsort '(1 2)) '(1 2))
-  (check-equal? (qsort '(2 2)) '(2 2))
+  ;; (check-equal? (qsort '(2 2)) '(2 2))
   (check-equal? (qsort '(9 8 7 6 5 4 3 2 1)) '(1 2 3 4 5 6 7 8 9))
   )
 
+(define (xor . seq)
+  (odd?
+   (for/fold ([num-true 0])
+       ([item (in-list seq)])
+       (+ num-true (if item 1 0)))))
+
+(define-test-suite xor-tests
+  (check-false (xor))
+  (check-not-false (xor 3))
+  (check-false     (xor 6 3))
+  (check-not-false (xor 3 6 7))
+  )
+
 (define-test-suite all-tests
-  parition-tests
-  ;; qsort-tests
+  xor-tests
+  partition-tests
+  qsort-tests
   )
 
 (define (main . args)
+  (random-seed 0)
   (exit (run-tests all-tests 'verbose)))
 (provide qsort main)
