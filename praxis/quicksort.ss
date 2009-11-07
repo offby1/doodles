@@ -30,15 +30,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (set! num-<= (add1 num-<=)))
 
   (let ([pivot-value (subvector-ref sv pivot-index)])
-    (let loop ()
-      (when (< (+ num-> num-<=) (subvector-length sv))
-        (let ((candidate-index num-<=))
-          (let ((candidate (subvector-ref sv candidate-index)))
-            (if (< pivot-value candidate)
-                (swap-high! candidate-index)
-                (keep-low! candidate-index))
-            (loop)
-            ))))
+    (let loop ([MAX (subvector-ref sv 0)]
+               [MIN (subvector-ref sv 0)])
+      (if (< (+ num-> num-<=) (subvector-length sv))
+          (let ((candidate-index num-<=))
+            (let ((candidate (subvector-ref sv candidate-index)))
+              (if (< pivot-value candidate)
+                  (swap-high! candidate-index)
+                  (keep-low! candidate-index))
+              (loop (max MAX candidate)
+                    (min MIN candidate))))
+          (printf "partition min is ~a; max is ~a~%" MIN MAX)))
 
     (let ([new-pivot-index
            ;; Seems dumb to search for the pivot after we've finished;
@@ -85,7 +87,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (qsort-subvector! (make-subvector sv 0 pivot-index))
          (qsort-subvector! (make-subvector sv pivot-index))))
      (let ([l (subvector->list sv)])
-       (when (not (apply < l))
+       (when (not (apply <= l))
          (error 'qsort-subvector! "Crap, it's not sorted: ~a" l)))
      (printf "~a is sorted.~%" (subvector->list sv))
      sv)))
@@ -116,7 +118,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (qsort '()) '())
   (check-equal? (qsort '(1)) '(1))
   (check-equal? (qsort '(1 2)) '(1 2))
-  ;; (check-equal? (qsort '(2 2)) '(2 2))
+  (check-equal? (qsort '(2 2)) '(2 2))
   (check-equal? (qsort '(9 8 7 6 5 4 3 2 1)) '(1 2 3 4 5 6 7 8 9))
   )
 
