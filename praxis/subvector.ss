@@ -10,20 +10,24 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          mzlib/trace)
 
 (define-struct subvector (v first-index length) #:transparent)
-(define (public-make-subvector v first-index length)
+(define (public-make-subvector v first-index [length #f])
   (cond
    ((vector? v)
-    (when (> length (vector-length v))
-      (error 'public-make-subvector "length ~a is too long for vector ~a" length v))
-    (make-subvector v first-index length))
+    (let ([length (or length (- (vector-length v) first-index))])
+      (when (> length (vector-length v))
+        (error 'public-make-subvector "length ~a is too long for vector ~a" length v))
+      (make-subvector v first-index length)))
    ((subvector? v)
-    (when (> length (subvector-length v))
-      (error 'public-make-subvector "length ~a is too long for subvector ~a" length v))
-    (make-subvector
-     (subvector-v v)
-     (+ first-index (subvector-first-index v))
-     length
-     ))))
+    (let ([length (or length (- (subvector-length v) first-index))])
+      (when (> length (subvector-length v))
+        (error 'public-make-subvector "length ~a is too long for subvector ~a" length v))
+      (make-subvector
+       (subvector-v v)
+       (+ first-index (subvector-first-index v))
+       length
+       )))
+   (else
+    (error 'public-make-subvector "~s is neither a vector nor a subvector" v))))
 (define (public-subvector . values)
   (list->subvector values))
 (define (list->subvector seq)
