@@ -29,18 +29,20 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (define (keep-low! i)
     (set! num-<= (add1 num-<=)))
 
-  (let ([pivot-value (subvector-ref sv pivot-index)])
-    (let loop ([MAX (subvector-ref sv 0)]
-               [MIN (subvector-ref sv 0)])
-      (if (< (+ num-> num-<=) (subvector-length sv))
-          (let ((candidate-index num-<=))
-            (let ((candidate (subvector-ref sv candidate-index)))
-              (if (< pivot-value candidate)
-                  (swap-high! candidate-index)
-                  (keep-low! candidate-index))
-              (loop (max MAX candidate)
-                    (min MIN candidate))))
-          (printf "partition min is ~a; max is ~a~%" MIN MAX)))
+  (let* ([pivot-value (subvector-ref sv pivot-index)]
+         [already-sorted?
+          (let loop ([MAX (subvector-ref sv 0)]
+                     [MIN (subvector-ref sv 0)])
+            (if (< (+ num-> num-<=) (subvector-length sv))
+                (let ((candidate-index num-<=))
+                  (let ((candidate (subvector-ref sv candidate-index)))
+                    (if (< pivot-value candidate)
+                        (swap-high! candidate-index)
+                        (keep-low! candidate-index))
+                    (loop (max MAX candidate)
+                          (min MIN candidate))))
+                (equal? MAX MIN)))])
+
 
     (let ([new-pivot-index
            ;; Seems dumb to search for the pivot after we've finished;
@@ -48,14 +50,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
            ;; efficient.  It'd surely be more complicated, though.
            (subvector-find-first sv pivot-value)])
 
-      (when #t
+      (when #f
         (let ([sv-<= (subvector->list (make-subvector sv 0 new-pivot-index))]
               [sv->  (subvector->list (make-subvector sv new-pivot-index))])
           (printf "partitioned ~a into ~a ~a~%" DEBUG-original sv-<= sv->))
         (when (not (is-partitioned? sv pivot-value))
           (error 'partition! "Oops, I failed ~a" sv)))
 
-      new-pivot-index)))
+      (values already-sorted? new-pivot-index))))
 
 (define-test-suite partition-tests
 
@@ -73,23 +75,19 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (qsort-subvector! sv)
   (case (subvector-length sv)
     ((0 1)
-     (printf "Tiny ~a is already sorted.~%" (subvector->list sv))
      sv)
     (else
-     (printf "Sorting ~a ..." (subvector->list sv))
-
      ;; We choose the index of an initial pivot, partition, then
      ;; update the index, since the partitioning will likely have
      ;; moved that value.
      (let ([orig-index (add1 (random (sub1 (subvector-length sv))))])
-       (printf "pivot-index is ~a; value is ~a~%" orig-index (subvector-ref sv orig-index))
-       (let ([pivot-index (partition! sv orig-index)])
-         (qsort-subvector! (make-subvector sv 0 pivot-index))
-         (qsort-subvector! (make-subvector sv pivot-index))))
+       (let-values ([(already-sorted? pivot-index) (partition! sv orig-index)])
+         (when (not already-sorted?)
+           (qsort-subvector! (make-subvector sv 0 pivot-index))
+           (qsort-subvector! (make-subvector sv pivot-index)))))
      (let ([l (subvector->list sv)])
        (when (not (apply <= l))
          (error 'qsort-subvector! "Crap, it's not sorted: ~a" l)))
-     (printf "~a is sorted.~%" (subvector->list sv))
      sv)))
 
 (define (is-partitioned? sv value)
