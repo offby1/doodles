@@ -5,7 +5,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
-(require schemeunit schemeunit/text-ui)
+(require (planet schematics/schemeunit:3)
+         (planet schematics/schemeunit:3/text-ui))
 (define (hmm . stuff)
   "dude, maybe you should write some tests")
 (define-test-suite hmm-tests
