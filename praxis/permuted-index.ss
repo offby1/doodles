@@ -4,29 +4,27 @@
 exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
+;; http://programmingpraxis.com/2009/12/22/permuted-index/
+
 #lang scheme
 (require srfi/1
          (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui))
 
-(define (all-rotations s)
-  (let* ([s  (regexp-split #px" +" s)]
-         [l (length s)])
-    (let loop ([counter (length s)]
-               [s (apply circular-list s)]
-               [result '()])
-      (if (positive? counter)
-          (loop
-           (sub1 counter)
-           (cdr s)
-           (cons (take s l) result))
-          (reverse result)))))
+(define (all-splits s)
+  (let* ([s (regexp-split #px" +" s)]
+         [l (length s) ])
+    (for/list
+        ([i (in-range (add1 l))])
+      (list (take s i)
+            (drop s i)))))
 
+(define-test-suite all-splits-tests
+  (pretty-print (all-splits "Yo momma eats elderberries")))
 
-(define-test-suite all-rotations-tests
-  (let ([ s  "This sentence has some words  in it"])
-    (check-equal? 7 (length (all-rotations s)))))
+(define-test-suite eva-thang
+  all-splits-tests)
 
 (define (main . args)
-  (exit (run-tests all-rotations-tests 'verbose)))
-(provide all-rotations-tests main)
+  (exit (run-tests eva-thang 'verbose)))
+(provide main)
