@@ -8,8 +8,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; http://golang.org/doc/go_spec.html
 
 #lang scheme
-(require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
 
 ;; Crude copy of the "go" language's "go" statement.
 (define-syntax-rule (go thing) (begin (thread (lambda () thing)) (void)))
