@@ -19,11 +19,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 ;; Copy the values from channel 'in' to 'out', removing those
 ;; divisible by 'prime'.
-(define (filter prime in out)
+(define (filter src dst prime)
   (let loop ()
-    (let ([candidate (channel-get in)])
-      (when (not (zero? (remainder candidate prime)))
-        (channel-put out candidate)))
+    (let ([i (channel-get src)])
+      (when (not (zero? (remainder i prime)))
+        (channel-put dst i)))
     (loop)))
 
 ;; The prime sieve: Daisy-chain filter processes together.
@@ -32,9 +32,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (go (generate ch))
     (let loop ([ch ch])
       (let ([ch1 (make-channel)]
-            [p (channel-get ch)])
-        (printf "~a~%" p)
-        (go (filter p ch ch1))
+            [prime (channel-get ch)])
+        (printf "~a~%" prime)
+        (go (filter ch ch1 prime))
         (loop ch1)))))
 
 (provide main)
