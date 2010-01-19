@@ -9,7 +9,7 @@ exec  mzscheme --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui))
 
 (define/contract (prime? n)
-  (-> (and/c (lambda (x) (< 1 x)) integer?) boolean?)
+  (-> (and/c ((curry <) 1) integer?) boolean?)
   (let/ec return
     (for ([x (in-range 2 (add1  (inexact->exact (floor (sqrt n)))))])
       (when (zero? (remainder n x))
