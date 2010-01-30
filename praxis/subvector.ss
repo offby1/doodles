@@ -28,21 +28,27 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
        )))
    (else
     (error 'public-make-subvector "~s is neither a vector nor a subvector" v))))
+
 (define (public-subvector . values)
   (list->subvector values))
+
 (define (list->subvector seq)
   (let ([v (list->vector seq)])
     (make-subvector v 0 (vector-length v))))
+
 (define (subvector->list sv)
   (reverse
    (for/fold ([result '()])
        ([index (in-range (subvector-length sv))])
        (cons (public-subvector-ref sv index)
              result))))
+
 (define (public-subvector-ref sv index)
   (vector-ref (subvector-v sv) (+ index (subvector-first-index sv))))
+
 (define (public-subvector-set! sv index value)
   (vector-set! (subvector-v sv) (+ index (subvector-first-index sv)) value))
+
 (define (subvector-find-first sv sought)
   (let loop ((i 0))
     (if (equal? sought (public-subvector-ref sv i))

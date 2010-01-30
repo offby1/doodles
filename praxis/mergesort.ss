@@ -61,6 +61,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-simple-check (check-sorted? thing)
   (sorted? thing))
+
 (define sorted?
   (match-lambda
    [(? subvector? sv)
