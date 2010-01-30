@@ -22,6 +22,22 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite all-splits-tests
   (pretty-print (all-splits "Yo momma eats elderberries")))
 
+(define (rejoin splits)
+  (map
+   (lambda (s)
+     (string-append
+      (string-join (first s) " ")
+      (string #\tab)
+      (string-join (second s) " ")))
+   splits))
+
+(define (interesting-first-word words)
+  (first words))
+(define (top s)
+  (rejoin
+   (filter interesting-first-word
+           (all-splits s))))
+
 (define-test-suite eva-thang
   all-splits-tests)
 
