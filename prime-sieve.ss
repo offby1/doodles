@@ -10,14 +10,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 
 ;; Crude copy of the "go" language's "go" statement.
-(define-syntax-rule (go thing) (begin (thread (lambda () thing)) (void)))
+(define-syntax-rule (go body ...) (begin (thread (lambda () body ...)) (void)))
 
 ;; Send the sequence 2, 3, 4, ... to channel 'ch'.
 (define (generate ch)
   (for ([i (in-naturals 2)])
     (channel-put ch i)))
 
-;; Copy the values from channel 'in' to 'out', removing those
+;; Copy the values from channel 'src' to 'dst', removing those
 ;; divisible by 'prime'.
 (define (filter src dst prime)
   (let loop ()
