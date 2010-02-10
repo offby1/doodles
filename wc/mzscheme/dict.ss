@@ -1,10 +1,10 @@
 #lang scheme
 
-(require (planet offby1/offby1/set)
+(require (prefix-in set: (planet "set.ss" ("soegaard" "galore.plt" 4 2)))
+         (only-in srfi/67 string-compare)
          scheme/runtime-path)
 
 (provide all-neighbors
-         with-neato-output
          random-word-pair)
 
 (define-runtime-path *dictionary-file-name* (build-path "/usr/share/dict/words"))
@@ -14,10 +14,12 @@
     (lambda (inp)
       (for/fold ([w-b-l  (make-immutable-hash '())])
           ([word (in-lines inp)])
+
           (let* ((l (string-length word))
-                 (same-length-words (hash-ref w-b-l l make-set)))
-            (hash-set w-b-l l (add same-length-words
-                                   (string-downcase word))))))))
+                 (same-length-words (hash-ref w-b-l l (curry set:make-ordered string-compare))))
+
+            (hash-set w-b-l l (set:insert (string-downcase word)
+                                          same-length-words)))))))
 
 (define *the-alphabet*
   (list->vector
@@ -42,30 +44,11 @@
       (append (25-varieties word letters-to-examine)
               result)))
 
-(define *graphis-output-port* (make-parameter #f (lambda (v)
-                                                   (when (not (output-port? v))
-                                                     (raise-type-error '*graphis-output-port* "output-port?" v))
-                                                   v)))
-
 (define (all-neighbors word)
-  (let ((rv (filter (lambda (n) (is-present? n  (hash-ref *words-by-length* (string-length word)))) (olvs word))))
-    (when (*graphis-output-port*)
-      (for-each (lambda (n)
-                  (fprintf (*graphis-output-port*) "~s -- ~s;~n" word n))
-                rv))
-    rv))
+  (filter (lambda (n) (set:member? n  (hash-ref *words-by-length* (string-length word)))) (olvs word)))
 
 (define (random-word-pair wlength)
-  (let* ((words (list->vector (hash-map (hash-ref *words-by-length* wlength) (lambda (k v) k))))
+  (let* ((words (list->vector (set:elements (hash-ref *words-by-length* wlength))))
          (length (vector-length words)))
     (list (vector-ref words (random length))
           (vector-ref words (random length)))))
-
-(define (with-neato-output thunk)
-  (parameterize ((*graphis-output-port*
-                  (open-output-file "network.dot" #:exists 'truncate/replace)))
-    (fprintf (*graphis-output-port*) "Graph fred{~nsize=\"30,30\"~n")
-    (begin0
-        (thunk)
-      (fprintf (*graphis-output-port*) "}~n")
-      (close-output-port (*graphis-output-port*)))))
