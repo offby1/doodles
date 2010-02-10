@@ -45,7 +45,9 @@
               result)))
 
 (define (all-neighbors word)
-  (filter (lambda (n) (set:member? n  (hash-ref *words-by-length* (string-length word)))) (olvs word)))
+  (filter
+   (curryr set:member? (hash-ref *words-by-length* (string-length word)))
+   (olvs word)))
 
 (define (random-word-pair wlength)
   (let* ((words (list->vector (set:elements (hash-ref *words-by-length* wlength))))
