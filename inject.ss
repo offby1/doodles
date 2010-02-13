@@ -22,7 +22,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define/contract (inject letter words)
   (char? (listof string?) . -> . (listof (listof string?)))
-  (map (lambda (w) (inject-1 letter w)) words))
+  (map (curry inject-1 letter) words))
 
 (define-test-suite inject-tests
 
