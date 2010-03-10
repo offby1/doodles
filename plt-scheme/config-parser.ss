@@ -7,9 +7,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require (planet schematics/schemeunit:3)
          (planet schematics/schemeunit:3/text-ui)
-         srfi/13
-         srfi/26)
-
+         srfi/13)
 
 (define-struct (exn:fail:user:config-parser exn:fail:user)
   (input-name line-number)
@@ -147,7 +145,7 @@ EOF
          (let ((desired-permissions '(read execute))
                (actual-permissions  (file-or-directory-permissions name)))
            (if (and (not (equal? name (build-path "/proc")))
-                    (andmap (cut member <> actual-permissions) desired-permissions))
+                    (andmap ((curryr member) actual-permissions) desired-permissions))
                accumulator
                (begin
                  (fprintf

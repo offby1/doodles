@@ -101,7 +101,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (for*/fold ([result (make-immutable-hash '())])
       ([d (in-list dicts)]
        [(k v) (in-dict d)])
-      (hash-update result k (cut + v <>) 0)))
+      (hash-update result k ((curry +) v) 0)))
 
 (define (dicts-equal? d1 d2)
   (and (equal? (dict-count d1)
@@ -219,7 +219,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                            (format "I have ~a, and {z}.  Gosh!"
                                    (apply  string-append
                                            (add-between
-                                            (map (cut format "{~a}" <>)
+                                            (map ((curry format) "{~a}")
                                                  (build-list 25 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
                                             ", ")))
                            counter)))
