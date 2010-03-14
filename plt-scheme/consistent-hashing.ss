@@ -10,14 +10,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (planet schematics/schemeunit:3/text-ui)
          (planet williams/uuid:1:1/uuid))
 
+(define (hex-string->integer hs)
+  (call-with-input-string
+   (string-append "#x" hs)
+   read))
+
 (define uuid->integer
   (match-lambda
    [(? string? u)
     (uuid->integer (string->uuid u))]
    [(? uuid? u)
-    (call-with-input-string
-     (string-append "#x" (uuid->hex-string u))
-     read)]))
+    (hex-string->integer (uuid->hex-string u))]))
 
 (define (guid->shard guid all-shards)
   (let ([n (uuid->integer guid)])
