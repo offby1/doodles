@@ -5,7 +5,7 @@ hello: hello.scm
 	chicken $^
 
 check: hello
-	./$^
+	time ./$^
 
 clean:
 	rm -f hello PROFILE

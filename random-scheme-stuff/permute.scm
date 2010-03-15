@@ -7,14 +7,18 @@
 
 ; From SICP, 2nd ed., more or less
 
-(module permute mzscheme
-(require (only (lib "1.ss" "srfi") delete append-map))
+#lang scheme
+
 (define (perms s)
 
   (if (null? s)
       (list '())
     (append-map (lambda (x)
-                  (map (lambda (p) (cons x p))
-                       (perms (delete x s))))
+                  (map (curry cons x)
+                       (perms (remove x s))))
                 s)))
-)
+
+(let ([n 9])
+  (printf "There are at least ~a permutations of the first ~a nonnegative integers~%"
+          (length (perms (build-list n values)))
+          n))

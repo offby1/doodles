@@ -5,7 +5,7 @@
   (let loop ((left '())
              (right l)
              (result '()))
-    (cond 
+    (cond
      ((null? right)
       (cons (append l (list item)) result))
      (else
