@@ -11,9 +11,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   "dude, maybe you should write some tests")
 (define-test-suite hmm-tests
 
-  (let ((stuff 'bother))
-    (check-equal? stuff 'bother)
-    (check-equal? 'actual 'expected "For Phillip Morris ... from Western Union")))
+  (check-equal? 'actual 'expected "For Phillip Morris ... from Western Union"))
 
 (define (main . args)
   (exit (run-tests hmm-tests 'verbose)))
