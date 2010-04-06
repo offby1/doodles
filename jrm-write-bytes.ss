@@ -7,14 +7,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; http://funcall.blogspot.com/2010/04/i-spent-lot-of-time-over-weekend.html
 
 #lang scheme
-(require schemeunit schemeunit/text-ui)
+(require schemeunit schemeunit/text-ui
+         file/md5)
 
-(define-syntax-rule (false-if-exn body ...)
+(define-syntax-rule (false-if-exn verbose? body ...)
   (with-handlers
       ([exn:fail?
         (lambda (exn)
-          (fprintf (current-error-port)
-                   "Uh oh: ~a~%" (exn-message exn))
+          (when verbose?
+            (fprintf (current-error-port)
+                     "Uh oh: ~a~%" (exn-message exn)))
           #f)])
     body ...))
 
@@ -22,23 +24,21 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define/contract (store-name->filename store-name)
   (string? . -> . path?)
-  (build-path "/tmp" (number->string (equal-hash-code store-name))))
+  (build-path "/tmp" (bytes->path-element (md5 (string->bytes/utf-8 store-name)))))
 
-;; (write-bytes! store-name byte-vector) => address
 (define/contract (write-bytes! store-name byte-vector)
   (string? bytes? . -> . (or/c false? address?))
-  (false-if-exn
+  (false-if-exn #t
    (let ([fn (store-name->filename store-name)])
-     (false-if-exn (delete-file fn))
+     (false-if-exn #f (delete-file fn))
      (call-with-output-file fn
        (lambda (op)
          (display byte-vector op)))
      (make-address store-name fn))))
 
-;; (read-bytes store-name address) => byte-vector
 (define/contract (read-bytes address)
   (address? . -> . (or/c false? bytes?))
-  (false-if-exn
+  (false-if-exn #t
    (file->bytes (address-file-name address))))
 
 (define-test-suite hmm-tests
