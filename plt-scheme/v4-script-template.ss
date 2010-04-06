@@ -5,14 +5,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
-(require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
+(require schemeunit schemeunit/text-ui)
+
 (define (hmm . stuff)
   "dude, maybe you should write some tests")
-(define-test-suite hmm-tests
 
+(define-test-suite hmm-tests
   (check-equal? 'actual 'expected "For Phillip Morris ... from Western Union"))
 
 (define (main . args)
   (exit (run-tests hmm-tests 'verbose)))
+
 (provide hmm main)

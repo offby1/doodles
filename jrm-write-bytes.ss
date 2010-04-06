@@ -7,8 +7,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; http://funcall.blogspot.com/2010/04/i-spent-lot-of-time-over-weekend.html
 
 #lang scheme
-(require (planet schematics/schemeunit:3)
-         (planet schematics/schemeunit:3/text-ui))
+(require schemeunit schemeunit/text-ui)
 
 (define-syntax-rule (false-if-exn body ...)
   (with-handlers
