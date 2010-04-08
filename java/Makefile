@@ -1,9 +1,10 @@
-USE_GCJ := yes
+USE_GCJ := no
 
-ifdef USE_GCJ
+ifeq ($(USE_GCJ), yes)
+GCJH  := gcjh-4.3
 JAVA  := gij
 JAVAC := /usr/bin/javac
-JAVAH := gcjh -jni
+JAVAH := $(GCJH) -jni
 else
 JAVA  := java
 JAVAC := javac
@@ -13,7 +14,7 @@ endif
 CLASSES	:= HelloWorld CallBack
 LIB	:= Hello
 
-ifdef USE_GCJ
+ifeq ($(USE_GCJ), yes)
 # Unfortunately if I simply say `gcj HelloWorld.java' it complains
 # about `Cannot find class "CallBack" [JLS 8]'
 $(word 1,$(CLASSES)).class: $(patsubst %,%.java,$(CLASSES))
@@ -29,7 +30,7 @@ endif
 lib%.so: %.o
 	$(CC) $(LDFLAGS) $^ -shared -o $@
 
-CPPFLAGS:= -I/usr/local/include -I/usr/local/include/linux
+CPPFLAGS:= -I/usr/local/include -I/usr/local/include/linux  -I/usr/lib/jvm/java-6-openjdk/include
 LDFLAGS	:= -shared
 
 all: $(patsubst %,%.class,$(CLASSES)) lib$(LIB).so
