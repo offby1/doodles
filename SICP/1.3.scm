@@ -1,34 +1,34 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec mzscheme -qu "$0" ${1+"$@"}
+exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
+
+#lang scheme
 
 (define (square z)
   (* z z))
 
 (define (sum-of-squares-of-two-largest a b c)
 
-  (define (sos x y)
-    (+ (square x)
-       (square y)))
-
-  (if (and (<= a b)
-           (<= a c))
-      (sos b c)
-    (if (<= b a)
-        (sos a c)
-      (sos a b))))
-
-;; Naturally Riastradh has a more clever approach:
-
-(define (sum-of-squares-of-two-largest a b c)
   (define smallest
-    (if (<= a b)
-        (if (<= a c) a c)
-      (if (<= b c) b c)))
+    (cond
+     ((<= a b c)
+      a)
+     ((<= b a c)
+      b)
+     (else
+      c)))
 
   (- (+ (square a)
         (square b)
         (square c))
-     (square smallest)
-     ))
+     (square smallest)))
+
+(provide main)
+(define (main . args)
+  (define (demo a b c)
+    (printf "~a ~a ~a => ~a~%" a b c (sum-of-squares-of-two-largest a b c)))
+
+  (demo 1 2 3)
+  (demo 3 2 1)
+  (demo 9 9 9))
