@@ -23,14 +23,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       (in-corpus? thing corpus)))
 
 (define (string->words s)
-  (define (strip x)
-    (regexp-replace* #px"[^[:alpha:]]+" x ""))
-  (map strip (regexp-split #rx" " (string-downcase s))))
+  (define (strip rx x) (regexp-replace* rx x ""))
+  (map (compose
+        (curry strip #px"^'+")
+        (curry strip #px"'+$")
+        (curry strip #px"[^'[:alpha:]]+"))
+       (regexp-split #rx" " (string-downcase s))))
 
 (define-test-suite string->words-tests
   (check-equal? (string->words "Hey you!!") (list "hey" "you"))
   (check-equal? (string->words "YO MOMMA") (list "yo" "momma"))
-  (check-equal? (string->words "Don't get tripped up by apostrophes'")
+  (check-equal? (string->words "Don't get tripped up by 'apostrophes'")
                 (list  "don't" "get" "tripped" "up" "by" "apostrophes")))
 
 (define-test-suite incubot-sentence-tests
