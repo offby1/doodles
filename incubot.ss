@@ -46,10 +46,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                  (set)
                  (make-immutable-hash '()))])
       ([s (in-list sentences)])
-      (add-to-corpus c s)))
+      (add-to-corpus s c)))
 
-(define/contract (add-to-corpus c s)
-  (-> corpus? string? corpus?)
+(define/contract (add-to-corpus s c)
+  (-> string? corpus? corpus?)
   (make-corpus
    (set-add (corpus-strings c) s)
    (for/fold ([h (corpus-strings-by-word c)])
@@ -128,7 +128,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (word-popularity "some"  (make-test-corpus)) 2)
   (check-equal? (word-popularity "thing" (make-test-corpus)) 2)
 
-  (let ([bigger (add-to-corpus (make-test-corpus) "Pound cake")])
+  (let ([bigger (add-to-corpus "Pound cake" (make-test-corpus))])
     (check-equal? (word-popularity "frotz" bigger) 0)
     (check-equal? (word-popularity "else"  bigger) 1)
     (check-equal? (word-popularity "some"  bigger) 2)
