@@ -12,7 +12,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; Note that if a word appears twice or more in a given sentence, we
 ;; only count it once.  No particular reason, except that this seems
 ;; like it will be easy.
-(define-struct corpus (strings pops-by-word strings-by-word) #:transparent)
+(define-struct corpus (strings strings-by-word) #:transparent)
 
 (define/contract (random-choose seq)
   (-> list? any/c)
@@ -44,7 +44,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (->* () () #:rest (listof string?) corpus?)
   (for/fold ([c (make-corpus
                  (set)
-                 (make-immutable-hash '())
                  (make-immutable-hash '()))])
       ([s (in-list sentences)])
       (add-to-corpus c s)))
@@ -53,9 +52,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (-> corpus? string? corpus?)
   (make-corpus
    (set-add (corpus-strings c) s)
-   (for/fold ([h (corpus-pops-by-word c)])
-       ([w (in-set (string->words s))])
-       (hash-increment h w))
    (for/fold ([h (corpus-strings-by-word c)])
        ([w (in-set (string->words s))])
        (hash-append h w s))))
@@ -87,9 +83,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
                      (set "don't" "get" "tripped" "up" "by" "apostrophes")))
 
+(define/contract (pops-by-word c w)
+  (-> corpus? string? natural-number/c)
+  (length (hash-ref (corpus-strings-by-word c) w '())))
+
 (define/contract (word-popularity w c)
   (string? corpus? . -> . natural-number/c)
-  (hash-ref (corpus-pops-by-word c) w 0))
+  (pops-by-word c w))
 
 (define (make-test-corpus)
   (public-make-corpus
@@ -101,7 +101,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define/contract (rarest ws c)
   (-> set? corpus? (or/c string? #f))
   (let ([result (foldl (lambda (w accum)
-                         (let ([p (hash-ref (corpus-pops-by-word c) w 0)])
+                         (let ([p (pops-by-word c w)])
                            (cond
                             ((positive? p)
                              (cond
