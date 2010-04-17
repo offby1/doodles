@@ -23,7 +23,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       (in-corpus? thing corpus)))
 
 (define (string->words s)
-  (define (strip rx) (lambda (x) (regexp-replace* rx x "")))
+  (define (strip rx) (curryr (curry regexp-replace* rx) ""))
   (map (compose
         (strip #px"^'+")
         (strip #px"'+$")
