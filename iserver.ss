@@ -29,6 +29,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
   (let ([s (time (make-incubot-server "/tmp/davinci.txt"))])
+
+    (for ([w (list "Pretend" "I'm" "doing" "something" "real" "important")])
+       (printf "~a " w)
+       (flush-output)
+       (sleep 1))
+    (newline)
+
     (for ([inp (in-list (list
                          "Oh shit"
                          "Oops, ate too much cookie dough"
