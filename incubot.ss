@@ -22,6 +22,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (or (not thing)
       (in-corpus? thing corpus)))
 
+(define (string->words s)
+  (define (strip x)
+    (regexp-replace* #px"[^[:alpha:]]+" x ""))
+  (map strip (regexp-split #rx" " (string-downcase s))))
+
+(define-test-suite string->words-tests
+  (check-equal? (string->words "Hey you!!") (list "hey" "you"))
+  (check-equal? (string->words "YO MOMMA") (list "yo" "momma"))
+  (check-equal? (string->words "Don't get tripped up by apostrophes'")
+                (list  "don't" "get" "tripped" "up" "by" "apostrophes")))
+
 (define-test-suite incubot-sentence-tests
   (let ([corpus (make-test-corpus)])
     (let* ([input-1 "For Phillip Morris ... from Western Union"]
@@ -38,7 +49,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                               (not output-2))
                          (not (equal? (output-1 output-2))))))))
 
+(define-test-suite all-tests
+  string->words-tests
+  incubot-sentence-tests)
+
 (define (main . args)
-  (exit (run-tests incubot-sentence-tests 'verbose)))
+  (exit (run-tests all-tests 'verbose)))
 
 (provide incubot-sentence main)
