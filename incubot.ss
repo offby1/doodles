@@ -5,22 +5,31 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
-(require schemeunit schemeunit/text-ui)
+(require schemeunit schemeunit/text-ui
+         mzlib/trace)
 
 (define (incubot-sentence input-sentence corpus)
-  "dude, maybe you should write some tests")
+  (car corpus))
 
-(define (in-corpus? corpus sentence)
-  #t)
+(define (in-corpus? sentence corpus)
+  (member sentence corpus))
 
 (define (make-test-corpus)
-  #f)
+  (list "Some thing"
+        "Some thing else"))
 
 (define-test-suite incubot-sentence-tests
   (let ([corpus (make-test-corpus)])
-    (check-true (in-corpus? corpus
-                            (incubot-sentence "For Phillip Morris ... from Western Union"
-                                              corpus)) )))
+    (let* ([input-1 "For Phillip Morris ... from Western Union"]
+           [output-1 (incubot-sentence input-1 corpus)]
+           [input-2 "I have no words in common with input-1"]
+           [output-2 (incubot-sentence input-2 corpus)])
+    (check-not-false (in-corpus? output-1 corpus) )
+    (check-not-false (in-corpus? output-2 corpus))
+
+    ;; Since the two input sentences have nothing in common, we should
+    ;; have come up with different outputs for each.
+    (check-not-equal? output-1 output-2))))
 
 (define (main . args)
   (exit (run-tests incubot-sentence-tests 'verbose)))
