@@ -12,12 +12,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (incubot-sentence input-sentence corpus)
   #f)
 
-(define (in-corpus? sentence corpus)
+(define-struct corpus () #:transparent)
+
+(define/contract (in-corpus? sentence corpus)
+  (string? corpus? . -> . boolean?)
   #f)
 
-(define (make-test-corpus)
-  (list "Some thing"
-        "Some thing else"))
+(define/contract (make-test-corpus)
+  (-> corpus?)
+  (make-corpus))
 
 (define (legitimate-response? thing corpus)
   (or (not thing)
@@ -42,7 +45,16 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-sets-equal? (string->words "Hey you!!") (set "hey" "you"))
   (check-sets-equal? (string->words "YO MOMMA") (set "yo" "momma"))
   (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
-                     (set  "don't" "get" "tripped" "up" "by" "apostrophes")))
+                     (set "don't" "get" "tripped" "up" "by" "apostrophes")))
+
+(define (word-popularity w corpus)
+  0)
+
+(define-test-suite popularity-tests
+  (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
+  (check-equal? (word-popularity "else"  (make-test-corpus)) 1)
+  (check-equal? (word-popularity "some"  (make-test-corpus)) 2)
+  (check-equal? (word-popularity "thing" (make-test-corpus)) 2))
 
 (define-test-suite incubot-sentence-tests
   (let ([corpus (make-test-corpus)])
@@ -62,7 +74,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-test-suite all-tests
   string->words-tests
-  incubot-sentence-tests)
+  incubot-sentence-tests
+  popularity-tests)
 
 (define (main . args)
   (exit (run-tests all-tests 'verbose)))
