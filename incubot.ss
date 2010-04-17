@@ -12,19 +12,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; Note that if a word appears twice or more in a given sentence, we
 ;; only count it once.  No particular reason, except that this seems
 ;; like it will be easy.
-(define-struct corpus (strings pops-by-word) #:transparent)
-
-(define/contract (rarest ws c)
-  (-> set? corpus? string?)
-  "frotz")
+(define-struct corpus (strings pops-by-word strings-by-word) #:transparent)
 
 (define/contract (random-choose seq)
   (-> list? any/c)
-  "plotz")
+  (list-ref seq (random (length seq))))
 
 (define/contract (strings-containing-word w c)
   (-> string? corpus? (listof string?))
-  '())
+  (hash-ref (corpus-strings-by-word c) w))
 
 (define incubot-sentence
   (match-lambda*
@@ -41,10 +37,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (hash-increment h key)
   (hash-set h key (add1 (hash-ref h key 0))))
+(define (hash-append h key value)
+  (hash-set h key (cons value (hash-ref h key '()))))
 
 (define/contract (public-make-corpus . sentences)
   (->* () () #:rest (listof string?) corpus?)
-  (for/fold ([c (make-corpus (set) (make-immutable-hash '()))])
+  (for/fold ([c (make-corpus
+                 (set)
+                 (make-immutable-hash '())
+                 (make-immutable-hash '()))])
       ([s (in-list sentences)])
       (add-to-corpus c s)))
 
@@ -54,29 +55,33 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    (set-add (corpus-strings c) s)
    (for/fold ([h (corpus-pops-by-word c)])
        ([w (in-set (string->words s))])
-       (hash-increment h w))))
+       (hash-increment h w))
+   (for/fold ([h (corpus-strings-by-word c)])
+       ([w (in-set (string->words s))])
+       (hash-append h w s))))
 
 (define (legitimate-response? thing corpus)
   (or (not thing)
       (in-corpus? thing corpus)))
-(trace legitimate-response?)
 
 (define/contract (string->words s)
   (string? . -> . set?) ;; it'd be nice if I could say "a set whose
   ;; elements are all strings"
   (define (strip rx) (curryr (curry regexp-replace* rx) ""))
   (apply set
-         (map (compose
-               (strip #px"^'+")
-               (strip #px"'+$")
-               (strip #px"[^'[:alpha:]]+"))
-              (regexp-split #rx" " (string-downcase s)))))
+         (filter (compose positive? string-length)
+                 (map (compose
+                       (strip #px"^'+")
+                       (strip #px"'+$")
+                       (strip #px"[^'[:alpha:]]+"))
+                      (regexp-split #rx" " (string-downcase s))))))
 
 (define-binary-check (check-sets-equal? actual expected)
   (and (set-empty? (set-subtract actual expected))
        (set-empty? (set-subtract expected actual))))
 
 (define-test-suite string->words-tests
+  (check-sets-equal? (string->words "...") (set))
   (check-sets-equal? (string->words "Hey you!!") (set "hey" "you"))
   (check-sets-equal? (string->words "YO MOMMA") (set "yo" "momma"))
   (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
@@ -90,6 +95,36 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (public-make-corpus
    "Some thing"
    "Some thing else"))
+
+(define (pf fmt . data)
+  (apply fprintf (current-error-port) fmt data))
+(define/contract (rarest ws c)
+  (-> set? corpus? (or/c string? #f))
+  (let ([result (foldl (lambda (w accum)
+                         (let ([p (hash-ref (corpus-pops-by-word c) w 0)])
+                           (cond
+                            ((positive? p)
+                             (cond
+                              ((not accum)
+                               (cons w p))
+                              ((< p (cdr accum))
+                               (cons w p))
+                              (else
+                               accum))
+                             )
+                            (else
+                             accum))
+                           ))
+                       #f
+                       (set-map ws values))])
+    (and result
+         (car result))))
+
+(define-test-suite rarest-tests
+  (let ([c (make-test-corpus)])
+    (check-equal? (rarest (set "some" "else") c) "else")
+    (check-equal? (rarest (set "some") c) "some")
+    (check-false (rarest (set "ummagumma") c))))
 
 (define-test-suite popularity-tests
   (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
@@ -123,12 +158,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                          (not (equal? output-1 output-2))))
 
     (check-equal? (incubot-sentence "What else do you want?" (make-test-corpus))
-                  "Some thing else"))))
+                  "Some thing else")
+                                    )))
 
 (define-test-suite all-tests
   string->words-tests
+  rarest-tests
   incubot-sentence-tests
-  popularity-tests)
+  popularity-tests
+  )
 
 (define (main . args)
   (exit (run-tests all-tests 'verbose)))
