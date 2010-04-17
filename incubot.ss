@@ -83,13 +83,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
                      (set "don't" "get" "tripped" "up" "by" "apostrophes")))
 
-(define/contract (pops-by-word c w)
-  (-> corpus? string? natural-number/c)
-  (length (hash-ref (corpus-strings-by-word c) w '())))
-
 (define/contract (word-popularity w c)
   (string? corpus? . -> . natural-number/c)
-  (pops-by-word c w))
+  (length (hash-ref (corpus-strings-by-word c) w '())))
 
 (define (make-test-corpus)
   (public-make-corpus
@@ -101,7 +97,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define/contract (rarest ws c)
   (-> set? corpus? (or/c string? #f))
   (let ([result (foldl (lambda (w accum)
-                         (let ([p (pops-by-word c w)])
+                         (let ([p (word-popularity w c)])
                            (cond
                             ((positive? p)
                              (cond
