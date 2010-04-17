@@ -15,25 +15,23 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; Note that if a word appears twice or more in a given sentence, we
 ;; only count it once.  No particular reason, except that this seems
 ;; like it will be easy.
-(define-struct corpus (strings word->pop) #:transparent)
+(define-struct corpus (strings pops-by-word) #:transparent)
 
 (define/contract (in-corpus? sentence c)
   (string? corpus? . -> . boolean?)
   (set-member? (corpus-strings c) sentence))
 
-(define (public-make-corpus . sentences)
-  (define (hash-increment! h key)
-    (hash-set! h key (add1 (hash-ref h key 0))))
-  (let* ([counts-by-word (make-hash)]
-         [sets (for/list ([s sentences])
-                 (string->words s))])
-    (for* ([s (in-list sets)]
-           [word (in-set s)])
-          (hash-increment! counts-by-word word))
-    (make-corpus
-     (apply set-union sets)
-     (lambda (word)
-       (hash-ref counts-by-word word 0)))))
+(define/contract (public-make-corpus . sentences)
+  (->* () () #:rest (listof string?) corpus?)
+  (define (hash-increment h key)
+    (hash-set h key (add1 (hash-ref h key 0))))
+  (make-corpus
+   (apply set sentences)
+   (for/fold ([h (make-immutable-hash '())])
+       ([s (in-list sentences)])
+       (for/fold ([h h])
+           ([w (in-set (string->words s))])
+           (hash-increment h w)))))
 
 (define (legitimate-response? thing corpus)
   (or (not thing)
@@ -62,7 +60,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define/contract (word-popularity w c)
   (string? corpus? . -> . natural-number/c)
-  ((corpus-word->pop c) w))
+  (hash-ref (corpus-pops-by-word c) w 0))
 
 (define (make-test-corpus)
   (public-make-corpus
@@ -71,9 +69,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-test-suite popularity-tests
   (let ([c (public-make-corpus "frotz" "plotz" "frotz")])
-    (check-equal? ((corpus-word->pop c) "fred") 0)
-    (check-equal? ((corpus-word->pop c) "plotz") 1)
-    (check-equal? ((corpus-word->pop c) "frotz") 2))
+    (check-equal? (hash-ref (corpus-pops-by-word c) "fred"  0) 0)
+    (check-equal? (hash-ref (corpus-pops-by-word c) "plotz" 0) 1)
+    (check-equal? (hash-ref (corpus-pops-by-word c) "frotz" 0) 2))
 
   (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
   (check-equal? (word-popularity "else"  (make-test-corpus)) 1)
