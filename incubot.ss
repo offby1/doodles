@@ -6,6 +6,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 (require schemeunit schemeunit/text-ui
+         scheme/set
          mzlib/trace)
 
 (define (incubot-sentence input-sentence corpus)
@@ -22,19 +23,26 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (or (not thing)
       (in-corpus? thing corpus)))
 
-(define (string->words s)
+(define/contract (string->words s)
+  (string? . -> . set?) ;; it'd be nice if I could say "a set whose
+  ;; elements are all strings"
   (define (strip rx) (curryr (curry regexp-replace* rx) ""))
-  (map (compose
-        (strip #px"^'+")
-        (strip #px"'+$")
-        (strip #px"[^'[:alpha:]]+"))
-       (regexp-split #rx" " (string-downcase s))))
+  (apply set
+         (map (compose
+               (strip #px"^'+")
+               (strip #px"'+$")
+               (strip #px"[^'[:alpha:]]+"))
+              (regexp-split #rx" " (string-downcase s)))))
+
+(define-binary-check (check-sets-equal? actual expected)
+  (and (set-empty? (set-subtract actual expected))
+       (set-empty? (set-subtract expected actual))))
 
 (define-test-suite string->words-tests
-  (check-equal? (string->words "Hey you!!") (list "hey" "you"))
-  (check-equal? (string->words "YO MOMMA") (list "yo" "momma"))
-  (check-equal? (string->words "Don't get tripped up by 'apostrophes'")
-                (list  "don't" "get" "tripped" "up" "by" "apostrophes")))
+  (check-sets-equal? (string->words "Hey you!!") (set "hey" "you"))
+  (check-sets-equal? (string->words "YO MOMMA") (set "yo" "momma"))
+  (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
+                     (set  "don't" "get" "tripped" "up" "by" "apostrophes")))
 
 (define-test-suite incubot-sentence-tests
   (let ([corpus (make-test-corpus)])
