@@ -26,13 +26,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define/contract (public-make-corpus . sentences)
   (->* () () #:rest (listof string?) corpus?)
-  (make-corpus
-   (apply set sentences)
-   (for/fold ([h (make-immutable-hash '())])
-       ([s (in-list sentences)])
-       (for/fold ([h h])
-           ([w (in-set (string->words s))])
-           (hash-increment h w)))))
+  (for/fold ([c (make-corpus (set) (make-immutable-hash '()))])
+      ([s (in-list sentences)])
+      (add-to-corpus c s)))
 
 (define/contract (add-to-corpus c s)
   (-> corpus? string? corpus?)
