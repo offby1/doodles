@@ -9,17 +9,35 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          scheme/set
          mzlib/trace)
 
-(define (incubot-sentence input-sentence corpus)
-  #f)
-
 ;; Note that if a word appears twice or more in a given sentence, we
 ;; only count it once.  No particular reason, except that this seems
 ;; like it will be easy.
 (define-struct corpus (strings pops-by-word) #:transparent)
 
-(define/contract (in-corpus? sentence c)
+(define/contract (rarest ws c)
+  (-> set? corpus? string?)
+  "frotz")
+
+(define/contract (random-choose seq)
+  (-> list? any/c)
+  "plotz")
+
+(define/contract (strings-containing-word w c)
+  (-> string? corpus? (listof string?))
+  '())
+
+(define incubot-sentence
+  (match-lambda*
+   [(list (? string? s) (? corpus? c))
+    (incubot-sentence (string->words s) c)]
+   [(list (? set? ws) (? corpus? c))
+    (let ([rare (rarest ws c)])
+      (and rare
+           (random-choose (strings-containing-word rare c))))]))
+
+(define/contract (in-corpus? s c)
   (string? corpus? . -> . boolean?)
-  (set-member? (corpus-strings c) sentence))
+  (set-member? (corpus-strings c) s))
 
 (define (hash-increment h key)
   (hash-set h key (add1 (hash-ref h key 0))))
@@ -41,6 +59,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (legitimate-response? thing corpus)
   (or (not thing)
       (in-corpus? thing corpus)))
+(trace legitimate-response?)
 
 (define/contract (string->words s)
   (string? . -> . set?) ;; it'd be nice if I could say "a set whose
@@ -101,7 +120,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     ;; failed to come up with anything for either.
     (check-not-false (or (and (not output-1)
                               (not output-2))
-                         (not (equal? (output-1 output-2))))))))
+                         (not (equal? output-1 output-2))))
+
+    (check-equal? (incubot-sentence "What else do you want?" (make-test-corpus))
+                  "Some thing else"))))
 
 (define-test-suite all-tests
   string->words-tests
