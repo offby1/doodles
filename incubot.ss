@@ -21,10 +21,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (string? corpus? . -> . boolean?)
   (set-member? (corpus-strings c) sentence))
 
+(define (hash-increment h key)
+  (hash-set h key (add1 (hash-ref h key 0))))
+
 (define/contract (public-make-corpus . sentences)
   (->* () () #:rest (listof string?) corpus?)
-  (define (hash-increment h key)
-    (hash-set h key (add1 (hash-ref h key 0))))
   (make-corpus
    (apply set sentences)
    (for/fold ([h (make-immutable-hash '())])
@@ -32,6 +33,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
        (for/fold ([h h])
            ([w (in-set (string->words s))])
            (hash-increment h w)))))
+
+(define/contract (add-to-corpus c s)
+  (-> corpus? string? corpus?)
+  (make-corpus
+   (set-add (corpus-strings c) s)
+   (for/fold ([h (corpus-pops-by-word c)])
+       ([w (in-set (string->words s))])
+       (hash-increment h w))))
 
 (define (legitimate-response? thing corpus)
   (or (not thing)
@@ -68,15 +77,19 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    "Some thing else"))
 
 (define-test-suite popularity-tests
-  (let ([c (public-make-corpus "frotz" "plotz" "frotz")])
-    (check-equal? (hash-ref (corpus-pops-by-word c) "fred"  0) 0)
-    (check-equal? (hash-ref (corpus-pops-by-word c) "plotz" 0) 1)
-    (check-equal? (hash-ref (corpus-pops-by-word c) "frotz" 0) 2))
-
   (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
   (check-equal? (word-popularity "else"  (make-test-corpus)) 1)
   (check-equal? (word-popularity "some"  (make-test-corpus)) 2)
-  (check-equal? (word-popularity "thing" (make-test-corpus)) 2))
+  (check-equal? (word-popularity "thing" (make-test-corpus)) 2)
+
+  (let ([bigger (add-to-corpus (make-test-corpus) "Pound cake")])
+    (check-equal? (word-popularity "frotz" bigger) 0)
+    (check-equal? (word-popularity "else"  bigger) 1)
+    (check-equal? (word-popularity "some"  bigger) 2)
+    (check-equal? (word-popularity "thing" bigger) 2)
+    (check-equal? (word-popularity "pound" bigger) 1)
+    (check-equal? (word-popularity "cake"  bigger) 1)))
+
 
 (define-test-suite incubot-sentence-tests
   (let ([corpus (make-test-corpus)])
