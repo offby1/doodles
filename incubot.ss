@@ -24,6 +24,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
    [(list (? string? s) (? corpus? c))
     (incubot-sentence (string->words s) c)]
    [(list (? set? ws) (? corpus? c))
+    (pf "~a~%" (set-map ws
+                        (lambda (w)
+                          (cons w (word-popularity w c)))))
     (let ([rare (rarest ws c)])
       (and rare
            (random-choose (strings-containing-word rare c))))]))
@@ -167,6 +170,23 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   )
 
 (define (main . args)
-  (exit (run-tests all-tests 'verbose)))
+  (let ([status (run-tests all-tests 'verbose)])
+    (when (positive? status)
+      (exit 1))
+    (let ([c (time
+              (call-with-input-file
+                  ;; biggest .txt file I could find already on my box
+                  ;; from the "ipython" package
+                  "/tmp/davinci.txt"
+                (lambda (inp)
+                  (for/fold ([c (public-make-corpus)])
+                      ([line (in-lines inp)])
+                      (add-to-corpus line c)))))])
+      (for ([inp (in-list (list
+                           "Oh shit"
+                           "Oops, ate too much cookie dough"
+                           "It's almost inconceivable that none of these words appears in that manual"
+                           "I'm impressed that I can find stuff already."))])
+        (printf "~a => ~a~%" inp (incubot-sentence inp  c))))))
 
 (provide incubot-sentence main)
