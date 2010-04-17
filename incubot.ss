@@ -9,9 +9,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          scheme/set
          mzlib/trace)
 
-;; Note that if a word appears twice or more in a given sentence, we
-;; only count it once.  No particular reason, except that this seems
-;; like it will be easy.
 (define-struct corpus (strings strings-by-word) #:transparent)
 
 (define/contract (random-choose seq)
@@ -89,6 +86,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (make-test-corpus)
   (public-make-corpus
+   "waka ja waka"
    "Some thing"
    "Some thing else"))
 
@@ -106,11 +104,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                               ((< p (cdr accum))
                                (cons w p))
                               (else
-                               accum))
-                             )
+                               accum)))
                             (else
-                             accum))
-                           ))
+                             accum))))
                        #f
                        (set-map ws values))])
     (and result
@@ -125,6 +121,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite popularity-tests
   (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
   (check-equal? (word-popularity "else"  (make-test-corpus)) 1)
+
+  ;; Note that if a word appears twice or more in a given sentence, we
+  ;; only count it once.  No particular reason, except that this seems
+  ;; like it will be easy.
+  (check-equal? (word-popularity "waka"  (make-test-corpus)) 1)
+
   (check-equal? (word-popularity "some"  (make-test-corpus)) 2)
   (check-equal? (word-popularity "thing" (make-test-corpus)) 2)
 
