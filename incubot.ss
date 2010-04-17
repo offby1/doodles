@@ -12,15 +12,28 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (incubot-sentence input-sentence corpus)
   #f)
 
-(define-struct corpus () #:transparent)
+;; Note that if a word appears twice or more in a given sentence, we
+;; only count it once.  No particular reason, except that this seems
+;; like it will be easy.
+(define-struct corpus (strings word->pop) #:transparent)
 
-(define/contract (in-corpus? sentence corpus)
+(define/contract (in-corpus? sentence c)
   (string? corpus? . -> . boolean?)
-  #f)
+  (set-member? (corpus-strings c) sentence))
 
-(define/contract (make-test-corpus)
-  (-> corpus?)
-  (make-corpus))
+(define (public-make-corpus . sentences)
+  (define (hash-increment! h key)
+    (hash-set! h key (add1 (hash-ref h key 0))))
+  (let* ([counts-by-word (make-hash)]
+         [sets (for/list ([s sentences])
+                 (string->words s))])
+    (for* ([s (in-list sets)]
+           [word (in-set s)])
+          (hash-increment! counts-by-word word))
+    (make-corpus
+     (apply set-union sets)
+     (lambda (word)
+       (hash-ref counts-by-word word 0)))))
 
 (define (legitimate-response? thing corpus)
   (or (not thing)
@@ -47,10 +60,21 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-sets-equal? (string->words "Don't get tripped up by 'apostrophes'")
                      (set "don't" "get" "tripped" "up" "by" "apostrophes")))
 
-(define (word-popularity w corpus)
-  0)
+(define/contract (word-popularity w c)
+  (string? corpus? . -> . natural-number/c)
+  ((corpus-word->pop c) w))
+
+(define (make-test-corpus)
+  (public-make-corpus
+   "Some thing"
+   "Some thing else"))
 
 (define-test-suite popularity-tests
+  (let ([c (public-make-corpus "frotz" "plotz" "frotz")])
+    (check-equal? ((corpus-word->pop c) "fred") 0)
+    (check-equal? ((corpus-word->pop c) "plotz") 1)
+    (check-equal? ((corpus-word->pop c) "frotz") 2))
+
   (check-equal? (word-popularity "frotz" (make-test-corpus)) 0)
   (check-equal? (word-popularity "else"  (make-test-corpus)) 1)
   (check-equal? (word-popularity "some"  (make-test-corpus)) 2)
