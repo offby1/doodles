@@ -8,6 +8,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (require (except-in "incubot.ss" main))
 
+(define (pf fmt . args)
+  (apply fprintf (current-error-port) fmt args))
+
 (define (make-incubot-server ifn)
   (let ([*to-server*   (make-channel)]
         [*from-server* (make-channel)])
@@ -27,9 +30,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
        (call-with-input-file ifn
          (lambda (ip)
            (let ([c (time
-                     (for/fold ([c (public-make-corpus)])
-                         ([line (in-lines ip)])
-                         (add-to-corpus line c)))])
+                     (pf "Snarfing ~s ..." ifn)
+                     (begin0
+                         (for/fold ([c (public-make-corpus)])
+                             ([line (in-lines ip)])
+                             (add-to-corpus line c))
+                       (pf "done~%"))
+                     )])
              (let loop ([c c])
                (match (channel-get *to-server*)
                  [(cons symbol inp)
@@ -50,5 +57,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (try "Oh shit")
     (try "Oops, ate too much cookie dough")
     (put "What is all this shit?")
+    (try "hamsters")
     (try "Oh shit")))
 
