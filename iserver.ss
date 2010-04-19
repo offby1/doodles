@@ -11,6 +11,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (make-incubot-server ifn)
   (let ([*to-server*   (make-channel)]
         [*from-server* (make-channel)])
+    (define funcs-by-symbol
+      (make-immutable-hash
+       (list
+        (cons 'get
+              (lambda (inp c)
+                (channel-put *from-server* (incubot-sentence inp c))
+                c))
+        (cons 'put
+              (lambda (sentence c)
+                (channel-put *from-server* #t)
+                (add-to-corpus sentence c))))))
     (thread
      (lambda ()
        (call-with-input-file ifn
@@ -21,12 +32,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                          (add-to-corpus line c)))])
              (let loop ([c c])
                (match (channel-get *to-server*)
-                 [(cons 'get inp)
-                  (channel-put *from-server* (incubot-sentence inp c))
-                  (loop c)]
-                 [(cons 'put sentence)
-                  (channel-put *from-server* #t)
-                  (loop (add-to-corpus sentence c))])))))))
+                 [(cons symbol inp)
+                  (loop ((hash-ref funcs-by-symbol symbol) inp c))])))))))
 
     (lambda (command-sym inp)
       (channel-put *to-server* (cons command-sym inp))
@@ -35,10 +42,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
   (let ([s (make-incubot-server "/tmp/davinci.txt")])
-    (define (try input)
-      (printf "~a => ~s~%" input (time (s 'get input))))
+    (define (get input) (s 'get input))
+    (define (put sentence) (s 'put sentence))
+
+    (define (try input) (printf "~a => ~s~%" input (time (get input))))
+
     (try "Oh shit")
     (try "Oops, ate too much cookie dough")
-    (s 'put "What is all this shit?")
+    (put "What is all this shit?")
     (try "Oh shit")))
 
