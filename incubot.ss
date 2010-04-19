@@ -40,6 +40,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (hash-append h key value)
   (hash-set h key (cons value (hash-ref h key '()))))
 
+(provide public-make-corpus)
 (define/contract (public-make-corpus . sentences)
   (->* () () #:rest (listof string?) corpus?)
   (for/fold ([c (make-corpus
@@ -48,6 +49,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
       ([s (in-list sentences)])
       (add-to-corpus s c)))
 
+(provide add-to-corpus)
 (define/contract (add-to-corpus s c)
   (-> string? corpus? corpus?)
   (make-corpus

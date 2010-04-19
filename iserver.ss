@@ -15,30 +15,30 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      (lambda ()
        (call-with-input-file ifn
          (lambda (ip)
-           (let ([c (for/fold ([c (public-make-corpus)])
-                        ([line (in-lines ip)])
-                        (add-to-corpus line c))])
-             (let loop ()
-               (let ([inp (channel-get *to-server*)])
-                 (channel-put *from-server* (incubot-sentence inp c)))
-               (loop)))))))
-    (lambda (inp)
-      (channel-put *to-server* inp)
+           (let ([c (time
+                     (for/fold ([c (public-make-corpus)])
+                         ([line (in-lines ip)])
+                         (add-to-corpus line c)))])
+             (let loop ([c c])
+               (match (channel-get *to-server*)
+                 [(cons 'get inp)
+                  (channel-put *from-server* (incubot-sentence inp c))
+                  (loop c)]
+                 [(cons 'put sentence)
+                  (channel-put *from-server* #t)
+                  (loop (add-to-corpus sentence c))])))))))
+
+    (lambda (command-sym inp)
+      (channel-put *to-server* (cons command-sym inp))
       (channel-get *from-server*))))
 
 (provide main)
 (define (main . args)
-  (let ([s (time (make-incubot-server "/tmp/davinci.txt"))])
+  (let ([s (make-incubot-server "/tmp/davinci.txt")])
+    (define (try input)
+      (printf "~a => ~s~%" input (time (s 'get input))))
+    (try "Oh shit")
+    (try "Oops, ate too much cookie dough")
+    (s 'put "What is all this shit?")
+    (try "Oh shit")))
 
-    (for ([w (list "Pretend" "I'm" "doing" "something" "real" "important")])
-       (printf "~a " w)
-       (flush-output)
-       (sleep 1))
-    (newline)
-
-    (for ([inp (in-list (list
-                         "Oh shit"
-                         "Oops, ate too much cookie dough"
-                         "It's almost inconceivable that none of these words appears in that manual"
-                         "I'm impressed that I can find stuff already."))])
-      (printf "~a => ~a~%" inp (time (s inp))))))
