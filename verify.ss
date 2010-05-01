@@ -74,7 +74,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
   ;; Insert your credit-card number here :)
   (check-true ((make-verifier credit-card-function 10) 0))
-  )
+  (check-true ((make-verifier credit-card-function 10) 6011302631452178)))
 
 (define-test-suite all-tests
   digits-tests
