@@ -13,6 +13,7 @@ __author__ = 'eric.hanchrow@gmail.com'
 import os.path
 import ConfigParser
 import simpledb
+import time
 
 if __name__ == "__main__":
     my_credentials = ConfigParser.SafeConfigParser()
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     print("Behold the frotz domain:", frotz_domain, dir(frotz_domain))
     print("Items in the frotz domain:", frotz_domain.items)
     frotz_domain['object1'] = dict(k1='value 1', k2='value 2')
+    print("Waiting a couple seconds, since I don't know how to specify ConsistentRead")
+    time.sleep(2)
     print("Object 1:", frotz_domain['object1'])
 
 
