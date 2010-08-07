@@ -5,15 +5,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang scheme
-(require schemeunit schemeunit/text-ui)
 (require "aws-common.ss")
 
 (define (post url form-data)
   (let ([headers `((AWSAccessKeyId   . ,AWSAccessKeyId)
                    (SignatureVersion . 2)
-                   (SignatureMethod  . "MD5")
+                   (SignatureMethod  . HMAC-SHA1)
                    (Timestamp        . ,(rfc-2822-date))
-                   (Signature        . ,(md5-b64 "John Hancock"))
+                   (Signature        . ,(sign #"Sign Me"))
                    )])
     (list url headers)
 
