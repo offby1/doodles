@@ -11,31 +11,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; for the gritty details of authentication
 
 
-(require net/url scheme/date file/md5 scheme/pretty
- (only-in srfi/13 substring/shared)
+(require net/url scheme/pretty
  (planet neil/htmlprag:1:6/htmlprag)
  (planet lizorkin/sxml:2:1/sxml)
  "aws-common.ss")
 
-(define (rfc-2822-date)
-  (parameterize ((date-display-format 'rfc2822))
-    (date->string (seconds->date (current-seconds)) #t)))
-
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
-
-(define (hexdecode abc)
-  (let loop  ((s (bytes->string/utf-8 abc))
-              (result '()))
-    (if (zero? (string-length s))
-        (apply bytes (reverse result))
-        (let* ((two-digits (substring/shared s 0 2))
-               (number (read (open-input-string (string-append "#x" two-digits)))))
-          (loop (substring/shared s 2)
-                (cons number result))))))
-
-(define (md5-b64 bytes)
-  (base64-encode (hexdecode (md5 bytes))))
 
 (define GET #f)
 (define PUT #f)
@@ -74,7 +56,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                       (format "Date: ~a" date)
                       (format "Content-Type: ~a" type)
                       (format "Content-MD5: ~a" (md5-b64 content)))))
-        
+
         (else
          (error "You know ... I just don't know how to deal with" verb)))))
 
