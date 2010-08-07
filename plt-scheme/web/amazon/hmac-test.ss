@@ -28,7 +28,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                           (second (HMAC-SHA1 #"baz" #"ugh")))
                      (bytes=? first second)))
 
-                  )                 
+                  )
                  'verbose)])
     (when (positive? status)
       (exit 1))))
