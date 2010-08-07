@@ -29,10 +29,19 @@ if __name__ == "__main__":
     frotz_domain = sdb['frotz']
     print("Behold the frotz domain:", frotz_domain, dir(frotz_domain))
     print("Items in the frotz domain:", frotz_domain.items)
+
     frotz_domain['object1'] = dict(k1='value 1', k2='value 2')
+    frotz_domain['pet1'] = dict(species='dog', name='rover')
+    frotz_domain['pet2'] = dict(species='dog', name='fido')
+    frotz_domain['pet3'] = dict(species='cat', name='fluffy')
+    frotz_domain['pet4'] = dict(species='cat', name='snowball')
     print("Waiting a couple seconds, since I don't know how to specify ConsistentRead")
     time.sleep(2)
+
     print("Object 1:", frotz_domain['object1'])
+    query = "SELECT * from frotz where species = 'cat'"
+    results = sdb.select(frotz_domain, query)
+    print(query, "=>", results)
 
 
 # git clone http://github.com/sixapart/python-simpledb.git
