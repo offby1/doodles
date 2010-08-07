@@ -50,7 +50,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                 (list auth (format "Date: ~a" date))))
         ((PUT) (call/input-url
                 url
-                (lambda (url headers) (put-pure-port url content headers))
+                (lambda (url headers)
+                  (printf "Url: ~s; content ~s; headers: ~s~%"
+                          (url->string url)
+                          content headers)
+                  (put-pure-port url content headers))
                 html->shtml
                 (list auth
                       (format "Date: ~a" date)
