@@ -6,12 +6,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang scheme
 
-(require file/md5
-         scheme/date
-         (planet lizorkin/sxml:2:1/sxml)
+(require (only-in file/md5 md5)
+         (only-in scheme/date date-display-format date->string)
+         (only-in (planet lizorkin/sxml:2:1/sxml) sxpath)
          (only-in net/base64 base64-encode-stream)
-         (planet jaymccarthy/hmac-sha1:1:1/hmac-sha1)
-         (planet schematics/macro:1:2/macro)
+         (only-in (planet jaymccarthy/hmac-sha1:1:1/hmac-sha1) HMAC-SHA1)
          (only-in srfi/13 substring/shared))
 
 (provide (all-defined-out))
