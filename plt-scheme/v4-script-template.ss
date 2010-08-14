@@ -7,6 +7,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require schemeunit schemeunit/text-ui)
 
+(provide hmm)
 (define (hmm . stuff)
   "dude, maybe you should write some tests")
 
@@ -16,4 +17,4 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (main . args)
   (exit (run-tests hmm-tests 'verbose)))
 
-(provide hmm main)
+(provide main)
