@@ -16,10 +16,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
               (+ (random) sum)))))
 
 (define (main)
-  (let ([outcomes (for/list ([t (in-range 0 1000000)])
-                    (trial))])
-    (exact->inexact
-     (/ (apply + outcomes)
-        (length outcomes)))))
+  (let loop ([num-trials 0]
+             [sum 0])
+    (if (= 10000000 num-trials)
+        (exact->inexact (/ sum num-trials))
+        (loop (add1 num-trials)
+              (+ sum (trial))))))
 
 (provide main)
