@@ -17,9 +17,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (main)
   (let loop ([num-trials 0]
-             [sum 0])
+             [sum 0.0])
     (if (= 10000000 num-trials)
-        (exact->inexact (/ sum num-trials))
+        (/ sum num-trials)
         (loop (add1 num-trials)
               (+ sum (trial))))))
 
