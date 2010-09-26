@@ -17,7 +17,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      (equal?  4 (modulo x 12))
      (equal? 12 (modulo x 13))))
 
-  (for/first ([candidate (in-naturals)]
+  (for/list ([candidate (in-range 0 500000)]
               #:when (win candidate))
       candidate))
 
