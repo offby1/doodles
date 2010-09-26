@@ -7,6 +7,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require "aws-common.ss"
          net/url
+         (only-in (planet offby1/offby1/zdate) zdate)
          (planet neil/htmlprag:1:6)
          (only-in srfi/13 string-join)
          (only-in net/uri-codec uri-encode))
@@ -40,7 +41,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                   `((AWSAccessKeyId   . ,AWSAccessKeyId)
                     (SignatureVersion . "2")
                     (SignatureMethod  . "HMAC-SHA1")
-                    (Timestamp        . ,(rfc-2822-date))
+                    (Timestamp        . ,(zdate))
                     (Signature        . ,(sign #"Sign Me"))
                     )
                  values)])
