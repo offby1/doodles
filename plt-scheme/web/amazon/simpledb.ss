@@ -15,8 +15,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/REST_RESTAuth.html
 
 ;; Coulda swore I implemented this once before someplace ...
-(define/contract (query-string-components->list query-string-components)
-  (-> (listof (cons/c symbol? string?)) (listof string?))
+(define (query-string-components->list query-string-components [uri-encode uri-encode])
   (define (thing->bytes/utf-8 t)
     (cond
      ((bytes? t) t)                     ;assume it's UTF-8 already --
@@ -43,7 +42,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                     (SignatureMethod  . "HMAC-SHA1")
                     (Timestamp        . ,(rfc-2822-date))
                     (Signature        . ,(sign #"Sign Me"))
-                    ))])
+                    )
+                 values)])
 
     (call/input-url
      url
@@ -55,10 +55,12 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (let loop ([accum '()])
     (let ([response (post (string->url "http://sdb.amazonaws.com")
                           (string->bytes/utf-8
-                           (string-join
-                            (query-string-components->list
-                             `((Action . "ListDomains") (MaxNumberOfDomains . "100")))
-                            "&")))])
+                           (string-append
+                            (string-join
+                             (query-string-components->list
+                              `((Action . "ListDomains") (MaxNumberOfDomains . "100")))
+                             "&")
+                            "\n")))])
       response)))
 
 (define sdb #f)
