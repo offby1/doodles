@@ -40,12 +40,17 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([headers (query-string-components->list
                   `((AWSAccessKeyId   . ,AWSAccessKeyId)
                     (SignatureVersion . "2")
-                    (SignatureMethod  . "HMAC-SHA1")
+                    (SignatureMethod  . "HmacSHA1")
                     (Timestamp        . ,(zdate))
                     (Signature        . ,(sign #"Sign Me"))
                     )
                  values)])
 
+    (fprintf (current-error-port)
+             "URL: ~s~%form-data: ~s~%headers: ~s~%"
+             (url->string url)
+             form-data
+             headers)
     (call/input-url
      url
      (lambda (url headers) (post-pure-port url form-data headers))
@@ -56,12 +61,11 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (let loop ([accum '()])
     (let ([response (post (string->url "http://sdb.amazonaws.com")
                           (string->bytes/utf-8
-                           (string-append
-                            (string-join
-                             (query-string-components->list
-                              `((Action . "ListDomains") (MaxNumberOfDomains . "100")))
-                             "&")
-                            "\n")))])
+                           (apply
+                            string-append
+                            (map  (curryr string-append "\n")
+                                  (query-string-components->list
+                                   `((Action . "ListDomains") (MaxNumberOfDomains . "100")))))))])
       response)))
 
 (define sdb #f)
