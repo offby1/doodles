@@ -9,14 +9,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          net/url
          (only-in (planet offby1/offby1/zdate) zdate)
          (planet neil/htmlprag:1:6)
-         (only-in srfi/13 string-join)
-         (only-in net/uri-codec uri-encode))
+         (only-in srfi/13 string-join))
 
 ;; Attempt to follow the rules at
 ;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/REST_RESTAuth.html
 
 ;; Coulda swore I implemented this once before someplace ...
-(define (query-string-components->list query-string-components [uri-encode uri-encode])
+(define (query-string-components->list query-string-components)
   (define (thing->bytes/utf-8 t)
     (cond
      ((bytes? t) t)                     ;assume it's UTF-8 already --
@@ -32,40 +31,45 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (map (match-lambda
         [(cons name value)
          (format "~a=~a"
-                 (uri-encode (symbol->string name))
-                 (uri-encode value))])
+                 (symbol->string name)
+                 value)])
        (sort-parameters query-string-components)))
 
+(define (stringlist->bytes strs)
+  (string->bytes/utf-8
+   (apply
+    string-append
+    (map (curryr string-append "\n") strs))))
+
 (define (post url form-data)
-  (let ([headers (query-string-components->list
-                  `((AWSAccessKeyId   . ,AWSAccessKeyId)
-                    (SignatureVersion . "2")
-                    (SignatureMethod  . "HmacSHA1")
-                    (Timestamp        . ,(zdate))
-                    (Signature        . ,(sign #"Sign Me"))
-                    )
-                 values)])
+  (let* ([boilerplate `((AWSAccessKeyId   . ,AWSAccessKeyId)
+                        (SignatureMethod  . "HmacSHA1")
+                        (SignatureVersion . "2")
+                        (Timestamp        . ,(zdate))
+                        (Version          . "2009-04-15")
+                        )]
+         [merged (append boilerplate form-data)]
+         [string-to-sign (stringlist->bytes (query-string-components->list
+                                             merged))]
+         [w-e-list  (cons (cons 'Signature  (sign string-to-sign)) merged)]
+         [whole-enchilada (stringlist->bytes (query-string-components->list w-e-list))])
 
     (fprintf (current-error-port)
-             "URL: ~s~%form-data: ~s~%headers: ~s~%"
+             "URL: ~s~%form-data: ~s~%whole-enchilada: ~s~%"
              (url->string url)
              form-data
-             headers)
+             whole-enchilada)
+
+
     (call/input-url
      url
-     (lambda (url headers) (post-pure-port url form-data headers))
-     html->shtml
-     headers)))
+     (curryr post-pure-port whole-enchilada)
+     html->shtml)))
 
 (define (list-domains sdb)
   (let loop ([accum '()])
     (let ([response (post (string->url "http://sdb.amazonaws.com")
-                          (string->bytes/utf-8
-                           (apply
-                            string-append
-                            (map  (curryr string-append "\n")
-                                  (query-string-components->list
-                                   `((Action . "ListDomains") (MaxNumberOfDomains . "100")))))))])
+                          `((Action . "ListDomains") (MaxNumberOfDomains . "100")))])
       response)))
 
 (define sdb #f)
