@@ -7,6 +7,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 (require "aws-common.ss"
          net/url
+         net/uri-codec
          (only-in (planet offby1/offby1/zdate) zdate)
          (planet neil/htmlprag:1:6)
          (only-in srfi/13 string-join))
@@ -49,10 +50,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                         (Version          . "2009-04-15")
                         )]
          [merged (append boilerplate form-data)]
-         [string-to-sign (stringlist->bytes (query-string-components->list
-                                             merged))]
+         [string-to-sign  (string->bytes/utf-8 (alist->form-urlencoded merged))]
          [w-e-list  (cons (cons 'Signature  (sign string-to-sign)) merged)]
-         [whole-enchilada (stringlist->bytes (query-string-components->list w-e-list))])
+         [whole-enchilada (string->bytes/utf-8 (alist->form-urlencoded w-e-list))])
 
     (fprintf (current-error-port)
              "URL: ~s~%form-data: ~s~%whole-enchilada: ~s~%"
@@ -63,8 +63,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
     (call/input-url
      url
-     (curryr post-pure-port whole-enchilada)
-     html->shtml)))
+     (lambda (url headers) (post-pure-port url whole-enchilada headers))
+     html->shtml
+     `("Content-Type: application/x-www-form-urlencoded"))))
 
 (define (list-domains sdb)
   (let loop ([accum '()])
