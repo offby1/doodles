@@ -8,31 +8,31 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (require (planet soegaard/math/math))
 
-(define (generate-fibs sink-ch)
+(define (generate-fibs sink)
   (thread
    (lambda ()
      (let loop ([i 1]
                 [j 0])
-       (channel-put sink-ch i)
+       (channel-put sink i)
        (loop (+ i j) i)))))
 
-(define (filter-channel predicate source-ch sink-ch)
+(define (filter-channel predicate source sink)
   (thread
    (lambda ()
      (let loop ()
-       (let ([datum (channel-get source-ch)])
+       (let ([datum (channel-get source)])
          (when (predicate datum)
-           (channel-put sink-ch datum)))
+           (channel-put sink datum)))
        (loop)))))
 
-(define (big-fibs sink-ch)
-  (define fib-source-ch (make-channel))
-  (generate-fibs fib-source-ch)
+(define (big-fibs sink)
+  (define fib-source (make-channel))
+  (generate-fibs fib-source)
   (filter-channel
    (lambda (x)
      (and (< 227000 x)
           (prime? x)))
-   fib-source-ch sink-ch))
+   fib-source sink))
 
 (provide main)
 (define (main)
