@@ -12,7 +12,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
   (thread
    (lambda ()
      (let loop ([i 1]
-                [j 1])
+                [j 0])
        (channel-put sink-ch i)
        (loop (+ i j) i)))))
 
