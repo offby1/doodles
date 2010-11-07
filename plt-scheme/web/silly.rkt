@@ -1,9 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
-|#
-
 #lang web-server/insta
 
 (require "kelly.rkt")
