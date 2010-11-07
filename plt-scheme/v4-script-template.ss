@@ -14,7 +14,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite hmm-tests
   (check-equal? 'actual 'expected "For Phillip Morris ... from Western Union"))
 
+(define-test-suite all-tests
+  hmm-tests)
+
 (define (main . args)
-  (exit (run-tests hmm-tests 'verbose)))
+  (exit (run-tests all-tests 'verbose)))
 
 (provide main)
