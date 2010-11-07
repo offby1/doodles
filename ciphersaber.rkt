@@ -8,6 +8,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require rackunit rackunit/text-ui)
+(require (only-in srfi/43 vector-swap!))
 
 ;; Stolen from
 ;; .../planet/300/5.0.1.900/cache/soegaard/math.plt/1/4/number-theory.ss
@@ -50,10 +51,80 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (string-upcase (simple-xor "04d46b053ca87b59" #"Attack at dawn")) "45A01F645FC35B38")
   )
 
+(define *initial-vector* (list->vector (build-list 256 values)))
+
+(define (permute-state-from-key state keybytes)
+  (let ([state (vector-copy state)]
+        [j 0])
+    (for ([(Si i) (in-indexed state)])
+      (set! j (modulo
+               (+ j
+                  (vector-ref state i)
+                  (bytes-ref keybytes (modulo i (bytes-length keybytes))))
+               256))
+      (vector-swap! state i j))
+    state))
+
+(define (shuffle thing)
+  (cond
+   ((vector? thing)
+    (apply vector (shuffle (vector->list thing))))
+   ((list? thing)
+
+    ;; From Eli Barzilay.  This is essentially my old technique of
+    ;; gluing a random number to each element, then sorting by those
+    ;; numbers, then removing them.  But it's vastly shorter.
+    (sort
+     thing
+     <
+     #:key (lambda (_) (random))
+     #:cache-keys? #t))
+   (else
+    (error 'shuffle "Don't know what to do with ~s" thing))))
+
+(define (generate-output state-vector i j)
+  (let* ([i (modulo (add1 i) 256)]
+         [j (modulo (+ (vector-ref state-vector i)) 256)]
+         [state-vector (vector-copy state-vector)])
+    (let ([tmp (vector-ref state-vector i)])
+      (vector-set! state-vector i j)
+      (vector-set! state-vector j tmp)
+      (values
+       state-vector
+       i
+       j
+       (vector-ref state-vector (modulo (+ (vector-ref state-vector i)
+                                           (vector-ref state-vector j)) 256))))))
+
+;; Spew keystream bytes from state into channel.
+(define (statevector->bytes state-vector channel)
+  (thread
+   (lambda ()
+     (let loop ([state-vector state-vector]
+                [i 0]
+                [j 0]
+                [output-byte #f])
+       (when output-byte
+         (channel-put channel output-byte))
+       (call-with-values
+           (lambda ()
+             (generate-output state-vector i j))
+         loop)))))
+
 (define-test-suite all-tests
   simple-xor-tests)
 
 (define (main . args)
-  (exit (run-tests all-tests 'verbose)))
+  (run-tests all-tests 'verbose)
+
+  (define *ch* (make-channel))
+  (statevector->bytes  (permute-state-from-key *initial-vector* #"Key") *ch*)
+
+  ;; this output should be eb9f7781b734ca72a719
+  (let loop ([n 0])
+    (when (< n 10)
+      (display (leading-zero (number->string (channel-get *ch*) 16)))
+      (display " ")
+      (loop (add1 n)))))
 
 (provide main)
