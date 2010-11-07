@@ -40,16 +40,20 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                    (cons (bitwise-xor pb cb) output-bytes))))))
 
 ;; http://en.wikipedia.org/wiki/Rc4#Test_vectors
-(define-test-suite hmm-tests
+(define-test-suite simple-xor-tests
+  (check-equal? (string-upcase (simple-xor "eb9f7781b734ca72a719" #"Plaintext")) "BBF316E8D940AF0AD3")
+  (check-equal? (string-upcase (simple-xor "6044db6d41b7" #"pedia")) "1021BF0420")
 
-  (check-equal?
+  ;; This differs from the data on wikipedia, in that they didn't
+  ;; spell out the key stream in its entirety; therefore I only check
+  ;; those bytes that I'm able to convert.
+  (check-equal? (string-upcase (simple-xor "04d46b053ca87b59" #"Attack at dawn")) "45A01F645FC35B38")
+  )
 
-   (string-upcase
-    (simple-xor  "eb9f7781b734ca72a719" #"Plaintext"))
-
-   "BBF316E8D940AF0AD3"))
+(define-test-suite all-tests
+  simple-xor-tests)
 
 (define (main . args)
-  (exit (run-tests hmm-tests 'verbose)))
+  (exit (run-tests all-tests 'verbose)))
 
 (provide main)
