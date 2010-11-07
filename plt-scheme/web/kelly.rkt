@@ -12,8 +12,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide days-since-kelly)
 (define (days-since-kelly [now (srfi-19-current-date)])
   (let ([weekday (srfi-19-date-week-day now)])
-    (modulo (- weekday 5) 7))
-  )
+    (modulo (- weekday
+               5 ;; 5 is Friday: the day Kelly cleans.
+               ) 7)))
 
 (define-test-suite days-since-kelly-tests
   (for ([offset '(0
