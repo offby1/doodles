@@ -59,10 +59,13 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (for ([(Si i) (in-indexed state)])
       (set! j (modulo
                (+ j
-                  (vector-ref state i)
+                  Si
                   (bytes-ref keybytes (modulo i (bytes-length keybytes))))
                256))
-      (vector-swap! state i j))
+      (vector-swap! state i j)
+
+      (display state)
+      (newline))
     state))
 
 (define (shuffle thing)
