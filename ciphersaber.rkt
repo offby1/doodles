@@ -57,47 +57,23 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([state (vector-copy state)]
         [j 0])
     (for ([(Si i) (in-indexed state)])
-      (set! j (modulo
-               (+ j
-                  Si
-                  (bytes-ref keybytes (modulo i (bytes-length keybytes))))
-               256))
-      (vector-swap! state i j)
+      (set! j (+ j Si (bytes-ref keybytes (modulo i (bytes-length keybytes)))))
+      (set! j (modulo j 256))
 
-      (display state)
-      (newline))
+      (vector-swap! state i j))
     state))
-
-(define (shuffle thing)
-  (cond
-   ((vector? thing)
-    (apply vector (shuffle (vector->list thing))))
-   ((list? thing)
-
-    ;; From Eli Barzilay.  This is essentially my old technique of
-    ;; gluing a random number to each element, then sorting by those
-    ;; numbers, then removing them.  But it's vastly shorter.
-    (sort
-     thing
-     <
-     #:key (lambda (_) (random))
-     #:cache-keys? #t))
-   (else
-    (error 'shuffle "Don't know what to do with ~s" thing))))
 
 (define (generate-output state-vector i j)
   (let* ([i (modulo (add1 i) 256)]
          [j (modulo (+ (vector-ref state-vector i)) 256)]
          [state-vector (vector-copy state-vector)])
-    (let ([tmp (vector-ref state-vector i)])
-      (vector-set! state-vector i j)
-      (vector-set! state-vector j tmp)
-      (values
-       state-vector
-       i
-       j
-       (vector-ref state-vector (modulo (+ (vector-ref state-vector i)
-                                           (vector-ref state-vector j)) 256))))))
+    (vector-swap! state-vector i j)
+    (values
+     state-vector
+     i
+     j
+     (vector-ref state-vector (modulo (+ (vector-ref state-vector i)
+                                         (vector-ref state-vector j)) 256)))))
 
 ;; Spew keystream bytes from state into channel.
 (define (statevector->bytes state-vector channel)
@@ -124,10 +100,13 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (statevector->bytes  (permute-state-from-key *initial-vector* #"Key") *ch*)
 
   ;; this output should be eb9f7781b734ca72a719
+  (display "Keystream: ")
   (let loop ([n 0])
     (when (< n 10)
       (display (leading-zero (number->string (channel-get *ch*) 16)))
       (display " ")
-      (loop (add1 n)))))
+      (loop (add1 n))))
+  (display "...")
+  (newline))
 
 (provide main)
