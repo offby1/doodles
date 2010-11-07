@@ -29,21 +29,23 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
       (string-append "0" string)
       string))
 
+(define (simple-xor ks-hex plaintext-bytes)
+  (apply string-append
+         (reverse
+          (map (lambda (i)
+                 (leading-zero (number->string i 16)))
+               (for/fold ([output-bytes '()])
+                   ([pb (in-bytes plaintext-bytes)]
+                    [cb (in-list (hex->integers ks-hex))])
+                   (cons (bitwise-xor pb cb) output-bytes))))))
+
+;; http://en.wikipedia.org/wiki/Rc4#Test_vectors
 (define-test-suite hmm-tests
 
   (check-equal?
 
    (string-upcase
-    (apply string-append
-           (reverse
-            (map (lambda (i)
-                   (leading-zero (number->string i 16)))
-                 (let ([ks-hex "eb9f7781b734ca72a719"]
-                       [plaintext-bytes #"Plaintext"])
-                   (for/fold ([output-bytes '()])
-                       ([pb (in-bytes plaintext-bytes)]
-                        [cb (in-list (hex->integers ks-hex))])
-                       (cons (bitwise-xor pb cb) output-bytes)))))))
+    (simple-xor  "eb9f7781b734ca72a719" #"Plaintext"))
 
    "BBF316E8D940AF0AD3"))
 
