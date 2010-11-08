@@ -9,7 +9,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
 (require (only-in srfi/43 vector-swap!)
          (only-in "key-schedule.rkt" permute-state-from-key)
-         "cruft.rkt")
+         "misc.rkt")
 
 ;; Spew keystream bytes from state into channel.
 (define (statevector->bytestream state-vector channel)
@@ -28,6 +28,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
                                 (m+ (vector-ref state-vector i)
                                     (vector-ref state-vector j))))))))
 
+(provide encrypt)
 (define (encrypt plaintext key)
   (let ([ch (make-channel)])
     (statevector->bytestream (permute-state-from-key key) ch)
