@@ -5,18 +5,18 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require rackunit rackunit/text-ui
-         (except-in "rc4.rkt" main)
+         (only-in (prefix-in rc4: "rc4.rkt") rc4:encrypt)
          "misc.rkt")
 
 (define (cs-decrypt-bytes key bytestream)
   (let ([iv (subbytes bytestream 0 10)])
-    (apply bytes (encrypt (subbytes bytestream 10) (bytes-append key iv)))))
+    (apply bytes (rc4:encrypt (subbytes bytestream 10) (bytes-append key iv)))))
 
 (define (cs-encrypt-bytes key bytestream)
   (let ([iv (apply bytes (build-list 10 (lambda (ignored) (random 256))))])
     (bytes-append iv
-                  (apply bytes (encrypt bytestream
-                                        (bytes-append key iv))))))
+                  (apply bytes (rc4:encrypt bytestream
+                                            (bytes-append key iv))))))
 
 (define-test-suite cs-tests
   ;; http://ciphersaber.gurus.org/, cstest1.cs1
@@ -34,6 +34,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (main . args)
   (define key-string (make-parameter #f))
   (define encrypt (make-parameter #t))
+  (define do-tests (make-parameter #f))
 
   (define file-to-encrypt
     (command-line
@@ -43,6 +44,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      [("-k" "--key") k "Encryption key"
       (key-string (string->bytes/utf-8 k) )]
 
+     [("-t" "--tests") "Run some tests, then exit"
+      (exit  (run-tests all-tests 'verbose))]
      #:args (filename)  ; expect one command-line argument: <filename>
                                         ; return the argument as a filename to compile
      filename))
