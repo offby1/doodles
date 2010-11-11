@@ -17,7 +17,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (bytes-append iv
                   (apply bytes (rc4:encrypt bytestream
                                             (bytes-append key iv))))))
-
+
 (define-test-suite cs-tests
   ;; http://ciphersaber.gurus.org/, cstest1.cs1
   (check-equal? (cs-decrypt-bytes
@@ -54,8 +54,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (error "Need a key!  Try -k"))
 
   (with-handlers
-      ([values (lambda (e)
-                 (fprintf (current-error-port) "Uh oh: ~a~%" (exn-message e)))])
+      ([exn? (lambda (e)
+               (fprintf (current-error-port) "Uh oh: ~a~%" (exn-message e)))])
     (display ((if (encrypt)
                   cs-encrypt-bytes
                   cs-decrypt-bytes)
