@@ -16,7 +16,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite all-tests
   hmm-tests)
 
+(provide main)
 (define (main . args)
   (exit (run-tests all-tests 'verbose)))
-
-(provide main)
