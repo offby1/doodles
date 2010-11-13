@@ -1,18 +1,14 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec mzscheme --require "$0" --main -- ${1+"$@"}
+exec racket --require "$0" --main -- ${1+"$@"}
 |#
 
-#lang scheme
-(require scheme/cmdline)
+#lang racket
+(require racket/cmdline)
 
-(require (lib "trace.ss")
-         srfi/1 srfi/13 srfi/43)
-
-(define *the-alphabet* "abcdefghijklmnopqrstuvwxyz ")
-(define c->n (lambda (c) (string-index *the-alphabet* (char-downcase c))))
-(define n->c (lambda (n) (string-ref   *the-alphabet* n)))
+(require
+ (only-in srfi/1  circular-list list-index))
 
 ;; A rotor is a mapping from offsets around the circumference on one
 ;; side, to offsets around the circumference on the other side.  (It's
@@ -21,33 +17,35 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 ;; "rotate" the rotor, we only affect one of those lists.  That way,
 ;; to see how far it's been rotated, we can just compare the two
 ;; lists.
-(define-struct rotor (rotated original) #:transparent)
+(struct rotor (rotated original) #:transparent)
 (define (rotor-at-start? r)
   (eq? (rotor-rotated r)
        (rotor-original r)))
 
 (define (shuffled list)
-  (sort list < #:key (lambda (_) (random)) #:cache-keys? #t))
+  (sort list < #:key (lambda (_) (random)) #:cache-keys? #t)
+  ;list
+  )
 
 (define (my-make-rotor)
   ;; The lists are circular, which makes for easy rotation: just
   ;; replace it with its cdr.
-  (let ((offsets (apply circular-list
-                        (shuffled (build-list (string-length *the-alphabet*) values)))))
-    (make-rotor offsets offsets )))
+  (let ([offsets (apply circular-list
+                        (shuffled (build-list 256 values)))])
+    (rotor offsets offsets )))
 
 (define (rotor-rotate r)
-  (make-rotor
+  (rotor
    (cdr (rotor-rotated r))
    (rotor-original r) ))
 
 ;; Encrypt or decrypt NUMBER through R, by taking the car of the Nth
 ;; cdr, or searching for N.
 (define (rotor-crypt r number [encrypt? #t])
-  (let ((lst (rotor-rotated r)))
+  (let ([lst (rotor-rotated r)])
     (if encrypt?
         (list-ref lst number)
-        (list-index (lambda (x) (equal? x number)) lst))))
+        (list-index (curry equal? number) lst))))
 
 ;; An enigma machine is nothing but a buncha rotors.
 (define-struct enigma (rotors) #:transparent)
@@ -58,30 +56,29 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
 ;; rightmost wheel of an odometer: sometimes that causes other wheels
 ;; to advance, too.
 (define (enigma-advance e)
-  (let loop ((old-rotors (enigma-rotors e))
-             (rotate? #t)
-             (new-rotors '()))
+  (let loop ([old-rotors (enigma-rotors e)]
+             [rotate? #t]
+             [new-rotors '()])
     (if (null? old-rotors)
         (make-enigma (reverse new-rotors))
-        (let ((this ((if rotate? rotor-rotate values) (car old-rotors))))
+        (let ([this ((if rotate? rotor-rotate values) (car old-rotors))])
           (loop (cdr old-rotors)
                 (and rotate? (rotor-at-start? this))
                 (cons this new-rotors))))))
 
-;; Encrypt or decrypt a letter by converting it to a number, then
-;; running that number through each rotor in the machine, then
-;; converting back to a letter.
-(define (enigma-crypt e letter [encrypt? #t])
-  (let ((l  (length (enigma-rotors e))))
-    (let loop ((rotors-done 0)
-               (encrypted (c->n letter)))
+;; Encrypt or decrypt a number by running that number through each
+;; rotor in the machine.
+(define (enigma-crypt e number [encrypt? #t])
+  (let ([l (length (enigma-rotors e))])
+    (let loop ([rotors-done 0]
+               [encrypted number])
       (if (equal? rotors-done l)
-          (n->c encrypted)
-          (let ((r (list-ref (enigma-rotors e)
+          encrypted
+          (let ([r (list-ref (enigma-rotors e)
                              ;; When we encrypt, we go through the
                              ;; rotors in order, but when we decrypt,
                              ;; we go in the opposite order.
-                             (if encrypt? rotors-done (sub1 (- l rotors-done))))))
+                             (if encrypt? rotors-done (sub1 (- l rotors-done))))])
             (loop (add1 rotors-done)
                   (rotor-crypt
                    r
@@ -89,28 +86,14 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
                    encrypt?)))))))
 
 (define (process-port e ip op [encrypt? #t])
-  (let loop ((e e))
-    (let ((ch (read-char ip)))
-      (when  (not (eof-object? ch))
-        (if (c->n ch)
-          (begin
-            (display (enigma-crypt e ch encrypt?) op)
-            (loop (enigma-advance e)))
-          (loop e))))))
+  (for ([b (in-input-port-bytes ip)])
+    (write-byte (enigma-crypt e b encrypt?) op)
+    (set! e (enigma-advance e))))
 
-(define (example plaintext)
-  (define e (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor)))))
-  (let ((ip (open-input-string plaintext))
-        (op (open-output-string)))
-    (process-port e ip op #t)
-    (printf "~s => ~s~%" plaintext (get-output-string op))
-    (let ((ip (open-input-string (get-output-string op)))
-          (op (open-output-string)))
-      (process-port e ip op #f)
-      (printf "... => ~s~%" (get-output-string op)))))
-
+(provide main)
 (define (main . args)
-  (define encrypt (make-parameter #t))
+  (define encrypt? (make-parameter #t))
+  (define num-rotors (make-parameter 5))
 
   (random-seed 0)
 
@@ -119,21 +102,35 @@ exec mzscheme --require "$0" --main -- ${1+"$@"}
    #:argv args
    #:once-any
    [("-e" "--encrypt") "Encrypt (as opposed to decrypt)"
-    (encrypt #t)]
+    (encrypt? #t)]
    [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
-    (encrypt #f)])
+    (encrypt? #f)]
+   #:once-any
+   [("-s" "--seed") s "Random seed.  This amounts to the Sekrit Key."
+    (random-seed (string->number s))]
+   [("-n" "--number-of-rotors") n "More rotors = more secure.  Message should be smaller than 256^n, I suspect."
+    (num-rotors (string->number n))])
 
   (when (terminal-port? (current-input-port))
     (fprintf (current-error-port)
              "Reading ~a...~%" (current-input-port)))
   (process-port
-   (make-enigma (build-list 5 (lambda (ignored) (my-make-rotor))))
+   (make-enigma (build-list (num-rotors) (lambda (ignored) (my-make-rotor))))
    (current-input-port)
    (current-output-port)
-   (encrypt))
-  (newline))
-(provide (all-defined-out))
+   (encrypt?))
+  (flush-output (current-output-port))
+  (when (terminal-port? (current-output-port))
+    (newline (current-error-port))))
+
 
+
+;; Example:
+
+;; echo -n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | ./enigma.ss | tee /dev/stderr | ./enigma.ss -d
+
+;; "crypt", I think, comes from the Debian package "mcrypt", and
+;; emulates an enigma with 5 rotors, 26 slots per rotor.
 
 ;; time dd if=/dev/urandom count=2048 bs=1024 | crypt sdlkfjdslfkjdslkvn > /dev/null
 ;; => 2.1 MB/s
