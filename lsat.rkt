@@ -47,22 +47,17 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                         (add1 black)))))
     (lambda (reds blacks)
       `((reds . ,reds)
-        (blacks . ,blacks))
-      )))
+        (blacks . ,blacks)))))
 
 (define *70-red* (make-urn 70 30))
 
+(provide main)
 (define (main . args)
   (pretty-display
-   (let loop ([experiments-to-run 100000]
-              [summaries '()])
-     (if (positive? experiments-to-run)
-         (loop (sub1 experiments-to-run)
-               (cons (summarize-experiment (draw-from-urn 12 *70-red*))
-                     summaries))
-         (sort (list->histogram summaries) < #:key cdr)))))
-
-(provide main)
+   (sort (list->histogram
+          (for/list ([_ (in-range 10000)])
+            (summarize-experiment (draw-from-urn 12 *70-red*))))
+         < #:key cdr)))
 
 #|
  When I run the above, I see output that includes lines like these:
