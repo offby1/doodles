@@ -56,15 +56,13 @@ exec racket --require "$0" --main -- ${1+"$@"}
 ;; rightmost wheel of an odometer: sometimes that causes other wheels
 ;; to advance, too.
 (define (enigma-advance e)
-  (let loop ([old-rotors (enigma-rotors e)]
-             [rotate? #t]
-             [new-rotors '()])
-    (if (null? old-rotors)
-        (make-enigma (reverse new-rotors))
-        (let ([this ((if rotate? rotor-rotate values) (car old-rotors))])
-          (loop (cdr old-rotors)
-                (and rotate? (rotor-at-start? this))
-                (cons this new-rotors))))))
+  (define rotate? #t)
+  (make-enigma
+   (for/list
+       ([r (in-list (enigma-rotors e))])
+     (let ([this ((if rotate? rotor-rotate values) r)])
+       (set! rotate? (and rotate? (rotor-at-start? this)))
+       this))))
 
 ;; Encrypt or decrypt a number by running that number through each
 ;; rotor in the machine.
