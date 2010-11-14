@@ -67,21 +67,9 @@ exec racket --require "$0" --main -- ${1+"$@"}
 ;; Encrypt or decrypt a number by running that number through each
 ;; rotor in the machine.
 (define (enigma-crypt e number [encrypt? #t])
-  (let ([l (length (enigma-rotors e))])
-    (let loop ([rotors-done 0]
-               [encrypted number])
-      (if (equal? rotors-done l)
-          encrypted
-          (let ([r (list-ref (enigma-rotors e)
-                             ;; When we encrypt, we go through the
-                             ;; rotors in order, but when we decrypt,
-                             ;; we go in the opposite order.
-                             (if encrypt? rotors-done (sub1 (- l rotors-done))))])
-            (loop (add1 rotors-done)
-                  (rotor-crypt
-                   r
-                   encrypted
-                   encrypt?)))))))
+  (for/fold ([encrypted number])
+      ([r ((if encrypt? values reverse) (enigma-rotors e))])
+      (rotor-crypt r encrypted encrypt?)))
 
 (define (process-port e ip op [encrypt? #t])
   (for ([b (in-input-port-bytes ip)])
