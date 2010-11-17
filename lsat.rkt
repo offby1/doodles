@@ -34,17 +34,20 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (red? thing)
   (eq? thing 'red))
 
+(define (redness thing)
+  (if (red? thing) 1 0))
+
+(define (blackness thing)
+  (if (red? thing) 0 1))
+
 (define (summarize-experiment list-of-balls)
   (call-with-values
       (lambda ()
         (for/fold ([red 0]
                    [black 0])
             ([ball list-of-balls])
-            (if (red? ball)
-                (values (add1 red)
-                        black)
-                (values red
-                        (add1 black)))))
+            (values (+ red   (redness   ball))
+                    (+ black (blackness ball)))))
     (lambda (reds blacks)
       `((reds . ,reds)
         (blacks . ,blacks)))))
