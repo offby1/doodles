@@ -91,7 +91,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
     (encrypt? #t)]
    [("-d" "--decrypt") "Decrypt (as opposed to encrypt)"
     (encrypt? #f)]
-   #:once-any
+   #:once-each
    [("-s" "--seed") s "Random seed.  This amounts to the Sekrit Key."
     (random-seed (string->number s))]
    [("-n" "--number-of-rotors") n "More rotors = more secure.  Message should be smaller than 256^n, I suspect."
