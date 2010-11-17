@@ -31,6 +31,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define-test-suite all-tests
   cs-tests)
 
+(provide main)
 (define (main . args)
   (define key-string (make-parameter #f))
   (define encrypt (make-parameter #t))
@@ -61,5 +62,3 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                   cs-decrypt-bytes)
               (key-string) (file->bytes file-to-encrypt))))
   (newline (current-error-port)))
-
-(provide main)

@@ -7,14 +7,19 @@ exec racket --require "$0" --main -- ${1+"$@"}
 (require (only-in srfi/43 vector-swap!)
          "misc.rkt")
 
+(define (br bytes index)
+  (bytes-ref bytes (modulo index (bytes-length bytes))))
+
 (provide permute-state-from-key)
 (define (permute-state-from-key keybytes)
   (define state  (list->vector (build-list 256 values)))
   (let loop ([i 0]
              [j 0])
     (when (< i (vector-length state))
-      (let* ([Si (vector-ref state i)]
-             [j (m+ j Si (bytes-ref keybytes (modulo i (bytes-length keybytes))))])
+      (let ([j (m+
+                j
+                (vector-ref state    i)
+                (br         keybytes i))])
         (vector-swap! state i j)
         (loop (add1 i) j))))
   state)
