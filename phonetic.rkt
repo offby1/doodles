@@ -1,0 +1,45 @@
+#lang racket
+
+(define words-by-letter
+  (make-immutable-hash
+   (map (lambda (c)
+          (match-define (cons letter word) c)
+          (cons (string-ref (symbol->string letter) 0)
+                (symbol->string word) ))
+        '(
+          (A . Alpha)
+          (B . Bravo)
+          (C . Charlie)
+          (D . Delta)
+          (E . Echo)
+          (F . Foxtrot)
+          (G . Golf)
+          (H . Hotel)
+          (I . India)
+          (J . Juliet)
+          (K . Kilo)
+          (L . Lima)
+          (M . Mike)
+          (N . November)
+          (O . Oscar)
+          (P . Papa)
+          (Q . Quebec)
+          (R . Romeo)
+          (S . Sierra)
+          (T . Tango)
+          (U . Uniform)
+          (V . Victor)
+          (W . Whiskey)
+          (X . X-ray)
+          (Y . Yankee)
+          (Z . Zulu)
+          ))))
+
+(define (expand-word word)
+  (map (lambda (ch)
+         (hash-ref words-by-letter (char-upcase ch) (string ch)))
+       (string->list word)))
+
+(string-join
+ (expand-word "wtf!")
+ " ")

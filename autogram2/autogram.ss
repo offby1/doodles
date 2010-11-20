@@ -17,27 +17,22 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define/contract (template->list str)
   (-> string? (listof (or/c string? char?)))
-  (let ([in (open-input-string str)])
-    (let loop ((result '())
-               (current-string '()))
+  (reverse
+   (for/fold ([result '()])
+       ([(str index) (in-indexed (regexp-split #rx"[{}]" str))])
+       (cond
+        ((odd? index)
+         (cons (string-ref str 0) result))
+        ((and (even? index)
+              (positive? (string-length str)))
+         (cons str result))
+        (else
+         result)))))
 
-      (define (incorporate-current-string)
-        (if (null? current-string)
-            result
-            (cons (list->string (reverse current-string)) result)))
-
-      (let ((ch (peek-char in)))
-        (cond
-         ((eof-object? ch)
-          (reverse (incorporate-current-string)))
-         ((char=? ch #\{)
-          (let ((char-with-braces (read in)))
-            (loop (cons (string-ref (symbol->string (car char-with-braces)) 0)
-                        (incorporate-current-string))
-                  '())))
-         (else
-          (loop result
-                (cons (read-char in) current-string))))))))
+(define-test-suite template->list-tests
+  (check-equal? (template->list "hey you")           '("hey you"))
+  (check-equal? (template->list "I have {a}")        '("I have " #\a))
+  (check-equal? (template->list "I have {a} and {b}")'("I have " #\a " and " #\b)))
 
 (define/contract (template->survey str)
   (-> string? (and/c hash? immutable?))
@@ -125,11 +120,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-binary-check (check-dicts-equal actual expected)
   (dicts-equal? actual expected))
-
-(define-test-suite template->list-tests
-  (check-equal? (template->list "hey you")           '("hey you"))
-  (check-equal? (template->list "I have {a}")        '("I have " #\a))
-  (check-equal? (template->list "I have {a} and {b}")'("I have " #\a " and " #\b)))
 
 (define-test-suite template->survey-tests
 
@@ -220,7 +210,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                                    (apply  string-append
                                            (add-between
                                             (map ((curry format) "{~a}")
-                                                 (build-list 25 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
+                                                 (build-list 12 (lambda (<>) (integer->char (+ <> (char->integer #\a))))))
                                             ", ")))
                            counter)))
                       '())])
