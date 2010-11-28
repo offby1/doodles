@@ -7,12 +7,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require rackunit rackunit/text-ui
-         (only-in (planet soegaard/math/math)
-                  positive-divisors
-                  coprime?))
+         (prefix-in math:
+                    (only-in (planet soegaard/math/math)
+                             positive-divisors
+                             coprime?
+                             totient)))
 
 (provide divisors)
-(define divisors positive-divisors)
+(define divisors math:positive-divisors)
 
 (define-test-suite divisors-tests
   (check-equal? (apply set (divisors 20)) (set 1 2 4 5 10 20)))
@@ -27,19 +29,17 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide totatives)
 (define (totatives n)
   (filter
-   (lambda (x) (coprime? n x))
+   (lambda (x) (math:coprime? n x))
    (build-list (sub1 n) add1)))
 
 (define-test-suite totatives-tests
   (check-equal? (apply set (totatives 30))
                 (set 1 7 11 13 17 19 23 29)))
 
-(provide totient)
-(define (totient n)
-  (length (totatives n)))
+(define totient math:totient)
 
 (define-test-suite totient-tests
-  (check-equal? (totient 30) 8))
+  (check-equal? (math:totient 30) 8))
 
 (define-test-suite all-tests
   divisors-tests
