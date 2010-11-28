@@ -3,6 +3,7 @@
 exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
+;; http://en.wikipedia.org/wiki/Multiplicative_group_of_integers_modulo_n
 ;; http://en.wikipedia.org/wiki/Cyclic_group
 
 #lang racket
