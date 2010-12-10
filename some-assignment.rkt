@@ -11,9 +11,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide mean-record)
 (define (mean-record lol)
-  (map mean
-       (apply map (lambda something  format "Something is ~s" something)
-              lol)))
+  (map mean (apply map list lol)))
 
 (define-test-suite mean-record-tests
   (check-equal? (mean-record '((1 2 3) (4 5 6) (7 8 9)))
