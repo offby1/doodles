@@ -1,7 +1,7 @@
 #lang racket
 ;; Report each unique line from stdin
-(let ([saw (make-hash)])
-  (for ([line (in-lines)])
-    (unless (hash-ref saw line #f)
-      (displayln line))
-    (hash-set! saw line #t)))
+(set-for-each
+ (for/fold ([saw (set)])
+     ([line (in-lines)])
+     (set-add saw line))
+ displayln)
