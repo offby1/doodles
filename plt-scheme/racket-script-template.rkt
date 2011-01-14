@@ -11,7 +11,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   "dude, maybe you should write some tests")
 
 (define-test-suite hmm-tests
-  (check-equal? 'actual 'expected "For Phillip Morris ... from Western Union"))
+  (check-equal? (hmm 'whatever) 'expected "For Phillip Morris ... from Western Union"))
 
 (define-test-suite all-tests
   hmm-tests)
