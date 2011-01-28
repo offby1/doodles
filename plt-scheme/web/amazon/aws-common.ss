@@ -28,7 +28,8 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-string sop)))
 
-(define (hexdecode abc)
+(define/contract (hexdecode abc)
+  (bytes? . -> . bytes?)
   (let loop  ((s (bytes->string/utf-8 abc))
               (result '()))
     (if (zero? (string-length s))
