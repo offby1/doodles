@@ -9,23 +9,45 @@
         (loop (cons 0 d))
         d)))
 
+;; This could be memoized, but when I try, I get an error that says
+;; that I'm trying to load two incompatible versions of memoize
+;; (math.ss is loading the older version)
 (define (kaprekar-chain-from n)
-  (let ([d (digits n)])
+  (let ([d (prepend-zeroes (digits n))])
     (when (< 4 (length d))
-      (error "Too many digits"))
+      (printf "~a: Too many digits~%" n)
+      #f)
     (when (= 1 (set-count  (apply set d)))
-      (error "Too few distinct digits"))
-    (let loop ([d (prepend-zeroes d)]
+      (printf "~a: Too few distinct digits~%" n)
+      #f)
+    (let loop ([d  d]
                [result (list (digits->number d))])
-      (printf "d is ~a~%" d)
       (let* ([asc  (sort d <)]
              [desc (reverse asc)]
              [diff (abs (- (digits->number asc)
                            (digits->number desc)))])
-        (if (= 6174 diff)
-            (cons diff result)
-            (loop (prepend-zeroes (digits diff))
-                  (cons diff result)))))))
+        (cond
+         ((zero? diff)
+          #f)
+         ((= 6174 diff)
+          (cons diff result))
+         (else
+          (loop (prepend-zeroes (digits diff))
+                (cons diff result)))
+         )))))
+
+;; longest possible chain
+(for/fold ([result #f])
+    ([x (in-range 1 10000)])
+
+    (let ([this-chain (kaprekar-chain-from x)])
+      (if (and this-chain
+               (or (not result)
+                   (< (length (cdr result))
+                      (length this-chain))))
+
+          (cons x this-chain)
+          result)))
 
 ;; Kaprekar numbers
 (for/fold ([result '()])
