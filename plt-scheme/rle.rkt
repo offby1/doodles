@@ -9,20 +9,26 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide rle)
 (define (rle seq)
   (let loop ([seq seq]
+             [last-elt #f]
+             [first-elt-of-current-run #f]
              [result '()])
     (cond
      ((null? seq) (reverse result))
-     ((yadda?)
+     ((and last-elt (equal? (car seq) (add1 last-elt)))
       (loop (cdr seq)
+            (car seq)
+            first-elt-of-current-run
             result))
-     ((bowie?)
+     (else
       (loop (cdr seq)
-            (cons (car seq)
-                  result)))
-     ((snork?)
-      (loop (cdr seq)
-            (cons (list yow pow)
-                  result))))))
+            (car seq)
+            (car seq)
+            (cons
+             (if (equal? last-elt first-elt-of-current-run)
+                 (car seq)
+                 (list first-elt-of-current-run (car seq)))
+             result)))
+     )))
 
 (define-test-suite rle-tests
   (check-equal? (rle ' (1 3 4 5 8 10 11 13)) '(1 (3 5) 8 (10 11) 13)))
