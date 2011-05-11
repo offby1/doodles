@@ -7,7 +7,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (require rackunit rackunit/text-ui)
 
 (define (state-machine input current-state)
-  (define (snord state)
+  (define (maybe-unlistify state)
     (if (and (list? state)
              (equal? (first state)
                      (second state)))
@@ -15,7 +15,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
         state))
   (cond
    ((eq? input 'shutdown)
-    (values (snord current-state) #f))
+    (values (maybe-unlistify current-state) #f))
    ((number? input)
     (cond
      ((and (list? current-state)
@@ -23,7 +23,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
       (values #f (list (first current-state)
                        input)))
      (else
-      (values (snord current-state)
+      (values (maybe-unlistify current-state)
               (list input input)))))
    (else
     (error "oops"))))
