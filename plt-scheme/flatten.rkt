@@ -6,28 +6,40 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 (require rackunit rackunit/text-ui)
 
-(provide flatten)
+(provide (rename-out [my-flatten flatten]))
 (define (flatten-inner thing)
   (let loop ([accumulator '()]
              [thing thing])
     (cond
      ((null? thing)
       accumulator)
+     ((empty? (car thing))
+      (loop accumulator (cdr thing)))
      ((pair? (car thing))
       (loop (append (flatten-inner (car thing)) accumulator) (cdr thing)))
      (else
       (loop (cons (car thing) accumulator)
-            (cdr thing)))
-     ))
-  )
+            (cdr thing))))))
 
-(define (flatten thing)
+(define (my-flatten thing)
   (reverse (flatten-inner thing)))
+
+(define (test-data [how-many 10])
+  (for/list ([i (in-range how-many)])
+    (let ([r (random)])
+      (cond
+        ((< r .1) '())
+        ((< r .2) (test-data (/ how-many 2)))
+        (else #\f)))))
 
 (define-test-suite flatten-tests
   (check-equal?
-   (flatten '( #\s (#\r #\a #\b) #\space #\o #\o #\f))
-   '( #\s #\r #\a #\b #\space #\o #\o #\f)))
+   (my-flatten '( #\s (#\r #\a #\b) #\space #\o #\o #\f))
+   '( #\s #\r #\a #\b #\space #\o #\o #\f))
+  (for ([trial (in-range 100)])
+    (let ([td (test-data 10)])
+      (check-equal? (my-flatten td)
+                    (flatten td)))))
 
 (define-test-suite all-tests
   flatten-tests)
