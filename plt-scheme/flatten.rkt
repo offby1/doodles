@@ -7,7 +7,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (require rackunit rackunit/text-ui)
 
 (provide (rename-out [my-flatten flatten]))
-(define (flatten-inner thing)
+(define (flatten-backwards thing)
   (let loop ([accumulator '()]
              [thing thing])
     (cond
@@ -16,13 +16,13 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      ((empty? (car thing))
       (loop accumulator (cdr thing)))
      ((pair? (car thing))
-      (loop (append (flatten-inner (car thing)) accumulator) (cdr thing)))
+      (loop (append (flatten-backwards (car thing)) accumulator) (cdr thing)))
      (else
       (loop (cons (car thing) accumulator)
             (cdr thing))))))
 
 (define (my-flatten thing)
-  (reverse (flatten-inner thing)))
+  (reverse (flatten-backwards thing)))
 
 (define (test-data [how-many 10])
   (for/list ([i (in-range how-many)])
