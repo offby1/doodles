@@ -28,7 +28,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
   (match (groups str)
     [(list region publisher title check)
      (zero? (remainder
-             (->checksum (reverse (build-list 10 add1))
+             (->checksum (build-list 10 (curry - 10))
                          (->digits region publisher title check))
              11))]
     [(list "978" region publisher title check)
