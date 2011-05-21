@@ -49,5 +49,5 @@ if __name__ == "__main__":
 # python setup.py build
 
 # Local Variables:
-# compile-command: "PYTHONPATH=/usr/local/src/python-simpledb/build/lib.linux-x86_64-2.6 python sdb-fiddling.py "
+# compile-command: "PYTHONPATH=/usr/local/src/python-simpledb/build/lib.linux-i686-2.7 python sdb-fiddling.py "
 # End:
