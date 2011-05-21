@@ -5,16 +5,15 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang racket
-(require mzlib/trace
-         rackunit
-         rackunit/text-ui
-         "aws-common.ss"
-         net/url
-         net/uri-codec
+(require (only-in "aws-common.ss" AWSAccessKeyId sign)
+         (only-in (planet neil/htmlprag:1:6) html->shtml)
          (only-in (planet offby1/offby1/zdate) zdate)
+         (only-in net/uri-codec alist->form-urlencoded)
+         (only-in net/url url-host url-path call/input-url post-pure-port string->url)
+         (only-in srfi/13 string-join)
          (only-in unstable/net/url url-path->string)
-         (planet neil/htmlprag:1:6)
-         (only-in srfi/13 string-join))
+         rackunit
+         rackunit/text-ui)
 
 ;; Attempt to follow the rules at
 ;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/REST_RESTAuth.html
