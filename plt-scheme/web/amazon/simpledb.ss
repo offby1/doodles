@@ -1,24 +1,25 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
+exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang racket
-(require rackunit
+(require mzlib/trace
+         rackunit
          rackunit/text-ui
          "aws-common.ss"
          net/url
          net/uri-codec
          (only-in (planet offby1/offby1/zdate) zdate)
+         (only-in unstable/net/url url-path->string)
          (planet neil/htmlprag:1:6)
          (only-in srfi/13 string-join))
 
 ;; Attempt to follow the rules at
 ;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/REST_RESTAuth.html
 
-;; Coulda swore I implemented this once before someplace ...
-(define (query-string-components->list query-string-components)
+(define (sort-alist query-string-components)
   (define (thing->bytes/utf-8 t)
     (cond
      ((bytes? t) t)                     ;assume it's UTF-8 already --
@@ -27,20 +28,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
      ((string? t) (string->bytes/utf-8 t))
      ((symbol? t) (thing->bytes/utf-8 (symbol->string t)))
      ((number? t) (thing->bytes/utf-8 (number->string t)))))
-
-  (define (sort-parameters query-string-components)
-    (sort query-string-components bytes<? #:key (compose thing->bytes/utf-8 car)))
-
-  (map (match-lambda
-        [(cons name value)
-         (format "~a=~a"
-                 (symbol->string name)
-                 value)])
-       (sort-parameters query-string-components)))
-
-(define-test-suite query-string-components->list-tests
-  (check-equal? (query-string-components->list '((foo . "bar") (baz . "ugh")))
-                '("baz=ugh" "foo=bar")))
+  (sort query-string-components bytes<? #:key (compose thing->bytes/utf-8 car)))
 
 (define (stringlist->bytes strs)
   (string->bytes/utf-8
@@ -48,6 +36,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
     string-append
     (map (curryr string-append "\n") strs))))
 
+(define (p val)
+  (displayln val (current-error-port))
+  val)
 (define (post url form-data)
   (let* ([boilerplate `((AWSAccessKeyId   . ,AWSAccessKeyId)
                         (SignatureMethod  . "HmacSHA1")
@@ -55,16 +46,20 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                         (Timestamp        . ,(zdate))
                         (Version          . "2009-04-15")
                         )]
-         [merged (append boilerplate form-data)]
-         [string-to-sign  (string->bytes/utf-8 (alist->form-urlencoded merged))]
+         [merged (p (sort-alist (append boilerplate form-data)))]
+         [string-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
+                                                       "POST"
+                                                       (url-host url)
+                                                       (url-path->string
+                                                        (url-path url))
+                                                       (alist->form-urlencoded merged)))]
          [w-e-list  (cons (cons 'Signature  (sign string-to-sign)) merged)]
          [whole-enchilada (string->bytes/utf-8 (alist->form-urlencoded w-e-list))])
 
     (fprintf (current-error-port)
-             "URL: ~s~%form-data: ~s~%whole-enchilada: ~s~%"
-             (url->string url)
-             form-data
-             whole-enchilada)
+             "string-to-sign: ~a~%whole-enchilada: ~a~%"
+             (bytes-join (regexp-split "&" string-to-sign)  #"\n&")
+             (bytes-join (regexp-split "&" whole-enchilada) #"\n&"))
 
 
     (call/input-url
@@ -75,14 +70,14 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (list-domains sdb)
   (let loop ([accum '()])
-    (let ([response (post (string->url "http://sdb.amazonaws.com")
+    (let ([response (post (string->url "http://sdb.amazonaws.com/")
                           `((Action . "ListDomains") (MaxNumberOfDomains . "100")))])
       response)))
 
 (define sdb #f)
 
 (define-test-suite all-tests
-  query-string-components->list-tests)
+  (check-not-equal? "I am a" "placeholder"))
 
 (define (main . args)
   (let ([failures (run-tests all-tests)])
