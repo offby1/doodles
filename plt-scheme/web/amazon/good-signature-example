@@ -1,0 +1,82 @@
+Compilation started at Sat May 21 11:08:40
+
+PYTHONPATH=/usr/local/src/python-simpledb/build/lib.linux-i686-2.7 python sdb-fiddling.py 
+Here's my access key ID: 0CMD1HG61T92SFB969G2
+A sdb: <simpledb.simpledb.SimpleDB object at 0xb776d38c> ['__class__', '__delattr__', '__delitem__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__hash__', '__init__', '__iter__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_list_domains', '_make_request', '_parse_attributes', '_sdb_url', '_select', 'aws_key', 'aws_secret', 'batch_put_attributes', 'create_domain', 'db', 'delete_attributes', 'delete_domain', 'encoder', 'get_attributes', 'get_domain_metadata', 'has_domain', 'hashlib', 'http', 'list_domains', 'ns', 'put_attributes', 'scheme', 'select', 'service_version', 'signature_method']
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=ListDomains&MaxNumberOfDomains=100&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A40&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9e9868c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=ListDomains&MaxNumberOfDomains=100&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A40&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9e986ec>
+/usr/local/src/python-simpledb/build/lib.linux-i686-2.7/simpledb/simpledb.py:302: FutureWarning: The behavior of this method will change in future versions.  Use specific 'len(elem)' or 'elem is not None' test instead.
+  if domain_result:
+My domains: [<Domain: frotz>]
+Behold the frotz domain: <Domain: frotz> ['__class__', '__delattr__', '__delitem__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__hash__', '__init__', '__iter__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setitem__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', '__weakref__', '_encode', '_get_query', 'all', 'count', 'filter', 'get', 'item_names', 'items', 'metadata', 'name', 'select', 'simpledb', 'values']
+Items in the frotz domain: {}
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb484c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb48ac>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=k2&Attribute.0.Replace=true&Attribute.0.Value=value%202&Attribute.1.Name=k1&Attribute.1.Replace=true&Attribute.1.Value=value%201&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb484c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=k2&Attribute.0.Replace=true&Attribute.0.Value=value%202&Attribute.1.Name=k1&Attribute.1.Replace=true&Attribute.1.Value=value%201&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb498c>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ea9c6c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A41&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb484c>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=rover&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=dog&DomainName=frotz&ItemName=pet1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb4c2c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=rover&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=dog&DomainName=frotz&ItemName=pet1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb4cec>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet2&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ea9c6c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet2&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb4c6c>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=fido&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=dog&DomainName=frotz&ItemName=pet2&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb4f8c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=fido&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=dog&DomainName=frotz&ItemName=pet2&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9ec606c>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet3&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ea9c6c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet3&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb4eac>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=fluffy&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=cat&DomainName=frotz&ItemName=pet3&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb490c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=fluffy&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=cat&DomainName=frotz&ItemName=pet3&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9ec638c>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet4&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ea9c6c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=DeleteAttributes&DomainName=frotz&ItemName=pet4&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A42&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9ec62cc>
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=snowball&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=cat&DomainName=frotz&ItemName=pet4&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A43&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ec64ec>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=PutAttributes&Attribute.0.Name=name&Attribute.0.Replace=true&Attribute.0.Value=snowball&Attribute.1.Name=species&Attribute.1.Replace=true&Attribute.1.Value=cat&DomainName=frotz&ItemName=pet4&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A43&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9ec66cc>
+Waiting a couple seconds, since I don't know how to specify ConsistentRead
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=GetAttributes&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A45&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9ea9c6c>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=GetAttributes&DomainName=frotz&ItemName=object1&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A45&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9ec676c>
+/usr/local/src/python-simpledb/build/lib.linux-i686-2.7/simpledb/simpledb.py:515: FutureWarning: The behavior of this method will change in future versions.  Use specific 'len(elem)' or 'elem is not None' test instead.
+  if attr_node:
+Object 1: {'k2': 'value 2', 'k1': 'value 1'}
+build_signature_base_string: returning 'POST\nsdb.amazonaws.com\n/\nAWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=Select&SelectExpression=SELECT%20%2A%20from%20frotz%20where%20species%20%3D%20%27cat%27&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A45&Version=2009-04-15'
+request: <simpledb.simpledb.Request object at 0x9eb4fec>; base: POST
+sdb.amazonaws.com
+/
+AWSAccessKeyId=0CMD1HG61T92SFB969G2&Action=Select&SelectExpression=SELECT%20%2A%20from%20frotz%20where%20species%20%3D%20%27cat%27&SignatureMethod=HmacSHA256&SignatureVersion=2&Timestamp=2011-05-21T18%3A08%3A45&Version=2009-04-15; hashed: <hmac.HMAC instance at 0x9eb4a8c>
+SELECT * from frotz where species = 'cat' => [{'species': 'cat', 'name': 'fluffy'}, {'species': 'cat', 'name': 'snowball'}]
+
+Compilation finished at Sat May 21 11:08:45
