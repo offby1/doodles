@@ -30,23 +30,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      ((number? t) (thing->bytes/utf-8 (number->string t)))))
   (sort query-string-components bytes<? #:key (compose thing->bytes/utf-8 car)))
 
-(define (stringlist->bytes strs)
-  (string->bytes/utf-8
-   (apply
-    string-append
-    (map (curryr string-append "\n") strs))))
-
-(define (p val)
-  (displayln val (current-error-port))
-  val)
-(define (post url form-data)
+(define (post-with-signature url form-data)
   (let* ([boilerplate `((AWSAccessKeyId   . ,AWSAccessKeyId)
                         (SignatureMethod  . "HmacSHA1")
                         (SignatureVersion . "2")
                         (Timestamp        . ,(zdate))
                         (Version          . "2009-04-15")
                         )]
-         [merged (p (sort-alist (append boilerplate form-data)))]
+         [merged  (sort-alist (append boilerplate form-data))]
          [string-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
                                                        "POST"
                                                        (url-host url)
@@ -56,25 +47,17 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          [w-e-list  (cons (cons 'Signature  (sign string-to-sign)) merged)]
          [whole-enchilada (string->bytes/utf-8 (alist->form-urlencoded w-e-list))])
 
-    (fprintf (current-error-port)
-             "string-to-sign: ~a~%whole-enchilada: ~a~%"
-             (bytes-join (regexp-split "&" string-to-sign)  #"\n&")
-             (bytes-join (regexp-split "&" whole-enchilada) #"\n&"))
-
-
     (call/input-url
      url
      (lambda (url headers) (post-pure-port url whole-enchilada headers))
      html->shtml
      `("Content-Type: application/x-www-form-urlencoded"))))
 
-(define (list-domains sdb)
-  (let loop ([accum '()])
-    (let ([response (post (string->url "http://sdb.amazonaws.com/")
-                          `((Action . "ListDomains") (MaxNumberOfDomains . "100")))])
-      response)))
-
-(define sdb #f)
+(define (list-domains)
+  (post-with-signature
+   (string->url "http://sdb.amazonaws.com/")
+   `((Action . "ListDomains")
+     (MaxNumberOfDomains . "100"))))
 
 (define-test-suite all-tests
   (check-not-equal? "I am a" "placeholder"))
@@ -83,6 +66,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([failures (run-tests all-tests)])
     (when (positive? failures)
       (exit 1)))
-  (printf "Domains: ~a~%" (list-domains sdb)))
+  (printf "Domains: ~a~%" (list-domains)))
 
 (provide main)
