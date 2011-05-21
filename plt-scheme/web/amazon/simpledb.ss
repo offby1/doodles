@@ -4,8 +4,10 @@
 exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-#lang scheme
-(require "aws-common.ss"
+#lang racket
+(require rackunit
+         rackunit/text-ui
+         "aws-common.ss"
          net/url
          net/uri-codec
          (only-in (planet offby1/offby1/zdate) zdate)
@@ -35,6 +37,10 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                  (symbol->string name)
                  value)])
        (sort-parameters query-string-components)))
+
+(define-test-suite query-string-components->list-tests
+  (check-equal? (query-string-components->list '((foo . "bar") (baz . "ugh")))
+                '("baz=ugh" "foo=bar")))
 
 (define (stringlist->bytes strs)
   (string->bytes/utf-8
@@ -75,7 +81,13 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define sdb #f)
 
+(define-test-suite all-tests
+  query-string-components->list-tests)
+
 (define (main . args)
+  (let ([failures (run-tests all-tests)])
+    (when (positive? failures)
+      (exit 1)))
   (printf "Domains: ~a~%" (list-domains sdb)))
 
 (provide main)
