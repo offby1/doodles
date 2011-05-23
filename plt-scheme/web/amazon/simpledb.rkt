@@ -128,7 +128,10 @@ exec racket --require "$0" --main -- ${1+"$@"}
    '((DomainName . "frotz")
      (Action . "PutAttributes")
      (ItemName . "test")
-     (Attribute.1.Name . "action")
-     (Attribute.1.Value . "a value with spaces"))))
+     (Attribute.0.Name . "action")
+     (Attribute.0.Value . "a value with spaces")
+
+     (Attribute.1.Name . "snorgulous")
+     (Attribute.1.Value . "an ellipsis:\u2026")     )))
 
 (provide main)
