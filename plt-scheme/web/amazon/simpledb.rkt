@@ -81,7 +81,10 @@ exec racket --require "$0" --main -- ${1+"$@"}
              (signed-POST-body url form-data)
              headers)]
             [headers (purify-port response-inp)])
-       (fprintf (current-error-port) "Headers:~s~%" headers)
+       (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
+         (case (string->number code)
+           ((200) 'good-good)
+           (else (error 'post-with-signature  "Bad response: ~s" headers))))
        response-inp))
 
    ;; actually the response is XML, but this works fine
