@@ -75,16 +75,18 @@ exec racket --require "$0" --main -- ${1+"$@"}
   (call/input-url
    url
    (lambda (url headers)
-     (let* ([response-inp
-            (post-impure-port
-             url
-             (signed-POST-body url form-data)
-             headers)]
+     (let* ([POST-body (signed-POST-body url form-data)]
+            [response-inp
+             (post-impure-port
+              url
+              POST-body
+              headers)]
             [headers (purify-port response-inp)])
        (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
          (case (string->number code)
            ((200) 'good-good)
            (else
+            (fprintf (current-error-port) "simpledb doesn't like~%~a~%" POST-body)
             (copy-port response-inp (current-error-port))
             (newline (current-error-port))
             (error 'post-with-signature  "Bad response: ~s" headers))))
