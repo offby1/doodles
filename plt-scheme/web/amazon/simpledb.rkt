@@ -115,6 +115,12 @@ exec racket --require "$0" --main -- ${1+"$@"}
   (let ([failures (run-tests all-tests)])
     (when (positive? failures)
       (exit 1)))
-  (printf "Domains: ~a~%" (list-domains)))
+  (printf "Domains: ~a~%" (list-domains))
+  (simpledb-post
+   '((DomainName . "frotz")
+     (Action . "PutAttributes")
+     (ItemName . "test")
+     (Attribute.1.Name . "action")
+     (Attribute.1.Value . "a value with spaces"))))
 
 (provide main)
