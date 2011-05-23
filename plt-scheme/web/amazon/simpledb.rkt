@@ -28,6 +28,14 @@ exec racket --require "$0" --main -- ${1+"$@"}
      ((number? t) (thing->bytes/utf-8 (number->string t)))))
   (sort query-string-components bytes<? #:key (compose thing->bytes/utf-8 car)))
 
+;; like alist->form-urlencoded, except we hexencode a few characters
+;; that seem to make AWS happy
+(define (encode-alist a)
+  (for/fold ([result (alist->form-urlencoded a)])
+      ([(pattern replacement) (in-dict '(("\\+" . "%20")
+                                         ("\\*" . "%2A")))])
+  (regexp-replace* pattern result replacement)))
+
 (define (signed-POST-body url form-data)
 
   (when (string? url)
@@ -44,10 +52,10 @@ exec racket --require "$0" --main -- ${1+"$@"}
                                                        "POST"
                                                        (url-host url)
                                                        (url-path->string (url-path url))
-                                                       (alist->form-urlencoded merged)))]
+                                                       (encode-alist merged)))]
          [whole-enchilada-list (cons `(Signature . ,(sign string-to-sign)) merged)])
 
-    (string->bytes/utf-8 (alist->form-urlencoded whole-enchilada-list))))
+    (string->bytes/utf-8 (encode-alist whole-enchilada-list))))
 
 (define-test-suite sign-tests
   (let ([a (form-urlencoded->alist
