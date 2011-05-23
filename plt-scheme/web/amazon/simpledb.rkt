@@ -8,7 +8,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
          (only-in (planet neil/htmlprag:1:6) html->shtml)
          (only-in (planet offby1/offby1/zdate) zdate)
          (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
-         (only-in net/url url-host url-path call/input-url post-pure-port string->url)
+         (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url)
          (only-in srfi/13 string-join)
          (only-in unstable/net/url url-path->string)
          rackunit
@@ -75,16 +75,21 @@ exec racket --require "$0" --main -- ${1+"$@"}
   (call/input-url
    url
    (lambda (url headers)
-     (post-pure-port
-      url
-      (signed-POST-body url form-data)
-      headers))
+     (let* ([response-inp
+            (post-impure-port
+             url
+             (signed-POST-body url form-data)
+             headers)]
+            [headers (purify-port response-inp)])
+       (fprintf (current-error-port) "Headers:~s~%" headers)
+       response-inp))
 
    ;; actually the response is XML, but this works fine
    html->shtml
 
    `("Content-Type: application/x-www-form-urlencoded")))
 
+(provide simpledb-post)
 (define (simpledb-post form-data)
   (post-with-signature
    (string->url "http://sdb.amazonaws.com/")
