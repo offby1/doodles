@@ -84,7 +84,10 @@ exec racket --require "$0" --main -- ${1+"$@"}
        (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
          (case (string->number code)
            ((200) 'good-good)
-           (else (error 'post-with-signature  "Bad response: ~s" headers))))
+           (else
+            (copy-port response-inp (current-error-port))
+            (newline (current-error-port))
+            (error 'post-with-signature  "Bad response: ~s" headers))))
        response-inp))
 
    ;; actually the response is XML, but this works fine
