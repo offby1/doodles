@@ -1,10 +1,10 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
 #$Id$
-exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
+exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-#lang scheme
+#lang racket
 
 (require (only-in file/md5 md5)
          (only-in scheme/date date-display-format date->string)
@@ -14,7 +14,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (only-in srfi/13 substring/shared))
 
 (provide (all-defined-out))
-(define AWSAccessKeyId "0CMD1HG61T92SFB969G2")
+(define AWSAccessKeyId  (get-preference '|AWS-access-key-id|))
 (define SecretAccessKey (get-preference '|AWS-secret-access-key|))
 
 (define (rfc-2822-date)
