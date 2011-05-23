@@ -35,6 +35,9 @@ if __name__ == "__main__":
     frotz_domain['pet2'] = dict(species='dog', name='fido')
     frotz_domain['pet3'] = dict(species='cat', name='fluffy')
     frotz_domain['pet4'] = dict(species='cat', name='snowball')
+    frotz_domain['pet5'] = dict(species='cat', name='a name with spaces')
+    frotz_domain['pet6'] = dict(species='cat', name='**stars**')
+    frotz_domain['pet6'] = dict(species='cat', name='non-ASCII\x2026')
     print("Waiting a couple seconds, since I don't know how to specify ConsistentRead")
     time.sleep(2)
 
