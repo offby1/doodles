@@ -1,1 +1,5 @@
-Nothing, it's perfect.
+Consider examining known-good libraries to steal ideas; in particular, URL-encoding.
+
+A Python library that seems active and relevant:
+
+http://code.google.com/p/boto/
