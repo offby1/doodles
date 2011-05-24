@@ -24,9 +24,9 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
 (define (base64-encode bytes)
-  (let ((sop (open-output-string)))
+  (let ((sop (open-output-bytes)))
     (base64-encode-stream (open-input-bytes bytes) sop "")
-    (get-output-string sop)))
+    (get-output-bytes sop)))
 
 (define/contract (hexdecode abc)
   (bytes? . -> . bytes?)
