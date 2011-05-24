@@ -30,14 +30,10 @@ if __name__ == "__main__":
     print("Behold the frotz domain:", frotz_domain, dir(frotz_domain))
     print("Items in the frotz domain:", frotz_domain.items)
 
-    frotz_domain['object1'] = dict(k1='value 1', k2='value 2')
-    frotz_domain['pet1'] = dict(species='dog', name='rover')
-    frotz_domain['pet2'] = dict(species='dog', name='fido')
-    frotz_domain['pet3'] = dict(species='cat', name='fluffy')
-    frotz_domain['pet4'] = dict(species='cat', name='snowball')
-    frotz_domain['pet5'] = dict(species='cat', name='a name with spaces')
-    frotz_domain['pet6'] = dict(species='cat', name='**stars**')
-    frotz_domain['pet6'] = dict(species='cat', name='non-ASCII\x2026')
+    frotz_domain['test'] = dict(action="a value with spaces",
+                                snorgulous=u'an ellipsis:\u2026',
+                                frotz=u'a nasty Unicode character:\ufffd',
+                                )
     print("Waiting a couple seconds, since I don't know how to specify ConsistentRead")
     time.sleep(2)
 
