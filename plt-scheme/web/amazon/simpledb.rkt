@@ -177,7 +177,10 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       ("Attribute.0.Value" . "a value with spaces")
 
       ("Attribute.1.Name"  . "snorgulous")
-      ("Attribute.1.Value" . "an ellipsis:\u2026")     )))
+      ("Attribute.1.Value" . "an ellipsis:\u2026")
+
+      ("Attribute.2.Name"  . "frotz")
+      ("Attribute.2.Value" . "a nasty Unicode character:\ufffd"))))
   (newline))
 
 (provide main)
