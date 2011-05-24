@@ -38,37 +38,41 @@ Replace special characters in string using the %xx escape. Letters, digits, and 
 Example: quote('/~connolly/') yields '/%7econnolly/'.
 |#
 
-(define/contract (char->urllib-quoted-bytes c #:safe safe)
-  (-> char? #:safe (set/c char?) bytes? )
+(define/contract (byte->urllib-quoted-bytes b #:safe safe)
+  (-> byte? #:safe (set/c byte?) bytes?)
 
   (define (hexencode-codepoint-number i)
     (string->bytes/utf-8 (format "%~a" (string-upcase (number->string i 16)))))
 
-  (let ([i (char->integer c)])
-    (cond
-     ((<= 65 i 90)                      ;upper-case letter
-      (bytes i))
-     ((<= 97 i 122)                     ;lower-case letter
-      (bytes i))
-     ((<= 48 i 57)                      ;digit
-      (bytes i))
-     ((set-member? safe c)
-      (bytes i))
-     (else
-      (hexencode-codepoint-number i)))))
+  (cond
+   ((<= 65 b 90)                        ;upper-case letter
+    (bytes b))
+   ((<= 97 b 122)                       ;lower-case letter
+    (bytes b))
+   ((<= 48 b 57)                        ;digit
+    (bytes b))
+   ((set-member? safe b)
+    (bytes b))
+   (else
+    (hexencode-codepoint-number b))))
 
-(define/contract (urllib-quote str #:safe [safe (set #\/)])
-  (->* (string?)  (#:safe (set/c char?)) bytes?)
+(define/contract (urllib-quote b #:safe [safe (set 47)])
+  (->* (bytes?)  (#:safe (set/c byte?)) bytes?)
 
   (for/fold ([result #""])
-      ([c (in-string str)])
-      (bytes-append result (char->urllib-quoted-bytes c #:safe safe))))
+      ([c (in-bytes b)])
+      (bytes-append result (byte->urllib-quoted-bytes c #:safe safe))))
 
-(define (escape b)
-  (urllib-quote b #:safe (apply set (string->list ".-_~"))))
+(define/contract escape
+  (-> (or/c string? bytes?) bytes?)
+  (match-lambda
+   [(? bytes? b)
+    (urllib-quote b #:safe (apply set (bytes->list ".-_~")))]
+   [(? string? s)
+    (escape (string->bytes/utf-8 s))]))
 
 (define-test-suite urllib-quote-tests
-  (check-equal? (urllib-quote "/~connolly/") #"/%7Econnolly/"))
+  (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
 
 (define (encode-alist a)
   (bytes-join
