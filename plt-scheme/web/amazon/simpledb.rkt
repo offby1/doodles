@@ -1,18 +1,20 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec racket --require "$0" --main -- ${1+"$@"}
+exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang racket
-(require (only-in "aws-common.ss" AWSAccessKeyId sign)
-         (only-in (planet neil/htmlprag:1:6) html->shtml)
-         (only-in (planet offby1/offby1/zdate) zdate)
-         (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
-         (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url)
-         (only-in srfi/13 string-join)
-         (only-in unstable/net/url url-path->string)
-         rackunit
-         rackunit/text-ui)
+(require
+ (only-in "aws-common.ss" AWSAccessKeyId sign)
+ (only-in (planet neil/htmlprag:1:6) html->shtml)
+ (only-in (planet offby1/offby1/zdate) zdate)
+ (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
+ (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url)
+ (only-in srfi/13 string-join)
+ (only-in unstable/net/url url-path->string)
+ rackunit
+ rackunit/text-ui
+ )
 
 ;; Attempt to follow the rules at
 ;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/REST_RESTAuth.html
@@ -28,24 +30,69 @@ exec racket --require "$0" --main -- ${1+"$@"}
      ((number? t) (thing->bytes/utf-8 (number->string t)))))
   (sort query-string-components bytes<? #:key (compose thing->bytes/utf-8 car)))
 
-;; like alist->form-urlencoded, except we hexencode a few characters
-;; that seem to make AWS happy
-(define (encode-alist a)
-  (for/fold ([result (alist->form-urlencoded a)])
-      ([(pattern replacement) (in-dict '(("\\+" . "%20")
-                                         ("\\*" . "%2A")))])
-  (regexp-replace* pattern result replacement)))
+;; http://docs.python.org/library/urllib.html#module-urllib
+#|
+urllib.quote(string[, safe])
+Replace special characters in string using the %xx escape. Letters, digits, and the characters '_.-' are never quoted. By default, this function is intended for quoting the path section of the URL.The optional safe parameter specifies additional characters that should not be quoted — its default value is '/'.
 
-(define (signed-POST-body url form-data)
+Example: quote('/~connolly/') yields '/%7econnolly/'.
+|#
+
+(define/contract (char->urllib-quoted-bytes c safe)
+  (-> char? (set/c char?) bytes? )
+
+  (define (hexencode-codepoint-number i)
+    (string->bytes/utf-8 (format "%~a" (string-upcase (number->string i 16)))))
+
+  (let ([i (char->integer c)])
+    (cond
+     ((<= 65 i 90)                      ;upper-case letter
+      (bytes i))
+     ((<= 97 i 122)                     ;lower-case letter
+      (bytes i))
+     ((<= 48 i 57)                      ;digit
+      (bytes i))
+     ((set-member? safe c)
+      (bytes i))
+     (else
+      (hexencode-codepoint-number i)))))
+
+(define/contract (urllib-quote str [safe (set #\/)])
+  (->* (string?) ((set/c char?)) bytes?)
+
+  (for/fold ([result #""])
+      ([c (in-string str)])
+      (bytes-append result (char->urllib-quoted-bytes c safe))))
+
+(define (escape b)
+  (urllib-quote b (apply set (string->list "-_~"))))
+
+(define-test-suite urllib-quote-tests
+  (check-equal? (urllib-quote "/~connolly/") #"/%7Econnolly/"))
+
+(define (encode-alist a)
+  (bytes-join
+   (reverse
+    (for/fold ([result '()])
+        ([p (in-list a)])
+        (cons
+         (string->bytes/utf-8
+          (format "~a=~a"
+                  (car p)
+                  (escape (cdr p))))
+         result)))
+   #"&"))
+
+(define (add-AWS-signature-and-stuff url form-data)
 
   (when (string? url)
     (set! url (string->url url)))
 
-  (let* ([boilerplate `((AWSAccessKeyId   . ,AWSAccessKeyId)
-                        (SignatureMethod  . "HmacSHA1")
-                        (SignatureVersion . "2")
-                        (Timestamp        . ,(zdate))
-                        (Version          . "2009-04-15")
+  (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
+                        ("SignatureMethod"  . "HmacSHA1")
+                        ("SignatureVersion" . "2")
+                        ("Timestamp"        . ,(zdate))
+                        ("Version"          . "2009-04-15")
                         )]
          [merged  (sort-alist (append boilerplate form-data))]
          [string-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
@@ -53,37 +100,32 @@ exec racket --require "$0" --main -- ${1+"$@"}
                                                        (url-host url)
                                                        (url-path->string (url-path url))
                                                        (encode-alist merged)))]
-         [whole-enchilada-list (cons `(Signature . ,(sign string-to-sign)) merged)])
+         [whole-enchilada-list (cons `("Signature" . ,(bytes->string/utf-8 (sign string-to-sign))) merged)])
 
-    (string->bytes/utf-8 (encode-alist whole-enchilada-list))))
+    whole-enchilada-list))
 
 (define-test-suite sign-tests
-  (let ([a (form-urlencoded->alist
-            (bytes->string/utf-8
-             (signed-POST-body
-              "http://frotz"
-              '((Hugger . "mugger")))))])
+  (match-let ([(list (cons "Signature"        sig)
+                     (cons "AWSAccessKeyId"   key)
+                     (cons "Hugger"           hugger)
+                     (cons "SignatureMethod"  meth)
+                     (cons "SignatureVersion" sigver)
+                     (cons "Timestamp"        time)
+                     (cons "Version"          ver))
+               (add-AWS-signature-and-stuff
+                "http://frotz"
+                '(("Hugger" . "mugger")))])
 
-    (match-let ([(list (cons 'Signature        sig)
-                       (cons 'AWSAccessKeyId   key)
-                       (cons 'Hugger           hugger)
-                       (cons 'SignatureMethod  meth)
-                       (cons 'SignatureVersion sigver)
-                       (cons 'Timestamp        time)
-                       (cons 'Version          ver))
-                 a])
-      (check-true (string? sig))
-
-      (check-equal? key    AWSAccessKeyId)
-      (check-equal? meth   "HmacSHA1")
-      (check-equal? sigver "2")
-      (check-equal? hugger "mugger"))))
+    (check-equal? key    AWSAccessKeyId)
+    (check-equal? meth   "HmacSHA1")
+    (check-equal? sigver "2")
+    (check-equal? hugger "mugger")))
 
 (define (post-with-signature url form-data)
   (call/input-url
    url
    (lambda (url headers)
-     (let* ([POST-body (signed-POST-body url form-data)]
+     (let* ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))]
             [response-inp
              (post-impure-port
               url
@@ -113,10 +155,11 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
 (define (list-domains)
   (simpledb-post
-   `((Action . "ListDomains")
-     (MaxNumberOfDomains . "100"))))
+   `(("Action" . "ListDomains")
+     ("MaxNumberOfDomains" . "100"))))
 
 (define-test-suite all-tests
+  urllib-quote-tests
   sign-tests)
 
 (define (main . args)
@@ -125,13 +168,13 @@ exec racket --require "$0" --main -- ${1+"$@"}
       (exit 1)))
   (printf "Domains: ~a~%" (list-domains))
   (simpledb-post
-   '((DomainName . "frotz")
-     (Action . "PutAttributes")
-     (ItemName . "test")
-     (Attribute.0.Name . "action")
-     (Attribute.0.Value . "a value with spaces")
+   `(("DomainName"        . "frotz")
+     ("Action"            . "PutAttributes")
+     ("ItemName"          . "test")
+     ("Attribute.0.Name"  . "action")
+     ("Attribute.0.Value" . "a value with spaces")
 
-     (Attribute.1.Name . "snorgulous")
-     (Attribute.1.Value . "an ellipsis:\u2026")     )))
+     ("Attribute.1.Name"  . "snorgulous")
+     ("Attribute.1.Value" . "an ellipsis:\u2026")     )))
 
 (provide main)
