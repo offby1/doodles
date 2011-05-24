@@ -38,8 +38,8 @@ Replace special characters in string using the %xx escape. Letters, digits, and 
 Example: quote('/~connolly/') yields '/%7econnolly/'.
 |#
 
-(define/contract (char->urllib-quoted-bytes c safe)
-  (-> char? (set/c char?) bytes? )
+(define/contract (char->urllib-quoted-bytes c #:safe safe)
+  (-> char? #:safe (set/c char?) bytes? )
 
   (define (hexencode-codepoint-number i)
     (string->bytes/utf-8 (format "%~a" (string-upcase (number->string i 16)))))
@@ -57,15 +57,15 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
      (else
       (hexencode-codepoint-number i)))))
 
-(define/contract (urllib-quote str [safe (set #\/)])
-  (->* (string?) ((set/c char?)) bytes?)
+(define/contract (urllib-quote str #:safe [safe (set #\/)])
+  (->* (string?)  (#:safe (set/c char?)) bytes?)
 
   (for/fold ([result #""])
       ([c (in-string str)])
-      (bytes-append result (char->urllib-quoted-bytes c safe))))
+      (bytes-append result (char->urllib-quoted-bytes c #:safe safe))))
 
 (define (escape b)
-  (urllib-quote b (apply set (string->list "-_~"))))
+  (urllib-quote b #:safe (apply set (string->list ".-_~"))))
 
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote "/~connolly/") #"/%7Econnolly/"))
@@ -122,30 +122,31 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (check-equal? hugger "mugger")))
 
 (define (post-with-signature url form-data)
-  (call/input-url
-   url
-   (lambda (url headers)
-     (let* ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))]
-            [response-inp
-             (post-impure-port
-              url
-              POST-body
-              headers)]
-            [headers (purify-port response-inp)])
-       (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
-         (case (string->number code)
-           ((200) 'good-good)
-           (else
-            (fprintf (current-error-port) "simpledb doesn't like~%~a~%" POST-body)
-            (copy-port response-inp (current-error-port))
-            (newline (current-error-port))
-            (error 'post-with-signature  "Bad response: ~s" headers))))
-       response-inp))
+  (let ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))])
+    (call/input-url
+     url
+     (lambda (url headers)
+       (let* ([response-inp
+               (post-impure-port
+                url
+                POST-body
+                headers)]
+              [headers (purify-port response-inp)])
+         (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
+           (case (string->number code)
+             ((200) 'good-good)
+             (else
+              (fprintf (current-error-port) "simpledb doesn't like~%~a~%" POST-body)
+              (copy-port response-inp (current-error-port))
+              (newline (current-error-port))
+              (error 'post-with-signature  "Bad response: ~s" headers))))
+         response-inp))
 
-   ;; actually the response is XML, but this works fine
-   html->shtml
+     ;; actually the response is XML, but this works fine
+     html->shtml
 
-   `("Content-Type: application/x-www-form-urlencoded")))
+     `("Content-Type: application/x-www-form-urlencoded"))
+    POST-body))
 
 (provide simpledb-post)
 (define (simpledb-post form-data)
@@ -167,14 +168,16 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (when (positive? failures)
       (exit 1)))
   (printf "Domains: ~a~%" (list-domains))
-  (simpledb-post
-   `(("DomainName"        . "frotz")
-     ("Action"            . "PutAttributes")
-     ("ItemName"          . "test")
-     ("Attribute.0.Name"  . "action")
-     ("Attribute.0.Value" . "a value with spaces")
+  (write
+   (simpledb-post
+    `(("DomainName"        . "frotz")
+      ("Action"            . "PutAttributes")
+      ("ItemName"          . "test")
+      ("Attribute.0.Name"  . "action")
+      ("Attribute.0.Value" . "a value with spaces")
 
-     ("Attribute.1.Name"  . "snorgulous")
-     ("Attribute.1.Value" . "an ellipsis:\u2026")     )))
+      ("Attribute.1.Name"  . "snorgulous")
+      ("Attribute.1.Value" . "an ellipsis:\u2026")     )))
+  (newline))
 
 (provide main)
