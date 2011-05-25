@@ -67,7 +67,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (-> (or/c string? bytes?) bytes?)
   (match-lambda
    [(? bytes? b)
-    (urllib-quote b #:safe (apply set (bytes->list ".-_~")))]
+    (urllib-quote b #:safe (apply set (bytes->list #".-_~")))]
    [(? string? s)
     (escape (string->bytes/utf-8 s))]))
 
