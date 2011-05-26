@@ -11,7 +11,8 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
          (only-in (planet lizorkin/sxml:2:1/sxml) sxpath)
          (only-in net/base64 base64-encode-stream)
          (only-in (planet jaymccarthy/hmac-sha1:1:1/hmac-sha1) HMAC-SHA1)
-         (only-in srfi/13 substring/shared))
+         (only-in srfi/13 substring/shared)
+         racket/trace)
 
 (provide (all-defined-out))
 (define AWSAccessKeyId  (get-preference '|AWS-access-key-id|))
@@ -42,7 +43,10 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (md5-b64 bytes)
   (base64-encode (hexdecode (md5 bytes))))
 
-(define (sign bytes) (base64-encode (HMAC-SHA1 SecretAccessKey bytes)))
+(define (sign bytes)
+  (let ([HMAC-SHA1 HMAC-SHA1])
+    (trace HMAC-SHA1)
+    (base64-encode (HMAC-SHA1 SecretAccessKey bytes))))
 
 (define-struct (exn:fail:aws exn:fail) (code message complete-response))
 (define (gack-on-error sxml error-path)

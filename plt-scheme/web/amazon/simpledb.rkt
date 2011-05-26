@@ -9,7 +9,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
- (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url)
+ (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url url->string)
  (only-in srfi/13 string-join)
  (only-in unstable/net/url url-path->string)
  rackunit
@@ -87,6 +87,15 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
          result)))
    #"&"))
 
+;; For debugging -- so I can run this code, and then the python code
+;; (which similarly goes in five-minute chunks) and have a prayer of
+;; getting the same timestamp (and hence, the same HMAC signature) on
+;; both.
+(define (now-rounded [resolution-seconds 300])
+  (let-values ([(q r)
+                (quotient/remainder (current-seconds) resolution-seconds)])
+    (* resolution-seconds q)))
+
 (define (add-AWS-signature-and-stuff url form-data)
 
   (when (string? url)
@@ -95,7 +104,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
                         ("SignatureMethod"  . "HmacSHA1")
                         ("SignatureVersion" . "2")
-                        ("Timestamp"        . ,(zdate))
+                        ("Timestamp"        . ,(zdate (now-rounded) #:offset 0)
+                                              )
                         ("Version"          . "2009-04-15")
                         )]
          [merged  (sort-alist (append boilerplate form-data))]
@@ -125,13 +135,24 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
 
+(define (post-debug url body headers)
+  (fprintf (current-error-port)
+           "Posting to ~a: ~a\n\n~a~%"
+           (url->string url)
+           (string-join headers "\n")
+           body)
+  (post-impure-port
+   url
+   body
+   headers))
+
 (define (post-with-signature url form-data)
   (let ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))])
     (call/input-url
      url
      (lambda (url headers)
        (let* ([response-inp
-               (post-impure-port
+               (post-debug
                 url
                 POST-body
                 headers)]
