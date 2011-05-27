@@ -102,7 +102,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (set! url (string->url url)))
 
   (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
-                        ("SignatureMethod"  . "HmacSHA1")
+                        ("SignatureMethod"  . "HmacSHA256")
                         ("SignatureVersion" . "2")
                         ("Timestamp"        . ,(zdate (now-rounded) #:offset 0)
                                               )
@@ -131,7 +131,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
                 '(("Hugger" . "mugger")))])
 
     (check-equal? key    AWSAccessKeyId)
-    (check-equal? meth   "HmacSHA1")
+    (check-equal? meth   "HmacSHA256")
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
 
@@ -170,7 +170,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
      ;; actually the response is XML, but this works fine
      html->shtml
 
-     `("Content-Type: application/x-www-form-urlencoded"))
+     `(,(format "host: ~a" (url-host url))
+       "Content-Type: application/x-www-form-urlencoded; charset=utf-8"))
     POST-body))
 
 (provide simpledb-post)
@@ -195,17 +196,20 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (printf "Domains: ~a~%" (list-domains))
   (write
    (simpledb-post
-    `(("DomainName"        . "frotz")
-      ("Action"            . "PutAttributes")
-      ("ItemName"          . "test")
-      ("Attribute.0.Name"  . "action")
-      ("Attribute.0.Value" . "a value with spaces")
+    `(("DomainName"          . "frotz")
+      ("Action"              . "PutAttributes")
+      ("ItemName"            . "test")
+      ("Attribute.0.Name"    . "action")
+      ("Attribute.0.Replace" . "true")
+      ("Attribute.0.Value"   . "a value with spaces")
 
-      ("Attribute.1.Name"  . "snorgulous")
-      ("Attribute.1.Value" . "an ellipsis:\u2026")
+      ("Attribute.1.Name"    . "snorgulous")
+      ("Attribute.1.Replace" . "true")
+      ("Attribute.1.Value"   . "an ellipsis:\u2026")
 
-      ("Attribute.2.Name"  . "frotz")
-      ("Attribute.2.Value" . "a nasty Unicode character:\ufffd"))))
+      ("Attribute.2.Name"    . "frotz")
+      ("Attribute.2.Replace" . "true")
+      ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
   (newline))
 
 (provide main)
