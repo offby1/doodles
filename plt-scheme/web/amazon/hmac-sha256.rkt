@@ -1,8 +1,6 @@
 #lang racket
 
 (require (lib "foreign.ss")
-         (except-in (lib "contract.ss")
-                    ->)
          (rename-in (lib "contract.ss")
                     [-> c->]))
 (unsafe!)
