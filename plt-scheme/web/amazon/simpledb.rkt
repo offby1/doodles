@@ -135,24 +135,13 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
 
-(define (post-debug url body headers)
-  (fprintf (current-error-port)
-           "Posting to ~a: ~a\n\n~a~%"
-           (url->string url)
-           (string-join headers "\n")
-           body)
-  (post-impure-port
-   url
-   body
-   headers))
-
 (define (post-with-signature url form-data)
   (let ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))])
     (call/input-url
      url
      (lambda (url headers)
        (let* ([response-inp
-               (post-debug
+               (post-impure-port
                 url
                 POST-body
                 headers)]
