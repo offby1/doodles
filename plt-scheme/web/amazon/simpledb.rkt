@@ -87,15 +87,6 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
          result)))
    #"&"))
 
-;; For debugging -- so I can run this code, and then the python code
-;; (which similarly goes in five-minute chunks) and have a prayer of
-;; getting the same timestamp (and hence, the same HMAC signature) on
-;; both.
-(define (now-rounded [resolution-seconds 300])
-  (let-values ([(q r)
-                (quotient/remainder (current-seconds) resolution-seconds)])
-    (* resolution-seconds q)))
-
 (define (add-AWS-signature-and-stuff url form-data)
 
   (when (string? url)
@@ -104,7 +95,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
                         ("SignatureMethod"  . "HmacSHA256")
                         ("SignatureVersion" . "2")
-                        ("Timestamp"        . ,(zdate (now-rounded) #:offset 0)
+                        ("Timestamp"        . ,(zdate #:offset 0)
                                               )
                         ("Version"          . "2009-04-15")
                         )]
