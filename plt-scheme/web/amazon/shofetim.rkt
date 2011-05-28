@@ -7,10 +7,11 @@
 (require racket/date)
 (require file/md5)
 (require web-server/stuffers/hmac-sha1)
+(require (only-in (planet neil/htmlprag:1:6) html->shtml))
 
 ;;;; Settings
-(define secret-key "")
-(define access-id "")
+(define secret-key (bytes->string/utf-8 (get-preference '|AWS-secret-access-key|)))
+(define access-id (get-preference '|AWS-access-key-id|))
 (define s3-host "s3.amazonaws.com/")
 ;;(define site "")
 (define base-url
@@ -86,4 +87,6 @@
     (put-impure-port url buffer http-headers)))
 
 ;;;Put it to work
-(copy-port (s3-put "/etc/passwd") (current-output-port)) ;;Specify the file name in the same directory to be uploaded.
+(match (html->shtml (s3-put "TODO")) ;;Specify the file name in the same directory to be uploaded.
+  [(list |*TOP*| header ... (list error stuff ...)) stuff]
+  [_ 'hooray])
