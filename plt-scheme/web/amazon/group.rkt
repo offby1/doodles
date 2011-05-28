@@ -12,12 +12,15 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define/contract (group seq group-size)
   (sequence? natural-number/c . -> . sequence?)
   (in-generator
-   (let ([this-chunk '()])
+   (let ([this-chunk '()]
+         [l 0])
      (for ([(elt i) (in-indexed seq)])
        (set! this-chunk (cons elt this-chunk))
-       (when (zero? (remainder (length this-chunk) group-size))
+       (set! l (add1 l))
+       (when (zero? (remainder l group-size))
          (yield (reverse this-chunk))
-         (set! this-chunk '())))
+         (set! this-chunk '())
+         (set! l 0)))
      (when (not (null? this-chunk))
        (yield this-chunk)))))
 
