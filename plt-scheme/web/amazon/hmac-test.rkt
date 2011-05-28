@@ -11,15 +11,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define/contract (hex-string->bytes s)
   (string? . -> . bytes?)
 
-  (let loop ([remainders '()]
-             [n  (read (open-input-string (format "#x~a" s)))])
-    (cond
-     ((zero? n)
-      (apply bytes remainders))
-     (else
-      (let-values ([(q r) (quotient/remainder n 256)])
-        (loop (cons r remainders) q)))))
-  )
+  (apply bytes (map (curryr string->number 16)
+                    (regexp-match* #rx"..?" s))))
+
 
 (define/contract (bytes->hex-string b)
   (bytes? . -> . string?)
