@@ -74,6 +74,9 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
 
+;; The car of each element must be something that can be stringified
+;; via (format "~a").  The cdr must be something that can be given to
+;; "escape", which means either a bytes? or a string?
 (define (encode-alist a)
   (bytes-join
    (reverse
