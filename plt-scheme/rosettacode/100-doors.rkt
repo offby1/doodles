@@ -2,14 +2,31 @@
 
 #lang racket
 
-(define *n-doors* 100)
-(define *doors* (make-vector *n-doors* #f))
+(define *doors* (make-vector 100 #f))
 
-(for ([pass (in-range *n-doors*)])
-  (for ([door (in-range *n-doors*)])
-    (when (zero? (remainder door (add1 pass)))
-      (dict-update! *doors* door not))))
+;; Like "map", but the proc must take an index as well as the element.
+(define (map-index proc seq)
+  (for/list ([(elt i) (in-indexed seq)])
+    (proc elt i)))
 
-(for ([(door index) (in-indexed *doors*)])
+;; Applies PROC to every STEPth element of SEQ, leaving the others
+;; unchanged.
+(define (map-step proc step seq)
+  (map-index
+   (lambda (elt i)
+     ((if (zero? (remainder i step) )
+          proc
+          values) elt))
+   seq))
+
+(define (toggle-nth n seq)
+  (map-step not n seq))
+
+(define (solve seq)
+  (for/fold ([result (vector->list seq)])
+      ([pass (in-range (vector-length seq))])
+      (toggle-nth (add1 pass) result)))
+
+(for ([(door index) (in-indexed (solve *doors*))])
   (when door
     (displayln index)))
