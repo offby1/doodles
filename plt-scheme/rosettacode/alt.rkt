@@ -1,17 +1,25 @@
 #lang racket
 
+;; Like "map", but the proc must take an index as well as the element.
+(define (map-index proc seq)
+  (for/list ([(elt i) (in-indexed seq)])
+    (proc elt i)))
+
 (define (map-step proc step lst)
-    (for/list ((i lst) (n (in-naturals 1)))
-      (if (equal? (modulo n step) 0)
-          (proc i)
-          i)))
+  (map-index
+   (lambda (elt i)
+     (if (zero? (remainder i step) )
+         (proc elt)
+         elt))
+   lst))
 
 (define (map-times-step proc times step lst)
   (if (equal? times 1)
       lst
       (map-times-step proc (sub1 times) (add1 step) (map-step proc step lst))))
 
-(sequence-for-each (lambda (x n)
-            (when x
-            (printf "~a is open\n" (add1 n))))
-          (in-indexed (map-times-step (lambda (x) (not x)) 101 1 (make-list 100 #f))))
+(sequence-for-each
+ (lambda (x n)
+   (when x
+     (printf "~a is open\n" n)))
+ (in-indexed (map-times-step not 101 1 (make-list 100 #f))))
