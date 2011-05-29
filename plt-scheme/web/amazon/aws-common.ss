@@ -6,8 +6,7 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 
-(require (only-in file/md5 md5)
-         (only-in scheme/date date-display-format date->string)
+(require (only-in scheme/date date-display-format date->string)
          (only-in (planet lizorkin/sxml:2:1/sxml) sxpath)
          (only-in net/base64 base64-encode-stream)
          (only-in "hmac-sha256.rkt" HMAC-SHA256)
@@ -28,20 +27,6 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (base64-encode-stream (open-input-bytes bytes) sop "")
     (get-output-bytes sop)))
 
-(define/contract (hexdecode abc)
-  (bytes? . -> . bytes?)
-  (let loop  ((s (bytes->string/utf-8 abc))
-              (result '()))
-    (if (zero? (string-length s))
-        (apply bytes (reverse result))
-        (let* ((two-digits (substring/shared s 0 2))
-               (number (read (open-input-string (string-append "#x" two-digits)))))
-          (loop (substring/shared s 2)
-                (cons number result))))))
-
-(define (md5-b64 bytes)
-  (base64-encode (hexdecode (md5 bytes))))
-
 (define (sign bytes)
   (base64-encode (HMAC-SHA256 SecretAccessKey bytes)))
 
@@ -61,3 +46,19 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
                 sxml)
                ))))
   sxml)
+
+(provide hex-string->bytes)
+(define/contract (hex-string->bytes s)
+  (string? . -> . bytes?)
+
+  (apply bytes (map (curryr string->number 16)
+                    (regexp-match* #rx"..?" s))))
+
+(provide bytes->hex-string)
+(define/contract (bytes->hex-string b)
+  (bytes? . -> . string?)
+  (string-join
+   (map
+    (curryr number->string 16)
+    (bytes->list b))
+   ""))

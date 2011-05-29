@@ -6,22 +6,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 
 (require "hmac-sha256.rkt"
+         (only-in "aws-common.ss"
+                  bytes->hex-string
+                  hex-string->bytes)
          rackunit rackunit/text-ui)
-
-(define/contract (hex-string->bytes s)
-  (string? . -> . bytes?)
-
-  (apply bytes (map (curryr string->number 16)
-                    (regexp-match* #rx"..?" s))))
-
-
-(define/contract (bytes->hex-string b)
-  (bytes? . -> . string?)
-  (string-join
-   (map
-    (curryr number->string 16)
-    (bytes->list b))
-   ""))
 
 (define-check (check-hmac key-hex-string data-bytes expected-hex-string)
   (let* ([key-bytes      (hex-string->bytes key-hex-string)]

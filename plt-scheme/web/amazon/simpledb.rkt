@@ -154,8 +154,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
      html->shtml
 
      `(,(format "host: ~a" (url-host url))
-       "Content-Type: application/x-www-form-urlencoded; charset=utf-8"))
-    POST-body))
+       "Content-Type: application/x-www-form-urlencoded; charset=utf-8"))))
+
 
 (provide simpledb-post)
 (define (simpledb-post form-data)
@@ -177,22 +177,20 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (when (positive? failures)
       (exit 1)))
   (printf "Domains: ~a~%" (list-domains))
-  (write
-   (simpledb-post
-    `(("DomainName"          . "frotz")
-      ("Action"              . "PutAttributes")
-      ("ItemName"            . "test")
-      ("Attribute.0.Name"    . "action")
-      ("Attribute.0.Replace" . "true")
-      ("Attribute.0.Value"   . "a value with spaces")
+  (simpledb-post
+   `(("DomainName"          . "frotz")
+     ("Action"              . "PutAttributes")
+     ("ItemName"            . "test")
+     ("Attribute.0.Name"    . "action")
+     ("Attribute.0.Replace" . "true")
+     ("Attribute.0.Value"   . "a value with spaces")
 
-      ("Attribute.1.Name"    . "snorgulous")
-      ("Attribute.1.Replace" . "true")
-      ("Attribute.1.Value"   . "an ellipsis:\u2026")
+     ("Attribute.1.Name"    . "snorgulous")
+     ("Attribute.1.Replace" . "true")
+     ("Attribute.1.Value"   . "an ellipsis:\u2026")
 
-      ("Attribute.2.Name"    . "frotz")
-      ("Attribute.2.Replace" . "true")
-      ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
-  (newline))
+     ("Attribute.2.Name"    . "frotz")
+     ("Attribute.2.Replace" . "true")
+     ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
 
 (provide main)
