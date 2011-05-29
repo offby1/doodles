@@ -14,7 +14,7 @@
    lst))
 
 (define (map-times-step proc times step lst)
-  (if (equal? times 1)
+  (if (zero? times)
       lst
       (map-times-step proc (sub1 times) (add1 step) (map-step proc step lst))))
 
@@ -22,4 +22,4 @@
  (lambda (x n)
    (when x
      (printf "~a is open\n" n)))
- (in-indexed (map-times-step not 101 1 (make-list 100 #f))))
+ (in-indexed (map-times-step not 100 1 (make-list 100 #f))))
