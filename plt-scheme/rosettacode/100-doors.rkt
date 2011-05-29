@@ -2,8 +2,6 @@
 
 #lang racket
 
-(define *doors* (make-vector 100 #f))
-
 ;; Like "map", but the proc must take an index as well as the element.
 (define (map-index proc seq)
   (for/list ([(elt i) (in-indexed seq)])
@@ -23,10 +21,10 @@
   (map-step not n seq))
 
 (define (solve seq)
-  (for/fold ([result (vector->list seq)])
-      ([pass (in-range (vector-length seq))])
+  (for/fold ([result seq])
+      ([(_ pass) (in-indexed  seq)])
       (toggle-nth (add1 pass) result)))
 
-(for ([(door index) (in-indexed (solve *doors*))])
+(for ([(door index) (in-indexed (solve (make-vector 100 #f)))])
   (when door
-    (displayln index)))
+    (printf "~a is open~%" index)))
