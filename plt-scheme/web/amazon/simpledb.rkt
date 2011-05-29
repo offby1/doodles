@@ -5,7 +5,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- (only-in "aws-common.ss" AWSAccessKeyId sign)
+ (only-in "aws-common.rkt" AWSAccessKeyId sign)
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)

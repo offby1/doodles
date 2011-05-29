@@ -6,7 +6,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 
 (require "hmac-sha256.rkt"
-         (only-in "aws-common.ss"
+         (only-in "aws-common.rkt"
                   bytes->hex-string
                   hex-string->bytes)
          rackunit rackunit/text-ui)
