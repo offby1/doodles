@@ -98,17 +98,16 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
                         ("SignatureMethod"  . "HmacSHA256")
                         ("SignatureVersion" . "2")
-                        ("Timestamp"        . ,(zdate #:offset 0)
-                                              )
+                        ("Timestamp"        . ,(zdate #:offset 0))
                         ("Version"          . "2009-04-15")
                         )]
          [merged  (sort-alist (append boilerplate form-data))]
-         [string-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
+         [bytes-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
                                                        "POST"
                                                        (url-host url)
                                                        (url-path->string (url-path url))
                                                        (encode-alist merged)))]
-         [whole-enchilada-list (cons `("Signature" . ,(bytes->string/utf-8 (sign string-to-sign))) merged)])
+         [whole-enchilada-list (cons `("Signature" . ,(sign bytes-to-sign)) merged)])
 
     whole-enchilada-list))
 
