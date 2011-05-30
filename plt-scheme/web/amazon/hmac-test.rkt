@@ -7,8 +7,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (require "hmac-sha256.rkt"
          (only-in "aws-common.rkt"
-                  bytes->hex-string
                   hex-string->bytes)
+         (only-in file/sha1
+                  bytes->hex-string)
          rackunit rackunit/text-ui)
 
 (define-check (check-hmac key-hex-string data-bytes expected-hex-string)

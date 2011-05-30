@@ -53,12 +53,3 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
   (apply bytes (map (curryr string->number 16)
                     (regexp-match* #rx"..?" s))))
-
-(provide bytes->hex-string)
-(define/contract (bytes->hex-string b)
-  (bytes? . -> . string?)
-  (string-join
-   (map
-    (curryr number->string 16)
-    (bytes->list b))
-   ""))
