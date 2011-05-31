@@ -3,7 +3,7 @@
 (require web-server/servlet)
 (require "kelly.rkt")
 
-(provide/contract (start (request? . -> . response/c)))
+(provide/contract (start (request? . -> . response?)))
 (define (start request)
   (let ([head "This House Is A Mess"])
     `(html
