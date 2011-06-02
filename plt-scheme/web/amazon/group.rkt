@@ -9,20 +9,19 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          rackunit/text-ui)
 
 (provide group)
+
 (define/contract (group seq group-size)
   (sequence? natural-number/c . -> . sequence?)
   (in-generator
-   (let ([this-chunk '()]
-         [l 0])
-     (for ([(elt i) (in-indexed seq)])
-       (set! this-chunk (cons elt this-chunk))
-       (set! l (add1 l))
-       (when (zero? (remainder l group-size))
-         (yield (reverse this-chunk))
-         (set! this-chunk '())
-         (set! l 0)))
-     (when (not (null? this-chunk))
-       (yield this-chunk)))))
+   (let-values ([(l final-chunk)
+                 (for/fold ([l 0] [this-chunk null])
+                     ([(elt i) (in-indexed seq)])
+                     (cond [(= l group-size)
+                            (yield (reverse this-chunk))
+                            (values 1 (list elt))]
+                           [else (values (add1 l) (cons elt this-chunk))]))])
+     (when (not (null? final-chunk))
+       (yield (reverse final-chunk))))))
 
 (define-test-suite group-tests
   (check-equal? (for/list ([i  (group (list 1 2 3 4) 1)])
