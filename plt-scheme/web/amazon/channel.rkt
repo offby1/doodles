@@ -5,10 +5,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- (only-in racket/async-channel
-          async-channel-get
-          async-channel-put
-          make-async-channel)
+ racket/async-channel
  (only-in racket/generator
           in-generator
           yield)
@@ -17,12 +14,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  )
 
 (provide channel->seq)
-(define/contract (channel->seq ch)
-  (channel? . -> . sequence?)
+(define/contract (channel->seq ch [sentinel? eof-object?])
+  ((async-channel?)  ((any/c . -> . boolean?)) . ->* . sequence?)
   (in-generator
    (let loop ()
      (let ([datum (async-channel-get ch)])
-       (when (not (eof-object? datum))
+       (when (not (sentinel? datum))
          (yield datum)
          (loop))))))
 
@@ -36,6 +33,13 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
       (async-channel-put ch datum))
     (check-equal?
      (sequence->list (channel->seq ch))
+     '(1 2 3 frotz)))
+
+  (let ([ch (make-async-channel)])
+    (for ([datum (list 1 2 3 'frotz 'plotz)])
+      (async-channel-put ch datum))
+    (check-equal?
+     (sequence->list (channel->seq ch (curry eq? 'plotz)))
      '(1 2 3 frotz)))  )
 
 (define-test-suite all-tests
