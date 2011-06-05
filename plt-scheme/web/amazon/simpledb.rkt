@@ -5,6 +5,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
+ (only-in "channel.rkt" channel->seq)
  (only-in "aws-common.rkt" AWSAccessKeyId sign)
  (only-in "group.rkt" group)
  (only-in (planet neil/htmlprag:1:6) html->shtml)
@@ -13,6 +14,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url url->string)
  (only-in srfi/13 string-join)
  (only-in unstable/net/url url-path->string)
+ racket/async-channel
  racket/trace
  rackunit
  rackunit/text-ui
@@ -174,12 +176,18 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 ;; from the efficiency of a batch upload.
 (provide close-upload-queue)
 (define (close-upload-queue q)
-  'whatever)
+  (async-channel-put q eof))
 (trace close-upload-queue)
 
 (provide make-simple-db-upload-queue)
 (define (make-simple-db-upload-queue)
-  'whatever)
+  (let ([ch (make-async-channel)])
+    (thread
+     (lambda ()
+       (for ([batch (group (channel->seq ch))])
+         (batch-put-items (first batch)
+                          (rest batch)))))
+    ch))
 (trace make-simple-db-upload-queue)
 
 (provide simpledb-enqueue)
@@ -198,12 +206,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
               (define (prefix s) (format "Item.~a.~a" i s))
             `(,@result
               (,(prefix "ItemName") . ,(first item))
-              ,@(attrs->prefixed-numbered-alist prefix (rest item))
-              )
-            )
-
-        )
-      ))
+              ,@(attrs->prefixed-numbered-alist prefix (rest item)))))))
 
   (apply simpledb-post (batch-put-items-args domainname items)))
 
