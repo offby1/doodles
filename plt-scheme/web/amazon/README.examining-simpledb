@@ -1,0 +1,10 @@
+In theory, the web page at
+AmazonSimpleDB-2009-04-15-scratchpad/webapp/index.html lets you play
+with the API; in practice, it's pretty flaky, and often doesn't work.
+Using it in Firefox 4 with a "bare" profile seems to work, but what's
+the point ...
+
+More convenient is the "aws" program in the current directory.  Its UI
+is a bit weird, but it works.  Try
+
+        ./aws select 'select * from frotz'

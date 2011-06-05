@@ -5,16 +5,18 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- (only-in "channel.rkt" channel->seq)
  (only-in "aws-common.rkt" AWSAccessKeyId sign)
  (only-in "group.rkt" group)
+ (only-in "upload-queue.rkt"
+          close-upload-queue
+          make-simple-db-upload-queue
+          simpledb-enqueue)
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
  (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url url->string)
  (only-in srfi/13 string-join)
  (only-in unstable/net/url url-path->string)
- racket/async-channel
  racket/trace
  rackunit
  rackunit/text-ui
@@ -173,86 +175,9 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
    `(("Action" . "ListDomains")
      ("MaxNumberOfDomains" . "100"))))
 
-;; these let our caller give us one item at a time, and yet benefit
-;; from the efficiency of a batch upload.
-(define thread-queue/c  (cons/c thread? async-channel?))
-
-(provide close-upload-queue)
-(define/contract (close-upload-queue q)
-  (-> thread-queue/c void)
-  (async-channel-put (cdr q) eof)
-  (sync (car q))
-  )
-
-(provide make-simple-db-upload-queue)
-(define/contract (make-simple-db-upload-queue domainname)
-  (string? . -> . thread-queue/c)
-  (let* ([ch (make-async-channel)]
-         [th (thread
-              (lambda ()
-                (for ([batch (group (channel->seq ch) 25)])
-                  (fprintf (current-error-port)
-                           "Putting ~a to domain ~a..." batch domainname)
-                  (batch-put-items domainname batch)
-                  (fprintf (current-error-port)
-                           "done~%"))
-                (displayln "Background upload thread exiting."
-                           (current-error-port))))])
-    (cons th ch)))
-
-(provide simpledb-enqueue)
-(define/contract (simpledb-enqueue queue item)
-  (-> thread-queue/c any/c void)
-  (async-channel-put (cdr queue) item))
-
-
-(define (batch-put-items domainname items)
-  (define (batch-put-items-args domainname items)
-    (for/list ([batch (group items 25)])
-      `(("DomainName"                 . ,domainname)
-        ("Action"                     . "BatchPutAttributes")
-
-        ,@(for/fold ([result '()])
-              ([(item i) (in-indexed batch)])
-              (define (prefix s) (format "Item.~a.~a" i s))
-            `(,@result
-              (,(prefix "ItemName") . ,(first item))
-              ,@(attrs->prefixed-numbered-alist prefix (rest item)))))))
-
-  (apply simpledb-post (batch-put-items-args domainname items)))
-
-(define (attrs->numbered-alist as)
-  (reverse
-   (for/fold ([result '()])
-       ([(kvp index) (in-indexed as)])
-       (define (prefix s) (format "Attribute.~a.~a" index s))
-     `((,(prefix "Value")   . ,(cdr kvp))
-       (,(prefix "Replace") . "true")
-       (,(prefix "Name")    . ,(car kvp))
-       ,@result))))
-
-(define (attrs->prefixed-numbered-alist prefix as)
-  (map (lambda (p)
-         (cons (prefix (car p))
-               (cdr p)))
-       (attrs->numbered-alist as)))
-
-(define-test-suite number-tests
-  (check-equal?
-   (attrs->numbered-alist '(("foo" . "bar")
-                            ("baz" . "ugh")))
-   '(("Attribute.0.Name"    . "foo")
-     ("Attribute.0.Replace" . "true")
-     ("Attribute.0.Value"   . "bar")
-
-     ("Attribute.1.Name"    . "baz")
-     ("Attribute.1.Replace" . "true")
-     ("Attribute.1.Value"   . "ugh"))
-   ))
 
 (define-test-suite all-tests
   urllib-quote-tests
-  number-tests
   sign-tests)
 
 (define (main . args)
@@ -277,7 +202,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       ("Attribute.2.Name"    . "frotz")
       ("Attribute.2.Replace" . "true")
       ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
-  (let ([x (make-simple-db-upload-queue "frotz")])
+  (let ([x (make-simple-db-upload-queue simpledb-post "frotz")])
     (simpledb-enqueue
      x
      '("batchtest"
