@@ -6,6 +6,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 (require
  (only-in "aws-common.rkt" AWSAccessKeyId sign)
+ (only-in "group.rkt" group)
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
@@ -78,7 +79,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 ;; The car of each element must be something that can be stringified
 ;; via (format "~a").  The cdr must be something that can be given to
 ;; "escape", which means either a bytes? or a string?
-(define (encode-alist a)
+(define/contract (encode-alist a)
+  ((listof (cons/c string? (or/c bytes? string?))) . -> . bytes?)
   (bytes-join
    (reverse
     (for/fold ([result '()])
@@ -168,10 +170,6 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
    `(("Action" . "ListDomains")
      ("MaxNumberOfDomains" . "100"))))
 
-(define-test-suite all-tests
-  urllib-quote-tests
-  sign-tests)
-
 ;; these let our caller give us one item at a time, and yet benefit
 ;; from the efficiency of a batch upload.
 (provide close-upload-queue)
@@ -188,6 +186,60 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define (simpledb-enqueue queue item)
   'whatever)
 (trace simpledb-enqueue)
+
+(define (batch-put-items domainname items)
+  (define (batch-put-items-args domainname items)
+    (for/list ([batch (group items 25)])
+      `(("DomainName"                 . ,domainname)
+        ("Action"                     . "BatchPutAttributes")
+
+        ,@(for/fold ([result '()])
+              ([(item i) (in-indexed batch)])
+              (define (prefix s) (format "Item.~a.~a" i s))
+            `(,@result
+              (,(prefix "ItemName") . ,(first item))
+              ,@(attrs->prefixed-numbered-alist prefix (rest item))
+              )
+            )
+
+        )
+      ))
+
+  (apply simpledb-post (batch-put-items-args domainname items)))
+
+(define (attrs->numbered-alist as)
+  (reverse
+   (for/fold ([result '()])
+       ([(kvp index) (in-indexed as)])
+       (define (prefix s) (format "Attribute.~a.~a" index s))
+     `((,(prefix "Value")   . ,(cdr kvp))
+       (,(prefix "Replace") . "true")
+       (,(prefix "Name")    . ,(car kvp))
+       ,@result))))
+
+(define (attrs->prefixed-numbered-alist prefix as)
+  (map (lambda (p)
+         (cons (prefix (car p))
+               (cdr p)))
+       (attrs->numbered-alist as)))
+
+(define-test-suite number-tests
+  (check-equal?
+   (attrs->numbered-alist '(("foo" . "bar")
+                            ("baz" . "ugh")))
+   '(("Attribute.0.Name"    . "foo")
+     ("Attribute.0.Replace" . "true")
+     ("Attribute.0.Value"   . "bar")
+
+     ("Attribute.1.Name"    . "baz")
+     ("Attribute.1.Replace" . "true")
+     ("Attribute.1.Value"   . "ugh"))
+   ))
+
+(define-test-suite all-tests
+  urllib-quote-tests
+  number-tests
+  sign-tests)
 
 (define (main . args)
   (let ([failures (run-tests all-tests)])
@@ -212,18 +264,14 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       ("Attribute.2.Replace" . "true")
       ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
   (displayln
-   (simpledb-post
-    `(("DomainName"                 . "frotz")
-      ("Action"                     . "BatchPutAttributes")
-      ("Item.0.ItemName"            . "batchtest")
-      ("Item.0.Attribute.0.Name"    . "action")
-      ("Item.0.Attribute.0.Replace" . "true")
-      ("Item.0.Attribute.0.Value"   . "a value with spaces")
-      ("Item.0.Attribute.1.Name"    . "snorgulous")
-      ("Item.0.Attribute.1.Replace" . "true")
-      ("Item.0.Attribute.1.Value"   . "an ellipsis:\u2026")
-      ("Item.0.Attribute.2.Name"    . "frotz")
-      ("Item.0.Attribute.2.Replace" . "true")
-      ("Item.0.Attribute.2.Value"   . "a nasty Unicode character:\ufffd")))))
+   (batch-put-items "frotz"
+                    '(("batchtest"
+                       ("action"     . "a value with spaces")
+                       ("snorgulous" . "an ellipsis:\u2026")
+                       ("frotz"      . "a nasty Unicode character:\ufffd"))
+                      ("another"
+                       ("action"     . "Jackson")
+                       ("snorgulous" . "horgulous")
+                       ("frotz"      . "plotz"))))))
 
 (provide main)
