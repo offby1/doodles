@@ -12,6 +12,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url url->string)
  (only-in srfi/13 string-join)
  (only-in unstable/net/url url-path->string)
+ racket/trace
  rackunit
  rackunit/text-ui
  )
@@ -170,6 +171,23 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define-test-suite all-tests
   urllib-quote-tests
   sign-tests)
+
+;; these let our caller give us one item at a time, and yet benefit
+;; from the efficiency of a batch upload.
+(provide close-upload-queue)
+(define (close-upload-queue q)
+  'whatever)
+(trace close-upload-queue)
+
+(provide make-simple-db-upload-queue)
+(define (make-simple-db-upload-queue)
+  'whatever)
+(trace make-simple-db-upload-queue)
+
+(provide simpledb-enqueue)
+(define (simpledb-enqueue queue item)
+  'whatever)
+(trace simpledb-enqueue)
 
 (define (main . args)
   (let ([failures (run-tests all-tests)])
