@@ -166,35 +166,46 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (post-with-signature
    (string->url "http://sdb.amazonaws.com/")
    form-data))
+(trace simpledb-post)
 
 (define (list-domains)
   (simpledb-post
    `(("Action" . "ListDomains")
      ("MaxNumberOfDomains" . "100"))))
-
+
 ;; these let our caller give us one item at a time, and yet benefit
 ;; from the efficiency of a batch upload.
+(define thread-queue/c  (cons/c thread? async-channel?))
+
 (provide close-upload-queue)
-(define (close-upload-queue q)
-  (async-channel-put q eof))
+(define/contract (close-upload-queue q)
+  (-> thread-queue/c void)
+  (async-channel-put (cdr q) eof)
+  (sync (car q))
+  )
 (trace close-upload-queue)
 
 (provide make-simple-db-upload-queue)
-(define (make-simple-db-upload-queue)
+(define/contract (make-simple-db-upload-queue domainname)
+  (string? . -> . thread-queue/c)
   (let ([ch (make-async-channel)])
-    (thread
-     (lambda ()
-       (for ([batch (group (channel->seq ch))])
-         (batch-put-items (first batch)
-                          (rest batch)))))
-    ch))
+    (cons
+     (thread
+      (lambda ()
+        (for ([batch (group (channel->seq ch) 25)])
+          (batch-put-items domainname batch))
+        (displayln "Background upload thread exiting."
+                   (current-error-port))))
+     ch)))
+
 (trace make-simple-db-upload-queue)
 
 (provide simpledb-enqueue)
-(define (simpledb-enqueue queue item)
-  'whatever)
+(define/contract (simpledb-enqueue queue item)
+  (-> thread-queue/c any/c void)
+  (async-channel-put (cdr queue) item))
 (trace simpledb-enqueue)
-
+
 (define (batch-put-items domainname items)
   (define (batch-put-items-args domainname items)
     (for/list ([batch (group items 25)])
@@ -266,15 +277,20 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       ("Attribute.2.Name"    . "frotz")
       ("Attribute.2.Replace" . "true")
       ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
-  (displayln
-   (batch-put-items "frotz"
-                    '(("batchtest"
-                       ("action"     . "a value with spaces")
-                       ("snorgulous" . "an ellipsis:\u2026")
-                       ("frotz"      . "a nasty Unicode character:\ufffd"))
-                      ("another"
-                       ("action"     . "Jackson")
-                       ("snorgulous" . "horgulous")
-                       ("frotz"      . "plotz"))))))
+  (let ([x (make-simple-db-upload-queue "frotz")])
+    (simpledb-enqueue
+     x
+     '("batchtest"
+       ("action"     . "a value with spaces")
+       ("snorgulous" . "an ellipsis:\u2026")
+       ("frotz"      . "a nasty Unicode character:\ufffd")))
+    (simpledb-enqueue
+     x
+     '("another"
+       ("action"     . "Jackson")
+       ("snorgulous" . "horgulous")
+       ("frotz"      . "plotz")))
+    (close-upload-queue x)
+    ))
 
 (provide main)
