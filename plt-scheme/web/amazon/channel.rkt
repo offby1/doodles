@@ -24,23 +24,27 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          (loop))))))
 
 (define-test-suite channel->seq-tests
-  (let ([ch (make-async-channel)])
-    (async-channel-put ch eof)
-    (check-equal? (sequence->list (channel->seq ch)) '()))
+  (let ()
+    (define ch #f)
+    (define (stuff! . data)
+      (set! ch  (make-async-channel))
+      (for-each (curry async-channel-put ch) data))
 
-  (let ([ch (make-async-channel)])
-    (for ([datum (list 1 2 3 'frotz eof)])
-      (async-channel-put ch datum))
-    (check-equal?
-     (sequence->list (channel->seq ch))
-     '(1 2 3 frotz)))
+    (define-simple-check (check-stuff data)
+      (apply stuff! data)
+      (equal? (sequence->list (channel->seq ch)) (drop-right data 1)))
 
-  (let ([ch (make-async-channel)])
-    (for ([datum (list 1 2 3 'frotz 'plotz)])
-      (async-channel-put ch datum))
-    (check-equal?
-     (sequence->list (channel->seq ch (curry eq? 'plotz)))
-     '(1 2 3 frotz)))  )
+    (define-simple-check (check-stuff-eq-sentinel data)
+      (apply stuff! data)
+      (let ([sentinel (last data)])
+        (equal?
+         (sequence->list
+          (channel->seq ch (curry eq? sentinel)))
+         (drop-right data 1))))
+
+    (check-stuff (list eof))
+    (check-stuff (list 1 2 3 'frotz eof))
+    (check-stuff-eq-sentinel (list 1 2 3 'frotz 'plotz))))
 
 (define-test-suite all-tests
   channel->seq-tests)
