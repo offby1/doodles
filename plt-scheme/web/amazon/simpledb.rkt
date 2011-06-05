@@ -183,28 +183,28 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (async-channel-put (cdr q) eof)
   (sync (car q))
   )
-(trace close-upload-queue)
 
 (provide make-simple-db-upload-queue)
 (define/contract (make-simple-db-upload-queue domainname)
   (string? . -> . thread-queue/c)
-  (let ([ch (make-async-channel)])
-    (cons
-     (thread
-      (lambda ()
-        (for ([batch (group (channel->seq ch) 25)])
-          (batch-put-items domainname batch))
-        (displayln "Background upload thread exiting."
-                   (current-error-port))))
-     ch)))
-
-(trace make-simple-db-upload-queue)
+  (let* ([ch (make-async-channel)]
+         [th (thread
+              (lambda ()
+                (for ([batch (group (channel->seq ch) 25)])
+                  (fprintf (current-error-port)
+                           "Putting ~a to domain ~a..." batch domainname)
+                  (batch-put-items domainname batch)
+                  (fprintf (current-error-port)
+                           "done~%"))
+                (displayln "Background upload thread exiting."
+                           (current-error-port))))])
+    (cons th ch)))
 
 (provide simpledb-enqueue)
 (define/contract (simpledb-enqueue queue item)
   (-> thread-queue/c any/c void)
   (async-channel-put (cdr queue) item))
-(trace simpledb-enqueue)
+
 
 (define (batch-put-items domainname items)
   (define (batch-put-items-args domainname items)
