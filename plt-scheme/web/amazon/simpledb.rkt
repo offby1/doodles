@@ -193,21 +193,37 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (let ([failures (run-tests all-tests)])
     (when (positive? failures)
       (exit 1)))
-  (printf "Domains: ~a~%" (list-domains))
-  (simpledb-post
-   `(("DomainName"          . "frotz")
-     ("Action"              . "PutAttributes")
-     ("ItemName"            . "test")
-     ("Attribute.0.Name"    . "action")
-     ("Attribute.0.Replace" . "true")
-     ("Attribute.0.Value"   . "a value with spaces")
+  (displayln
+   (list-domains))
+  (displayln
+   (simpledb-post
+    `(("DomainName"          . "frotz")
+      ("Action"              . "PutAttributes")
+      ("ItemName"            . "test")
+      ("Attribute.0.Name"    . "action")
+      ("Attribute.0.Replace" . "true")
+      ("Attribute.0.Value"   . "a value with spaces")
 
-     ("Attribute.1.Name"    . "snorgulous")
-     ("Attribute.1.Replace" . "true")
-     ("Attribute.1.Value"   . "an ellipsis:\u2026")
+      ("Attribute.1.Name"    . "snorgulous")
+      ("Attribute.1.Replace" . "true")
+      ("Attribute.1.Value"   . "an ellipsis:\u2026")
 
-     ("Attribute.2.Name"    . "frotz")
-     ("Attribute.2.Replace" . "true")
-     ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
+      ("Attribute.2.Name"    . "frotz")
+      ("Attribute.2.Replace" . "true")
+      ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
+  (displayln
+   (simpledb-post
+    `(("DomainName"                 . "frotz")
+      ("Action"                     . "BatchPutAttributes")
+      ("Item.0.ItemName"            . "batchtest")
+      ("Item.0.Attribute.0.Name"    . "action")
+      ("Item.0.Attribute.0.Replace" . "true")
+      ("Item.0.Attribute.0.Value"   . "a value with spaces")
+      ("Item.0.Attribute.1.Name"    . "snorgulous")
+      ("Item.0.Attribute.1.Replace" . "true")
+      ("Item.0.Attribute.1.Value"   . "an ellipsis:\u2026")
+      ("Item.0.Attribute.2.Name"    . "frotz")
+      ("Item.0.Attribute.2.Replace" . "true")
+      ("Item.0.Attribute.2.Value"   . "a nasty Unicode character:\ufffd")))))
 
 (provide main)
