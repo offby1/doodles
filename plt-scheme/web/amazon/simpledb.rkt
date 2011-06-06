@@ -5,7 +5,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- "contracts.rkt"
  (only-in "aws-common.rkt" AWSAccessKeyId sign)
  (only-in "group.rkt" group)
  (only-in "upload-queue.rkt"
@@ -15,7 +14,16 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
- (only-in net/url url-host url-path call/input-url post-impure-port purify-port string->url url->string)
+ (only-in net/url
+          call/input-url
+          post-impure-port
+          purify-port
+          string->url
+          url->string
+          url-host
+          url-path
+          url?
+          )
  (only-in srfi/13 string-join)
  (only-in unstable/net/url url-path->string)
  racket/trace
@@ -48,8 +56,15 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define/contract (byte->urllib-quoted-bytes b #:safe safe)
   (-> byte? #:safe (set/c byte?) bytes?)
 
+  (define (zero-pad str num)
+    (let loop ([str str])
+      (if (< (string-length str)
+             num)
+          (loop (string-append "0" str))
+          str)))
+
   (define (hexencode-codepoint-number i)
-    (string->bytes/utf-8 (format "%~a" (string-upcase (number->string i 16)))))
+    (string->bytes/utf-8 (format "%~a" (string-upcase (zero-pad (number->string i 16) 2)))))
 
   (cond
    ((<= 65 b 90)                        ;upper-case letter
@@ -80,6 +95,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
+
+(define stringy? (or/c string? bytes?))
 
 ;; The car of each element must be something that can be stringified
 ;; via (format "~a").  The cdr must be something that can be given to
@@ -136,7 +153,31 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
 
-(define (post-with-signature url form-data)
+;; Characters that I am probably escaping correctly.  Every time I do
+;; a POST, and the server doesn't bitch at me, I add all the
+;; characters in that post to this set.
+(define *ok-chars* (set))
+(define (bytes->charset b) (apply set (string->list (bytes->string/utf-8 b))))
+(define (update-ok-chars! alist)
+  (define (update-from-bytes! b)
+    (set! *ok-chars* (set-union *ok-chars* (bytes->charset b))))
+  (for ([p alist])
+    (update-from-bytes! (car p))
+    (update-from-bytes! (cdr p))))
+
+;; Display characters that I'm probably not properly escaping.
+(define (note-suspicious-characters alist)
+  (fprintf (current-error-port)
+           "Suspicious chars: ~a"
+           (set-subtract
+            (for/fold ([all-chars-in-input (set)])
+                ([p alist])
+                (set-union all-chars-in-input (bytes->charset (car p))
+                           (set-union all-chars-in-input (bytes->charset (cdr p)))))
+            *ok-chars*)))
+
+(define/contract (post-with-signature url form-data)
+  (url? (listof (cons/c bytes? bytes?)) . -> . any/c)
   (let ([POST-body (encode-alist (add-AWS-signature-and-stuff url form-data))])
     (call/input-url
      url
@@ -149,7 +190,10 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
               [headers (purify-port response-inp)])
          (match-let ([(pregexp "^HTTP/(.*?) (.*?) (.*?)\r.*" (list _ vers code message)) headers])
            (case (string->number code)
-             ((200) 'good-good)
+             ((200) (update-ok-chars! form-data))
+             ((403)
+              (note-suspicious-characters form-data)
+              (fprintf (current-error-port) "Signature trouble with~%~a~%" POST-body))
              (else
               (fprintf (current-error-port) "simpledb doesn't like~%~a~%" POST-body)
               (copy-port response-inp (current-error-port))
@@ -169,7 +213,6 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (post-with-signature
    (string->url "http://sdb.amazonaws.com/")
    form-data))
-(trace simpledb-post)
 
 (define (list-domains)
   (simpledb-post
