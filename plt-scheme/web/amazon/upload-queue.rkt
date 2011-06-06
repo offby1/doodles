@@ -5,8 +5,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
+ "contracts.rkt"
  (only-in "group.rkt" group)
-  (only-in "channel.rkt" channel->seq)
+ (only-in "channel.rkt" channel->seq)
  racket/async-channel
  racket/trace
  rackunit
@@ -23,7 +24,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (sync (car q))
   )
 
-(define stringy? (or/c string? bytes?))
 (define alist? (listof (cons/c stringy? stringy?)))
 (define item?  (cons/c stringy? alist?))
 (define batch? (listof item?))
@@ -32,7 +32,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (stringy? natural-number/c  . -> . stringy?)
   (let ([transformer (cond
                       ((string? thing) values)
-                      ((bytes?  thing) string->bytes/utf-8))])
+                      ((bytes?  thing) ensure-bytes))])
     (transformer (format "~a.~a" thing n))))
 
 ;; A kludge, to work around the lack of resultion in timestamps.
@@ -113,18 +113,30 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (-> thread-queue/c any/c void)
   (async-channel-put (cdr queue) item))
 
+(define ensure-bytes
+  (match-lambda
+   [(? bytes? b)
+    b]
+   [(? string? s)
+    (string->bytes/utf-8 s)]
+   [(? symbol? s)
+    (ensure-bytes (symbol->string s))]
+   [(? pair? p)
+    (cons (ensure-bytes (car p))
+          (ensure-bytes (cdr p)))]))
+
 (define (batch-put-items simpledb-post domainname items)
   (define (batch-put-items-args domainname items)
     (for/list ([batch (group items 25)])
-      `(("DomainName"                 . ,domainname)
-        ("Action"                     . "BatchPutAttributes")
+      `((#"DomainName"                 . ,(ensure-bytes domainname))
+        (#"Action"                     . #"BatchPutAttributes")
 
         ,@(for/fold ([result '()])
               ([(item i) (in-indexed batch)])
-              (define (prefix s) (format "Item.~a.~a" i s))
+              (define (prefix s) (ensure-bytes (format "Item.~a.~a" i s)))
             `(,@result
-              (,(prefix "ItemName") . ,(first item))
-              ,@(attrs->prefixed-numbered-alist prefix (rest item)))))))
+              (,(prefix "ItemName") . ,(ensure-bytes (first item)))
+              ,@(map ensure-bytes (attrs->prefixed-numbered-alist prefix (rest item))))))))
 
   (apply simpledb-post (batch-put-items-args domainname items)))
 

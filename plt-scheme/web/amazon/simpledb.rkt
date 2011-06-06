@@ -5,6 +5,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
+ "contracts.rkt"
  (only-in "aws-common.rkt" AWSAccessKeyId sign)
  (only-in "group.rkt" group)
  (only-in "upload-queue.rkt"
@@ -84,7 +85,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 ;; via (format "~a").  The cdr must be something that can be given to
 ;; "escape", which means either a bytes? or a string?
 (define/contract (encode-alist a)
-  ((listof (cons/c string? (or/c bytes? string?))) . -> . bytes?)
+  ((listof (cons/c stringy? stringy?)) . -> . bytes?)
   (bytes-join
    (reverse
     (for/fold ([result '()])
@@ -162,9 +163,9 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
      `(,(format "host: ~a" (url-host url))
        "Content-Type: application/x-www-form-urlencoded; charset=utf-8"))))
 
-
 (provide simpledb-post)
-(define (simpledb-post form-data)
+(define/contract (simpledb-post form-data)
+  ((listof (cons/c bytes? bytes?)) . -> . any/c)
   (post-with-signature
    (string->url "http://sdb.amazonaws.com/")
    form-data))
@@ -172,8 +173,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 
 (define (list-domains)
   (simpledb-post
-   `(("Action" . "ListDomains")
-     ("MaxNumberOfDomains" . "100"))))
+   `((#"Action"             . #"ListDomains")
+     (#"MaxNumberOfDomains" . #"100"))))
 
 
 (define-test-suite all-tests
@@ -188,20 +189,18 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
    (list-domains))
   (displayln
    (simpledb-post
-    `(("DomainName"          . "frotz")
-      ("Action"              . "PutAttributes")
-      ("ItemName"            . "test")
-      ("Attribute.0.Name"    . "action")
-      ("Attribute.0.Replace" . "true")
-      ("Attribute.0.Value"   . "a value with spaces")
-
-      ("Attribute.1.Name"    . "snorgulous")
-      ("Attribute.1.Replace" . "true")
-      ("Attribute.1.Value"   . "an ellipsis:\u2026")
-
-      ("Attribute.2.Name"    . "frotz")
-      ("Attribute.2.Replace" . "true")
-      ("Attribute.2.Value"   . "a nasty Unicode character:\ufffd"))))
+    `((#"DomainName"          . #"frotz")
+      (#"Action"              . #"PutAttributes")
+      (#"ItemName"            . #"test")
+      (#"Attribute.0.Name"    . #"action")
+      (#"Attribute.0.Replace" . #"true")
+      (#"Attribute.0.Value"   . #"a value with spaces")
+      (#"Attribute.1.Name"    . #"snorgulous")
+      (#"Attribute.1.Replace" . #"true")
+      (#"Attribute.1.Value"   . ,(string->bytes/utf-8 "an ellipsis:\u2026"))
+      (#"Attribute.2.Name"    . #"frotz")
+      (#"Attribute.2.Replace" . #"true")
+      (#"Attribute.2.Value"   . ,(string->bytes/utf-8 "a nasty Unicode character:\ufffd")))))
   (let ([x (make-simple-db-upload-queue simpledb-post "frotz")])
     (simpledb-enqueue
      x
