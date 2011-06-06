@@ -12,15 +12,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  rackunit
  rackunit/text-ui)
 
-;; these let our caller give us one item at a time, and yet benefit
+(struct thread-queue (thread channel))
+;; these let our caller give us one item at a time, yet still benefit
 ;; from the efficiency of a batch upload.
-(define thread-queue/c  (cons/c thread? async-channel?))
-
 (provide close-upload-queue)
 (define/contract (close-upload-queue q)
-  (-> thread-queue/c void)
-  (async-channel-put (cdr q) eof)
-  (sync (car q))
+  (-> thread-queue? void)
+  (async-channel-put (thread-queue-channel q) eof)
+  (sync (thread-queue-thread q))
   )
 
 (define stringy? (or/c string? bytes?))
@@ -94,7 +93,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide make-simple-db-upload-queue)
 (define/contract (make-simple-db-upload-queue simpledb-post domainname)
-  ((alist? . -> . any/c) string? . -> . thread-queue/c)
+  ((alist? . -> . any/c) string? . -> . thread-queue?)
   (let* ([ch (make-async-channel)]
          [th (thread
               (lambda ()
@@ -102,12 +101,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                   (batch-put-items simpledb-post domainname (uniqify-keys batch)))
                 (displayln "Background upload thread exiting."
                            (current-error-port))))])
-    (cons th ch)))
+    (thread-queue th ch)))
 
 (provide simpledb-enqueue)
 (define/contract (simpledb-enqueue queue item)
-  (-> thread-queue/c any/c void)
-  (async-channel-put (cdr queue) item))
+  (-> thread-queue? any/c void)
+  (async-channel-put (thread-queue-channel queue) item))
 
 (define ensure-bytes
   (match-lambda
