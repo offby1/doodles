@@ -99,11 +99,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          [th (thread
               (lambda ()
                 (for ([batch (group (channel->seq ch) 25)])
-                  (fprintf (current-error-port)
-                           "Putting ~a to domain ~a..." batch domainname)
-                  (batch-put-items simpledb-post domainname (uniqify-keys batch))
-                  (fprintf (current-error-port)
-                           "done~%"))
+                  (batch-put-items simpledb-post domainname (uniqify-keys batch)))
                 (displayln "Background upload thread exiting."
                            (current-error-port))))])
     (cons th ch)))
@@ -138,7 +134,16 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
               (,(prefix "ItemName") . ,(ensure-bytes (first item)))
               ,@(map ensure-bytes (attrs->prefixed-numbered-alist prefix (rest item))))))))
 
-  (apply simpledb-post (batch-put-items-args domainname items)))
+  (displayln
+   (call-with-values
+       (lambda ()
+         (time-apply simpledb-post (batch-put-items-args domainname items)))
+     (lambda (rv cpu real gc)
+       `((rv ,rv)
+         (cpu ,cpu)
+         (real ,real)
+         (gc ,gc))))
+   (current-error-port)))
 
 (define (attrs->numbered-alist as)
   (reverse
