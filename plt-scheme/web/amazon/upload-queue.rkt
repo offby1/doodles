@@ -5,7 +5,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- "contracts.rkt"
  (only-in "group.rkt" group)
  (only-in "channel.rkt" channel->seq)
  racket/async-channel
@@ -24,6 +23,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (sync (car q))
   )
 
+(define stringy? (or/c string? bytes?))
 (define alist? (listof (cons/c stringy? stringy?)))
 (define item?  (cons/c stringy? alist?))
 (define batch? (listof item?))
