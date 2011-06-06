@@ -1,6 +1,7 @@
 #lang racket
 
-(require web-server/servlet)
+(require web-server/servlet
+         web-server/compat/0/coerce)
 (require "kelly.rkt")
 
 (provide/contract (start (request? . -> . response?)))
@@ -17,6 +18,6 @@
                #:launch-browser? #f
                #:quit? #f
                #:listen-ip #f
-               #:port 8000
+               #:port 80
                #:servlet-path
                "/servlets/silly.rkt")
