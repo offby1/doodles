@@ -28,16 +28,69 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define item?  (cons/c stringy? alist?))
 (define batch? (listof item?))
 
-;; A kludge, to work around the lack of resultion in timestamps.
-;; Perhaps I should append an autoincrementing number to each
-;; timestamp, rather than nixing all but the first.  Oh well.
-(define/contract (nix-duplicates batch)
-  (batch? . -> . batch?)
-  (for/fold ([result '()])
-      ([item batch])
-      (cons item result)))
+(define/contract (append-number thing n)
+  (stringy? natural-number/c  . -> . stringy?)
+  (let ([transformer (cond
+                      ((string? thing) values)
+                      ((bytes?  thing) string->bytes/utf-8))])
+    (transformer (format "~a.~a" thing n))))
 
-(trace nix-duplicates)
+;; A kludge, to work around the lack of resultion in timestamps.
+;; Appends an autoincrementing number to each timestamp.
+(define/contract (uniqify-keys batch)
+  (batch? . -> . batch?)
+  (reverse
+   (call-with-values
+       (lambda ()
+         (for/fold ([result '()]
+                    [key-to-count (make-immutable-hash '())])
+             ([item batch])
+
+             (let* ([this-key (first item)]
+                    [seen (hash-ref key-to-count this-key (const 0))])
+               (values
+                (cons (cons (append-number this-key seen)
+                            (rest item))
+                      result)
+                (hash-update key-to-count this-key add1 (const 0))))))
+     (lambda (batch _)
+       batch))))
+
+(define-test-suite uniqify-tests
+  (check-equal? (uniqify-keys '()) '())
+  (check-equal?
+   (uniqify-keys
+    '((#"item name")))
+   '((#"item name.0")))
+  (check-equal?
+   (uniqify-keys
+    '((#"item 1")
+      (#"item 2")))
+   '((#"item 1.0")
+     (#"item 2.0")))
+  (check-equal?
+   (uniqify-keys
+    '(
+      ("item 1" ("k" . "v"))
+      ("item 2" ("k" . "v"))
+      ))
+   '(
+     ("item 1.0" ("k" . "v"))
+     ("item 2.0" ("k" . "v"))
+     )
+   )
+  (check-equal?
+   (uniqify-keys
+    '(
+      ("item" ("k" . "v"))
+      ("item" ("x" . "y"))
+      ))
+   '(
+     ("item.0" ("k" . "v"))
+     ("item.1" ("x" . "y"))
+     )
+   )
+  )
 
 (provide make-simple-db-upload-queue)
 (define/contract (make-simple-db-upload-queue simpledb-post domainname)
@@ -48,7 +101,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                 (for ([batch (group (channel->seq ch) 25)])
                   (fprintf (current-error-port)
                            "Putting ~a to domain ~a..." batch domainname)
-                  (batch-put-items simpledb-post domainname (nix-duplicates batch))
+                  (batch-put-items simpledb-post domainname (uniqify-keys batch))
                   (fprintf (current-error-port)
                            "done~%"))
                 (displayln "Background upload thread exiting."
@@ -105,6 +158,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
    ))
 
 (define-test-suite all-tests
+  uniqify-tests
   number-tests)
 
 (provide main)
