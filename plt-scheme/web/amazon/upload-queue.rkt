@@ -26,8 +26,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                       ((bytes?  thing) ensure-bytes))])
     (transformer (format "~a.~a" thing n))))
 
-;; A kludge, to work around the lack of resultion in timestamps.
+;; A kludge, to work around the lack of resolution in timestamps.
 ;; Appends an autoincrementing number to each timestamp.
+
+;; Will subtly do The Wrong Thing if the last item in one batch has
+;; the same name as the first item in the next batch -- in that case,
+;; the second one "wins".
 (define/contract (uniqify-keys batch)
   (batch? . -> . batch?)
   (reverse
