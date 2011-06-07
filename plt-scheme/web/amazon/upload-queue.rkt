@@ -90,8 +90,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   )
 
 (provide make-simple-db-upload-queue)
-(define/contract (make-simple-db-upload-queue simpledb-post domainname [batch-size 25])
-  (((alist? . -> . any/c) string?) (natural-number/c) . ->* . thread-queue?)
+(define/contract (make-simple-db-upload-queue
+                  #:domainname domainname
+                  #:poster [simpledb-post simpledb-post]
+                  #:batch-size [batch-size 25])
+  ((#:domainname string?) (#:poster (alist? . -> . any/c)  #:batch-size natural-number/c) . ->* . thread-queue?)
   (let* ([ch (make-async-channel)]
          [th (thread
               (lambda ()
@@ -187,7 +190,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
   (run-tests/maybe-exit all-tests)
-  (let ([x (make-simple-db-upload-queue simpledb-post "frotz")])
+  (let ([x (make-simple-db-upload-queue #:domainname "frotz")])
     (simpledb-enqueue
      x
      '("batchtest"
