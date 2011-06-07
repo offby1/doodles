@@ -6,7 +6,8 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 
-(require (only-in scheme/date date-display-format date->string)
+(require (only-in rackunit/text-ui run-tests)
+         (only-in scheme/date date-display-format date->string)
          (only-in (planet lizorkin/sxml:2:1/sxml) sxpath)
          (only-in net/base64 base64-encode-stream)
          (only-in "hmac-sha256.rkt" HMAC-SHA256)
@@ -56,3 +57,9 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
   (apply bytes (map (curryr string->number 16)
                     (regexp-match* #rx"..?" s))))
+
+(provide run-tests/maybe-exit)
+(define (run-tests/maybe-exit tests)
+  (let ([failures (run-tests tests)])
+    (when (positive? failures)
+      (exit 1))))

@@ -5,8 +5,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
+ (only-in "aws-common.rkt" run-tests/maybe-exit)
  (only-in "group.rkt" group)
  (only-in "channel.rkt" channel->seq)
+ (only-in "simpledb.rkt" simpledb-post)
  racket/async-channel
  racket/trace
  rackunit
@@ -184,4 +186,20 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (exit (run-tests all-tests 'verbose)))
+  (run-tests/maybe-exit all-tests)
+  (let ([x (make-simple-db-upload-queue simpledb-post "frotz")])
+    (simpledb-enqueue
+     x
+     '("batchtest"
+       ("action"     . "a value with spaces")
+       ("snorgulous" . "an ellipsis:\u2026")
+       ("frotz"      . "a nasty Unicode character:\ufffd")))
+    (simpledb-enqueue
+     x
+     '("another"
+       ("action"     . "Jackson")
+       ("snorgulous" . "horgulous")
+       ("frotz"      . "plotz")))
+    (close-upload-queue x)
+    ))
+

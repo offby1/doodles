@@ -5,12 +5,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- (only-in "aws-common.rkt" AWSAccessKeyId sign)
+ (only-in "aws-common.rkt" AWSAccessKeyId sign run-tests/maybe-exit)
  (only-in "group.rkt" group)
- (only-in "upload-queue.rkt"
-          close-upload-queue
-          make-simple-db-upload-queue
-          simpledb-enqueue)
+
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
@@ -225,9 +222,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   sign-tests)
 
 (define (main . args)
-  (let ([failures (run-tests all-tests)])
-    (when (positive? failures)
-      (exit 1)))
+  (run-tests/maybe-exit all-tests)
   (displayln
    (list-domains))
   (displayln
@@ -243,21 +238,6 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       (#"Attribute.1.Value"   . ,(string->bytes/utf-8 "an ellipsis:\u2026"))
       (#"Attribute.2.Name"    . #"frotz")
       (#"Attribute.2.Replace" . #"true")
-      (#"Attribute.2.Value"   . ,(string->bytes/utf-8 "a nasty Unicode character:\ufffd")))))
-  (let ([x (make-simple-db-upload-queue simpledb-post "frotz")])
-    (simpledb-enqueue
-     x
-     '("batchtest"
-       ("action"     . "a value with spaces")
-       ("snorgulous" . "an ellipsis:\u2026")
-       ("frotz"      . "a nasty Unicode character:\ufffd")))
-    (simpledb-enqueue
-     x
-     '("another"
-       ("action"     . "Jackson")
-       ("snorgulous" . "horgulous")
-       ("frotz"      . "plotz")))
-    (close-upload-queue x)
-    ))
+      (#"Attribute.2.Value"   . ,(string->bytes/utf-8 "a nasty Unicode character:\ufffd"))))))
 
 (provide main)
