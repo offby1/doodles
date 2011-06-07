@@ -89,12 +89,36 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
    )
   )
 
+(provide with-upload-queue)
+(define/contract (with-upload-queue
+                  proc
+                  #:domainname domainname
+                  #:poster [simpledb-post simpledb-post]
+                  #:batch-size [batch-size 25]
+                  )
+  (->* ((-> thread-queue? any/c)
+        #:domainname string?)
+       (#:poster (alist? . -> . any/c)
+        #:batch-size natural-number/c)
+       any/c)
+  (let ([q (make-simple-db-upload-queue
+            #:domainname domainname
+            #:poster simpledb-post
+            #:batch-size batch-size)])
+    (define (cleanup) (close-upload-queue q))
+    (with-handlers ([exn? (lambda (e)
+                            (cleanup)
+                            (raise e))])
+      (proc q))
+    (cleanup)))
+
 (provide make-simple-db-upload-queue)
 (define/contract (make-simple-db-upload-queue
                   #:domainname domainname
                   #:poster [simpledb-post simpledb-post]
                   #:batch-size [batch-size 25])
-  ((#:domainname string?) (#:poster (alist? . -> . any/c)  #:batch-size natural-number/c) . ->* . thread-queue?)
+  ((#:domainname string?)
+   (#:poster (alist? . -> . any/c)  #:batch-size natural-number/c) . ->* . thread-queue?)
   (let* ([ch (make-async-channel)]
          [th (thread
               (lambda ()
@@ -190,19 +214,21 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
   (run-tests/maybe-exit all-tests)
-  (let ([x (make-simple-db-upload-queue #:domainname "frotz")])
-    (simpledb-enqueue
-     x
-     '("batchtest"
-       ("action"     . "a value with spaces")
-       ("snorgulous" . "an ellipsis:\u2026")
-       ("frotz"      . "a nasty Unicode character:\ufffd")))
-    (simpledb-enqueue
-     x
-     '("another"
-       ("action"     . "Jackson")
-       ("snorgulous" . "horgulous")
-       ("frotz"      . "plotz")))
-    (close-upload-queue x)
-    ))
+  (with-upload-queue
+   #:domainname "frotz"
+   (lambda (q)
+     (simpledb-enqueue
+      q
+      '("batchtest"
+        ("action"     . "a value with spaces")
+        ("snorgulous" . "an ellipsis:\u2026")
+        ("frotz"      . "a nasty Unicode character:\ufffd")))
+
+     (simpledb-enqueue
+      q
+      '("another"
+        ("action"     . "Jackson")
+        ("snorgulous" . "horgulous")
+        ("frotz"      . "plotz"))))))
+
 
