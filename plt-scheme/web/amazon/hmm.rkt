@@ -1,23 +1,21 @@
 #lang racket
 
-(define (with-resource resource-creation-arg consumer)
-  (let ([resource (make-resource resource-creation-arg)])
+(define (call-wif-input-fyle filename consumer)
+  (let ([inp (open-input-file filename)])
     (define (cleanup)
-      (release-resource resource))
+      (close-input-port inp)
+      (fprintf (current-error-port)
+               "Closed ~a~%" inp))
     (with-handlers ([exn? (lambda (e)
                             (cleanup)
                             (raise e))])
-      (consumer resource))
+      (consumer inp))
     (cleanup)))
 
-;;; example parameters
-(define (make-resource . args)
-  (printf "Creating resource from ~a~%" args)
-  'a-resource)
-(define (release-resource . args)
-  (printf "Releasing resource ~a~%" args))
+(call-wif-input-fyle "/etc/passwd"
+               (lambda (inp)
+                 (for ([(l i) (in-indexed (in-lines inp))])
+                   (printf "A line from ~a: ~s~%" inp l)
+                   (when (= i 10)
+                     (error "Oh shit, it's the dreaded tenth line!")))))
 
-(with-resource "an argument"
-               (lambda (r)
-                 (printf "Doing something interesting with resource ~a~%" r)
-                 (error "Oh whoops")))
