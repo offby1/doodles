@@ -218,11 +218,67 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (simpledb-post
    `((#"Action"             . #"ListDomains")
      (#"MaxNumberOfDomains" . #"100"))))
+
+;; http://docs.amazonwebservices.com/AmazonSimpleDB/latest/DeveloperGuide/
+(define *simpledb-select-reserved-keywords*
+  '("and" "asc" "between" "by" "desc" "every" "from" "in"
+    "intersection" "is" "like" "limit" "not" "null"
+    "or" "order" "select" "where"))
+
+(provide escape-attribute-name)
+;; it would probably be fine to just double all existing backticks,
+;; and then pessimistically wrap the result in backticks, thus
+;; transforming "fred" => "`fred`".  But oh well.
+(define/contract (escape-attribute-name n)
+  (stringy? . -> . stringy?)
+  (define (bt-wrap s)
+    (string-append "`" s "`"))
+
+  (if (member n *simpledb-select-reserved-keywords*)
+      (bt-wrap n)
+      (let-values ([(internally-escaped safe? _)
+                    (for/fold ([result ""]
+                               [safe? #t]
+                               [chars-seen 0])
+                        ([ch n])
+                        (cond
+                         ;; safe characters
+                         ((or (char<=? #\a (char-downcase ch) #\z)
+                              (char=? ch #\_)
+                              (char=? ch #\$)
+                              (and (positive? chars-seen)
+                                   (char<=? #\0 ch #\9)))
+                          (values (string-append result (string ch))
+                                  safe?
+                                  (add1 chars-seen)))
+
+                         ;; backticks get doubled
+                         ((char=? ch #\`)
+                          (values (string-append result (make-string 2 ch))
+                                  #f
+                                  (add1 chars-seen)))
+
+                         ;; everything else gets passed through as-is,
+                         ;; but the result needs to be wrapped in
+                         ;; backticks.
+                         (else
+                          (values (string-append result (string ch))
+                                  #f
+                                  (add1 chars-seen)))))])
+        (if safe? internally-escaped (bt-wrap internally-escaped)))))
+
+(define-test-suite escape-tests
+  (check-equal? (escape-attribute-name "or") "`or`")
+  (check-equal? (escape-attribute-name "a0_$") "a0_$")
+  (check-equal? (escape-attribute-name "0a_$") "`0a_$`")
+  (check-equal? (escape-attribute-name "x-y") "`x-y`")
+  (check-equal? (escape-attribute-name "x`y") "`x``y`"))
 
 
 (define-test-suite all-tests
   urllib-quote-tests
-  sign-tests)
+  sign-tests
+  escape-tests)
 
 (define (main . args)
   (run-tests/maybe-exit all-tests)
