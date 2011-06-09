@@ -5,7 +5,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 (require
- (only-in "aws-common.rkt" AWSAccessKeyId sign run-tests/maybe-exit)
+ (only-in "aws-common.rkt"
+          AWSAccessKeyId
+          run-tests/maybe-exit
+          sign
+          stringy?
+)
  (only-in "group.rkt" group)
 
  (only-in (planet neil/htmlprag:1:6) html->shtml)
@@ -92,8 +97,6 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
-
-(define stringy? (or/c string? bytes?))
 
 ;; The car of each element must be something that can be stringified
 ;; via (format "~a").  The cdr must be something that can be given to

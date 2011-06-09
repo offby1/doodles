@@ -6,7 +6,8 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 #lang racket
 
-(require (only-in rackunit/text-ui run-tests)
+(require (only-in rackunit check-equal?)
+         (only-in rackunit/text-ui run-tests)
          (only-in scheme/date date-display-format date->string)
          (only-in (planet lizorkin/sxml:2:1/sxml) sxpath)
          (only-in net/base64 base64-encode-stream)
@@ -57,6 +58,48 @@ exec  racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
   (apply bytes (map (curryr string->number 16)
                     (regexp-match* #rx"..?" s))))
+
+(provide stringy?)
+(define stringy? (or/c string? bytes?))
+
+(provide escape-attribute-name)
+(define/contract (escape-attribute-name n)
+  (stringy? . -> . stringy?)
+  (let-values ([(internally-escaped safe? _)
+                (for/fold ([result ""]
+                           [safe? #t]
+                           [chars-seen 0])
+                    ([ch n])
+                    (cond
+                     (                  ;a character is safe if it's a
+                                        ;letter, underscore, or $
+                      (or (char<=? #\a (char-downcase ch) #\z)
+                          (char=? ch #\_)
+                          (char=? ch #\$)
+
+                          ;; it's also safe if it's a digit, and
+                          ;; chars-seen > 0
+                          (and (positive? chars-seen)
+                               (char<=? #\0 ch #\9)))
+
+                      (values (string-append result (string ch))
+                              safe?
+                              (add1 chars-seen)))
+                     ((char=? ch #\`)
+                      (values (string-append result (make-string 2 ch))
+                              #f
+                              (add1 chars-seen)))
+                     (else
+                      (values (string-append result (string ch))
+                              #f
+                              (add1 chars-seen)))))])
+    (if safe? internally-escaped (string-append "`" internally-escaped "`"))))
+
+(check-equal? (escape-attribute-name "a0_$") "a0_$")
+(check-equal? (escape-attribute-name "0a_$") "`0a_$`")
+(check-equal? (escape-attribute-name "x-y") "`x-y`")
+(check-equal? (escape-attribute-name "x`y") "`x``y`")
+
 
 (provide run-tests/maybe-exit)
 (define (run-tests/maybe-exit tests)
