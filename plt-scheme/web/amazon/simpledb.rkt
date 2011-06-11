@@ -273,6 +273,32 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (check-equal? (escape-attribute-name "0a_$") "`0a_$`")
   (check-equal? (escape-attribute-name "x-y") "`x-y`")
   (check-equal? (escape-attribute-name "x`y") "`x``y`"))
+
+;; The return value is Unix time -- seconds since "the epoch"
+(provide find-time-of-most-recent-entry)
+(define/contract (find-time-of-most-recent-entry #:domain [domain "freenode"])
+  (->* () (#:domain string?) real?)
+  (let ([resp
+         (simpledb-post
+          `((#"Action"             . #"Select")
+            (#"SelectExpression" . ,(string->bytes/utf-8
+                                     (format
+                                      (string-join
+                                       `("select itemname()"
+                                         "from ~a"
+                                         "where itemname() > '0'"
+                                         "order by itemname() desc"
+                                         "limit 1")
+                                       " ") (escape domain))))))])
+    (match resp
+      [(list '*TOP* _ ...
+             (list 'selectresponse _
+                   (list 'selectresult (list 'item (list 'name name))
+                         _ ...)
+                   _ ...))
+       (string->number name)]
+      [_ (error 'find-time-of-most-recent-entry "Unrecgonized response: ~a" resp)])))
+
 
 
 (define-test-suite all-tests
