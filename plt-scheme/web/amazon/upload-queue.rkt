@@ -170,7 +170,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (displayln
    (call-with-values
        (lambda ()
-         (time-apply simpledb-post (batch-put-items-args domainname items)))
+         (time-apply
+          simpledb-post
+          ;;(curry printf "A batch: ~s~%")
+          (batch-put-items-args domainname items)))
      (lambda (rv cpu real gc)
        `((rv ,rv)
          (cpu ,cpu)
