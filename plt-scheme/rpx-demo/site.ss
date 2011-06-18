@@ -1,15 +1,16 @@
 ;; https://rpxnow.com/docs
 
 #lang scheme
-(require web-server/servlet
-         web-server/servlet-env
-         web-server/insta/insta
-         (only-in net/url set-url-query!)
-         net/uri-codec
-         (prefix-in json: (planet dherman/json:1:1/json))
-         "ssl-url.ss")
+(require
+ (only-in web-server/servlet request-bindings exists-binding? extract-binding/single)
+ web-server/servlet-env
+ web-server/compat/0/coerce
+ (only-in net/url set-url-query!)
+ net/uri-codec
+ (prefix-in json: (planet dherman/json:1:1/json))
+ "ssl-url.ss")
 
-(define *our-url* "http://localhost:8000/servlets/standalone.ss")
+(define *our-url* "http://localhost:8000/servlets/standalone.rkt")
 
 (define (signin-page)
   `(html (head (title "Hello world!"))
