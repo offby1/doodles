@@ -79,8 +79,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
    (else
     (hexencode-codepoint-number b))))
 
-(define/contract (urllib-quote b #:safe [safe (set 47)])
-  (->* (bytes?)  (#:safe (set/c byte?)) bytes?)
+(define/contract (urllib-quote b #:safe safe)
+  (->* (bytes? #:safe (set/c byte?))  () bytes?)
 
   (for/fold ([result #""])
       ([c (in-bytes b)])
@@ -95,7 +95,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (escape (string->bytes/utf-8 s))]))
 
 (define-test-suite urllib-quote-tests
-  (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
+  (check-equal? (urllib-quote #"/~connolly/" #:safe (set 47)) #"/%7Econnolly/"))
 
 (provide encode-alist)
 ;; The car of each element must be something that can be stringified
