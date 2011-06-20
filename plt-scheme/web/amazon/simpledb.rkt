@@ -15,7 +15,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
- (only-in net/uri-codec alist->form-urlencoded form-urlencoded->alist)
  (only-in net/url
           call/input-url
           post-impure-port
@@ -98,6 +97,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote #"/~connolly/") #"/%7Econnolly/"))
 
+(provide encode-alist)
 ;; The car of each element must be something that can be stringified
 ;; via (format "~a").  The cdr must be something that can be given to
 ;; "escape", which means either a bytes? or a string?
@@ -153,6 +153,10 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
 
+
+;; Some debugging code that helped me properly escape characters while
+;; generating the signature.
+
 ;; Characters that I am probably escaping correctly.  Every time I do
 ;; a POST, and the server doesn't bitch at me, I add all the
 ;; characters in that post to this set.
@@ -175,6 +179,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
                 (set-union all-chars-in-input (bytes->charset (car p))
                            (set-union all-chars-in-input (bytes->charset (cdr p)))))
             *ok-chars*)))
+
 
 (define/contract (post-with-signature url form-data)
   (url? (listof (cons/c bytes? bytes?)) . -> . any/c)
