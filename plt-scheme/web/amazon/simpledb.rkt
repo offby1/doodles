@@ -199,6 +199,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
              ((403)
               (note-suspicious-characters form-data)
               (fprintf (current-error-port) "Signature trouble with~%~a~%" POST-body))
+             ((418)
+              (fprintf (current-error-port) "Kewl -- internal error"))
              (else
               (fprintf (current-error-port) "simpledb doesn't like~%~a~%" POST-body)
               (copy-port response-inp (current-error-port))
@@ -328,6 +330,8 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
       (#"Attribute.1.Value"   . ,(string->bytes/utf-8 "an ellipsis:\u2026"))
       (#"Attribute.2.Name"    . #"frotz")
       (#"Attribute.2.Replace" . #"true")
-      (#"Attribute.2.Value"   . ,(string->bytes/utf-8 "a nasty Unicode character:\ufffd"))))))
+
+      ;; changing 576 to 577 provokes an internal error.
+      (#"Attribute.2.Value"   . ,(string->bytes/utf-8 (apply string (build-list 576 integer->char))))))))
 
 (provide main)
