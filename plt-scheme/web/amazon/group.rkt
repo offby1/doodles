@@ -10,6 +10,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide group)
 
+;; Given a sequence and a number, return a sequence of lists.  Each
+;; list (except possibly the last) has GROUP-SIZE entries; those
+;; entries are taken from the original SEQ, in order.  Thus we're
+;; "grouping" or "batching up" the items in SEQ.  See the unit tests
+;; for examples.
 (define/contract (group seq group-size)
   (sequence? natural-number/c . -> . sequence?)
   (in-generator
