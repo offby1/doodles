@@ -97,7 +97,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
 (define-test-suite urllib-quote-tests
   (check-equal? (urllib-quote #"/~connolly/" #:safe (set 47)) #"/%7Econnolly/"))
 
-(provide encode-alist)
+
 ;; The car of each element must be something that can be stringified
 ;; via (format "~a").  The cdr must be something that can be given to
 ;; "escape", which means either a bytes? or a string?
@@ -232,7 +232,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
     "intersection" "is" "like" "limit" "not" "null"
     "or" "order" "select" "where"))
 
-(provide escape-attribute-name)
+
 ;; it would probably be fine to just double all existing backticks,
 ;; and then pessimistically wrap the result in backticks, thus
 ;; transforming "fred" => "`fred`".  But oh well.
