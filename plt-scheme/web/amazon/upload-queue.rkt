@@ -8,7 +8,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
  (only-in "aws-common.rkt" run-tests/maybe-exit)
  (only-in "group.rkt" group)
  (only-in "channel.rkt" channel->seq)
- (only-in "simpledb.rkt" simpledb-post)
+ (only-in "simpledb.rkt" form-data?
+                         simpledb-post)
  racket/async-channel
  racket/trace
  rackunit
@@ -154,7 +155,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (cons (ensure-bytes (car p))
           (ensure-bytes (cdr p)))]))
 
-(define (batch-put-items simpledb-post domainname items)
+(define/contract (batch-put-items simpledb-post domainname items)
+  ((form-data? . -> . any/c) string? batch? . -> . any/c)
   (define (batch-put-items-args domainname items)
     (for/list ([batch (group items 25)])
       `((#"DomainName"                 . ,(ensure-bytes domainname))

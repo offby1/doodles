@@ -214,9 +214,13 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
      `(,(format "host: ~a" (url-host url))
        "Content-Type: application/x-www-form-urlencoded; charset=utf-8"))))
 
+(provide form-data?)
+(define form-data?
+  (listof (cons/c bytes? bytes?)))
+
 (provide simpledb-post)
 (define/contract (simpledb-post form-data)
-  ((listof (cons/c bytes? bytes?)) . -> . any/c)
+  (form-data? . -> . any/c)
   (post-with-signature
    (string->url "http://sdb.amazonaws.com/")
    form-data))
