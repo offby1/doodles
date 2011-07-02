@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 use Time::HiRes qw( time sleep );
-use Test::Unit;
+use Test::Unit::Procedural;
 
 package finish_time;
 
