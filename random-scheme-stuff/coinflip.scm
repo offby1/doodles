@@ -1,16 +1,12 @@
 #!/usr/bin/guile -s
 !#
 
-(use-modules (ice-9 slib))
 (use-modules (ice-9 popen))
 
 (define (random-char)
   (with-input-from-file "/dev/urandom"
     (lambda ()
       (read-char))))
-
-;; From SLIB
-(require 'logical)
 
 (define (count-set-bits byte)
   (logcount (char->integer byte)))
@@ -33,7 +29,7 @@
     (vector-set! stats n (+ 1 old))))
 
 (begin
-  (define stats (make-vector 160 0))
+  (define stats (make-vector 200 0))
   (define trials-to-do 200)
   (define (vector->gnuplot-data v)
     (let loop ((slots-plotted 0)
@@ -41,8 +37,8 @@
       (if (= slots-plotted (vector-length v))
           return
         (loop (+ 1 slots-plotted)
-              (string-append 
-               return 
+              (string-append
+               return
                (number->string slots-plotted)
                " "
                (number->string (vector-ref v slots-plotted))
@@ -53,8 +49,8 @@
       (begin
         (increment! (flip-many-times (vector-length stats)))
         (loop (- trials 1)))))
-  
-  (let* ((command-line (string-append 
+
+  (let* ((command-line (string-append
 
                         ;; these arguments work for GNU Plotutils 2.3
 
@@ -70,4 +66,5 @@
                         ))
          (plot (open-output-pipe command-line)))
     (display (vector->gnuplot-data stats) plot)
-    (close-pipe plot)))
+    (close-pipe plot)
+    (sleep 20)))
