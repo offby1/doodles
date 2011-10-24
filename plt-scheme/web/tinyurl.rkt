@@ -29,10 +29,14 @@
         (404-page req))))
 
 (define (get-host-and-port r)
-  (let ([host-port-bytes (header-value (headers-assq* #"Host" (request-headers/raw r)))])
-    (match (bytes->string/utf-8 host-port-bytes)
+  (let ([host-port-string
+         (bytes->string/utf-8
+          (header-value
+           (headers-assq* #"Host" (request-headers/raw r))))])
+    (match host-port-string
       [(regexp "(.*):(.*)" (list _ h port-string))
-       (values h (string->number port-string))])))
+       (values h (string->number port-string))]
+      [_ (values host-port-string 80)])))
 
 (define (create-short-url-page req str)
   (let-values ([(hostname hostport) (get-host-and-port req)])
@@ -101,7 +105,7 @@
   (make-request
    #"GET"                               ;method
    (string->url u)                      ;URI
-   empty                                ;headers/raw
+   (list (header #"Host" #"most"))      ;headers/raw
    (delay empty)                        ;bindings/raw-promise
    #f                                   ;post-data/raw
    "1.2.3.4"                            ;host-ip
