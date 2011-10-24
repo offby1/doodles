@@ -4,8 +4,8 @@
  (only-in "db.rkt" db-lookup db-add! db-init!)
  (only-in file/md5 md5)
  (only-in net/base64 base64-encode-stream)
- net/url
- web-server/dispatch
+ (only-in net/url url->string url url-path url-scheme url-host url-port url-path-absolute? string->url)
+ (only-in web-server/dispatch dispatch-rules string-arg serve/dispatch)
  web-server/formlets
  web-server/formlets/servlet
  web-server/http
@@ -29,31 +29,33 @@
         (404-page req))))
 
 (define (get-host-and-port r)
-  (let ([host-port-string
+  (let ([from-header
          (bytes->string/utf-8
           (header-value
            (headers-assq* #"Host" (request-headers/raw r))))])
-    (match host-port-string
-      [(regexp "(.*):(.*)" (list _ h port-string))
-       (values h (string->number port-string))]
-      [_ (values host-port-string 80)])))
+
+    (match (regexp-split #rx":" from-header)
+      [(list host)      (values host 80)]
+      [(list host port) (values host (string->number port))])))
 
 (define (create-short-url-page req str)
   (let-values ([(hostname hostport) (get-host-and-port req)])
-    (let ([urlstr
-           (url->string
-            (struct-copy
-             url
-             (request-uri req)
-             [scheme "http"]
-             [host (or (url-host (request-uri req))
-                       hostname)]
-             [port (or (url-port (request-uri req))
-                       hostport)]
-             [path-absolute? #t]
-             [path (url-path
-                    (string->url (url-generator expand-and-redirect (shorten-url-string str))))])
-            )])
+    (let* ([in-url (request-uri req)]
+           [urlstr
+
+            ;; Make a URL like the one in the request, but fill in the
+            ;; host and port, which tend to be missing.
+            (url->string
+             (struct-copy
+              url
+              in-url
+              [scheme "http"]
+              [host (or (url-host in-url) hostname)]
+              [port (or (url-port in-url) hostport)]
+              [path-absolute? #t]
+              [path (url-path
+                     (string->url (url-generator expand-and-redirect (shorten-url-string str))))])
+             )])
       (response/xexpr
        `(html (p "Your short URL is: "
                  (a ((href ,urlstr))
@@ -74,7 +76,7 @@
      (p "Sorry, man; I just don't grok the URL")
      (p (tt ,(url->string (request-uri req)))))
    #:code 404
-   #:message #"Dave's not here"))
+   #:message #"Not found"))
 
 (define (hash-it str)
   (bytes->string/utf-8
@@ -85,6 +87,9 @@
 
 ;; just like the one in the library, except it doesn't append a
 ;; carriage-return/newline.
+
+;; Which probably isn't an issue since I'm only gonna ever encode a
+;; few bytes ...
 (define (base64-encode bytes)
   (let ((sop (open-output-bytes)))
     (base64-encode-stream (open-input-bytes bytes) sop "")
