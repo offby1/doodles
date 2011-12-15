@@ -31,7 +31,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
         ;;                       )
         #:transparent)
 
-(define (tree-count t) 'fixme)
+(define (tree-count t)
+  (for/fold ([count 0])
+      ([elt (in-producer (tree-iterate-first t) #f)])
+      (add1 count)))
 
 (define (tree-iterate-first t)
   (generator ()
