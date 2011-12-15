@@ -28,7 +28,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
         ;;                       tree-iterate-value
         ;;                       )
-        )
+        #:transparent)
 
 (define (tree-count t) 'fixme)
 (define (tree-iterate-first t) 'fixme)
@@ -101,11 +101,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (tree-left t)
           (tree-remove (tree-right t) k)))))
 
-(define (merge-trees a b)
-  (tree-fold a b
-             (lambda (accum k v left right )
-               (tree-set accum k v))))
-
 (define (tree-fold t accum proc)
   (cond
    ((tree-empty? t)
@@ -116,6 +111,25 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                (tree-fold (tree-left t) accum proc)
                (tree-fold (tree-right t) accum proc)
                ))))
+
+;; Super-stupid and slow.
+(define (merge-trees a b)
+  (tree-fold a b
+             (lambda (accum k v left right )
+               (tree-set accum k v))))
+
+(check-not-false (tree-empty?
+                  (merge-trees (make-tree)
+                               (make-tree))))
+(check-equal? (tree->list
+               (merge-trees (make-tree)
+                            (tree-set (make-tree) 2 3)))
+              '((2 3 () ())))
+
+(let ([t (tree-set (make-tree) 2 3)])
+  (check-equal? (tree->list
+                 (merge-trees  t t ))
+                '((2 3 () ()))))
 
 (define (tree->list t)
   (tree-fold t '()
