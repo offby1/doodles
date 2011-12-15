@@ -8,6 +8,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 (require rackunit
          rackunit/text-ui
+         racket/generator
          racket/trace)
 
 (struct tree (key value left right)
@@ -31,8 +32,23 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
         #:transparent)
 
 (define (tree-count t) 'fixme)
-(define (tree-iterate-first t) 'fixme)
-(define (tree-iterate-next t) 'fixme)
+
+(define (tree-iterate-first t)
+  (generator ()
+    (let loop ([t t])
+      (cond
+       ((tree-empty? t) #f)
+       (else
+        (loop (tree-left t))
+        (yield (cons (unbox (tree-key t))
+                     (tree-value t)))
+        (loop (tree-right t)))))))
+
+(define (tree-iterate-next g)
+  (let ([s (generator-state g)])
+    (and (not (eq? 'done s))
+         (g))))
+
 (define (tree-iterate-key t) 'fixme)
 (define (tree-iterate-value t) 'fixme)
 
@@ -82,8 +98,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (tree-left t)
           (tree-set (tree-right t) k v)))))
 
-;; fairly lame -- builds up a whole new tree while omitting the
-;; specified element
 (define (tree-remove t k)
   (cond
    ((tree-empty? t)
@@ -101,22 +115,37 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (tree-left t)
           (tree-remove (tree-right t) k)))))
 
-(define (tree-fold t accum proc)
-  (cond
-   ((tree-empty? t)
-    accum)
-   (else (proc accum
-               (unbox (tree-key t))
-               (tree-value t)
-               (tree-fold (tree-left t) accum proc)
-               (tree-fold (tree-right t) accum proc)
-               ))))
-
-;; Super-stupid and slow.
 (define (merge-trees a b)
-  (tree-fold a b
-             (lambda (accum k v left right )
-               (tree-set accum k v))))
+  (cond
+   ((tree-empty? a)
+    b)
+   ((tree-empty? b)
+    a)
+   ((< (unbox (tree-key a))
+       (unbox (tree-key b)))
+    (tree (tree-key a)
+          (tree-value a)
+          (tree-left a)
+          (merge-trees (tree-right a)
+                       b)))
+   ((= (unbox (tree-key a))
+       (unbox (tree-key b)))
+    (tree (tree-key a)
+          (tree-value a)
+          (merge-trees (tree-left a)
+                       (tree-left b))
+          (merge-trees (tree-right a)
+                       (tree-right b))))
+   (else
+    (tree (tree-key a)
+          (tree-value a)
+          (merge-trees (tree-left a)
+                       b)
+          (tree-right a)))))
+
+(define (tree->list t)
+  (for/list ([p (in-producer (tree-iterate-first t) #f)])
+    p))
 
 (check-not-false (tree-empty?
                   (merge-trees (make-tree)
@@ -124,17 +153,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (check-equal? (tree->list
                (merge-trees (make-tree)
                             (tree-set (make-tree) 2 3)))
-              '((2 3 () ())))
+              '((2 . 3)))
 
 (let ([t (tree-set (make-tree) 2 3)])
   (check-equal? (tree->list
                  (merge-trees  t t ))
-                '((2 3 () ()))))
-
-(define (tree->list t)
-  (tree-fold t '()
-             (lambda (accum k v left right )
-               (cons (list k v left right) accum))))
+                '((2 . 3))))
 
 (define-test-suite all-tests
   (check-true (tree-empty? (make-tree)) "empty")
@@ -151,15 +175,18 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                       (tree->list t4))
         (set! t (tree-remove t 3))
         (check-equal? (tree->list t)
-                      '((4 four () ()))))))
+                      '((4 . four))))))
 
   (let ([t
          (for/fold ([t (make-tree)])
              ([i 100])
              (tree-set t (random 100) 'frotz))])
     (check-false (tree-empty? t))
-    (displayln t)
-    (pretty-print (tree->list t))))
+    (for/fold ([t t])
+              ([key (in-list (map car (tree->list t)))])
+      (displayln (tree->list t))
+      (tree-remove t key))))
+
 
 (provide main)
 (define (main . args)
