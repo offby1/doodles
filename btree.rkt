@@ -33,27 +33,37 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (tree-count t)
   (for/fold ([count 0])
-      ([elt (in-producer (tree-iterate-first t) #f)])
+      ([elt (in-producer (first (tree-iterate-first t)) #f)])
       (add1 count)))
 
 (define (tree-iterate-first t)
-  (generator ()
-    (let loop ([t t])
-      (cond
-       ((tree-empty? t) #f)
-       (else
-        (loop (tree-left t))
-        (yield (cons (unbox (tree-key t))
-                     (tree-value t)))
-        (loop (tree-right t)))))))
+  (list
+   (generator ()
+     (let loop ([t t])
+       (cond
+        ((tree-empty? t) #f)
+        (else
+         (loop (tree-left t))
+         (yield (cons (unbox (tree-key t))
+                      (tree-value t)))
+         (loop (tree-right t))))))
+   (tree-key t)
+   (tree-value t)))
 
-(define (tree-iterate-next g)
-  (let ([s (generator-state g)])
-    (and (not (eq? 'done s))
+(define (tree-iterate-next pos)
+  (let ([g (first pos)])
+    (and (not (eq? 'done (generator-state g)))
          (g))))
 
-(define (tree-iterate-key t) 'fixme)
-(define (tree-iterate-value t) 'fixme)
+(define (tree-iterate-key t pos)
+  ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
+  (second pos))
+
+;(check-equal? (tree-iterate-key (tree-set (make-tree) 2 'two)))
+
+(define (tree-iterate-value t pos)
+  ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
+  (third pos))
 
 (define (make-tree) (tree #f #f #f #f))
 (define (public-tree-empty? t) (not (box? (tree-key t))))
@@ -147,8 +157,18 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (tree-right a)))))
 
 (define (tree->list t)
-  (for/list ([p (in-producer (tree-iterate-first t) #f)])
+  (for/list ([p (in-producer (first (tree-iterate-first t)) #f)])
     p))
+
+(define (list->tree l)
+  (for/fold ([t (make-tree)])
+      ([p  l])
+      (tree-set t (car p) (cdr p))))
+
+(let ([t (make-tree)])
+  (check-equal? (list->tree (tree->list t)) t)
+  (set! t (tree-set t 2 'two))
+  (check-equal? (list->tree (tree->list t)) t))
 
 (check-not-false (tree-empty?
                   (merge-trees (make-tree)
@@ -182,14 +202,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
   (let ([t
          (for/fold ([t (make-tree)])
-             ([i 100])
-             (tree-set t (random 100) 'frotz))])
-    (check-false (tree-empty? t))
-    (for/fold ([t t])
-              ([key (in-list (map car (tree->list t)))])
-      (displayln (tree->list t))
-      (tree-remove t key))))
+             ([i (shuffle (build-list 100 values))])
+             (tree-set t i 'frotz))])
 
+    (for/fold ([t t])
+        ([key (in-list (map car (tree->list t)))]
+         [expected-count (in-range 100 0 -1)])
+        (check-equal? (tree-count t) expected-count)
+        (tree-remove t key))))
 
 (provide main)
 (define (main . args)
