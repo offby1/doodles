@@ -1,0 +1,8 @@
+-*-org-*-
+
+* Mutability?
+i.e., provide tree-set! and friends
+
+* Fix BUGBUGs of course
+
+* Make "equal?" and < paramaterizeable

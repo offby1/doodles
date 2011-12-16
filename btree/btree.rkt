@@ -11,59 +11,53 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          racket/generator
          racket/trace)
 
-(struct tree (key value left right)
+(define (tree-count t) (length (dict-map t cons)))
 
-        ;; #:property prop:dict (vector
+;; Our "pos" is a stack of tree nodes -- the nodes we need to pass
+;; through to get to a particular node.
 
-        ;;                       tree-ref
-        ;;                       #f        ;set!
-        ;;                       tree-set
+(define (tree-iterate-first t [pos '()])
+  (cond
+   ((tree-empty? t)
+    #f)
+   ((not (tree-left t))
+    (cons t pos))
+   (else
+    (tree-iterate-first (tree-left t) (cons t pos)))))
 
-        ;;                       #f        ;remove!
-        ;;                       tree-remove
-        ;;                       tree-count
+(define (tree-iterate-next t pos)
+  ;; BUGBUG -- raise exn:fail:contract if POS is not valid for t
+  (let loop ([pos pos])
+    (cond
+     ((null? pos) #f)
+     ((tree-right (car pos))
+      (tree-iterate-first (tree-right (car pos)) (cdr pos)))
+     ((null? (cdr pos)) #f)
+     ((< (unbox (tree-key (cadr pos)))
+         (unbox (tree-key (car pos))))
+      (loop (cdr pos)))
+     (else (cdr pos)))))
 
-        ;;                       tree-iterate-first
-        ;;                       tree-iterate-next
-        ;;                       tree-iterate-key
+
+(define (check-round-trip . seq)
+  (check-equal? (map car (tree->list (ql->t seq)))
+                (sort seq <)))
 
-        ;;                       tree-iterate-value
-        ;;                       )
-        #:transparent)
-
-(define (tree-count t)
-  (for/fold ([count 0])
-      ([elt (in-producer (first (tree-iterate-first t)) #f)])
-      (add1 count)))
-
-(define (tree-iterate-first t)
-  (list
-   (generator ()
-     (let loop ([t t])
-       (cond
-        ((tree-empty? t) #f)
-        (else
-         (loop (tree-left t))
-         (yield (cons (unbox (tree-key t))
-                      (tree-value t)))
-         (loop (tree-right t))))))
-   (tree-key t)
-   (tree-value t)))
-
-(define (tree-iterate-next pos)
-  (let ([g (first pos)])
-    (and (not (eq? 'done (generator-state g)))
-         (g))))
+(define-test-suite iterate-tests
+  (check-false  (tree-iterate-first (make-tree)))
+  (check-round-trip 2)
+  (check-round-trip 2 3 1)
+  (check-round-trip 7 0 6 4)
+  (check-round-trip 0 1)
+  (apply check-round-trip (shuffle (build-list 100 values))))
 
 (define (tree-iterate-key t pos)
   ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
-  (second pos))
-
-;(check-equal? (tree-iterate-key (tree-set (make-tree) 2 'two)))
+  (tree-key (car pos)))
 
 (define (tree-iterate-value t pos)
   ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
-  (third pos))
+  (tree-value (car pos)))
 
 (define (make-tree) (tree #f #f #f #f))
 (define (public-tree-empty? t) (not (box? (tree-key t))))
@@ -156,34 +150,60 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                        b)
           (tree-right a)))))
 
-(define (tree->list t)
-  (for/list ([p (in-producer (first (tree-iterate-first t)) #f)])
-    p))
+(provide (rename-out [make-tree tree]))
+(struct tree (key value left right)
+
+        #:property prop:dict (vector
+
+                              tree-ref
+                              #f        ;set!
+                              tree-set
+
+                              #f        ;remove!
+                              tree-remove
+                              tree-count
+
+                              tree-iterate-first
+                              tree-iterate-next
+                              tree-iterate-key
+
+                              tree-iterate-value
+                              )
+        #:transparent)
+
+(define (tree->list t) (dict-map t (lambda (k v) (cons (unbox k) v))))
 
 (define (list->tree l)
   (for/fold ([t (make-tree)])
       ([p  l])
       (tree-set t (car p) (cdr p))))
 
-(let ([t (make-tree)])
-  (check-equal? (list->tree (tree->list t)) t)
-  (set! t (tree-set t 2 'two))
-  (check-equal? (list->tree (tree->list t)) t))
+;; quick list->tree.  Just for testing.
+(define (ql->t keys)
+  (list->tree (map (lambda (k) (cons k k)) keys)))
 
-(check-not-false (tree-empty?
-                  (merge-trees (make-tree)
-                               (make-tree))))
-(check-equal? (tree->list
-               (merge-trees (make-tree)
-                            (tree-set (make-tree) 2 3)))
-              '((2 . 3)))
+(define-test-suite misc-tests
+  (let ([t (make-tree)])
+    (check-equal? (list->tree (tree->list t)) t)
+    (set! t (tree-set t 2 'two))
+    (check-equal? (list->tree (tree->list t)) t))
 
-(let ([t (tree-set (make-tree) 2 3)])
+  (check-not-false (tree-empty?
+                    (merge-trees (make-tree)
+                                 (make-tree))))
   (check-equal? (tree->list
-                 (merge-trees  t t ))
-                '((2 . 3))))
+                 (merge-trees (make-tree)
+                              (tree-set (make-tree) 2 3)))
+                '((2 . 3)))
+
+  (let ([t (tree-set (make-tree) 2 3)])
+    (check-equal? (tree->list
+                   (merge-trees  t t ))
+                  '((2 . 3)))))
 
 (define-test-suite all-tests
+  iterate-tests
+  misc-tests
   (check-true (tree-empty? (make-tree)) "empty")
   (let ([t3  (tree-set (make-tree) 3 'three)])
     (check-false (tree-empty? t3) "not empty")
@@ -200,17 +220,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
         (check-equal? (tree->list t)
                       '((4 . four))))))
 
-  (let ([t
-         (for/fold ([t (make-tree)])
-             ([i (shuffle (build-list 100 values))])
-             (tree-set t i 'frotz))])
-
-    (for/fold ([t t])
-        ([key (in-list (map car (tree->list t)))]
-         [expected-count (in-range 100 0 -1)])
-        (check-equal? (tree-count t) expected-count)
-        (tree-remove t key))))
+  )
 
 (provide main)
 (define (main . args)
+  (random-seed 2)
   (exit (run-tests all-tests 'verbose)))
