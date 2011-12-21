@@ -3,20 +3,13 @@
 exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-;; slavishly following http://en.wikipedia.org/wiki/Binary_search_tree
-
 #lang racket
 (require rackunit
          rackunit/text-ui
-         racket/generator
          racket/trace)
 
 (define (tree-count t)
-  (let loop ([pos (tree-iterate-first t)]
-             [length 0])
-    (if (not pos) length
-        (loop (tree-iterate-next t pos)
-              (add1 length)))))
+  (sequence-length (in-dict-keys t)))
 
 ;; Our "pos" is a stack of tree nodes -- the nodes we need to pass
 ;; through to get to a particular node.
