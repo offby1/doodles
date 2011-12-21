@@ -36,7 +36,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
       (loop (cdr pos)))
      (else (cdr pos)))))
 
-
 (define (check-round-trip . seq)
   (check-equal? (map car (tree->list (ql->t seq)))
                 (sort seq <)))
@@ -47,6 +46,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-round-trip 2 3 1)
   (check-round-trip 7 0 6 4)
   (check-round-trip 0 1)
+  (check-equal? 3 (tree-count (ql->t '(1 2 3))))
   (apply check-round-trip (shuffle (build-list 100 values))))
 
 (define (tree-iterate-key t pos)
@@ -60,29 +60,22 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (make-tree) (tree #f #f #f #f))
 (define (public-tree-empty? t) (not (box? (tree-key t))))
 (define (tree-empty? t) (or (not t) (public-tree-empty? t)))
-(define (tree-ref-internal t k failure-result)
+(define (tree-ref t k [failure-result (lambda ()
+                                        (raise
+                                         (make-exn:fail
+                                          "Not found"
+                                          (current-continuation-marks))))])
   (cond
    ((tree-empty? t)
-    (failure-result))
+    (if (procedure? failure-result)
+        (failure-result)
+        failure-result))
    ((equal? k (unbox (tree-key t)))
-    t)
+    (tree-value t))
    ((< k (unbox (tree-key t)))
-    (tree-ref-internal (tree-left t) k failure-result))
+    (tree-ref (tree-left t) k failure-result))
    (else
-    (tree-ref-internal (tree-right t) k failure-result))))
-
-
-(define (tree-ref t k
-                  [failure-result (lambda ()
-                                    (raise
-                                     (make-exn:fail
-                                      "Not found"
-                                      (current-continuation-marks))))])
-  (let ([int (tree-ref-internal t k failure-result)])
-    (cond
-     (int => tree-value)
-     (else
-      (failure-result)))))
+    (tree-ref (tree-right t) k failure-result))))
 
 (define (tree-set t k v)
   (cond
@@ -197,7 +190,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([t (tree-set (make-tree) 2 3)])
     (check-equal? (tree->list
                    (merge-trees  t t ))
-                  '((2 . 3)))))
+                  '((2 . 3))))
+
+  (check-equal? (dict-ref (make-tree) 0 (thunk 'not-found))
+                'not-found))
 
 (define-test-suite all-tests
   iterate-tests
@@ -206,6 +202,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([t3  (tree-set (make-tree) 3 'three)])
     (check-false (tree-empty? t3) "not empty")
     (check-false (tree-ref t3 6 (thunk #f)) "failure thunk when not found")
+    (check-equal? (tree-ref t3 6 'not-found) 'not-found "failure non-thunk when not found")
     (check-equal? (tree-ref t3 3)  'three "found 3")
     (let ([t4 (tree-set t3 4 'four)])
       (check-equal? (tree-ref t4 3 ) 'three "3 still in new tree")
