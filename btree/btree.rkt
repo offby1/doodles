@@ -11,7 +11,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          racket/generator
          racket/trace)
 
-(define (tree-count t) (length (dict-map t cons)))
+(define (tree-count t)
+  (let loop ([pos (tree-iterate-first t)]
+             [length 0])
+    (if (not pos) length
+        (loop (tree-iterate-next t pos)
+              (add1 length)))))
 
 ;; Our "pos" is a stack of tree nodes -- the nodes we need to pass
 ;; through to get to a particular node.
