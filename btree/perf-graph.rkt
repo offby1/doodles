@@ -11,17 +11,32 @@
       ([elt seq])
       (dict-set dict elt elt)))
 
+(define (gc-time thunk)
+  (let-values ([(results cpu real gc) (time-apply thunk '())])
+    gc))
+
 (define (cpu-time thunk)
   (let-values ([(results cpu real gc) (time-apply thunk '())])
     cpu))
 
-(define (size->times n constructor)
+(define (size->times n constructor value-generator)
   (set! n (inexact->exact (round n)))
-  (define l (shuffle (build-list n values)))
+  (define l (build-list n value-generator))
   (define dict (constructor))
-  (cpu-time (thunk (list->dict dict l))))
+  (gc-time (thunk (list->dict dict l))))
 
-(plot (list (function #:label "tree" #:color 3 (curryr size->times tree) 1000 2000)
-            (function #:label "hash" (curryr size->times hash) 1000 2000))
-      #:x-label "number of elements in dictionary"
-      #:y-label "total insertion time, ms")
+(define r (lambda (_) (random)))
+
+(parameterize ([plot-x-transform log-transform])
+  (let ([lx 100]
+        [ux 200])
+    (plot (list (function #:label "tree, ordered"
+                          (curryr size->times tree values) lx ux)
+                (function #:label "tree, ordered the other way"
+                          (curryr size->times tree -) lx ux)
+                (function #:label "tree, random"
+                          (curryr size->times tree r) lx ux)
+                (function #:label "hash"
+                          (curryr size->times hash r) lx ux))
+          #:x-label "number of elements in dictionary"
+          #:y-label "gc time, ms")))
