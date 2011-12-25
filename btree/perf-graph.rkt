@@ -19,29 +19,30 @@
   (let-values ([(results cpu real gc) (time-apply thunk '())])
     cpu))
 
-(define (size->times n constructor value-generator)
+(define (size->times n constructor)
   (set! n (inexact->exact (round n)))
-  (define l (build-list n value-generator))
-  (define dict (constructor))
-  (cpu-time (thunk (list->dict dict l))))
-
-(define r (lambda (_) (random)))
+  (define l (shuffle (build-list n values)))
+  (define d (list->dict (constructor) l))
+  (cpu-time
+   (thunk
+    (for/fold ([d d])
+        ([elt l])
+        (dict-remove d elt)))))
 
 (parameterize ([plot-font-size 18])
   (let ([lx 100]
         [ux 200])
 
-    (define (quickfunc label ps color ctor vg)
+    (define (quickfunc label ps color ctor)
       (function #:label label
                 #:style ps
                 #:color color
                 #:width 2
-                (curryr size->times ctor vg) lx ux))
+                (curryr size->times ctor) lx ux))
 
     (time
-     (plot (list (quickfunc "tree, ordered" 'solid 0 tree values)
-                 ;;(quickfunc "vector, ordered" vector values)
-                 (quickfunc "tree, random"  'dot 1 tree r)
-                 (quickfunc "hash, ordered" 'long-dash 2 hash values))
+     (plot (list (quickfunc "tree" 'solid 0 tree )
+                 (quickfunc "hash" 'long-dash 2 hash ))
+           #:title "Time to delete all the elements, one by one"
            #:x-label "number of elements in dictionary"
            #:y-label "CPU time, ms"))))
