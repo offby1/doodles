@@ -27,16 +27,21 @@
 
 (define r (lambda (_) (random)))
 
-(parameterize ([plot-x-transform log-transform])
+(parameterize ([plot-font-size 18])
   (let ([lx 100]
         [ux 200])
 
-    (define (quickfunc label ctor vg)
-      (function #:label label (curryr size->times ctor vg) lx ux))
+    (define (quickfunc label ps color ctor vg)
+      (function #:label label
+                #:style ps
+                #:color color
+                #:width 2
+                (curryr size->times ctor vg) lx ux))
 
-    (plot (list (quickfunc "tree, ordered" tree values)
-                ;;(quickfunc "vector, ordered" vector values)
-                (quickfunc "tree, random"  tree r)
-                (quickfunc "hash" hash r))
-          #:x-label "number of elements in dictionary"
-          #:y-label "CPU time, ms")))
+    (time
+     (plot (list (quickfunc "tree, ordered" 'solid 0 tree values)
+                 ;;(quickfunc "vector, ordered" vector values)
+                 (quickfunc "tree, random"  'dot 1 tree r)
+                 (quickfunc "hash, ordered" 'long-dash 2 hash values))
+           #:x-label "number of elements in dictionary"
+           #:y-label "CPU time, ms"))))
