@@ -23,20 +23,20 @@
   (set! n (inexact->exact (round n)))
   (define l (build-list n value-generator))
   (define dict (constructor))
-  (gc-time (thunk (list->dict dict l))))
+  (cpu-time (thunk (list->dict dict l))))
 
 (define r (lambda (_) (random)))
 
 (parameterize ([plot-x-transform log-transform])
   (let ([lx 100]
         [ux 200])
-    (plot (list (function #:label "tree, ordered"
-                          (curryr size->times tree values) lx ux)
-                (function #:label "tree, ordered the other way"
-                          (curryr size->times tree -) lx ux)
-                (function #:label "tree, random"
-                          (curryr size->times tree r) lx ux)
-                (function #:label "hash"
-                          (curryr size->times hash r) lx ux))
+
+    (define (quickfunc label ctor vg)
+      (function #:label label (curryr size->times ctor vg) lx ux))
+
+    (plot (list (quickfunc "tree, ordered" tree values)
+                ;;(quickfunc "vector, ordered" vector values)
+                (quickfunc "tree, random"  tree r)
+                (quickfunc "hash" hash r))
           #:x-label "number of elements in dictionary"
-          #:y-label "gc time, ms")))
+          #:y-label "CPU time, ms")))
