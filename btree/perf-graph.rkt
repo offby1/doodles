@@ -41,8 +41,9 @@
                 (curryr size->times ctor) lx ux))
 
     (time
-     (plot (list (quickfunc "tree" 'solid 0 tree )
-                 (quickfunc "hash" 'long-dash 2 hash ))
+     (plot (list (quickfunc "tree"  'solid     0 tree )
+                 (quickfunc "alist" 'dot       1 (thunk '()) )
+                 (quickfunc "hash"  'long-dash 2 hash ))
            #:title "Time to delete all the elements, one by one"
            #:x-label "number of elements in dictionary"
            #:y-label "CPU time, ms"))))
