@@ -57,7 +57,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
   (tree-value (car pos)))
 
-(define (make-tree) (tree #f #f #f #f))
+(define (make-tree [k #f] [v #f] [l #f] [r #f])
+  (tree k v l r
+        (if (box? k)
+            (add1
+             (max (cond (l => tree-height) (else 0))
+                  (cond (r => tree-height) (else 0))))
+            0)))
+(define (public-make-tree) (make-tree))
 (define (public-tree-empty? t) (not (box? (tree-key t))))
 (define (tree-empty? t) (or (not t) (public-tree-empty? t)))
 (define (tree-ref t k [failure-result (lambda ()
@@ -80,19 +87,19 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (tree-set t k v)
   (cond
    ((tree-empty? t)
-    (tree (box k) v #f #f))
+    (make-tree (box k) v #f #f))
    ((equal? k
             (unbox (tree-key t)))
-    (tree
+    (make-tree
      (box k) v
      (tree-left t)
      (tree-right t)))
    ((< k (unbox (tree-key t)))
-    (tree (tree-key t) (tree-value t)
+    (make-tree (tree-key t) (tree-value t)
           (tree-set (tree-left t) k v)
           (tree-right t)))
    (else
-    (tree (tree-key t) (tree-value t)
+    (make-tree (tree-key t) (tree-value t)
           (tree-left t)
           (tree-set (tree-right t) k v)))))
 
@@ -105,11 +112,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (merge-trees (tree-remove (tree-left t) k)
                  (tree-remove (tree-right t) k)))
    ((< k (unbox (tree-key t)))
-    (tree (tree-key t) (tree-value t)
+    (make-tree (tree-key t) (tree-value t)
           (tree-remove (tree-left t) k)
           (tree-right t)))
    (else
-    (tree (tree-key t) (tree-value t)
+    (make-tree (tree-key t) (tree-value t)
           (tree-left t)
           (tree-remove (tree-right t) k)))))
 
@@ -121,28 +128,28 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     a)
    ((< (unbox (tree-key a))
        (unbox (tree-key b)))
-    (tree (tree-key a)
+    (make-tree (tree-key a)
           (tree-value a)
           (tree-left a)
           (merge-trees (tree-right a)
                        b)))
    ((= (unbox (tree-key a))
        (unbox (tree-key b)))
-    (tree (tree-key a)
+    (make-tree (tree-key a)
           (tree-value a)
           (merge-trees (tree-left a)
                        (tree-left b))
           (merge-trees (tree-right a)
                        (tree-right b))))
    (else
-    (tree (tree-key a)
+    (make-tree (tree-key a)
           (tree-value a)
           (merge-trees (tree-left a)
                        b)
           (tree-right a)))))
 
-(provide (rename-out [make-tree tree]))
-(struct tree (key value left right)
+(provide (rename-out [public-make-tree tree]))
+(struct tree (key value left right height)
 
         #:property prop:dict (vector
 
@@ -195,9 +202,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-equal? (dict-ref (make-tree) 0 (thunk 'not-found))
                 'not-found))
 
-(define-test-suite all-tests
-  iterate-tests
-  misc-tests
+(define-test-suite depth-tests
+  (check-equal? (tree-height (make-tree)) 0)
+  (check-equal? (tree-height (ql->t '(1))) 1)
+  (check-equal? (tree-height (ql->t '(1 2))) 2)
+  (check-equal? (tree-height (ql->t '(1 2 3))) 3)
+  (check-equal? (tree-height (ql->t '(1 0 3))) 2))
+
+(define-test-suite more-misc-tests
   (check-true (tree-empty? (make-tree)) "empty")
   (let ([t3  (tree-set (make-tree) 3 'three)])
     (check-false (tree-empty? t3) "not empty")
@@ -213,9 +225,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                       (tree->list t4))
         (set! t (tree-remove t 3))
         (check-equal? (tree->list t)
-                      '((4 . four))))))
+                      '((4 . four)))))))
 
-  )
+(define-test-suite all-tests
+  iterate-tests
+  misc-tests
+  depth-tests
+  more-misc-tests)
+
 
 (provide main)
 (define (main . args)
