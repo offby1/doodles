@@ -225,7 +225,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                       (tree->list t4))
         (set! t (tree-remove t 3))
         (check-equal? (tree->list t)
-                      '((4 . four)))))))
+                      '((4 . four))))))
+  (let ([t (ql->t '(3))])
+    (check-not-false (tree-empty? (dict-remove t 3)))))
 
 (define-test-suite all-tests
   iterate-tests
