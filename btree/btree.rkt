@@ -120,33 +120,52 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (tree-left t)
           (tree-remove (tree-right t) k)))))
 
-(define (merge-trees a b)
-  (cond
-   ((tree-empty? a)
-    b)
-   ((tree-empty? b)
-    a)
-   ((< (unbox (tree-key a))
-       (unbox (tree-key b)))
-    (make-tree (tree-key a)
-          (tree-value a)
-          (tree-left a)
-          (merge-trees (tree-right a)
-                       b)))
-   ((= (unbox (tree-key a))
-       (unbox (tree-key b)))
-    (make-tree (tree-key a)
-          (tree-value a)
-          (merge-trees (tree-left a)
-                       (tree-left b))
-          (merge-trees (tree-right a)
-                       (tree-right b))))
-   (else
-    (make-tree (tree-key a)
-          (tree-value a)
-          (merge-trees (tree-left a)
-                       b)
-          (tree-right a)))))
+;; TODO -- the top-level? argument, and maybe-tree-ify, are kludges.
+;; Do better
+(define (merge-trees a b [top-level? #t])
+
+  (define (maybe-tree-ify thing)
+    (cond
+     ((not top-level?)
+      thing)
+     ((not thing)
+      (public-make-tree))
+     ((tree? thing)
+      thing)
+     (else
+      (error "OK, buddy, this makes no sense" thing))))
+
+  (maybe-tree-ify
+   (cond
+    ((tree-empty? a)
+     b)
+    ((tree-empty? b)
+     a)
+    ((< (unbox (tree-key a))
+        (unbox (tree-key b)))
+     (make-tree (tree-key a)
+                (tree-value a)
+                (tree-left a)
+                (merge-trees (tree-right a)
+                             b
+                             #f)))
+    ((= (unbox (tree-key a))
+        (unbox (tree-key b)))
+     (make-tree (tree-key a)
+                (tree-value a)
+                (merge-trees (tree-left a)
+                             (tree-left b)
+                             #f)
+                (merge-trees (tree-right a)
+                             (tree-right b)
+                             #f)))
+    (else
+     (make-tree (tree-key a)
+                (tree-value a)
+                (merge-trees (tree-left a)
+                             b
+                             #f)
+                (tree-right a))))))
 
 (provide (rename-out [public-make-tree tree]))
 (struct tree (key value left right height)
