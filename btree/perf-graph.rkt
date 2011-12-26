@@ -19,31 +19,55 @@
   (let-values ([(results cpu real gc) (time-apply thunk '())])
     cpu))
 
-(define (size->times n constructor)
-  (set! n (inexact->exact (round n)))
+(define (embiggen n)
+  (expt 10 n))
+
+(define log10
+  (let ([l (log 10)])
+    (lambda (x)
+      (/ (log (+ x .1))
+         l))))
+
+(define (perf-test-delete n constructor)
+  (set! n (inexact->exact (round (embiggen n))))
   (define l (shuffle (build-list n values)))
   (define d (list->dict (constructor) l))
-  (cpu-time
-   (thunk
-    (for/fold ([d d])
-        ([elt l])
-        (dict-remove d elt)))))
+  (log10
+   (cpu-time
+    (thunk
+     (for/fold ([d d])
+         ([elt l])
+         (dict-remove d elt))))))
 
-(parameterize ([plot-font-size 18])
-  (let ([lx 100]
-        [ux 200])
+(define (perf-test-insert n constructor)
+  (set! n (inexact->exact (round (embiggen n))))
+  (define l (shuffle (build-list n values)))
+  (log10
+   (cpu-time
+    (thunk
+     (list->dict (constructor) l)))))
 
-    (define (quickfunc label ps color ctor)
-      (function #:label label
-                #:style ps
-                #:color color
-                #:width 2
-                (curryr size->times ctor) lx ux))
+(define (go)
+  (parameterize ([plot-font-size 18])
+    (let ([lx 2]
+          [ux 3])
 
-    (time
-     (plot (list (quickfunc "tree"  'solid     0 tree )
-                 (quickfunc "alist" 'dot       1 (thunk '()) )
-                 (quickfunc "hash"  'long-dash 2 hash ))
-           #:title "Time to delete all the elements, one by one"
-           #:x-label "number of elements in dictionary"
-           #:y-label "CPU time, ms"))))
+      (define (quickfunc label perf-test ps color ctor)
+        (function #:label label
+                  #:style ps
+                  #:color color
+                  #:width 2
+                  (curryr perf-test ctor) lx ux))
+
+      (time
+       (plot (list (quickfunc "insert: tree"  perf-test-insert 'solid     2 tree )
+                   (quickfunc "insert: alist" perf-test-insert 'dot       2 (thunk '()) )
+                   ;;(quickfunc "insert: hash"  perf-test-insert 'long-dash 2 hash )
+
+                   (quickfunc "delete: tree"  perf-test-delete 'solid     3 tree )
+                   (quickfunc "delete: alist" perf-test-delete 'dot       3 (thunk '()) )
+                   ;; (quickfunc "delete: hash"  perf-test-delete 'long-dash 3 hash )
+                   )
+             #:title "Various dict operation times"
+             #:x-label "log10 number of elements in dictionary"
+             #:y-label "log10 CPU time, ms")))))
