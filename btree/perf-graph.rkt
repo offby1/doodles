@@ -1,56 +1,79 @@
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
+|#
+
 #lang racket
 
-;; Load me in DrRacket (version 5.2 or better), then click "run", to
-;; see a spiffy graph.
-
-(require (except-in "btree.rkt" main)
-         plot)
+(require plot
+         (except-in "btree.rkt" main))
 
 (define (list->dict dict seq)
   (for/fold ([dict dict])
       ([elt seq])
       (dict-set dict elt elt)))
 
+;; Keeps the plot package from computing the log of zero
+(define (nonzero x)
+  (if (zero? x)
+      0.01
+      x))
+
 (define (gc-time thunk)
   (let-values ([(results cpu real gc) (time-apply thunk '())])
-    gc))
+    (nonzero gc)))
 
 (define (cpu-time thunk)
   (let-values ([(results cpu real gc) (time-apply thunk '())])
-    cpu))
+    (nonzero cpu)))
 
-(define (embiggen n)
-  (expt 10 n))
+
+;; Sorta like "shuffle", but all the small elements are in the first
+;; half of the result.
+(define (half-shuffle seq)
+  (let* ([midpoint (round (/ (length seq) 2))]
+         [one (take seq midpoint)]
+         [two (list-tail seq midpoint)])
+    (append (shuffle one)
+            (shuffle two))))
 
-(define log10
-  (let ([l (log 10)])
-    (lambda (x)
-      (/ (log (+ x .1))
-         l))))
+(define (time-list-consumer n list-chewer)
+  (let ([l (half-shuffle
+            (build-list
+             (inexact->exact (round  n))
+             values))])
+    (cpu-time
+     (list-chewer
+      l))))
 
-(define (perf-test-delete n constructor)
-  (set! n (inexact->exact (round (embiggen n))))
-  (define l (shuffle (build-list n values)))
-  (define d (list->dict (constructor) l))
-  (log10
-   (cpu-time
-    (thunk
-     (for/fold ([d d])
-         ([elt l])
-         (dict-remove d elt))))))
+(define (perf-test-delete n dict-ctor)
+  (time-list-consumer
+   n
+   (lambda (l)
+     (define d (list->dict (dict-ctor) l))
+     (thunk
+      (for/fold ([d d])
+          ([elt l])
+          (dict-remove d elt))))))
 
-(define (perf-test-insert n constructor)
-  (set! n (inexact->exact (round (embiggen n))))
-  (define l (shuffle (build-list n values)))
-  (log10
-   (cpu-time
-    (thunk
-     (list->dict (constructor) l)))))
-
-(define (go)
-  (parameterize ([plot-font-size 18])
-    (let ([lx 2]
-          [ux 3])
+(define (perf-test-insert n dict-ctor)
+  (time-list-consumer
+   n
+   (lambda (l)
+     (thunk
+      (list->dict (dict-ctor) l)))))
+
+(provide main)
+(define (main . args)
+  (parameterize ([plot-y-transform log-transform]
+                 [plot-x-transform log-transform]
+                 [plot-font-size 18]
+                 [plot-new-window? #t]
+                 [plot-width 800]
+                 [plot-height 650]
+                 [line-samples 10])
+    (let ([lx 200]
+          [ux 5000])
 
       (define (quickfunc label perf-test ps color ctor)
         (function #:label label
@@ -60,14 +83,17 @@
                   (curryr perf-test ctor) lx ux))
 
       (time
-       (plot (list (quickfunc "insert: tree"  perf-test-insert 'solid     2 tree )
-                   (quickfunc "insert: alist" perf-test-insert 'dot       2 (thunk '()) )
-                   ;;(quickfunc "insert: hash"  perf-test-insert 'long-dash 2 hash )
+       (plot
+        (list
+         (quickfunc "insert: tree"  perf-test-insert 'dot 1 tree )
+         (quickfunc "insert: alist" perf-test-insert 'dot 2 (thunk '()))
+         (quickfunc "insert: hash"  perf-test-insert 'dot 3 hash )
 
-                   (quickfunc "delete: tree"  perf-test-delete 'solid     3 tree )
-                   (quickfunc "delete: alist" perf-test-delete 'dot       3 (thunk '()) )
-                   ;; (quickfunc "delete: hash"  perf-test-delete 'long-dash 3 hash )
-                   )
-             #:title "Various dict operation times"
-             #:x-label "log10 number of elements in dictionary"
-             #:y-label "log10 CPU time, ms")))))
+         (quickfunc "delete: tree"  perf-test-delete 'solid 1 tree )
+         (quickfunc "delete: alist" perf-test-delete 'solid 2 (thunk '()))
+         (quickfunc "delete: hash"  perf-test-delete 'solid 3 hash )
+
+         )
+        #:title "Various dict operation times"
+        #:x-label "number of elements in dictionary"
+        #:y-label "CPU time, ms")))))
