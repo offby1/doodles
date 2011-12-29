@@ -213,6 +213,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                               (tree-set (make-tree) 2 3)))
                 '((2 . 3)))
 
+  (check-equal? (tree-count (ql->t '(1 2 3))) 3)
+
   (let ([t (tree-set (make-tree) 2 3)])
     (check-equal? (tree->list
                    (merge-trees  t t ))
