@@ -6,7 +6,7 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 
 (require plot
-         (except-in "btree.rkt" main))
+         "btree.rkt")
 
 (define (list->dict dict seq)
   (for/fold ([dict dict])
