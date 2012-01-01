@@ -177,26 +177,10 @@
 ;; (for ([proc prop-dict-vector]) (when (procedure? proc) (trace proc)))
 
 (struct tree (node-or-false)
-
-        #:guard (lambda (thing type-name)
-                  (when (and (not (node? thing))
-                             (not (false? thing)))
-                    (error type-name "struct tree be wantin' a node or false, yo; not ~s" thing))
-                  thing)
-
         #:property prop:dict prop-dict-vector
         #:transparent)
 
-(struct node (key value left right)
-        #:guard (lambda (key value left right type-name)
-                  (when (not (tree? left))
-                    (error type-name "My left child gotta be a tree, not ~s" left))
-                  (when (not (tree? right))
-                    (error type-name "My right child gotta be a tree, not ~s" right))
-                  (when (not (key? key))
-                    (error type-name "My key gotta be a number, not ~s" key))
-                  (values key value left right))
-        #:transparent)
+(struct node (key value left right) #:transparent)
 
 ;; Convenience wrappers
 (define (tree-left  t) (node-left  (tree-node-or-false t)))
