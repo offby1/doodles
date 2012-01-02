@@ -72,22 +72,23 @@
      (else failure-result))))
 
 (define (tree-set t k v)
-  (cond
-   ((tree-empty? t)
-    (make-tree k v))
-   ((equal? k (tree-key t))
-    (make-tree
-     k v
-     (tree-left t)
-     (tree-right t)))
-   ((< k (tree-key t))
-    (make-tree (tree-key t) (tree-value t)
-               (tree-set (tree-left t) k v)
-               (tree-right t)))
-   (else
-    (make-tree (tree-key t) (tree-value t)
-               (tree-left t)
-               (tree-set (tree-right t) k v)))))
+  (let ([stack-o-trees (find-subtree t k)])
+    (for/fold ([result (make-tree k v)])
+          ([parent (pos-rest stack-o-trees)]
+           [child  stack-o-trees])
+          (case (which-child parent child)
+            ((left)
+             (make-tree
+              (tree-key parent)
+              (tree-value parent)
+              result
+              (tree-right parent)))
+            ((right)
+             (make-tree
+              (tree-key parent)
+              (tree-value parent)
+              (tree-left parent)
+              result))))))
 
 ;; This should be private to tree-remove, but it's at top level so
 ;; that the tests can get at it.
@@ -116,17 +117,17 @@
                  (tree-left target)
                  (tree-right s))))))
 
+(define (which-child parent child)
+  (cond
+   ((eq? child (tree-left parent))
+    'left)
+   ((eq? child (tree-right parent))
+    'right)
+   (else
+    (error 'which-child (format "~a is not a parent of ~a" parent child)))))
+
 (define (tree-remove t k)
   (let ([stack-o-trees (find-subtree t k)])
-    (define (which-child parent child)
-      (cond
-       ((eq? child (tree-left parent))
-        'left)
-       ((eq? child (tree-right parent))
-        'right)
-       (else
-        (error 'which-child (format "~a is not a parent of ~a" parent child)))))
-
     (cond
      ((tree-empty? (pos-head stack-o-trees))
       t)
