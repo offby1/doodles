@@ -9,39 +9,36 @@
 ;; Our "pos" is a stack of tree nodes -- the nodes we need to pass
 ;; through to get to a particular node.
 
-;; TODO -- rewrite to use find-node, passing some magic value for the
-;; sought key, such that that magic key is always smaller than all the
-;; existing keys.  (Or for that matter, pass an "equal?" and "<"
-;; procedure that always return #f and #t respectively)
-(define (tree-iterate-first t [pos '()])
+;; TODO -- combine with find-subtree -- they're awfully similar
+(define (tree-iterate-first t [pos (make-pos)])
   (cond
    ((tree-empty? t)
     #f)
    ((tree-empty? (tree-left t))
-    (cons t pos))
+    (pos-push t pos))
    (else
-    (tree-iterate-first (tree-left t) (cons t pos)))))
+    (tree-iterate-first (tree-left t) (pos-push t pos)))))
 
 (define (tree-iterate-next t pos)
   ;; BUGBUG -- raise exn:fail:contract if POS is not valid for t
   (let loop ([pos pos])
     (cond
      ((null? pos) #f)
-     ((not (tree-empty? (tree-right (car pos))))
-      (tree-iterate-first (tree-right (car pos)) (cdr pos)))
-     ((null? (cdr pos)) #f)
-     ((< (tree-key (cadr pos))
-         (tree-key (car pos)))
-      (loop (cdr pos)))
-     (else (cdr pos)))))
+     ((not (tree-empty? (tree-right (pos-head pos))))
+      (tree-iterate-first (tree-right (pos-head pos)) (pos-rest pos)))
+     ((pos-empty? (pos-rest pos)) #f)
+     ((< (tree-key (pos-head (pos-rest pos)))
+         (tree-key (pos-head pos)))
+      (loop (pos-rest pos)))
+     (else (pos-rest pos)))))
 
 (define (tree-iterate-key t pos)
   ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
-  (tree-key (car pos)))
+  (tree-key (pos-head pos)))
 
 (define (tree-iterate-value t pos)
   ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
-  (tree-value (car pos)))
+  (tree-value (pos-head pos)))
 
 (define (make-tree k v [l #f] [r #f])
   (set! l (or l (public-make-tree)))
@@ -53,14 +50,14 @@
 (define (tree-empty? t)
   (not (tree-node-or-false t)))
 
-(define (find-subtree t k [stack '()])
+(define (find-subtree t k [stack (make-pos)])
   (cond
-   ((tree-empty? t) (cons t stack))
-   ((equal? k (tree-key t)) (cons t stack))
+   ((tree-empty? t) (pos-push t stack))
+   ((equal? k (tree-key t)) (pos-push t stack))
    ((< k (tree-key t))
-    (find-subtree (tree-left t) k (cons t stack)))
+    (find-subtree (tree-left t) k (pos-push t stack)))
    (else
-    (find-subtree (tree-right t) k (cons t stack)))))
+    (find-subtree (tree-right t) k (pos-push t stack)))))
 
 (define (tree-ref t k [failure-result (lambda ()
                                         (raise
@@ -69,8 +66,8 @@
                                           (current-continuation-marks))))])
   (let ([path (find-subtree t k)])
     (cond
-     ((not (tree-empty? (car path)))
-      (tree-value (car path)))
+     ((not (tree-empty? (pos-head path)))
+      (tree-value (pos-head path)))
      ((procedure? failure-result) (failure-result))
      (else failure-result))))
 
@@ -99,7 +96,7 @@
   (define (in-order-successor t)
     ((lambda (x) (tree? x)) . -> . (or/c false? (lambda (x) (tree? x))))
     (cond
-     ((tree-iterate-first (tree-right t)) => car)
+     ((tree-iterate-first (tree-right t)) => pos-head)
      (else #f)))
 
   (cond
@@ -131,13 +128,13 @@
         (error 'which-child (format "~a is not a parent of ~a" parent child)))))
 
     (cond
-     ((tree-empty? (car stack-o-trees))
+     ((tree-empty? (pos-head stack-o-trees))
       t)
-     ((null? (cdr stack-o-trees))
-      (decapitate (car stack-o-trees)))
+     ((null? (pos-rest stack-o-trees))
+      (decapitate (pos-head stack-o-trees)))
      (else
-      (for/fold ([result (decapitate (car stack-o-trees))])
-          ([child  (cdr stack-o-trees)]
+      (for/fold ([result (decapitate (pos-head stack-o-trees))])
+          ([child  (pos-rest stack-o-trees)]
            [parent stack-o-trees])
           (case (which-child child parent)
             ((left)
@@ -190,6 +187,17 @@
         #:transparent)
 
 (struct node (key value left right depth) #:transparent)
+
+(struct pos (stack)
+        #:transparent
+        #:property prop:sequence (lambda (p) (pos-stack p)))
+(define (make-pos) (pos '()))
+(define/contract (pos-push thing p)
+  (tree? pos? . -> . pos?)
+  (pos (cons thing (pos-stack p))))
+(define pos-head (compose car pos-stack))
+(define pos-rest (compose pos cdr pos-stack))
+(define pos-empty? (compose null? pos-stack))
 
 ;; Convenience wrappers
 (define (tree-left  t) (node-left  (tree-node-or-false t)))
