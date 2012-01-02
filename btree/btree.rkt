@@ -46,7 +46,9 @@
 (define (make-tree k v [l #f] [r #f])
   (set! l (or l (public-make-tree)))
   (set! r (or r (public-make-tree)))
-  (tree (node k v l r)))
+  (tree (node k v l r (add1
+                       (max (cond ((tree-node-or-false l) => node-depth) (else 0))
+                            (cond ((tree-node-or-false r) => node-depth) (else 0)))))))
 
 (define (tree-empty? t)
   (not (tree-node-or-false t)))
@@ -180,7 +182,7 @@
         #:property prop:dict prop-dict-vector
         #:transparent)
 
-(struct node (key value left right) #:transparent)
+(struct node (key value left right depth) #:transparent)
 
 ;; Convenience wrappers
 (define (tree-left  t) (node-left  (tree-node-or-false t)))
