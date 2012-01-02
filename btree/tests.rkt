@@ -86,7 +86,19 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([t (ql->t '(3))])
     (check-not-false (tree-empty? (dict-remove t 3)))))
 
+(define-test-suite super-serious-delete-tests
+  (for ([pass (in-range 10)])
+    (let* ([seq (build-list 10 values)]
+           [t (ql->t (shuffle seq))])
+      (for ([elt (shuffle seq)]
+            [expected-length (in-range (length seq) -1)])
+        (check-not-false (dict-ref t elt))
+        (set! t (dict-remove t elt))
+        (check-equal? (dict-count t) expected-length)
+        (check-false (dict-ref t elt #f))))))
+
 (define-test-suite all-tests
+  super-serious-delete-tests
   decapitate-tests
   iterate-tests
   misc-tests
