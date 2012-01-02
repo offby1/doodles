@@ -14,6 +14,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   tree-count
   tree-empty?
   tree-iterate-first
+  tree-iterate-key
+  tree-iterate-next
   tree-ref
   tree-remove
   tree-set
@@ -97,7 +99,17 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
         (check-equal? (dict-count t) expected-length)
         (check-false (dict-ref t elt #f))))))
 
+(define-test-suite position-mismatch-tests
+  (let* ([t (ql->t '(1 2))]
+         [p (tree-iterate-first t)]
+         [n (tree-iterate-next t p)])
+    (check-equal? (tree-iterate-key t n) 2)
+    (let ([another (ql->t '(1 2))])
+      (check-exn exn:fail:contract?
+                 (thunk (tree-iterate-next another p))))))
+
 (define-test-suite all-tests
+  position-mismatch-tests
   super-serious-delete-tests
   decapitate-tests
   iterate-tests

@@ -20,7 +20,7 @@
     (tree-iterate-first (tree-left t) (pos-push t pos)))))
 
 (define (tree-iterate-next t pos)
-  ;; BUGBUG -- raise exn:fail:contract if POS is not valid for t
+  (pos-validate t pos)
   (let loop ([pos pos])
     (cond
      ((null? pos) #f)
@@ -33,11 +33,11 @@
      (else (pos-rest pos)))))
 
 (define (tree-iterate-key t pos)
-  ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
+  (pos-validate t pos)
   (tree-key (pos-head pos)))
 
 (define (tree-iterate-value t pos)
-  ;; BUGBUG -- raise exn:fail:contract if pos isn't valid for t
+  (pos-validate t pos)
   (tree-value (pos-head pos)))
 
 (define (make-tree k v [l #f] [r #f])
@@ -201,6 +201,11 @@
   (pos (pos-original-tree p)
        (cdr (pos-stack p))))
 (define pos-empty? (compose null? pos-stack))
+(define (pos-validate t p)
+  (when (not (eq? t (pos-original-tree p)))
+    (raise (exn:fail:contract
+            (format "Dude, ~a and ~a aren't related" t p)
+            (current-continuation-marks)))))
 
 ;; Convenience wrappers
 (define (tree-left  t) (node-left  (tree-node-or-false t)))
