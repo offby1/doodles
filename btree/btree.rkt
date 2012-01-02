@@ -71,24 +71,27 @@
      ((procedure? failure-result) (failure-result))
      (else failure-result))))
 
+(define (stitch-up-stack new-head stack)
+  (for/fold ([result new-head])
+      ([parent (pos-rest stack)]
+       [child  stack])
+      (case (which-child parent child)
+        ((left)
+         (make-tree
+          (tree-key parent)
+          (tree-value parent)
+          result
+          (tree-right parent)))
+        ((right)
+         (make-tree
+          (tree-key parent)
+          (tree-value parent)
+          (tree-left parent)
+          result)))))
+
 (define (tree-set t k v)
   (let ([stack-o-trees (find-subtree t k)])
-    (for/fold ([result (make-tree k v)])
-          ([parent (pos-rest stack-o-trees)]
-           [child  stack-o-trees])
-          (case (which-child parent child)
-            ((left)
-             (make-tree
-              (tree-key parent)
-              (tree-value parent)
-              result
-              (tree-right parent)))
-            ((right)
-             (make-tree
-              (tree-key parent)
-              (tree-value parent)
-              (tree-left parent)
-              result))))))
+    (stitch-up-stack (make-tree k v) stack-o-trees)))
 
 ;; This should be private to tree-remove, but it's at top level so
 ;; that the tests can get at it.
@@ -119,12 +122,10 @@
 
 (define (which-child parent child)
   (cond
-   ((eq? child (tree-left parent))
-    'left)
-   ((eq? child (tree-right parent))
-    'right)
+   ((eq? child (tree-left  parent)) 'left )
+   ((eq? child (tree-right parent)) 'right)
    (else
-    (error 'which-child (format "~a is not a parent of ~a" parent child)))))
+    (error 'which-child (format "~a is not the parent of ~a" parent child)))))
 
 (define (tree-remove t k)
   (let ([stack-o-trees (find-subtree t k)])
@@ -132,23 +133,8 @@
      ((tree-empty? (pos-head stack-o-trees))
       t)
      (else
-      (for/fold ([result (decapitate (pos-head stack-o-trees))])
-          ([parent  (pos-rest stack-o-trees)]
-           [child stack-o-trees])
-          (case (which-child parent child)
-            ((left)
-             (make-tree
-              (tree-key parent)
-              (tree-value parent)
-              result
-              (tree-right parent)))
-            ((right)
-             (make-tree
-              (tree-key parent)
-              (tree-value parent)
-              (tree-left parent)
-              result))
-            ))))))
+      (stitch-up-stack (decapitate (pos-head stack-o-trees))
+                       stack-o-trees)))))
 
 (define (tree-height t)
   (cond
