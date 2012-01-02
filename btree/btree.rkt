@@ -131,8 +131,6 @@
     (cond
      ((tree-empty? (pos-head stack-o-trees))
       t)
-     ((null? (pos-rest stack-o-trees))
-      (decapitate (pos-head stack-o-trees)))
      (else
       (for/fold ([result (decapitate (pos-head stack-o-trees))])
           ([parent  (pos-rest stack-o-trees)]
