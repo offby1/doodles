@@ -10,7 +10,7 @@
 ;; through to get to a particular node.
 
 ;; TODO -- combine with find-subtree -- they're awfully similar
-(define (tree-iterate-first t [pos (make-pos)])
+(define (tree-iterate-first t [pos (make-pos t)])
   (cond
    ((tree-empty? t)
     #f)
@@ -50,7 +50,7 @@
 (define (tree-empty? t)
   (not (tree-node-or-false t)))
 
-(define (find-subtree t k [stack (make-pos)])
+(define (find-subtree t k [stack (make-pos t)])
   (cond
    ((tree-empty? t) (pos-push t stack))
    ((equal? k (tree-key t)) (pos-push t stack))
@@ -188,15 +188,18 @@
 
 (struct node (key value left right depth) #:transparent)
 
-(struct pos (stack)
+(struct pos (original-tree stack)
         #:transparent
         #:property prop:sequence (lambda (p) (pos-stack p)))
-(define (make-pos) (pos '()))
+(define (make-pos original-tree) (pos original-tree '()))
 (define/contract (pos-push thing p)
   (tree? pos? . -> . pos?)
-  (pos (cons thing (pos-stack p))))
+  (pos (pos-original-tree p)
+       (cons thing (pos-stack p))))
 (define pos-head (compose car pos-stack))
-(define pos-rest (compose pos cdr pos-stack))
+(define (pos-rest p)
+  (pos (pos-original-tree p)
+       (cdr (pos-stack p))))
 (define pos-empty? (compose null? pos-stack))
 
 ;; Convenience wrappers
