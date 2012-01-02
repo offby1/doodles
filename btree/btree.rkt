@@ -192,8 +192,7 @@
         #:transparent
         #:property prop:sequence (lambda (p) (pos-stack p)))
 (define (make-pos original-tree) (pos original-tree '()))
-(define/contract (pos-push thing p)
-  (tree? pos? . -> . pos?)
+(define (pos-push thing p)
   (pos (pos-original-tree p)
        (cons thing (pos-stack p))))
 (define pos-head (compose car pos-stack))

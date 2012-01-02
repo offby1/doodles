@@ -3,6 +3,8 @@
 * Mutability?
 i.e., provide tree-set! and friends
 
-* Fix BUGBUGs of course
-
 * Make "equal?" and < paramaterizeable
+
+* Self balance!
+http://en.wikipedia.org/wiki/Self-balancing_binary_search_tree
+
