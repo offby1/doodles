@@ -71,6 +71,9 @@
      ((procedure? failure-result) (failure-result))
      (else failure-result))))
 
+;; Given the result of find-subtree, throw away the first element,
+;; replace it with NEW-HEAD, and return a new STACK in which all
+;; elements are ancestors of NEW-HEAD.
 (define (stitch-up-stack new-head stack)
   (for/fold ([result new-head])
       ([parent (pos-rest stack)]
