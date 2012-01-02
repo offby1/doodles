@@ -135,20 +135,20 @@
       (decapitate (pos-head stack-o-trees)))
      (else
       (for/fold ([result (decapitate (pos-head stack-o-trees))])
-          ([child  (pos-rest stack-o-trees)]
-           [parent stack-o-trees])
-          (case (which-child child parent)
+          ([parent  (pos-rest stack-o-trees)]
+           [child stack-o-trees])
+          (case (which-child parent child)
             ((left)
              (make-tree
-              (tree-key child)
-              (tree-value child)
+              (tree-key parent)
+              (tree-value parent)
               result
-              (tree-right child)))
+              (tree-right parent)))
             ((right)
              (make-tree
-              (tree-key child)
-              (tree-value child)
-              (tree-left child)
+              (tree-key parent)
+              (tree-value parent)
+              (tree-left parent)
               result))
             ))))))
 
