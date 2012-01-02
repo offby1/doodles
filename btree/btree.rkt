@@ -44,8 +44,8 @@
   (set! l (or l (public-make-tree)))
   (set! r (or r (public-make-tree)))
   (tree (node k v l r (add1
-                       (max (cond ((tree-node-or-false l) => node-depth) (else 0))
-                            (cond ((tree-node-or-false r) => node-depth) (else 0)))))))
+                       (max (cond ((tree-node-or-false l) => node-height) (else 0))
+                            (cond ((tree-node-or-false r) => node-height) (else 0)))))))
 
 (define (tree-empty? t)
   (not (tree-node-or-false t)))
@@ -151,15 +151,15 @@
               result))
             ))))))
 
-(define (tree-depth t)
+(define (tree-height t)
   (cond
-   ((tree-node-or-false t) => node-depth)
+   ((tree-node-or-false t) => node-height)
    (else 0)))
 
 (define (public-make-tree) (tree #f))
 (provide (rename-out [public-make-tree tree])
          tree?
-         tree-depth)
+         tree-height)
 
 (define prop-dict-vector
   (vector
@@ -186,7 +186,7 @@
         #:property prop:dict prop-dict-vector
         #:transparent)
 
-(struct node (key value left right depth) #:transparent)
+(struct node (key value left right height) #:transparent)
 
 (struct pos (original-tree stack)
         #:transparent

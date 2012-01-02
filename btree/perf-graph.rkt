@@ -13,9 +13,9 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
                     ([elt seq])
                     (dict-set dict elt elt))])
     (when (tree? result)
-      (printf "count ~a; depth ~a~%"
+      (printf "count ~a; height ~a~%"
               (dict-count result)
-              (tree-depth result)))
+              (tree-height result)))
     result
     ))
 
