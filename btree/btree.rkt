@@ -75,6 +75,7 @@
   (for/fold ([result new-head])
       ([parent (pos-rest stack)]
        [child  stack])
+      (displayln (treenode->string child))
       (case (which-child parent child)
         ((left)
          (make-tree
@@ -170,6 +171,19 @@
 (struct tree (node-or-false)
         #:property prop:dict prop-dict-vector
         #:transparent)
+
+(define (treenode->string t)
+  (let ([n (tree-node-or-false t)])
+    (if n
+        (format
+         "Node (~a, ~a) has height ~a, balance factor ~a"
+         (tree-key t)
+         (tree-value t)
+         (tree-height t)
+         (abs
+          (- (tree-height (tree-left t))
+             (tree-height (tree-right t)))))
+        (format "Empty node"))))
 
 (struct node (key value left right height) #:transparent)
 
