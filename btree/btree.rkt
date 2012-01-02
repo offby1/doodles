@@ -154,8 +154,15 @@
               result))
             ))))))
 
+(define (tree-depth t)
+  (cond
+   ((tree-node-or-false t) => node-depth)
+   (else 0)))
+
 (define (public-make-tree) (tree #f))
-(provide (rename-out [public-make-tree tree]))
+(provide (rename-out [public-make-tree tree])
+         tree?
+         tree-depth)
 
 (define prop-dict-vector
   (vector

@@ -9,9 +9,15 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
          "btree.rkt")
 
 (define (list->dict dict seq)
-  (for/fold ([dict dict])
-      ([elt seq])
-      (dict-set dict elt elt)))
+  (let ([result (for/fold ([dict dict])
+                    ([elt seq])
+                    (dict-set dict elt elt))])
+    (when (tree? result)
+      (printf "count ~a; depth ~a~%"
+              (dict-count result)
+              (tree-depth result)))
+    result
+    ))
 
 ;; Keeps the plot package from computing the log of zero
 (define (nonzero x)
@@ -38,7 +44,7 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
             (shuffle two))))
 
 (define (time-list-consumer n list-chewer)
-  (let ([l (half-shuffle
+  (let ([l (shuffle
             (build-list
              (inexact->exact (round  n))
              values))])
@@ -85,14 +91,9 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
       (time
        (plot
         (list
-         (quickfunc "insert: tree"  perf-test-insert 'dot 1 tree )
-         (quickfunc "insert: alist" perf-test-insert 'dot 2 (thunk '()))
-         (quickfunc "insert: hash"  perf-test-insert 'dot 3 hash )
-
+         (quickfunc "insert: tree"  perf-test-insert 'dot   1 tree )
          (quickfunc "delete: tree"  perf-test-delete 'solid 1 tree )
-         (quickfunc "delete: alist" perf-test-delete 'solid 2 (thunk '()))
-         (quickfunc "delete: hash"  perf-test-delete 'solid 3 hash )
-
+         (function #:label "identity" (curry * 3/50) #:style 'short-dash)
          )
         #:title "Various dict operation times"
         #:x-label "number of elements in dictionary"
