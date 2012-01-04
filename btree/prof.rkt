@@ -7,7 +7,7 @@ exec racket --load "$0"
 
 (profiling-enabled #t)
 
-(require  (except-in "btree.rkt" main))
+(require "btree.rkt")
 
 (define (fill-er-up dict seq)
   (for/fold ([dict dict])
