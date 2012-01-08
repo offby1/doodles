@@ -23,7 +23,6 @@
   (pos-validate t pos)
   (let loop ([pos pos])
     (cond
-     ((null? pos) #f)
      ((not (tree-empty? (tree-right (pos-head pos))))
       (tree-iterate-first (tree-right (pos-head pos)) (pos-rest pos)))
      ((pos-empty? (pos-rest pos)) #f)
@@ -107,9 +106,6 @@
      (else #f)))
 
   (cond
-   ((and (tree-empty? (tree-left  target))
-         (tree-empty? (tree-right target)))
-    (tree-left target))
    ((tree-empty? (tree-left target))
     (tree-right target))
    ((tree-empty? (tree-right target))
