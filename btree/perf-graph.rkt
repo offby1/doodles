@@ -85,8 +85,10 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
       (time
        (plot
         (list
-         (quickfunc "insert: tree"  perf-test-insert 'dot   1 tree )
-         (quickfunc "delete: tree"  perf-test-delete 'solid 1 tree )
+         (quickfunc "insert: tree"  perf-test-insert 'dot   3 tree )
+         (quickfunc "delete: tree"  perf-test-delete 'solid 3 tree )
+         (quickfunc "insert: alist" perf-test-insert 'dot   2 (thunk '()) )
+         (quickfunc "delete: alist" perf-test-delete 'solid 2 (thunk '()) )
          (function #:label "identity" (curry * 3/50) #:style 'short-dash)
          )
         #:title "Various dict operation times"

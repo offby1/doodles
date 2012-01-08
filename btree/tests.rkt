@@ -6,11 +6,15 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 (require rackunit rackunit/text-ui)
 (require "btree.rkt")
+
 (require/expose
  "btree.rkt"
  (
   decapitate
+  list->tree
   public-make-tree
+  ql->t
+  tree-MaxNodeCount
   tree-count
   tree-empty?
   tree-iterate-first
@@ -32,7 +36,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (check-round-trip 7 0 6 4)
   (check-round-trip 0 1)
   (check-equal? 3 (tree-count (ql->t '(1 2 3))))
-  (apply check-round-trip (shuffle (build-list 100 values))))
+  (apply check-round-trip (build-list 100 values)))
 
 (define-test-suite decapitate-tests
   (for ([permutation '((1 2 3)
@@ -108,21 +112,24 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
       (check-exn exn:fail:contract?
                  (thunk (tree-iterate-next another p))))))
 
+;; These may need adjusting if you change the balancing threshold
+;; "alpha".
+(define-test-suite maxnodecount-tests
+  (let ([t (public-make-tree)])
+    (check-equal? (tree-MaxNodeCount t) 0)
+    (set! t (tree-set t 2 'two))
+    (check-equal? (tree-MaxNodeCount t) 1)
+    (set! t  (tree-remove t 2))
+    ))
+
 (define-test-suite all-tests
   position-mismatch-tests
   super-serious-delete-tests
   decapitate-tests
   iterate-tests
+  maxnodecount-tests
   misc-tests
   more-misc-tests)
-
-(define (list->tree l)
-  (for/fold ([t (public-make-tree)])
-      ([p  l])
-      (tree-set t (car p) (cdr p))))
-
-(define (ql->t keys)
-  (list->tree (map (lambda (k) (cons k k)) keys)))
 
 (define (tree->alist t)
   (dict-map t cons))
