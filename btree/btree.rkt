@@ -102,7 +102,6 @@
 (define (decapitate target)
 
   (define (in-order-successor t)
-    ((lambda (x) (tree? x)) . -> . (or/c false? (lambda (x) (tree? x))))
     (cond
      ((tree-iterate-first (tree-right t)) => pos-head)
      (else #f)))
