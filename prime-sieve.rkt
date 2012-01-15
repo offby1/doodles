@@ -1,13 +1,12 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
+exec racket --require "$0" --main -- ${1+"$@"}
 |#
 
 ;; Fairly direct translation of the example at
 ;; http://golang.org/doc/go_spec.html
 
-#lang scheme
+#lang racket
 
 ;; Crude copy of the "go" language's "go" statement.
 (define-syntax-rule (go body ...) (begin (thread (thunk body ...)) (void)))
