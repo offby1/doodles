@@ -10,7 +10,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang scheme
 
 ;; Crude copy of the "go" language's "go" statement.
-(define-syntax-rule (go body ...) (begin (thread (lambda () body ...)) (void)))
+(define-syntax-rule (go body ...) (begin (thread (thunk body ...)) (void)))
 
 ;; Send the sequence 2, 3, 4, ... to channel 'ch'.
 (define (generate ch)
