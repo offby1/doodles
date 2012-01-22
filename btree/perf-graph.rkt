@@ -9,15 +9,9 @@ exec gracket -l errortrace --require "$0" --main -- ${1+"$@"}
          "btree.rkt")
 
 (define (list->dict dict seq)
-  (let ([result (for/fold ([dict dict])
-                    ([elt seq])
-                    (dict-set dict elt elt))])
-    (when (tree? result)
-      (printf "count ~a; height ~a~%"
-              (dict-count result)
-              (tree-height result)))
-    result
-    ))
+  (for/fold ([dict dict])
+      ([elt seq])
+      (dict-set dict elt elt)))
 
 ;; Keeps the plot package from computing the log of zero
 (define (nonzero x)

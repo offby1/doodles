@@ -77,7 +77,7 @@
   (for/fold ([result new-head])
       ([parent (pos-rest stack)]
        [child  stack])
-      (displayln (treenode->string child))
+
       (case (which-child parent child)
         ((left)
          (make-tree
