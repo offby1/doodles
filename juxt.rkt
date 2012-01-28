@@ -12,11 +12,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide juxt)
 (define (juxt . procs)
   (lambda args
-    (reverse
-     (for/fold ([result '()])
-         ([p procs])
-         (cons (apply p args)
-               result)))))
+    (map (lambda (p)
+           (apply p args))
+         procs)))
 
 (define-test-suite juxt-tests
   (let ()
