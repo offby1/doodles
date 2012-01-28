@@ -20,9 +20,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define-test-suite juxt-tests
   (let ()
-    (define (a thing) (list 'a thing))
-    (define (b thing) (list 'b thing))
-    (define (c thing) (list 'c thing))
+    (define a (curry list 'a))
+    (define b (curry list 'b))
+    (define c (curry list 'c))
     (define x 'x)
 
     (check-equal? ((juxt a b c) x) '((a x) (b x) (c x)) )))
