@@ -14,10 +14,15 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 (require net/url scheme/pretty
  (planet neil/htmlprag:1:6/htmlprag)
  (planet lizorkin/sxml:2:1/sxml)
- "aws-common.ss")
+ "aws-common.ss"
+ file/md5
+ mzlib/trace)
 
 (define (just-the-path request-URI)
   (url->string  (make-url #f #f #f #f #t (url-path request-URI) '() #f)))
+
+(define (md5-b64 bytes)
+   (base64-encode (md5 bytes #f)))
 
 (define GET #f)
 (define PUT #f)
@@ -65,9 +70,9 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
          (error "You know ... I just don't know how to deal with" verb)))))
 
   (set! GET (lambda (thing)              (gack-on-error (call 'GET thing "" ""       ) '(error))))
-  (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type) '(error)))))
+  (set! PUT (lambda (thing content type) (gack-on-error (call 'PUT thing content type) '(error))))
 
-;;(trace call)
+  (trace call))
 
 (provide main)
 (define (main . args)
