@@ -1,10 +1,9 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
+exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 |#
 
-#lang scheme
+#lang racket
 
 ;; see
 ;; http://docs.amazonwebservices.com/AmazonS3/2006-03-01/RESTAuthentication.html
