@@ -6,27 +6,27 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 #lang racket
 (require
  (only-in "aws-common.rkt"
-          AWSAccessKeyId
-          run-tests/maybe-exit
-          sign
-          stringy?
-)
+   AWSAccessKeyId
+   run-tests/maybe-exit
+   sign
+   stringy?
+   )
  (only-in "group.rkt" group)
 
  (only-in (planet neil/htmlprag:1:6) html->shtml)
  (only-in (planet offby1/offby1/zdate) zdate)
  (only-in net/url
-          call/input-url
-          post-impure-port
-          purify-port
-          string->url
-          url->string
-          url-host
-          url-path
-          url?
-          )
+   call/input-url
+   post-impure-port
+   purify-port
+   string->url
+   url->string
+   url-host
+   url-path
+   url?
+   )
  (only-in srfi/13 string-join)
- (only-in unstable/net/url url-path->string)
+ (only-in web-server/private/util url-path->string)
  racket/trace
  rackunit
  rackunit/text-ui
@@ -126,7 +126,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
                         ("Timestamp"        . ,(zdate #:offset 0))
                         ("Version"          . "2009-04-15")
                         )]
-         [merged  (sort-alist (append boilerplate form-data))]
+         [merged (sort-alist (append boilerplate form-data))]
          [bytes-to-sign  (string->bytes/utf-8 (format "~a~%~a~%~a~%~a"
                                                        "POST"
                                                        (url-host url)
