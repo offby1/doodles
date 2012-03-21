@@ -40,7 +40,7 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                                (if (eq? verb 'GET) "" type)
                                date
                                (just-the-path url)))))
-           (auth (format "Authorization: AWS ~a:~a" AWSAccessKeyId sig)))
+           (auth (format "Authorization: AWS ~a:~a" (AWSAccessKeyId) sig)))
 
       (case verb
         ((GET) (call/input-url
@@ -71,9 +71,6 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (unless SecretAccessKey
-    (raise-user-error "You must provide a secret access key in your PLT preferences file"))
-
   (printf "Known buckets: ~a ~%"
           ((sxpath '(listallmybucketsresult buckets (bucket) name *text*)) (GET "")))
   (printf "Creating a bucket: ~a~%"
@@ -93,5 +90,3 @@ exec  mzscheme -l errortrace --require "$0" --main -- ${1+"$@"}
                      )))
     (printf "Putting something into a bucket what don't exist: ")
     (PUT "oooooohhhhhhnooooooo/wozzup" #"Nobody expects the Portuguese Tribunal!!" "text/plain")))
-
-

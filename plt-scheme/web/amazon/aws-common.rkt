@@ -16,8 +16,8 @@
                                         key
                                         (find-system-path 'pref-file)))))
     (values
-     (getpref '|AWS-access-key-id|)
-     (getpref '|AWS-secret-access-key|))))
+     (thunk (getpref '|AWS-access-key-id|))
+     (thunk (getpref '|AWS-secret-access-key|)))))
 
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
@@ -31,7 +31,7 @@
     (get-output-bytes sop)))
 
 (define (sign bytes)
-  (base64-encode (HMAC-SHA256 SecretAccessKey bytes)))
+  (base64-encode (HMAC-SHA256 (SecretAccessKey) bytes)))
 
 (define-struct (exn:fail:aws exn:fail) (code message complete-response))
 (define (gack-on-error sxml error-path)

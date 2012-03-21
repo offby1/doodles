@@ -120,7 +120,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
   (when (string? url)
     (set! url (string->url url)))
 
-  (let* ([boilerplate `(("AWSAccessKeyId"   . ,AWSAccessKeyId)
+  (let* ([boilerplate `(("AWSAccessKeyId"   . ,(AWSAccessKeyId))
                         ("SignatureMethod"  . "HmacSHA256")
                         ("SignatureVersion" . "2")
                         ("Timestamp"        . ,(zdate #:offset 0))
@@ -148,7 +148,7 @@ Example: quote('/~connolly/') yields '/%7econnolly/'.
                 "http://frotz"
                 '(("Hugger" . "mugger")))])
 
-    (check-equal? key    AWSAccessKeyId)
+    (check-equal? key    (AWSAccessKeyId))
     (check-equal? meth   "HmacSHA256")
     (check-equal? sigver "2")
     (check-equal? hugger "mugger")))
