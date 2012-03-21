@@ -8,8 +8,16 @@
          (only-in srfi/13 substring/shared))
 
 (provide (all-defined-out))
-(define AWSAccessKeyId  (get-preference '|AWS-access-key-id|))
-(define SecretAccessKey (get-preference '|AWS-secret-access-key|))
+
+(define-values (AWSAccessKeyId SecretAccessKey)
+  (let ()
+    (define (getpref key)
+      (get-preference key (thunk (error 'getpref "Cannot get preference ~s; don't know why; check ~a"
+                                        key
+                                        (find-system-path 'pref-file)))))
+    (values
+     (getpref '|AWS-access-key-id|)
+     (getpref '|AWS-secret-access-key|))))
 
 (define (rfc-2822-date)
   (parameterize ((date-display-format 'rfc2822))
