@@ -1,5 +1,7 @@
 (ns hello.core)
 
+(def visitors (ref #{}))
+
 (defn hello
   "Returns a hello message, calling you by username.
           Knows if you've been naughty or nice."
