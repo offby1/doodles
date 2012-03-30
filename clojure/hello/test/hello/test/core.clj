@@ -3,4 +3,5 @@
   (:use [clojure.test]))
 
 (deftest replace-me
-  (is "hello, sailor" (hello "sailor")))
+  (is (= "Hello, sailor" (hello "sailor")))
+  (is (= "Welcome back, wanker sailor" (hello "sailor"))))
