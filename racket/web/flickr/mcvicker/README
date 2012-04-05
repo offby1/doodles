@@ -1,0 +1,19 @@
+-*-org-*-
+
+* To run
+
+./gui.ss
+
+* General idea
+
+Convert the Excel spreadsheet into something parseable -- XML seems an
+obvious choice, but as far as I can tell, it's ambiguous; CSV is much
+simpler and isn't ambiguous ...
+
+... then parse it into simple structures ... then shove some of the
+structure data into flickr.
+
+* tying the spreadsheet to the images
+
+Looks like the images are named with a capital J, then some digits;
+and the digits correspond to the number in the spreadsheet.
