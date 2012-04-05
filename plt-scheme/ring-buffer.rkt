@@ -9,9 +9,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (struct ring-buffer (max-size current-size data) #:transparent)
 
+(provide make)
 (define (make [size 5])
   (ring-buffer size 0 '()))
 
+(provide add)
 (define (add rb datum)
   (let ([new-size (min (ring-buffer-max-size rb)
                        (add1 (ring-buffer-current-size rb)))]
@@ -25,6 +27,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      new-data
      )))
 
+(provide ->list)
 (define (->list rb)
   (ring-buffer-data rb))
 
