@@ -68,6 +68,17 @@ exec racket --require "$0" --main -- ${1+"$@"}
 (define-test-suite all-tests
   quicksort-tests)
 
+(define (them lst)
+  (time sort lst <)
+  (void))
+(define (me lst)
+  (define v (list->vector lst))
+  (time (quicksort-vector! v))
+  (void))
+
 (provide main)
 (define (main . args)
+  (define big-random-list (shuffle (build-list 100000 (lambda _ (random)))))
+  (display "Them:") (them big-random-list)
+  (display "Me  :") (me big-random-list)
   (exit (run-tests all-tests 'verbose)))
