@@ -1,14 +1,20 @@
 #lang racket
 
-(require unstable/debug)
+;; http://en.wikipedia.org/wiki/Cartesian_product
 
-(define (something items tuples)
-  (for/fold ([result '()])
-      ([item items])
-      (append (map (curry cons item) tuples)
-              result)))
+(define (cartesian-product s1 s2)
+  (apply set
+         (for*/list ([one s1]
+                     [two s2])
+                    (list one two))))
 
-(define (cartesian-product . seqs)
-  (for/fold ([result '()])
-      ([seq seqs])
-      (something seq result)))
+(define (nary-cartesian-product . sets)
+  (cond
+   ((null? sets)
+    (set))
+   ((null? (rest sets))
+    (first sets))
+   (else
+    (for/fold ([result (first sets)])
+        ([s (rest sets)])
+        (cartesian-product s result)))))
