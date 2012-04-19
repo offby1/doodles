@@ -29,7 +29,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
       storeIndex)))
 
 (define (choose-pivot array left right)
-  (quotient (+ left right) 2))
+  (+ left (random (add1 (- right left)))))
 
 (define (quicksort-vector! array
                            [left 0]
@@ -78,7 +78,8 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (define big-random-list (shuffle (build-list 100000 (lambda _ (random)))))
-  (display "Them:") (them big-random-list)
-  (display "Me  :") (me big-random-list)
+  (let ([size 500000])
+    (display "Random :") (me (shuffle (build-list size (lambda _ (random)))))
+    (display "Ordered:") (me (build-list size values))
+    (display "Reverse:") (me (reverse (build-list size values))))
   (exit (run-tests all-tests 'verbose)))
