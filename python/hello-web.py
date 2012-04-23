@@ -7,7 +7,7 @@ A sort of "hello world" web server.
 from __future__ import print_function
 from __future__ import absolute_import
 
-__author__ = 'erich@cozi.com'
+__author__ = 'eric.hanchrow@gmail.com'
 
 from collections import defaultdict
 from webob import Response

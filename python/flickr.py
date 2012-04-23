@@ -5,7 +5,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-__author__ = 'erich@cozi.com'
+__author__ = 'eric.hanchrow@gmail.com'
 
 import collections
 import configobj
