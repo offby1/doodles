@@ -53,8 +53,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (define (nearest-node-name n)
   (edge-dest-node-name
-   ;; TODO -- rather than sorting, simply compute the minimum.
-   (first (sort (set->list (node-edgeset n)) < #:key edge-weight #:cache-keys? #t))))
+   (for/fold ([smallest #f])
+       ([e (node-edgeset n)])
+       (if (or (not smallest)
+               (< (edge-weight e) (edge-weight smallest)))
+           e
+           smallest))))
 
 (define (traverse-from g init)
   (when (not (graph-ref g (node-name init) #f))
