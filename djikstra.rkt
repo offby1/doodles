@@ -52,13 +52,15 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      nodes-by-name)))
 
 (define (nearest-node-name n)
+  (define (mmin key-fn first . rest)
+    (for/fold ([rv first])
+        ([i rest])
+        (if (< (key-fn i)
+               (key-fn rv))
+            i
+            rv)))
   (edge-dest-node-name
-   (for/fold ([smallest #f])
-       ([e (node-edgeset n)])
-       (if (or (not smallest)
-               (< (edge-weight e) (edge-weight smallest)))
-           e
-           smallest))))
+   (apply mmin edge-weight (set->list (node-edgeset n)))))
 
 (define (traverse-from g init)
   (when (not (graph-ref g (node-name init) #f))
