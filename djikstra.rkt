@@ -9,7 +9,14 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (require unstable/debug)
 
 (struct graph (nodes-by-name) #:transparent)
-(struct node  (name edgeset) #:transparent)
+(struct node  (name edgeset) #:transparent
+        #:property prop:custom-write
+        (lambda (thing op write?)
+          (fprintf op "<node ~a ~a>"
+                   (node-name thing)
+                   (set-map (node-edgeset thing) (lambda (e)
+                                                   (cons (edge-dest-node-name e)
+                                                         (edge-weight e)))))))
 (struct edge  (dest-node-name weight) #:transparent)
 
 (define (make-graph-from-edge-list things)
@@ -19,12 +26,10 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
        (let ([source-node-name (first thing)]
              [dest-node-name   (second thing)]
              [edge-weight      (third thing)])
-         (debug thing)
          (dict-update! nodes-by-name
                        dest-node-name
                        values
                        (node dest-node-name (set)))
-         (debug nodes-by-name)
          ;; create entries for source and dest nodes in
          ;; nodes-by-name
 
@@ -41,10 +46,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
                        )
          ))
-     (debug nodes-by-name))))
+     nodes-by-name)))
 
 (define (nearest-node-name n)
   (edge-dest-node-name
+   ;; TODO -- rather than sorting, simply compute the minimum.
    (first (sort (set->list (node-edgeset n)) < #:key edge-weight #:cache-keys? #t))))
 
 (define (traverse-from g init)
@@ -60,8 +66,6 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (for ([n (in-dict-values (graph-nodes-by-name g))])
     (when (not (eq? n init))
       (hash-set! distances-by-node n +inf.0)))
-
-  (displayln distances-by-node)
 
   ;; 2. Mark all nodes unvisited.  Set the initial node as
   ;; current. Create a set of the unvisited nodes called the unvisited
@@ -108,28 +112,26 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          distances-by-node
          (let ([nearest  (dict-ref (graph-nodes-by-name g)
                                    (nearest-node-name current))])
-           (if (not (rational? (dict-ref distances-by-node nearest)
-                               ))
+           (if (not (rational? (dict-ref distances-by-node nearest)))
                distances-by-node
                ;; 6.  Set the unvisited node marked with the smallest
                ;; tentative distance as the next "current node" and go back
                ;; to step 3.
-               (loop nearest)               ))
-
-         )))
+               (loop nearest))))))
 
 (provide main)
 (define (main . args)
   (define g (make-graph-from-edge-list
-             '((a b 10)
-               (a c 5)
-               (e f 1)
+             '((a b 5)
+               (a c 10)
                (b c 3)
-               (b d 12)
-               (b e 10)
+               (a e 1)
+               (e c 5)
                )))
   (for ([(name node) (in-dict (graph-nodes-by-name g))])
     (for ([e (node-edgeset node)])
       (printf  "~a: ~a ~a~%" name (edge-dest-node-name e) (edge-weight e))))
-  (pretty-print (traverse-from g (dict-ref (graph-nodes-by-name g) 'a)))
+  (let ([init (dict-ref (graph-nodes-by-name g) 'a)])
+    (printf "Starting at ~a...~%" init)
+    (pretty-print (traverse-from g init)))
   )
