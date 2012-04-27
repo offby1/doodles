@@ -17,6 +17,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                    (set-map (node-edgeset thing) (lambda (e)
                                                    (cons (edge-dest-node-name e)
                                                          (edge-weight e)))))))
+
+(define (graph-ref g name [default #f]) (dict-ref (graph-nodes-by-name g) name default))
+
 (struct edge  (dest-node-name weight) #:transparent)
 
 (define (make-graph-from-edge-list things)
@@ -54,9 +57,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
    (first (sort (set->list (node-edgeset n)) < #:key edge-weight #:cache-keys? #t))))
 
 (define (traverse-from g init)
-  (when (not (dict-ref (graph-nodes-by-name g)
-                       (node-name init)
-                       #f))
+  (when (not (graph-ref g (node-name init) #f))
     (error 'traverse-from "No node named ~s in graph" (node-name init)))
   (define distances-by-node (make-hash))
 
@@ -89,8 +90,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     ;; remains in the unvisited set.
     (for ([e (node-edgeset current)])
       (let ([A current]
-            [B (dict-ref (graph-nodes-by-name g)
-                         (edge-dest-node-name e))])
+            [B (graph-ref g (edge-dest-node-name e))])
         (let ([tentative-distance (+ (edge-weight e)
                                      (dict-ref distances-by-node A))])
           (when (< tentative-distance (dict-ref distances-by-node B))
@@ -110,8 +110,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     ;; algorithm has finished.
     (if  (set-empty? (node-edgeset current))
          distances-by-node
-         (let ([nearest  (dict-ref (graph-nodes-by-name g)
-                                   (nearest-node-name current))])
+         (let ([nearest  (graph-ref g (nearest-node-name current))])
            (if (not (rational? (dict-ref distances-by-node nearest)))
                distances-by-node
                ;; 6.  Set the unvisited node marked with the smallest
@@ -131,7 +130,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (for ([(name node) (in-dict (graph-nodes-by-name g))])
     (for ([e (node-edgeset node)])
       (printf  "~a: ~a ~a~%" name (edge-dest-node-name e) (edge-weight e))))
-  (let ([init (dict-ref (graph-nodes-by-name g) 'a)])
+  (let ([init (graph-ref g 'a)])
     (printf "Starting at ~a...~%" init)
     (pretty-print (traverse-from g init)))
   )
