@@ -74,6 +74,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
 
+  (define word-length (string->number (first args)))
+
   (define metronome
     (let ([main-thread (current-thread)])
       (thread
@@ -84,22 +86,22 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (loop))))))
 
   (let ([dict (read-dictionary "/usr/share/dict/words")])
-    (let loop ([eight-letter-words (hash-ref dict 3)]
-               [longest '((dummy . -1))])
+    (let loop ([eight-letter-words (hash-ref dict word-length)]
+               [longest '((dummy . ()))])
       (if (set-empty? eight-letter-words)
-          (pretty-print longest)
+          (pretty-print (first longest))
           (let ([h (sort
                     (dict-map
                      (b-f-traverse
                       (one-item-from-set eight-letter-words)
                       (curryr real-neighbors eight-letter-words))
-                     cons) > #:key cdr)
+                     cons) > #:key (compose length cdr))
                    ])
             (when (thread-try-receive)
               (fprintf (current-error-port) "~a words left~%" (set-count eight-letter-words)))
             (loop (set-subtract eight-letter-words (apply set (dict-map h (lambda (k v) k))))
-                  (if (> (cdr (first h))
-                         (cdr (first longest)))
+                  (if (> (length (cdr (first h)))
+                         (length (cdr (first longest))))
                       h
                       longest))
             )))))
