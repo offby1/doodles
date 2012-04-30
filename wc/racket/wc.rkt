@@ -28,6 +28,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
     (display "done" (current-error-port))
     (newline (current-error-port))))
 
+(define (letters-only str) (regexp-replace* #px"[^[:alnum:]]+" str ""))
+
 (define-flexible-reader read-dictionary
   (lambda (inp)
     (diag
@@ -35,11 +37,12 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      (thunk
       (for/fold ([words-by-length (make-immutable-hash)])
           ([line (in-lines inp)])
-          (hash-update
-           words-by-length
-           (string-length line)
-           (lambda (s) (set-add s line))
-           (set)))))))
+          (let ([word (letters-only line)])
+            (hash-update
+             words-by-length
+             (string-length word)
+             (lambda (s) (set-add s word))
+             (set))))))))
 
 (define *alphabet*
   (for/fold ([v (set)])
@@ -82,4 +85,4 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
        (let ([dict (read-dictionary "/usr/share/dict/words")])
          (bfs "giant" (curryr real-neighbors dict))))
     (lambda (hash queue)
-      (pretty-print hash))))
+      (pretty-print (sort (dict-map hash cons) < #:key cdr)))))
