@@ -84,13 +84,13 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
           (loop))))))
 
   (let ([dict (read-dictionary "/usr/share/dict/words")])
-    (let loop ([eight-letter-words (hash-ref dict 8)]
+    (let loop ([eight-letter-words (hash-ref dict 3)]
                [longest '((dummy . -1))])
       (if (set-empty? eight-letter-words)
           (pretty-print longest)
           (let ([h (sort
                     (dict-map
-                     (bfs
+                     (b-f-traverse
                       (one-item-from-set eight-letter-words)
                       (curryr real-neighbors eight-letter-words))
                      cons) > #:key cdr)
