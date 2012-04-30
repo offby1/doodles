@@ -81,8 +81,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (provide main)
 (define (main . args)
   (let ([dict (read-dictionary "/usr/share/dict/words")])
-    (pretty-print
-     (sort
-      (dict-map
-       (bfs (first args) (curryr real-neighbors dict))
-       cons) < #:key cdr))))
+    (for ([word args])
+      (pretty-print
+       (sort
+        (dict-map
+         (bfs word (curryr real-neighbors dict))
+         cons) < #:key cdr)))))
