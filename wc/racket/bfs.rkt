@@ -3,8 +3,8 @@
 (require "q.rkt"
          unstable/debug)
 
-(provide bfs)
-(define (bfs init generate-neighbors)
+(provide b-f-traverse)
+(define (b-f-traverse init generate-neighbors)
   (let loop ([node-to-distance (make-immutable-hash (list (cons init 0)))]
              [q (enqueue (make-queue) init)])
     (if (queue-empty? q)
@@ -23,14 +23,13 @@
                         (hash-update
                          node-to-distance
                          n
-                         (lambda (original-distance)
-                           (min original-distance default))
+                         (curryr min default)
                          default))
                       (enqueue q n))
                    ))
               loop))))))
 
-(bfs
+(b-f-traverse
  'fred
  (lambda (n)
    (case n
