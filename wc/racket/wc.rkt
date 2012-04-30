@@ -73,6 +73,16 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
+
+  (define metronome
+    (let ([main-thread (current-thread)])
+      (thread
+       (thunk
+        (let loop ()
+          (thread-send main-thread 'wakey-wakey)
+          (sleep 1)
+          (loop))))))
+
   (let ([dict (read-dictionary "/usr/share/dict/words")])
     (let loop ([eight-letter-words (hash-ref dict 8)]
                [longest '((dummy . -1))])
@@ -85,9 +95,11 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                       (curryr real-neighbors eight-letter-words))
                      cons) > #:key cdr)
                    ])
+            (when (thread-try-receive)
+              (fprintf (current-error-port) "~a words left~%" (set-count eight-letter-words)))
             (loop (set-subtract eight-letter-words (apply set (dict-map h (lambda (k v) k))))
                   (if (> (cdr (first h))
                          (cdr (first longest)))
-                      (debug h)
+                      h
                       longest))
             )))))
