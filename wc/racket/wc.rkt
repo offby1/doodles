@@ -80,9 +80,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
 (provide main)
 (define (main . args)
-  (call-with-values
-      (thunk
-       (let ([dict (read-dictionary "/usr/share/dict/words")])
-         (bfs "giant" (curryr real-neighbors dict))))
-    (lambda (hash queue)
-      (pretty-print (sort (dict-map hash cons) < #:key cdr)))))
+  (let ([dict (read-dictionary "/usr/share/dict/words")])
+    (pretty-print
+     (sort
+      (dict-map
+       (bfs (first args) (curryr real-neighbors dict))
+       cons) < #:key cdr))))

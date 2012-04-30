@@ -20,11 +20,6 @@
               (queue (cdr (queue-forward q))
                      (queue-reverse q)))))
 
-(provide queue-length)
-(define (queue-length q)
-  (+ (length (queue-forward q)
-             (queue-reverse q))))
-
 (provide queue-empty?)
 (define (queue-empty? q)
   (and (null? (queue-forward q))

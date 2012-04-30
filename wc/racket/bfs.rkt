@@ -8,7 +8,7 @@
   (let loop ([node-to-distance (make-immutable-hash (list (cons init 0)))]
              [q (enqueue (make-queue) init)])
     (if (queue-empty? q)
-        (values node-to-distance q)
+        node-to-distance
         (let-values ([(item q) (dequeue q)])
           (define (visited? thing) (hash-ref node-to-distance thing #f))
           (let ([neighbors (filter (compose not visited?) (set->list (generate-neighbors item)))
