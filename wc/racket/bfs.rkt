@@ -11,8 +11,7 @@
         node-to-predecessor
         (let-values ([(item q) (dequeue q)])
           (define (visited? thing) (hash-has-key? node-to-predecessor thing))
-          (let ([neighbors (filter (compose not visited?) (generate-neighbors item))
-                           ])
+          (let ([neighbors (filter (compose not visited?) (generate-neighbors item))])
             (call-with-values
                 (thunk
                  (for/fold ([node-to-predecessor node-to-predecessor]
@@ -22,8 +21,8 @@
                       (hash-update
                        node-to-predecessor
                        n
-                       (lambda (existing)
-                         (cons existing  (hash-ref node-to-predecessor item))) item)
+                       (curryr cons (hash-ref node-to-predecessor item))
+                       item)
 
                       (enqueue q n))
                    ))
