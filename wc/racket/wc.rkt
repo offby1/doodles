@@ -46,9 +46,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
              (set))))))))
 
 (define *alphabet*
-  (for/fold ([v (set)])
-            ([i (in-range (char->integer #\a) (add1 (char->integer #\z)))])
-    (set-add v (integer->char i))))
+  (for/set ([i (in-range (char->integer #\a) (add1 (char->integer #\z)))])
+           (integer->char i)))
 
 (define (real-neighbors word words)
   (define (potential-neighbors word)
@@ -58,11 +57,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
          (substring word 0 index)
          (string ch)
          (substring word (add1 index) (string-length word))))
-      (for/fold ([v (set)])
-          ([ch *alphabet*])
-          (if (char=? ch avoid-this-character)
-              v
-              (set-add v (build-word word index ch)))))
+      (for/set ([ch *alphabet*]
+                #:when (not (char=? ch avoid-this-character)))
+          (build-word word index ch)))
     (for/fold ([n (set)])
         ([(ch i) (in-indexed word)])
         (set-union n (25-varieties word i ch))))
