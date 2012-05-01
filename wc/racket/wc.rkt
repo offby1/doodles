@@ -71,35 +71,35 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 (define (one-item-from-set s)
   (for/first ([item (in-set s)]) item))
 
+(define *dict-desription* 'unknown)
+(define progress-indicator-thread
+  (thread
+   (thunk
+    (let loop ()
+      (when (not (eq? 'unknown *dict-desription*))
+        (fprintf (current-error-port) "Dictionary: ~a~%" *dict-desription*))
+      (sleep 5)
+      (loop)))))
+
 (provide main)
 (define (main . args)
 
   (define word-length (string->number (first args)))
 
-  (define metronome
-    (let ([main-thread (current-thread)])
-      (thread
-       (thunk
-        (let loop ()
-          (thread-send main-thread 'wakey-wakey)
-          (sleep 1)
-          (loop))))))
-
   (let ([dict (read-dictionary "/usr/share/dict/words")])
-    (let loop ([eight-letter-words (hash-ref dict word-length)]
+    (let loop ([same-length-words (hash-ref dict word-length)]
                [longest '((dummy . ()))])
-      (if (set-empty? eight-letter-words)
+      (set! *dict-desription* (format "~a ~a-letter words" (set-count same-length-words) word-length))
+      (if (set-empty? same-length-words)
           (pretty-print (first longest))
           (let ([h (sort
                     (dict-map
                      (b-f-traverse
-                      (one-item-from-set eight-letter-words)
-                      (curryr real-neighbors eight-letter-words))
+                      (one-item-from-set same-length-words)
+                      (curryr real-neighbors same-length-words))
                      cons) > #:key (compose length cdr))
                    ])
-            (when (thread-try-receive)
-              (fprintf (current-error-port) "~a words left~%" (set-count eight-letter-words)))
-            (loop (set-subtract eight-letter-words (apply set (dict-map h (lambda (k v) k))))
+            (loop (set-subtract same-length-words (apply set (dict-keys h)))
                   (if (> (length (cdr (first h)))
                          (length (cdr (first longest))))
                       h
