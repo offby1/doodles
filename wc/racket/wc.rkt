@@ -22,20 +22,21 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
      [(? input-port? inp)
       (input-port-consumer inp)])))
 
-(define (diag string thunk)
-  (display string (current-error-port))
-  (begin0
-      (thunk)
-    (display "done" (current-error-port))
-    (newline (current-error-port))))
-
-(define (letters-only str) (regexp-replace* #px"[^[:alnum:]]+" str ""))
-
 (define-flexible-reader read-dictionary
   (lambda (inp)
+
+    (define (diag string thunk)
+      (display string (current-error-port))
+      (begin0
+          (thunk)
+        (display "done" (current-error-port))
+        (newline (current-error-port))))
+
     (diag
      (format "Reading ~a..." inp)
      (thunk
+      (define (letters-only str) (regexp-replace* #px"[^[:alnum:]]+" str ""))
+
       (for/fold ([words-by-length (make-immutable-hash)])
           ([line (in-lines inp)])
           (let ([word (string-downcase (letters-only line))])
