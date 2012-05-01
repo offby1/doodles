@@ -11,7 +11,7 @@
         node-to-predecessor
         (let-values ([(item q) (dequeue q)])
           (define (visited? thing) (hash-has-key? node-to-predecessor thing))
-          (let ([neighbors (filter (compose not visited?) (set->list (generate-neighbors item)))
+          (let ([neighbors (filter (compose not visited?) (generate-neighbors item))
                            ])
             (call-with-values
                 (thunk
@@ -36,13 +36,13 @@
    (lambda (n)
      (case n
        ((fred)
-        (set 'tim 'harmony))
+        (list 'tim 'harmony))
        ((tim mary)
-        (set 'zed))
+        (list 'zed))
        ((zed clem)
-        (set 'harmony))
+        (list 'harmony))
        (else
-        (set)))))
+        (list)))))
   (lambda (dest trail)
     (reverse (cons dest trail))))
  <

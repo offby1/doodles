@@ -1,6 +1,8 @@
 #lang racket
 
-(struct queue (forward reverse) #:prefab)
+;; Functional queue made from two stacks.
+
+(struct queue (forward reverse))
 
 (provide make-queue)
 (define (make-queue)

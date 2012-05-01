@@ -50,24 +50,19 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (for/set ([i (in-range (char->integer #\a) (add1 (char->integer #\z)))])
            (integer->char i)))
 
-(define (real-neighbors word words)
-  (define (potential-neighbors word)
-    (define (25-varieties word index avoid-this-character)
-      (define (build-word word index ch)
-        (string-append
-         (substring word 0 index)
-         (string ch)
-         (substring word (add1 index) (string-length word))))
-      (for/set ([ch *alphabet*]
-                #:when (not (char=? ch avoid-this-character)))
-          (build-word word index ch)))
-    (for/fold ([n (set)])
-        ([(ch i) (in-indexed word)])
-        (set-union n (25-varieties word i ch))))
-  (set-intersect (potential-neighbors word) words))
+(define (neighbors word words)
 
-(define (one-item-from-set s)
-  (for/first ([item (in-set s)]) item))
+  (define (25-varieties word index avoid-this-character)
+    (for/list ([ch *alphabet*]
+               #:when (not (char=? ch avoid-this-character)))
+      (string-append
+       (substring word 0 index)
+       (string ch)
+       (substring word (add1 index) (string-length word)))))
+
+  (for/fold ([n (list)])
+      ([(ch i) (in-indexed word)])
+      (append (filter (curry set-member? words) (25-varieties word i ch)) n)))
 
 (define *dict-desription* 'unknown)
 (define progress-indicator-thread
@@ -87,6 +82,9 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
   (let ([dict (read-dictionary "/usr/share/dict/words")])
     (let loop ([same-length-words (hash-ref dict word-length)]
                [longest '((dummy . ()))])
+
+      (define (one-item-from-set s) (for/first ([item (in-set s)]) item))
+
       (set! *dict-desription* (format "~a ~a-letter words" (set-count same-length-words) word-length))
       (if (set-empty? same-length-words)
           (pretty-print (first longest))
@@ -94,7 +92,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                     (dict-map
                      (b-f-traverse
                       (one-item-from-set same-length-words)
-                      (curryr real-neighbors same-length-words))
+                      (curryr neighbors same-length-words))
                      cons) > #:key (compose length cdr))
                    ])
             (loop (set-subtract same-length-words (apply set (dict-keys h)))
