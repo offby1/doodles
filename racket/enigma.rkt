@@ -1,6 +1,5 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
 exec racket --require "$0" --main -- ${1+"$@"}
 |#
 
@@ -98,8 +97,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
     (num-rotors (string->number n))])
 
   (when (terminal-port? (current-input-port))
-    (fprintf (current-error-port)
-             "Reading ~a...~%" (current-input-port)))
+    (eprintf "Reading ~a...~%" (current-input-port)))
   (process-port
    (make-enigma (build-list (num-rotors) (lambda (ignored) (my-make-rotor))))
    (current-input-port)
@@ -113,7 +111,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
 ;; Example:
 
-;; echo -n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | ./enigma.ss | tee /dev/stderr | ./enigma.ss -d
+;; echo -n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | ./enigma.rkt | tee /dev/stderr | ./enigma.rkt -d
 
 ;; "crypt", I think, comes from the Debian package "mcrypt", and
 ;; emulates an enigma with 5 rotors, 26 slots per rotor.
@@ -121,5 +119,5 @@ exec racket --require "$0" --main -- ${1+"$@"}
 ;; time dd if=/dev/urandom count=2048 bs=1024 | crypt sdlkfjdslfkjdslkvn > /dev/null
 ;; => 2.1 MB/s
 
-;; time dd if=/dev/urandom count=2048 bs=1024 | ./enigma.ss > /dev/null
+;; time dd if=/dev/urandom count=2048 bs=1024 | ./enigma.rkt > /dev/null
 ;; => 258 kB/s :-(

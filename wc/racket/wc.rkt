@@ -70,15 +70,17 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
    (thunk
     (let loop ()
       (when (not (eq? 'unknown *dict-desription*))
-        (fprintf (current-error-port) "Dictionary: ~a~%" *dict-desription*))
+        (eprintf "Dictionary: ~a~%" *dict-desription*))
       (sleep 5)
       (loop)))))
 
 (provide main)
 (define (main . args)
 
-  (define word-length (string->number (first args)))
-
+  (define word-length (string->number (apply string-append args)))
+  (when (not word-length)
+    (eprintf "Usage: ~a [number]~%" (current-command-line-arguments))
+    (exit 1))
   (let ([dict (read-dictionary "/usr/share/dict/words")])
     (let loop ([same-length-words (hash-ref dict word-length)]
                [longest '((dummy . ()))])

@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
+exec racket --require "$0" --main -- ${1+"$@"}
 |#
 
 #lang racket
@@ -56,7 +56,7 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
 
   (with-handlers
       ([exn? (lambda (e)
-               (fprintf (current-error-port) "Uh oh: ~a~%" (exn-message e)))])
+               (eprintf "Uh oh: ~a~%" (exn-message e)))])
     (display ((if (encrypt)
                   cs-encrypt-bytes
                   cs-decrypt-bytes)
