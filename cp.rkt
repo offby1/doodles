@@ -24,17 +24,18 @@
                 [two s2])
                (set one two)))))
 
-(check-equal? (cartesian-product (set) (set 1 2))
-              (cp (set)))
+(define-test-suite cartesian-product-tests
+  (check-equal? (cartesian-product (set) (set 1 2))
+                (cp (set)))
 
-(check-equal? (cartesian-product (set 1) (set 2))
-              (cp (set (set 1 2))))
+  (check-equal? (cartesian-product (set 1) (set 2))
+                (cp (set (set 1 2))))
 
-(check-equal? (cartesian-product (set 1 2) (set 'dog 'cat))
-              (cp (set (set 1 'dog)
-                       (set 1 'cat)
-                       (set 2 'dog)
-                       (set 2 'cat))))
+  (check-equal? (cartesian-product (set 1 2) (set 'dog 'cat))
+                (cp (set (set 1 'dog)
+                         (set 1 'cat)
+                         (set 2 'dog)
+                         (set 2 'cat)))))
 
 (define/contract (embiggen prod new)
   (cp? set? . -> . cp?)
@@ -44,21 +45,22 @@
     (for/list ([old (cp-set-of-sets prod)])
       (cp-set-of-sets (cartesian-product old new))))))
 
-(check-equal?
- (embiggen (cp (set (set 1 2))) (set 'frotz))
- (cp
-  (set
-   (set 1 'frotz)
-   (set 2 'frotz))))
+(define-test-suite embiggen-tests
+  (check-equal?
+   (embiggen (cp (set (set 1 2))) (set 'frotz))
+   (cp
+    (set
+     (set 1 'frotz)
+     (set 2 'frotz))))
 
-(check-equal?
- (embiggen (cartesian-product (set 1 2) (set 'dog 'cat)) (set 'salad))
- (cp
-  (set
-   (set 1 'salad)
-   (set 2 'salad)
-   (set 'dog 'salad)
-   (set 'cat 'salad))))
+  (check-equal?
+   (embiggen (cartesian-product (set 1 2) (set 'dog 'cat)) (set 'salad))
+   (cp
+    (set
+     (set 1 'salad)
+     (set 2 'salad)
+     (set 'dog 'salad)
+     (set 'cat 'salad)))))
 
 (define/contract (nary-cartesian-product . sets)
   (->* () #:rest (listof set?) cp?)
@@ -91,4 +93,9 @@
                   (set 'red 'fish)
                   (set 'blue 'fish)))))
 
-(run-tests nary-tests)
+(run-tests
+ (test-suite
+  "all"
+  cartesian-product-tests
+  embiggen-tests
+  nary-tests))
