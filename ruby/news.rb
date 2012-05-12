@@ -1,7 +1,7 @@
 require 'net/http'
 require 'rexml/document'
 
-class NewsError < Exception
+class NewsError < StandardError
 end
 
 def gimme
@@ -14,6 +14,7 @@ def call_http_xml(uri, redirection_limit = 10)
   url = URI.parse(uri)
   client = Net::HTTP.new(url.host, url.port)
   res = client.request(Net::HTTP::Get.new(uri))
+  raise NewsError, "Bad hair day", res.value
   case res
   when Net::HTTPSuccess then
     return REXML::Document.new(res.body)
@@ -34,4 +35,10 @@ def extract_and_process(doc)
   titles
 end
 
-puts gimme
+begin
+  puts gimme
+  exit 0
+rescue StandardError => hmm
+  puts "Wassup? #{hmm}"
+  exit 1
+end
