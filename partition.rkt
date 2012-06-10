@@ -12,11 +12,12 @@
 ;; Given a partition P which sums to n, return a set of all partitions
 ;; which sum to n + 1.
 (define (more-partitions p)
-  (define result (set (increment-at p 0)))
+  (define result (set))
 
-  (for ([index (in-range 1 (vector-length p))])
-    (when (> (vector-ref p (sub1 index))
-             (vector-ref p index))
+  (for ([index (in-range (vector-length p))])
+    (when (or (zero? index)
+              (> (vector-ref p (sub1 index))
+                 (vector-ref p index)))
       (set! result (set-add result (increment-at p index)))))
 
   (set-add result (vector-append p (vector 1))))
