@@ -23,6 +23,7 @@
                (set 5 6 'dog)
                )))
 
+(provide cartesian-product)
 (define (cartesian-product . sets)
   (for/fold ([result (set (set))])
       ([elt sets])

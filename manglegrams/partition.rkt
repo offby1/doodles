@@ -29,6 +29,7 @@
 
   (set-add result (vector-append p (vector 1))))
 
+(provide all-partitions)
 (define (all-partitions n)
   (if (= n 1)
       (set (vector 1))
@@ -41,14 +42,3 @@
 (for ([(expected index) (in-indexed '[1 1 2 3 5 7 11 15 22 30 42 56])])
   (when (positive? index)
     (check-equal? (set-count (all-partitions index)) expected))))
-
-(module+ main
-(pretty-print
- (let ([char #\a]
-       [number 2])
-   (set-map
-    (all-partitions number)
-    (lambda (v)
-      (map
-       (lambda (n) (make-string n char))
-       (vector->list v)))))))
