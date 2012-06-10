@@ -3,6 +3,11 @@
 (require "cp.rkt"
          "partition.rkt")
 
+(define (bagify str)
+  (for/fold ([r (make-immutable-hash)])
+      ([ch (map char-downcase (filter char-alphabetic? (string->list str)))])
+      (hash-update r ch add1 0)))
+
 (define (wozzit char number)
   (apply set
   (set-map
@@ -15,4 +20,4 @@
 (module+ main
 
 (pretty-print
-(apply cartesian-product (list (wozzit #\b 1) (wozzit #\a 2) (wozzit #\n 2))) ))
+(apply cartesian-product (dict-map (bagify "banana") wozzit)) ))
