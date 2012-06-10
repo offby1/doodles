@@ -43,4 +43,12 @@
     (check-equal? (set-count (all-partitions index)) expected))))
 
 (module+ main
-(pretty-print (all-partitions 10)))
+(pretty-print
+ (let ([char #\a]
+       [number 2])
+   (set-map
+    (all-partitions number)
+    (lambda (v)
+      (map
+       (lambda (n) (make-string n char))
+       (vector->list v)))))))
