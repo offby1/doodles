@@ -4,18 +4,15 @@
          "partition.rkt")
 
 (define (wozzit char number)
-  (apply
-   set
-   (set-map
-    (all-partitions number)
-    (lambda (v)
-      (map
-       (lambda (n) (make-string n char))
-       (vector->list v))))))
+  (apply set
+  (set-map
+   (all-partitions number)
+   (lambda (v)
+     (map
+      (lambda (n) (make-string n char))
+      (vector->list v))))))
 
 (module+ main
 
 (pretty-print
-(cartesian-product  (set '("aa") '("a" "a"))
-                    (set '("b"))
-                    (set '("nn") '("n" "n"))) ))
+(apply cartesian-product (list (wozzit #\b 1) (wozzit #\a 2) (wozzit #\n 2))) ))
