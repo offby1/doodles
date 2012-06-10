@@ -3,14 +3,11 @@
 ;; http://en.wikipedia.org/wiki/Partition_(number_theory)
 
 ;; Return a vector that is like V, except the INDEXth number is one
-;; bigger.  As a special case, if INDEX is the size of V, then we
-;; append a 1.
+;; bigger.
 (define (increment-at v index)
-  (if (= index (vector-length v))
-      (vector-append v (vector 1))
-      (for/vector
-       ([(elt i) (in-indexed v)])
-       ((if (= i index) add1 values) elt))))
+  (let ([v (vector-copy v)])
+    (dict-update! v index add1)
+    v))
 
 ;; Given a partition P which sums to n, return a set of all partitions
 ;; which sum to n + 1.
@@ -22,7 +19,7 @@
              (vector-ref p index))
       (set! result (set-add result (increment-at p index)))))
 
-  (set-add result (increment-at p (vector-length p))))
+  (set-add result (vector-append p (vector 1))))
 
 (define (all-partitions n)
   (if (= n 1)
