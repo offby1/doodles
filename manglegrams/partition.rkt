@@ -42,3 +42,6 @@
 (for ([(expected index) (in-indexed '[1 1 2 3 5 7 11 15 22 30 42 56])])
   (when (positive? index)
     (check-equal? (set-count (all-partitions index)) expected))))
+
+(module+ main
+(pretty-print (all-partitions 5)))
