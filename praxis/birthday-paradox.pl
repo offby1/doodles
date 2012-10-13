@@ -1,12 +1,8 @@
 #!/usr/bin/env perl
 
 # http://programmingpraxis.com/2012/10/12/birthday-paradox/
-# also
-#
 
 use Modern::Perl;
-
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 
 sub generate_birthdays {
   my ($population_size) = @_;
