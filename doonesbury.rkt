@@ -11,7 +11,7 @@
 (require (planet neil/html-parsing:2:0)
           net/url
           racket/pretty ;; "You pretty now" -- D'Angelo Barkesdale
-          xml/path
+          (planet clements/sxml2:1:=3)
           )
 
 (define (strip-url-string->xexp url-string)
@@ -23,7 +23,7 @@
 (define (mine-gold xexp)
   ;; Find an IMG element whose SRC attribute looks like
   ;; http://assets.amuniversal.com/buncha-hex-characters
-  (se-path*/list '(img #:src) xexp)
+  ((sxpath '(// img)) xexp)
   )
 
 (module+ main
