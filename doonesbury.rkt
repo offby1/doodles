@@ -12,6 +12,7 @@
           net/url
           racket/pretty ;; "You pretty now" -- D'Angelo Barkesdale
           (planet clements/sxml2:1:=3)
+          browser/external
           )
 
 (define (strip-url-string->xexp url-string)
@@ -20,13 +21,13 @@
    get-pure-port
    html->xexp))
 
-(define (mine-gold xexp)
-  ;; Find an IMG element whose SRC attribute looks like
-  ;; http://assets.amuniversal.com/buncha-hex-characters
-  ((sxpath '(// img)) xexp)
-  )
+(define (extract-image-url-string xexp)
+  (let ([gold ((sxpath "//img[@class='strip']/@src") xexp)])
+    (and (not (null? gold))
+         (second (first gold)))))
 
+;; http://www.gyford.com/misc/doonesburyrss.php
 (module+ main
-  (pretty-print
-   (mine-gold
+  (send-url
+   (extract-image-url-string
     (strip-url-string->xexp  "http://doonesbury.slate.com/strip/archive/2013/02/17"))))
