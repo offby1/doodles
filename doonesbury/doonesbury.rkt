@@ -1,5 +1,12 @@
 #lang racket
 
+(require (planet neil/html-parsing:2:0)
+          net/url
+          racket/pretty ;; "You pretty now" -- D'Angelo Barkesdale
+          (planet clements/sxml2:1:=3)
+          browser/external
+          )
+
 ;; The problem: I love to read Doonesbury, and I love reading stuff
 ;; via RSS.  However, the Doonesbury RSS feed points me to a page that
 ;; is so ugly, and so cluttered, that my heart sinks every time I look
@@ -7,13 +14,11 @@
 ;; within).
 
 ;; This program therefore grabs just the image, without all the crap.
+;; It starts with the URL to the RSS feed itself.
 
-(require (planet neil/html-parsing:2:0)
-          net/url
-          racket/pretty ;; "You pretty now" -- D'Angelo Barkesdale
-          (planet clements/sxml2:1:=3)
-          browser/external
-          )
+;; I got this by subscribing at doonesbury.com with Google Reader,
+;; then exporting my Google Reader stuff through "Google Takeout"
+(define *rss-feed-url* "http://www.gyford.com/misc/doonesburyrss.php")
 
 (define (get-following-redirections url)
   (let-values ([(ip headers)
@@ -46,6 +51,6 @@
   )
 
 (module+ main
-  (for-each send-url
+  (for-each displayln
             (map (compose extract-image-url-string HTML-url-string->xexp)
-                 (rss-URL-string->HTML-url-strings "http://www.gyford.com/misc/doonesburyrss.php"))))
+                 (rss-URL-string->HTML-url-strings *rss-feed-url*))))
