@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="http://www.doonesbury.com/strip/dailydose/">
+    <title>Doonesbury Daily Dose</title>
+    <link>http://www.doonesbury.com/strip/dailydose/</link>
+    <description>Doonesbury every day</description>
+    <dc:language>en-us</dc:language>
+    <dc:creator>phil@gyford.com</dc:creator>
+    <dc:date>2013-02-24T23:56:30+00:00</dc:date>
+
+    <items>
+      <rdf:Seq>
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/24" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/23" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/22" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/21" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/20" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/19" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/18" />
+        <rdf:li rdf:resource="http://www.doonesbury.com/strip/archive/2013/02/17" />
+      </rdf:Seq>
+    </items>
+
+  </channel>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/24">
+    <title>Sunday February 24, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/24</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/24">Sunday February 24, 2013</a>]]></description>
+    <dc:date>2013-02-24T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/23">
+    <title>Saturday February 23, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/23</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/23">Saturday February 23, 2013</a>]]></description>
+    <dc:date>2013-02-23T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/22">
+    <title>Friday February 22, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/22</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/22">Friday February 22, 2013</a>]]></description>
+    <dc:date>2013-02-22T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/21">
+    <title>Thursday February 21, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/21</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/21">Thursday February 21, 2013</a>]]></description>
+    <dc:date>2013-02-21T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/20">
+    <title>Wednesday February 20, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/20</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/20">Wednesday February 20, 2013</a>]]></description>
+    <dc:date>2013-02-20T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/19">
+    <title>Tuesday February 19, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/19</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/19">Tuesday February 19, 2013</a>]]></description>
+    <dc:date>2013-02-19T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/18">
+    <title>Monday February 18, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/18</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/18">Monday February 18, 2013</a>]]></description>
+    <dc:date>2013-02-18T00:00:00+00:00</dc:date>
+  </item>
+
+  <item rdf:about="http://www.doonesbury.com/strip/archive/2013/02/17">
+    <title>Sunday February 17, 2013</title>
+    <link>http://www.doonesbury.com/strip/archive/2013/02/17</link>
+    <description><![CDATA[<a href="http://www.doonesbury.com/strip/archive/2013/02/17">Sunday February 17, 2013</a>]]></description>
+    <dc:date>2013-02-17T00:00:00+00:00</dc:date>
+  </item>
+
+</rdf:RDF>
