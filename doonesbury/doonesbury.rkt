@@ -15,10 +15,15 @@
           browser/external
           )
 
-(define (strip-url-string->xexp url-string)
+(define (get-following-redirections url)
+  (let-values ([(ip headers)
+                (get-pure-port/headers url #:redirections 1)])
+    ip))
+
+(define (HTML-url-string->xexp url-string)
   (call/input-url
    (string->url url-string)
-   get-pure-port
+   get-following-redirections
    html->xexp))
 
 (define (extract-image-url-string xexp)
@@ -26,8 +31,21 @@
     (and (not (null? gold))
          (second (first gold)))))
 
-;; http://www.gyford.com/misc/doonesburyrss.php
+(define (rss-URL-string->HTML-url-strings rss-url)
+  (let ([sxml (call/input-url
+               (string->url rss-url)
+               get-following-redirections
+               (curryr ssax:xml->sxml  '((x . "http://purl.org/rss/1.0/"))))])
+
+    ;; See
+    ;; http://planet.racket-lang.org/package-source/clements/sxml2.plt/1/3/planet-docs/sxml/sxpath.html
+
+    ;; ... particularly the bit that says ``Handling of namespaces in
+    ;; sxpath is a bit surprising''.  It sure is :-|
+    (map second ((sxpath "//x:item/x:link" '((x . "x"))) sxml)))
+  )
+
 (module+ main
-  (send-url
-   (extract-image-url-string
-    (strip-url-string->xexp  "http://doonesbury.slate.com/strip/archive/2013/02/17"))))
+  (for-each send-url
+            (map (compose extract-image-url-string HTML-url-string->xexp)
+                 (rss-URL-string->HTML-url-strings "http://www.gyford.com/misc/doonesburyrss.php"))))
