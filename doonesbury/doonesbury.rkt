@@ -13,8 +13,13 @@
 ;; at it (even though my beloved Doonesbury strip is indeed embedded
 ;; within).
 
-;; This program therefore grabs just the image, without all the crap.
-;; It starts with the URL to the RSS feed itself.
+;; Ideally I'd like to rewrite the RSS feed, so that the links point
+;; to the raw images (the URLs for which this program currently
+;; outputs).  Haven't yet figured out the elegant way to do that.
+;; Instead, this program just grabs the image URL from the feed, and
+;; displays it.
+
+;; Berry starts it off with the URL to the RSS feed itself.
 
 ;; I got this by subscribing at doonesbury.com with Google Reader,
 ;; then exporting my Google Reader stuff through "Google Takeout"
@@ -36,21 +41,28 @@
     (and (not (null? gold))
          (second (first gold)))))
 
-(define (rss-URL-string->HTML-url-strings rss-url)
-  (let ([sxml (call/input-url
-               (string->url rss-url)
-               get-following-redirections
-               (curryr ssax:xml->sxml  '((x . "http://purl.org/rss/1.0/"))))])
+(define (download-and-parse-XML url xml-namespace-silliness)
+  (call/input-url
+   (string->url url)
+   get-following-redirections
+   (curryr ssax:xml->sxml xml-namespace-silliness)))
 
-    ;; See
-    ;; http://planet.racket-lang.org/package-source/clements/sxml2.plt/1/3/planet-docs/sxml/sxpath.html
+(define (extract-link-URLs sxml namespace-prefix-symbol)
 
-    ;; ... particularly the bit that says ``Handling of namespaces in
-    ;; sxpath is a bit surprising''.  It sure is :-|
-    (map second ((sxpath "//x:item/x:link" '((x . "x"))) sxml)))
-  )
+  ;; See
+  ;; http://planet.racket-lang.org/package-source/clements/sxml2.plt/1/3/planet-docs/sxml/sxpath.html
+
+  ;; ... particularly the bit that says ``Handling of namespaces in
+  ;; sxpath is a bit surprising''.  It sure is :-|
+  (map second ((sxpath (format "//~a:item/~a:link"
+                               namespace-prefix-symbol
+                               namespace-prefix-symbol)
+                       `((,namespace-prefix-symbol . ,(format "~a" namespace-prefix-symbol))))
+               sxml)))
 
 (module+ main
   (for-each displayln
             (map (compose extract-image-url-string HTML-url-string->xexp)
-                 (rss-URL-string->HTML-url-strings *rss-feed-url*))))
+                 (extract-link-URLs
+                  (download-and-parse-XML *rss-feed-url*  '((x . "http://purl.org/rss/1.0/")))
+                  'x))))
