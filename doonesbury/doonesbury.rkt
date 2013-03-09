@@ -52,8 +52,11 @@
             "Downloading from ~a..."
             url-string))
 
-(define *rss-namespace-abbrev* '((x . "http://purl.org/rss/1.0/")
-                                 (rdf . "http://www.w3.org/1999/02/22-rdf-syntax-ns#")))
+(define *namespace-prefix-assig* '(
+                                 (xmlns:rdf . "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+                                 (xmlns:dc  . "http://purl.org/dc/elements/1.1/")
+                                 (xmlns     . "http://purl.org/rss/1.0/")
+                                 ))
 
 ;; Given parsed XML that came from a slow ugly page at Slate.com, use
 ;; some xpath magic to find the URL of a "bare" Doonesbury image.
@@ -65,16 +68,16 @@
          (second (first gold)))))
 
 ;; Given SXML that represents a parsed RSS feed, extract the text of
-;; "x:link" elements whose parent is an "x:item" element.
+;; "xmlns:link" elements whose parent is an "xmlns:item" element.
 (module+ test
   (let ([sxml
          '(*TOP*
            bogon1
-           (x:item (x:link "whoa"))
+           (xmlns:item (xmlns:link "whoa"))
            (bogon number two)
-           (x:item (x:link "Nellie"))
+           (xmlns:item (xmlns:link "Nellie"))
            )])
-    (check-equal? (extract-link-URLs sxml 'x) '("whoa" "Nellie"))))
+    (check-equal? (extract-link-URLs sxml 'xmlns) '("whoa" "Nellie"))))
 
 (define (extract-link-URLs sxml namespace-prefix-symbol)
 
@@ -93,7 +96,7 @@
 (define *demo-mode* #t)
 
 (define ssax-parse-from-input-port
-  (curryr ssax:xml->sxml *rss-namespace-abbrev*))
+  (curryr ssax:xml->sxml *namespace-prefix-assig*))
 
 ;; Given the URL of an ugly Slate page holding a particular Doonesbury
 ;; strip, download the page, extract the URL of just the image, and
