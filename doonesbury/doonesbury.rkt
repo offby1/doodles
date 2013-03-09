@@ -90,7 +90,7 @@
                sxml)))
 
 ;; When #t, reads from some files in this directory, rather than downloading.
-(define *demo-mode* #f)
+(define *demo-mode* #t)
 
 (define ssax-parse-from-input-port
   (curryr ssax:xml->sxml *rss-namespace-abbrev*))
@@ -110,5 +110,6 @@
         (call-with-input-file "sample-rss-feed.xml" ssax-parse-from-input-port)
         (call-with-input-URL *rss-feed-url* ssax-parse-from-input-port)))
 
-  (pretty-print
-   (modify-RDF-item-links (parsed-feed) improve-doonesbury-url)))
+  (srl:sxml->xml
+   (modify-RDF-item-links (parsed-feed) improve-doonesbury-url)
+   (current-output-port)))
