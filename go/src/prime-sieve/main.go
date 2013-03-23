@@ -6,11 +6,15 @@ import (
 
 func main() {
 	primes := primes()
-	for {
+	computed := 0
+	printed := 0
+	for printed < 5 {
 		p := <-primes
-		fmt.Printf("%v ", p)
-		if p > 1000 {
-			break
+		computed++
+
+		if computed%1000 == 0 {
+			fmt.Printf("%v ", p)
+			printed++
 		}
 	}
 }
