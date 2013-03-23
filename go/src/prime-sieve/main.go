@@ -5,14 +5,14 @@ import (
 )
 
 func main() {
-	fmt.Printf("Ahoy y'all\n")
-	int_channel := integers()
-	fmt.Printf("Here's an int: %v\n", <-int_channel)
-	fmt.Printf("Here's another: %v\n", <-int_channel)
-
-	odds_only := exclude_factors(int_channel, 2)
-	fmt.Printf("here's an odd number: %v\n", <-odds_only)
-	fmt.Printf("here's another: %v\n", <-odds_only)
+	primes := primes()
+	for {
+		p := <-primes
+		fmt.Printf("%v ", p)
+		if p > 1000 {
+			break
+		}
+	}
 }
 
 func integers() <-chan int {
@@ -37,5 +37,20 @@ func exclude_factors(numbers <-chan int, i int) <-chan int {
 			}
 		}
 	}()
+	return ch
+}
+
+func primes() <-chan int {
+	ch := make(chan int)
+
+	go func() {
+		the_sieve := integers()
+		for {
+			a_prime := <-the_sieve
+			ch <- a_prime
+			the_sieve = exclude_factors(the_sieve, a_prime)
+		}
+	}()
+
 	return ch
 }
