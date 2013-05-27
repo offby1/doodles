@@ -315,14 +315,14 @@ exec mred --require "$0" --main -- ${1+"$@"}
     (update-frame)
 
     (instantiate
-     checkable-menu-item%
-     ("&Ed (as opposed to Eric)"
-      file-menu
-      (lambda (item event)
-        (ed? (send item is-checked?))
-        (update-frame)))
+        checkable-menu-item%
+        ("&Ed (as opposed to Eric)"
+         file-menu
+         (lambda (item event)
+           (ed? (send item is-checked?))
+           (update-frame)))
 
-     (checked (ed?)))
+      (checked (ed?)))
 
 ;;;   (instantiate
 ;;;    checkable-menu-item%
@@ -334,20 +334,20 @@ exec mred --require "$0" --main -- ${1+"$@"}
 ;;;    (checked (*flickr-fail*)))
 
     (instantiate
-     menu-item%
-     ("&Quit"
-      file-menu
-      (lambda (item event)
-        (exit 0))))
+        menu-item%
+        ("&Quit"
+         file-menu
+         (lambda (item event)
+           (exit 0))))
     (instantiate
-     menu-item%
-     ("&About"
-      help-menu
-      (lambda (item event)
-        (message-box
-         "Exciting, huh?"
-         (format "This is flickr-thingy version ~a" *svnversion-string*))))))
+        menu-item%
+        ("&About"
+         help-menu
+         (lambda (item event)
+           (message-box
+            "Exciting, huh?"
+            (format "This is flickr-thingy version ~a" *svnversion-string*))))))
 
   (send frame show #t))
-
+(main)
 )

@@ -3,35 +3,23 @@ basename  := $(shell echo flickr-thingy-$(svnversion) | sed s,:,-,)
 
 # BUGBUG -- name it ".exe" only if we're on Windows.
 exe = flickr-thingy.exe
-pdir = flickr-thingy
-zip = $(basename).zip
-
-all: $(zip)
+all: $(exe)
 
 # All this complexity preserves the timestamp on version.ss if its
 # contents haven't changed -- that way stuff that depends on it won't
 # needlessly rebuild whenever we rebuild _it_.
 version.ss: FORCE
 	@temp=`mktemp botXXXXXX` ; \
-	echo -n '(define *svnversion-string* "' > $${temp}; \
-	echo -n $(svnversion) >> $${temp}; \
-	echo    '")' >> $${temp}; \
+	/bin/echo -n '(define *svnversion-string* "' > $${temp}; \
+	/bin/echo -n $(svnversion) >> $${temp}; \
+	/bin/echo    '")' >> $${temp}; \
 	if ! cmp --quiet $${temp} $@; then mv -v $${temp} $@; fi; \
 	rm -f $${temp}
 
 FORCE:
 
-# BUGBUG -- this works for Windows, but *nix puts it in
-# $(pdir)/bin/$(exe).  "uname" might return "Linux", "CYGWIN_NT-5.1",
-# "Darwin", or who knows what all else.
-$(zip): $(pdir)/$(exe)
-	zip -ur $@ $(pdir)
-
 $(exe): $(wildcard *.ss) version.ss
-	mzc --gui-exe $@ gui.ss 
-
-$(pdir)/$(exe): $(exe)
-	mzc --exe-dir $(pdir) $^
+	raco exe --gui gui.ss 
 
 check: $(exe)
 	PATH=.:$$PATH $^
@@ -40,4 +28,4 @@ check: $(exe)
 
 .PHONY: clean
 clean:
-	rm -rf $(exe) $(zip) $(pdir) version.ss
+	rm -rf $(exe) $ version.ss
