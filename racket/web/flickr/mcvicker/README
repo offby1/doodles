@@ -1,5 +1,11 @@
 -*-org-*-
 
+* To package it up:
+
+You'll need http://cygwin.com.  Make sure you've got "make" installed;
+then go to this directory in a Cygwin shell and type "make"; that
+should produce gui.exe.
+
 * To run
 
 ./gui.ss
