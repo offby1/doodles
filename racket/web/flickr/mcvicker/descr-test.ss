@@ -1,9 +1,13 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mzscheme --no-init-file --mute-banner --version --load "$0"
+exec mzscheme "$0"
 |#
-(module descr-test mzscheme
+
+#lang mzscheme
+
+;; This little test adds a title and a description to the photo at
+;; http://www.flickr.com/photos/offby1/2055192230
+
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
          (lib "etc.ss")
          (lib "file.ss")
@@ -16,19 +20,20 @@ exec mzscheme --no-init-file --mute-banner --version --load "$0"
          (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
          "keys.ss")
 
-(
- (lambda (title subject slide-mount-notation)
-   (flickr.photos.setMeta
-    #:auth_token (get-preference (*pref-name*))
+(define (whop-photo title subject slide-mount-notation)
+  (flickr.photos.setMeta
+   #:auth_token (get-preference (*pref-name*))
 
-    #:photo_id "2055192230"
-    #:title title
-    #:description (sxml->html
-                   `(html
-                     (em ,subject) ": " ,slide-mount-notation
+   #:photo_id "2055192230"
+   #:title title
+   #:description (sxml->html
+                  `(html
+                    (em ,subject) ": " ,slide-mount-notation
 
-                     ))))
- "glitz"
- "A lovely pagoda, shimmering under the full moon"
- "E. Pagoda")
-)
+                    ))))
+
+(whop-photo "glitz"
+            "A lovely pagoda, shimmering under the full moon"
+            "E. Pagoda")
+
+(displayln "OK, let's see if that worked ...")
