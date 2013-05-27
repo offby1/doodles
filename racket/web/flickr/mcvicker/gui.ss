@@ -1,8 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mred --require "$0" --main -- ${1+"$@"}
-|#
 (module gui mzscheme
 (require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
          (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
