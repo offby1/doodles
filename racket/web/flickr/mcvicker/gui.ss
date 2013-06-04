@@ -171,7 +171,7 @@
 ;; "jklmn" => #f
 (define (title->number-or-false string)
   (match
-      (regexp-match #px"^[jJ]([0-9]+)$" string)
+      (regexp-match #px"^[jJ]([0-9]+)\\b" string)
     [(_ number-string)
      (string->number number-string)]
     [_ #f]))
