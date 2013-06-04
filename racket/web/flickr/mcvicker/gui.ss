@@ -235,33 +235,20 @@
 
                                                      )))
 
-                                             (flickr.photos.setDates
-                                              #:auth_token (get-preference (*pref-name*))
-
-                                              #:photo_id (photo-id (full-info-flickr-metadata record))
-                                              #:date_taken date
-                                              #:date_taken_granularity granularity)
                                              (if  (equal?  descr '(html "" "" ""))
                                                   (log! (format "Skipping ~s because the description is empty" record))
                                                   ;; I'm pretty sure
                                                   ;; there's never any
                                                   ;; return value, but
                                                   ;; you can't be too careful!
-                                                  (let* ((rv (flickr.photos.setMeta
-                                                              #:auth_token (get-preference (*pref-name*))
-
-                                                              #:photo_id  (photo-id (full-info-flickr-metadata record))
-                                                              #:title (full-info-title record)
-                                                              #:description (sxml->html descr)))
-                                                         (msg (format
-                                                               "~s: ~s: ~s => ~s"
+                                                  (let* ((msg (format
+                                                               "Pretending to send data: ~s: ~s: ~s"
                                                                (full-info-title record)
                                                                date
-                                                               descr
-                                                               rv)))
+                                                               descr)))
                                                     (send frame set-status-text
                                                           msg)
-                                                    (log! (format "Sent data to flickr: ~a" msg)))))
+                                                    (log! msg))))
 
                                            (send pb advance!)
                                            (yield))))
