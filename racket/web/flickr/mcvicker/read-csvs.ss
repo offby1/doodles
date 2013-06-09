@@ -1,20 +1,17 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
+exec racket $0
 |#
 
-(module read-csvs mzscheme
-(require (only (lib "1.ss" "srfi")
-               filter
-               partition
-               take)
-         (lib "etc.ss")
-         (only (lib "misc.ss" "swindle")
-               regexp-case)
-         (planet "csv.ss" ("neil" "csv.plt" 1 1)))
+#lang racket
 
-(define-struct datum (slide-number mount-date subject mount-notation scanned) #f)
+(module+ test
+  (require rackunit rackunit/text-ui))
+
+(require
+ (planet "csv.ss" ("neil" "csv.plt" 1 1)))
+
+(define-struct datum (slide-number mount-date subject mount-notation scanned) #:transparent)
 
 (define (zero-pad i)
   (string-append
@@ -62,74 +59,75 @@ exec mzscheme -M errortrace -qu "$0" ${1+"$@"}
        (else
         y))))
 
-  (regexp-case
-   (string-downcase mount-date)
-   [#px"^[ ?]*$" (values #f #f)]
-   [(#px"^([0-9]{2,4})$" year)
-    (values
-     (format "~a" (normalize-year year))
-     "6")]
-   [(#px"^([a-z]{3})-([0-9]{2,4})$" mon year)
-    (values
-     (format
-      "~a-~a"
-      (normalize-year year)
-      (zero-pad (month-sym->number (string->symbol mon))))
-     "4")]
-   [else
-    (error 'make-datum "Can't parse date ~s -- doesn't match the regexp" mount-date)]))
+  (match (string-downcase mount-date)
+    [(regexp #px"^([0-9]{2,4})$" (list _ year))
+     (values
+      (format "~a" (normalize-year year))
+      "6")]
+    [(regexp #px"^((?i:[a-z]){3})-([0-9]{2,4})$" (list _ mon year))
+     (values
+      (format
+       "~a-~a"
+       (normalize-year year)
+       (zero-pad (month-sym->number (string->symbol mon))))
+      "4")]
+    [else
+     (values #f #f)]))
 
-(define (private-make-datum slide-number mount-date subject mount-notation scanned)
+(module+ test
+  (check-equal? (call-with-values (thunk (lem-date->flickr-date-info "")) cons)
+                (cons #f #f))
+  (check-equal? (call-with-values (thunk (lem-date->flickr-date-info "1964")) cons)
+                (cons "1964" "6"))
+  (check-equal? (call-with-values (thunk (lem-date->flickr-date-info "Oct-64")) cons)
+                (cons "1964-10" "4")))
+
+(define *data-by-number* (make-hash '()))
+
+(define (row-to-hash r)
+  (for/hash ([k '(slide-number mount-date subject mount-notation scanned)]
+             [v r])
+    (values k v)))
+
+(define (get h k) (hash-ref h k ""))
+
+(define (hash-to-datum h)
   (make-datum
-   slide-number
+   (get h 'slide-number)
    (call-with-values
        (lambda ()
-         (lem-date->flickr-date-info mount-date))
+         (lem-date->flickr-date-info (get h 'mount-date)))
      cons)
-   subject
-   mount-notation
-   scanned))
+   (get h 'subject)
+   (get h 'mount-notation)
+   (get h 'scanned)))
 
-(define *data-by-number* (make-hash-table 'equal))
+(define (snorgle-file fn [status-proc #f])
+  (when status-proc
+    (status-proc (format
+                  "~a ... " fn)))
+  (call-with-input-file
+      fn
+    (lambda (ip)
+      (csv-for-each
+       (lambda (row)
+         (let* ([h (row-to-hash row)]
+                [slide-number (get h 'slide-number)])
+           (when (integer? (read (open-input-string slide-number)))
+             (hash-set!
+              *data-by-number*
+              slide-number
+              (hash-to-datum h)))))
+       ip))))
 
-(define snorgle-file
- (lambda (fn status-proc)
-   (status-proc (format
-                 "~a ... " fn))
-   (call-with-input-file
-       fn
-     (lambda (ip)
-       (csv-for-each
-        (lambda (row)
-          (let again ((row row))
-            (cond
-             ((and (= 6 (length row))
-                   (zero? (string-length (list-ref row 5))))
-              (again (take row 5)))
-             ((= 5 (length row))
-              (let ((non-empty-fields (filter (lambda (str)
-                                                (positive? (string-length str)))
-                                              row)))
-                ;; don't bother storing the data if the index is the
-                ;; only non-empty field.
-                (when (< 1 (length non-empty-fields))
-                  (let ((index  (read (open-input-string (car row)))))
-                    (when (integer? index)
-                      (hash-table-put!
-                       *data-by-number*
-                       index
-                       (apply private-make-datum row)))))))
-             (else
-              (status-proc
-               (format
-                "Freaky row has ~a entries, but I want 5 or 6: ~s~%"
-                (length row)
-                row))))))
-        ip)))))
 
 (provide snorgle-file *data-by-number*
-         (struct datum (slide-number
-                        mount-date
-                        mount-notation
-                        subject)))
-)
+         (struct-out datum))
+
+(module+ main
+  (for ([f  (directory-list ".")])
+    (let ([m (regexp-match #px"\\.csv$" f)])
+      (when m
+        (snorgle-file f))))
+
+  (pretty-write *data-by-number*))
