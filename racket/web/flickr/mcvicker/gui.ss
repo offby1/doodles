@@ -1,15 +1,21 @@
-(module gui mzscheme
-(require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec racket $0
+|#
+
+#lang racket
+(require unstable/debug
+         (planet dvanhorn/flickr:2:3)
          (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
          (lib "class.ss")
          (lib "etc.ss")
          (lib "file.ss")
          (lib "include.ss")
-         (only (lib "list.ss") sort)
+         (only-in (lib "list.ss") sort)
          (lib "match.ss")
          (lib "mred.ss" "mred")
          (lib "pretty.ss")
-         (only (lib "1.ss" "srfi")
+         (only-in (lib "1.ss" "srfi")
                filter)
          (lib "trace.ss")
          "auth.ss"
@@ -30,7 +36,8 @@
    (find-system-path 'temp-dir)
    "flickr-log.txt"))
 (define log! #f)
-(let ((op (open-output-file *log-file-name* 'truncate/replace 'text)))
+(let ((op (open-output-file *log-file-name* #:exists 'truncate/replace #:mode 'text)))
+  (current-error-port op)
   (set! log! (lambda (msg)
               (fprintf op "~a~%" msg)
               (flush-output op))))
@@ -91,14 +98,14 @@
 
                          (send csv-message set-label (format
                                                       "~a photo records loaded"
-                                                      (hash-table-count *data-by-number*)))
+                                                      (hash-count *data-by-number*)))
                          (send frame set-status-text "Done reading CSV files."))))))))
 (define csv-message
   (new message%
        (label "You haven't yet loaded any photo records from CSV files.")
        (parent csv-panel)))
 
-(define *photos-by-title* (make-hash-table 'equal))
+(define *photos-by-title* (make-hash '()))
 
 (define downloaded-panel (new vertical-panel% (parent hpane) (style '(border))))
 
@@ -137,22 +144,22 @@
                                 (send pb advance!)
                                 (for-each
                                  (lambda (photo)
-                                   (hash-table-put! *photos-by-title* (photo-title photo) photo)
-                                   (log! (format "Noted ~s => ~s" (photo-title photo) photo)))
+                                   (hash-set! *photos-by-title* (photo-title photo) photo)
+                                   (log! (format "Noted ~s => ~s -- number is ~s"
+                                                 (photo-title photo)
+                                                 photo
+                                                 (title->number-or-false (photo-title photo)))))
                                  photos)
                                 (send frame set-status-text
                                       (format "Downloaded ~a photos from flickr..."
-                                              (hash-table-count *photos-by-title*)))
-                                (yield))
-                              #:user_id (*user-id*)
-
-                              #:auth_token (get-preference (*pref-name*)))
+                                              (hash-count *photos-by-title*)))
+                                (yield)))
 
                              (send frame set-status-text "Finished downloading from flickr.")
                              (send download-message set-label
                                    (format
                                     "Downloaded information about ~a photos"
-                                    (hash-table-count *photos-by-title*)))
+                                    (hash-count *photos-by-title*)))
                              (send pb show #f)))))))
 
               (send progress-bar start!)))))))
@@ -164,19 +171,7 @@
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
-;; e.g. "j123" => 123
-;; but
-;; "123" => #f
-;; and
-;; "jklmn" => #f
-(define (title->number-or-false string)
-  (match
-      (regexp-match #px"^[jJ]([0-9]+)\\b" string)
-    [(_ number-string)
-     (string->number number-string)]
-    [_ #f]))
-
-(define-struct full-info (title csv-record flickr-metadata) #f)
+(define-struct full-info (title csv-record flickr-metadata) #:transparent)
 
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
@@ -191,12 +186,12 @@
                            (match-let (((date . granularity)
                                         (datum-mount-date (full-info-csv-record record))))
                              (and date granularity))))
-                    (hash-table-map
+                    (hash-map
                      *photos-by-title*
                      (lambda (title photo)
                        (let ((as-number (title->number-or-false title)))
                          (and (integer? as-number)
-                              (let ((datum (hash-table-get *data-by-number* as-number #f)))
+                              (let ((datum (hash-ref *data-by-number* as-number #f)))
                                 (and
                                  datum
                                  (make-full-info
@@ -221,7 +216,7 @@
                                       ([void usual-exception-handler])
                                     (for-each
                                      (lambda (record)
-                                       (parameterize ((sign-all? #t))
+                                       (parameterize ((signed? #t))
                                          (match-let (((date . granularity)
                                                       (datum-mount-date (full-info-csv-record record))))
                                            (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
@@ -282,8 +277,8 @@
                 (find-system-path 'temp-dir)
                 'sw_shownormal))))))
 
-(provide main)
-(define (main . args)
+
+(module+ main
   (let* ((mb (instantiate menu-bar% (frame)))
          (file-menu (instantiate menu% ("&File" mb)))
          (help-menu (instantiate menu% ("&Help" mb)))
@@ -331,5 +326,3 @@
             (format "This is flickr-thingy version ~a" *svnversion-string*))))))
 
   (send frame show #t))
-(main)
-)

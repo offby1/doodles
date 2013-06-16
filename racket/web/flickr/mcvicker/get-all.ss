@@ -1,8 +1,13 @@
-;;$Id$
-(module get-all mzscheme
+#! /bin/sh
+#| Hey Emacs, this is -*-scheme-*- code!
+exec racket $0
+|#
+
+#lang racket
+
 (require
- (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
- (only (planet "memoize.ss" ("dherman" "memoize.plt" 2 (= 3))) define/memo*)
+ (planet dvanhorn/flickr:2:3)
+ (only-in (planet "memoize.ss" ("dherman" "memoize.plt" 2 (= 3))) define/memo*)
  (lib "etc.ss")
  (lib "match.ss")
  (lib "pretty.ss")
@@ -11,16 +16,16 @@
 
 (define *cache* #f)
 (define (alist->mutable-hash a)
-  (let ((h (make-hash-table 'equal)))
+  (let ((h (make-hash '())))
     (for-each (lambda (p)
-                (hash-table-put!
+                (hash-set!
                  h
                  (car p)
                  (cdr p)))
               a)
     h))
 
-(define-struct photo (id title) #f)
+(define-struct photo (id title) #:transparent)
 
 ;; returns a pair: the total number of pages (or 0 to indicate you
 ;; asked for a page past the end), and the list of photos from that
@@ -33,18 +38,19 @@
   (when (zero? page-number)
     (error 'get-page "ah ah ah -- flickr page numbers count from 1, not 0"))
 
-  (parameterize ((non-text-tags (list* 'photos (non-text-tags)))
-                 (sign-all? #t))
+  (parameterize ((signed? #t))
     (match
-     (hash-table-get
+     (hash-ref
       *cache*
       page-number
       (lambda ()
         (let ((got (apply flickr.photos.search
                           (list* #:page (number->string page-number)
                                  #:sort "date_posted_asc"
-                                 args))))
-          (hash-table-put! *cache* page-number got)
+                                 args
+                                 #:user_id (*user-id*)
+                                 #:auth_token (get-preference (*pref-name*))))))
+          (hash-set! *cache* page-number got)
           got)))
      [(('photos atts photos ...))
       (match atts
@@ -71,7 +77,7 @@
         (if (file-exists? *cache-file*)
             (alist->mutable-hash
              (with-input-from-file *cache-file* read))
-             (make-hash-table 'equal)))
+             (make-hash '())))
   (let loop ((pages-requested 0))
     (match-let ([(total-pages buncha-photos ...)
                  (apply get-one-page (add1 pages-requested) args)])
@@ -82,16 +88,36 @@
          total-pages)
         (loop (add1 pages-requested)))))
 
-  (when (positive? (hash-table-count *cache*))
+  (when (positive? (hash-count *cache*))
     (with-handlers
         ([exn:fail:filesystem? void])
       (call-with-output-file
           *cache-file*
         (lambda (op)
           (parameterize ((print-hash-table #t))
-            (pretty-print (hash-table-map *cache* cons) op)))))))
+            (pretty-print (hash-map *cache* cons) op)))))))
 
+(provide (all-defined-out))
 
-(provide (all-defined))
+(module+ main
+  (require (only-in "misc.rkt" title->number-or-false))
+  (define *photos-by-title* (make-hash '()))
 
-)
+  (for-each-page
+   (lambda ( photos this-page-number total-pages)
+     (when (equal? 1 this-page-number)
+       (printf "Downloading from flickr ...~%"))
+
+     (for-each
+      (lambda (photo)
+        (hash-set! *photos-by-title* (photo-title photo) photo)
+        (printf "Noted ~s => ~s -- number is ~s~%"
+                (photo-title photo)
+                photo
+                (title->number-or-false (photo-title photo))))
+      photos)
+     (printf
+      (format "Downloaded ~a photos from flickr...~%"
+              (hash-count *photos-by-title*)))))
+  (pretty-display *photos-by-title*)
+  )

@@ -1,10 +1,6 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-#$Id$
-exec mzscheme -qu "$0" ${1+"$@"}
-|#
-(module auth mzscheme
-(require (planet "flickr.ss" ("dvanhorn" "flickr.plt" 1))
+#lang racket
+
+(require (planet dvanhorn/flickr:2:3)
          (lib "external.ss" "browser")
          (lib "url.ss" "net")
          (lib "match.ss")
@@ -16,19 +12,18 @@ exec mzscheme -qu "$0" ${1+"$@"}
        (= 98 (exn:flickr-code exn))))
 
 (define (authenticate! browser-prompt-thunk)
-  (parameterize ((sign-all? #t))
+  (parameterize ((signed? #t))
     (match (flickr.auth.getFrob)
            [(('frob () frob))
             (begin
               (send-url (url->string (authorize-url #:frob frob #:perms "write")))
               (browser-prompt-thunk)
-              (parameterize ((non-text-tags (list* 'auth (non-text-tags))))
-                (match (flickr.auth.getToken #:frob frob)
-                       [(('auth ()
-                                ('token () token)
-                                ('perms () perms)
-                                ('user (('fullname fn) ('nsid nsid) ('username user)))))
-                        (put-preferences (list (*pref-name*)) (list token))])))])))
+              (match (flickr.auth.getToken #:frob frob)
+                [(('auth ()
+                         ('token () token)
+                         ('perms () perms)
+                         ('user (('fullname fn) ('nsid nsid) ('username user)))))
+                 (put-preferences (list (*pref-name*)) (list token))]))])))
 
 (define (maybe-authenticate! browser-prompt-thunk)
   (let ((auth-token (get-preference (*pref-name*))))
@@ -39,5 +34,3 @@ exec mzscheme -qu "$0" ${1+"$@"}
         (authenticate! browser-prompt-thunk))))
 
 (provide maybe-authenticate!)
-
-)
