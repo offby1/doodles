@@ -12,6 +12,7 @@ exec racket $0
  (lib "match.ss")
  (lib "pretty.ss")
  (lib "trace.ss")
+ (only-in "misc.rkt" photo photo-title)
  "keys.ss")
 
 (define *cache* #f)
@@ -24,8 +25,6 @@ exec racket $0
                  (cdr p)))
               a)
     h))
-
-(define-struct photo (id title) #:transparent)
 
 ;; returns a pair: the total number of pages (or 0 to indicate you
 ;; asked for a page past the end), and the list of photos from that
@@ -68,9 +67,10 @@ exec racket $0
                                      ('secret _)
                                      ('server _)
                                      ('title title)))
-                                   (make-photo id title)])) photos))])])))
+                                   (photo id title)])) photos))])])))
 
 ;; for each page, calls proc on the list of photos from that page.
+(provide for-each-page)
 (define (for-each-page proc . args)
   (define *cache-file* (format "downloaded-photos-cache-~a.ss" (*user-id*)))
   (set! *cache*
@@ -97,11 +97,18 @@ exec racket $0
           (parameterize ((print-hash-table #t))
             (pretty-print (hash-map *cache* cons) op)))))))
 
-(provide (all-defined-out))
-
 (module+ main
-  (require (only-in "misc.rkt" title->number-or-false))
+  (require
+   (only-in "misc.rkt" title->number-or-false log! join)
+   (only-in "read-csvs.rkt" snorgle-file))
+  (log! printf)
   (define *photos-by-title* (make-hash '()))
+
+  (define *data-by-number*
+    (snorgle-file
+     "Robinson slides data 1-1000.csv"
+     (lambda (message)
+       ((log!) message))))
 
   (for-each-page
    (lambda ( photos this-page-number total-pages)
@@ -110,14 +117,14 @@ exec racket $0
 
      (for-each
       (lambda (photo)
-        (hash-set! *photos-by-title* (photo-title photo) photo)
-        (printf "Noted ~s => ~s -- number is ~s~%"
-                (photo-title photo)
-                photo
-                (title->number-or-false (photo-title photo))))
+        (hash-set! *photos-by-title* (photo-title photo) photo))
+
       photos)
      (printf
       (format "Downloaded ~a photos from flickr...~%"
               (hash-count *photos-by-title*)))))
-  (pretty-display *photos-by-title*)
+
+  (pretty-display
+   (join  *photos-by-title* *data-by-number*))
+
   )

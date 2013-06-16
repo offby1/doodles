@@ -1,26 +1,21 @@
-(module progress-bar mzscheme
-(require
- (lib "class.ss")
- (lib "mred.ss" "mred"))
+#lang racket/gui
 
 (define pb%
   (class dialog%
     (init  work-to-do)
     (init-field worker-proc)
-    (public start!)
-    (public advance!)
-    (public set-work-to-do!)
+
     (define th #f)
     (super-new)
 
-    (define (start!)
+    (define/public (start!)
       (set! th (thread (lambda () (worker-proc this))))
       (send this show #t))
 
     (define vpane
       (new vertical-pane% (parent this)))
 
-    (define (advance!)
+    (define/public (advance!)
       (send gauge set-value (add1 (send gauge get-value)))
       (send text set-label
             (format
@@ -28,7 +23,7 @@
              (send gauge get-value)
              (send gauge get-range))))
 
-    (define (set-work-to-do! x)
+    (define/public (set-work-to-do! x)
       (send gauge set-range x))
 
     (define gauge
@@ -55,5 +50,3 @@
               (send this show #f)))))))
 
 (provide pb%)
-
-)

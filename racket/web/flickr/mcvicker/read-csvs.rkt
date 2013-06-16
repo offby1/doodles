@@ -8,10 +8,8 @@ exec racket $0
 (module+ test
   (require rackunit rackunit/text-ui))
 
-(require
- (planet "csv.ss" ("neil" "csv.plt" 1 1)))
-
-(define-struct datum (slide-number mount-date subject mount-notation scanned) #:transparent)
+(require (planet neil/csv:2:0)
+         (only-in "misc.rkt" datum))
 
 (define (zero-pad i)
   (string-append
@@ -82,8 +80,6 @@ exec racket $0
   (check-equal? (call-with-values (thunk (lem-date->flickr-date-info "Oct-64")) cons)
                 (cons "1964-10" "4")))
 
-(define *data-by-number* (make-hash '()))
-
 (define (row-to-hash r)
   (for/hash ([k '(slide-number mount-date subject mount-notation scanned)]
              [v r])
@@ -92,7 +88,7 @@ exec racket $0
 (define (get h k) (hash-ref h k ""))
 
 (define (hash-to-datum h)
-  (make-datum
+  (datum
    (get h 'slide-number)
    (call-with-values
        (lambda ()
@@ -103,6 +99,7 @@ exec racket $0
    (get h 'scanned)))
 
 (define (snorgle-file fn [status-proc #f])
+  (define *data-by-number* (make-hash '()))
   (when status-proc
     (status-proc (format
                   "~a ... " fn)))
@@ -118,16 +115,13 @@ exec racket $0
               *data-by-number*
               slide-number
               (hash-to-datum h)))))
-       ip))))
+       ip)))
+  *data-by-number*)
 
-
-(provide snorgle-file *data-by-number*
-         (struct-out datum))
+(provide snorgle-file)
 
 (module+ main
   (for ([f  (directory-list ".")])
     (let ([m (regexp-match #px"\\.csv$" f)])
       (when m
-        (snorgle-file f))))
-
-  (pretty-write *data-by-number*))
+        (pretty-write (snorgle-file f))))))

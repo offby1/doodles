@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec racket $0
+exec racket -l errortrace -u $0
 |#
 
 #lang racket
@@ -18,11 +18,20 @@ exec racket $0
          (only-in (lib "1.ss" "srfi")
                filter)
          (lib "trace.ss")
+         (only-in "misc.rkt"
+           datum-slide-number
+           full-info-csv-record
+           join
+           log!
+           photo-title
+           title->number-or-false
+           whop-record!
+           )
          "auth.ss"
-         "get-all.ss"
+         (only-in "get-all.ss" for-each-page)
          "keys.ss"
          "progress-bar.ss"
-         "read-csvs.ss")
+         "read-csvs.rkt")
 
 (include "version.ss")
 
@@ -35,12 +44,12 @@ exec racket $0
   (build-path
    (find-system-path 'temp-dir)
    "flickr-log.txt"))
-(define log! #f)
+
 (let ((op (open-output-file *log-file-name* #:exists 'truncate/replace #:mode 'text)))
   (current-error-port op)
-  (set! log! (lambda (msg)
-              (fprintf op "~a~%" msg)
-              (flush-output op))))
+  (log! (lambda (msg)
+          (fprintf op "~a~%" msg)
+          (flush-output op))))
 
 (define frame (new frame% (label "Flickr Thingy")))
 
@@ -72,6 +81,8 @@ exec racket $0
 
 (define csv-panel (new vertical-panel% (parent hpane) (style '(border))))
 
+(define *data-by-number* (make-hash '()))
+
 (define open-button
   (new button% (parent csv-panel) (label "Read dem CSV files")
        (callback (lambda (item event)
@@ -89,11 +100,12 @@ exec racket $0
                        (when files
                          (for-each
                           (lambda (file)
-                            (snorgle-file
-                             file
-                             (lambda (message)
-                               (send frame set-status-text message)
-                               (log! message))))
+                            (set! *data-by-number*
+                                  (snorgle-file
+                                   file
+                                   (lambda (message)
+                                     (send frame set-status-text message)
+                                     (log! message)))))
                           files)
 
                          (send csv-message set-label (format
@@ -127,11 +139,11 @@ exec racket $0
 
             (let ((progress-bar
                    (new pb%
-                        (label "Progress!")
-                        (parent frame)
-                        (work-to-do 1)  ;we'll set this to the correct
+                        [label "Progress!"]
+                        [parent frame]
+                        [work-to-do 1]  ;we'll set this to the correct
                                         ;value once we know what it is.
-                        (worker-proc
+                        [worker-proc
                          (lambda (pb)
                            (with-handlers
                                ([void usual-exception-handler])
@@ -160,7 +172,7 @@ exec racket $0
                                    (format
                                     "Downloaded information about ~a photos"
                                     (hash-count *photos-by-title*)))
-                             (send pb show #f)))))))
+                             (send pb show #f)))])))
 
               (send progress-bar start!)))))))
 
@@ -171,7 +183,43 @@ exec racket $0
 
 (define joined-panel (new vertical-panel% (parent hpane) (style '(border))))
 
-(define-struct full-info (title csv-record flickr-metadata) #:transparent)
+(define joined-message
+  (new message%
+       (label "You haven't yet linked CSV records with downloaded photo info.")
+       (parent joined-panel)))
+
+(define (maybe-whop-flickr-photos joined)
+  (when (positive? (length joined))
+    (define sorted (sort
+                    joined
+                    (lambda (r1 r2)
+                      (< (string->number (datum-slide-number (full-info-csv-record r1)))
+                         (string->number (datum-slide-number (full-info-csv-record r2)))))))
+    (define progress-bar
+      (new pb%
+           [label "Doin' It!"]
+           [parent frame]
+           [work-to-do (length sorted)]
+           [worker-proc
+            (lambda (pb)
+              (with-handlers
+                  ([void usual-exception-handler])
+                (for-each
+                 (lambda (record)
+                   (parameterize ((signed? #t))
+                     (whop-record! record (lambda (msg )
+                                            (send frame set-status-text msg)
+                                            (log! msg))))
+                   (send pb advance!)
+                   (yield))
+                 sorted))
+
+              (send frame set-status-text
+                    (format
+                     "Fiddled ~a photos on flickr!!"
+                     (length sorted))))]))
+    (send progress-bar show #f)
+    (send progress-bar start!)))
 
 (define join-button
   (new button% (parent joined-panel) (label "glue the two bits together")
@@ -179,90 +227,9 @@ exec racket $0
         (lambda (item event)
           (with-handlers
               ([void usual-exception-handler])
-            (let ((joined
-                   (filter
-                    (lambda (record)
-                      (and record
-                           (match-let (((date . granularity)
-                                        (datum-mount-date (full-info-csv-record record))))
-                             (and date granularity))))
-                    (hash-map
-                     *photos-by-title*
-                     (lambda (title photo)
-                       (let ((as-number (title->number-or-false title)))
-                         (and (integer? as-number)
-                              (let ((datum (hash-ref *data-by-number* as-number #f)))
-                                (and
-                                 datum
-                                 (make-full-info
-                                  title
-                                  datum
-                                  photo))))))))))
+            (let ([joined (join *photos-by-title* *data-by-number*)])
               (send joined-message set-label (format "~a records matched" (length joined)))
-              (if (positive? (length joined))
-                  (let* ((sorted (sort
-                                  joined
-                                  (lambda (r1 r2)
-                                    (< (string->number (datum-slide-number (full-info-csv-record r1)))
-                                       (string->number (datum-slide-number (full-info-csv-record r2)))))))
-                         (progress-bar
-                          (new pb%
-                               (label "Doin' It!")
-                               (parent frame)
-                               (work-to-do (length sorted))
-                               (worker-proc
-                                (lambda (pb)
-                                  (with-handlers
-                                      ([void usual-exception-handler])
-                                    (for-each
-                                     (lambda (record)
-                                       (parameterize ((signed? #t))
-                                         (match-let (((date . granularity)
-                                                      (datum-mount-date (full-info-csv-record record))))
-                                           (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
-                                                  (s  (datum-subject         (full-info-csv-record record)))
-                                                  (descr
-                                                   `(html
-                                                     ,(if (positive? (string-length mn)) (list 'b mn) "")
-                                                     ,(if (positive? (string-length mn))
-                                                          "|| " "")
-                                                     ,(if (positive? (string-length s))  s       "")
-
-                                                     )))
-
-                                             (if  (equal?  descr '(html "" "" ""))
-                                                  (log! (format "Skipping ~s because the description is empty" record))
-                                                  ;; I'm pretty sure
-                                                  ;; there's never any
-                                                  ;; return value, but
-                                                  ;; you can't be too careful!
-                                                  (let* ((msg (format
-                                                               "Pretending to send data: ~s: ~s: ~s"
-                                                               (full-info-title record)
-                                                               date
-                                                               descr)))
-                                                    (send frame set-status-text
-                                                          msg)
-                                                    (log! msg))))
-
-                                           (send pb advance!)
-                                           (yield))))
-
-                                     sorted)
-
-                                    (send frame set-status-text
-                                          (format
-                                           "Fiddled ~a photos on flickr!!"
-                                           (length sorted))))
-
-                                  (send pb show #f))))))
-                    (send progress-bar start!))
-                  (log! "No joined photos"))))))))
-
-(define joined-message
-  (new message%
-       (label "You haven't yet linked CSV records with downloaded photo info.")
-       (parent joined-panel)))
+              (maybe-whop-flickr-photos joined)))))))
 
 (define view-log-button
   (and (eq? (system-type) 'windows)
