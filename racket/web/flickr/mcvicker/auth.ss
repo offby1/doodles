@@ -16,7 +16,10 @@
     (match (flickr.auth.getFrob)
            [(('frob () frob))
             (begin
-              (send-url (url->string (authorize-url #:frob frob #:perms "write")))
+              (send-url (url->string (authorize-url (current-sec-key)
+                                                    (cons 'api_key (current-api-key))
+                                                    (cons 'frob frob)
+                                                    (cons 'perms "write"))))
               (browser-prompt-thunk)
               (match (flickr.auth.getToken #:frob frob)
                 [(('auth ()
