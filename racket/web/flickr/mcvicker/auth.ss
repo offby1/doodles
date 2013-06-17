@@ -24,13 +24,16 @@
               (browser-prompt-thunk)
               (let ([token (flickr.auth.getToken #:frob frob)])
                 (match token
-                  [(('auth ()
-                           ('token () token)
-                           ('perms () perms)
-                           ('user (('fullname fn) ('nsid nsid) ('username user)))))
+                  [`((auth ()
+                           (token () ,token)
+                           (perms () ,perms)
+                           (user ((fullname . ,fn) (nsid ,nsid) (username ,user)))))
 
                    (put-preferences (list (*pref-name*)) (list token))]
-                  [_ (log! (format "Wtf: ~s" token)) #f]))
+                  [_ (raise-arguments-error
+                      'authenticate!
+                      "Token from flickr.auth.getToken doesn't match our expectations"
+                      "token" token)]))
               )])))
 
 (define (maybe-authenticate! browser-prompt-thunk)
