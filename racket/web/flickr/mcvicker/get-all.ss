@@ -13,7 +13,7 @@ exec racket $0
  (lib "pretty.ss")
  (lib "trace.ss")
  (only-in "misc.rkt" photo photo-title)
- "keys.ss")
+ "keys.rkt")
 
 (define *cache* #f)
 (define (alist->mutable-hash a)

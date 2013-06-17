@@ -4,6 +4,11 @@
 ;; Run my tests with ``raco test racket-script-template.rkt''.
 ;; Invoke my "main" with ``racket racket-script-template.rkt''.
 
+(require
+ (planet dvanhorn/flickr:2:3)
+ (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
+ (only-in "keys.rkt" *pref-name*))
+
 (module+ test
   (require rackunit rackunit/text-ui))
 
@@ -60,7 +65,7 @@
    mapped))
 
 (provide whop-record!)
-(define (whop-record! record success-logger)
+(define (whop-record! record success-logger [for-real? #f])
   (match-let ([(cons date granularity)
                (datum-mount-date (full-info-csv-record record))])
     (let* ((mn (datum-mount-notation  (full-info-csv-record record)))
@@ -74,14 +79,31 @@
 
               )))
 
+      (when for-real?
+        (flickr.photos.setDates
+         #:auth_token (get-preference (*pref-name*))
+
+         #:photo_id (photo-id (full-info-flickr-metadata record))
+         #:date_taken date
+         #:date_taken_granularity granularity))
+
       (if  (equal?  descr '(html "" "" ""))
            (log! (format "Skipping ~s because the description is empty" record))
            ;; I'm pretty sure
            ;; there's never any
            ;; return value, but
            ;; you can't be too careful!
-           (success-logger (format
-                            "Pretending to send data: ~s: ~s: ~s"
-                            (full-info-title record)
-                            date
-                            descr))))))
+           (when for-real?
+             (let ((rv (flickr.photos.setMeta
+                        #:auth_token (get-preference (*pref-name*))
+
+                        #:photo_id  (photo-id (full-info-flickr-metadata record))
+                        #:title (full-info-title record)
+                        #:description (sxml->html descr))))
+               (success-logger (format
+                                "sent data to flickr: ~s: ~s: ~s => ~s"
+                                (full-info-title record)
+                                date
+                                descr
+                                rv))))
+           ))))

@@ -18,7 +18,7 @@ exec mzscheme "$0"
                filter)
          (lib "trace.ss")
          (planet "html-parser.ss" ("ashinn" "html-parser.plt" 1 1))
-         "keys.ss")
+         "keys.rkt")
 
 (define (whop-photo title subject slide-mount-notation)
   (flickr.photos.setMeta

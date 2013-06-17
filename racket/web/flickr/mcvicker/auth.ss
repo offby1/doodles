@@ -5,7 +5,7 @@
          (lib "url.ss" "net")
          (lib "match.ss")
          (lib "file.ss")
-         "keys.ss")
+         "keys.rkt")
 
 (define (exn:flickr:invalid-auth-token? exn)
   (and (exn:flickr? exn)

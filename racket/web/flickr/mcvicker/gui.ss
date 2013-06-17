@@ -29,7 +29,7 @@ exec racket -l errortrace -u $0
            )
          "auth.ss"
          (only-in "get-all.ss" for-each-page)
-         "keys.ss"
+         "keys.rkt"
          "progress-bar.ss"
          "read-csvs.rkt")
 
