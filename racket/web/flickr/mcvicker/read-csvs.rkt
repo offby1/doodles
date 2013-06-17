@@ -109,8 +109,9 @@ exec racket $0
       (csv-for-each
        (lambda (row)
          (let* ([h (row-to-hash row)]
-                [slide-number (get h 'slide-number)])
-           (when (integer? (read (open-input-string slide-number)))
+                [slide-number-string (get h 'slide-number)]
+                [slide-number (read (open-input-string slide-number-string))])
+           (when (integer? slide-number)
              (hash-set!
               *data-by-number*
               slide-number
