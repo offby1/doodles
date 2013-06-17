@@ -5,7 +5,8 @@
          (lib "url.ss" "net")
          (lib "match.ss")
          (lib "file.ss")
-         "keys.rkt")
+         "keys.rkt"
+         (only-in "misc.rkt" log!))
 
 (define (exn:flickr:invalid-auth-token? exn)
   (and (exn:flickr? exn)
@@ -21,12 +22,16 @@
                                                     (cons 'frob frob)
                                                     (cons 'perms "write"))))
               (browser-prompt-thunk)
-              (match (flickr.auth.getToken #:frob frob)
-                [(('auth ()
-                         ('token () token)
-                         ('perms () perms)
-                         ('user (('fullname fn) ('nsid nsid) ('username user)))))
-                 (put-preferences (list (*pref-name*)) (list token))]))])))
+              (let ([token (flickr.auth.getToken #:frob frob)])
+                (match token
+                  [(('auth ()
+                           ('token () token)
+                           ('perms () perms)
+                           ('user (('fullname fn) ('nsid nsid) ('username user)))))
+
+                   (put-preferences (list (*pref-name*)) (list token))]
+                  [_ (log! (format "Wtf: ~s" token)) #f]))
+              )])))
 
 (define (maybe-authenticate! browser-prompt-thunk)
   (let ((auth-token (get-preference (*pref-name*))))
