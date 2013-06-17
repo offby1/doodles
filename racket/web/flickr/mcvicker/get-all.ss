@@ -1,6 +1,6 @@
 #! /bin/sh
 #| Hey Emacs, this is -*-scheme-*- code!
-exec racket $0
+exec racket -l errortrace -u $0
 |#
 
 #lang racket
@@ -44,11 +44,11 @@ exec racket $0
       page-number
       (lambda ()
         (let ((got (apply flickr.photos.search
-                          (list* #:page (number->string page-number)
-                                 #:sort "date_posted_asc"
-                                 args
-                                 #:user_id (*user-id*)
-                                 #:auth_token (get-preference (*pref-name*))))))
+                          args
+                          #:page (number->string page-number)
+                          #:sort "date_posted_asc"
+                          #:user_id *user-id*
+                          #:auth_token (get-preference (*pref-name*)))))
           (hash-set! *cache* page-number got)
           got)))
      [(('photos atts photos ...))
@@ -72,7 +72,7 @@ exec racket $0
 ;; for each page, calls proc on the list of photos from that page.
 (provide for-each-page)
 (define (for-each-page proc . args)
-  (define *cache-file* (format "downloaded-photos-cache-~a.ss" (*user-id*)))
+  (define *cache-file* (format "downloaded-photos-cache-~a.ss" *user-id*))
   (set! *cache*
         (if (file-exists? *cache-file*)
             (alist->mutable-hash

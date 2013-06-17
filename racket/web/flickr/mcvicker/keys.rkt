@@ -12,13 +12,13 @@
      (or (getenv "USERNAME")
          (getenv "USER"))))))
 
-(define (*user-id*)
+(define *user-id*
   (if (ed?)
       "76532524@N03"
       "20825469@N00"))
 
 (define (*pref-name*)
-  (string->symbol (format "flickr:token:~a" (*user-id*))))
+  (string->symbol (format "flickr:token:~a" *user-id*)))
 
 (provide ed?
          *pref-name*
