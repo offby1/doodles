@@ -36,26 +36,28 @@
 
 (provide join)
 (define (join *photos-by-title* *data-by-number*)
+  (define mapped
+    (hash-map
+     *photos-by-title*
+     (lambda (title photo)
+       (let ((as-number (title->number-or-false title)))
+         (let ((datum (hash-ref *data-by-number* as-number #f)))
+           (and
+            datum
+            (full-info
+             title
+             datum
+             photo)))))))
+
   (filter
    (lambda (record)
      (match record
-       [(struct datum _)
+       [(struct full-info _)
         (let ([md (datum-mount-date (full-info-csv-record record))])
           (and (car md)
                (cdr md)))]
        [_ #f]))
-   (hash-map
-    *photos-by-title*
-    (lambda (title photo)
-      (let ((as-number (title->number-or-false title)))
-        (and (integer? as-number)
-             (let ((datum (hash-ref *data-by-number* as-number #f)))
-               (and
-                datum
-                (full-info
-                 title
-                 datum
-                 photo)))))))))
+   mapped))
 
 (provide whop-record!)
 (define (whop-record! record success-logger)
