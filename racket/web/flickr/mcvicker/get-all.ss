@@ -120,11 +120,11 @@ exec racket $0
         (hash-set! *photos-by-title* (photo-title photo) photo))
 
       photos)
-     (printf
-      (format "Downloaded ~a photos from flickr...~%"
-              (hash-count *photos-by-title*)))))
+     (when (zero? (remainder this-page-number 10))
+       (printf
+        (format "Downloaded ~a photos from flickr...~%"
+                (hash-count *photos-by-title*))))))
 
   (pretty-display
    (join  *photos-by-title* *data-by-number*))
-
   )
