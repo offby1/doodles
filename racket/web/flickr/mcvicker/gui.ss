@@ -48,7 +48,8 @@ exec racket -l errortrace -u $0
 (let ((op (open-output-file *log-file-name* #:exists 'truncate/replace #:mode 'text)))
   (current-error-port op)
   (log! (lambda (msg)
-          (fprintf op "~a~%" msg)
+          (display msg op)
+          (newline op)
           (flush-output op))))
 
 (define frame (new frame% (label "Flickr Thingy")))
