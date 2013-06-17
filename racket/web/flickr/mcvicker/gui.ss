@@ -217,8 +217,9 @@ exec racket -l errortrace -u $0
               (send frame set-status-text
                     (format
                      "Fiddled ~a photos on flickr!!"
-                     (length sorted))))]))
-    (send progress-bar show #f)
+                     (length sorted)))
+              (send progress-bar show #f))]))
+
     (send progress-bar start!)))
 
 (define join-button
