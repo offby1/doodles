@@ -1,20 +1,25 @@
 #lang racket
 ; Hey Emacs, this is -*-scheme-*- code!
 
-;; Run my tests with ``raco test racket-script-template.rkt''.
-;; Invoke my "main" with ``racket racket-script-template.rkt''.
+(provide (all-defined-out))
 
-(module+ test
-  (require rackunit rackunit/text-ui))
-
-(provide hmm)
-(define (hmm . stuff)
-  "dude, maybe you should write some tests")
-
-;; file-or-directory-identity
+;; A finite stream of directories, starting at bottom-directory,
+;; ending with the root directory.
 (struct parent-directory-stream (bottom-directory)
   #:guard (lambda (dir struct-name)
-            (values (build-path dir)))
+            (cond
+             [(file-exists? dir)
+              ;; If dir is really a file, return its directory.
+              (let-values ([(base name must-be-dir?) (split-path dir)])
+                (if (eq? base 'relative)
+                    "."
+                    base))]
+             [(not (directory-exists? dir))
+               (error struct-name "~a is not a directory" dir)]
+
+             [#t
+              (build-path dir)]
+             ))
   #:transparent
   #:methods gen:stream
   [(define (stream-empty? stream)
@@ -29,8 +34,20 @@
            (list)
            (parent-directory-stream p))))])
 
-(module+ test
-  (check-equal? (hmm 'whatever) 'expected "For Phillip Morris ... from Western Union"))
+(define (find-parent-dir starting-dir criterion)
+  (for/first ([d (parent-directory-stream starting-dir)]
+              #:when (criterion d))
+    d))
 
-(module+ main
-  (displayln (hmm "I wonder where she lives")))
+(define (find-parent-containing starting-dir sentinel)
+  (find-parent-dir
+   starting-dir
+   (lambda (d)
+     (let ([sentinel (build-path d sentinel)])
+       (or (file-exists? sentinel)
+           (directory-exists? sentinel))))))
+
+;; e.g.
+;; (find-parent-containing
+;;  "/Users/erichanchrow/git-repositories/Me/doodles/racket/dirstream.rkt"
+;;  ".git")
