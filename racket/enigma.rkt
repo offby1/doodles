@@ -1,8 +1,3 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec racket --require "$0" --main -- ${1+"$@"}
-|#
-
 #lang racket
 (require racket/cmdline)
 
@@ -75,8 +70,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
     (write-byte (enigma-crypt e b encrypt?) op)
     (set! e (enigma-advance e))))
 
-(provide main)
-(define (main . args)
+(module+ main
   (define encrypt? (make-parameter #t))
   (define num-rotors (make-parameter 5))
 
@@ -84,7 +78,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
   (command-line
    #:program "enigma"
-   #:argv args
+   #:argv (current-command-line-arguments)
    #:once-any
    [("-e" "--encrypt") "Encrypt (as opposed to decrypt)"
     (encrypt? #t)]
@@ -111,7 +105,7 @@ exec racket --require "$0" --main -- ${1+"$@"}
 
 ;; Example:
 
-;; echo -n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | ./enigma.rkt | tee /dev/stderr | ./enigma.rkt -d
+;; echo -n aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | racket enigma.rkt | (tee /dev/stderr; echo > /dev/stderr) |  racket enigma.rkt -d
 
 ;; "crypt", I think, comes from the Debian package "mcrypt", and
 ;; emulates an enigma with 5 rotors, 26 slots per rotor.
@@ -119,5 +113,5 @@ exec racket --require "$0" --main -- ${1+"$@"}
 ;; time dd if=/dev/urandom count=2048 bs=1024 | crypt sdlkfjdslfkjdslkvn > /dev/null
 ;; => 2.1 MB/s
 
-;; time dd if=/dev/urandom count=2048 bs=1024 | ./enigma.rkt > /dev/null
+;; time dd if=/dev/urandom count=2048 bs=1024 | racket enigma.rkt > /dev/null
 ;; => 258 kB/s :-(
