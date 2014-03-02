@@ -1,3 +1,8 @@
+"""Illustrate
+http://www.billthelizard.com/2009/09/getting-fair-toss-from-biased-coin.html
+
+"""
+
 import collections
 import pprint
 import random
