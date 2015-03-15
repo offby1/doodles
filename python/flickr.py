@@ -7,29 +7,30 @@ from __future__ import absolute_import
 
 __author__ = 'eric.hanchrow@gmail.com'
 
+# Core
 import collections
-import configobj
 import datetime
 import os
 import pprint
 import sys
-import warnings
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    # Ubuntu package python-flickrapi
-    import flickrapi
+# 3rd-party
+import configobj                # pip install configobj
+import flickrapi                # pip install flickrapi
+
 
 def get_auth_stuff(filename=None):
     if filename is None:
         filename = os.path.expanduser('~/.flickr-auth')
         c = configobj.ConfigObj(filename)
+
         return(c['flickr']['api_key'],
                c['flickr']['shared_secret'])
 
 api_key, shared_secret = get_auth_stuff()
 
 flickr = flickrapi.FlickrAPI(api_key, shared_secret)
+
 
 def dump(thing, indent=0):
     print(' ' * indent, end='')
@@ -71,4 +72,4 @@ while True:
     requested_page += 1
 
 pprint.pprint(dict(id_to_exif_tag_to_exif_value))
-#sets = flickr.photosets_getList(user_id='73509078@N00')
+# sets = flickr.photosets_getList(user_id='73509078@N00')
