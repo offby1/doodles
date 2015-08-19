@@ -13,7 +13,10 @@ def lotta_primes():
         if g != 1:
             yield g
 
-for i, p in enumerate(lotta_primes()):
-    print(p)
-    if i > 10:
+found = set()
+for p in lotta_primes():
+    if p not in found:
+        print(p)
+    found.add(p)
+    if len(found) > 50:
         break
