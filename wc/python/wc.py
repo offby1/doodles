@@ -7,8 +7,8 @@ def n_letter_words(dict_file_name, n):
 
 
 def main():
-    import pprint
-    pprint.pprint(set(n_letter_words('/usr/share/dict/words', 5)))
+    for length in range(1, 20):
+        print(length, len(set(n_letter_words('/usr/share/dict/words', length))))
 
 if __name__ == "__main__":
     main()
