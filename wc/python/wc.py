@@ -1,13 +1,24 @@
 # Core
+import argparse
 import ast
 import collections
 import pprint
+import random
 
 # 3rd party
 import progress.bar                 # pip install progress
+import progress.spinner
+
+
+class NoPath(Exception):
+    pass
 
 
 class Graph:
+    """
+    This is an "Adjacency List" graph (https://en.wikipedia.org/wiki/Adjacency_list).
+    """
+
     def __init__(self):
         self.neighbors_by_node = collections.defaultdict(set)
 
@@ -15,18 +26,17 @@ class Graph:
         self.neighbors_by_node[_from].add(to)
         self.neighbors_by_node[to].add(_from)
 
-    def bfs(self, _from, to):
+    def bfs(self, _from):
         seen = set([_from])
         queue = [(_from, [_from])]
         while len(queue):
             node, trail = queue.pop(0)
-            if node == to:
-                return trail
+
             for n in self.neighbors_by_node[node]:
                 if n not in seen:
                     queue.append((n, trail + [n]))
                     seen.add(n)
-        raise Exception("No path from {} to {}".format(_from, to))
+        return trail
 
     def __str__(self):
         return pprint.pformat(dict(self.neighbors_by_node))
@@ -80,22 +90,43 @@ def differ_by_one_letter(left, right):
 
 
 def main():
-    word_length = 5
-    cache_file_name = 'graph.cache.{}'.format(word_length)
+    def at_least_three(string):
+        value = int(string)
+        if value < 3:
+            msg = "%r is not at least three" % string
+            raise argparse.ArgumentTypeError(msg)
+        return value
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--word-length",
+                        type=at_least_three,
+                        default=3)
+    args = parser.parse_args()
+
+    cache_file_name = 'graph.cache.{}'.format(args.word_length)
     try:
         with open(cache_file_name) as inf:
             graph = Graph.from_python_literal(inf.read())
     except FileNotFoundError:
-        graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
+        graph = Graph.from_wordlist('/usr/share/dict/words', args.word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
 
-    if word_length == 5:
-        print(graph.bfs('giant', 'raven'))
-    elif word_length == 3:
-        print(graph.bfs('gal', 'err'))
-    else:
-        print("Dunno 'bout words of length {}; fixme".format(word_length))
+    spinner = progress.spinner.LineSpinner()
+    all_words = list(graph.neighbors_by_node.keys())
+
+    longest_chain = []
+    while True:
+        spinner.next()
+
+        start = random.choice(all_words)
+
+        chain = graph.bfs(start)
+
+        if len(chain) > len(longest_chain):
+            longest_chain = chain
+            if chain[0] > chain[-1]:
+                chain = list(reversed(chain))
+            print("{}: {}".format(len(chain), chain))
 
 if __name__ == "__main__":
     main()
