@@ -26,6 +26,15 @@ class Graph:
         self.neighbors_by_node[_from].add(to)
         self.neighbors_by_node[to].add(_from)
 
+    @property
+    def stats(self):
+        v = len(self.neighbors_by_node.keys())
+        n = sum([len(s) for s in self.neighbors_by_node.values()])
+        ratio = v / n
+        return {'vertices': v,
+                'nodes': n,
+                'ratio': ratio}
+
     def bfs(self, _from):
         seen = set([_from])
         queue = [(_from, [_from])]
@@ -110,6 +119,8 @@ def main():
         graph = Graph.from_wordlist('/usr/share/dict/words', args.word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
+
+    pprint.pprint(graph.stats)
 
     spinner = progress.spinner.LineSpinner()
     all_words = list(graph.neighbors_by_node.keys())
