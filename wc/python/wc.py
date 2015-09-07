@@ -80,21 +80,22 @@ def differ_by_one_letter(left, right):
 
 
 def main():
-    word_length = 3
+    word_length = 5
     cache_file_name = 'graph.cache.{}'.format(word_length)
     try:
         with open(cache_file_name) as inf:
             graph = Graph.from_python_literal(inf.read())
-        print("Read from literal")
     except FileNotFoundError:
         graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
-        print("Read laboriously")
 
-    for node in graph.bfs('gal', 'can'):
-        print(node)
-
+    if word_length == 5:
+        print(graph.bfs('giant', 'raven'))
+    elif word_length == 3:
+        print(graph.bfs('gal', 'err'))
+    else:
+        print("Dunno 'bout words of length {}; fixme".format(word_length))
 
 if __name__ == "__main__":
     main()
