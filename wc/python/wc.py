@@ -15,6 +15,17 @@ class Graph:
         self.neighbors_by_node[_from].add(to)
         self.neighbors_by_node[to].add(_from)
 
+    def bfs(self, _from, to):
+        queue = [_from]
+        while len(queue):
+            node = queue.pop(0)
+            yield node
+            if node == to:
+                return
+            for n in self.neighbors_by_node[node]:
+                queue.append(n)
+        raise Exception("No path from {} to {}".format(_from, to))
+
     def __str__(self):
         return pprint.pformat(dict(self.neighbors_by_node))
 
@@ -67,17 +78,21 @@ def differ_by_one_letter(left, right):
 
 
 def main():
-    word_length = 5
+    word_length = 3
     cache_file_name = 'graph.cache.{}'.format(word_length)
     try:
         with open(cache_file_name) as inf:
             graph = Graph.from_python_literal(inf.read())
+        print("Read from literal")
     except FileNotFoundError:
         graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
+        print("Read laboriously")
 
-    print(graph)
+    for node in graph.bfs('gal', 'can'):
+        print(node)
+
 
 if __name__ == "__main__":
     main()
