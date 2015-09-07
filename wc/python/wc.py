@@ -7,25 +7,9 @@ import pprint
 import progress.bar                 # pip install progress
 
 
-class Node:
-    def __init__(self, datum):
-        self.datum = datum
-        self.neighbors = set()
-
-    def __hash__(self):
-        return hash(self.datum)
-
-    def __eq__(self, other):
-        return self.datum == other.datum
-
-
 class Graph:
     def __init__(self):
-        self.nodes_by_datum = {}
         self.neighbors_by_node = collections.defaultdict(set)
-
-    def add_node(self, datum):
-        self.nodes_by_datum[datum] = Node(datum)
 
     def add_vertex(self, _from, to):
         self.neighbors_by_node[_from].add(to)
@@ -39,7 +23,6 @@ class Graph:
         vertices = ast.literal_eval(string)
         rv = klass()
         for source_node, target_nodes in vertices.items():
-            rv.add_node(source_node)
             for t in target_nodes:
                 rv.add_vertex(source_node, t)
         return rv
@@ -51,7 +34,7 @@ class Graph:
         for left in progress.bar.Bar("Processing {}-letter words from {}".format(word_length,
                                                                                  wordlist_file_name),
                                      suffix='%(index)d/%(max)d (%(eta_td)s remaining)').iter(words):
-            rv.add_node(left)
+
             # In theory, you could generate all possible one-letter
             # variants of "left", and then add them; but that would take
             # roughly 25^word_length steps, which is much larger than the
