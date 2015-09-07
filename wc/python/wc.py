@@ -16,14 +16,16 @@ class Graph:
         self.neighbors_by_node[to].add(_from)
 
     def bfs(self, _from, to):
-        queue = [_from]
+        seen = set([_from])
+        queue = [(_from, [_from])]
         while len(queue):
-            node = queue.pop(0)
-            yield node
+            node, trail = queue.pop(0)
             if node == to:
-                return
+                return trail
             for n in self.neighbors_by_node[node]:
-                queue.append(n)
+                if n not in seen:
+                    queue.append((n, trail + [n]))
+                    seen.add(n)
         raise Exception("No path from {} to {}".format(_from, to))
 
     def __str__(self):
