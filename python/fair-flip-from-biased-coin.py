@@ -30,7 +30,7 @@ def run_trials(flipper, num=100):
     for t in range(num):
         histogram[flipper()] += 1
 
-    print('{:>15}: {}'.format(flipper.func_name, pprint.pformat(dict(histogram))))
+    print('{:>15}: {}'.format(flipper.__name__, pprint.pformat(dict(histogram))))
 
 run_trials(biased_coinflip)
 run_trials(make_unbiased_flipper(biased_coinflip))
