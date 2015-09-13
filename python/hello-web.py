@@ -9,21 +9,28 @@ from __future__ import absolute_import
 
 __author__ = 'eric.hanchrow@gmail.com'
 
+# Core
 from collections import defaultdict
-from webob import Response
+
+# 3rd-party
+from webob import Response      # pip install webob
 from webob.dec import wsgify
 import wsgiref.simple_server
+
 
 class Simple(object):
     def __init__(self):
         self.counts_by_URL = defaultdict(int)
-    
+
     @wsgify
     def __call__(self, req):
         self.counts_by_URL[req.path] += 1
-        return Response("My call history: " + str(self.counts_by_URL),
+        return Response("My call history: " + str(dict(self.counts_by_URL)),
                         content_type='text/plain')
 
 if __name__ == "__main__":
-    httpd = wsgiref.simple_server.make_server('localhost', 8000, Simple())
+    host = 'localhost'
+    port = 8000
+    httpd = wsgiref.simple_server.make_server(host, port, Simple())
+    print("Point yon web browser at http://{host}:{port}".format(host=host, port=port))
     httpd.serve_forever()
