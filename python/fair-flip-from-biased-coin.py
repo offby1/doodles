@@ -25,7 +25,7 @@ def make_unbiased_flipper(biased_flipper):
     return unbiased_flip
 
 
-def run_trials(flipper, num=1000):
+def run_trials(flipper, num=100):
     histogram = collections.defaultdict(int)
     for t in range(num):
         histogram[flipper()] += 1
