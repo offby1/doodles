@@ -79,10 +79,14 @@ class Enigma:
 
 
 if __name__ == "__main__":
-    lines = sys.stdin.readlines()
+    import math
+
+    print("Our alphabet has {} characters; the output should thus have {} bits per byte".format(len(alphabet),
+                                                                                                math.log2(len(alphabet))),
+          file=sys.stderr)
 
     random.seed(0)
     e = Enigma()
 
-    for line in lines:
+    for line in sys.stdin:
         print(e.encrypt(line))
