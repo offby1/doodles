@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import random
 import string
+import sys
 
 alphabet = string.ascii_letters + string.digits + string.punctuation
 
@@ -28,6 +29,11 @@ class Wheel:
     def transform(self, number, encrypt):
         return self.permutation[number] if encrypt else self.permutation.index(number)
 
+    def reflect(self, number):
+        n = len(self.permutation)
+        offset = n // 2
+        return (number + offset) % n
+
 
 def to_numbers(str):
     nums = []
@@ -48,11 +54,15 @@ class Enigma:
     def __init__(self, num_wheels=5):
         assert(num_wheels > 0)
         self.wheels = [Wheel(len(alphabet)) for i in range(num_wheels)]
+        self.reflector = Wheel(len(alphabet))
 
-    def run_through_wheels(self, letter, encrypt):
-        for w in self.wheels if encrypt else reversed(self.wheels):
-            letter = w.transform(letter, encrypt)
-        return letter
+    def run_through_wheels(self, number):
+        for w in self.wheels:
+            number = w.transform(number, True)
+        number = self.reflector.reflect(number)
+        for w in reversed(self.wheels):
+            number = w.transform(number, False)
+        return number
 
     def advance_wheels(self):
         for w in self.wheels:
@@ -60,27 +70,19 @@ class Enigma:
             if not wrapped_around:
                 break
 
-    def process(self, input, encrypt):
+    def encrypt(self, input):
         output_numbers = []
         for number in to_numbers(input):
             self.advance_wheels()
-            output_numbers.append(self.run_through_wheels(number, encrypt))
+            output_numbers.append(self.run_through_wheels(number))
         return to_letters(output_numbers)
 
-    def encrypt(self, input):
-        return self.process(input, True)
-
-    def decrypt(self, input):
-        return self.process(input, False)
 
 if __name__ == "__main__":
-    import sys
-
     lines = sys.stdin.readlines()
 
-    for method in 'encrypt', 'decrypt':
-        random.seed(0)
-        e = Enigma()
+    random.seed(0)
+    e = Enigma()
 
-        for line in lines:
-            print(getattr(e, method)(line))
+    for line in lines:
+        print(e.encrypt(line))
