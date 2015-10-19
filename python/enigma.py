@@ -10,7 +10,7 @@ def rotate(l):
     l.append (l.pop (0))
 
 
-class Wheel:
+class Rotor:
     def __init__(self, num_slots):
         self.offset = 0
         self.permutation = list(range(num_slots))
@@ -46,36 +46,36 @@ def to_numbers(str):
     return nums
 
 
-def to_letters(nums):
+def to_string(nums):
     return ''.join(alphabet[n] for n in nums)
 
 
 class Enigma:
-    def __init__(self, num_wheels=5):
-        assert(num_wheels > 0)
-        self.wheels = [Wheel(len(alphabet)) for i in range(num_wheels)]
-        self.reflector = Wheel(len(alphabet))
+    def __init__(self, num_rotors=5):
+        assert(num_rotors > 0)
+        self.rotors = [Rotor(len(alphabet)) for i in range(num_rotors)]
+        self.reflector = Rotor(len(alphabet))
 
-    def run_through_wheels(self, number):
-        for w in self.wheels:
-            number = w.transform(number, True)
+    def run_through_rotors(self, number):
+        for r in self.rotors:
+            number = r.transform(number, True)
         number = self.reflector.reflect(number)
-        for w in reversed(self.wheels):
-            number = w.transform(number, False)
+        for r in reversed(self.rotors):
+            number = r.transform(number, False)
         return number
 
-    def advance_wheels(self):
-        for w in self.wheels:
-            wrapped_around = w.advance()
+    def advance_rotors(self):
+        for r in self.rotors:
+            wrapped_around = r.advance()
             if not wrapped_around:
                 break
 
     def encrypt(self, input):
         output_numbers = []
         for number in to_numbers(input):
-            self.advance_wheels()
-            output_numbers.append(self.run_through_wheels(number))
-        return to_letters(output_numbers)
+            self.advance_rotors()
+            output_numbers.append(self.run_through_rotors(number))
+        return to_string(output_numbers)
 
 
 if __name__ == "__main__":
