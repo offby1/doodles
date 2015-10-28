@@ -13,21 +13,21 @@ def rotate(l):
 class Rotor:
     def __init__(self, num_slots):
         self.offset = 0
-        self.permutation = list(range(num_slots))
-        random.shuffle(self.permutation)
+        self.num_slots = num_slots
+        self.permutation = Permutation(self.num_slots)
 
     def advance(self):
-        rotate(self.permutation)
+        rotate(self.permutation.numbers)
 
         self.offset += 1
 
-        if self.offset == len(self.permutation):
+        if self.offset == self.num_slots:
             self.offset = 0
             return True
         return False
 
     def transform(self, number, encrypt):
-        return self.permutation[number] if encrypt else self.permutation.index(number)
+        return self.permutation.permute(number) if encrypt else self.permutation.unpermute(number)
 
 
 
@@ -46,13 +46,24 @@ def to_string(nums):
     return ''.join(alphabet[n] for n in nums)
 
 
+class Permutation:
+    def __init__(self, length):
+        self.numbers = list(range(length))
+        random.shuffle(self.numbers)
+
+    def permute(self, input):
+        return self.numbers[input]
+
+    def unpermute(self, input):
+        return self.numbers.index(input)
+
 class Enigma:
     def __init__(self, num_rotors=5):
         assert(num_rotors > 0)
         self.rotors = [Rotor(len(alphabet)) for i in range(num_rotors)]
 
     def reflect(self, number):
-        n = len(self.rotors[0].permutation)
+        n = self.rotors[0].num_slots
         offset = n // 2
         return (number + offset) % n
 
