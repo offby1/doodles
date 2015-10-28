@@ -3,7 +3,7 @@ import random
 import string
 import sys
 
-alphabet = string.ascii_letters + string.digits + string.punctuation
+alphabet = string.printable
 
 
 def rotate(l):
@@ -29,10 +29,6 @@ class Rotor:
     def transform(self, number, encrypt):
         return self.permutation[number] if encrypt else self.permutation.index(number)
 
-    def reflect(self, number):
-        n = len(self.permutation)
-        offset = n // 2
-        return (number + offset) % n
 
 
 def to_numbers(str):
@@ -54,12 +50,16 @@ class Enigma:
     def __init__(self, num_rotors=5):
         assert(num_rotors > 0)
         self.rotors = [Rotor(len(alphabet)) for i in range(num_rotors)]
-        self.reflector = Rotor(len(alphabet))
+
+    def reflect(self, number):
+        n = len(self.rotors[0].permutation)
+        offset = n // 2
+        return (number + offset) % n
 
     def run_through_rotors(self, number):
         for r in self.rotors:
             number = r.transform(number, True)
-        number = self.reflector.reflect(number)
+        number = self.reflect(number)
         for r in reversed(self.rotors):
             number = r.transform(number, False)
         return number
@@ -89,4 +89,4 @@ if __name__ == "__main__":
     e = Enigma()
 
     for line in sys.stdin:
-        print(e.encrypt(line))
+        print(e.encrypt(line), end='')
