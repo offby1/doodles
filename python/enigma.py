@@ -6,10 +6,6 @@ import sys
 alphabet = string.printable
 
 
-def rotate(l):
-    l.append (l.pop (0))
-
-
 class Rotor:
     def __init__(self, num_slots):
         self.offset = 0
@@ -17,7 +13,8 @@ class Rotor:
         self.permutation = Permutation(self.num_slots)
 
     def advance(self):
-        rotate(self.permutation.numbers)
+        # Rotate the list.
+        self.permutation.numbers.append(self.permutation.numbers.pop(0))
 
         self.offset += 1
 
@@ -28,7 +25,6 @@ class Rotor:
 
     def transform(self, number, encrypt):
         return self.permutation.permute(number) if encrypt else self.permutation.unpermute(number)
-
 
 
 def to_numbers(str):
@@ -56,6 +52,7 @@ class Permutation:
 
     def unpermute(self, input):
         return self.numbers.index(input)
+
 
 class Enigma:
     def __init__(self, num_rotors=5):
