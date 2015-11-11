@@ -18,6 +18,7 @@ class Rotor:
 
         self.offset += 1
 
+        # The return value is True if we've "wrapped around".
         if self.offset == self.num_slots:
             self.offset = 0
             return True
