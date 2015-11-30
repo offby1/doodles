@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import functools
 import random
 import string
 import sys
@@ -43,6 +44,11 @@ def to_string(nums):
     return ''.join(alphabet[n] for n in nums)
 
 
+@functools.lru_cache()
+def _unpermute(numbers, i):
+    return numbers.index(i)
+
+
 class Permutation:
     def __init__(self, length):
         self.numbers = list(range(length))
@@ -52,7 +58,23 @@ class Permutation:
         return self.numbers[input]
 
     def unpermute(self, input):
+        # real	0m44.482s
+        # user	1m22.189s
+        # sys	0m0.582s
+
         return self.numbers.index(input)
+
+        # The invocation of 'tuple' here costs more than we
+        # save by memoizing in the first place.
+
+        # real	1m16.004s
+        # user	2m24.914s
+        # sys	0m0.579s
+
+        # We defer to a regular function because I can't figure out
+        # how to memoize a method.
+
+        return _unpermute(tuple(self.numbers), input)
 
 
 class Enigma:
@@ -99,3 +121,5 @@ if __name__ == "__main__":
 
     for line in sys.stdin:
         print(e.encrypt(line), end='')
+
+    print (_unpermute.cache_info(), file=sys.stderr)
