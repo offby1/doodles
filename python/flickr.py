@@ -22,10 +22,11 @@ import flickrapi                # pip install flickrapi
 def get_auth_stuff(filename=None):
     if filename is None:
         filename = os.path.expanduser('~/.flickr-auth')
-        c = configobj.ConfigObj(filename)
 
-        return(c['flickr']['api_key'],
-               c['flickr']['shared_secret'])
+    c = configobj.ConfigObj(filename)
+
+    return(c['flickr']['api_key'],
+           c['flickr']['shared_secret'])
 
 api_key, shared_secret = get_auth_stuff()
 
