@@ -9,6 +9,7 @@ import random
 
 
 def biased_coinflip():
+    # True 1% of the time; False 99% of the time
     return random.Random().uniform(0, 1) < .01
 
 
