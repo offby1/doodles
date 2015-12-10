@@ -1,59 +1,115 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+"""The traditional 8-queens problem, copied from
+https://hg.python.org/cpython/file/3.5/Lib/test/test_generators.py
 
 """
-The traditional 8-queens problem, solved with brute force.
-"""
 
-from __future__ import print_function
-from __future__ import absolute_import
-
-__author__ = 'eric.hanchrow@gmail.com'
-
-import itertools
-
-class Board(object):
-    def __init__(self, rows=8, columns=8):
-        self.rows = rows
-        self.columns = columns
-        self.unattacked = set(itertools.product(range(8), range(8)))
-        self.occupied = set()
-
-    def star(self, sq):
-        row  = map(lambda c: (sq[0], c), range(8))
-        col  = map(lambda r: (r, sq[1]), range(8))
-        nesw = map(lambda i: (sq[0] + i, sq[1] + i), range(-8, 8))
-        nwse = map(lambda i: (sq[0] + i, sq[1] - i), range(-8, 8))
-        for candidate in sorted(set(itertools.chain(row, col, nesw, nwse))):
-            if candidate[0] >= 0 and candidate[0] < self.columns:
-                if candidate[1] >= 0 and candidate[1] < self.rows:
-                    yield candidate
-
-    def place_queen(self, sq):
-        new = Board()
-        new.occupied = set(self.occupied)
-        new.occupied.add(sq)
-
-        for s in self.star(sq):
-            new.unattacked.discard(s)
-
-        return new
-
-    def __str__(self):
-        return "Board with queens at {}".format(list(self.occupied))
+# A conjoin-based N-Queens solver.
 
 
-def outer(outer_n):
+def conjoin(gs):
 
-    def solve(n):
-        if n == 0:
-            yield Board()
+    n = len(gs)
+    values = [None] * n
+
+    # Do one loop nest at time recursively, until the # of loop nests
+    # remaining is divisible by 3.
+
+    def gen(i):
+        if i >= n:
+            yield values
+
+        elif (n - i) % 3:
+            ip1 = i + 1
+            for values[i] in gs[i]():
+                for x in gen(ip1):
+                    yield x
 
         else:
-            for subsolution in solve(n - 1):
-                for sq in subsolution.unattacked:
-                    yield subsolution.place_queen(sq)
+            for x in _gen3(i):
+                yield x
 
-    return [b for b in solve(outer_n) if len(b.occupied) == outer_n]
+    # Do three loop nests at a time, recursing only if at least three more
+    # remain.  Don't call directly:  this is an internal optimization for
+    # gen's use.
 
-for s in outer(3):
-    print(s)
+    def _gen3(i):
+        assert i < n and (n - i) % 3 == 0
+        ip1, ip2, ip3 = i + 1, i + 2, i + 3
+        g, g1, g2 = gs[i : ip3]
+
+        if ip3 >= n:
+            # These are the last three, so we can yield values directly.
+            for values[i] in g():
+                for values[ip1] in g1():
+                    for values[ip2] in g2():
+                        yield values
+
+        else:
+            # At least 6 loop nests remain; peel off 3 and recurse for the
+            # rest.
+            for values[i] in g():
+                for values[ip1] in g1():
+                    for values[ip2] in g2():
+                        for x in _gen3(ip3):
+                            yield x
+
+    for x in gen(0):
+        yield x
+
+
+class Queens:
+    def __init__(self, n):
+        self.n = n
+        rangen = range(n)
+
+        # Assign a unique int to each column and diagonal.
+        # columns:  n of those, range(n).
+        # NW-SE diagonals: 2n-1 of these, i-j unique and invariant along
+        # each, smallest i-j is 0-(n-1) = 1-n, so add n-1 to shift to 0-
+        # based.
+        # NE-SW diagonals: 2n-1 of these, i+j unique and invariant along
+        # each, smallest i+j is 0, largest is 2n-2.
+
+        # For each square, compute a bit vector of the columns and
+        # diagonals it covers, and for each row compute a function that
+        # generates the possiblities for the columns in that row.
+        self.rowgenerators = []
+        for i in rangen:
+            rowuses = [(1 << j) |                  # column ordinal
+                       (1 << (n + i - j + n - 1)) |    # NW-SE ordinal
+                       (1 << (n + 2 * n - 1 + i + j))    # NE-SW ordinal
+                            for j in rangen]
+
+            def rowgen(rowuses=rowuses):
+                for j in rangen:
+                    uses = rowuses[j]
+                    if uses & self.used == 0:
+                        self.used |= uses
+                        yield j
+                        self.used &= ~uses
+
+            self.rowgenerators.append(rowgen)
+
+    # Generate solutions.
+    def solve(self):
+        self.used = 0
+        for row2col in conjoin(self.rowgenerators):
+            yield row2col
+
+    def printsolution(self, row2col):
+        n = self.n
+        assert n == len(row2col)
+        sep = "+" + "-+" * n
+        print(sep)
+        for i in range(n):
+            squares = [" " for j in range(n)]
+            squares[row2col[i]] = "Q"
+            print("|" + "|".join(squares) + "|")
+            print(sep)
+
+q = Queens(8)
+
+for solution in q.solve():
+    q.printsolution(solution)
