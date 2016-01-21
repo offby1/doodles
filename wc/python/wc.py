@@ -10,10 +10,6 @@ import progress.bar                 # pip install progress
 import progress.spinner
 
 
-class NoPath(Exception):
-    pass
-
-
 class Graph:
     """
     This is an "Adjacency List" graph (https://en.wikipedia.org/wiki/Adjacency_list).
@@ -38,6 +34,7 @@ class Graph:
     def bfs(self, _from):
         seen = set([_from])
         queue = [(_from, [_from])]
+
         while len(queue):
             node, trail = queue.pop(0)
 
