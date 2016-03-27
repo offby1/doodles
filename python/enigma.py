@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import functools
 import random
 import string
 import sys
@@ -14,9 +13,6 @@ class Rotor:
         self.permutation = Permutation(self.num_slots)
 
     def advance(self):
-        # Rotate the list.
-        self.permutation.numbers.append(self.permutation.numbers.pop(0))
-
         self.offset += 1
 
         # The return value is True if we've "wrapped around".
@@ -26,7 +22,7 @@ class Rotor:
         return False
 
     def transform(self, number, encrypt):
-        return self.permutation.permute(number) if encrypt else self.permutation.unpermute(number)
+        return self.permutation.permute(number, self.offset) if encrypt else self.permutation.unpermute(number, self.offset)
 
 
 def to_numbers(str):
@@ -44,37 +40,16 @@ def to_string(nums):
     return ''.join(alphabet[n] for n in nums)
 
 
-@functools.lru_cache()
-def _unpermute(numbers, i):
-    return numbers.index(i)
-
-
 class Permutation:
     def __init__(self, length):
         self.numbers = list(range(length))
         random.shuffle(self.numbers)
 
-    def permute(self, input):
-        return self.numbers[input]
+    def permute(self, input, offset):
+        return self.numbers[(input + offset) % len(self.numbers)]
 
-    def unpermute(self, input):
-        # real	0m44.482s
-        # user	1m22.189s
-        # sys	0m0.582s
-
-        return self.numbers.index(input)
-
-        # The invocation of 'tuple' here costs more than we
-        # save by memoizing in the first place.
-
-        # real	1m16.004s
-        # user	2m24.914s
-        # sys	0m0.579s
-
-        # We defer to a regular function because I can't figure out
-        # how to memoize a method.
-
-        return _unpermute(tuple(self.numbers), input)
+    def unpermute(self, input, offset):
+        return (self.numbers.index(input) - offset) % len(self.numbers)
 
 
 class Enigma:
@@ -110,16 +85,8 @@ class Enigma:
 
 
 if __name__ == "__main__":
-    import math
-
-    print("Our alphabet has {} characters; the output should thus have {} bits per byte".format(len(alphabet),
-                                                                                                math.log2(len(alphabet))),
-          file=sys.stderr)
-
     random.seed(0)
     e = Enigma()
 
     for line in sys.stdin:
         print(e.encrypt(line), end='')
-
-    print (_unpermute.cache_info(), file=sys.stderr)
