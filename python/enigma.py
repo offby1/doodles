@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+import itertools
 import random
 import string
 import sys
 
 alphabet = string.printable
+
+inverted_alphabet = {letter: number for number, letter in enumerate(alphabet)}
 
 
 class Rotor:
@@ -29,8 +32,8 @@ def to_numbers(str):
     nums = []
     for letter in str:
         try:
-            nums.append(alphabet.index(letter))
-        except ValueError:
+            nums.append(inverted_alphabet[letter])
+        except KeyError:
             pass
 
     return nums
@@ -40,16 +43,38 @@ def to_string(nums):
     return ''.join(alphabet[n] for n in nums)
 
 
+def _invert_list(numbers):
+    inverse = numbers.copy()
+    for index, value in enumerate(numbers):
+        inverse[value] = index
+    return inverse
+
+
+def _invert_tableau(tableau):
+    return [_invert_list(l) for l in tableau]
+
+
 class Permutation:
     def __init__(self, length):
-        self.numbers = list(range(length))
-        random.shuffle(self.numbers)
+        numbers = list(range(length))
+        random.shuffle(numbers)
+
+        self.forward_tableau = list(self._make_tableau(numbers))
+        self.reverse_tableau = _invert_tableau(self.forward_tableau)
 
     def permute(self, input, offset):
-        return self.numbers[(input + offset) % len(self.numbers)]
+        return self.forward_tableau[offset][input]
 
     def unpermute(self, input, offset):
-        return (self.numbers.index(input) - offset) % len(self.numbers)
+        return self.reverse_tableau[offset][input]
+
+    def _make_tableau(self, numbers):
+        l = len(numbers)
+        cycle = itertools.cycle(numbers)
+
+        for i in range(l):
+            yield list(itertools.islice(cycle, l))
+            next(cycle)
 
 
 class Enigma:
