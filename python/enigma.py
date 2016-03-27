@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 import itertools
 import random
-import string
 import sys
-
-alphabet = string.printable
-
-inverted_alphabet = {letter: number for number, letter in enumerate(alphabet)}
 
 
 class Rotor:
@@ -26,21 +21,6 @@ class Rotor:
 
     def transform(self, number, encrypt):
         return self.permutation.permute(number, self.offset) if encrypt else self.permutation.unpermute(number, self.offset)
-
-
-def to_numbers(str):
-    nums = []
-    for letter in str:
-        try:
-            nums.append(inverted_alphabet[letter])
-        except KeyError:
-            pass
-
-    return nums
-
-
-def to_string(nums):
-    return ''.join(alphabet[n] for n in nums)
 
 
 def _invert_list(numbers):
@@ -80,7 +60,7 @@ class Permutation:
 class Enigma:
     def __init__(self, num_rotors=5):
         assert(num_rotors > 0)
-        self.rotors = [Rotor(len(alphabet)) for i in range(num_rotors)]
+        self.rotors = [Rotor(256) for i in range(num_rotors)]
 
     def reflect(self, number):
         n = self.rotors[0].num_slots
@@ -101,17 +81,17 @@ class Enigma:
             if not wrapped_around:
                 break
 
-    def encrypt(self, input):
+    def encrypt(self, input_bytes):
         output_numbers = []
-        for number in to_numbers(input):
-            self.advance_rotors()
+        for number in input_bytes:
             output_numbers.append(self.run_through_rotors(number))
-        return to_string(output_numbers)
+            self.advance_rotors()
+        return bytes(output_numbers)
 
 
 if __name__ == "__main__":
     random.seed(0)
     e = Enigma()
 
-    for line in sys.stdin:
-        print(e.encrypt(line), end='')
+    for line in sys.stdin.buffer:
+        sys.stdout.buffer.write(e.encrypt(line))
