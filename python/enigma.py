@@ -3,6 +3,13 @@ import itertools
 import random
 import sys
 
+""" This emulates the famous Enigma
+(https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
+and decryption are the same operation.  Example usage:
+
+    $ echo fee fi fo fum | python3 enigma.py > ciphertext ; python3 enigma.py < ciphertext
+"""
+
 
 class Rotor:
     def __init__(self, num_slots):
