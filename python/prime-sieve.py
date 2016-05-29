@@ -1,9 +1,10 @@
 import queue
-from threading import Thread
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor()
 
 def fire_and_forget(callable):
-    T = Thread(target=callable)
-    T.start()
+    executor.submit(callable)
 
 
 def integers(sink):
