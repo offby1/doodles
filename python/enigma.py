@@ -7,7 +7,7 @@ import sys
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
 and decryption are the same operation.  Example usage:
 
-    $ echo fee fi fo fum | python3 enigma.py > ciphertext ; python3 enigma.py < ciphertext
+    $ echo fee fi fo fum | python enigma.py | tee /dev/tty | python enigma.py
 """
 
 
@@ -20,11 +20,11 @@ class Rotor:
     def advance(self):
         self.offset += 1
 
-        # The return value is True if we've "wrapped around".
         if self.offset == self.num_slots:
             self.offset = 0
-            return True
-        return False
+
+        # The return value is True if we've "wrapped around".
+        return self.offset == 0
 
     def transform(self, number, encrypt):
         return self.permutation.permute(number, self.offset) if encrypt else self.permutation.unpermute(number, self.offset)
@@ -41,12 +41,21 @@ def _invert_tableau(tableau):
     return [_invert_list(l) for l in tableau]
 
 
+def _make_tableau(numbers):
+    l = len(numbers)
+    cycle = itertools.cycle(numbers)
+
+    for i in range(l):
+        yield list(itertools.islice(cycle, l))
+        next(cycle)
+
+
 class Permutation:
     def __init__(self, length):
         numbers = list(range(length))
         random.shuffle(numbers)
 
-        self.forward_tableau = list(self._make_tableau(numbers))
+        self.forward_tableau = list(_make_tableau(numbers))
         self.reverse_tableau = _invert_tableau(self.forward_tableau)
 
     def permute(self, input, offset):
@@ -54,14 +63,6 @@ class Permutation:
 
     def unpermute(self, input, offset):
         return self.reverse_tableau[offset][input]
-
-    def _make_tableau(self, numbers):
-        l = len(numbers)
-        cycle = itertools.cycle(numbers)
-
-        for i in range(l):
-            yield list(itertools.islice(cycle, l))
-            next(cycle)
 
 
 class Enigma:
