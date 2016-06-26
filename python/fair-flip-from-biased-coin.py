@@ -17,8 +17,8 @@ def make_unbiased_flipper(biased_flipper):
 
     def unbiased_flip():
         while True:
-            first  = biased_coinflip()
-            second = biased_coinflip()
+            first  = biased_flipper()
+            second = biased_flipper()
 
             if first != second:
                 return first
