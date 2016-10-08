@@ -1,6 +1,11 @@
 """This is the one use case I know of for which concurrency is
-obviously a win.  We will download a pile of web pages, and find that
-doing so concurrently is faster than doing them in sequence.  """
+obviously a win: We will download a pile of web pages, and find that
+doing so concurrently is faster than doing them in sequence.
+
+We also do the concurrent downloads a bunch of different times, using
+different techniques.  tl;dr -- they're all about the same speed.
+
+"""
 
 # Core
 import asyncio
@@ -15,6 +20,10 @@ import threading
 import aiohttp                  # pip install aiohttp
 import requests                 # pip install requests
 
+# We'll download all these URLS, either one at a time, or in parallel.
+
+# I have no idea why I chose wikipedia articles with "Eagle" in their
+# titles.  Just go with it.
 urls = ('https://en.wikipedia.org/wiki/American_Eagles',
         'https://en.wikipedia.org/wiki/Ateneo_Blue_Eagles',
         'https://en.wikipedia.org/wiki/Bedford_Town_F.C.',
@@ -74,7 +83,7 @@ def download_one(url):
     return '{} => {} bytes'.format(url, len(requests.get(url).text))
 
 
-def naive_download(urls):
+def sequential_download(urls):
     for url in urls:
         print(download_one(url))
 
@@ -138,7 +147,7 @@ if __name__ == "__main__":
         print(timeit.timeit(python_expression, globals=globals(), number=1))
 
 
-    t("naive:"   , 'naive_download(urls)')
+    t("naive:"   , 'sequential_download(urls)')
     t("threaded:", 'threaded_download(urls)')
     t("futures:" , 'future_download(urls)')
     t("asyncio:" , 'async_download(urls)')
