@@ -67,6 +67,8 @@ urls = ('https://en.wikipedia.org/wiki/American_Eagles',
         # 'https://en.wikipedia.org/wiki/Woodville-West_Torrens_Eagles',
 )
 
+#urls=urls[0:3]
+
 def download_one(url):
     return '{} => {} bytes'.format(url, len(requests.get(url).text))
 
@@ -101,10 +103,8 @@ def threaded_download(urls):
 
 def future_download(urls):
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
-        futures = [executor.submit(download_one, url) for url in urls]
-
-        for future in concurrent.futures.as_completed(futures):
-            print(future.result())
+        for result in executor.map(download_one, urls):
+            print(result)
 
 
 async def async_download(client, url):
