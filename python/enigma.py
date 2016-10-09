@@ -7,12 +7,19 @@ import sys
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
 and decryption are the same operation.  Example usage:
 
-    $ echo fee fi fo fum | python3 enigma.py | tee /dev/tty | python3 enigma.py
+    $ echo fee fi fo fum | python3 enigma.py | tee >(base64 -i - > /dev/tty) | python3 enigma.py
+    1tWxuC6SrLfeyOkynyk=
+    fee fi fo fum
+
 """
 
 
 class Rotor:
     def __init__(self, num_slots):
+
+        # Otherwise reflection won't work ... I think
+        assert (num_slots % 2 == 0)
+
         self.offset = 0
         self.num_slots = num_slots
         self.permutation = Permutation(self.num_slots)
@@ -91,11 +98,9 @@ class Enigma:
                 break
 
     def encrypt(self, input_bytes):
-        output_numbers = []
         for number in input_bytes:
-            output_numbers.append(self.run_through_rotors(number))
+            yield self.run_through_rotors(number)
             self.advance_rotors()
-        return bytes(output_numbers)
 
 
 if __name__ == "__main__":
@@ -103,4 +108,4 @@ if __name__ == "__main__":
     e = Enigma()
 
     for line in sys.stdin.buffer:
-        sys.stdout.buffer.write(e.encrypt(line))
+        sys.stdout.buffer.write(bytes(e.encrypt(line)))
