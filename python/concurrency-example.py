@@ -76,7 +76,7 @@ urls = ('https://en.wikipedia.org/wiki/American_Eagles',
         # 'https://en.wikipedia.org/wiki/Woodville-West_Torrens_Eagles',
 )
 
-#urls=urls[0:3]
+# urls=urls[0:3]
 
 
 def download_one(url):
@@ -142,10 +142,10 @@ def async_download(urls):
 
 if __name__ == "__main__":
     import timeit
+
     def t(description, python_expression):
         print(description)
         print(timeit.timeit(python_expression, globals=globals(), number=1))
-
 
     t("naive:"   , 'sequential_download(urls)')
     t("threaded:", 'threaded_download(urls)')
