@@ -7,7 +7,7 @@ import sys
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
 and decryption are the same operation.  Example usage:
 
-    $ echo fee fi fo fum | python enigma.py | tee /dev/tty | python enigma.py
+    $ echo fee fi fo fum | python3 enigma.py | tee /dev/tty | python3 enigma.py
 """
 
 
