@@ -27,7 +27,8 @@ class Rotor:
         return self.offset == 0
 
     def transform(self, number, encrypt):
-        return self.permutation.permute(number, self.offset) if encrypt else self.permutation.unpermute(number, self.offset)
+        method_name = 'permute' if encrypt else 'unpermute'
+        return getattr(self.permutation, method_name)(number, self.offset)
 
 
 def _invert_list(numbers):
