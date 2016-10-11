@@ -26,10 +26,13 @@ chunk isn't noticeably delayed.
 
 """
 
+# This queue isn't a necessary part of the simulation; it's here only
+# to assure me that the notifications aren't being lost (they aren't
+# :-)
 notification_queue = queue.Queue()
 
 
-def do_some_notification(datum, i):
+def do_one_notification(datum, i):
     time.sleep(0.03)
     if i == 0:
         _log.debug("Notified for %s.%d", datum, i)
@@ -38,13 +41,18 @@ def do_some_notification(datum, i):
 
 def main_work(datum, executor):
     time.sleep(0.02)
+
+    # In reality, we'd only send one notification per unit of work.
+    # But sending a pile of them makes it more likely that we'll
+    # notice extra time being spent somewhere it oughtn't.
     num_notes = 100
     _log.debug("Sending %d notifications for %s", num_notes, datum)
     for i in range(num_notes):
-        executor.submit(do_some_notification, datum, i)
+        executor.submit(do_one_notification, datum, i)
 
 
 def harness(num_times, executor):
+    """ Invoke main_work NUM_TIMES times, with a different random datum each time."""
     for _ in range(num_times):
         inp = ''.join(random.choices (4, string.ascii_lowercase))
         main_work(inp, executor)
