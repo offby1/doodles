@@ -2,11 +2,11 @@ def _first_row():
     return [1]
 
 
-def nth_row(n):
-    if n == 1:
+def next_row(previous_row=None):
+    if previous_row is None:
         return _first_row()
 
-    previous_row = nth_row(n - 1)
+    n = len(previous_row) + 1
     new_row = [0] * n
 
     for index in range(n):
@@ -21,11 +21,14 @@ def nth_row(n):
 
 
 def print_triangle(num_rows):
-    for row_number in range(1, num_rows + 1):
-        print(nth_row(row_number))
+    prev_row = None
+    for row_number in range(num_rows):
+        this_row = next_row(prev_row)
+        print(this_row)
+        prev_row = this_row
 
 
-num_rows = 10
+num_rows = 30
 
 if __name__ == "__main__":
     print_triangle(num_rows)
