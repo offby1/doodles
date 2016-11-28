@@ -24,6 +24,7 @@ def print_triangle(num_rows):
     prev_row = None
     for row_number in range(num_rows):
         this_row = next_row(prev_row)
+        print(' ' * (num_rows - row_number), end='')
         print(this_row)
         prev_row = this_row
 
