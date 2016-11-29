@@ -1,80 +1,79 @@
-#!/usr/bin/env python
-
-"""
-Generate an "autogram" -- https://en.wikipedia.org/wiki/Autogram
-"""
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
-__author__ = 'ehanchrow@ine.com'
-
-# Core
 import collections
 import random
 import string
 
-# 3rd-party
 import num2words                # pip install num2words
+import progressbar              # pip install progressbar2
+
+def number_and_letter_to_string(number, letter):
+    return '{} {}{}'.format(num2words.num2words(number), letter, '' if number == 1 else "'s")
 
 
-lc_letters = sorted(set(string.letters.lower()))
+def join_strings(strings):
+    most = strings[:-1]
+    return ', '.join(most) + ' and ' + strings[-1]
 
 
-def string_to_counter(s):
-    return collections.Counter(filter(str.isalpha, str(s).lower()))
+def new_counter(c):
+    terse = [number_and_letter_to_string(v, k) for k, v in sorted(c.items()) if k.isalpha()]
+    string = "Can I get you " + join_strings(terse) + '?'
+
+    return collections.Counter(string.lower()), string
 
 
-def perturb_counter(c):
-    for key in c:
-        c[key] = max(c[key] + random.randrange(-10, 10), 0)
-    return c
+class Seen:
+    def __init__(self):
+        self.seen = set()
+
+    def __call__(self, counter):
+        return self.freeze(counter) in self.seen
+
+    def note(self, counter):
+        self.seen.add(self.freeze(counter))
+
+    def freeze(self, c):
+        return tuple(c.items())
+
+    def len(self):
+        return len(self.seen)
 
 
-def counter_to_string(c, template):
-    def pluralize(string, number):
-        if number == 1:
-            return string
-        return string + "'s"
-
-    def slot(letter, number):
-        return '{} {}'.format(num2words.num2words(number), pluralize(letter, number))
-
-    return template.format(**{letter: slot(letter, c.get(letter, 0)) for letter in lc_letters})
+def perturb_counter(c, seen):
+    while seen(c):
+        key = random.choice(string.ascii_lowercase)
+        value = c[key]
+        c[key] = value + random.randrange(-3, 4)
 
 
-def template_snippet(l):
-    return "{{{}}}".format(l)
+def chase_string(string):
+    seen_counters = Seen()
 
-if __name__ == "__main__":
-    all_snippets = [template_snippet(l) for l in lc_letters[:18]]
+    c = collections.Counter(string)
+    last = None
+    finished_naturally = False
 
-    initial_counter = {letter: 0 for letter in lc_letters}
+    with progressbar.ProgressBar(max_value=progressbar.UnknownLength) as bar:
+        try:
+            while True:
+                if seen_counters(c):
+                    if c == last:
+                        finished_naturally = True
+                        break
+                    else:
+                        bar.update(seen_counters.len())
+                        perturb_counter(c, seen_counters)
 
-    snippets_plus_and = all_snippets
-    snippets_plus_and[-1] = 'and ' + snippets_plus_and[-1]
-    template = "This sentence, over which I slaved and struggled for many years, has {}.".format(', '.join(snippets_plus_and))
+                seen_counters.note(c)
 
-    old = counter_to_string(string_to_counter(template.format(**initial_counter)), template)
+                last = c
+                c, string = new_counter(c)
+        except KeyboardInterrupt:
+            pass
 
-    seen = set([old])
+    print('{} {}'.format('!!' if finished_naturally else '?', string))
 
-    while True:
-        survey = string_to_counter(old)
-        new = counter_to_string(survey, template)
+chase_string(string.ascii_lowercase)
 
-        if old == new:
-            print(len(seen))
-            print(new)
-            break
+# This text contains twelve i's, seven h's, four a's, four x's, thirty-two e's, seven v's, one z, one j, eighteen n's, three d's, five y's, sixteen o's, five u's, twenty-eight s's, six w's, one q, four g's, one p, twenty t's, seven f's, four l's, one m, two c's, eight r's, one k and one b.  It really does!
 
-        while new in seen:
-            survey = perturb_counter(survey)
-            new = counter_to_string(survey, template)
-
-        seen.add(new)
-        if len(seen) % 1000 == 0:
-            print(len(seen))
-
-        old = new
+# This text contains four a's, one b, two c's, three d's, thirty-two e's, seven f's, four g's, seven h's, twelve i's, one j, one k, four l's, one m, eighteen n's, sixteen o's, one p, one q, eight r's, twenty-eight s's, twenty t's, five u's, seven v's, six w's, four x's, five y's and one z.  It really does!
