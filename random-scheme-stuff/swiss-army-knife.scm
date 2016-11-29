@@ -1,16 +1,15 @@
-;; -*-scheme-*-
 ;; ... would have:
-;; 
+;;
 ;; bottle opener with large screwdriver and wire stripper
 ;; can opener with small screwdriver
 ;; corkscrew
-;; fine screwdriver 
-;; key ring 
+;; fine screwdriver
+;; key ring
 ;; locking blade
-;; phillips screwdriver 
+;; phillips screwdriver
 ;; scissors
 
-(define swiss-army-knives 
+(define swiss-army-knives
   '((
      "outdoors swisschamp®"
      (
@@ -760,8 +759,8 @@
       (map (lambda (bool)
              (if bool 1 0))
            (map (lambda (blade)
-                  (model-has-blade? model blade)) 
-                (list 
+                  (model-has-blade? model blade))
+                (list
                  "bottle opener with large screwdriver and wire stripper"
                  "can opener with small screwdriver"
                  "corkscrew"
@@ -771,7 +770,7 @@
                  "phillips screwdriver "
                  "scissors"
                  )))))
-     
+
    (map (lambda (model) (cons (car model) (number-of-desired-blades model))) swiss-army-knives)
    )
  (lambda (thing1 thing2)

@@ -1,4 +1,6 @@
-(define (factorial i)
+#lang scheme
+
+(define (! i)
   (define (inner i f)
     (if (zero? i)
         f
@@ -16,11 +18,11 @@
 (time
  (let loop ((i 0)
             (sum 0))
-   (if (< i 5000)
+   (if (< i 500)
        (loop (+ i 1)
-             (+ sum (/ 
-                     (* (square (factorial i))
+             (+ sum (/
+                     (* (square (! i))
                         (expt 2 (+ i 1)))
-                     (factorial (+ i i 1))
+                     (! (+ i i 1))
                      )))
      (printf "~a~%" (exact->inexact sum)))))

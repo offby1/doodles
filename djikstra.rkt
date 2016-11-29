@@ -1,12 +1,4 @@
-#! /bin/sh
-#| Hey Emacs, this is -*-scheme-*- code!
-exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
-|#
-
-;; http://en.wikipedia.org/wiki/Djikstra%27s_algorithm
-
 #lang racket
-(require unstable/debug)
 
 (struct graph (nodes-by-name) #:transparent)
 (struct node  (name edgeset) #:transparent
@@ -124,8 +116,8 @@ exec racket -l errortrace --require "$0" --main -- ${1+"$@"}
                ;; to step 3.
                (loop nearest))))))
 
-(provide main)
-(define (main . args)
+
+(module+ main
   (define g (make-graph-from-edge-list
              '((a b 5)
                (a c 10)
