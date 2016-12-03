@@ -17,55 +17,46 @@ def join_strings(strings):
 
 
 def new_counter(c):
-    terse = [number_and_letter_to_string(v, k) for k, v in sorted(c.items()) if k.isalpha()]
+    terse = [number_and_letter_to_string(v, k) for k, v in c.sorted_items() if k.isalpha()]
     string = "Prince Phillip and Queen Elizabeth keep " + join_strings(terse) + ' at Buckingham Palace.'
 
-    return collections.Counter(string.lower()), string
+    return HashableCounter(string.lower()), string
 
 
-class Seen:
-    def __init__(self):
-        self.seen = set()
+class HashableCounter(collections.Counter):
+    def sorted_items(self):
+        return sorted(self.items())
 
-    def __call__(self, counter):
-        return self.freeze(counter) in self.seen
-
-    def note(self, counter):
-        self.seen.add(self.freeze(counter))
-
-    def freeze(self, c):
-        return tuple(c.items())
-
-    def len(self):
-        return len(self.seen)
+    def __hash__(self):
+        return hash(tuple(self.sorted_items()))
 
 
 def perturb_counter(c, seen):
-    while seen(c):
+    while c in seen:
         key = random.choice(ALPHABET)
         value = c[key]
         c[key] = value + random.randrange(-3, 4)
 
 
 def chase_string(string):
-    seen_counters = Seen()
+    seen_counters = set()
 
-    c = collections.Counter(string)
+    c = HashableCounter(string)
     last = None
     finished_naturally = False
 
     with progressbar.ProgressBar(max_value=progressbar.UnknownLength) as bar:
         try:
             while True:
-                if seen_counters(c):
+                if c in seen_counters:
                     if c == last:
                         finished_naturally = True
                         break
                     else:
-                        bar.update(seen_counters.len())
+                        bar.update(len(seen_counters))
                         perturb_counter(c, seen_counters)
 
-                seen_counters.note(c)
+                seen_counters.add(c)
 
                 last = c
                 c, string = new_counter(c)
@@ -74,7 +65,8 @@ def chase_string(string):
 
     print('{} {}'.format('!!' if finished_naturally else '?', string))
 
-chase_string(ALPHABET)
+if __name__ == "__main__":
+    chase_string(ALPHABET)
 
 # This text contains twelve i's, seven h's, four a's, four x's, thirty-two e's, seven v's, one z, one j, eighteen n's, three d's, five y's, sixteen o's, five u's, twenty-eight s's, six w's, one q, four g's, one p, twenty t's, seven f's, four l's, one m, two c's, eight r's, one k and one b.  It really does!
 
