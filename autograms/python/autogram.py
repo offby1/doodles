@@ -45,7 +45,12 @@ def chase_string(string):
     last = None
     finished_naturally = False
 
-    with progressbar.ProgressBar(max_value=progressbar.UnknownLength) as bar:
+    widgets = [progressbar.AnimatedMarker(), ' ',
+               progressbar.Counter(), ' ',
+               progressbar.Timer(), ' ',
+               progressbar.AdaptiveTransferSpeed()]
+    with progressbar.ProgressBar(widgets=widgets,
+                                 max_value=progressbar.UnknownLength) as bar:
         try:
             while True:
                 if c in seen_counters:
