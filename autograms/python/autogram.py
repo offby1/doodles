@@ -16,9 +16,9 @@ def join_strings(strings):
     return ', '.join(most) + ' and ' + strings[-1]
 
 
-def new_counter(c):
+def new_counter(c, letters_to_count):
     terse = [number_and_letter_to_string(v, k) for k, v in c.sorted_items() if k.isalpha()]
-    string = "Prince Phillip and Queen Elizabeth keep " + join_strings(terse) + ' at Buckingham Palace.'
+    string = "Prince Phillip and Queen Elizabeth keep " + join_strings(terse[0:letters_to_count]) + ' at Buckingham Palace.'
 
     return HashableCounter(string.lower()), string
 
@@ -38,7 +38,7 @@ def perturb_counter(c, seen):
         c[key] = value + random.randrange(-3, 4)
 
 
-def chase_string(string):
+def chase_string(string, letters_to_count):
     seen_counters = set()
 
     c = HashableCounter(string)
@@ -64,14 +64,18 @@ def chase_string(string):
                 seen_counters.add(c)
 
                 last = c
-                c, string = new_counter(c)
+                c, string = new_counter(c, letters_to_count)
         except KeyboardInterrupt:
             pass
 
     print('{} {}'.format('!!' if finished_naturally else '?', string))
+    return finished_naturally
+
 
 if __name__ == "__main__":
-    chase_string(ALPHABET)
+    random.seed(0)
+    for letters_to_count in range(1, len(ALPHABET) + 1):
+        chase_string(ALPHABET, letters_to_count)
 
 # This text contains twelve i's, seven h's, four a's, four x's, thirty-two e's, seven v's, one z, one j, eighteen n's, three d's, five y's, sixteen o's, five u's, twenty-eight s's, six w's, one q, four g's, one p, twenty t's, seven f's, four l's, one m, two c's, eight r's, one k and one b.  It really does!
 
