@@ -12,6 +12,7 @@ import sys
 # 3rd-party
 import configobj                # pip install configobj
 import flickrapi                # pip install flickrapi
+import progressbar              # pip install progressbar2
 
 __author__ = 'eric.hanchrow@gmail.com'
 
@@ -35,22 +36,22 @@ flickr = flickrapi.FlickrAPI(api_key,
 my_nsid = flickr.people_findByUsername(username='offby1')['user']['nsid']
 
 requested_page = 1
-while True:
-    rsp = flickr.photos_search(user_id=my_nsid,
-                               page=requested_page,
-                               per_page='10')
+with progressbar.ProgressBar(max_value=progressbar.UnknownLength) as bar:
+    while True:
+        rsp = flickr.photos_search(user_id=my_nsid,
+                                   page=requested_page,
+                                   per_page='10')
 
-    photos = rsp['photos']
+        photos = rsp['photos']
 
-    print("This is page", photos['page'], "of", photos['pages'], file=sys.stderr)
-    for photo in photos['photo']:
-        id = photo['id']
-        info = flickr.photos_getInfo(photo_id=id)
-        pprint.pprint(info)
-        exit(0)
+        for photo in photos['photo']:
+            id = photo['id']
+            info = flickr.photos_getInfo(photo_id=id)
+            pprint.pprint(info)
+            bar.update()
 
-    if int(photos['page']) >= int(photos['pages']):
-        print("That's all!")
-        break
+        if int(photos['page']) >= int(photos['pages']):
+            print("That's all!")
+            break
 
-    requested_page += 1
+        requested_page += 1
