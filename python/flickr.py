@@ -36,22 +36,31 @@ flickr = flickrapi.FlickrAPI(api_key,
 my_nsid = flickr.people_findByUsername(username='offby1')['user']['nsid']
 
 requested_page = 1
-with progressbar.ProgressBar(max_value=progressbar.UnknownLength) as bar:
-    while True:
-        rsp = flickr.photos_search(user_id=my_nsid,
-                                   page=requested_page,
-                                   per_page='10')
+per_page = 10
 
-        photos = rsp['photos']
+with progressbar.ProgressBar() as bar:
+    try:
+        while True:
+            rsp = flickr.photos_search(user_id=my_nsid,
+                                       page=requested_page,
+                                       per_page=str(per_page))
 
-        for photo in photos['photo']:
-            id = photo['id']
-            info = flickr.photos_getInfo(photo_id=id)
-            pprint.pprint(info)
-            bar.update()
+            photos = rsp['photos']
 
-        if int(photos['page']) >= int(photos['pages']):
-            print("That's all!")
-            break
+            # Not quite right, since the last page likely has fewer than
+            # per_page photos.  Ah well
+            bar.max_value = int(photos['pages']) * per_page
 
-        requested_page += 1
+            for index, photo in enumerate(photos['photo']):
+                id = photo['id']
+                info = flickr.photos_getInfo(photo_id=id)
+                pprint.pprint(info)
+                bar.update(per_page * (int(photos['page']) - 1) + index)
+
+            if int(photos['page']) >= int(photos['pages']):
+                print("That's all!")
+                break
+
+            requested_page += 1
+    except KeyboardInterrupt:
+        pass
