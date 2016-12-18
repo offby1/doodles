@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 # Core
 import datetime
+import json
 import os
 import pprint
 import sys
@@ -74,6 +75,39 @@ def _unpaginated_search(flickr, user_id):
         requested_page += 1
 
 
+class PhotoStore:
+    filename = '/tmp/photos.js'
+
+    def __init__(self, filename=None):
+        self.photos_by_id = {}
+        if filename is not None:
+            self.filename = filename
+
+        try:
+            with open(self.filename) as inf:
+                self.photos_by_id = json.load(inf)
+        except ValueError:
+            os.unlink(self.filename)
+        except IOError as e:
+            print(e)
+        else:
+            print("Loaded {} items from {}".format(len(self.photos_by_id), self.filename))
+
+
+    def save_to_file(self):
+        with open(self.filename, 'w') as outf:
+            json.dump(self.photos_by_id, outf, indent=1)
+        print("Saved {} items to {}".format(len(self.photos_by_id), self.filename))
+
+
+    def has_id(self, id_):
+        return id_ in self.photos_by_id
+
+
+    def store_by_id(self, id_, data):
+        self.photos_by_id[id_] = data
+
+
 api_key, shared_secret = get_auth_stuff()
 
 flickr = flickrapi.FlickrAPI(api_key,
@@ -83,16 +117,21 @@ flickr = flickrapi.FlickrAPI(api_key,
 
 my_nsid = flickr.people_findByUsername(username='offby1')['user']['nsid']
 
+ps = PhotoStore()
+
 with progressbar.ProgressBar() as bar:
     try:
         for index, (total, photo) in enumerate(_unpaginated_search(flickr, my_nsid)):
             bar.max_value = total
+
             id_ = photo['id']
-            blob = {}
-            blob.update(flickr.photos_getExif(photo_id=id_)['photo'])
-            blob.update(flickr.photos_getInfo(photo_id=id_)['photo'])
-            blob.update(_size_list_to_dict(flickr.photos_getSizes(photo_id=id_)))
-            pprint.pprint(blob)
+            if not ps.has_id(id_):
+                blob = {}
+                blob.update(flickr.photos_getExif(photo_id=id_)['photo'])
+                blob.update(flickr.photos_getInfo(photo_id=id_)['photo'])
+                blob.update(_size_list_to_dict(flickr.photos_getSizes(photo_id=id_)))
+                ps.store_by_id(id_, blob)
+
             bar.update(index)
 
             # TODO -- persist the blob somewhere, using id_ as an index.
@@ -102,3 +141,5 @@ with progressbar.ProgressBar() as bar:
 
     except KeyboardInterrupt:
         pass
+
+ps.save_to_file()
