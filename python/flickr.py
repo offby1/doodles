@@ -27,119 +27,142 @@ def get_auth_stuff(filename=None):
     return(c['flickr']['api_key'],
            c['flickr']['shared_secret'])
 
-def _size_list_to_dict(getSizes_response):
-    """For mysterious reasons, the bulk of this information is a list of
-    dicts, rather than a dict keyed on the name of the size.
 
-    {u'sizes': {u'canblog': 0,
-                u'candownload': 1,
-                u'canprint': 0,
-                u'size': [{u'height': 75,
-                           u'label': u'Square',
-                           u'media': u'photo',
-                           u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_s.jpg',
-                           u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/sq/',
-                           u'width': 75},
-                          {u'height': u'150',
-                           u'label': u'Large Square',
-                           u'media': u'photo',
-                           u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_q.jpg',
-                           u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/q/',
-                           u'width': u'150'}]},
-     u'stat': u'ok'}
-    """
-    rv = {}
-    for d in getSizes_response['sizes']['size']:
-        rv[d['label']] = d
+class FlickrAdapter:
+    def __init__(self, flickr, username='offby1'):
+        self.flickr = flickr
+        self.username = username
+        self.method_map = {
+            'Exif':  self.getExif,
+            'Info':  self.getInfo,
+            'Sizes': self.getSizes,
+        }
 
-    return {'sizes': rv}
+    def getExif(self, id_):
+        return self.flickr.photos_getExif(photo_id=id_)['photo']
 
+    def getInfo(self, id_):
+        return self.flickr.photos_getInfo(photo_id=id_)['photo']
 
-def _unpaginated_search(flickr, user_id):
-    requested_page = 1
-    per_page = 100
+    def getSizes(self, id_):
+        """For mysterious reasons, the bulk of this information is a list of
+        dicts, rather than a dict keyed on the name of the size.
 
-    while True:
-        rsp = flickr.photos_search(user_id=user_id,
-                                   page=requested_page,
-                                   per_page=str(per_page))
+        {u'sizes': {u'canblog': 0,
+                    u'candownload': 1,
+                    u'canprint': 0,
+                    u'size': [{u'height': 75,
+                               u'label': u'Square',
+                               u'media': u'photo',
+                               u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_s.jpg',
+                               u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/sq/',
+                               u'width': 75},
+                              {u'height': u'150',
+                               u'label': u'Large Square',
+                               u'media': u'photo',
+                               u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_q.jpg',
+                               u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/q/',
+                               u'width': u'150'}]},
+         u'stat': u'ok'}
+        """
+        getSizes_response = self.flickr.photos_getSizes(photo_id=id_)
+        rv = {}
+        for d in getSizes_response['sizes']['size']:
+            rv[d['label']] = d
 
-        photos = rsp['photos']
-
-        for photo in photos['photo']:
-            yield int(photos['total']), photo
-
-        if int(photos['page']) == int(photos['pages']):
-            return
-
-        requested_page += 1
+        return {'sizes': rv}
 
 
-class PhotoStore:
-    filename = os.path.join(os.path.dirname(__file__), 'photos.js')
+    def all_photo_metadata(self):
+        requested_page = 1
+        per_page = 100
 
-    def __init__(self, filename=None):
-        self.photos_by_id = {}
-        if filename is not None:
-            self.filename = filename
+        my_nsid = self.flickr.people_findByUsername(username=self.username)['user']['nsid']
 
+        while True:
+            rsp = self.flickr.photos_search(user_id=my_nsid,
+                                            page=requested_page,
+                                            per_page=str(per_page))
+
+            photos = rsp['photos']
+
+            for photo in photos['photo']:
+                yield int(photos['total']), photo
+
+            if int(photos['page']) == int(photos['pages']):
+                return
+
+            requested_page += 1
+
+class Storage:
+    def __init__(self):
+        self.container = os.path.join(os.path.dirname(__file__), 'storage')
+
+    def _make_fn(self, id_, datum_name):
+        return os.path.join(self.container, id_, datum_name)
+
+    def has_datum(self, id_, datum_name):
+        fn = self._make_fn(id_, datum_name)
+        return os.path.isfile(fn)
+
+    def store_datum(self, id_, datum_name, data, force=True):
+        fn = self._make_fn(id_, datum_name)
         try:
-            with open(self.filename) as inf:
-                self.photos_by_id = json.load(inf)
-        except ValueError:
-            os.unlink(self.filename)
-        except IOError as e:
-            print(e)
-        else:
-            print("Loaded {} items from {}".format(len(self.photos_by_id), self.filename))
+            os.makedirs(os.path.dirname(fn))
+        except OSError:
+            pass
+
+        if force or not self.has_datum(id_, datum_name):
+            with open(fn, 'w') as outf:
+                json.dump(data, outf)
 
 
-    def save_to_file(self):
-        with open(self.filename, 'w') as outf:
-            json.dump(self.photos_by_id, outf, indent=1)
-        print("Saved {} items to {}".format(len(self.photos_by_id), self.filename))
+def convert_json_to_storage(json_file_name):
+    with open(json_file_name) as inf:
+        json_blob = json.load(inf)
+
+    storage = Storage()
+
+    bar = progressbar.ProgressBar(max_value=len(json_blob.items()))
+    bar.start()
+    for index, (photo_id, stuff) in enumerate(json_blob.items()):
+        exif = stuff.pop('exif')
+        sizes= stuff.pop('sizes')
+        info = {'info': stuff}
+        storage.store_datum(photo_id, 'Exif', exif, force=False)
+        storage.store_datum(photo_id, 'Info', info, force=False)
+        storage.store_datum(photo_id, 'Sizes', sizes, force=False)
+        bar.update(index + 1)
 
 
-    def has_id(self, id_):
-        return id_ in self.photos_by_id
+
+if __name__ == "__main__":
+    convert_json_to_storage('photos.js')
+    exit(0)
+
+    api_key, shared_secret = get_auth_stuff()
+
+    flickr = FlickrAdapter(flickrapi.FlickrAPI(api_key,
+                                               shared_secret,
+                                               format='parsed-json',
+                                               cache=True))
 
 
-    def store_by_id(self, id_, data):
-        self.photos_by_id[id_] = data
+    storage = Storage()
 
+    bar = progressbar.ProgressBar()
+    bar.start()
 
-api_key, shared_secret = get_auth_stuff()
-
-flickr = flickrapi.FlickrAPI(api_key,
-                             shared_secret,
-                             format='parsed-json',
-                             cache=True)
-
-my_nsid = flickr.people_findByUsername(username='offby1')['user']['nsid']
-
-ps = PhotoStore()
-
-with progressbar.ProgressBar() as bar:
     try:
-        for index, (total, photo) in enumerate(_unpaginated_search(flickr, my_nsid)):
+        for index, (total, photo) in enumerate(flickr.all_photo_metadata()):
             bar.max_value = total
 
             id_ = photo['id']
-            if not ps.has_id(id_):
-                blob = {}
-                blob.update(flickr.photos_getExif(photo_id=id_)['photo'])
-                blob.update(flickr.photos_getInfo(photo_id=id_)['photo'])
-                blob.update(_size_list_to_dict(flickr.photos_getSizes(photo_id=id_)))
-                ps.store_by_id(id_, blob)
+            for datum_name, method in flickr.method_map.items():
+                if not storage.has_datum(id_, datum_name):
+                    storage.store_datum(id_, datum_name, method(id_))
 
-            bar.update(index)
-
-            # TODO -- persist the blob somewhere, using id_ as an index.
-
-            # TODO -- then skip most of the stuff if we find that
-            # we've already persisted this id_.
+                bar.update(index)
 
     except KeyboardInterrupt:
         pass
-
-ps.save_to_file()
