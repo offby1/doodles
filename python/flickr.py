@@ -76,7 +76,7 @@ def _unpaginated_search(flickr, user_id):
 
 
 class PhotoStore:
-    filename = '/tmp/photos.js'
+    filename = os.path.join(os.path.dirname(__file__), 'photos.js')
 
     def __init__(self, filename=None):
         self.photos_by_id = {}
