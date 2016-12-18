@@ -49,12 +49,9 @@ for e in edges:
             # traverse all neighbors, mark them with this graph
             visit_graph(node, lambda node: graph_by_node.update({node: graph_name}))
 
-import pprint
-pprint.pprint(dict(graph_by_node))
-
 # invert graph_by_node, since that's easier to read
 nodes_by_graph = collections.defaultdict(set)
 for node, graph in graph_by_node.items():
     nodes_by_graph[graph].add(node)
 
-pprint.pprint(dict(nodes_by_graph))
+print([list (s) for s in nodes_by_graph.values()])
