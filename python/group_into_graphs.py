@@ -6,18 +6,33 @@
 
 import collections
 
-edges = [[0,9], [3,7], [7,9], [5,6], [1,5], [4,2]]
+class Graph:
+    def __init__(self, edges):
+        self.edges = edges
+        self.neighbors_by_node = collections.defaultdict(set)
 
-def populate_neighbor_dict(edges):
-    rv = collections.defaultdict(set)
+        for e in self.edges:
+            n1, n2 = e
+            self.neighbors_by_node[n1].add(n2)
+            self.neighbors_by_node[n2].add(n1)
 
-    for e in edges:
-        rv[e[0]].add(e[1])
-        rv[e[1]].add(e[0])
+    def traverse_starting_at(self, node, node_func, seen=None):
+        """For each node in the graph, invoke node_func for side effects.
 
-    return rv
+        """
+        if seen is None:
+            seen = set()
 
-neighbors_by_node = populate_neighbor_dict(edges)
+        node_func(node)
+        seen.add(node)
+
+        for n in self.neighbors_by_node[node]:
+            if n not in seen:
+                self.traverse_starting_at(n, node_func, seen=seen)
+
+
+the_graph = Graph([[0,9], [3,7], [7,9], [5,6], [1,5], [4,2], [8, 8]])
+
 graph_by_node = {}
 
 class GraphNameGenerator:
@@ -29,25 +44,14 @@ class GraphNameGenerator:
         return 'Graph Number {}'.format(self.counter)
 
 
-def visit_graph(node, node_func, seen=None):
-    if seen is None:
-        seen = set([node])
-
-    node_func(node)
-
-    for n in neighbors_by_node[node]:
-        if n not in seen:
-            seen.add(n)
-            visit_graph(n, node_func, seen=seen)
-
 generate_unique_graph_name = GraphNameGenerator()
 
-for e in edges:
+for e in the_graph.edges:
     for node in e:
         if node not in graph_by_node:
             graph_name = generate_unique_graph_name()
             # traverse all neighbors, mark them with this graph
-            visit_graph(node, lambda node: graph_by_node.update({node: graph_name}))
+            the_graph.traverse_starting_at(node, lambda node: graph_by_node.update({node: graph_name}))
 
 # invert graph_by_node, since that's easier to read
 nodes_by_graph = collections.defaultdict(set)
