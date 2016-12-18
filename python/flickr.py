@@ -54,6 +54,26 @@ def _size_list_to_dict(getSizes_response):
     return {'sizes': rv}
 
 
+def _unpaginated_search(flickr, user_id):
+    requested_page = 1
+    per_page = 100
+
+    while True:
+        rsp = flickr.photos_search(user_id=user_id,
+                                   page=requested_page,
+                                   per_page=str(per_page))
+
+        photos = rsp['photos']
+
+        for photo in photos['photo']:
+            yield int(photos['total']), photo
+
+        if int(photos['page']) == int(photos['pages']):
+            return
+
+        requested_page += 1
+
+
 api_key, shared_secret = get_auth_stuff()
 
 flickr = flickrapi.FlickrAPI(api_key,
@@ -63,35 +83,22 @@ flickr = flickrapi.FlickrAPI(api_key,
 
 my_nsid = flickr.people_findByUsername(username='offby1')['user']['nsid']
 
-requested_page = 1
-per_page = 10
-
 with progressbar.ProgressBar() as bar:
     try:
-        while True:
-            rsp = flickr.photos_search(user_id=my_nsid,
-                                       page=requested_page,
-                                       per_page=str(per_page))
+        for index, (total, photo) in enumerate(_unpaginated_search(flickr, my_nsid)):
+            bar.max_value = total
+            id_ = photo['id']
+            blob = {}
+            blob.update(flickr.photos_getExif(photo_id=id_)['photo'])
+            blob.update(flickr.photos_getInfo(photo_id=id_)['photo'])
+            blob.update(_size_list_to_dict(flickr.photos_getSizes(photo_id=id_)))
+            pprint.pprint(blob)
+            bar.update(index)
 
-            photos = rsp['photos']
+            # TODO -- persist the blob somewhere, using id_ as an index.
 
-            # Not quite right, since the last page likely has fewer than
-            # per_page photos.  Ah well
-            bar.max_value = int(photos['pages']) * per_page
+            # TODO -- then skip most of the stuff if we find that
+            # we've already persisted this id_.
 
-            for index, photo in enumerate(photos['photo']):
-                id = photo['id']
-                blob = {}
-                blob.update(flickr.photos_getExif(photo_id=id)['photo'])
-                blob.update(flickr.photos_getInfo(photo_id=id)['photo'])
-                blob.update(_size_list_to_dict(flickr.photos_getSizes(photo_id=id)))
-                pprint.pprint(blob)
-                bar.update(per_page * (int(photos['page']) - 1) + index)
-
-            if int(photos['page']) == int(photos['pages']):
-                print("That's all!")
-                break
-
-            requested_page += 1
     except KeyboardInterrupt:
         pass
