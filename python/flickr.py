@@ -101,20 +101,16 @@ class Storage:
     def _make_fn(self, id_, datum_name):
         return os.path.join(self.container, id_, datum_name)
 
-    def has_datum(self, id_, datum_name):
+    def ensure_stored(self, id_, datum_name, data_thunk):
         fn = self._make_fn(id_, datum_name)
-        return os.path.isfile(fn)
+        if not os.path.isfile(fn):
+            try:
+                os.makedirs(os.path.dirname(fn))
+            except OSError:
+                pass
 
-    def store_datum(self, id_, datum_name, data, force=True):
-        fn = self._make_fn(id_, datum_name)
-        try:
-            os.makedirs(os.path.dirname(fn))
-        except OSError:
-            pass
-
-        if force or not self.has_datum(id_, datum_name):
             with open(fn, 'w') as outf:
-                json.dump(data, outf)
+                json.dump(data_thunk(), outf)
 
 
 if __name__ == "__main__":
@@ -137,8 +133,7 @@ if __name__ == "__main__":
 
             id_ = photo['id']
             for datum_name, method in flickr.method_map.items():
-                if not storage.has_datum(id_, datum_name):
-                    storage.store_datum(id_, datum_name, method(id_))
+                storage.ensure_stored(id_, datum_name, lambda : method(id_))
 
                 bar.update(index)
 
