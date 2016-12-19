@@ -3,6 +3,15 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+""" Copy all my flickr photos to s3, since I don't expect flickr will
+be around for long.
+
+Similar idea: https://github.com/tgerla/flickr-s3-backup
+
+TODO: write a counterpart that uploads from S3 to Google Photos.  See
+https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol#PostPhotos
+"""
+
 # Core
 import datetime
 import json
@@ -17,7 +26,7 @@ import botocore.exceptions
 import configobj                # pip install configobj
 import flickrapi                # pip install flickrapi
 import progressbar              # pip install progressbar2
-import requests
+import requests                 # pip install requests
 
 # API docs: https://www.flickr.com/services/api/
 
@@ -76,7 +85,7 @@ class FlickrAdapter:
 
             requested_page += 1
 
-class Storage:
+class S3Storage:
     def __init__(self):
         self.bucket_name = 'flickr-sanctuary'
         self.session = None
@@ -87,13 +96,6 @@ class Storage:
         return '{}/{}'.format(id_, datum_name)
 
     def _object_exists(self, object_name):
-        try:
-            self.bucket.Object(object_name).metadata
-            return True
-        except botocore.exceptions.ClientError:
-            return False
-
-    def ensure_stored(self, id_, datum_name, data_thunk):
         if self.session is None:
             self.session = boto3.session.Session()
 
@@ -103,6 +105,15 @@ class Storage:
         if self.bucket is None:
             self.bucket = self.s3.Bucket (self.bucket_name)
 
+        try:
+            self.bucket.Object(object_name).metadata
+        except botocore.exceptions.ClientError:
+            return False
+
+        return True
+
+
+    def ensure_stored(self, id_, datum_name, data_thunk):
         objname = self._make_object_name(id_, datum_name)
 
         if not self._object_exists(objname):
@@ -118,7 +129,7 @@ if __name__ == "__main__":
                                                cache=True))
 
 
-    storage = Storage()
+    storage = S3Storage()
 
     bar = progressbar.ProgressBar()
     bar.start()
