@@ -42,29 +42,12 @@ class FlickrAdapter:
         }
 
     def getExif(self, id_):
-        return self.flickr.photos_getExif(photo_id=id_)['photo']
+        return json.dumps(self.flickr.photos_getExif(photo_id=id_)['photo'])
 
     def getInfo(self, id_):
-        return self.flickr.photos_getInfo(photo_id=id_)['photo']
+        return json.dumps(self.flickr.photos_getInfo(photo_id=id_)['photo'])
 
     def get_original(self, id_):
-        """{u'sizes': {u'canblog': 0,
-                    u'candownload': 1,
-                    u'canprint': 0,
-                    u'size': [{u'height': 75,
-                               u'label': u'Square',
-                               u'media': u'photo',
-                               u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_s.jpg',
-                               u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/sq/',
-                               u'width': 75},
-                              {u'height': u'150',
-                               u'label': u'Large Square',
-                               u'media': u'photo',
-                               u'source': u'https://farm9.staticflickr.com/8326/29332283952_f830b0e681_q.jpg',
-                               u'url': u'https://www.flickr.com/photos/offby1/29332283952/sizes/q/',
-                               u'width': u'150'}]},
-         u'stat': u'ok'}
-        """
         getSizes_response = self.flickr.photos_getSizes(photo_id=id_)
 
         for d in getSizes_response['sizes']['size']:
@@ -124,7 +107,7 @@ class Storage:
 
         if not self._object_exists(objname):
             o = self.bucket.Object(objname)
-            o.put(Body=json.dumps(data_thunk()))
+            o.put(Body=data_thunk())
 
 if __name__ == "__main__":
     api_key, shared_secret = get_auth_stuff()
