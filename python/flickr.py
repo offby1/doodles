@@ -135,7 +135,7 @@ if __name__ == "__main__":
             for datum_name, method in flickr.method_map.items():
                 storage.ensure_stored(id_, datum_name, lambda : method(id_))
 
-                bar.update(index)
+                bar.update(index + 1)
 
     except KeyboardInterrupt:
         pass
