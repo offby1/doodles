@@ -11,6 +11,9 @@ import pprint
 import sys
 
 # 3rd-party
+import boto3                    # pip install boto3
+import boto3.s3
+import botocore.exceptions
 import configobj                # pip install configobj
 import flickrapi                # pip install flickrapi
 import progressbar              # pip install progressbar2
@@ -96,21 +99,36 @@ class FlickrAdapter:
 
 class Storage:
     def __init__(self):
-        self.container = os.path.join(os.path.dirname(__file__), 'storage')
+        self.bucket_name = 'flickr-sanctuary'
+        self.session = None
+        self.s3 = None
+        self.bucket = None
 
-    def _make_fn(self, id_, datum_name):
-        return os.path.join(self.container, id_, datum_name)
+    def _make_object_name(self, id_, datum_name):
+        return '{}/{}'.format(id_, datum_name)
+
+    def _object_exists(self, object_name):
+        try:
+            self.bucket.Object(object_name).metadata
+            return True
+        except botocore.exceptions.ClientError:
+            return False
 
     def ensure_stored(self, id_, datum_name, data_thunk):
-        fn = self._make_fn(id_, datum_name)
-        if not os.path.isfile(fn):
-            try:
-                os.makedirs(os.path.dirname(fn))
-            except OSError:
-                pass
+        if self.session is None:
+            self.session = boto3.session.Session()
 
-            with open(fn, 'w') as outf:
-                json.dump(data_thunk(), outf)
+        if self.s3 is None:
+            self.s3 = self.session.resource('s3')
+
+        if self.bucket is None:
+            self.bucket = self.s3.Bucket (self.bucket_name)
+
+        objname = self._make_object_name(id_, datum_name)
+
+        if not self._object_exists(objname):
+            o = self.bucket.Object(objname)
+            o.put(Body=json.dumps(data_thunk()))
 
 
 if __name__ == "__main__":
