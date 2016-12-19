@@ -135,14 +135,14 @@ if __name__ == "__main__":
     bar.start()
 
     try:
-        for index, (total, photo) in enumerate(flickr.all_photo_metadata()):
+        for photo_index, (total, photo) in enumerate(flickr.all_photo_metadata()):
             bar.max_value = total * len(flickr.method_map)
 
             id_ = photo['id']
-            for datum_name, method in flickr.method_map.items():
+            for method_index, (datum_name, method) in enumerate(flickr.method_map.items()):
                 storage.ensure_stored(id_, datum_name, lambda : method(id_))
 
-                bar.update(index + 1)
+                bar.update(1 + method_index + photo_index * len(flickr.method_map))
 
     except KeyboardInterrupt:
         pass
