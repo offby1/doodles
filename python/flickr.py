@@ -117,29 +117,7 @@ class Storage:
                 json.dump(data, outf)
 
 
-def convert_json_to_storage(json_file_name):
-    with open(json_file_name) as inf:
-        json_blob = json.load(inf)
-
-    storage = Storage()
-
-    bar = progressbar.ProgressBar(max_value=len(json_blob.items()))
-    bar.start()
-    for index, (photo_id, stuff) in enumerate(json_blob.items()):
-        exif = stuff.pop('exif')
-        sizes= stuff.pop('sizes')
-        info = {'info': stuff}
-        storage.store_datum(photo_id, 'Exif', exif, force=False)
-        storage.store_datum(photo_id, 'Info', info, force=False)
-        storage.store_datum(photo_id, 'Sizes', sizes, force=False)
-        bar.update(index + 1)
-
-
-
 if __name__ == "__main__":
-    convert_json_to_storage('photos.js')
-    exit(0)
-
     api_key, shared_secret = get_auth_stuff()
 
     flickr = FlickrAdapter(flickrapi.FlickrAPI(api_key,
