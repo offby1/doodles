@@ -17,7 +17,7 @@ import botocore.exceptions
 import configobj                # pip install configobj
 import flickrapi                # pip install flickrapi
 import progressbar              # pip install progressbar2
-
+import requests
 
 # API docs: https://www.flickr.com/services/api/
 
@@ -38,7 +38,7 @@ class FlickrAdapter:
         self.method_map = {
             'Exif':  self.getExif,
             'Info':  self.getInfo,
-            'Sizes': self.getSizes,
+            'Original': self.get_original,
         }
 
     def getExif(self, id_):
@@ -47,11 +47,8 @@ class FlickrAdapter:
     def getInfo(self, id_):
         return self.flickr.photos_getInfo(photo_id=id_)['photo']
 
-    def getSizes(self, id_):
-        """For mysterious reasons, the bulk of this information is a list of
-        dicts, rather than a dict keyed on the name of the size.
-
-        {u'sizes': {u'canblog': 0,
+    def get_original(self, id_):
+        """{u'sizes': {u'canblog': 0,
                     u'candownload': 1,
                     u'canprint': 0,
                     u'size': [{u'height': 75,
@@ -69,11 +66,10 @@ class FlickrAdapter:
          u'stat': u'ok'}
         """
         getSizes_response = self.flickr.photos_getSizes(photo_id=id_)
-        rv = {}
-        for d in getSizes_response['sizes']['size']:
-            rv[d['label']] = d
 
-        return {'sizes': rv}
+        for d in getSizes_response['sizes']['size']:
+            if d['label'] == 'Original':
+                return requests.get(d['source']).content
 
 
     def all_photo_metadata(self):
@@ -130,7 +126,6 @@ class Storage:
             o = self.bucket.Object(objname)
             o.put(Body=json.dumps(data_thunk()))
 
-
 if __name__ == "__main__":
     api_key, shared_secret = get_auth_stuff()
 
@@ -147,7 +142,7 @@ if __name__ == "__main__":
 
     try:
         for index, (total, photo) in enumerate(flickr.all_photo_metadata()):
-            bar.max_value = total
+            bar.max_value = total * len(flickr.method_map)
 
             id_ = photo['id']
             for datum_name, method in flickr.method_map.items():
