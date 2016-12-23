@@ -34,3 +34,20 @@ The Google Services docs are so various and complex that it's
 daunting.  I keep putting off reading them.
 
 """
+
+# From https://developers.google.com/picasa-web/docs/1.0/developers_guide_python
+def GetAuthSubUrl():
+    # My little ec2 box running a temporary web server
+    next = 'http://ec2-52-8-12-207.us-west-1.compute.amazonaws.com:8000/'
+
+    scope = 'https://picasaweb.google.com/data/'
+    secure = False
+    session = True
+    gd_client = gdata.photos.service.PhotosService()
+    return gd_client.GenerateAuthSubURL(next, scope, secure, session);
+
+authSubUrl = GetAuthSubUrl();
+# Crap, this URL leads to https://support.google.com/a/answer/162106
+# which basically says "This flavor of OUath hasn't been supported for
+# years; get a horse"
+print '<a href="%s">Login to your Google account</a>' % authSubUrl
