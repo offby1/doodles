@@ -1,5 +1,5 @@
+import itertools
 import math
-import random
 
 import progressbar              # pip install progressbar2
 
@@ -15,8 +15,9 @@ def se_diag(lol):
 
 
 def sw_diag(lol):
-    for i, col in enumerate(reversed(list(columns(lol)))):
-        yield col[i]
+    l = len(lol)
+    for i, col in enumerate(columns(lol)):
+        yield col[l - i - 1]
 
 
 def is_magic_square(lol):
@@ -40,35 +41,28 @@ def is_magic_square(lol):
 
     return True
 
-_3x3 = [
-    [2, 7, 6],
-    [9, 5, 1],
-    [4, 3, 8]
-]
 
-def random_magic_square(order):
-    values = [1 + v for v in range(order * order)]
-    random.shuffle(values)
+def all_squares(order):
+    size = order * order
+    progress = progressbar.ProgressBar(max_value=math.factorial(size))
 
-    rv = []
-    for n in range(0, order * order, order):
-        rv.append(values[n:n + order])
+    def wat():
+        for values in itertools.permutations([1 + v for v in range(size)]):
+            rv = []
+            for n in range(0, order * order, order):
+                rv.append(values[n:n + order])
 
-    return rv
+            yield rv
+
+    return progress(wat())
 
 if __name__ == "__main__":
-    import json
     import pprint
 
-    order = 3
-    bar = progressbar.ProgressBar(max_value=math.factorial(order * order))
-    bar.start()
-    trials = 0
-    while True:
-        ms = random_magic_square(order)
-        bar.update(trials)
-        if is_magic_square(ms):
-            pprint.pprint(ms)
-            exit(0)
-
-        trials += 1
+    try:
+        for sq in all_squares(3):
+            if is_magic_square(sq):
+                pprint.pprint(sq)
+                break
+    except KeyboardInterrupt:
+        pass
