@@ -48,11 +48,7 @@ def all_squares(order):
 
     def wat():
         for values in itertools.permutations([1 + v for v in range(size)]):
-            rv = []
-            for n in range(0, order * order, order):
-                rv.append(values[n:n + order])
-
-            yield rv
+            yield [values[n:n + order] for n in range(0, size, order)]
 
     return progress(wat())
 
