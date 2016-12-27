@@ -5,8 +5,8 @@ import pprint
 import random
 
 # 3rd party
-import click
-import progressbar                 # pip install progress2
+import click                    # pip install click
+import progressbar              # pip install progress2
 
 class Graph:
     """
@@ -30,6 +30,12 @@ class Graph:
                 'ratio': ratio}
 
     def bfs(self, _from):
+        """Traverse the graph starting at _FROM, visiting every reachable node in breadth-first order.
+
+        Return the path to the last node we visited (which is as "far"
+        as one can get from _FROM).
+
+        """
         seen = set([_from])
         queue = [(_from, [_from])]
 
@@ -90,7 +96,7 @@ def differ_by_one_letter(left, right):
     for l, r in zip(left, right):
         if l != r:
             differing_letters += 1
-            if differing_letters > 2:
+            if differing_letters > 1:
                 return False
     return differing_letters == 1
 
