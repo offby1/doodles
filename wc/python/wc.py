@@ -6,9 +6,7 @@ import pprint
 import random
 
 # 3rd party
-import progress.bar                 # pip install progress
-import progress.spinner
-
+import progressbar                 # pip install progress2
 
 class Graph:
     """
@@ -60,9 +58,11 @@ class Graph:
     def from_wordlist(klass, wordlist_file_name, word_length):
         rv = klass()
         words = set(n_letter_words(wordlist_file_name, word_length))
-        for left in progress.bar.Bar("Processing {}-letter words from {}".format(word_length,
-                                                                                 wordlist_file_name),
-                                     suffix='%(index)d/%(max)d (%(eta_td)s remaining)').iter(words):
+        for left in progressbar.ProgressBar(widgets=["Processing {}-letter words from {}".format(word_length,
+                                                                                                 wordlist_file_name),
+                                                     progressbar.Percentage(),
+                                                     ' ', progressbar.Bar(),
+                                                     ' ', progressbar.ETA()])(words):
 
             # In theory, you could generate all possible one-letter
             # variants of "left", and then add them; but that would take
@@ -119,13 +119,12 @@ def main():
 
     pprint.pprint(graph.stats)
 
-    spinner = progress.spinner.LineSpinner()
+    spinner = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
     all_words = list(graph.neighbors_by_node.keys())
 
     longest_chain = []
-    while True:
-        spinner.next()
 
+    while True:
         start = random.choice(all_words)
 
         chain = graph.bfs(start)
@@ -134,7 +133,10 @@ def main():
             longest_chain = chain
             if chain[0] > chain[-1]:
                 chain = list(reversed(chain))
-            print("{}: {}".format(len(chain), chain))
+            print("\n{}: {}".format(len(chain), chain))
+
+        spinner.update(spinner.value + 1)
+
 
 if __name__ == "__main__":
     main()
