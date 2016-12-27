@@ -1,11 +1,11 @@
 # Core
-import argparse
 import ast
 import collections
 import pprint
 import random
 
 # 3rd party
+import click
 import progressbar                 # pip install progress2
 
 class Graph:
@@ -95,25 +95,17 @@ def differ_by_one_letter(left, right):
     return differing_letters == 1
 
 
-def main():
-    def at_least_three(string):
-        value = int(string)
-        if value < 3:
-            msg = "%r is not at least three" % string
-            raise argparse.ArgumentTypeError(msg)
-        return value
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--word-length",
-                        type=at_least_three,
-                        default=3)
-    args = parser.parse_args()
-
-    cache_file_name = 'graph.cache.{}'.format(args.word_length)
+@click.command()
+@click.option('-w', '--word-length',
+              default=3,
+              type=click.IntRange(3, 10, clamp=True))
+def main(word_length):
+    cache_file_name = 'graph.cache.{}'.format(word_length)
     try:
         with open(cache_file_name) as inf:
             graph = Graph.from_python_literal(inf.read())
     except FileNotFoundError:
-        graph = Graph.from_wordlist('/usr/share/dict/words', args.word_length)
+        graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
 
