@@ -2,7 +2,7 @@
 import itertools
 import random
 import sys
-from types import Iterator
+from typing import Iterator, List
 
 """ This emulates the famous Enigma
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
