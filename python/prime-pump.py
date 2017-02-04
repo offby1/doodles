@@ -13,6 +13,7 @@ def lotta_primes():
         if g != 1:
             yield g
 
+
 found = set()
 for p in lotta_primes():
     if p not in found:

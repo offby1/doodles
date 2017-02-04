@@ -16,9 +16,11 @@ xlations = {
     'is': 'z',
 }
 
+
 def lookup(match):
     word = match.group(0)
     return xlations.get(word.lower(), word)
+
 
 output = re.sub(r'(\w+)', lookup, input)
 

@@ -1,13 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 A sort of "hello world" web server.
 """
-
-from __future__ import print_function
-from __future__ import absolute_import
-
-__author__ = 'eric.hanchrow@gmail.com'
 
 # Core
 from collections import defaultdict
@@ -19,6 +14,7 @@ import wsgiref.simple_server
 
 
 class Simple(object):
+
     def __init__(self):
         self.counts_by_URL = defaultdict(int)
 
@@ -27,6 +23,7 @@ class Simple(object):
         self.counts_by_URL[req.path] += 1
         return Response("My call history: " + str(dict(self.counts_by_URL)),
                         content_type='text/plain')
+
 
 if __name__ == "__main__":
     host = 'localhost'

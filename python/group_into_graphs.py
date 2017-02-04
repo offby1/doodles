@@ -6,7 +6,9 @@
 
 import collections
 
+
 class Graph:
+
     def __init__(self, edges):
         self.edges = edges
         self.neighbors_by_node = collections.defaultdict(set)
@@ -31,11 +33,13 @@ class Graph:
                 self.traverse_starting_at(n, node_func, seen=seen)
 
 
-the_graph = Graph([[0,9], [3,7], [7,9], [5,6], [1,5], [4,2], [8, 8]])
+the_graph = Graph([[0, 9], [3, 7], [7, 9], [5, 6], [1, 5], [4, 2], [8, 8]])
 
 graph_by_node = {}
 
+
 class GraphNameGenerator:
+
     def __init__(self):
         self.counter = 0
 
@@ -58,4 +62,4 @@ nodes_by_graph = collections.defaultdict(set)
 for node, graph in graph_by_node.items():
     nodes_by_graph[graph].add(node)
 
-print([list (s) for s in nodes_by_graph.values()])
+print([list(s) for s in nodes_by_graph.values()])

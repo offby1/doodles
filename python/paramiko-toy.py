@@ -26,6 +26,7 @@ def from_named_dir(d):
 def key2str(pk):
     return '{} bits'.format(pk.get_bits())
 
+
 if __name__ == "__main__":
     for name, result in from_named_dir(os.path.expanduser("~/.ssh")):
         print('{}: {}'.format(name, key2str(result)))

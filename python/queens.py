@@ -109,6 +109,7 @@ class Queens:
             print("|" + "|".join(squares) + "|")
             print(sep)
 
+
 q = Queens(8)
 
 for solution in q.solve():

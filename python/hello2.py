@@ -1,6 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from Tkinter import *
+from Tkinter import (
+    Button,
+    Frame,
+    LEFT,
+    Tk,
+)
+
 
 class App:
 
@@ -16,7 +22,8 @@ class App:
         self.hi_there.pack(side=LEFT)
 
     def say_hi(self):
-        print "hi there, everyone!"
+        print("hi there, everyone!")
+
 
 root = Tk()
 

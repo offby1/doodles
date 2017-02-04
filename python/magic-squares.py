@@ -52,6 +52,7 @@ def all_squares(order):
 
     return progress(wat())
 
+
 if __name__ == "__main__":
     import pprint
 

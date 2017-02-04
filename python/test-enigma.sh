@@ -17,8 +17,8 @@ log ()
 }
 
 go < "$inf" | go > "$outf"
-log "This should be the first two lines of ${inf}:"
-head -2 "$outf"
+log "This should be the first ten lines of ${inf}:"
+head -10 "$outf"
 log "======================="
 cmp --quiet "$inf" "$outf" || exit 1
 

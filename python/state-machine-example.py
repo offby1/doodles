@@ -32,6 +32,7 @@ class Lock:
         else:
             raise Exception('wtf')
 
+
 l = Lock()
 for attempt in range(10):
     method = random.choice([l.try_to_open, l.lock])

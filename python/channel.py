@@ -1,7 +1,9 @@
 from collections import deque, namedtuple
 import types
 
+
 class Channel:
+
     def __init__(self, name='', size=1):
         self.deque = deque(maxlen=size)
         self.name = name
@@ -28,10 +30,17 @@ class Channel:
 
 Waiting = namedtuple('Waiting', "function channel mode")
 
-ready_transmit = lambda w: w.mode == 'transmit' and not w.channel.full()
-ready_receive = lambda w: w.mode == 'receive' and not w.channel.empty()
+
+def ready_transmit(w):
+    return w.mode == 'transmit' and not w.channel.full()
+
+
+def ready_receive(w):
+    return w.mode == 'receive' and not w.channel.empty()
+
 
 class Loop:
+
     def __init__(self):
         self.pending = set()
 
@@ -50,7 +59,6 @@ class Loop:
             self.pending.remove(pick)
 
         return pick
-
 
     def run_until_complete(self, f):
         self.run(f)
