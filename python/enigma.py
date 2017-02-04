@@ -4,14 +4,15 @@ import random
 import sys
 from typing import Iterator, List
 
+import click                    # pip install click
+
 """ This emulates the famous Enigma
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
 and decryption are the same operation.  Example usage:
 
-    $ echo fee fi fo fum | python3 enigma.py | tee >(base64 -i - > /dev/tty) | python3 enigma.py
-    1tWxuC6SrLfeyOkynyk=
+    $ echo fee fi fo fum | python3 enigma.py frotz | tee >(base64 -i - > /dev/tty) | python3 enigma.py frotz
+    TUxq0hlfHKU4zzOmmrY=
     fee fi fo fum
-
 """
 
 
@@ -104,9 +105,14 @@ class Enigma:
             self.advance_rotors()
 
 
-if __name__ == "__main__":
-    random.seed(0)
+@click.command()
+@click.argument('secret_key', default='')
+def encrypt_stdin_to_stdout(secret_key):
+    random.seed(secret_key)
     e = Enigma()
 
     for line in sys.stdin.buffer:
         sys.stdout.buffer.write(bytes(e.encrypt(line)))
+
+if __name__ == "__main__":
+    encrypt_stdin_to_stdout()
