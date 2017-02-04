@@ -77,12 +77,12 @@ class Permutation:
 class Enigma:
     def __init__(self, num_rotors: int =5) -> None:
         assert(num_rotors > 0)
-        self.rotors = [Rotor(256) for i in range(num_rotors)]
+        self.num_slots = 256
+        self.rotors = [Rotor(self.num_slots) for i in range(num_rotors)]
 
     def reflect(self, number: int) -> int:
-        n = self.rotors[0].num_slots
-        offset = n // 2
-        return (number + offset) % n
+        offset = self.num_slots // 2
+        return (number + offset) % self.num_slots
 
     def run_through_rotors(self, number: int) -> int:
         for r in self.rotors:
