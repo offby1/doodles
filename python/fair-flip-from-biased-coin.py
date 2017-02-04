@@ -14,10 +14,10 @@ def biased_coinflip():
 
 
 def make_unbiased_flipper(biased_flipper):
-
+    # True 50% of the time
     def unbiased_flip():
         while True:
-            first  = biased_flipper()
+            first = biased_flipper()
             second = biased_flipper()
 
             if first != second:
@@ -32,6 +32,7 @@ def run_trials(flipper, num=100):
         histogram[flipper()] += 1
 
     print('{:>15}: {}'.format(flipper.__name__, pprint.pformat(dict(histogram))))
+
 
 run_trials(biased_coinflip)
 run_trials(make_unbiased_flipper(biased_coinflip))
