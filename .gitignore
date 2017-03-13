@@ -3,3 +3,4 @@ compiled/
 /chicken/hello
 /chicken/PROFILE.*
 /python/photos.js
+maze/maze.app/*
