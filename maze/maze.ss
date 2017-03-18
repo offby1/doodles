@@ -1,14 +1,10 @@
 (module maze mzscheme
 (require (planet "dfs.ss" ("offby1" "offby1.plt")))
-(require (all-except "draw.ss" my-version))
+(require "draw.ss")
 (require (lib "trace.ss"))
 (require (lib "cmdline.ss"))
 (require (only (lib "list.ss") sort))
 (require (only (lib "1.ss" "srfi") iota filter append-map))
-
-(provide my-version)
-
-(define my-version "$Id$")
 
 (define visited-nodes #f)
 (define x-coordinate car)
@@ -179,5 +175,4 @@
   )
  )
 (define *the-grid* (make-grid main *x-max*))
-(printf "~s~%" my-version)
 )

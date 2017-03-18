@@ -2,9 +2,7 @@
 (require (lib "mred.ss" "mred")
          (lib "class.ss"))
 
-(provide (rename internal-make-grid make-grid) draw-line *offset* *pause* my-version)
-
-(define my-version "$Id$")
+(provide (rename internal-make-grid make-grid) draw-line *offset* *pause*)
 
 (print-struct #t)
 (define-struct grid (device-contexts
@@ -192,5 +190,4 @@
          ))
      )
    (grid-device-contexts grid)))
-(printf "~s~%" my-version)
 )
