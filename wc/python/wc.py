@@ -8,6 +8,7 @@ import random
 import click                    # pip install click
 import progressbar              # pip install progress2
 
+
 class Graph:
     """
     This is an "Adjacency List" graph (https://en.wikipedia.org/wiki/Adjacency_list).
@@ -22,8 +23,8 @@ class Graph:
 
     @property
     def stats(self):
-        v = len(self.neighbors_by_node.keys())
-        n = sum([len(s) for s in self.neighbors_by_node.values()])
+        n = len(self.neighbors_by_node.keys())
+        v = sum([len(s) for s in self.neighbors_by_node.values()])
         ratio = v / n
         return {'vertices': v,
                 'nodes': n,
