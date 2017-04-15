@@ -1,7 +1,7 @@
 import random
 
 
-def mergesort(seq, recursion_depth=0, key=None):
+def mergesort(seq, key=None):
     if key is None:
         key = lambda x: x
 
@@ -15,11 +15,9 @@ def mergesort(seq, recursion_depth=0, key=None):
     left = seq[0:half_length]
     right = seq[half_length:]
 
-    rv = list(merged(mergesort(left, recursion_depth=recursion_depth + 1, key=key),
-                     mergesort(right, recursion_depth=recursion_depth + 1, key=key),
-                     key=key))
-    print('| ' * recursion_depth + f'{seq} => {rv}')
-    return rv
+    return list(merged(mergesort(left, key=key),
+                       mergesort(right, key=key),
+                       key=key))
 
 
 def merged(s1, s2, key):
@@ -32,6 +30,7 @@ def merged(s1, s2, key):
             yield s1.pop(0)
         else:
             yield s2.pop(0)
+
 
 original = [random.randint(0, 100) for _ in range(100)]
 
