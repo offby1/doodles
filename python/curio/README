@@ -1,0 +1,6 @@
+Following along https://curio.readthedocs.io/en/latest/tutorial.html
+
+I installed curio via
+
+    ~/venv3.darwin/bin/pip install git+https://github.com/dabeaz/curio.git
+
