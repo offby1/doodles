@@ -74,10 +74,10 @@ urls = ('https://en.wikipedia.org/wiki/American_Eagles',
         # 'https://en.wikipedia.org/wiki/West_Coast_Eagles',
         # 'https://en.wikipedia.org/wiki/Winthrop_Eagles',
         # 'https://en.wikipedia.org/wiki/Woodville-West_Torrens_Eagles',
-)
+        )
 
 # urls=urls[0:3]
-
+
 
 def download_one(url):
     return '{} => {} bytes'.format(url, len(requests.get(url).text))
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         print(description)
         print(timeit.timeit(python_expression, globals=globals(), number=1))
 
-    t("naive:"   , 'sequential_download(urls)')
+    t("naive:", 'sequential_download(urls)')
     t("threaded:", 'threaded_download(urls)')
-    t("futures:" , 'future_download(urls)')
-    t("asyncio:" , 'async_download(urls)')
+    t("futures:", 'future_download(urls)')
+    t("asyncio:", 'async_download(urls)')
