@@ -3,6 +3,7 @@
 import random
 import statistics
 
+
 def trial(number_burning=30):
     blows = 0
     while (number_burning > 0):
@@ -12,6 +13,7 @@ def trial(number_burning=30):
         blows += 1
 
     return blows
+
 
 data = [trial() for _ in range(10000)]
 print ('Mean : {}'.format(statistics.mean(data)))
