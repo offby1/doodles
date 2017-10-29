@@ -2,6 +2,8 @@ Lynn says my step-niece Nelly has been cast in a movie along with
 Reese Witherspoon, Laura Dern, and Nicole Kidman.  Let's see if I can
 figure out which movie it is.
 
+   [Spoiler alert: it's the HBO series "Big Little Lies"]
+
 First I collect the titles of those actress' movies that haven't yet
 been released; they go into files named after each actress.
 
