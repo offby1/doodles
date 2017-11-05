@@ -5,7 +5,12 @@ In Seattle, when the wind comes from the North, it'll be clear for the next day 
 For years I'd wanted historical weather data that included cloud cover
 and wind direction.  I finally found it in DarkSky's API.
 
-$ DARSKY_SECRET_KEY=xyzzy python3 darksky.py
+# Find the secret key at https://darksky.net/dev/account
+$ DARKSKY_SECRET_KEY=xyzzy python3 darksky.py
+
+Now I have to figure out how to tell if there's a correlation between
+wind direction and cloud cover.  Maybe I'll import the data into
+Google Sheets, and have it draw some sort of graph.
 
 """
 
@@ -17,14 +22,14 @@ import pytz
 import requests                 # pip install requests
 
 # See https://darksky.net/dev/docs
-DARSKY_SECRET_KEY = os.environ.get ('DARSKY_SECRET_KEY')
+DARKSKY_SECRET_KEY = os.environ.get ('DARKSKY_SECRET_KEY')
 TIME_MACHINE_REQUEST_URL_TEMPLATE = 'https://api.darksky.net/forecast/{key}/{latitude},{longitude},{time}'
 
 SEATTLE_LAT_LON = (47.62052420842363, -122.34919035599756)  # decimal degrees, + is North, duh
 
 
 def get_weather_for_time (time):
-    url = TIME_MACHINE_REQUEST_URL_TEMPLATE.format (key=DARSKY_SECRET_KEY,
+    url = TIME_MACHINE_REQUEST_URL_TEMPLATE.format (key=DARKSKY_SECRET_KEY,
                                                     latitude=SEATTLE_LAT_LON[0],
                                                     longitude=SEATTLE_LAT_LON[1],
                                                     time=time.isoformat ())
@@ -43,7 +48,7 @@ def _24_hours_wind_and_cloud_stuff (darksky_dict):
             pass
 
 
-def one_years_stuff (starting_year):
+def one_years_hourly_data (starting_year):
     jan_1 = datetime.datetime(year=starting_year, month=1, day=1, tzinfo=pytz.utc)
 
     midnight = jan_1
@@ -55,5 +60,5 @@ def one_years_stuff (starting_year):
 
 if __name__ == '__main__':
     pprint.pprint (('time', 'cloudCover', 'windBearing'))
-    for h in one_years_stuff (2017):
-        print (h)
+    for hour in one_years_hourly_data (2017):
+        print (hour)
