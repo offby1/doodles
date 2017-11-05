@@ -1,17 +1,25 @@
+import collections
 import csv
+import itertools
 import sys
 
 reader = csv.DictReader (sys.stdin)
 next(reader)
 
-pairs = []
-for datum in reader:
-    cloudCover = datum['cloudCover']
-    windBearing = datum['windBearing']
+covers_by_bearing = collections.defaultdict (list)
 
-    pairs.append ((windBearing, cloudCover))
+current_reader, advanced_reader = itertools.tee (reader)
+advanced_reader = itertools.islice (advanced_reader, 24, None)
+
+for toople, advanced_tuple in zip (current_reader, advanced_reader):
+    windBearing = int(toople['windBearing'])
+    cloudCover  = float(toople['cloudCover'])
+    advancedCloudCover  = float(advanced_tuple['cloudCover'])
+
+    covers_by_bearing[windBearing].append (advancedCloudCover)
 
 writer = csv.writer (sys.stdout)
 writer.writerow (('windBearing (degrees)', 'cloudCover'))
-for p in sorted (pairs, key=lambda p: int (p[0])):
-    writer.writerow (p)
+for bearing, covers in sorted (covers_by_bearing.items ()):
+    for c in sorted(covers):
+        writer.writerow ((bearing, c))
