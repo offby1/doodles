@@ -59,6 +59,10 @@ def one_years_hourly_data (starting_year):
 
 
 if __name__ == '__main__':
-    pprint.pprint (('time', 'cloudCover', 'windBearing'))
+    import csv
+    import sys
+    writer = csv.writer (sys.stdout)
+    writer.writerow (('time', 'cloudCover', 'windBearing'))
+
     for hour in one_years_hourly_data (2017):
-        print (hour)
+        writer.writerow (hour)
