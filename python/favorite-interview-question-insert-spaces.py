@@ -2,7 +2,7 @@
 words, return another string that is like the first, but with spaces
 added, so that the result is a space-separated sequence of words.
 
-For example, given "thiswasatrickyproblemitdoescertainlyappear", and a
+For example, given "thisisatrickyproblemitcertainlydoesappear", and a
 normal English dictionary, return "this was a tricky problem it does
 certainly appear".
 
@@ -19,16 +19,10 @@ def _snarf_dict():
 
             # Eliminate most of the one-letter words from the
             # dictionary, because they make the problem a lot less
-            # interesting.
-
+            # interesting, and the algorithm much slower.
             if len(word) == 1:
                 if word.lower() not in {'i', 'a'}:
                     continue
-
-            # Similarly only keep words if they contain a vowel.
-            if not any(v in word for v in {'a', 'e', 'i', 'o', 'u', 'y'}):
-                print(f"Vowel-less monstrosity, begone {word!r}")
-                continue
 
             result.add(word)
     return result
@@ -45,40 +39,38 @@ def _all_splits(seq):
 def insert_spaces(input_, dictionary_words):
     print(f'input_ {input_!r}')
     if input_ == '':
-        return ''
+        yield ''
 
     if input_ in dictionary_words:
-        return input_
+        yield input_
 
     for prefix, rest in _all_splits(input_):
         if prefix in dictionary_words:
             print(f'Hey, {input_!r} starts with {prefix!r}')
             from_shorter_string = insert_spaces(rest, dictionary_words)
-            if from_shorter_string:
-                rv = prefix + ' ' + from_shorter_string
+            for short in from_shorter_string:
+                rv = prefix + ' ' + short
                 print(f'w00t! {rv}')
-                return rv
+                yield rv
             print(f'hmm, well I guess {rest!r} is insoluble')
-
-    return None
 
 
 def test_base_case():
-    assert insert_spaces('', dictionary_words) == ''
+    assert list(insert_spaces('', dictionary_words)) == ['']
 
 
 def test_lone_word():
-    assert insert_spaces("beer", dictionary_words) == "beer"
+    assert "beer" in insert_spaces("beer", dictionary_words)
 
 
 def test_two_words():
-    assert insert_spaces("dickmove", dictionary_words) == "dick move"
+    assert "dick move" in insert_spaces("dickmove", dictionary_words)
 
 
 def test_example():
     # unfortunately the output depends heavily on the dicitonary.
     # This works on the dict that comes with macOS 10.13.3 "Sierra".
-    input_ = "thiswasatrickyproblemitdoescertainlyappear"
-    expected_output = "this wa sa tricky problem it do es certain ly appear"
+    input_ = "thisisatrickyproblemitcertainlydoesappear"
+    expected_output = "this is a tricky problem it certainly does appear"
 
-    assert insert_spaces(input_, dictionary_words) == expected_output
+    assert expected_output in insert_spaces(input_, dictionary_words)
