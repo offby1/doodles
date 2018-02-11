@@ -11,9 +11,9 @@ covers_by_bearing = collections.defaultdict (list)
 current_reader, advanced_reader = itertools.tee (reader)
 advanced_reader = itertools.islice (advanced_reader, 24, None)
 
-for toople, advanced_tuple in zip (current_reader, advanced_reader):
-    windBearing = int(toople['windBearing'])
-    cloudCover  = float(toople['cloudCover'])
+for _tuple, advanced_tuple in zip (current_reader, advanced_reader):
+    windBearing = int(_tuple['windBearing'])
+    cloudCover  = float(_tuple['cloudCover'])
     advancedCloudCover  = float(advanced_tuple['cloudCover'])
 
     covers_by_bearing[windBearing].append (advancedCloudCover)

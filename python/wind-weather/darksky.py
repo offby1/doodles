@@ -16,7 +16,6 @@ Google Sheets, and have it draw some sort of graph.
 
 import datetime
 import os
-import pprint
 
 import pytz
 import requests                 # pip install requests
