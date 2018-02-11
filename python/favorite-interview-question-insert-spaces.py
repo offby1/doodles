@@ -68,3 +68,26 @@ def test_example():
     expected_output = "this is a tricky problem it certainly does appear"
 
     assert expected_output in insert_spaces(input_, dictionary_words)
+
+
+if __name__ == "__main__":
+    import re
+    import statistics
+
+    def _average_word_length(str_):
+        words = str_.split(' ')
+        return statistics.mean([len(w) for w in words])
+
+    for inp_ in (
+            "thisisatrickyproblemitcertainlydoesappear",
+            "tell me your dream, your hope, your fear",
+            "I suppose pretty much anything you put in here would have a number of solution"
+    ):
+        cleaned_up_input = re.sub (r'[^a-z]', '', inp_.lower())
+        solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words),
+                           key=_average_word_length,
+                           reverse=True)
+        if solutions:
+            print(f'\n\n{len(solutions)} solutions!')
+            for solution in solutions[0:10]:
+                print(f'{solution}')
