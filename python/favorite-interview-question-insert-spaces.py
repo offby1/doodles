@@ -10,6 +10,8 @@ certainly appear".
 
 # python3 -m pytest favorite-interview-question-insert-spaces.py
 
+import progressbar
+
 
 def _snarf_dict():
     result = set()
@@ -36,14 +38,24 @@ def _all_splits(seq):
         yield (seq[0:index], seq[index:])
 
 
+def insert_spaces(input_, dictionary_words, bar=None):
     if input_ in dictionary_words:
+        if bar:
+            bar.update(len(input_))
         yield input_
 
     for prefix, rest in _all_splits(input_):
         if prefix in dictionary_words:
-            from_shorter_string = insert_spaces(rest, dictionary_words)
+            from_shorter_string = insert_spaces(rest, dictionary_words, bar=bar)
             for short in from_shorter_string:
-                yield prefix + ' ' + short
+                result = prefix + ' ' + short
+                if bar:
+                    bar.update(len(prefix))
+                yield result
+
+    if bar:
+        bar.update(0)
+
 
 def test_base_case():
     assert list(insert_spaces('', dictionary_words)) == []
@@ -77,13 +89,14 @@ if __name__ == "__main__":
     for inp_ in (
             "thisisatrickyproblemitcertainlydoesappear",
             "tell me your dream, your hope, your fear",
-            "I suppose pretty much anything you put in here would have a number of solution"
+            "I suppose pretty much anything you put in here would have a number of solution",
     ):
         cleaned_up_input = re.sub (r'[^a-z]', '', inp_.lower())
-        solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words),
-                           key=_average_word_length,
-                           reverse=True)
-        if solutions:
-            print(f'\n\n{len(solutions)} solutions!')
-            for solution in solutions[0:10]:
-                print(f'{solution}')
+        with progressbar.ProgressBar(max_value=len(cleaned_up_input) * 2 - 1) as bar:
+            solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words, bar),
+                               key=_average_word_length,
+                               reverse=True)
+            if solutions:
+                print(f'\n\n{len(solutions)} solutions!')
+                for solution in solutions[0:10]:
+                    print(f'{solution}')
