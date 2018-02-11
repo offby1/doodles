@@ -37,7 +37,6 @@ def _all_splits(seq):
 
 
 def insert_spaces(input_, dictionary_words):
-    print(f'input_ {input_!r}')
     if input_ == '':
         yield ''
 
@@ -46,14 +45,9 @@ def insert_spaces(input_, dictionary_words):
 
     for prefix, rest in _all_splits(input_):
         if prefix in dictionary_words:
-            print(f'Hey, {input_!r} starts with {prefix!r}')
             from_shorter_string = insert_spaces(rest, dictionary_words)
             for short in from_shorter_string:
-                rv = prefix + ' ' + short
-                print(f'w00t! {rv}')
-                yield rv
-            print(f'hmm, well I guess {rest!r} is insoluble')
-
+                yield prefix + ' ' + short
 
 def test_base_case():
     assert list(insert_spaces('', dictionary_words)) == ['']
