@@ -36,10 +36,6 @@ def _all_splits(seq):
         yield (seq[0:index], seq[index:])
 
 
-def insert_spaces(input_, dictionary_words):
-    if input_ == '':
-        yield ''
-
     if input_ in dictionary_words:
         yield input_
 
@@ -50,7 +46,7 @@ def insert_spaces(input_, dictionary_words):
                 yield prefix + ' ' + short
 
 def test_base_case():
-    assert list(insert_spaces('', dictionary_words)) == ['']
+    assert list(insert_spaces('', dictionary_words)) == []
 
 
 def test_lone_word():
