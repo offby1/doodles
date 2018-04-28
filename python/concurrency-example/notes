@@ -1,0 +1,2 @@
+* Trio might be a smidge slower than the other guys.
+* The async thing spews a lot of warnings that I don't understand.
