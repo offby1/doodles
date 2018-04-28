@@ -4,3 +4,4 @@ compiled/
 /chicken/PROFILE.*
 /python/photos.js
 maze/maze.app/*
+.vscode/
