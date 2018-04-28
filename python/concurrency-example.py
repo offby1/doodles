@@ -18,7 +18,10 @@ import threading
 
 # 3rd-party
 import aiohttp                  # pip install aiohttp
+import asks                     # pip install asks
 import requests                 # pip install requests
+import trio                     # pip install trio
+
 
 # We'll download all these URLS, either one at a time, or in parallel.
 
@@ -140,15 +143,30 @@ def async_download(urls):
 
             loop.run_until_complete(asyncio.gather(*tasks))
 
+async def trio_download_one(url):
+    r = await asks.get(url)
+    text = r.text
+    print('{} => {} bytes'.format(url, len(text)))
+
+
+async def trio_parent(urls):
+    async with trio.open_nursery() as nursery:
+        for u in urls:
+            nursery.start_soon(trio_download_one, u)
+
 
 if __name__ == "__main__":
     import timeit
 
     def t(description, python_expression):
-        print(description)
+        print(f'{description} starting')
         print(timeit.timeit(python_expression, globals=globals(), number=1))
+        print(f'{description} done')
 
     t("naive:", 'sequential_download(urls)')
     t("threaded:", 'threaded_download(urls)')
     t("futures:", 'future_download(urls)')
     t("asyncio:", 'async_download(urls)')
+
+    asks.init('trio')
+    t("trio:", 'trio.run(trio_parent, urls)')
