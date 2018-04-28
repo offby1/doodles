@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """This is the one use case I know of for which concurrency is
 obviously a win: We will download a pile of web pages, and find that
 doing so concurrently is faster than doing them in sequence.
@@ -6,22 +8,11 @@ We also do the concurrent downloads a bunch of different times, using
 different techniques.  tl;dr -- they're all about the same speed.
 
 """
-
-# Core
-import asyncio
-import concurrent.futures
-import contextlib
-import queue
-import signal
-import sys
-import threading
-
-# 3rd-party
-import aiohttp                  # pip install aiohttp
-import asks                     # pip install asks
-import requests                 # pip install requests
-import trio                     # pip install trio
-
+import async                    # noqa
+import future                   # noqa
+import sequential               # noqa
+import threaded                 # noqa
+import treeoh                   # noqa
 
 # We'll download all these URLS, either one at a time, or in parallel.
 
@@ -81,92 +72,15 @@ urls = ('https://en.wikipedia.org/wiki/American_Eagles',
 
 # urls=urls[0:3]
 
+import timeit
 
-def download_one(url):
-    return '{} => {} bytes'.format(url, len(requests.get(url).text))
+def t(description, python_expression):
+    print(f'{description} starting')
+    print(timeit.timeit(python_expression, globals=globals(), number=1))
+    print(f'{description} done')
 
-
-def sequential_download(urls):
-    for url in urls:
-        print(download_one(url))
-
-
-def threaded_download(urls):
-    result_queue = queue.Queue()
-    threads = []
-
-    class Download(threading.Thread):
-
-        def __init__(self, url):
-            self.url = url
-            super(Download, self).__init__()
-
-        def run(self):
-            result_queue.put(download_one(self.url))
-
-    for url in urls:
-        t = Download(url)
-        threads.append(t)
-        t.start()
-    for t in threads:
-        t.join()
-
-    while not result_queue.empty():
-        print(result_queue.get())
-
-
-def future_download(urls):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(urls)) as executor:
-        for result in executor.map(download_one, urls):
-            print(result)
-
-
-async def async_download_one(client, url):
-    async with client.get(url) as response:
-        assert response.status == 200
-        text = await response.text()
-    print('{} => {} bytes'.format(url, len(text)))
-
-
-def async_download(urls):
-    with contextlib.closing(asyncio.get_event_loop()) as loop:
-        with contextlib.closing(aiohttp.ClientSession(loop=loop)) as client:
-
-            def signal_handler(signal, frame):
-                loop.stop()
-                client.close()
-                sys.exit(0)
-
-            signal.signal(signal.SIGINT, signal_handler)
-
-            tasks = [asyncio.ensure_future(async_download_one(client, u)) for u in urls]
-
-            loop.run_until_complete(asyncio.gather(*tasks))
-
-async def trio_download_one(url):
-    r = await asks.get(url)
-    text = r.text
-    print('{} => {} bytes'.format(url, len(text)))
-
-
-async def trio_parent(urls):
-    async with trio.open_nursery() as nursery:
-        for u in urls:
-            nursery.start_soon(trio_download_one, u)
-
-
-if __name__ == "__main__":
-    import timeit
-
-    def t(description, python_expression):
-        print(f'{description} starting')
-        print(timeit.timeit(python_expression, globals=globals(), number=1))
-        print(f'{description} done')
-
-    t("naive:", 'sequential_download(urls)')
-    t("threaded:", 'threaded_download(urls)')
-    t("futures:", 'future_download(urls)')
-    t("asyncio:", 'async_download(urls)')
-
-    asks.init('trio')
-    t("trio:", 'trio.run(trio_parent, urls)')
+t("naive:", 'sequential.download(urls)')
+t("threaded:", 'threaded.download(urls)')
+t("futures:", 'future.download(urls)')
+t("asyncio:", 'async.download(urls)')
+t("trio:", 'treeoh.download(urls)')
