@@ -34,19 +34,19 @@ class Tree:
         if self.item is None:
             return
         if self.left:
-            for item in self.left.traverse_depth_first():
-                yield item
-        yield self.item[0]
+            for child in self.left.traverse_depth_first():
+                yield child
+        yield self
         if self.right:
-            for item in self.right.traverse_depth_first():
-                yield item
+            for child in self.right.traverse_depth_first():
+                yield child
 
 def test_it():
     t = Tree()
     for i in ['cat', 'dog', 'aardvark']:
         t.add_item(i)
 
-    assert list(t.traverse_depth_first()) == ['aardvark', 'cat', 'dog']
+    assert [n.item[0] for n in t.traverse_depth_first()] == ['aardvark', 'cat', 'dog']
 
 def test_it_some_more():
     shuffled = list(range(100))
@@ -57,5 +57,5 @@ def test_it_some_more():
     for i in shuffled:
         t.add_item(i)
 
-    ordered = list(t.traverse_depth_first())
+    ordered = [n.item[0] for n in t.traverse_depth_first()]
     assert ordered == list(range(100))
