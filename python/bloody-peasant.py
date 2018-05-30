@@ -1,10 +1,4 @@
-#!/usr/bin/env python
-
-"""Some documentation would be nice!"""
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
+#!/usr/bin/env python3
 
 import collections
 
@@ -17,7 +11,7 @@ def product(left, right):
     while left > 0:
         if left % 2:
             prod = prod + right
-        left = left / 2
+        left = left // 2
         right *= 2
 
     if frozen[0] > 1:
