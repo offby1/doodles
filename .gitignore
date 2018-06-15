@@ -1,7 +1,9 @@
 *~
-compiled/
-/chicken/hello
+.hypothesis/
+.pytest_cache/
 /chicken/PROFILE.*
+/chicken/hello
 /python/photos.js
+compiled/
 maze/maze.app/*
 .vscode/
