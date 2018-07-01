@@ -1,6 +1,7 @@
 """Collect research to prove or disprove a theory I've had for a while:
 
-In Seattle, when the wind comes from the North, it'll be clear for the next day or two.
+    In Seattle, when the wind comes from the North, it'll be clear for
+    the next day or two.
 
 For years I'd wanted historical weather data that included cloud cover
 and wind direction.  I finally found it in DarkSky's API.
@@ -22,6 +23,9 @@ import requests                 # pip install requests
 
 # See https://darksky.net/dev/docs
 DARKSKY_SECRET_KEY = os.environ.get ('DARKSKY_SECRET_KEY')
+if DARKSKY_SECRET_KEY is None:
+    raise Exception("This ain't gonna work unless you set DARKSKY_SECRET_KEY in the environment.")
+
 TIME_MACHINE_REQUEST_URL_TEMPLATE = 'https://api.darksky.net/forecast/{key}/{latitude},{longitude},{time}'
 
 SEATTLE_LAT_LON = (47.6629818, -122.3387453)  # decimal degrees, + is North, duh
@@ -32,10 +36,10 @@ def get_weather_for_time (time):
                                                     latitude=SEATTLE_LAT_LON[0],
                                                     longitude=SEATTLE_LAT_LON[1],
                                                     time=time.isoformat ())
-    wat = requests.get (url)
-    wat.raise_for_status ()
+    response = requests.get (url)
+    response.raise_for_status ()
 
-    return wat.json ()
+    return response.json ()
 
 
 def _24_hours_wind_and_cloud_stuff (darksky_dict):
