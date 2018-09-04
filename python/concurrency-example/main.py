@@ -8,6 +8,8 @@ We also do the concurrent downloads a bunch of different times, using
 different techniques.  tl;dr -- they're all about the same speed.
 
 """
+import timeit
+
 import asynchronous             # noqa
 import future                   # noqa
 import sequential               # noqa
@@ -72,15 +74,15 @@ urls = ('https://en.wikipedia.org/wiki/American_Eagles',
 
 # urls=urls[0:3]
 
-import timeit
 
 def t(description, python_expression):
     print(f'{description} starting')
     print(timeit.timeit(python_expression, globals=globals(), number=1))
     print(f'{description} done')
 
-t("naive:", 'sequential.download(urls)')
-t("threaded:", 'threaded.download(urls)')
-t("futures:", 'future.download(urls)')
-t("asyncio:", 'asynchronous.download(urls)')
-t("trio:", 'treeoh.download(urls)')
+
+t("naive:",    'sequential.download(urls)'   )
+t("threaded:", 'threaded.download(urls)'     )
+t("futures:",  'future.download(urls)'       )
+t("asyncio:",  'asynchronous.download(urls)' )
+t("trio:",     'treeoh.download(urls)'       )
