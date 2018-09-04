@@ -8,7 +8,7 @@ We also do the concurrent downloads a bunch of different times, using
 different techniques.  tl;dr -- they're all about the same speed.
 
 """
-import async                    # noqa
+import asynchronous             # noqa
 import future                   # noqa
 import sequential               # noqa
 import threaded                 # noqa
@@ -82,5 +82,5 @@ def t(description, python_expression):
 t("naive:", 'sequential.download(urls)')
 t("threaded:", 'threaded.download(urls)')
 t("futures:", 'future.download(urls)')
-t("asyncio:", 'async.download(urls)')
+t("asyncio:", 'asynchronous.download(urls)')
 t("trio:", 'treeoh.download(urls)')
