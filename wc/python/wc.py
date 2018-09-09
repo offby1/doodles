@@ -6,7 +6,7 @@ import random
 
 # 3rd party
 import click                    # pip install click
-import progressbar              # pip install progress2
+import tqdm                     # pip install tqdm
 
 
 class Graph:
@@ -65,11 +65,10 @@ class Graph:
     def from_wordlist(klass, wordlist_file_name, word_length):
         rv = klass()
         words = set(n_letter_words(wordlist_file_name, word_length))
-        for left in progressbar.ProgressBar(widgets=["Processing {}-letter words from {}".format(word_length,
-                                                                                                 wordlist_file_name),
-                                                     progressbar.Percentage(),
-                                                     ' ', progressbar.Bar(),
-                                                     ' ', progressbar.ETA()])(words):
+        for left in tqdm.tqdm(words,
+                              unit='word',
+                              desc="Processing {}-letter words from {}".format(word_length,
+                                                                                      wordlist_file_name)):
 
             # In theory, you could generate all possible one-letter
             # variants of "left", and then add them; but that would take
@@ -94,8 +93,8 @@ def n_letter_words(dict_file_name, n):
 
 def differ_by_one_letter(left, right):
     differing_letters = 0
-    for l, r in zip(left, right):
-        if l != r:
+    for l_, r_ in zip(left, right):
+        if l_ != r_:
             differing_letters += 1
             if differing_letters > 1:
                 return False
@@ -118,7 +117,8 @@ def main(word_length):
 
     pprint.pprint(graph.stats)
 
-    spinner = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    spinner = tqdm.tqdm(desc='chains',
+                        unit='')
     all_words = list(graph.neighbors_by_node.keys())
 
     longest_chain = []
@@ -134,7 +134,7 @@ def main(word_length):
                 chain = list(reversed(chain))
             print("\n{}: {}".format(len(chain), chain))
 
-        spinner.update(spinner.value + 1)
+        spinner.update(1)
 
 
 if __name__ == "__main__":
