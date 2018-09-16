@@ -1,3 +1,11 @@
+"""Rather than find a chain from one word to another, we will search
+our dictionary for (say) five-letter words, and find the longest
+chains we can.  We will run more or less forever, displaying a chain
+as soon as we find one that's longer than any others we've found so
+far.
+
+"""
+
 # Core
 import ast
 import collections
