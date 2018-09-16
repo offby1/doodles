@@ -67,7 +67,7 @@ class Graph:
         for left in tqdm.tqdm(words,
                               unit='word',
                               desc="Processing {}-letter words from {}".format(word_length,
-                                                                                      wordlist_file_name)):
+                                                                               wordlist_file_name)):
 
             # In theory, you could generate all possible one-letter
             # variants of "left", and then add them; but that would take
@@ -102,7 +102,7 @@ def differ_by_one_letter(left, right):
 
 @click.command()
 @click.option('-w', '--word-length',
-              default=3,
+              default=5,
               type=click.IntRange(3, 10, clamp=True))
 def main(word_length):
     cache_file_name = 'graph.cache.{}'.format(word_length)
