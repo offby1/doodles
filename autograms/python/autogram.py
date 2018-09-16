@@ -4,7 +4,7 @@ import random
 import string
 
 import num2words                # pip install num2words
-import progressbar              # pip install progressbar2
+import tqdm                     # pip install tqdm
 
 ALPHABET = string.ascii_lowercase
 
@@ -54,12 +54,7 @@ def chase_string(string, letters_to_count):
     last = None
     finished_naturally = False
 
-    widgets = [progressbar.AnimatedMarker(), ' ',
-               progressbar.Counter(), ' ',
-               progressbar.Timer(), ' ',
-               progressbar.AdaptiveTransferSpeed()]
-    with progressbar.ProgressBar(widgets=widgets,
-                                 max_value=progressbar.UnknownLength) as bar:
+    with tqdm.tqdm() as bar:
         try:
             while True:
                 if c in seen_counters:
