@@ -29,15 +29,6 @@ class Graph:
         self.neighbors_by_node[_from].add(to)
         self.neighbors_by_node[to].add(_from)
 
-    @property
-    def stats(self):
-        n = len(self.neighbors_by_node.keys())
-        v = sum([len(s) for s in self.neighbors_by_node.values()])
-        ratio = v / n
-        return {'vertices': v,
-                'nodes': n,
-                'ratio': ratio}
-
     def bfs(self, _from):
         """Traverse the graph starting at _FROM, visiting every reachable node in breadth-first order.
 
@@ -122,8 +113,6 @@ def main(word_length):
         graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
-
-    pprint.pprint(graph.stats)
 
     spinner = tqdm.tqdm(desc='chains',
                         unit='')
