@@ -52,11 +52,11 @@ def _invert_tableau(tableau: List[List[int]]) -> List[List[int]]:
 
 
 def _make_tableau(numbers: List[int]) -> Iterator[List[int]]:
-    l = len(numbers)
+    length = len(numbers)
     cycle = itertools.cycle(numbers)
 
-    for i in range(l):
-        yield list(itertools.islice(cycle, l))
+    for i in range(length):
+        yield list(itertools.islice(cycle, length))
         next(cycle)
 
 
@@ -68,11 +68,11 @@ class Permutation:
         self.forward_tableau = list(_make_tableau(numbers))
         self.reverse_tableau = _invert_tableau(self.forward_tableau)
 
-    def permute(self, input: int, offset: int) -> int:
-        return self.forward_tableau[offset][input]
+    def permute(self, inp: int, offset: int) -> int:
+        return self.forward_tableau[offset][inp]
 
-    def unpermute(self, input: int, offset: int) -> int:
-        return self.reverse_tableau[offset][input]
+    def unpermute(self, inp: int, offset: int) -> int:
+        return self.reverse_tableau[offset][inp]
 
 
 class Enigma:
@@ -113,6 +113,7 @@ def encrypt_stdin_to_stdout(secret_key):
 
     for line in sys.stdin.buffer:
         sys.stdout.buffer.write(bytes(e.encrypt(line)))
+
 
 if __name__ == "__main__":
     encrypt_stdin_to_stdout()
