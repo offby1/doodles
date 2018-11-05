@@ -19,8 +19,15 @@ def number_and_letter_to_string(number, letter):
 
 
 def join_strings(strings):
-    most = strings[:-1]
-    return ', '.join(most) + ' and ' + strings[-1]
+    """
+    ['wat'] => 'wat'
+    ['what', 'not'] => 'what and not'
+    ['shake', 'rattle', 'roll'] => 'shake, rattle, and roll'
+    """
+    if len(strings) == 1:
+        return strings[0]
+    butlast = strings[:-1]
+    return ', and '.join([', '.join(butlast), strings[-1]])
 
 
 def new_counter(c, letters_to_count):
