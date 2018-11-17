@@ -3,9 +3,11 @@ import responder
 
 api = responder.API()
 
+
 @api.route("/{greeting}")
 async def greet_world(req, resp, *, greeting):
     resp.text = f"{greeting}, world!"
+
 
 @api.route("/dumb")
 async def dumb(req, resp):
