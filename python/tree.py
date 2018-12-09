@@ -81,16 +81,18 @@ def test_it_some_more():
         t.add_item(i)
 
     ordered = [n.item for (n, _) in t.traverse_depth_first()]
-    assert ordered == list(range(100))
+    assert ordered == sorted(ordered)
 
 
 def test_returned_paths():
     r"""
      cat
      /   \
-aardvark  \ dog
-           /     \
-      clydesdale   elephant
+aardvark  \
+           \
+            dog
+           /   \
+    clydesdale  elephant
     """
 
     t = Tree()
