@@ -18,9 +18,11 @@ class Tree:
         if self.item is None:
             self.item = item
         else:
-            target = self.find_parent_for(item)
             new = Tree()
             new.item = item
+
+            target = self.find_parent_for(item)
+
             if item > target.item:
                 target.right = new
             else:
@@ -45,14 +47,18 @@ class Tree:
         if path_to_here is None:
             path_to_here = []
 
+        # Can't use 'append' here because that would mutate our input
         path_to_here = path_to_here + [self]
 
         if self.item is None:
             return
+
         if self.left:
             for child, left_path_to_here in self.left.traverse_depth_first(path_to_here):
                 yield (child, left_path_to_here)
+
         yield (self, path_to_here)
+
         if self.right:
             for child, right_path_to_here in self.right.traverse_depth_first(path_to_here):
                 yield (child, right_path_to_here)
@@ -79,7 +85,7 @@ def test_it_some_more():
 
 
 def test_returned_paths():
-    """
+    r"""
      cat
      /   \
 aardvark  \ dog
