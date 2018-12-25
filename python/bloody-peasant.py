@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import collections
+import pprint
 
 factors_by_product = collections.defaultdict(set)
+
 
 def product(left, right):
     frozen = tuple(sorted((right, left)))
@@ -19,9 +21,9 @@ def product(left, right):
 
     return prod
 
+
 for x in range (10):
     for y in range(10):
         product(x, y)
 
-import pprint
 pprint.pprint(dict(factors_by_product))
