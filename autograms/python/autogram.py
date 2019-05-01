@@ -21,7 +21,7 @@ def number_and_letter_to_string(number, letter):
 def join_strings(strings):
     """
     ['wat'] => 'wat'
-    ['what', 'not'] => 'what and not'
+    ['what', 'not'] => 'what, and not'
     ['shake', 'rattle', 'roll'] => 'shake, rattle, and roll'
     """
     if len(strings) == 1:
