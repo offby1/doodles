@@ -8,22 +8,28 @@ certainly appear".
 
 """
 
-# python3 -m pytest favorite-interview-question-insert-spaces.py
+# python3 -m pytest --doctest-modules  favorite-interview-question-insert-spaces.py
 
-import progressbar
+import os
+
+import tqdm  # pip install tqdm
 
 
 def _snarf_dict():
     result = set()
-    with open('/usr/share/dict/words') as inf:
-        for word in inf:
-            word = word.rstrip().lower()
+    with open("/usr/share/dict/words") as inf:
+        progressbar = tqdm.tqdm(
+            total=os.fstat(inf.fileno()).st_size, desc="Reading dictionary"
+        )
+        for raw_word in inf:
+            progressbar.update(len(raw_word))
+            word = raw_word.rstrip().lower()
 
             # Eliminate most of the one-letter words from the
             # dictionary, because they make the problem a lot less
             # interesting, and the algorithm much slower.
             if len(word) == 1:
-                if word.lower() not in {'i', 'a'}:
+                if word.lower() not in {"i", "a"}:
                     continue
 
             result.add(word)
@@ -34,31 +40,46 @@ dictionary_words = _snarf_dict()
 
 
 def _all_splits(seq):
+    """
+    >>> list(_all_splits('abcd'))
+    [('a', 'bcd'), ('ab', 'cd'), ('abc', 'd')]
+    """
     for index in range(1, len(seq)):
         yield (seq[0:index], seq[index:])
 
 
-def insert_spaces(input_, dictionary_words, bar=None):
+def insert_spaces(input_, dictionary_words, recursion_depth=0, progressbar=None):
+    if progressbar is None:
+        # total here is a total guess :-) It's here just to make the
+        # progress bar render solid glyphs.
+        progressbar = tqdm.tqdm(desc="Finding solutions", total=len(input_) * 4)
+
     if input_ in dictionary_words:
-        if bar:
-            bar.update(len(input_))
+        if recursion_depth == 0:
+            progressbar.write(input_)
         yield input_
 
     for prefix, rest in _all_splits(input_):
         if prefix in dictionary_words:
-            from_shorter_string = insert_spaces(rest, dictionary_words, bar=bar)
+            from_shorter_string = insert_spaces(
+                rest,
+                dictionary_words,
+                recursion_depth=recursion_depth + 1,
+                progressbar=progressbar,
+            )
             for short in from_shorter_string:
-                result = prefix + ' ' + short
-                if bar:
-                    bar.update(len(prefix))
+                result = prefix + " " + short
+                if recursion_depth == 0:
+                    progressbar.write(result)
                 yield result
+                progressbar.update()
 
-    if bar:
-        bar.update(0)
+    if recursion_depth == 0:
+        progressbar.close()
 
 
 def test_base_case():
-    assert list(insert_spaces('', dictionary_words)) == []
+    assert list(insert_spaces("", dictionary_words)) == []
 
 
 def test_lone_word():
@@ -83,20 +104,16 @@ if __name__ == "__main__":
     import statistics
 
     def _average_word_length(str_):
-        words = str_.split(' ')
+        words = str_.split(" ")
         return statistics.mean([len(w) for w in words])
 
     for inp_ in (
-            "thisisatrickyproblemitcertainlydoesappear",
-            "tell me your dream, your hope, your fear",
-            "I suppose pretty much anything you put in here would have a number of solution",
+        "thisisatrickyproblemitcertainlydoesappear",
+        "tell me your dream, your hope, your fear",
+        "I suppose pretty much anything you put in here would have a number of solution",
     ):
-        cleaned_up_input = re.sub (r'[^a-z]', '', inp_.lower())
-        with progressbar.ProgressBar(max_value=len(cleaned_up_input) * 2 - 1) as bar:
-            solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words, bar),
-                               key=_average_word_length,
-                               reverse=True)
-            if solutions:
-                print(f'\n\n{len(solutions)} solutions!')
-                for solution in solutions[0:10]:
-                    print(f'{solution}')
+        cleaned_up_input = re.sub(r"[^a-z]", "", inp_.lower())
+
+        for index, _ in enumerate(insert_spaces(cleaned_up_input, dictionary_words)):
+            if index == 10:
+                break
