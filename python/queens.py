@@ -37,7 +37,7 @@ def conjoin(gs):
     def _gen3(i):
         assert i < n and (n - i) % 3 == 0
         ip1, ip2, ip3 = i + 1, i + 2, i + 3
-        g, g1, g2 = gs[i : ip3]
+        g, g1, g2 = gs[i:ip3]
 
         if ip3 >= n:
             # These are the last three, so we can yield values directly.
@@ -77,10 +77,12 @@ class Queens:
         # generates the possiblities for the columns in that row.
         self.rowgenerators = []
         for i in rangen:
-            rowuses = [(1 << j) |                  # column ordinal
-                       (1 << (n + i - j + n - 1)) |    # NW-SE ordinal
-                       (1 << (n + 2 * n - 1 + i + j))    # NE-SW ordinal
-                            for j in rangen]
+            rowuses = [
+                (1 << j)
+                | (1 << (n + i - j + n - 1))  # column ordinal
+                | (1 << (n + 2 * n - 1 + i + j))  # NW-SE ordinal  # NE-SW ordinal
+                for j in rangen
+            ]
 
             def rowgen(rowuses=rowuses):
                 for j in rangen:

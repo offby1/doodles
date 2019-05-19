@@ -4,7 +4,7 @@ import random
 import sys
 from typing import Iterator, List
 
-import click                    # pip install click
+import click  # pip install click
 
 """ This emulates the famous Enigma
 (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
@@ -20,7 +20,7 @@ class Rotor:
     def __init__(self, num_slots: int) -> None:
 
         # Otherwise reflection won't work ... I think
-        assert (num_slots % 2 == 0)
+        assert num_slots % 2 == 0
 
         self.offset = 0
         self.num_slots = num_slots
@@ -36,7 +36,7 @@ class Rotor:
         return self.offset == 0
 
     def transform(self, number: int, encrypt: bool) -> int:
-        method_name = 'permute' if encrypt else 'unpermute'
+        method_name = "permute" if encrypt else "unpermute"
         return getattr(self.permutation, method_name)(number, self.offset)
 
 
@@ -76,8 +76,8 @@ class Permutation:
 
 
 class Enigma:
-    def __init__(self, num_rotors: int =5) -> None:
-        assert(num_rotors > 0)
+    def __init__(self, num_rotors: int = 5) -> None:
+        assert num_rotors > 0
         self.num_slots = 256
         self.rotors = [Rotor(self.num_slots) for i in range(num_rotors)]
 
@@ -106,7 +106,7 @@ class Enigma:
 
 
 @click.command()
-@click.argument('secret_key', default='')
+@click.argument("secret_key", default="")
 def encrypt_stdin_to_stdout(secret_key):
     random.seed(secret_key)
     e = Enigma()
