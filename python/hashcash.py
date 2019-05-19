@@ -20,11 +20,15 @@ import itertools
 import subprocess
 
 
-def _assemble_bytes_from_components(random_bytes, counter, ver=1, bits=20, resource='frotz@plotz.com', ext=''):
-    date = datetime.datetime.utcnow ().strftime ('%y%m%d%H%M%S')
-    rand_b64 = base64.b64encode(random_bytes).decode('utf-8')
-    counter_b64 = base64.b64encode(integer_to_bytes(counter)).decode('utf-8')
-    return f'{ver}:{bits}:{date}:{resource}:{ext}:{rand_b64}:{counter_b64}'.encode('utf-8')
+def _assemble_bytes_from_components(
+    random_bytes, counter, ver=1, bits=20, resource="frotz@plotz.com", ext=""
+):
+    date = datetime.datetime.utcnow().strftime("%y%m%d%H%M%S")
+    rand_b64 = base64.b64encode(random_bytes).decode("utf-8")
+    counter_b64 = base64.b64encode(integer_to_bytes(counter)).decode("utf-8")
+    return f"{ver}:{bits}:{date}:{resource}:{ext}:{rand_b64}:{counter_b64}".encode(
+        "utf-8"
+    )
 
 
 def _leading_zeroes_of_byte(b):
@@ -72,22 +76,21 @@ def find_string_whose_hash_has_leading_zeroes(random_bytes):
 
 
 def validate_candate(bytes_):
-    needed_leading_zeroes = int(bytes_.split (b':', 2)[1])
+    needed_leading_zeroes = int(bytes_.split(b":", 2)[1])
     hashed = hashlib.sha1(bytes_).digest()
     leading_zeroes = _leading_zeroes_of_bytes(hashed)
     if leading_zeroes >= needed_leading_zeroes:
         str_ = bytes_.decode("utf-8")
-        print(f'{str_} is a legit hashcash thingy')
+        print(f"{str_} is a legit hashcash thingy")
 
-        bash_command_line = f'echo -n {str_} | openssl sha1'
-        sha1 = subprocess.run(['bash', '-c', bash_command_line],
-                              stdout=subprocess.PIPE)
+        bash_command_line = f"echo -n {str_} | openssl sha1"
+        sha1 = subprocess.run(["bash", "-c", bash_command_line], stdout=subprocess.PIPE)
         print(f'{bash_command_line!r} => {sha1.stdout.rstrip().decode("utf-8")}')
-        print(f'That has {leading_zeroes} leading zero bits.')
+        print(f"That has {leading_zeroes} leading zero bits.")
         return leading_zeroes, True
 
     return leading_zeroes, False
 
 
 if __name__ == "__main__":
-    find_string_whose_hash_has_leading_zeroes(b'wass up homies')
+    find_string_whose_hash_has_leading_zeroes(b"wass up homies")
