@@ -3,8 +3,8 @@ import functools
 import random
 import string
 
-import num2words                # pip install num2words
-import tqdm                     # pip install tqdm
+import num2words  # pip install num2words
+import tqdm  # pip install tqdm
 
 ALPHABET = string.ascii_lowercase
 
@@ -32,14 +32,14 @@ def join_strings(strings):
 
 def new_counter(c, letters_to_count):
     terse = [number_and_letter_to_string(v, k) for k, v in c.sorted_items() if k.isalpha()]
-    string = "Prince Phillip and Queen Elizabeth keep " + \
-        join_strings(terse[0:letters_to_count]) + ' at Buckingham Palace.'
+    string = (
+        "Prince Phillip and Queen Elizabeth keep " + join_strings(terse[0:letters_to_count]) + ' at Buckingham Palace.'
+    )
 
     return HashableCounter(string.lower()), string
 
 
 class HashableCounter(collections.Counter):
-
     def sorted_items(self):
         return sorted(self.items())
 
