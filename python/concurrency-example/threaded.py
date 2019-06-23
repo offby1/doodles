@@ -9,7 +9,6 @@ def download(urls):
     threads = []
 
     class Download(threading.Thread):
-
         def __init__(self, url):
             self.url = url
             super(Download, self).__init__()
