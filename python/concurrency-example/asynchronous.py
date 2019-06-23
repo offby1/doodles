@@ -2,7 +2,7 @@ import contextlib
 import signal
 import sys
 
-import aiohttp                  # pip install aiohttp
+import aiohttp  # pip install aiohttp
 import asyncio
 
 
