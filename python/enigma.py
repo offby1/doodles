@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import itertools
 import random
 import sys
 from typing import Iterator, List
@@ -15,8 +14,25 @@ and decryption are the same operation.  Example usage:
     fee fi fo fum
 """
 
+"""
+Check the types by doing
+      $ python3 -m pip install --user mypy-lang
+      $ python3 -m mypy enigma.py
+"""
+
 
 class Rotor:
+    """
+    >>> random.seed(0)
+    >>> p = Rotor(4)
+    >>> plaintext = 0
+    >>> encrypted = p.transform(plaintext, True)
+    >>> encrypted
+    2
+    >>> p.transform(encrypted, False)
+    0
+    """
+
     def __init__(self, num_slots: int) -> None:
 
         # Otherwise reflection won't work ... I think
@@ -24,9 +40,15 @@ class Rotor:
 
         self.offset = 0
         self.num_slots = num_slots
-        self.permutation = Permutation(self.num_slots)
+
+        self.forward_numbers = list(range(self.num_slots))
+        random.shuffle(self.forward_numbers)
+        self.reverse_numbers = _invert_list(self.forward_numbers)
 
     def advance(self):
+        _rotate_list(self.forward_numbers)
+        self.reverse_numbers = _invert_list(self.forward_numbers)
+
         self.offset += 1
 
         if self.offset == self.num_slots:
@@ -36,8 +58,21 @@ class Rotor:
         return self.offset == 0
 
     def transform(self, number: int, encrypt: bool) -> int:
-        method_name = "permute" if encrypt else "unpermute"
-        return getattr(self.permutation, method_name)(number, self.offset)
+        list_ = self.forward_numbers if encrypt else self.reverse_numbers
+        return list_[number]
+
+
+def _rotate_list(numbers: List[int]) -> None:
+    """
+    >>> numbers = [1, 2, 3, 4]
+    >>> _rotate_list(numbers)
+    >>> numbers
+    [2, 3, 4, 1]
+    """
+    first = numbers[0]
+    numbers[:-1] = numbers[1:]
+    numbers[-1:] = [first]
+    return
 
 
 def _invert_list(numbers: List[int]) -> List[int]:
@@ -45,34 +80,6 @@ def _invert_list(numbers: List[int]) -> List[int]:
     for index, value in enumerate(numbers):
         inverse[value] = index
     return inverse
-
-
-def _invert_tableau(tableau: List[List[int]]) -> List[List[int]]:
-    return [_invert_list(l) for l in tableau]
-
-
-def _make_tableau(numbers: List[int]) -> Iterator[List[int]]:
-    length = len(numbers)
-    cycle = itertools.cycle(numbers)
-
-    for i in range(length):
-        yield list(itertools.islice(cycle, length))
-        next(cycle)
-
-
-class Permutation:
-    def __init__(self, length: int) -> None:
-        numbers = list(range(length))
-        random.shuffle(numbers)
-
-        self.forward_tableau = list(_make_tableau(numbers))
-        self.reverse_tableau = _invert_tableau(self.forward_tableau)
-
-    def permute(self, inp: int, offset: int) -> int:
-        return self.forward_tableau[offset][inp]
-
-    def unpermute(self, inp: int, offset: int) -> int:
-        return self.reverse_tableau[offset][inp]
 
 
 class Enigma:
