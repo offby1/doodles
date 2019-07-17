@@ -62,7 +62,7 @@ def one_years_hourly_data (starting_year):
 
 
 def format_timestamp(time_t):
-    dt = datetime.datetime.fromtimestamp(time_t, tz=pytz.utc)
+    dt = datetime.datetime.fromtimestamp(time_t, tz=pytz.timezone('America/Los_Angeles'))
     return dt.strftime('%FT%T%z')
 
 
