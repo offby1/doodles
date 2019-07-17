@@ -25,11 +25,9 @@ class Rotor:
     """
     >>> random.seed(0)
     >>> p = Rotor(4)
-    >>> plaintext = 0
-    >>> encrypted = p.transform(plaintext, True)
-    >>> encrypted
+    >>> p.transform(0, True)
     2
-    >>> p.transform(encrypted, False)
+    >>> p.transform(2, False)
     0
     """
 
@@ -69,10 +67,7 @@ def _rotate_list(numbers: List[int]) -> None:
     >>> numbers
     [2, 3, 4, 1]
     """
-    first = numbers[0]
-    numbers[:-1] = numbers[1:]
-    numbers[-1:] = [first]
-    return
+    numbers.append(numbers.pop(0))
 
 
 def _invert_list(numbers: List[int]) -> List[int]:
@@ -86,7 +81,7 @@ class Enigma:
     def __init__(self, num_rotors: int = 5) -> None:
         assert num_rotors > 0
         self.num_slots = 256
-        self.rotors = [Rotor(self.num_slots) for i in range(num_rotors)]
+        self.rotors = [Rotor(self.num_slots) for _ in range(num_rotors)]
 
     def reflect(self, number: int) -> int:
         offset = self.num_slots // 2
