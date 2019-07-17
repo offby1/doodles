@@ -1,4 +1,4 @@
-"""Collect research to prove or disprove a theory I've had for a while:
+"""Collect data to prove or disprove a theory I've had for a while:
 
     In Seattle, when the wind comes from the North, it'll be clear for
     the next day or two.
@@ -20,11 +20,10 @@ import os
 
 import pytz
 import requests                 # pip install requests
+import tqdm                     # pip install tqdm
 
 # See https://darksky.net/dev/docs
 DARKSKY_SECRET_KEY = os.environ.get ('DARKSKY_SECRET_KEY')
-if DARKSKY_SECRET_KEY is None:
-    raise Exception("This ain't gonna work unless you set DARKSKY_SECRET_KEY in the environment.")
 
 TIME_MACHINE_REQUEST_URL_TEMPLATE = 'https://api.darksky.net/forecast/{key}/{latitude},{longitude},{time}'
 
@@ -52,6 +51,7 @@ def _24_hours_wind_and_cloud_stuff (darksky_dict):
 
 
 def one_years_hourly_data (starting_year):
+    print(f"Getting one year's hourly data for {starting_year}", file=sys.stderr)
     jan_1 = datetime.datetime(year=starting_year, month=1, day=1, tzinfo=pytz.utc)
 
     midnight = jan_1
@@ -61,11 +61,21 @@ def one_years_hourly_data (starting_year):
             yield hour
 
 
+def format_timestamp(time_t):
+    dt = datetime.datetime.fromtimestamp(time_t, tz=pytz.utc)
+    return dt.strftime('%FT%T%z')
+
+
 if __name__ == '__main__':
+    if DARKSKY_SECRET_KEY is None:
+        raise Exception("This ain't gonna work unless you set DARKSKY_SECRET_KEY in the environment.")
+
     import csv
     import sys
     writer = csv.writer (sys.stdout)
     writer.writerow (('time', 'cloudCover', 'windBearing'))
 
-    for hour in one_years_hourly_data (2017):
-        writer.writerow (hour)
+    for one_hours_data in tqdm.tqdm(one_years_hourly_data (2018), total=365 * 24):
+        hour = format_timestamp(one_hours_data[0])
+        one_hours_data = tuple([hour]) + one_hours_data[1:]
+        writer.writerow (one_hours_data)
