@@ -5,9 +5,10 @@ name = "pypi"
 
 [packages]
 aiohttp = "*"
-requests = "*"
-trio = "*"
 asks = "*"
+requests = ">=2.20.0"
+trio = "*"
+urllib3 = ">=1.24.2"
 
 [dev-packages]
 
