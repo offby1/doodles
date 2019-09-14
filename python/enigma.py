@@ -44,7 +44,7 @@ class Rotor:
         self.reverse_numbers = _invert_list(self.forward_numbers)
 
     def advance(self):
-        _rotate_list(self.forward_numbers)
+        self.forward_numbers.append(self.forward_numbers.pop(0)) # rotate the list
         self.reverse_numbers = _invert_list(self.forward_numbers)
 
         self.offset += 1
@@ -58,16 +58,6 @@ class Rotor:
     def transform(self, number: int, encrypt: bool) -> int:
         list_ = self.forward_numbers if encrypt else self.reverse_numbers
         return list_[number]
-
-
-def _rotate_list(numbers: List[int]) -> None:
-    """
-    >>> numbers = [1, 2, 3, 4]
-    >>> _rotate_list(numbers)
-    >>> numbers
-    [2, 3, 4, 1]
-    """
-    numbers.append(numbers.pop(0))
 
 
 def _invert_list(numbers: List[int]) -> List[int]:
