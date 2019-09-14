@@ -5,20 +5,17 @@ from typing import Iterator, List
 
 import click  # pip install click
 
-""" This emulates the famous Enigma
-(https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
-and decryption are the same operation.  Example usage:
+# This emulates the famous Enigma
+# (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
+# and decryption are the same operation.  Example usage:
 
-    $ echo fee fi fo fum | python3 enigma.py frotz | tee >(base64 -i - > /dev/tty) | python3 enigma.py frotz
-    TUxq0hlfHKU4zzOmmrY=
-    fee fi fo fum
-"""
+#     $ echo fee fi fo fum | python3 enigma.py frotz | tee >(base64 -i - > /dev/tty) | python3 enigma.py frotz
+#     TUxq0hlfHKU4zzOmmrY=
+#     fee fi fo fum
 
-"""
-Check the types by doing
-      $ python3 -m pip install --user mypy-lang
-      $ python3 -m mypy enigma.py
-"""
+# Check the types by doing
+#       $ python3 -m pip install --user mypy-lang
+#       $ python3 -m mypy enigma.py
 
 
 class Rotor:
