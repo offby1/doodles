@@ -1,23 +1,19 @@
-def next_row(previous_row=None):
-    if previous_row is None:
-        return [1]
+def next_row(previous_row):
+    new_row = [1]
 
-    n = len(previous_row) + 1
-    new_row = [0] * n
+    new_length = len(previous_row) + 1
 
-    for index in range(n):
-        if index == 0:
-            new_row[index] = 1
-        elif index == n - 1:
-            new_row[index] = 1
-        else:
-            new_row[index] = previous_row[index - 1] + previous_row[index]
+    if new_length > 1:
+        new_row.extend([0] * (new_length - 2) + [1])
+
+    for index in range(1, new_length - 1):
+        new_row[index] = previous_row[index - 1] + previous_row[index]
 
     return new_row
 
 
 def yield_triangle(num_rows):
-    prev_row = None
+    prev_row = []
     for _ in range(num_rows):
         this_row = next_row(prev_row)
         yield this_row
