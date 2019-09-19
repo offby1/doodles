@@ -18,17 +18,15 @@ def next_row(previous_row=None):
 
 def yield_triangle(num_rows):
     prev_row = None
-    for row_number in range(num_rows):
+    for _ in range(num_rows):
         this_row = next_row(prev_row)
         yield this_row
         prev_row = this_row
 
 
-num_rows = 30
-
 if __name__ == "__main__":
     rows = []
-    for row in yield_triangle(num_rows):
+    for row in yield_triangle(30):
         rows.append(row)
 
     width_in_characters = len(str(rows[-1]))
