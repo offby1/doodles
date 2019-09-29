@@ -10,19 +10,23 @@ date     : The time that the message was sent, in the format YYMMDD[hhmm[ss]].
 resource : Resource data string being transmitted, e.g., an IP address or email address.
 ext      : Extension (optional; ignored in version 1).
 rand     : String of random characters, encoded in base-64 format.
-counter  : Binary counter (up to 220), encoded in base-64 format.
+counter  : Binary counter, encoded in base-64 format.
 """
 
 import base64
 import datetime
 import hashlib
 import itertools
+import os
 import subprocess
 
 
-def _assemble_bytes_from_components(
-    random_bytes, counter, ver=1, bits=20, resource="frotz@plotz.com", ext=""
-):
+def _assemble_bytes_from_components(random_bytes, counter):
+    ver = 1
+    bits = 20
+    resource = "frotz@plotz.com"
+    ext = ""
+
     date = datetime.datetime.utcnow().strftime("%y%m%d%H%M%S")
     rand_b64 = base64.b64encode(random_bytes).decode("utf-8")
     counter_b64 = base64.b64encode(integer_to_bytes(counter)).decode("utf-8")
@@ -60,9 +64,11 @@ def integer_to_bytes(i):
     return bytes(reversed(rv))
 
 
-def find_string_whose_hash_has_leading_zeroes(random_bytes):
+def find_string_whose_hash_has_leading_zeroes():
     most_leading_zeroes_seen = 0
-    for count in itertools.count():
+    random_bytes = os.urandom(10)
+
+    for count in itertools.count(1):
         candidate = _assemble_bytes_from_components(random_bytes, count)
 
         leading_zeroes, is_legit = validate_candate(candidate)
@@ -73,6 +79,10 @@ def find_string_whose_hash_has_leading_zeroes(random_bytes):
         if leading_zeroes > most_leading_zeroes_seen:
             most_leading_zeroes_seen = leading_zeroes
             print(f'{candidate.decode("utf-8")} => {leading_zeroes}')
+
+        count += 1
+
+    return None
 
 
 def validate_candate(bytes_):
@@ -93,4 +103,4 @@ def validate_candate(bytes_):
 
 
 if __name__ == "__main__":
-    find_string_whose_hash_has_leading_zeroes(b"wass up homies")
+    find_string_whose_hash_has_leading_zeroes()
