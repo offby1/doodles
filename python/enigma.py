@@ -67,12 +67,12 @@ def _invert_list(numbers: List[int]) -> List[int]:
 class Enigma:
     def __init__(self, num_rotors: int = 5) -> None:
         assert num_rotors > 0
-        self.num_slots = 256
-        self.rotors = [Rotor(self.num_slots) for _ in range(num_rotors)]
+        self.rotors = [Rotor(256) for _ in range(num_rotors)]
 
     def reflect(self, number: int) -> int:
-        offset = self.num_slots // 2
-        return (number + offset) % self.num_slots
+        num_slots = self.rotors[0].num_slots
+        offset = num_slots // 2
+        return (number + offset) % num_slots
 
     def run_through_rotors(self, number: int) -> int:
         for r in self.rotors:
