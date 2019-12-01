@@ -48,9 +48,9 @@ class Rotor:
 
         if self.offset == self.num_slots:
             self.offset = 0
+            return True
 
-        # The return value is True if we've "wrapped around".
-        return self.offset == 0
+        return False
 
     def transform(self, number: int, encrypt: bool) -> int:
         list_ = self.forward_numbers if encrypt else self.reverse_numbers
