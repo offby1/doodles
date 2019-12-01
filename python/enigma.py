@@ -70,7 +70,11 @@ def _invert_list(numbers: List[int]) -> List[int]:
 class Enigma:
     def __init__(self, num_rotors: int = 5) -> None:
         assert num_rotors > 0
-        self.rotors = [Rotor(256) for _ in range(num_rotors)]
+        self.rotors = [Rotor(26) for _ in range(num_rotors)]
+
+    @property
+    def rotor_size(self):
+        return self.rotors[0].num_slots
 
     def reflect(self, number: int) -> int:
         num_slots = self.rotors[0].num_slots
@@ -92,9 +96,14 @@ class Enigma:
                 break
 
     def encrypt(self, input_bytes: bytes) -> Iterator[int]:
+        input_bytes = bytes([b for b in input_bytes.lower() ])
+        input_bytes = input_bytes.lower()
+
         for number in input_bytes:
-            yield self.run_through_rotors(number)
-            self.advance_rotors()
+            number -= ord('a')
+            if 0 <= number <= self.rotor_size:
+                yield self.run_through_rotors(number) + ord('a')
+                self.advance_rotors()
 
 
 @click.command()
