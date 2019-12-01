@@ -34,11 +34,14 @@ class Rotor:
         assert num_slots % 2 == 0
 
         self.offset = 0
-        self.num_slots = num_slots
 
-        self.forward_numbers = list(range(self.num_slots))
+        self.forward_numbers = list(range(num_slots))
         random.shuffle(self.forward_numbers)
         self.reverse_numbers = _invert_list(self.forward_numbers)
+
+    @property
+    def num_slots(self):
+        return len(self.forward_numbers)
 
     def advance(self):
         self.forward_numbers.append(self.forward_numbers.pop(0)) # rotate the list
