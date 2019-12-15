@@ -6,7 +6,6 @@ import common
 
 def download(urls):
     result_queue = queue.Queue()
-    threads = []
 
     class Download(threading.Thread):
         def __init__(self, url):
@@ -16,10 +15,11 @@ def download(urls):
         def run(self):
             result_queue.put(common.download_one(self.url))
 
-    for url in urls:
-        t = Download(url)
-        threads.append(t)
+    threads = [Download(url) for url in urls]
+
+    for t in threads:
         t.start()
+
     for t in threads:
         t.join()
 
