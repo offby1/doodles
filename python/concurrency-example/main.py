@@ -80,8 +80,8 @@ def t(description, python_expression):
     print(f'{description} done')
 
 
-t("naive:", 'sequential.download(urls)')
+t("naive:",    'sequential.download(urls)')
 t("threaded:", 'threaded.download(urls)')
-t("futures:", 'future.download(urls)')
-t("asyncio:", 'asynchronous.download(urls)')
-t("trio:", 'treeoh.download(urls)')
+t("futures:",  'future.download(urls)')
+t("asyncio:",  'asynchronous.download(urls)')
+t("trio:",     'treeoh.download(urls)')
