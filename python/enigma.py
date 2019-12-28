@@ -95,15 +95,25 @@ class Enigma:
             if not wrapped_around:
                 break
 
+    def encrypt_single_number(self, number):
+        return_value = None
+
+        number -= ord('a')
+        if 0 <= number <= self.rotor_size:
+            return_value = self.run_through_rotors(number) + ord('a')
+            self.advance_rotors()
+
+        return return_value
+
+
     def encrypt(self, input_bytes: bytes) -> Iterator[int]:
         input_bytes = bytes([b for b in input_bytes.lower() ])
         input_bytes = input_bytes.lower()
 
         for number in input_bytes:
-            number -= ord('a')
-            if 0 <= number <= self.rotor_size:
-                yield self.run_through_rotors(number) + ord('a')
-                self.advance_rotors()
+            encrypted = self.encrypt_single_number(number)
+            if encrypted is not None:
+                yield encrypted
 
 
 @click.command()
