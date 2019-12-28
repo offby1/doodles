@@ -13,15 +13,13 @@ go()
 
 log ()
 {
-    echo "$@" > /dev/stderr
+    echo -e "$@" > /dev/stderr
 }
 
-go < "$inf" | go > "$outf"
+head -10 "$inf" | go  | go > "$outf"
 log "This should be the first ten lines of ${inf}:"
-head -10 "$outf"
-log "======================="
-cmp --quiet "$inf" "$outf" || exit 1
+cat "$outf"
+log "\n======================="
 
 log "Encrypting /usr/share/dict/words, just to see how long it takes ..."
 time go < /usr/share/dict/words | go > /dev/null
-
