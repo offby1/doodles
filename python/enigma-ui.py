@@ -42,11 +42,21 @@ def main(stdscr):
     while True:
         k = stdscr.getkey()
 
+        # display whatever key they pressed in the upper-left, for debugging.
+        # erase the area first.
+        stdscr.addstr(1, 0, ' ' * 10)
+        stdscr.addstr(1, 0, k)
+
         if k == "!":
             break
 
         plaintext.append(k)
-        encrypted = e.encrypt_single_number(ord(k))
+        try:
+            encrypted = e.encrypt_single_number(ord(k.lower()))
+        except TypeError:
+            # k might have been e.g. "KEY_RIGHT", on which ord will puke.
+            encrypted = None
+
         if encrypted:
             encrypted = chr(encrypted)
             ciphertext.append(encrypted)
