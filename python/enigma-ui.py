@@ -1,8 +1,5 @@
 from curses import wrapper
-import pathlib
 import random
-import tempfile
-import time
 
 from enigma import Enigma
 
@@ -30,13 +27,14 @@ class LetterLocator:
         return self.locations_by_letter.get(l)
 
 
-def main(stdscr, transcript_binary_fh):
+def main(stdscr):
     stdscr.clear()
 
     stdscr.addstr(0, 0, "Hit ! to exit")
     stdscr.refresh()
 
     plaintext = []
+    ciphertext = []
     e = Enigma()
     locator = LetterLocator()
     last_lit_location = None
@@ -51,27 +49,23 @@ def main(stdscr, transcript_binary_fh):
         encrypted = e.encrypt_single_number(ord(k))
         if encrypted:
             encrypted = chr(encrypted)
-            transcript_binary_fh.write(encrypted.encode("latin-1"))
+            ciphertext.append(encrypted)
 
             loc = locator(encrypted)
             if loc:
 
                 if last_lit_location is not None:
                     stdscr.addstr(*last_lit_location, " ")
-                    stdscr.refresh()
 
                 stdscr.addstr(*loc, encrypted)
                 stdscr.refresh()
                 last_lit_location = loc
 
-    transcript_binary_fh.write(b"\n")
-    return plaintext
+    return ''.join(plaintext), ''.join(ciphertext)
 
 
 if __name__ == "__main__":
     random.seed("")
-    with tempfile.NamedTemporaryFile(delete=False) as transcript:
-        plaintext = "".join(wrapper(main, transcript))
-        final_name = pathlib.Path("/tmp") / plaintext
-    pathlib.Path(transcript.name).rename(final_name)
-    print(f"Your encryption/decryption of {plaintext!r} is in {final_name}")
+    plaintext, ciphertext = wrapper(main)
+
+    print(ciphertext)
