@@ -8,6 +8,9 @@ from enigma import Enigma
 
 
 class LetterLocator:
+    """
+    Given a letter, figure out where to display it on the screen.
+    """
     def __init__(self):
         self.locations_by_letter = {}
         keyboard_layout = [
@@ -45,10 +48,10 @@ def main(stdscr, transcript_binary_fh):
             break
 
         plaintext.append(k)
-        raw_encrypted = e.encrypt_single_number(ord(k))
-        if raw_encrypted:
-            transcript_binary_fh.write(chr(raw_encrypted).encode("latin-1"))
-            encrypted = chr(raw_encrypted)
+        encrypted = e.encrypt_single_number(ord(k))
+        if encrypted:
+            encrypted = chr(encrypted)
+            transcript_binary_fh.write(encrypted.encode("latin-1"))
 
             loc = locator(encrypted)
             if loc:
