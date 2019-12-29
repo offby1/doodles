@@ -69,7 +69,7 @@ def main(stdscr, transcript_binary_fh):
 
 
 if __name__ == "__main__":
-    random.seed(0)
+    random.seed("")
     with tempfile.NamedTemporaryFile(delete=False) as transcript:
         plaintext = "".join(wrapper(main, transcript))
         final_name = pathlib.Path("/tmp") / plaintext
