@@ -10,8 +10,8 @@ import click  # pip install click
 # and decryption are the same operation.  Example usage:
 
 #     $ echo fee fi fo fum | python3 enigma.py frotz | tee >(base64 -i - > /dev/tty) | python3 enigma.py frotz
-#     TUxq0hlfHKU4zzOmmrY=
-#     fee fi fo fum
+#     cnFxamVldmJudA==
+#     feefifofum
 
 # Check the types by doing
 #       $ python3 -m pip install --user mypy-lang
