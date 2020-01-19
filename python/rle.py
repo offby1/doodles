@@ -2,17 +2,14 @@ def run_length_encode(inp):
     current_char = None
     current_count = None
     for ch in inp:
-        if not current_count:
+        if ch != current_char:
+            if current_char is not None:
+                yield (current_char, current_count)
             current_char = ch
             current_count = 1
-        else:
-            if ch != current_char:
-                yield (current_char, current_count)
-                current_char = ch
-                current_count = 1
 
-            else:
-                current_count += 1
+        else:
+            current_count += 1
     yield (current_char, current_count)
 
 
