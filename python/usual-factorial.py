@@ -28,3 +28,5 @@ sum = 0
 for n in itertools.count(1):
     sum += 1 / fact(n)
     print(sum)
+    if n > 20:
+        break
