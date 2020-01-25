@@ -21,7 +21,14 @@ def rotate_letter(character, amount):
 
     return number_to_letter(n + amount)
 
-cleartext = "When in Rome, do as the Romans do"
-ciphertext = ''.join([rotate_letter(l, 3) for l in cleartext])
-print(ciphertext)
-print(''.join([rotate_letter(l, -3) for l in ciphertext]))
+
+def caesar(text, encrypt=True):
+    offset = 3 if encrypt else -3
+    return ''.join([rotate_letter(l, offset) for l in text])
+
+
+if __name__ == "__main__":
+    cleartext = "When in Rome, do as the Romans do"
+    ciphertext = caesar(cleartext)
+    print(ciphertext)
+    print(caesar(ciphertext, encrypt=False))
