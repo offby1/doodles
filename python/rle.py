@@ -1,24 +1,32 @@
-def run_length_encode(inp):
-    current_char = None
-    current_count = None
-    for ch in inp:
-        if ch != current_char:
-            if current_char is not None:
-                yield (current_char, current_count)
-            current_char = ch
-            current_count = 1
+import dataclasses
+import operator
+import random
 
+@dataclasses.dataclass
+class Streak:
+    starting_index: int
+    length: int
+    item: object
+
+
+def run_length_encode(seq):
+    current_streak = None
+
+    for index, elt in enumerate(seq):
+        if current_streak is None:
+            current_streak = Streak(index, 1, elt)
+        elif elt != current_streak.item:
+            yield current_streak
+            current_streak = Streak(index, 1, elt)
         else:
-            current_count += 1
-    yield (current_char, current_count)
+            current_streak.length += 1
+
+    if current_streak is not None:
+        yield current_streak
 
 
-def tidy_up_rle(pairs):
-    result_chars = []
-    for p in pairs:
-        result_chars.append(f"{p[0]}{p[1]}")
-    return ''.join(result_chars)
-
-# tidy_up_rle(run_length_encode('xyxx!hello world'))
-# 'x1y1x2!1h1e1l2o1 1w1o1r1l1d1'
-# >>>
+flips = ''.join(random.choices("HT", k=100))
+print(flips)
+longest_streak = max(run_length_encode(flips), key=operator.attrgetter('length'))
+print(' ' * longest_streak.starting_index, end='^\n')
+print(longest_streak)
