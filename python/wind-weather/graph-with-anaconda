@@ -4,7 +4,7 @@ Instead:
     $ brew cask install anaconda
     $ /usr/local/anaconda3/bin/ipython3
 
-... and then paste the below.
+... and then paste the below, one line at a time.
 
 """
 

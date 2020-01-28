@@ -75,7 +75,7 @@ if __name__ == '__main__':
     writer = csv.writer (sys.stdout)
     writer.writerow (('time', 'cloudCover', 'windBearing'))
 
-    for one_hours_data in tqdm.tqdm(one_years_hourly_data (2018), total=365 * 24):
+    for one_hours_data in tqdm.tqdm(one_years_hourly_data (2019), total=365 * 24):
         hour = format_timestamp(one_hours_data[0])
         one_hours_data = tuple([hour]) + one_hours_data[1:]
         writer.writerow (one_hours_data)
