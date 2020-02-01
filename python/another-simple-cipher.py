@@ -21,11 +21,9 @@ def _decrypt_number(ciphertext, key):
 
 
 def mangle_numbers(nums, encrypt=True):
-    result = []
     func = _encrypt_number if encrypt else _decrypt_number
     for plaintext_number, key_number in zip(nums, itertools.cycle(RANDOM_ARRAY)):
-        result.append(func(plaintext_number, key_number))
-    return result
+        yield func(plaintext_number, key_number)
 
 
 with open ('/Users/erichanchrow/git-repositories/3rd-party/emacs/nextstep/Emacs.app/Contents/Resources/etc/HELLO') as inf:
