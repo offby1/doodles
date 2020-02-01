@@ -80,8 +80,6 @@ def find_string_whose_hash_has_leading_zeroes():
             most_leading_zeroes_seen = leading_zeroes
             print(f'{candidate.decode("utf-8")} => {leading_zeroes}')
 
-        count += 1
-
     return None
 
 
