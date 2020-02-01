@@ -91,7 +91,7 @@ def test_two_words():
 
 
 def test_example():
-    # unfortunately the output depends heavily on the dicitonary.
+    # unfortunately the output depends heavily on the dictionary.
     # This works on the dict that comes with macOS 10.13.3 "Sierra".
     input_ = "thisisatrickyproblemitcertainlydoesappear"
     expected_output = "this is a tricky problem it certainly does appear"
