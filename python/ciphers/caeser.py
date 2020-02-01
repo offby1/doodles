@@ -2,29 +2,15 @@ import string
 import itertools
 
 
-the_alphabet = itertools.cycle(string.ascii_letters)
+lets = itertools.cycle(string.ascii_letters)
+offset = itertools.dropwhile(lambda c: c < 'd', itertools.cycle(string.ascii_letters))
 
-
-def number_to_letter(number):
-    return next(itertools.islice(itertools.cycle(string.ascii_letters), number, number + 1))
-
-
-def letter_to_number(l):
-    return string.ascii_letters.index(l)
-
-
-def rotate_letter(character, amount):
-    try:
-        n = letter_to_number(character)
-    except ValueError:
-        return character
-
-    return number_to_letter(n + amount)
-
+forward_mapping = dict(itertools.islice(zip(lets, offset), 52))
+reverse_mapping = dict(itertools.islice(zip(offset, lets), 52))
 
 def caesar(text, encrypt=True):
-    offset = 3 if encrypt else -3
-    return ''.join([rotate_letter(l, offset) for l in text])
+    map_ = forward_mapping if encrypt else reverse_mapping
+    return ''.join([map_.get(l, l) for l in text])
 
 
 if __name__ == "__main__":
