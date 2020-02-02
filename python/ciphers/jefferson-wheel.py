@@ -1,75 +1,100 @@
 """
 https://en.wikipedia.org/wiki/Jefferson_wheel
-
-Basically an Enigma where the wheels are fixed.
 """
 
 import itertools
 import random
 import string
+import sys
 
 
-def l_to_n(letter):
-    letter = letter.lower()
-    assert letter in string.ascii_lowercase
-    return ord(letter) - ord(string.ascii_lowercase[0])
+class Disk(list):
+    def __init__(self):
+        super().__init__(string.ascii_lowercase)
+        random.shuffle(self)
 
-
-def n_to_l(n):
-    return string.ascii_lowercase[n]
-
-
-def _invert_list(numbers):
-    inverse = numbers.copy()
-    for index, value in enumerate(numbers):
-        inverse[value] = index
-    return inverse
-
-
-class Disk():
-    def __init__(self, id_):
-        self.id = id_
-        self.encryption_letters = [l_to_n(l) for l in string.ascii_lowercase]
-        random.shuffle(self.encryption_letters)
-        self.decryption_letters = _invert_list(self.encryption_letters)
-
-    def crypt(self, n, encrypt=True):
-        if encrypt:
-            rv = self.encryption_letters[n]
-        else:
-            rv = self.decryption_letters[n]
-
-        return rv
+    def turn_to_display(self, character):
+        # Our caller will set character to None when it's finished a
+        # string, but still has some more wheels to process, including
+        # us.  We randomize ourselves to erase any previous setting,
+        # which could be distracting.
+        if character is None:
+            character = random.choice(self)
+        assert character in self, f"wtf is {character=}"
+        while self[0] != character:
+            self.append(self.pop(0))
 
     def __str__(self):
-        return (
-            f'{self.id:02} ' +
-            ' '.join([n_to_l(n) for n in self.encryption_letters]))
+        return ''.join(self)
+
+
+def chunk(iterable, size):
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]
 
 
 class WheelCipher():
     def __init__(self, num_disks=36):
-        self.disks = [Disk(n) for n in range(num_disks)]
+        self.disks = [Disk() for _ in range(num_disks)]
 
-    def crypt_number_sequence(self, numbers, encrypt=True):
-        for number, disk in zip(numbers, itertools.cycle(self.disks)):
-            yield disk.crypt(number, encrypt=encrypt)
+    @property
+    def width(self):
+        return len(self.disks)
 
-    def crypt_string(self, str_, encrypt=True):
-        str_ = [c for c in str_.lower() if c in string.ascii_lowercase]
+    @property
+    def alphabet(self):
+        return self.disks[0]
 
-        return ''.join([n_to_l(n)
-                        for n in self.crypt_number_sequence([l_to_n(l) for l in str_],
-                                                            encrypt=encrypt)])
+    @property
+    def circumference(self):
+        return len(self.alphabet)
+
+    def turn_to_display(self, str_):
+        str_ = [l for l in str_ if l in self.alphabet]
+        for disk, character in itertools.zip_longest(self.disks, str_):
+            disk.turn_to_display(character)
+
+    def random_row(self):
+        offset = random.randrange(1, self.circumference)
+        for d in self.disks:
+            yield d[offset]
+
+    def _filter_string(self, str_):
+        return [c for c in str_.lower() if c in self.alphabet]
+
+    def encrypt_string(self, str_):
+        str_ = self._filter_string(str_)
+        result = []
+        for c in chunk(str_, self.width):
+            self.turn_to_display(c)
+            result.extend(self.random_row())
+        return ''.join(result)
+
+    def decrypt_string(self, str_):
+        str_ = self._filter_string(str_)
+        for index, c in enumerate(chunk(str_, self.width)):
+            self.turn_to_display(c)
+            if index > 0:
+                print()
+            print(self)
 
     def __str__(self):
-        return '\n'.join(str(d) for d in self.disks)
+        result = []
+        for offset in range(self.circumference):
+            row = []
+            for d in self.disks:
+                row.append(d[offset])
+            result.append(''.join(row))
+        return '\n'.join(result)
 
 
 if __name__ == "__main__":
     random.seed(0)
     j = WheelCipher()
-    print(j)
-    wat = j.crypt_string('Hey you!!' * 20, encrypt=True)
-    print(wat)
-    print(j.crypt_string(wat, encrypt=False))
+    plaintext = ''.join(sys.argv[1:])
+    if not plaintext:
+        plaintext = "Attack at dawn"
+    print(f"{plaintext=}")
+    ciphertext = ' '.join(chunk(j.encrypt_string(plaintext), 5))
+    print(f"{ciphertext=}")
+    j.decrypt_string(ciphertext)
