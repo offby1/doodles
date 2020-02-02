@@ -5,6 +5,7 @@ https://en.wikipedia.org/wiki/Jefferson_wheel
 import itertools
 import random
 import string
+import subprocess
 import sys
 
 
@@ -15,7 +16,7 @@ class Disk(list):
 
     def turn_to_display(self, character):
         # Our caller will set character to None when it's finished a
-        # string, but still has some more wheels to process, including
+        # string, but still has some more disks to process, including
         # us.  We randomize ourselves to erase any previous setting,
         # which could be distracting.
         if character is None:
@@ -49,12 +50,11 @@ class WheelCipher():
     def circumference(self):
         return len(self.alphabet)
 
-    def turn_to_display(self, str_):
-        str_ = [l for l in str_ if l in self.alphabet]
+    def _turn_to_display(self, str_):
         for disk, character in itertools.zip_longest(self.disks, str_):
             disk.turn_to_display(character)
 
-    def random_row(self):
+    def _random_row(self):
         offset = random.randrange(1, self.circumference)
         for d in self.disks:
             yield d[offset]
@@ -66,30 +66,57 @@ class WheelCipher():
         str_ = self._filter_string(str_)
         result = []
         for c in chunk(str_, self.width):
-            self.turn_to_display(c)
-            result.extend(self.random_row())
+            self._turn_to_display(c)
+            result.extend(self._random_row())
         return ''.join(result)
 
     def decrypt_string(self, str_):
         str_ = self._filter_string(str_)
         for index, c in enumerate(chunk(str_, self.width)):
-            self.turn_to_display(c)
+            self._turn_to_display(c)
+
             if index > 0:
                 print()
-            print(self)
 
-    def __str__(self):
-        result = []
+            # Sort the rows with the least "entropy" first.  This
+            # makes it slightly easier to find the plaintext row from
+            # amongst the garbage.
+            for r in sorted(self.rows(), key=walker_entropy):
+                print(r)
+
+    def rows(self):
         for offset in range(self.circumference):
             row = []
             for d in self.disks:
                 row.append(d[offset])
-            result.append(''.join(row))
-        return '\n'.join(result)
+            yield(''.join(row))
+
+    def __str__(self):
+        return '\n'.join(self.rows())
+
+
+def walker_entropy(str_):
+    """
+    http://fourmilab.ch/random/
+    $ brew install ent
+    """
+
+    child = subprocess.run(
+        ["/usr/local/bin/ent"],
+        input=str_,
+        stdout=subprocess.PIPE,
+        text=True
+    )
+
+    for line in child.stdout.split('\n'):
+        # e.g. `Entropy = 4.283381 bits per byte.`
+        fields = line.split(' ')
+        if fields[0] == 'Entropy':
+            return float(fields[2])
 
 
 if __name__ == "__main__":
-    random.seed(0)
+    random.seed(0)              # extra security :-)
     j = WheelCipher()
     plaintext = ''.join(sys.argv[1:])
     if not plaintext:
@@ -97,4 +124,5 @@ if __name__ == "__main__":
     print(f"{plaintext=}")
     ciphertext = ' '.join(chunk(j.encrypt_string(plaintext), 5))
     print(f"{ciphertext=}")
+    print()
     j.decrypt_string(ciphertext)
