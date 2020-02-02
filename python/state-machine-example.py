@@ -33,8 +33,8 @@ class Lock:
             raise Exception('wtf')
 
 
-l = Lock()
+l_ = Lock()
 for attempt in range(10):
-    method = random.choice([l.try_to_open, l.lock])
+    method = random.choice([l_.try_to_open, l_.lock])
     print(method.__name__, end=': ')
     method()

@@ -5,23 +5,28 @@ logging.basicConfig()
 
 _log = logging.getLogger()
 
+
 class RaiseStyle(Enum):
     BARE    = 0
     FROM    = 1
     NEW     = 2
     RERAISE = 3
 
+
 def top():
     print("Hi I'm a top-level function")
     middle()
+
 
 def middle():
     print("MIddle guy here")
     inner()
 
+
 def inner():
     print("Inner")
     raise Exception("Good golly miss MOlly")
+
 
 def caller(raise_style):
     try:

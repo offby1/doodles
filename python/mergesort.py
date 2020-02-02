@@ -5,12 +5,12 @@ def mergesort(seq, key=None):
     if key is None:
         key = lambda x: x
 
-    l = len(seq)
+    l_ = len(seq)
 
-    if l < 2:
+    if l_ < 2:
         return seq
 
-    half_length = l // 2
+    half_length = l_ // 2
 
     left = seq[0:half_length]
     right = seq[half_length:]

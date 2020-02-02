@@ -15,9 +15,9 @@ def se_diag(lol):
 
 
 def sw_diag(lol):
-    l = len(lol)
+    l_ = len(lol)
     for i, col in enumerate(columns(lol)):
-        yield col[l - i - 1]
+        yield col[l_ - i - 1]
 
 
 def is_magic_square(lol):

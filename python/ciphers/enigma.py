@@ -105,7 +105,6 @@ class Enigma:
 
         return return_value
 
-
     def encrypt(self, input_bytes: bytes) -> Iterator[int]:
         input_bytes = bytes([b for b in input_bytes.lower() ])
         input_bytes = input_bytes.lower()

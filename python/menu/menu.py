@@ -2,7 +2,7 @@ import collections
 from dataclasses import dataclass
 import pprint
 import statistics
-import sys
+
 
 @dataclass
 class Entry:
@@ -11,6 +11,7 @@ class Entry:
 
     def __str__(self):
         return f'\t{self.key}) {self.text}'
+
 
 class Menu:
     def __init__(self, entries):
@@ -33,10 +34,12 @@ class Menu:
             else:
                 return c
 
+
 def test_empty_menu_all_choices_None():
     m = Menu([])
     assert m.determine_choice('') is None
     assert m.determine_choice('whatever') is None
+
 
 def test_single_entry_choice():
     e = Entry(key='key', text='text')
@@ -44,10 +47,12 @@ def test_single_entry_choice():
     assert m.determine_choice('key') is e
     assert m.determine_choice('waah') is None
 
+
 def test_single_entry_display():
     e = Entry(key='key', text='text')
     m = Menu([e])
     assert m.display() == '\tkey) text'
+
 
 def test_multi_entry_display_is_sorted():
     m = Menu([
@@ -55,6 +60,7 @@ def test_multi_entry_display_is_sorted():
         Entry(key='Arnold', text='aardvark'),
     ])
     assert m.display() == '\tArnold) aardvark\n\tZooey) zebra'
+
 
 def choose_continue_or_quit():
     """
@@ -87,6 +93,7 @@ def collect_valid_test_score():
                 return i
             print(f'Nope: {i} is too big or too small')
 
+
 def choose_grade_level():
     m = Menu([
         Entry(key='1', text='Freshman'),
@@ -96,6 +103,7 @@ def choose_grade_level():
     ])
     print(m.display())
     return m.force_valid_choice(input)
+
 
 if __name__ == "__main__":
     counts_by_grade = collections.Counter()
@@ -112,26 +120,26 @@ if __name__ == "__main__":
 
 """
 :-) 2018-07-07T21:30:15-0700 [Eric-Hanchrows-MacBook-Pro tmp]$ (echo 1; echo 2; echo 50; echo 1; echo 1; echo 24; echo 1; echo 4; echo 99; echo 2)| python3 menu.py
-	1) Enter student information
-	2) Quit
-	1) Freshman
-	2) Sophomore
-	3) Junior
-	4) Senior
-Enter a grade level here: 	1) Enter student information
-	2) Quit
-	1) Freshman
-	2) Sophomore
-	3) Junior
-	4) Senior
-Enter a grade level here: 	1) Enter student information
-	2) Quit
-	1) Freshman
-	2) Sophomore
-	3) Junior
-	4) Senior
-Enter a grade level here: 	1) Enter student information
-	2) Quit
+        1) Enter student information
+        2) Quit
+        1) Freshman
+        2) Sophomore
+        3) Junior
+        4) Senior
+Enter a grade level here:       1) Enter student information
+        2) Quit
+        1) Freshman
+        2) Sophomore
+        3) Junior
+        4) Senior
+Enter a grade level here:       1) Enter student information
+        2) Quit
+        1) Freshman
+        2) Sophomore
+        3) Junior
+        4) Senior
+Enter a grade level here:       1) Enter student information
+        2) Quit
 Total number of students entered: 3
 Average test score: 57.666666666666664
 {'Freshman': 1, 'Senior': 1, 'Sophomore': 1}

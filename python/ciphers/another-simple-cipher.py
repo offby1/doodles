@@ -1,4 +1,3 @@
-import itertools
 import random
 import string
 
@@ -10,6 +9,7 @@ scrambled = ''.join(scrambled)
 
 forward_mapping = dict(zip(lets, scrambled))
 reverse_mapping = dict(zip(scrambled, lets))
+
 
 def transform(letter, encrypt=True):
     map_ = forward_mapping if encrypt else reverse_mapping

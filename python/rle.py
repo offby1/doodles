@@ -2,6 +2,7 @@ import dataclasses
 import operator
 import random
 
+
 @dataclasses.dataclass
 class Streak:
     starting_index: int
