@@ -1,9 +1,13 @@
 import contextlib
+import logging
 import signal
 import sys
 
 import aiohttp  # pip install aiohttp
 import asyncio
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 async def async_download_one(client, url):
@@ -13,17 +17,23 @@ async def async_download_one(client, url):
     print('{} => {} bytes'.format(url, len(text)))
 
 
+async def create_session(loop):
+    return aiohttp.ClientSession(loop=loop)
+
+
 def download(urls):
     with contextlib.closing(asyncio.get_event_loop()) as loop:
-        with contextlib.closing(aiohttp.ClientSession(loop=loop)) as client:
+        loop.set_debug(enabled=True)
+        client = loop.run_until_complete(create_session(loop))
 
-            def signal_handler(signal, frame):
-                loop.stop()
-                client.close()
-                sys.exit(0)
+        def signal_handler(signal, frame):
+            loop.stop()
+            client.close()
+            sys.exit(0)
 
-            signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
 
-            tasks = [asyncio.ensure_future(async_download_one(client, u)) for u in urls]
+        tasks = [asyncio.ensure_future(async_download_one(client, u)) for u in urls]
 
-            loop.run_until_complete(asyncio.gather(*tasks))
+        loop.run_until_complete(asyncio.gather(*tasks))
+        loop.run_until_complete(client.close())
