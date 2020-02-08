@@ -1,26 +1,22 @@
 import random
-import string
 
-lets = string.printable
+bytes_ = bytes(range(256))
+scrambled = bytes(random.sample(bytes_, k=len(bytes_)))
 
-scrambled = list(lets)
-random.shuffle(scrambled)
-scrambled = ''.join(scrambled)
-
-forward_mapping = dict(zip(lets, scrambled))
-reverse_mapping = dict(zip(scrambled, lets))
+encrypt = dict(zip(bytes_, scrambled))
+decrypt = dict(zip(scrambled, bytes_))
 
 
-def transform(letter, encrypt=True):
-    map_ = forward_mapping if encrypt else reverse_mapping
-    return map_.get(letter, letter)
+def transform_bytes(bytes_, map_):
+    return bytes([map_.get(b, b) for b in bytes_])
 
 
-with open ('/etc/passwd') as inf:
-    more_sample_text = inf.read()
-    with open('/tmp/decrypt-me', 'w') as outf:
-        outf.write(''.join(transform(l) for l in more_sample_text))
-        print(f'Check out {outf.name!r} for some ciphertext')
+with open("/etc/passwd", "rb") as inf:
+    plaintext = inf.read()
 
-    with open('/tmp/decrypt-me', 'r') as inf:
-        print(''.join(transform(l, encrypt=False) for l in inf.read()))
+    with open("/tmp/decrypt-me", "wb") as outf:
+        outf.write(transform_bytes(plaintext, encrypt))
+        print(f"Check out {outf.name!r} for some ciphertext")
+
+    with open("/tmp/decrypt-me", "rb") as inf:
+        print(transform_bytes(inf.read(), decrypt).decode("utf-8"))
