@@ -76,13 +76,13 @@ class WheelCipher():
             self._turn_to_display(c)
 
             if index > 0:
-                print()
+                yield('')
 
             # Sort the rows with the least "entropy" first.  This
             # makes it slightly easier to find the plaintext row from
             # amongst the garbage.
             for r in sorted(self.rows(), key=walker_entropy):
-                print(r)
+                yield(r)
 
     def rows(self):
         for offset in range(self.circumference):
@@ -125,4 +125,5 @@ if __name__ == "__main__":
     ciphertext = ' '.join(chunk(j.encrypt_string(plaintext), 5))
     print(f"{ciphertext=}")
     print()
-    j.decrypt_string(ciphertext)
+    for decrypted_row in j.decrypt_string(ciphertext):
+        print(decrypted_row)
