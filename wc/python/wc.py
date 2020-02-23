@@ -13,8 +13,8 @@ import pprint
 import random
 
 # 3rd party
-import click                    # pip install click
-import tqdm                     # pip install tqdm
+import click  # pip install click
+import tqdm  # pip install tqdm
 
 
 class Graph:
@@ -64,10 +64,9 @@ class Graph:
     def from_wordlist(klass, wordlist_file_name, word_length):
         rv = klass()
         words = set(n_letter_words(wordlist_file_name, word_length))
-        for left in tqdm.tqdm(words,
-                              unit='word',
-                              desc="Processing {}-letter words from {}".format(word_length,
-                                                                               wordlist_file_name)):
+        for left in tqdm.tqdm(
+            words, unit='word', desc="Processing {}-letter words from {}".format(word_length, wordlist_file_name)
+        ):
 
             # In theory, you could generate all possible one-letter
             # variants of "left", and then add them; but that would take
@@ -101,9 +100,7 @@ def differ_by_one_letter(left, right):
 
 
 @click.command()
-@click.option('-w', '--word-length',
-              default=5,
-              type=click.IntRange(3, 10, clamp=True))
+@click.option('-w', '--word-length', default=5, type=click.IntRange(3, 10, clamp=True))
 def main(word_length):
     cache_file_name = 'graph.cache.{}'.format(word_length)
     try:
@@ -114,8 +111,7 @@ def main(word_length):
         with open(cache_file_name, 'w') as outf:
             outf.write(str(graph))
 
-    spinner = tqdm.tqdm(desc='chains',
-                        unit='')
+    spinner = tqdm.tqdm(desc='chains', unit='')
     all_words = list(graph.neighbors_by_node.keys())
 
     longest_chain = []
