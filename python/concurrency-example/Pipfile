@@ -7,7 +7,7 @@ name = "pypi"
 aiohttp = "*"
 asks = "*"
 requests = ">=2.20.0"
-trio = "*"
+trio = "~=0.11.0"               # pinned, as suggested by https://github.com/python-trio/trio/issues/1
 urllib3 = ">=1.24.2"
 
 [dev-packages]
