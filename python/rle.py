@@ -26,8 +26,9 @@ def run_length_encode(seq):
         yield current_streak
 
 
-flips = ''.join(random.choices("HT", k=100))
-print(flips)
-longest_streak = max(run_length_encode(flips), key=operator.attrgetter('length'))
-print(' ' * longest_streak.starting_index, end='^\n')
-print(longest_streak)
+if __name__ == "__main__":
+    flips = ''.join(random.choices("HT", k=100))
+    print(flips)
+    longest_streak = max(run_length_encode(flips), key=operator.attrgetter('length'))
+    print(' ' * longest_streak.starting_index, end='^\n')
+    print(longest_streak)
