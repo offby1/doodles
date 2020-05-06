@@ -10,19 +10,47 @@ certainly appear".
 
 # python3 -m pytest --doctest-modules  favorite-interview-question-insert-spaces.py
 
-import os
 
-import tqdm  # pip install tqdm
+def bogus_two_letter_word(w):
+    if len(w) != 2:
+        return False
+
+    # It's easier to spell out the legit words than the bogus ones
+    return w not in {
+        "am",
+        "an",
+        "as",
+        "at",
+        "ax",
+        "be",
+        "by",
+        "do",
+        "ha",
+        "he",
+        "hi",
+        "ho",
+        "id",
+        "if",
+        "in",
+        "is",
+        "it",
+        "me",
+        "my",
+        "no",
+        "of",
+        "ok",
+        "on",
+        "or",
+        "so",
+        "to",
+        "us",
+    }
 
 
 def _snarf_dict():
     result = set()
     with open("/usr/share/dict/words") as inf:
-        progressbar = tqdm.tqdm(
-            total=os.fstat(inf.fileno()).st_size, desc="Reading dictionary"
-        )
         for raw_word in inf:
-            progressbar.update(len(raw_word))
             word = raw_word.rstrip().lower()
 
             # Eliminate most of the one-letter words from the
@@ -31,6 +59,9 @@ def _snarf_dict():
             if len(word) == 1:
                 if word.lower() not in {"i", "a"}:
                     continue
+
+            if bogus_two_letter_word(word):
+                continue
 
             result.add(word)
     return result
@@ -48,34 +79,16 @@ def _all_splits(seq):
         yield (seq[0:index], seq[index:])
 
 
-def insert_spaces(input_, dictionary_words, recursion_depth=0, progressbar=None):
-    if progressbar is None:
-        # total here is a total guess :-) It's here just to make the
-        # progress bar render solid glyphs.
-        progressbar = tqdm.tqdm(desc="Finding solutions", total=len(input_) * 4)
-
+def insert_spaces(input_, dictionary_words):
     if input_ in dictionary_words:
-        if recursion_depth == 0:
-            progressbar.write(input_)
         yield input_
 
     for prefix, rest in _all_splits(input_):
         if prefix in dictionary_words:
-            from_shorter_string = insert_spaces(
-                rest,
-                dictionary_words,
-                recursion_depth=recursion_depth + 1,
-                progressbar=progressbar,
-            )
+            from_shorter_string = insert_spaces(rest, dictionary_words)
             for short in from_shorter_string:
                 result = prefix + " " + short
-                if recursion_depth == 0:
-                    progressbar.write(result)
                 yield result
-                progressbar.update()
-
-    if recursion_depth == 0:
-        progressbar.close()
 
 
 def test_base_case():
@@ -107,6 +120,9 @@ if __name__ == "__main__":
         words = str_.split(" ")
         return statistics.mean([len(w) for w in words])
 
+    def num_spaces(str_):
+        return (len(str_.split()), str_)
+
     for inp_ in (
         "thisisatrickyproblemitcertainlydoesappear",
         "tell me your dream, your hope, your fear",
@@ -114,6 +130,5 @@ if __name__ == "__main__":
     ):
         cleaned_up_input = re.sub(r"[^a-z]", "", inp_.lower())
 
-        for index, _ in enumerate(insert_spaces(cleaned_up_input, dictionary_words)):
-            if index == 10:
-                break
+        solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words), key=num_spaces)
+        print('\n'.join(solutions))
