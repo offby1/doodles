@@ -75,9 +75,12 @@ urls = (
 
 
 def t(description, python_expression):
+    print()
     print(f'{description} starting')
-    print(timeit.timeit(python_expression, globals=globals(), number=1))
+    time_in_seconds = timeit.timeit(python_expression, globals=globals(), number=1)
+    print(f'Downloading {len(urls)} urls took {time_in_seconds} seconds.')
     print(f'{description} done')
+    print()
 
 
 t("naive:",    'sequential.download(urls)')

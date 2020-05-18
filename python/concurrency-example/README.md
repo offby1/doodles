@@ -5,4 +5,5 @@
         $ python3 -m pipenv run python3 main.py
 
 * Trio might be a smidge slower than the other guys.
-* The async thing spews a lot of warnings that I don't understand.
+* The async thing used to spew a lot of warnings that I didn't understand.  Now it doesn't; I don't understand
+  _that_, either.
