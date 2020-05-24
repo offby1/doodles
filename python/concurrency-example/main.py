@@ -76,15 +76,12 @@ urls = (
 
 def t(description, python_expression):
     print()
-    print(f'{description} starting')
+    print(f'{description}: starting')
     time_in_seconds = timeit.timeit(python_expression, globals=globals(), number=1)
-    print(f'Downloading {len(urls)} urls took {time_in_seconds} seconds.')
+    print(f'Downloading {len(urls)} urls with {description!r} took {time_in_seconds} seconds.')
     print(f'{description} done')
     print()
 
 
-t("naive:",    'sequential.download(urls)')
-t("threaded:", 'threaded.download(urls)')
-t("futures:",  'future.download(urls)')
-t("asyncio:",  'asynchronous.download(urls)')
-t("trio:",     'treeoh.download(urls)')
+for module_name in ("sequential", "threaded", "future", "treeoh"):
+    t(module_name,    f'{module_name}.download(urls)')
