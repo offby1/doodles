@@ -1,26 +1,28 @@
 import codecs
-import os.path
 import paramiko                 # pip install paramiko
+import pathlib
 import sys
 
 
 def from_named_file(fn):
     with open(fn, 'r') as inf:
-        try:
-            return paramiko.rsakey.RSAKey.from_private_key(inf)
-        except paramiko.ssh_exception.SSHException:
-            return paramiko.dsskey.DSSKey.from_private_key(inf)
+        for ctor in (paramiko.rsakey.RSAKey.from_private_key, paramiko.dsskey.DSSKey.from_private_key):
+            try:
+                return ctor(inf)
+            except (paramiko.ssh_exception.SSHException, IndexError):
+                pass
 
 
 def from_named_dir(d):
-    for fn in os.scandir(d):
-        p = fn.path
+    for fn in d.rglob('*'):
+        if not fn.is_file():
+            continue
         try:
-            yield p, from_named_file(p)
+            yield fn, from_named_file(fn)
         except (paramiko.ssh_exception.PasswordRequiredException,
                 paramiko.ssh_exception.SSHException,
                 UnicodeDecodeError) as e:
-            print('{}: {}'.format(p, e), file=sys.stderr)
+            print('{}: {}'.format(fn, e), file=sys.stderr)
 
 
 def key2str(pk):
@@ -28,8 +30,11 @@ def key2str(pk):
 
 
 if __name__ == "__main__":
-    for name, result in from_named_dir(os.path.expanduser("~/.ssh")):
-        print('{}: {}'.format(name, key2str(result)))
+    for name, result in from_named_dir(pathlib.Path("~/.ssh").expanduser()):
+        if result:
+            print('{}: {}'.format(name, key2str(result)))
+        else:
+            print(f"Nuts, {name} doesn't seem to be a proper key")
 
     agent = paramiko.agent.Agent()
     for pk in agent.get_keys():
