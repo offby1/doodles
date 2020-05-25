@@ -26,7 +26,7 @@ output = re.sub(r'(\w+)', lookup, input)
 
 print(output)
 
-# ~/venv3.Linux/bin/python wat.py
+# python3 translation.py
 
-# Where is the boo-tay?
-# We wants our swag!!!
+# waar z de boo-tay?
+# wheee!!! lusts for arr swag!!!
