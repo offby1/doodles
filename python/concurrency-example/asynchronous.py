@@ -1,11 +1,10 @@
+import asyncio
 import contextlib
 import logging
 import signal
 import sys
 
 import aiohttp  # pip install aiohttp
-import asyncio
-
 
 logging.basicConfig(level=logging.INFO)
 

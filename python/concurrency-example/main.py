@@ -84,4 +84,4 @@ def t(description, python_expression):
 
 
 for module_name in ("sequential", "threaded", "future", "treeoh", "asynchronous"):
-    t(module_name,    f'{module_name}.download(urls)')
+    t(module_name, f'{module_name}.download(urls)')
