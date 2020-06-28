@@ -78,7 +78,8 @@ def t(description, python_expression):
     print()
     print(f'{description}: starting')
     time_in_seconds = timeit.timeit(python_expression, globals=globals(), number=1)
-    print(f'Downloading {len(urls)} urls with {description!r} took {time_in_seconds} seconds.')
+    number_of_requests = len(urls)
+    print(f'Downloading {number_of_requests} urls with {description!r} took {time_in_seconds} seconds: {number_of_requests / time_in_seconds} requests per second')
     print(f'{description} done')
     print()
 
