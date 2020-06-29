@@ -7,3 +7,4 @@
 * Trio might be a smidge slower than the other guys.
 * The async thing used to spew a lot of warnings that I didn't understand.  Now it doesn't; I don't understand
   _that_, either.
+* async seems significantly faster than the others.  It didn't used to be, though.

@@ -9,21 +9,21 @@ import aiohttp  # pip install aiohttp
 logging.basicConfig(level=logging.INFO)
 
 
-async def async_download_one(client, url):
-    async with client.get(url) as response:
+async def async_download_one(aiohttp_client, url):
+    async with aiohttp_client.get(url) as response:
         assert response.status == 200
         text = await response.text()
     print('{} => {} bytes'.format(url, len(text)))
 
 
-async def create_session(loop):
+async def create_aiohttp_session(loop):
     return aiohttp.ClientSession(loop=loop)
 
 
 def download(urls):
     with contextlib.closing(asyncio.get_event_loop()) as loop:
         loop.set_debug(enabled=True)
-        client = loop.run_until_complete(create_session(loop))
+        client = loop.run_until_complete(create_aiohttp_session(loop))
 
         def signal_handler(signal, frame):
             loop.stop()
