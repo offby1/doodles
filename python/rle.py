@@ -32,3 +32,9 @@ if __name__ == "__main__":
     longest_streak = max(run_length_encode(flips), key=operator.attrgetter('length'))
     print(' ' * longest_streak.starting_index, end='^\n')
     print(longest_streak)
+
+    # See how often a streak of six comes up in a million flips.
+    flips = ''.join(random.choices("HT", k=1_000_000))
+    streaks = run_length_encode(flips)
+    streaks_of_six_or_more = [s for s in streaks if s.length >= 6]
+    print(f"Found {len(streaks_of_six_or_more)=} in {len(flips)=}")
