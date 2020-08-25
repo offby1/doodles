@@ -5,7 +5,7 @@ class NewsError < StandardError
 end
 
 def gimme
-  extract_and_process(call_http_xml('http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml'))
+  extract_and_process(call_http_xml('https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'))
 end
 
 def call_http_xml(uri, redirection_limit = 10)
