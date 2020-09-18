@@ -99,7 +99,7 @@ class Enigma:
         return_value = None
 
         number -= ord('a')
-        if 0 <= number <= self.rotor_size:
+        if 0 <= number < self.rotor_size:
             return_value = self.run_through_rotors(number) + ord('a')
             self.advance_rotors()
 
