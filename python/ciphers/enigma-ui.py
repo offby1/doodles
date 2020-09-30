@@ -1,5 +1,5 @@
-from curses import wrapper
 import random
+from curses import wrapper
 
 from enigma import Enigma
 
@@ -8,6 +8,7 @@ class LetterLocator:
     """
     Given a letter, figure out where to display it on the screen.
     """
+
     def __init__(self):
         self.locations_by_letter = {}
         keyboard_layout = [
@@ -23,8 +24,8 @@ class LetterLocator:
             for column_index, letter in enumerate(row_letters):
                 self.locations_by_letter[letter] = (row_index, column_index)
 
-    def __call__(self, l):
-        return self.locations_by_letter.get(l)
+    def __call__(self, letter):
+        return self.locations_by_letter.get(letter)
 
 
 def main(stdscr):
