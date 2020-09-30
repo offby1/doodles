@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import random
 import sys
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 import click  # pip install click
 
@@ -40,11 +40,11 @@ class Rotor:
         self.reverse_numbers = _invert_list(self.forward_numbers)
 
     @property
-    def num_slots(self):
+    def num_slots(self) -> int:
         return len(self.forward_numbers)
 
-    def advance(self):
-        self.forward_numbers.append(self.forward_numbers.pop(0)) # rotate the list
+    def advance(self) -> bool:  # True means we "wrapped around"
+        self.forward_numbers.append(self.forward_numbers.pop(0))  # rotate the list
         self.reverse_numbers = _invert_list(self.forward_numbers)
 
         self.offset += 1
@@ -73,13 +73,12 @@ class Enigma:
         self.rotors = [Rotor(26) for _ in range(num_rotors)]
 
     @property
-    def rotor_size(self):
+    def rotor_size(self) -> int:
         return self.rotors[0].num_slots
 
     def reflect(self, number: int) -> int:
-        num_slots = self.rotors[0].num_slots
-        offset = num_slots // 2
-        return (number + offset) % num_slots
+        offset = self.rotor_size // 2
+        return (number + offset) % self.rotor_size
 
     def run_through_rotors(self, number: int) -> int:
         for r in self.rotors:
@@ -89,13 +88,13 @@ class Enigma:
             number = r.transform(number, False)
         return number
 
-    def advance_rotors(self):
+    def advance_rotors(self) -> None:
         for r in self.rotors:
-            wrapped_around = r.advance()
+            wrapped_around: bool = r.advance()
             if not wrapped_around:
                 break
 
-    def encrypt_single_number(self, number):
+    def encrypt_single_number(self, number: int) -> Optional[int]:
         return_value = None
 
         number -= ord('a')
@@ -106,7 +105,7 @@ class Enigma:
         return return_value
 
     def encrypt(self, input_bytes: bytes) -> Iterator[int]:
-        input_bytes = bytes([b for b in input_bytes.lower() ])
+        input_bytes = bytes([b for b in input_bytes.lower()])
         input_bytes = input_bytes.lower()
 
         for number in input_bytes:
