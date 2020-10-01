@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+import itertools
+import pprint
 import random
+import string
 import sys
-from typing import Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import click  # pip install click
 
@@ -15,10 +18,12 @@ import click  # pip install click
 
 # Check the types by doing
 #       $ python3 -m pip install --user mypy-lang
-#       $ python3 -m mypy enigma.py
+#       $ python3 -m mypy --strict enigma.py
 
 
 class Rotor:
+    ALPHABET = list(string.ascii_lowercase + ' .')
+
     """
     >>> random.seed(0)
     >>> p = Rotor(4)
@@ -28,24 +33,34 @@ class Rotor:
     0
     """
 
-    def __init__(self, num_slots: int) -> None:
-
+    def __init__(self) -> None:
         # Otherwise reflection won't work ... I think
-        assert num_slots % 2 == 0
+        assert len(self.ALPHABET) % 2 == 0
 
         self.offset = 0
 
-        self.forward_numbers = list(range(num_slots))
-        random.shuffle(self.forward_numbers)
-        self.reverse_numbers = _invert_list(self.forward_numbers)
+        self.alphabet = itertools.cycle(self.ALPHABET[:])
+        self.shuffled: Any = self.ALPHABET[:]
+        random.shuffle(self.shuffled)
+        self.shuffled = itertools.cycle(self.shuffled)
+
+        self.compute_mappings_from_offset()
+
+    def compute_mappings_from_offset(self) -> None:
+        alphabet = itertools.islice(self.alphabet, self.num_slots)
+        shuffled = itertools.islice(self.shuffled, self.num_slots)
+        self.forward_mapping: Dict[str, str] = {a: s for a, s in zip(alphabet, shuffled)}
+        alphabet = itertools.islice(self.alphabet, self.num_slots)
+        shuffled = itertools.islice(self.shuffled, self.num_slots)
+        self.reverse_mapping: Dict[str, str] = {s: a for a, s in zip(alphabet, shuffled)}
 
     @property
     def num_slots(self) -> int:
-        return len(self.forward_numbers)
+        return len(self.ALPHABET)
 
     def advance(self) -> bool:  # True means we "wrapped around"
-        self.forward_numbers.append(self.forward_numbers.pop(0))  # rotate the list
-        self.reverse_numbers = _invert_list(self.forward_numbers)
+        next(self.alphabet)
+        self.compute_mappings_from_offset()
 
         self.offset += 1
 
@@ -55,38 +70,39 @@ class Rotor:
 
         return False
 
-    def transform(self, number: int, encrypt: bool) -> int:
-        list_ = self.forward_numbers if encrypt else self.reverse_numbers
-        return list_[number]
+    def transform(self, letter: str, encrypt: bool) -> str:
+        mapping_ = self.forward_mapping if encrypt else self.reverse_mapping
+        return mapping_[letter]
 
-
-def _invert_list(numbers: List[int]) -> List[int]:
-    inverse = numbers.copy()
-    for index, value in enumerate(numbers):
-        inverse[value] = index
-    return inverse
+    def __repr__(self) -> str:
+        return pprint.pformat(self.forward_mapping)
 
 
 class Enigma:
     def __init__(self, num_rotors: int = 5) -> None:
         assert num_rotors > 0
-        self.rotors = [Rotor(26) for _ in range(num_rotors)]
+        self.rotors = [Rotor() for _ in range(num_rotors)]
 
     @property
     def rotor_size(self) -> int:
         return self.rotors[0].num_slots
 
-    def reflect(self, number: int) -> int:
-        offset = self.rotor_size // 2
-        return (number + offset) % self.rotor_size
+    @property
+    def alphabet(self) -> List[str]:
+        return self.rotors[0].ALPHABET
 
-    def run_through_rotors(self, number: int) -> int:
+    def reflect(self, letter: str) -> str:
+        index = self.alphabet.index(letter)
+        offset = self.rotor_size // 2
+        return self.alphabet[(index + offset) % self.rotor_size]
+
+    def run_through_rotors(self, letter: str) -> str:
         for r in self.rotors:
-            number = r.transform(number, True)
-        number = self.reflect(number)
+            letter = r.transform(letter, True)
+        letter = self.reflect(letter)
         for r in reversed(self.rotors):
-            number = r.transform(number, False)
-        return number
+            letter = r.transform(letter, False)
+        return letter
 
     def advance_rotors(self) -> None:
         for r in self.rotors:
@@ -94,35 +110,35 @@ class Enigma:
             if not wrapped_around:
                 break
 
-    def encrypt_single_number(self, number: int) -> Optional[int]:
+    def encrypt_single_letter(self, letter: str) -> Optional[str]:
         return_value = None
 
-        number -= ord('a')
-        if 0 <= number < self.rotor_size:
-            return_value = self.run_through_rotors(number) + ord('a')
+        if letter in self.alphabet:
+            return_value = self.run_through_rotors(letter)
             self.advance_rotors()
 
         return return_value
 
-    def encrypt(self, input_bytes: bytes) -> Iterator[int]:
-        input_bytes = bytes([b for b in input_bytes.lower()])
-        input_bytes = input_bytes.lower()
+    def encrypt(self, input_letters: str) -> Iterator[str]:
+        input_letters = input_letters.lower()
 
-        for number in input_bytes:
-            encrypted = self.encrypt_single_number(number)
+        for letter in input_letters:
+            encrypted = self.encrypt_single_letter(letter)
             if encrypted is not None:
                 yield encrypted
 
 
 @click.command()
 @click.argument("secret_key", default="")
-def encrypt_stdin_to_stdout(secret_key):
+def encrypt_stdin_to_stdout(secret_key: str) -> None:
     random.seed(secret_key)
-    e = Enigma()
+    e = Enigma(num_rotors=5)
 
-    for line in sys.stdin.buffer:
-        sys.stdout.buffer.write(bytes(e.encrypt(line)))
+    for line in sys.stdin:
+        wat = e.encrypt(line)
+        sys.stdout.write(''.join(wat))
 
 
 if __name__ == "__main__":
+    r = Rotor()
     encrypt_stdin_to_stdout()
