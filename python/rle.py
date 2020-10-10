@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import operator
 import random
@@ -33,8 +34,14 @@ if __name__ == "__main__":
     print(' ' * longest_streak.starting_index, end='^\n')
     print(longest_streak)
 
-    # See how often a streak of six comes up in a million flips.
+    print("\n\nAnd now ... one MEELLION coin flips")
+
+    histogram = collections.Counter()
+
     flips = ''.join(random.choices("HT", k=1_000_000))
     streaks = run_length_encode(flips)
-    streaks_of_six_or_more = [s for s in streaks if s.length >= 6]
-    print(f"Found {len(streaks_of_six_or_more)=} in {len(flips)=}")
+    for s in streaks:
+        histogram[s.length] += 1
+
+    for streak_length, occurrences in sorted(histogram.items()):
+        print(f"{streak_length=:<3} {occurrences=}")
