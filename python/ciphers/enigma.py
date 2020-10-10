@@ -8,13 +8,13 @@ from typing import Any, Dict, Iterator, List, Optional
 
 import click  # pip install click
 
-# This emulates the famous Enigma
-# (https://en.wikipedia.org/wiki/Enigma_machine) machine.  Encryption
+# This emulates the famous [Enigma machine]
+# (https://en.wikipedia.org/wiki/Enigma_machine).  Encryption
 # and decryption are the same operation.  Example usage:
 
 #     $ echo fee fi fo fum | python3 enigma.py frotz | tee >(base64 -i - > /dev/tty) | python3 enigma.py frotz
-#     cnFxamVldmJudA==
-#     feefifofum
+#     YWp5anFucnlkaHF2cg==
+#     fee fi fo fum
 
 # Check the types by doing
 #       $ python3 -m pip install --user mypy-lang
@@ -34,19 +34,19 @@ class Rotor:
     """
 
     def __init__(self) -> None:
-        # Otherwise reflection won't work ... I think
+        # Otherwise reflection won't work
         assert len(self.ALPHABET) % 2 == 0
 
         self.offset = 0
 
-        self.alphabet = itertools.cycle(self.ALPHABET[:])
+        self.alphabet = itertools.cycle(self.ALPHABET)
         self.shuffled: Any = self.ALPHABET[:]
         random.shuffle(self.shuffled)
         self.shuffled = itertools.cycle(self.shuffled)
 
-        self.compute_mappings_from_offset()
+        self.compute_mappings()
 
-    def compute_mappings_from_offset(self) -> None:
+    def compute_mappings(self) -> None:
         alphabet = itertools.islice(self.alphabet, self.num_slots)
         shuffled = itertools.islice(self.shuffled, self.num_slots)
         self.forward_mapping: Dict[str, str] = {a: s for a, s in zip(alphabet, shuffled)}
@@ -60,7 +60,7 @@ class Rotor:
 
     def advance(self) -> bool:  # True means we "wrapped around"
         next(self.alphabet)
-        self.compute_mappings_from_offset()
+        self.compute_mappings()
 
         self.offset += 1
 
