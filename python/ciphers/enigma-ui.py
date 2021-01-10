@@ -53,24 +53,25 @@ def main(stdscr):
 
         plaintext.append(k)
         try:
-            encrypted = e.encrypt_single_number(ord(k.lower()))
+            encrypted = e.encrypt_single_letter(k.lower())
         except TypeError:
             # k might have been e.g. "KEY_RIGHT", on which ord will puke.
-            encrypted = None
+            continue
 
-        if encrypted:
-            encrypted = chr(encrypted)
-            ciphertext.append(encrypted)
+        if not encrypted:
+            continue
 
-            loc = locator(encrypted)
-            if loc:
+        ciphertext.append(encrypted)
 
-                if last_lit_location is not None:
-                    stdscr.addstr(*last_lit_location, " ")
+        loc = locator(encrypted)
+        if loc:
 
-                stdscr.addstr(*loc, encrypted)
-                stdscr.refresh()
-                last_lit_location = loc
+            if last_lit_location is not None:
+                stdscr.addstr(*last_lit_location, " ")
+
+            stdscr.addstr(*loc, encrypted)
+            stdscr.refresh()
+            last_lit_location = loc
 
     return ''.join(plaintext), ''.join(ciphertext)
 
