@@ -1,2 +1,2 @@
-$ go install prime-sieve
-$ ./bin/prime-sieve 
+$ export GOPATH=$(pwd); go install prime-sieve
+$ ./bin/prime-sieve
