@@ -1,6 +1,8 @@
 import itertools
 
 
+# See also https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.chunked
+
 # from http://stackoverflow.com/a/8290514/20146
 def batch(sequence, size):
     for i in range(0, len(sequence), size):
