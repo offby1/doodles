@@ -9,3 +9,4 @@ maze/maze.app/*
 .vscode/
 .venv/
 /.mypy_cache/
+/python/wind-weather/.env

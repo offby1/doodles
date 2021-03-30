@@ -18,11 +18,13 @@ Google Sheets, and have it draw some sort of graph.
 import datetime
 import os
 
+import dotenv
 import pytz
 import requests                 # pip install requests
 import tqdm                     # pip install tqdm
 
 # See https://darksky.net/dev/docs
+dotenv.load_dotenv()
 DARKSKY_SECRET_KEY = os.environ.get ('DARKSKY_SECRET_KEY')
 
 TIME_MACHINE_REQUEST_URL_TEMPLATE = 'https://api.darksky.net/forecast/{key}/{latitude},{longitude},{time}'
@@ -75,7 +77,7 @@ if __name__ == '__main__':
     writer = csv.writer (sys.stdout)
     writer.writerow (('time', 'cloudCover', 'windBearing'))
 
-    for one_hours_data in tqdm.tqdm(one_years_hourly_data (2019), total=365 * 24):
+    for one_hours_data in tqdm.tqdm(one_years_hourly_data (2020), total=365 * 24):
         hour = format_timestamp(one_hours_data[0])
         one_hours_data = tuple([hour]) + one_hours_data[1:]
         writer.writerow (one_hours_data)
