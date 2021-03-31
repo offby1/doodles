@@ -3,8 +3,8 @@ words, return another string that is like the first, but with spaces
 added, so that the result is a space-separated sequence of words.
 
 For example, given "thisisatrickyproblemitcertainlydoesappear", and a
-normal English dictionary, return "this was a tricky problem it does
-certainly appear".
+normal English dictionary, return "this is a tricky problem it certainly
+does appear".
 
 """
 
