@@ -1,5 +1,5 @@
 import random
-from curses import wrapper
+from curses import wrapper, tigetnum
 
 from enigma import Enigma
 
@@ -62,6 +62,9 @@ def main(stdscr):
             continue
 
         ciphertext.append(encrypted)
+        stdscr.addstr(tigetnum("lines") - 1,
+                      len(ciphertext),
+                      encrypted)
 
         loc = locator(encrypted)
         if loc:
