@@ -33,7 +33,13 @@ def on_key_release(*events):
 
 def add_letter_displays(parent_window):
     def generic_label(column_index, row_index, text):
-        label = ttk.Label(parent_window, text=text, font=the_font)
+        label = ttk.Label(
+            parent_window,
+
+            # space is invisible; this is easier to see
+            text=('_' if text == ' ' else text),
+            font=the_font
+        )
         label.grid(
             column=column_index,
             row=row_index,
@@ -43,7 +49,7 @@ def add_letter_displays(parent_window):
         parent_window.columnconfigure(column_index, weight=1)
         parent_window.rowconfigure(row_index, weight=1)
 
-        labels_by_letter[letter] = label
+        labels_by_letter[text] = label
         root.bind(f'<KeyPress-{letter}>', lambda e: on_key_press(e))
         root.bind(f'<KeyRelease-{letter}>', lambda e: on_key_release(e))
 
@@ -51,9 +57,8 @@ def add_letter_displays(parent_window):
         "q w e r t y u i o p",
         " a s d f g h j k l",
         "  z x c v b n m",
+        "      _  .",
     ]
-
-    letters_to_place = set(enigma.alphabet)
 
     for row_index, row_letters in enumerate(display_layout):
         for column_index, letter in enumerate(row_letters):
@@ -61,12 +66,10 @@ def add_letter_displays(parent_window):
             if letter == ' ':
                 continue
 
+            if letter == '_':
+                letter = ' '
+
             generic_label(column_index, row_index, letter)
-
-            letters_to_place.remove(letter)
-
-    for index, letter in enumerate(sorted(letters_to_place)):
-        generic_label(column_index, row_index + 1, '_' if letter == ' ' else letter)
 
 
 def on_output_label_Destroy(e):
