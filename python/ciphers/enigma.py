@@ -49,10 +49,11 @@ class Rotor:
     def compute_mappings(self) -> None:
         alphabet = itertools.islice(self.alphabet, self.num_slots)
         shuffled = itertools.islice(self.shuffled, self.num_slots)
-        self.forward_mapping: Dict[str, str] = {a: s for a, s in zip(alphabet, shuffled)}
-        alphabet = itertools.islice(self.alphabet, self.num_slots)
-        shuffled = itertools.islice(self.shuffled, self.num_slots)
-        self.reverse_mapping: Dict[str, str] = {s: a for a, s in zip(alphabet, shuffled)}
+        self.forward_mapping = {}
+        self.reverse_mapping = {}
+        for a, s in zip(alphabet, shuffled):
+            self.forward_mapping[a] = s
+            self.reverse_mapping[s] = a
 
     @property
     def num_slots(self) -> int:
@@ -71,7 +72,7 @@ class Rotor:
         return False
 
     def transform(self, letter: str, encrypt: bool) -> str:
-        mapping_ = self.forward_mapping if encrypt else self.reverse_mapping
+        mapping_: Dict[str, str] = self.forward_mapping if encrypt else self.reverse_mapping
         return mapping_[letter]
 
     def __repr__(self) -> str:
@@ -79,6 +80,17 @@ class Rotor:
 
 
 class Enigma:
+    """
+    >>> random.seed('')
+    >>> e = Enigma(num_rotors=5)
+    >>> ''.join(e.encrypt('fee fi fo fum'))
+    'kaozbecythes.'
+    >>> random.seed('')
+    >>> e = Enigma(num_rotors=5)
+    >>> ''.join(e.encrypt('kaozbecythes.'))
+    'fee fi fo fum'
+    """
+
     def __init__(self, num_rotors: int = 5) -> None:
         assert num_rotors > 0
         self.rotors = [Rotor() for _ in range(num_rotors)]
@@ -140,5 +152,4 @@ def encrypt_stdin_to_stdout(secret_key: str) -> None:
 
 
 if __name__ == "__main__":
-    r = Rotor()
     encrypt_stdin_to_stdout()
