@@ -1,5 +1,5 @@
 import random
-from tkinter import E, EventType, N, S, Tk, W, font, ttk
+from tkinter import E, EventType, N, S, StringVar, Tk, W, font, ttk
 
 from enigma import Enigma
 
@@ -7,8 +7,6 @@ labels_by_letter = {}
 
 
 def on_key_press(*events):
-    global ciphertext
-
     event = events[0]
     if event.type == EventType.KeyPress:
         letter = event.char
@@ -18,8 +16,8 @@ def on_key_press(*events):
             label = labels_by_letter[encrypted]
             label.configure(foreground='yellow')
 
-            ciphertext += encrypted
-            ciphertext_label.configure(text=ciphertext[-30:])
+            ciphertext_stringvar.set(ciphertext_stringvar.get() + encrypted)
+            ciphertext_entry.xview('end')
 
             plaintext = plaintext_label.cget('text')
             plaintext += letter
@@ -74,16 +72,17 @@ def add_letter_displays(parent_window):
 def on_output_label_Destroy(e):
 
     with open('ciphertext', 'w') as outf:
-        print(ciphertext, file=outf)
+        print(ciphertext_stringvar.get(), file=outf)
         print(f"Wrote {outf.name}")
 
 
 random.seed('')
 enigma = Enigma()
-ciphertext = ''
 
 root = Tk()
 root.title("Enigma Encryptor")
+
+ciphertext_stringvar = StringVar()
 
 the_font = font.nametofont('TkFixedFont')
 the_font.configure(size=75)
@@ -93,13 +92,16 @@ input_frame.grid(column=0, row=0, sticky=(N, W, E, S))
 
 output_frame = ttk.Frame(root)
 output_frame.grid(column=0, row=1, sticky=(W, S))
+output_frame.bind('<Destroy>', on_output_label_Destroy)
 
 plaintext_label = ttk.Label(output_frame, text='', font=the_font)
 plaintext_label.grid(column=0, row=0, sticky=(W, S))
 
-ciphertext_label = ttk.Label(output_frame, text='', font=the_font)
-ciphertext_label.grid(column=0, row=1, sticky=(W, S))
-ciphertext_label.bind('<Destroy>', on_output_label_Destroy)
+ciphertext_entry = ttk.Entry(
+    output_frame, textvariable=ciphertext_stringvar, font=the_font,
+    state='readonly'
+)
+ciphertext_entry.grid(column=0, row=1, sticky=(W, E, S))
 
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
