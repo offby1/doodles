@@ -6,7 +6,6 @@
 /.mypy_cache/
 /chicken/hello
 /chicken/PROFILE.*
-/python/ciphers/ciphertext
 /python/photos.js
 /python/wind-weather/.env
 compiled/
