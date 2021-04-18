@@ -5,8 +5,8 @@ import itertools
 lets = itertools.cycle(string.ascii_letters)
 offset = itertools.dropwhile(lambda c: c < 'd', itertools.cycle(string.ascii_letters))
 
-forward_mapping = dict(itertools.islice(zip(lets, offset), 52))
-reverse_mapping = dict(itertools.islice(zip(offset, lets), 52))
+forward_mapping = dict(itertools.islice(zip(lets, offset), len(string.ascii_letters)))
+reverse_mapping = dict(itertools.islice(zip(offset, lets), len(string.ascii_letters)))
 
 
 def caesar(text, encrypt=True):
