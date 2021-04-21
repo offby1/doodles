@@ -1,6 +1,8 @@
 #!/bin/bash
 
 here=$(cd $(dirname $0) && pwd)
+python3 -m doctest "$here/enigma.py"
+
 inf=/etc/passwd
 
 outf=$(mktemp)
