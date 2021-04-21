@@ -12,6 +12,7 @@ TODO:
 """
 
 import random
+import sys
 from tkinter import E, EventType, N, S, StringVar, Tk, W, font, ttk
 
 from enigma import Enigma
@@ -24,16 +25,19 @@ def on_key_press(*events):
     if event.type == EventType.KeyPress:
         letter = event.char
 
-        if event.state != 0:    # ignore typing when modifier keys are pressed
+        if event.state != 0:  # ignore typing when modifier keys are pressed
             return
 
         encrypted = enigma.encrypt_single_letter(letter)
         if encrypted:
+            for label in labels_by_letter.values():
+                label.configure(foreground='black')
+
             label = labels_by_letter[encrypted]
             label.configure(foreground='yellow')
 
             ciphertext_stringvar.set(ciphertext_stringvar.get() + encrypted)
-            ciphertext_entry.xview('end') # ensures the text scrolls to the left as needed
+            ciphertext_entry.xview('end')  # ensures the text scrolls to the left as needed
 
             ciphertext_entry.clipboard_clear()
             ciphertext_entry.clipboard_append(ciphertext_stringvar.get())
@@ -41,13 +45,6 @@ def on_key_press(*events):
             plaintext = plaintext_label.cget('text')
             plaintext += letter
             plaintext_label.configure(text=plaintext[-20:])
-
-
-def on_key_release(*events):
-    event = events[0]
-    if event.type == EventType.KeyRelease:
-        for label in labels_by_letter.values():
-            label.configure(foreground='black')
 
 
 def add_letter_displays(parent_window):
@@ -66,10 +63,9 @@ def add_letter_displays(parent_window):
 
             label = ttk.Label(
                 parent_window,
-
                 # space is invisible; this is easier to see
                 text=('_' if letter == ' ' else letter),
-                font=the_font
+                font=the_font,
             )
             label.grid(
                 column=column_index,
@@ -82,10 +78,13 @@ def add_letter_displays(parent_window):
 
             labels_by_letter[letter] = label
             root.bind(f'<KeyPress-{letter}>', lambda e: on_key_press(e))
-            root.bind(f'<KeyRelease-{letter}>', lambda e: on_key_release(e))
 
 
-random.seed('')
+secret_key = ''
+if len(sys.argv) > 1:
+    secret_key = sys.argv[1]
+
+random.seed(secret_key)
 enigma = Enigma()
 
 root = Tk()
@@ -106,8 +105,7 @@ plaintext_label = ttk.Label(output_frame, text='', font=the_font)
 plaintext_label.grid(column=0, row=0, sticky=(W, E, S))
 
 ciphertext_entry = ttk.Entry(
-    output_frame, textvariable=ciphertext_stringvar, font=the_font,
-    state='readonly'
+    output_frame, textvariable=ciphertext_stringvar, font=the_font, state='readonly'
 )
 ciphertext_entry.grid(column=0, row=1, sticky=(W, E, S))
 
