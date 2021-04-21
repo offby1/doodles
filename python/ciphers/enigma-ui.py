@@ -9,6 +9,8 @@ TODO:
 
 - draw the actual wheels, somehow, so we can watch them turn around as we type.
 
+- make little ka-chunk sounds as we type, and more kachunks as each wheel turns
+
 """
 
 import random
@@ -29,6 +31,7 @@ def on_key_press(*events):
             return
 
         encrypted = enigma.encrypt_single_letter(letter)
+
         if encrypted:
             for label in labels_by_letter.values():
                 label.configure(foreground='black')
