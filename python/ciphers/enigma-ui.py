@@ -15,6 +15,8 @@ TODO:
 
 import random
 import sys
+import threading
+import time
 from tkinter import E, EventType, N, S, StringVar, Tk, W, font, ttk
 
 from enigma import Enigma
@@ -26,7 +28,8 @@ def on_key_press(*events):
     event = events[0]
     if event.type == EventType.KeyPress:
         letter = event.char
-
+        if not letter:
+            letter = ' '
         if event.state != 0:  # ignore typing when modifier keys are pressed
             return
 
@@ -83,6 +86,13 @@ def add_letter_displays(parent_window):
             root.bind(f'<KeyPress-{letter}>', lambda e: on_key_press(e))
 
 
+class GhostTypist(threading.Thread):
+    def run(self):
+        for letter in "who is doing all the typing around here".lower():
+            root.event_generate(f'<KeyPress-{letter}>')
+            time.sleep(0.1)
+
+
 secret_key = ''
 if len(sys.argv) > 1:
     secret_key = sys.argv[1]
@@ -116,4 +126,6 @@ root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
 add_letter_displays(input_frame)
+t = GhostTypist()
+t.start()
 root.mainloop()
