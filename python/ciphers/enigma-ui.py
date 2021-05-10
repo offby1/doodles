@@ -93,6 +93,21 @@ class GhostTypist(threading.Thread):
             time.sleep(0.1)
 
 
+class ScrollingEntry(ttk.Frame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent)
+        self.entry = ttk.Entry(self, **kwargs)
+        self.scrollbar = ttk.Scrollbar(orient='horizontal')
+        self.entry.configure(xscrollcommand=self.scrollbar.set)
+        self.scrollbar.configure(command=self.entry.xview)
+
+        self.entry.grid    (column=0, row=1, sticky=(W, E, S))
+        self.scrollbar.grid(column=0, row=2, sticky=(W, E, S))
+
+    def xview(self, *args, **kwargs):
+        return self.entry.xview(*args, **kwargs)
+
+
 secret_key = ''
 if len(sys.argv) > 1:
     secret_key = sys.argv[1]
@@ -117,8 +132,11 @@ output_frame.grid(column=0, row=1, sticky=(W, E, S))
 plaintext_label = ttk.Label(output_frame, text='', font=the_font)
 plaintext_label.grid(column=0, row=0, sticky=(W, E, S))
 
-ciphertext_entry = ttk.Entry(
-    output_frame, textvariable=ciphertext_stringvar, font=the_font, state='readonly'
+ciphertext_entry = ScrollingEntry(
+    output_frame,
+    textvariable=ciphertext_stringvar,
+    font=the_font,
+    state='readonly',
 )
 ciphertext_entry.grid(column=0, row=1, sticky=(W, E, S))
 
