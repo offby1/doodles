@@ -21,10 +21,11 @@ end
 template = "This sentence has %{a} a's and %{q} qs."
 h = histogram('')
 
-seen = Set[h]
+seen = Set[]
 loop {
-  h = histogram(template % h)
-  break if seen === h
-  puts template % h
-  seen.add(h)
+  rendered = template % h
+  break if seen === rendered
+  seen.add(rendered)
+  puts rendered
+  h = histogram(rendered)
 }
