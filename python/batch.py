@@ -1,6 +1,5 @@
 import itertools
 
-
 # See also https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.chunked
 
 # from http://stackoverflow.com/a/8290514/20146
@@ -26,8 +25,14 @@ def b2(iterable, size):
             yield one_batch
 
 
+def b3(iterable, size):
+    # https://docs.python.org/3/library/functions.html#zip
+    return itertools.zip_longest(*[iter(iterable)] * size)
+
+
 print(list(batch(range(10), 3)))
 print(list(b2(range(10), 3)))
+print(list(b3(range(10), 3)))
 
 
 try:
