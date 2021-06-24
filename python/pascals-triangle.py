@@ -27,7 +27,4 @@ if __name__ == "__main__":
 
     width_in_characters = len(str(rows[-1]))
     for row in rows:
-        this_rows_width = len(str(row))
-        left_padding = int(round((width_in_characters - this_rows_width) / 2))
-        print(' ' * left_padding, end='')
-        print(row)
+        print(str(row).center(width_in_characters))
