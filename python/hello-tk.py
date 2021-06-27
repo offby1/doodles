@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from Tkinter import (
+from tkinter import (
     Button,
     Frame,
     LEFT,
