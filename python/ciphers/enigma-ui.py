@@ -25,11 +25,10 @@ labels_by_letter = {}
 def on_key_press(*events):
     event = events[0]
     if event.type == EventType.KeyPress:
-        letter = event.char
-        if not letter:
-            letter = ' '
         if event.state != 0:  # ignore typing when modifier keys are pressed
             return
+
+        letter = event.char or ' '
 
         encrypted = enigma.encrypt_single_letter(letter)
 
