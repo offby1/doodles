@@ -31,10 +31,10 @@ class Disk(list):
 
 def chunk(iterable, size):
     for i in range(0, len(iterable), size):
-        yield iterable[i:i + size]
+        yield iterable[i : i + size]
 
 
-class WheelCipher():
+class WheelCipher:
     def __init__(self, num_disks=36):
         self.disks = [Disk() for _ in range(num_disks)]
 
@@ -76,20 +76,20 @@ class WheelCipher():
             self._turn_to_display(c)
 
             if index > 0:
-                yield('')
+                yield ('')
 
             # Sort the rows with the least "entropy" first.  This
             # makes it slightly easier to find the plaintext row from
             # amongst the garbage.
             for r in sorted(self.rows(), key=walker_entropy):
-                yield(r)
+                yield (r)
 
     def rows(self):
         for offset in range(self.circumference):
             row = []
             for d in self.disks:
                 row.append(d[offset])
-            yield(''.join(row))
+            yield (''.join(row))
 
     def __str__(self):
         return '\n'.join(self.rows())
@@ -119,7 +119,7 @@ def walker_entropy(str_):
 
 
 if __name__ == "__main__":
-    random.seed(0)              # extra security :-)
+    random.seed(0)  # extra security :-)
     j = WheelCipher()
     plaintext = ''.join(sys.argv[1:])
     if not plaintext:
