@@ -101,12 +101,15 @@ def walker_entropy(str_):
     $ brew install ent
     """
 
-    child = subprocess.run(
-        ["/usr/local/bin/ent"],
-        input=str_,
-        stdout=subprocess.PIPE,
-        text=True
-    )
+    try:
+        child = subprocess.run(
+            ["ent"],
+            input=str_,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+    except Exception:
+        return str_
 
     for line in child.stdout.split('\n'):
         # e.g. `Entropy = 4.283381 bits per byte.`
