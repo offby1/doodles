@@ -11,7 +11,7 @@ import sys
 
 class Disk(list):
     def __init__(self):
-        super().__init__(string.ascii_lowercase)
+        super().__init__(string.ascii_lowercase + ":")
         random.shuffle(self)
 
     def turn_to_display(self, character):
@@ -118,15 +118,25 @@ def walker_entropy(str_):
             return float(fields[2])
 
 
+class actual_words:
+    dict_words = set(open("/usr/share/dict/words").read().splitlines())
+
+    def __call__(self, str_):
+        ostensible_words = set(str_.split(':'))
+        return ostensible_words.intersection(self.dict_words)
+
+
 if __name__ == "__main__":
     random.seed(0)  # extra security :-)
     j = WheelCipher()
     plaintext = ''.join(sys.argv[1:])
     if not plaintext:
-        plaintext = "Attack at dawn"
+        plaintext = ":Attack:at:dawn:"
     print(f"{plaintext=}")
     ciphertext = ' '.join(chunk(j.encrypt_string(plaintext), 5))
     print(f"{ciphertext=}")
     print()
-    for decrypted_row in j.decrypt_string(ciphertext):
+    for decrypted_row in sorted(j.decrypt_string(ciphertext),
+                                key=lambda s: len(actual_words()(s)),
+                                reverse=True):
         print(decrypted_row)
