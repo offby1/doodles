@@ -1,7 +1,7 @@
 import pathlib
 
-import matplotlib.pyplot as plt
-import pandas as pd
+import matplotlib.pyplot as plt # python3 -m pip install matplotlib
+import pandas as pd             # python3 -m pip install pandas
 
 __here__ = pathlib.Path(__file__).parent.absolute()
 
