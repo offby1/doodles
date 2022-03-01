@@ -114,11 +114,6 @@ def test_example():
 
 if __name__ == "__main__":
     import re
-    import statistics
-
-    def _average_word_length(str_):
-        words = str_.split(" ")
-        return statistics.mean([len(w) for w in words])
 
     def num_spaces(str_):
         return (len(str_.split()), str_)
