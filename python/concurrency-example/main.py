@@ -10,6 +10,8 @@ different techniques.  tl;dr -- they're all about the same speed.
 """
 import timeit
 
+import tabulate
+
 import asynchronous  # noqa
 import future  # noqa
 import sequential  # noqa
@@ -21,28 +23,28 @@ import treeoh  # noqa
 # I have no idea why I chose wikipedia articles with "Eagle" in their
 # titles.  Just go with it.
 urls = (
-    'https://en.wikipedia.org/wiki/American_Eagles',
-    'https://en.wikipedia.org/wiki/Ateneo_Blue_Eagles',
-    'https://en.wikipedia.org/wiki/Bedford_Town_F.C.',
-    'https://en.wikipedia.org/wiki/Boston_College_Eagles',
-    'https://en.wikipedia.org/wiki/Chris_Eagles',
-    'https://en.wikipedia.org/wiki/Colorado_Eagles',
-    'https://en.wikipedia.org/wiki/Coppin_State_Eagles',
-    'https://en.wikipedia.org/wiki/Crystal_Palace_F.C.',
-    'https://en.wikipedia.org/wiki/Eagle_(disambiguation)',
-    'https://en.wikipedia.org/wiki/Eagles_(1984_film)',
-    'https://en.wikipedia.org/wiki/Eagles_(2012_film)',
-    'https://en.wikipedia.org/wiki/Eagles_(album)',
-    'https://en.wikipedia.org/wiki/Eagles_(band)',
-    'https://en.wikipedia.org/wiki/Eagles_(box_set)',
-    'https://en.wikipedia.org/wiki/Eagles_cricket_team',
-    'https://en.wikipedia.org/wiki/Eastern_Michigan_Eagles',
-    'https://en.wikipedia.org/wiki/Eastern_Washington_Eagles',
-    'https://en.wikipedia.org/wiki/Embry%E2%80%93Riddle_Aeronautical_University',
-    'https://en.wikipedia.org/wiki/Fraternal_Order_of_Eagles',
-    'https://en.wikipedia.org/wiki/Georgia_Southern_Eagles',
-    'https://en.wikipedia.org/wiki/Germany_national_football_team',
-    'https://en.wikipedia.org/wiki/Greg_Eagles',
+    "https://en.wikipedia.org/wiki/American_Eagles",
+    "https://en.wikipedia.org/wiki/Ateneo_Blue_Eagles",
+    "https://en.wikipedia.org/wiki/Bedford_Town_F.C.",
+    "https://en.wikipedia.org/wiki/Boston_College_Eagles",
+    "https://en.wikipedia.org/wiki/Chris_Eagles",
+    "https://en.wikipedia.org/wiki/Colorado_Eagles",
+    "https://en.wikipedia.org/wiki/Coppin_State_Eagles",
+    "https://en.wikipedia.org/wiki/Crystal_Palace_F.C.",
+    "https://en.wikipedia.org/wiki/Eagle_(disambiguation)",
+    "https://en.wikipedia.org/wiki/Eagles_(1984_film)",
+    "https://en.wikipedia.org/wiki/Eagles_(2012_film)",
+    "https://en.wikipedia.org/wiki/Eagles_(album)",
+    "https://en.wikipedia.org/wiki/Eagles_(band)",
+    "https://en.wikipedia.org/wiki/Eagles_(box_set)",
+    "https://en.wikipedia.org/wiki/Eagles_cricket_team",
+    "https://en.wikipedia.org/wiki/Eastern_Michigan_Eagles",
+    "https://en.wikipedia.org/wiki/Eastern_Washington_Eagles",
+    "https://en.wikipedia.org/wiki/Embry%E2%80%93Riddle_Aeronautical_University",
+    "https://en.wikipedia.org/wiki/Fraternal_Order_of_Eagles",
+    "https://en.wikipedia.org/wiki/Georgia_Southern_Eagles",
+    "https://en.wikipedia.org/wiki/Germany_national_football_team",
+    "https://en.wikipedia.org/wiki/Greg_Eagles",
     # 'https://en.wikipedia.org/wiki/Hanwha_Eagles',
     # 'https://en.wikipedia.org/wiki/Jeanne_Eagels',
     # 'https://en.wikipedia.org/wiki/Manly-Warringah_Sea_Eagles',
@@ -76,13 +78,20 @@ urls = (
 
 def t(description, python_expression):
     print()
-    print(f'{description}: starting')
+    print(f"{description}: starting")
     time_in_seconds = timeit.timeit(python_expression, globals=globals(), number=1)
     number_of_requests = len(urls)
-    print(f'Downloading {number_of_requests} urls with {description!r} took {time_in_seconds} seconds: {number_of_requests / time_in_seconds} requests per second')
-    print(f'{description} done')
+    print(
+        f"Downloading {number_of_requests} urls with {description!r} took {time_in_seconds} seconds: {number_of_requests / time_in_seconds} requests per second"
+    )
+    print(f"{description} done")
     print()
+    return time_in_seconds
 
 
+table = []
 for module_name in ("sequential", "threaded", "future", "treeoh", "asynchronous"):
-    t(module_name, f'{module_name}.download(urls)')
+    time_in_seconds = t(module_name, f"{module_name}.download(urls)")
+    table.append((module_name, time_in_seconds))
+
+print(tabulate.tabulate(table, headers=["Module Name", "Time in Seconds"]))
