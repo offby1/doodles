@@ -65,7 +65,11 @@ class Graph:
         rv = klass()
         words = set(n_letter_words(wordlist_file_name, word_length))
         for left in tqdm.tqdm(
-            words, unit='word', desc="Processing {}-letter words from {}".format(word_length, wordlist_file_name)
+            words,
+            unit="word",
+            desc="Processing {}-letter words from {}".format(
+                word_length, wordlist_file_name
+            ),
         ):
 
             # In theory, you could generate all possible one-letter
@@ -100,18 +104,18 @@ def differ_by_one_letter(left, right):
 
 
 @click.command()
-@click.option('-w', '--word-length', default=5, type=click.IntRange(3, 10, clamp=True))
-def main(word_length):
-    cache_file_name = 'graph.cache.{}'.format(word_length)
+@click.option("-w", "--word-length", default=5, type=click.IntRange(3, 10, clamp=True))
+def main(word_length=5):
+    cache_file_name = "graph.cache.{}".format(word_length)
     try:
         with open(cache_file_name) as inf:
             graph = Graph.from_python_literal(inf.read())
     except FileNotFoundError:
-        graph = Graph.from_wordlist('/usr/share/dict/words', word_length)
-        with open(cache_file_name, 'w') as outf:
+        graph = Graph.from_wordlist("/usr/share/dict/words", word_length)
+        with open(cache_file_name, "w") as outf:
             outf.write(str(graph))
 
-    spinner = tqdm.tqdm(desc='chains', unit='')
+    spinner = tqdm.tqdm(desc="chains", unit="")
     all_words = list(graph.neighbors_by_node.keys())
 
     longest_chain = []
