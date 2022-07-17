@@ -7,8 +7,8 @@ far.
 """
 
 # Core
-import ast
 import collections
+import json
 import pprint
 import random
 
@@ -29,7 +29,7 @@ class Graph:
         self.neighbors_by_node[_from].add(to)
         self.neighbors_by_node[to].add(_from)
 
-    def bfs(self, _from):
+    def breadth_first_traverse(self, _from):
         """Traverse the graph starting at _FROM, visiting every reachable node in breadth-first order.
 
         Return the path to the last node we visited (which is as "far"
@@ -48,17 +48,18 @@ class Graph:
                     seen.add(n)
         return trail
 
-    def __str__(self):
-        return pprint.pformat(dict(self.neighbors_by_node))
-
     @classmethod
-    def from_python_literal(klass, string):
-        vertices = ast.literal_eval(string)
+    def from_JSON_filehandle(klass, inf):
+        vertices = json.load(inf)
         rv = klass()
         for source_node, target_nodes in vertices.items():
             for t in target_nodes:
                 rv.add_vertex(source_node, t)
         return rv
+
+    def to_JSON(self, outf):
+        with_list_values = {k: sorted(v) for k, v in self.neighbors_by_node.items()}
+        return json.dump(with_list_values, outf, indent=2, sort_keys=True)
 
     @classmethod
     def from_wordlist(klass, wordlist_file_name, word_length):
@@ -106,14 +107,14 @@ def differ_by_one_letter(left, right):
 @click.command()
 @click.option("-w", "--word-length", default=5, type=click.IntRange(3, 10, clamp=True))
 def main(word_length=5):
-    cache_file_name = "graph.cache.{}".format(word_length)
+    cache_file_name = "graph.cache.{}.json".format(word_length)
     try:
         with open(cache_file_name) as inf:
-            graph = Graph.from_python_literal(inf.read())
+            graph = Graph.from_JSON_filehandle(inf)
     except FileNotFoundError:
         graph = Graph.from_wordlist("/usr/share/dict/words", word_length)
         with open(cache_file_name, "w") as outf:
-            outf.write(str(graph))
+            graph.to_JSON(outf)
 
     spinner = tqdm.tqdm(desc="chains", unit="")
     all_words = list(graph.neighbors_by_node.keys())
@@ -123,7 +124,7 @@ def main(word_length=5):
     while True:
         start = random.choice(all_words)
 
-        chain = graph.bfs(start)
+        chain = graph.breadth_first_traverse(start)
 
         if len(chain) > len(longest_chain):
             longest_chain = chain
