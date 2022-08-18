@@ -103,6 +103,10 @@ def test_two_words():
     assert "dick move" in insert_spaces("dickmove", dictionary_words)
 
 
+def test_hey_I_should_really_come_up_with():
+    assert "I should come up with a case that will foil a simpleminded non-recursive solution" is True
+
+
 def test_example():
     # unfortunately the output depends heavily on the dictionary.
     # This works on the dict that comes with macOS 10.13.3 "Sierra".
@@ -125,5 +129,7 @@ if __name__ == "__main__":
     ):
         cleaned_up_input = re.sub(r"[^a-z]", "", inp_.lower())
 
-        solutions = sorted(insert_spaces(cleaned_up_input, dictionary_words), key=num_spaces)
-        print('\n'.join(solutions))
+        solutions = sorted(
+            insert_spaces(cleaned_up_input, dictionary_words), key=num_spaces
+        )
+        print("\n".join(solutions))
