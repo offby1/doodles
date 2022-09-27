@@ -1,5 +1,7 @@
 import random
 
+from hypothesis import given, strategies as st
+
 
 def mergesort(seq, key=None):
     if key is None:
@@ -32,8 +34,9 @@ def merged(s1, s2, key):
             yield s2.pop(0)
 
 
-original = [random.randint(0, 100) for _ in range(100)]
+@given(st.lists(st.integers()))
+def test_em_all_let_God_sort_em_out(original):
+    actual = list(mergesort(original))
+    expected = sorted(original)
 
-sorted = list(mergesort(original))
-
-print(sorted)
+    assert actual == expected
