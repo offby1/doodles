@@ -71,7 +71,7 @@ def find_string_whose_hash_has_leading_zeroes():
     for count in itertools.count(1):
         candidate = _assemble_bytes_from_components(random_bytes, count)
 
-        leading_zeroes, is_legit = validate_candate(candidate)
+        leading_zeroes, is_legit = validate_candidate(candidate)
 
         if is_legit:
             return candidate
@@ -83,7 +83,7 @@ def find_string_whose_hash_has_leading_zeroes():
     return None
 
 
-def validate_candate(bytes_):
+def validate_candidate(bytes_):
     needed_leading_zeroes = int(bytes_.split(b":", 2)[1])
     hashed = hashlib.sha1(bytes_).digest()
     leading_zeroes = _leading_zeroes_of_bytes(hashed)
