@@ -21,10 +21,8 @@ def yield_triangle(num_rows):
 
 
 if __name__ == "__main__":
-    rows = []
-    for row in yield_triangle(5):
-        rows.append(row)
+    rows = list(yield_triangle(30))
 
-    width_in_characters = len(str(rows[-1]))
+    width_in_characters = len(rows[-1]) * 2 - 1
     for row in rows:
-        print(str(row).center(width_in_characters))
+        print(" ".join([" " if r % 2 else "*" for r in row]).center(width_in_characters).rstrip())
