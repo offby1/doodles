@@ -9,7 +9,6 @@ far.
 # Core
 import collections
 import json
-import pprint
 import random
 
 # 3rd party
