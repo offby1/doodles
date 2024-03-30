@@ -10,4 +10,4 @@ poetry install --no-root
 
 set -e
 
-./.venv/bin/python3 main.py
+poetry run python3 main.py
