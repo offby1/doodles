@@ -1,3 +1,16 @@
-[tool.black]
-line-length = 120
-skip-string-normalization = true
+[tool.poetry]
+name = "doodles"
+version = "0.1.0"
+description = ""
+authors = ["Eric Hanchrow <eric.hanchrow@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+tqdm = "^4.66.5"
+click = "^8.1.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
