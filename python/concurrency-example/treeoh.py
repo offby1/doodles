@@ -2,13 +2,13 @@
 import asks
 import trio
 
-asks.init('trio')
+asks.init("trio")
 
 
 async def trio_download_one(url):
     r = await asks.get(url)
     text = r.text
-    print('{} => {} bytes'.format(url, len(text)))
+    print(f"{url} => {len(text)} bytes")
 
 
 async def trio_parent(urls):

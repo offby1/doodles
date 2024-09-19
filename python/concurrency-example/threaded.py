@@ -10,7 +10,7 @@ def download(urls):
     class Download(threading.Thread):
         def __init__(self, url):
             self.url = url
-            super(Download, self).__init__()
+            super().__init__()
 
         def run(self):
             result_queue.put(common.download_one(self.url))

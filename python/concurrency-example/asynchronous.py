@@ -13,7 +13,7 @@ async def async_download_one(aiohttp_client, url):
     async with aiohttp_client.get(url) as response:
         assert response.status == 200
         text = await response.text()
-    print('{} => {} bytes'.format(url, len(text)))
+    print(f"{url} => {len(text)} bytes")
 
 
 async def create_aiohttp_session(loop):
