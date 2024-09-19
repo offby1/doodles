@@ -1,12 +1,11 @@
 # https://trio.readthedocs.io/en/stable/
-import asks
+import httpx
 import trio
-
-asks.init("trio")
 
 
 async def trio_download_one(url):
-    r = await asks.get(url)
+    async with httpx.AsyncClient() as client:
+        r = await client.get(url)
     text = r.text
     print(f"{url} => {len(text)} bytes")
 
