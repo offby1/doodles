@@ -8,7 +8,7 @@ decrypt = dict(zip(scrambled, bytes_))
 
 
 def transform_bytes(bytes_, map_):
-    return bytes([map_.get(b, b) for b in bytes_])
+    return bytes([map_[b] for b in bytes_])
 
 
 with open("/etc/passwd", "rb") as inf:

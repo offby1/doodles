@@ -1,7 +1,6 @@
-"""
-https://en.wikipedia.org/wiki/Jefferson_wheel
-"""
+"""https://en.wikipedia.org/wiki/Jefferson_wheel."""
 
+from collections.abc import Sequence
 import itertools
 import random
 import string
@@ -10,11 +9,11 @@ import sys
 
 
 class Disk(list):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(string.ascii_lowercase + ":")
         random.shuffle(self)
 
-    def turn_to_display(self, character):
+    def turn_to_display(self, character: str) -> None:
         # Our caller will set character to None when it's finished a
         # string, but still has some more disks to process, including
         # us.  We randomize ourselves to erase any previous setting,
@@ -25,17 +24,17 @@ class Disk(list):
         while self[0] != character:
             self.append(self.pop(0))
 
-    def __str__(self):
-        return ''.join(self)
+    def __str__(self) -> str:
+        return "".join(self)
 
 
-def chunk(iterable, size):
+def chunk(iterable: Sequence, size: int):
     for i in range(0, len(iterable), size):
         yield iterable[i : i + size]
 
 
 class WheelCipher:
-    def __init__(self, num_disks=36):
+    def __init__(self, num_disks=36) -> None:
         self.disks = [Disk() for _ in range(num_disks)]
 
     @property
@@ -50,7 +49,7 @@ class WheelCipher:
     def circumference(self):
         return len(self.alphabet)
 
-    def _turn_to_display(self, str_):
+    def _turn_to_display(self, str_) -> None:
         for disk, character in itertools.zip_longest(self.disks, str_):
             disk.turn_to_display(character)
 
@@ -68,7 +67,7 @@ class WheelCipher:
         for c in chunk(str_, self.width):
             self._turn_to_display(c)
             result.extend(self._random_row())
-        return ''.join(result)
+        return "".join(result)
 
     def decrypt_string(self, str_):
         str_ = self._filter_string(str_)
@@ -76,67 +75,68 @@ class WheelCipher:
             self._turn_to_display(c)
 
             if index > 0:
-                yield ('')
+                yield ("")
 
             # Sort the rows with the least "entropy" first.  This
             # makes it slightly easier to find the plaintext row from
             # amongst the garbage.
-            for r in sorted(self.rows(), key=walker_entropy):
-                yield (r)
+            yield from sorted(self.rows(), key=walker_entropy)
 
     def rows(self):
         for offset in range(self.circumference):
             row = []
             for d in self.disks:
                 row.append(d[offset])
-            yield (''.join(row))
+            yield ("".join(row))
 
-    def __str__(self):
-        return '\n'.join(self.rows())
+    def __str__(self) -> str:
+        return "\n".join(self.rows())
 
 
 def walker_entropy(str_):
+    """http://fourmilab.ch/random/
+    $ brew install ent.
     """
-    http://fourmilab.ch/random/
-    $ brew install ent
-    """
-
     try:
         child = subprocess.run(
             ["ent"],
             input=str_,
             stdout=subprocess.PIPE,
             text=True,
+            check=False,
         )
     except Exception:
         return str_
 
-    for line in child.stdout.split('\n'):
+    for line in child.stdout.split("\n"):
         # e.g. `Entropy = 4.283381 bits per byte.`
-        fields = line.split(' ')
-        if fields[0] == 'Entropy':
+        fields = line.split(" ")
+        if fields[0] == "Entropy":
             return float(fields[2])
+    return None
 
 
 class actual_words:
     dict_words = set(open("/usr/share/dict/words").read().splitlines())
 
     def __call__(self, str_):
-        ostensible_words = set(str_.split(':'))
+        ostensible_words = set(str_.split(":"))
         return ostensible_words.intersection(self.dict_words)
 
 
 if __name__ == "__main__":
     random.seed(0)  # extra security :-)
     j = WheelCipher()
-    plaintext = ''.join(sys.argv[1:])
+    plaintext = "".join(sys.argv[1:])
     if not plaintext:
         plaintext = ":Attack:at:dawn:"
     print(f"{plaintext=}")
-    ciphertext = ' '.join(chunk(j.encrypt_string(plaintext), 5))
+    ciphertext = " ".join(chunk(j.encrypt_string(plaintext), 5))
     print(f"{ciphertext=}")
     print()
-    for decrypted_row in sorted(j.decrypt_string(ciphertext),
-                                key=lambda s: len(actual_words()(s)),
-                                reverse=True):
+    for decrypted_row in sorted(
+        j.decrypt_string(ciphertext),
+        key=lambda s: len(actual_words()(s)),
+        reverse=True,
+    ):
         print(decrypted_row)

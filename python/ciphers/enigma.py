@@ -4,7 +4,8 @@ import pprint
 import random
 import string
 import sys
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any, Optional
 
 import click  # pip install click
 
@@ -22,7 +23,7 @@ import click  # pip install click
 
 
 class Rotor:
-    ALPHABET = list(string.ascii_lowercase + ' .')
+    ALPHABET = list(string.ascii_lowercase + " .")
 
     """
     >>> random.seed(0)
@@ -72,7 +73,7 @@ class Rotor:
         return False
 
     def transform(self, letter: str, encrypt: bool) -> str:
-        mapping_: Dict[str, str] = self.forward_mapping if encrypt else self.reverse_mapping
+        mapping_: dict[str, str] = self.forward_mapping if encrypt else self.reverse_mapping
         return mapping_[letter]
 
     def __repr__(self) -> str:
@@ -80,8 +81,7 @@ class Rotor:
 
 
 class Enigma:
-    """
-    >>> random.seed('')
+    """>>> random.seed('')
     >>> e = Enigma(num_rotors=5)
     >>> ''.join(e.encrypt('fee fi fo fum'))
     'kaozbecythes.'
@@ -100,7 +100,7 @@ class Enigma:
         return self.rotors[0].num_slots
 
     @property
-    def alphabet(self) -> List[str]:
+    def alphabet(self) -> list[str]:
         return self.rotors[0].ALPHABET
 
     def reflect(self, letter: str) -> str:
@@ -148,7 +148,7 @@ def encrypt_stdin_to_stdout(secret_key: str) -> None:
 
     for line in sys.stdin:
         wat = e.encrypt(line)
-        sys.stdout.write(''.join(wat))
+        sys.stdout.write("".join(wat))
 
 
 if __name__ == "__main__":
