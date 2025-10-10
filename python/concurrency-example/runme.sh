@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec uv run python3 main.py
+exec uv run python3 -X dev main.py
