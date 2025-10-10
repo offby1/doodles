@@ -1,20 +1,19 @@
-[tool.poetry]
+[project]
 name = "concurrency-example"
 version = "0.1.0"
 description = ""
-authors = ["Eric Hanchrow <eric.hanchrow@gmail.com>"]
+authors = [{ name = "Eric Hanchrow", email = "eric.hanchrow@gmail.com" }]
+requires-python = ">= 3.8"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = ">= 3.8"
-aiohttp = "^3.10.5"
-requests = "^2.32.3"
-trio = "^0.26.2"
-urllib3 = "^2.2.3"
-tabulate = "^0.9.0"
-httpx = "^0.27.2"
-
+dependencies = [
+    "aiohttp>=3.10.5,<4",
+    "requests>=2.32.3,<3",
+    "trio>=0.26.2,<0.27",
+    "urllib3>=2.2.3,<3",
+    "tabulate>=0.9.0,<0.10",
+    "httpx>=0.27.2,<0.28",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
