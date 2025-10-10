@@ -17,7 +17,8 @@ async def async_download_one(aiohttp_client, url):
 
 
 async def create_aiohttp_session(loop):
-    return aiohttp.ClientSession(loop=loop)
+    headers = {"User-Agent": "AsyncDemo/0.1 (https://gitlab.com/offby1/doodles/blob/master/python/concurrency-example)"}
+    return aiohttp.ClientSession(loop=loop, headers=headers)
 
 
 def download(urls):
