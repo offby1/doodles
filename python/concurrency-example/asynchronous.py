@@ -26,9 +26,9 @@ def download(urls):
         loop.set_debug(enabled=True)
         client = loop.run_until_complete(create_aiohttp_session(loop))
 
-        def signal_handler(signal, frame):
+        def signal_handler(_signal, _frame):
             loop.stop()
-            client.close()
+            _ = client.close()
             sys.exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
