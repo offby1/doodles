@@ -22,7 +22,8 @@ async def create_aiohttp_session(loop):
 
 
 def download(urls):
-    with contextlib.closing(asyncio.get_event_loop()) as loop:
+    with contextlib.closing(asyncio.new_event_loop()) as loop:
+        asyncio.set_event_loop(loop)
         loop.set_debug(enabled=True)
         client = loop.run_until_complete(create_aiohttp_session(loop))
 
