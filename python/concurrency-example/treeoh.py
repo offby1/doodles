@@ -1,7 +1,11 @@
+import logging
+
 # https://trio.readthedocs.io/en/stable/
 import httpx
 import trio
 
+
+logging.getLogger("httpx").setLevel(logging.WARN)
 
 async def trio_download_one(url):
     headers = {"User-Agent": "TrioDemo/0.1 (https://gitlab.com/offby1/doodles/blob/master/python/concurrency-example)"}

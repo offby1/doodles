@@ -10,3 +10,4 @@
 /python/wind-weather/.env
 compiled/
 maze/maze.app/*
+/python/concurrency-example/.claude/
