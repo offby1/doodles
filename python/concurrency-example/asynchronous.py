@@ -2,9 +2,11 @@ import asyncio
 import contextlib
 import logging
 import signal
+import ssl
 import sys
 
 import aiohttp  # pip install aiohttp
+import certifi
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +20,9 @@ async def async_download_one(aiohttp_client, url):
 
 async def create_aiohttp_session(loop):
     headers = {"User-Agent": "AsyncDemo/0.1 (https://gitlab.com/offby1/doodles/blob/master/python/concurrency-example)"}
-    return aiohttp.ClientSession(loop=loop, headers=headers)
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    connector = aiohttp.TCPConnector(loop=loop, ssl=ssl_context)
+    return aiohttp.ClientSession(loop=loop, headers=headers, connector=connector)
 
 
 def download(urls):
