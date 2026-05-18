@@ -4,7 +4,8 @@ import trio
 
 
 async def trio_download_one(url):
-    async with httpx.AsyncClient() as client:
+    headers = {"User-Agent": "TrioDemo/0.1 (https://gitlab.com/offby1/doodles/blob/master/python/concurrency-example)"}
+    async with httpx.AsyncClient(headers=headers) as client:
         r = await client.get(url)
     text = r.text
     print(f"{url} => {len(text)} bytes")
