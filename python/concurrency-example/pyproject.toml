@@ -5,7 +5,7 @@ description = ""
 authors = [{ name = "Eric Hanchrow", email = "eric.hanchrow@gmail.com" }]
 requires-python = ">= 3.11"
 dependencies = [
-    "aiohttp>=3.10.5,<4",
+    "aiohttp>=3.14.3,<4",
     "certifi",
     "requests",
     "trio>=0.26.2,<0.27",
